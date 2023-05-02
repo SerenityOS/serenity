@@ -229,7 +229,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
     if (!computed_values.max_width().is_none()) {
         auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
-        if (used_width.to_px(box) > max_width.to_px(box)) {
+        auto used_width_px = used_width.is_auto() ? available_space.width.to_px() : used_width.to_px(box);
+        if (used_width_px > max_width.to_px(box)) {
             used_width = try_compute_width(max_width);
         }
     }
@@ -238,7 +239,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
         auto min_width = calculate_inner_width(box, available_space.width, computed_values.min_width());
-        if (used_width.to_px(box) < min_width.to_px(box)) {
+        auto used_width_px = used_width.is_auto() ? available_space.width.to_px() : used_width.to_px(box);
+        if (used_width_px < min_width.to_px(box)) {
             used_width = try_compute_width(min_width);
         }
     }
