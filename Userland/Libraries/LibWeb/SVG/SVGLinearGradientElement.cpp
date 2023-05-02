@@ -103,8 +103,8 @@ Optional<Gfx::PaintStyle const&> SVGLinearGradientElement::to_gfx_paint_style(SV
         // box units) and then applying the transform specified by attribute ‘gradientTransform’. Percentages represent
         // values relative to the bounding box for the object.
         // Note: For gradientUnits="objectBoundingBox" both "100%" and "1" are treated the same.
-        start_point = paint_context.path_bounding_box.location() + Gfx::FloatPoint { start_x().value() * paint_context.path_bounding_box.width(), start_y().value() * paint_context.path_bounding_box.height() };
-        end_point = paint_context.path_bounding_box.location() + Gfx::FloatPoint { end_x().value() * paint_context.path_bounding_box.width(), end_y().value() * paint_context.path_bounding_box.height() };
+        start_point = { start_x().value(), start_y().value() };
+        end_point = { end_x().value(), end_y().value() };
     } else {
         // GradientUnits::UserSpaceOnUse
         // If gradientUnits="userSpaceOnUse", ‘x1’, ‘y1’, ‘x2’, and ‘y2’ represent values in the coordinate system
@@ -125,28 +125,14 @@ Optional<Gfx::PaintStyle const&> SVGLinearGradientElement::to_gfx_paint_style(SV
     if (!m_paint_style) {
         m_paint_style = Gfx::SVGLinearGradientPaintStyle::create(start_point, end_point)
                             .release_value_but_fixme_should_propagate_errors();
-        // FIXME: Update this if DOM changes?
-        for_each_color_stop([&](auto& stop) {
-            m_paint_style->add_color_stop(stop.stop_offset().value(), stop.stop_color()).release_value_but_fixme_should_propagate_errors();
-        });
+        // FIXME: Update stops in DOM changes:
+        add_color_stops(*m_paint_style);
     } else {
         m_paint_style->set_start_point(start_point);
         m_paint_style->set_end_point(end_point);
     }
 
-    auto gradient_affine_transform = gradient_transform().value_or(Gfx::AffineTransform {});
-
-    if (units == GradientUnits::ObjectBoundingBox) {
-        // Adjust transform to take place in the coordinate system defined by the bounding box:
-        gradient_affine_transform = Gfx::AffineTransform {}
-                                        .translate(paint_context.path_bounding_box.location())
-                                        .scale(paint_context.path_bounding_box.width(), paint_context.path_bounding_box.height())
-                                        .multiply(gradient_affine_transform)
-                                        .scale(1 / paint_context.path_bounding_box.width(), 1 / paint_context.path_bounding_box.height())
-                                        .translate(-paint_context.path_bounding_box.location());
-    }
-
-    m_paint_style->set_gradient_transform(Gfx::AffineTransform { paint_context.transform }.multiply(gradient_affine_transform));
+    m_paint_style->set_gradient_transform(gradient_paint_transform(paint_context));
     return *m_paint_style;
 }
 
