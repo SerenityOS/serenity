@@ -229,6 +229,29 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
     auto const& computed_values = node.computed_values();
 
+    auto adjust_for_box_sizing = [&](CSSPixels unadjusted_pixels, CSS::Size const& computed_size, bool width) -> CSSPixels {
+        // box-sizing: content-box and/or automatic size don't require any adjustment.
+        if (computed_values.box_sizing() == CSS::BoxSizing::ContentBox || computed_size.is_auto())
+            return unadjusted_pixels;
+
+        // box-sizing: border-box requires us to subtract the relevant border and padding from the size.
+        CSSPixels border_and_padding;
+
+        if (width) {
+            border_and_padding = CSSPixels(computed_values.border_left().width)
+                + computed_values.padding().left().resolved(*m_node, CSS::Length::make_px(containing_block_used_values->content_width())).resolved(*m_node).to_px(*m_node)
+                + CSSPixels(computed_values.border_right().width)
+                + computed_values.padding().right().resolved(*m_node, CSS::Length::make_px(containing_block_used_values->content_width())).resolved(*m_node).to_px(*m_node);
+        } else {
+            border_and_padding = CSSPixels(computed_values.border_top().width)
+                + computed_values.padding().top().resolved(*m_node, CSS::Length::make_px(containing_block_used_values->content_width())).resolved(*m_node).to_px(*m_node)
+                + CSSPixels(computed_values.border_bottom().width)
+                + computed_values.padding().bottom().resolved(*m_node, CSS::Length::make_px(containing_block_used_values->content_width())).resolved(*m_node).to_px(*m_node);
+        }
+
+        return unadjusted_pixels - border_and_padding;
+    };
+
     auto is_definite_size = [&](CSS::Size const& size, CSSPixels& resolved_definite_size, bool width) {
         // A size that can be determined without performing layout; that is,
         // a <length>,
@@ -270,22 +293,22 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
                 auto containing_block_size_as_length = width
                     ? CSS::Length::make_px(containing_block_used_values->content_width())
                     : CSS::Length::make_px(containing_block_used_values->content_height());
-                resolved_definite_size = size.calculated().resolve_length_percentage(node, containing_block_size_as_length).value_or(CSS::Length::make_auto()).to_px(node);
+                resolved_definite_size = adjust_for_box_sizing(size.calculated().resolve_length_percentage(node, containing_block_size_as_length).value_or(CSS::Length::make_auto()).to_px(node), size, width);
                 return true;
             }
-            resolved_definite_size = size.calculated().resolve_length(node)->to_px(node);
+            resolved_definite_size = adjust_for_box_sizing(size.calculated().resolve_length(node)->to_px(node), size, width);
             return true;
         }
 
         if (size.is_length()) {
             VERIFY(!size.is_auto()); // This should have been covered by the Size::is_auto() branch above.
-            resolved_definite_size = size.length().to_px(node);
+            resolved_definite_size = adjust_for_box_sizing(size.length().to_px(node), size, width);
             return true;
         }
         if (size.is_percentage()) {
             if (containing_block_has_definite_size) {
                 auto containing_block_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
-                resolved_definite_size = containing_block_size * size.percentage().as_fraction();
+                resolved_definite_size = adjust_for_box_sizing(containing_block_size * size.percentage().as_fraction(), size, width);
                 return true;
             }
             return false;
