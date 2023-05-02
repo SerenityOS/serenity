@@ -1088,15 +1088,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
             return;
         }
 
-        auto cross_size = [&]() {
-            if (item.box->computed_values().box_sizing() == CSS::BoxSizing::BorderBox && !should_treat_cross_size_as_auto(item.box)) {
-                return max(CSSPixels(0.0f), inner_cross_size(item.box) - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after);
-            }
-
-            return inner_cross_size(item.box);
-        }();
-
-        item.hypothetical_cross_size = css_clamp(cross_size, clamp_min, clamp_max);
+        item.hypothetical_cross_size = css_clamp(inner_cross_size(item.box), clamp_min, clamp_max);
         return;
     }
 
