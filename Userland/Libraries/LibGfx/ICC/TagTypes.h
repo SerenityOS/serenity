@@ -179,6 +179,41 @@ public:
         return mix(values()[i] / 65535.f, values()[i + 1] / 65535.f, f);
     }
 
+    // y must be in [0..1].
+    float evaluate_inverse(float y) const
+    {
+        VERIFY(0.f <= y && y <= 1.f);
+
+        if (values().is_empty())
+            return y;
+
+        if (values().size() == 1)
+            return powf(y, 1.f / (values()[0] / (float)0x100));
+
+        // FIXME: Verify somewhere that:
+        // * values() is non-decreasing
+        // * values()[0] is 0, values()[values().size() - 1] is 65535
+
+        // FIXME: Use binary search.
+        size_t n = values().size() - 1;
+        size_t i = 0;
+        for (; i < n; ++i) {
+            if (values()[i] / 65535.f <= y && y <= values()[i + 1] / 65535.f)
+                break;
+        }
+
+        float x1 = i / (float)n;
+        float y1 = values()[i] / 65535.f;
+        float x2 = (i + 1) / (float)n;
+        float y2 = values()[i + 1] / 65535.f;
+
+        // Flat line segment?
+        if (y1 == y2)
+            return (x1 + x2) / 2;
+
+        return (y - y1) / (y2 - y1) * (x2 - x1) + x1; // Same as `((y - y1) / (y2 - y1) + i) / (float)n`
+    }
+
 private:
     Vector<u16> m_values;
 };
