@@ -802,7 +802,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
             if (value.function().name().equals_ignoring_ascii_case("calc"sv)) {
                 auto const& calc_function = value.function();
-                if (auto calc_value = CSS::Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, calc_function.values())) {
+                if (auto calc_value = Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, calc_function.values()).release_value_but_fixme_should_propagate_errors()) {
                     switch (calc_value->resolved_type()) {
                     case CalculatedStyleValue::ResolvedType::Integer: {
                         auto resolved_value = calc_value->resolve_integer();
@@ -865,7 +865,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     if (!expand_unresolved_values(element, string_from_property_id(property_id), unresolved_values_with_variables_expanded, expanded_values))
         return {};
 
-    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
+    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values).release_value_but_fixme_should_propagate_errors())
         return parsed_value.release_nonnull();
 
     return {};

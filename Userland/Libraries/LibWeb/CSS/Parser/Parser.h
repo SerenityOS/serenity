@@ -85,16 +85,17 @@ public:
 
     RefPtr<Supports> parse_as_supports();
 
-    RefPtr<StyleValue> parse_as_css_value(PropertyID);
+    ErrorOr<RefPtr<StyleValue>> parse_as_css_value(PropertyID);
 
-    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
-    static RefPtr<CalculatedStyleValue> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
+    static ErrorOr<RefPtr<StyleValue>> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
+    static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
 
 private:
     Parser(ParsingContext const&, Vector<Token>);
 
     enum class ParseError {
         IncludesIgnoredVendorPrefix,
+        InternalError,
         SyntaxError,
     };
     template<typename T>
@@ -267,64 +268,64 @@ private:
         Font,
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
-    RefPtr<StyleValue> parse_url_value(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    ErrorOr<RefPtr<StyleValue>> parse_url_value(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
     Optional<Vector<AngularColorStopListElement>> parse_angular_color_stop_list(TokenStream<ComponentValue>&);
 
-    RefPtr<StyleValue> parse_linear_gradient_function(ComponentValue const&);
-    RefPtr<StyleValue> parse_conic_gradient_function(ComponentValue const&);
-    RefPtr<StyleValue> parse_radial_gradient_function(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_linear_gradient_function(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_conic_gradient_function(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_radial_gradient_function(ComponentValue const&);
 
     ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_css_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_dynamic_value(ComponentValue const&);
-    RefPtr<CalculatedStyleValue> parse_calculated_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_dimension_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_numeric_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_identifier_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_color_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_rect_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_string_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_image_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_css_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
+    ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_numeric_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_identifier_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_color_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_rect_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_string_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_image_value(ComponentValue const&);
     template<typename ParseFunction>
-    RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
-    RefPtr<StyleValue> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
+    ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
 
-    RefPtr<StyleValue> parse_filter_value_list_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_background_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_single_background_position_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
-    RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_single_background_size_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_border_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_border_radius_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_content_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_display_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_flex_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_flex_flow_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_font_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_font_family_value(Vector<ComponentValue> const&, size_t start_index = 0);
-    RefPtr<StyleValue> parse_list_style_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_overflow_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_filter_value_list_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_background_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_single_background_position_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
+    ErrorOr<RefPtr<StyleValue>> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_single_background_size_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_border_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_border_radius_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_border_radius_shorthand_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_content_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_display_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_flex_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_flex_flow_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_font_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_font_family_value(Vector<ComponentValue> const&, size_t start_index = 0);
+    ErrorOr<RefPtr<StyleValue>> parse_list_style_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_overflow_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
         No,
         Yes,
     };
-    RefPtr<StyleValue> parse_shadow_value(Vector<ComponentValue> const&, AllowInsetKeyword);
-    RefPtr<StyleValue> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
-    RefPtr<StyleValue> parse_text_decoration_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
-    RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
-    RefPtr<StyleValue> parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_placement(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_template_areas_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_shadow_value(Vector<ComponentValue> const&, AllowInsetKeyword);
+    ErrorOr<RefPtr<StyleValue>> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
+    ErrorOr<RefPtr<StyleValue>> parse_text_decoration_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_transform_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_transform_origin_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_track_placement(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_template_areas_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
 
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calculation(Vector<ComponentValue> const&);
 
