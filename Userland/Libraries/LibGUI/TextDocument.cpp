@@ -791,7 +791,7 @@ TextPosition TextDocument::first_word_break_after(TextPosition const& position) 
             auto view_between_target_and_index = line.view().substring_view(target.column(), *index - target.column());
 
             if (should_continue_beyond_word(view_between_target_and_index)) {
-                target.set_column(*index + 1);
+                target.set_column(min(*index + 1, line.length()));
                 continue;
             }
 
