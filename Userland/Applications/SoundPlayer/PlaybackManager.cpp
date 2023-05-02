@@ -37,6 +37,7 @@ void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)
 void PlaybackManager::stop()
 {
     set_paused(true);
+    m_connection->clear_client_buffer();
     m_connection->async_clear_buffer();
 
     if (m_loader)
