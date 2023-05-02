@@ -1570,10 +1570,8 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
             auto evaluate_curve_inverse = [this](TagSignature curve_tag, float f) {
                 auto const& trc = *m_tag_table.get(curve_tag).value();
                 VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
-                if (trc.type() == CurveTagData::Type) {
-                    TODO();
-                    return 0.f;
-                }
+                if (trc.type() == CurveTagData::Type)
+                    return static_cast<CurveTagData const&>(trc).evaluate_inverse(f);
                 return static_cast<ParametricCurveTagData const&>(trc).evaluate_inverse(f);
             };
 
