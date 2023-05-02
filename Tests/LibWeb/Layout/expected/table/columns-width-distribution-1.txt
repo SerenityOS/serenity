@@ -1,0 +1,28 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x108.21875 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x92.21875 children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 782x92.21875 children: not-inline
+        TableBox <table.ambox> at (9,9) content-size 782x90.21875 children: not-inline
+          BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+            TextNode <#text>
+          TableRowGroupBox <tbody> at (9,9) content-size 782x90.21875 children: not-inline
+            TableRowBox <tr> at (9,9) content-size 782x90.21875 children: not-inline
+              TableCellBox <td.mbox-image> at (10,29.109375) content-size 50x50 children: not-inline
+                BlockContainer <div.mbox-image-div> at (10,29.109375) content-size 50x50 children: not-inline
+              TableCellBox <td.mbox-text> at (62,10) content-size 728x88.21875 children: inline
+                line 0 width: 689.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                  frag 0 from TextNode start: 1, length: 84, rect: [62,10 689.640625x17.46875]
+                    "In a scene set in a lawyer's office, the lawyer sits alone and bounces a rubber ball"
+                line 1 width: 695.5625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+                  frag 0 from TextNode start: 86, length: 84, rect: [62,27 695.5625x17.46875]
+                    "against the wall. They receive a call from their assistant who expresses frustration"
+                line 2 width: 703.125, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+                  frag 0 from TextNode start: 171, length: 85, rect: [62,44 703.125x17.46875]
+                    "over a packed waiting room and the lawyer's lack of clients. The lawyer then looks at"
+                line 3 width: 695.90625, height: 17.875, bottom: 70.28125, baseline: 13.53125
+                  frag 0 from TextNode start: 257, length: 81, rect: [62,62 695.90625x17.46875]
+                    "some papers from a large envelope, which turn out to be divorce papers from their"
+                line 4 width: 725.734375, height: 18.34375, bottom: 88.21875, baseline: 13.53125
+                  frag 0 from TextNode start: 339, length: 92, rect: [62,79 725.734375x17.46875]
+                    "significant other. Finally, the lawyer instructs their assistant to send in the next client."
+                TextNode <#text>
