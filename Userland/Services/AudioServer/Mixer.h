@@ -78,7 +78,7 @@ public:
         ErrorOr<Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE>, Audio::AudioQueue::QueueStatus> result = Audio::AudioQueue::QueueStatus::Invalid;
         do {
             result = m_buffer->dequeue();
-        } while (result.is_error() && result.error() != Audio::AudioQueue::QueueStatus::Empty);
+        } while (!result.is_error() || result.error() != Audio::AudioQueue::QueueStatus::Empty);
     }
 
     void set_paused(bool paused) { m_paused = paused; }
