@@ -206,8 +206,14 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
         return Length(percentage.as_fraction(), Length::Type::Em).to_px(layout_node);
     }
 
-    if (line_height->is_calculated())
-        return line_height->as_calculated().resolve_length(layout_node)->to_px(layout_node);
+    if (line_height->is_calculated()) {
+        auto resolved = line_height->as_calculated().resolve_length(layout_node);
+        if (!resolved.has_value()) {
+            dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string().release_value_but_fixme_should_propagate_errors());
+            return layout_node.font().pixel_metrics().line_spacing();
+        }
+        return resolved->to_px(layout_node);
+    }
 
     return layout_node.font().pixel_metrics().line_spacing();
 }
