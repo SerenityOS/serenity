@@ -212,9 +212,11 @@ void TableFormattingContext::compute_table_width()
 
     auto& computed_values = table_box().computed_values();
 
+    CSSPixels width_of_table_containing_block = m_state.get(*table_box().containing_block()).content_width();
+
     // Percentages on 'width' and 'height' on the table are relative to the table wrapper box's containing block,
     // not the table wrapper box itself.
-    CSSPixels width_of_table_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
+    CSSPixels width_of_table_wrapper_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
 
     // The row/column-grid width minimum (GRIDMIN) width is the sum of the min-content width
     // of all the columns plus cell spacing or borders.
@@ -233,7 +235,7 @@ void TableFormattingContext::compute_table_width()
     // The used min-width of a table is the greater of the resolved min-width, CAPMIN, and GRIDMIN.
     auto used_min_width = grid_min;
     if (!computed_values.min_width().is_auto()) {
-        used_min_width = max(used_min_width, computed_values.min_width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box()));
+        used_min_width = max(used_min_width, computed_values.min_width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box()));
     }
 
     CSSPixels used_width;
@@ -245,10 +247,10 @@ void TableFormattingContext::compute_table_width()
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
         // of resolved-table-width, and the used min-width of the table.
-        CSSPixels resolved_table_width = computed_values.width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box());
+        CSSPixels resolved_table_width = computed_values.width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box());
         used_width = max(resolved_table_width, used_min_width);
         if (!computed_values.max_width().is_none())
-            used_width = min(used_width, computed_values.max_width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box()));
+            used_width = min(used_width, computed_values.max_width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box()));
     }
 
     // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
