@@ -1,7 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x92.21875 children: not-inline
-    Box <body> at (2,2) content-size 796x90.21875 flex-container(column) children: not-inline
-      BlockContainer <main> at (3,3) content-size 400x88.21875 flex-item children: inline
+  BlockContainer <html> at (1,1) content-size 798x92.21875 [BFC] children: not-inline
+    Box <body> at (2,2) content-size 796x90.21875 flex-container(column) [FFC] children: not-inline
+      BlockContainer <main> at (3,3) content-size 400x88.21875 flex-item [BFC] children: inline
         line 0 width: 346.984375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
           frag 0 from TextNode start: 0, length: 41, rect: [3,3 346.984375x17.46875]
             "For my day job I'm currently working as a"

@@ -1,7 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x457.09375 children: not-inline
-    Box <body.hero> at (10,10) content-size 500x439.09375 flex-container(column) children: not-inline
-      BlockContainer <div.upper> at (10,11) content-size 500x437.09375 flex-item children: inline
+  BlockContainer <html> at (1,1) content-size 798x457.09375 [BFC] children: not-inline
+    Box <body.hero> at (10,10) content-size 500x439.09375 flex-container(column) [FFC] children: not-inline
+      BlockContainer <div.upper> at (10,11) content-size 500x437.09375 flex-item [BFC] children: inline
         line 0 width: 453.984375, height: 87.34375, bottom: 87.34375, baseline: 67.65625
           frag 0 from TextNode start: 0, length: 11, rect: [10,11 453.984375x87.34375]
             "This entire"
@@ -18,5 +18,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 37, length: 11, rect: [10,360 468.75x87.34375]
             "background."
         TextNode <#text>
-      BlockContainer <(anonymous)> at (10,10) content-size 0x0 children: inline
+      BlockContainer <(anonymous)> at (10,10) content-size 0x0 [BFC] children: inline
         TextNode <#text>

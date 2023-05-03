@@ -24,6 +24,8 @@ public:
         Grid,
         Table,
         SVG,
+        InternalReplaced, // Internal hack formatting context for replaced elements. FIXME: Get rid of this.
+        InternalDummy,    // Internal hack formatting context for unimplemented things. FIXME: Get rid of this.
     };
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) = 0;
@@ -43,6 +45,8 @@ public:
     bool is_block_formatting_context() const { return type() == Type::Block; }
 
     virtual bool inhibits_floating() const { return false; }
+
+    [[nodiscard]] static Optional<Type> formatting_context_type_created_by_box(Box const&);
 
     static bool creates_block_formatting_context(Box const&);
 

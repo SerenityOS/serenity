@@ -1,16 +1,16 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x316 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x316 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x300 children: not-inline
-      TableWrapper <(anonymous)> at (8,8) content-size 200x300 children: not-inline
-        TableBox <div.table> at (8,8) content-size 200x300 children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 200x300 [BFC] children: not-inline
+        TableBox <div.table> at (8,8) content-size 200x300 [TFC] children: not-inline
           TableRowBox <div.row.a> at (8,8) content-size 200x100 children: not-inline
-            TableCellBox <div.cell> at (8,8) content-size 200x17.46875 children: inline
+            TableCellBox <div.cell> at (8,8) content-size 200x17.46875 [BFC] children: inline
               line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                 frag 0 from TextNode start: 0, length: 1, rect: [8,8 9.34375x17.46875]
                   "a"
               TextNode <#text>
           TableRowBox <div.row.b> at (8,108) content-size 200x200 children: not-inline
-            TableCellBox <div.cell> at (8,108) content-size 200x17.46875 children: inline
+            TableCellBox <div.cell> at (8,108) content-size 200x17.46875 [BFC] children: inline
               line 0 width: 9.46875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                 frag 0 from TextNode start: 0, length: 1, rect: [8,108 9.46875x17.46875]
                   "b"

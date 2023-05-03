@@ -1,5 +1,5 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x16 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x16 [BFC] children: not-inline
     BlockContainer <(anonymous)> at (0,0) content-size 800x0 children: inline
       TextNode <#text>
     BlockContainer <body> at (8,8) content-size 784x0 children: inline
