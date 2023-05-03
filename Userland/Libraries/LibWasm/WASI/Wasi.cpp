@@ -515,14 +515,19 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0755);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
@@ -573,14 +578,19 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0755);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
@@ -599,14 +609,19 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0755);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
