@@ -855,9 +855,9 @@ void Window::set_fullscreen(bool fullscreen)
         new_window_rect = m_saved_nonfullscreen_rect;
     }
 
+    set_rect(new_window_rect);
     send_resize_event_to_client();
     send_move_event_to_client();
-    set_rect(new_window_rect);
 }
 
 WindowTileType Window::tile_type_based_on_rect(Gfx::IntRect const& rect) const
