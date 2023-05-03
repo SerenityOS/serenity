@@ -329,6 +329,116 @@ TEST_CASE(offset_of_with_until_and_after_wrapping_around)
     EXPECT_EQ(result.value_or(42), 14ul);
 }
 
+TEST_CASE(find_copy_in_seekback)
+{
+    auto haystack = "ABABCABCDAB"sv.bytes();
+    auto needle = "ABCD"sv.bytes();
+
+    // Set up the buffer for testing.
+    auto buffer = MUST(CircularBuffer::create_empty(haystack.size() + needle.size()));
+    auto written_haystack_bytes = buffer.write(haystack);
+    VERIFY(written_haystack_bytes == haystack.size());
+    MUST(buffer.discard(haystack.size()));
+    auto written_needle_bytes = buffer.write(needle);
+    VERIFY(written_needle_bytes == needle.size());
+
+    {
+        // Find the largest matches with a length between 1 and 1 (all "A").
+        auto matches = MUST(buffer.find_copy_in_seekback(1, 1));
+        EXPECT_EQ(matches.size(), 4ul);
+        EXPECT_EQ(matches[0].distance, 11ul);
+        EXPECT_EQ(matches[0].length, 1ul);
+        EXPECT_EQ(matches[1].distance, 9ul);
+        EXPECT_EQ(matches[1].length, 1ul);
+        EXPECT_EQ(matches[2].distance, 6ul);
+        EXPECT_EQ(matches[2].length, 1ul);
+        EXPECT_EQ(matches[3].distance, 2ul);
+        EXPECT_EQ(matches[3].length, 1ul);
+    }
+
+    {
+        // Find the largest matches with a length between 1 and 2 (all "AB", everything smaller gets eliminated).
+        auto matches = MUST(buffer.find_copy_in_seekback(2, 1));
+        EXPECT_EQ(matches.size(), 4ul);
+        EXPECT_EQ(matches[0].distance, 11ul);
+        EXPECT_EQ(matches[0].length, 2ul);
+        EXPECT_EQ(matches[1].distance, 9ul);
+        EXPECT_EQ(matches[1].length, 2ul);
+        EXPECT_EQ(matches[2].distance, 6ul);
+        EXPECT_EQ(matches[2].length, 2ul);
+        EXPECT_EQ(matches[3].distance, 2ul);
+        EXPECT_EQ(matches[3].length, 2ul);
+    }
+
+    {
+        // Find the largest matches with a length between 1 and 3 (all "ABC", everything smaller gets eliminated).
+        auto matches = MUST(buffer.find_copy_in_seekback(3, 1));
+        EXPECT_EQ(matches.size(), 2ul);
+        EXPECT_EQ(matches[0].distance, 9ul);
+        EXPECT_EQ(matches[0].length, 3ul);
+        EXPECT_EQ(matches[1].distance, 6ul);
+        EXPECT_EQ(matches[1].length, 3ul);
+    }
+
+    {
+        // Find the largest matches with a length between 1 and 4 (all "ABCD", everything smaller gets eliminated).
+        auto matches = MUST(buffer.find_copy_in_seekback(4, 1));
+        EXPECT_EQ(matches.size(), 1ul);
+        EXPECT_EQ(matches[0].distance, 6ul);
+        EXPECT_EQ(matches[0].length, 4ul);
+    }
+
+    {
+        // Find the largest matches with a length between 1 and 5 (all "ABCD", everything smaller gets eliminated, and nothing larger exists).
+        auto matches = MUST(buffer.find_copy_in_seekback(5, 1));
+        EXPECT_EQ(matches.size(), 1ul);
+        EXPECT_EQ(matches[0].distance, 6ul);
+        EXPECT_EQ(matches[0].length, 4ul);
+    }
+
+    {
+        // Find the largest matches with a length between 4 and 5 (all "ABCD", everything smaller never gets found, nothing larger exists).
+        auto matches = MUST(buffer.find_copy_in_seekback(5, 4));
+        EXPECT_EQ(matches.size(), 1ul);
+        EXPECT_EQ(matches[0].distance, 6ul);
+        EXPECT_EQ(matches[0].length, 4ul);
+    }
+
+    {
+        // Find the largest matches with a length between 5 and 5 (nothing is found).
+        auto matches = MUST(buffer.find_copy_in_seekback(5, 5));
+        EXPECT_EQ(matches.size(), 0ul);
+    }
+
+    {
+        // Find the largest matches with a length between 1 and 2 (selected "AB", everything smaller gets eliminated).
+        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 6ul, 9ul }));
+        EXPECT_EQ(matches.size(), 2ul);
+        EXPECT_EQ(matches[0].distance, 6ul);
+        EXPECT_EQ(matches[0].length, 2ul);
+        EXPECT_EQ(matches[1].distance, 9ul);
+        EXPECT_EQ(matches[1].length, 2ul);
+    }
+
+    {
+        // Check that we don't find anything for hints before the valid range.
+        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 0ul }));
+        EXPECT_EQ(matches.size(), 0ul);
+    }
+
+    {
+        // Check that we don't find anything for hints after the valid range.
+        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 12ul }));
+        EXPECT_EQ(matches.size(), 0ul);
+    }
+
+    {
+        // Check that we don't find anything for a minimum length beyond the whole buffer size.
+        auto matches = MUST(buffer.find_copy_in_seekback(12, 13));
+        EXPECT_EQ(matches.size(), 0ul);
+    }
+}
+
 BENCHMARK_CASE(looping_copy_from_seekback)
 {
     auto circular_buffer = MUST(CircularBuffer::create_empty(16 * MiB));
