@@ -369,6 +369,8 @@ struct CLUTData {
 
 using LutCurveType = NonnullRefPtr<TagData>; // FIXME: Variant<CurveTagData, ParametricCurveTagData> instead?
 
+bool are_valid_curves(Optional<Vector<LutCurveType>> const& curves);
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
@@ -394,6 +396,10 @@ public:
         VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
         VERIFY(m_a_curves.has_value() == m_clut.has_value());
         VERIFY(m_m_curves.has_value() == m_e.has_value());
+
+        VERIFY(are_valid_curves(m_a_curves));
+        VERIFY(are_valid_curves(m_m_curves));
+        VERIFY(are_valid_curves(m_b_curves));
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
@@ -448,6 +454,10 @@ public:
         VERIFY(m_e.has_value() == m_m_curves.has_value());
         VERIFY(m_clut.has_value() == m_a_curves.has_value());
         VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
+
+        VERIFY(are_valid_curves(m_b_curves));
+        VERIFY(are_valid_curves(m_m_curves));
+        VERIFY(are_valid_curves(m_a_curves));
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
