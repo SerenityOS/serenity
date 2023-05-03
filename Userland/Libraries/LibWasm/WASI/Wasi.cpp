@@ -636,11 +636,15 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
     auto path_data = TRY(slice_typed_memory(configuration, path, path_len));
     auto path_string = DeprecatedString::copy(path_data);
 
+    dbgln_if(WASI_FINE_GRAINED_DEBUG, "path_open: dir_fd={}, path={}, open_flags={}", dir_fd, path_string, open_flags);
+
     int opened_fd = openat(dir_fd, path_string.characters(), open_flags, 0644);
     if (opened_fd < 0)
         return errno_value_from_errno(errno);
 
     // FIXME: Implement Rights and RightsInheriting.
+
+    m_fd_map.insert(opened_fd, static_cast<u32>(opened_fd));
 
     return FD(opened_fd);
 }

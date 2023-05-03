@@ -478,6 +478,10 @@
 #    cmakedefine01 WASI_DEBUG
 #endif
 
+#ifndef WASI_FINE_GRAINED_DEBUG
+#    cmakedefine01 WASI_FINE_GRAINED_DEBUG
+#endif
+
 #ifndef WASM_BINPARSER_DEBUG
 #    cmakedefine01 WASM_BINPARSER_DEBUG
 #endif
