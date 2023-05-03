@@ -24,6 +24,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
@@ -128,6 +129,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     StringView line_box_color_on = ""sv;
     StringView fragment_color_on = ""sv;
     StringView flex_color_on = ""sv;
+    StringView formatting_context_color_on = ""sv;
     StringView color_off = ""sv;
 
     if (interactive) {
@@ -140,6 +142,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         line_box_color_on = "\033[34;1m"sv;
         fragment_color_on = "\033[35;1m"sv;
         flex_color_on = "\033[34;1m"sv;
+        formatting_context_color_on = "\033[37;1m"sv;
         color_off = "\033[0m"sv;
     }
 
@@ -223,6 +226,28 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
+        }
+
+        if (auto formatting_context_type = Layout::FormattingContext::formatting_context_type_created_by_box(box); formatting_context_type.has_value()) {
+            switch (formatting_context_type.value()) {
+            case Layout::FormattingContext::Type::Block:
+                builder.appendff(" [{}BFC{}]", formatting_context_color_on, color_off);
+                break;
+            case Layout::FormattingContext::Type::Flex:
+                builder.appendff(" [{}FFC{}]", formatting_context_color_on, color_off);
+                break;
+            case Layout::FormattingContext::Type::Grid:
+                builder.appendff(" [{}GFC{}]", formatting_context_color_on, color_off);
+                break;
+            case Layout::FormattingContext::Type::Table:
+                builder.appendff(" [{}TFC{}]", formatting_context_color_on, color_off);
+                break;
+            case Layout::FormattingContext::Type::SVG:
+                builder.appendff(" [{}SVG{}]", formatting_context_color_on, color_off);
+                break;
+            default:
+                break;
+            }
         }
 
         builder.appendff(" children: {}", box.children_are_inline() ? "inline" : "not-inline");

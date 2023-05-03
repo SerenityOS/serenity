@@ -114,72 +114,97 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
     return false;
 }
 
-OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(LayoutState& state, Box const& child_box)
+Optional<FormattingContext::Type> FormattingContext::formatting_context_type_created_by_box(Box const& box)
 {
-    if (child_box.is_replaced_box() && !child_box.can_have_children()) {
-        // NOTE: This is a bit strange.
-        //       Basically, we create a pretend formatting context for replaced elements that does nothing.
-        //       This allows other formatting contexts to treat them like elements that actually need inside layout
-        //       without having separate code to handle replaced elements.
-        // FIXME: Find a better abstraction for this.
-        struct ReplacedFormattingContext : public FormattingContext {
-            ReplacedFormattingContext(LayoutState& state, Box const& box)
-                : FormattingContext(Type::Block, state, box)
-            {
-            }
-            virtual CSSPixels automatic_content_width() const override { return 0; }
-            virtual CSSPixels automatic_content_height() const override { return 0; }
-            virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
-        };
-        return make<ReplacedFormattingContext>(state, child_box);
+    if (box.is_replaced_box() && !box.can_have_children()) {
+        return Type::InternalReplaced;
     }
 
-    if (!child_box.can_have_children())
+    if (!box.can_have_children())
         return {};
 
-    auto child_display = child_box.display();
+    if (is<SVGSVGBox>(box))
+        return Type::SVG;
 
-    if (is<SVGSVGBox>(child_box))
-        return make<SVGFormattingContext>(state, child_box, this);
+    auto display = box.display();
 
-    if (child_display.is_flex_inside())
-        return make<FlexFormattingContext>(state, child_box, this);
+    if (display.is_flex_inside())
+        return Type::Flex;
 
-    if (creates_block_formatting_context(child_box))
-        return make<BlockFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
+    if (display.is_table_inside())
+        return Type::Table;
 
-    if (child_display.is_table_inside())
-        return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
+    if (display.is_grid_inside())
+        return Type::Grid;
 
-    if (child_display.is_grid_inside()) {
-        return make<GridFormattingContext>(state, child_box, this);
-    }
+    if (creates_block_formatting_context(box))
+        return Type::Block;
 
-    VERIFY(is_block_formatting_context());
-    if (child_box.children_are_inline())
+    if (box.children_are_inline())
         return {};
 
-    // The child box is a block container that doesn't create its own BFC.
-    // It will be formatted by this BFC.
-    if (!child_display.is_flow_inside()) {
-        dbgln("FIXME: Child box doesn't create BFC, but inside is also not flow! display={}", MUST(child_display.to_string()));
+    // The box is a block container that doesn't create its own BFC.
+    // It will be formatted by the containing BFC.
+    if (!display.is_flow_inside()) {
         // HACK: Instead of crashing, create a dummy formatting context that does nothing.
         // FIXME: Remove this once it's no longer needed. It currently swallows problem with standalone
         //        table-related boxes that don't get fixed up by CSS anonymous table box generation.
-        struct DummyFormattingContext : public FormattingContext {
-            DummyFormattingContext(LayoutState& state, Box const& box)
-                : FormattingContext(Type::Block, state, box)
-            {
-            }
-            virtual CSSPixels automatic_content_width() const override { return 0; }
-            virtual CSSPixels automatic_content_height() const override { return 0; }
-            virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
-        };
-        return make<DummyFormattingContext>(state, child_box);
+        dbgln("FIXME: Child box doesn't create BFC, but inside is also not flow! display={}", MUST(display.to_string()));
+        return Type::InternalDummy;
     }
-    VERIFY(child_box.is_block_container());
-    VERIFY(child_display.is_flow_inside());
     return {};
+}
+
+// FIXME: This is a hack. Get rid of it.
+struct ReplacedFormattingContext : public FormattingContext {
+    ReplacedFormattingContext(LayoutState& state, Box const& box)
+        : FormattingContext(Type::Block, state, box)
+    {
+    }
+    virtual CSSPixels automatic_content_width() const override { return 0; }
+    virtual CSSPixels automatic_content_height() const override { return 0; }
+    virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
+};
+
+// FIXME: This is a hack. Get rid of it.
+struct DummyFormattingContext : public FormattingContext {
+    DummyFormattingContext(LayoutState& state, Box const& box)
+        : FormattingContext(Type::Block, state, box)
+    {
+    }
+    virtual CSSPixels automatic_content_width() const override { return 0; }
+    virtual CSSPixels automatic_content_height() const override { return 0; }
+    virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
+};
+
+OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(LayoutState& state, Box const& child_box)
+{
+    auto type = formatting_context_type_created_by_box(child_box);
+    if (!type.has_value())
+        return nullptr;
+
+    switch (type.value()) {
+    case Type::Block:
+        return make<BlockFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
+    case Type::SVG:
+        return make<SVGFormattingContext>(state, child_box, this);
+    case Type::Flex:
+        return make<FlexFormattingContext>(state, child_box, this);
+    case Type::Grid:
+        return make<GridFormattingContext>(state, child_box, this);
+    case Type::Table:
+        return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
+    case Type::InternalReplaced:
+        return make<ReplacedFormattingContext>(state, child_box);
+    case Type::InternalDummy:
+        return make<DummyFormattingContext>(state, child_box);
+    case Type::Inline:
+        // IFC should always be created by a parent BFC directly.
+        VERIFY_NOT_REACHED();
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box, LayoutMode layout_mode, AvailableSpace const& available_space)
