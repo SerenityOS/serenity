@@ -17,7 +17,7 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
  1 file changed, 1 deletion(-)
 
 diff --git a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
-index 4efd7b43dff96b6adb87993e4c66cbcb5ae144dc..932fa0cfbdeff6bb029fcf4b44d93d126d1ecd5f 100644
+index 29765bce8021a69980bbd3e283fe812f22c63242..3f18082dd0542c2161637ceeaef9d4738c4f18c4 100644
 --- a/libgcc/config/t-slibgcc
 +++ b/libgcc/config/t-slibgcc
 @@ -26,7 +26,6 @@ SHLIB_MAP = @shlib_map_file@
