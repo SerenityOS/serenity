@@ -13,11 +13,11 @@ CompileFlags:
   Add:
     - "-D__serenity__"
     - "-UNO_TLS"
-    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0"
-    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0/x86_64-pc-serenity"
+    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0"
+    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0/x86_64-pc-serenity"
 ```
 
-You will need to change `/path/to/serenity` and change `12.1.0` to
+You will need to change `/path/to/serenity` and change `13.1.0` to
 whatever your GCC toolchain version at the time is.
 
 Run cmake (`Meta/serenity.sh run` or similar) at least once for this

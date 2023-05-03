@@ -27,10 +27,10 @@ Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index e3cc3a8e867d3428d34f2b4db9c47104a0385450..6e30c391dac74101321a52ca17d8215c05f87844 100644
+index 5136c0571e8cb14fd7fd37ac0301a28f32289cc7..6dec4849fb3d86891818b1abac495cf729af64c5 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
-@@ -1374,7 +1374,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
+@@ -1381,7 +1381,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -39,7 +39,7 @@ index e3cc3a8e867d3428d34f2b4db9c47104a0385450..6e30c391dac74101321a52ca17d8215c
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -2421,7 +2421,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
+@@ -2418,7 +2418,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -49,10 +49,10 @@ index e3cc3a8e867d3428d34f2b4db9c47104a0385450..6e30c391dac74101321a52ca17d8215c
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index eac6039212168e1cd33e1b6c2b938324fd403f12..11d23dba48e5799c31335f71911e1c4dca65a245 100755
+index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306169afe53 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
-@@ -11914,6 +11914,11 @@ else
+@@ -11910,6 +11910,11 @@ else
      lt_cv_dlopen_libs=
      ;;
  
@@ -64,7 +64,7 @@ index eac6039212168e1cd33e1b6c2b938324fd403f12..11d23dba48e5799c31335f71911e1c4d
    darwin*)
    # if libdl is installed we need to link against it
      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
-@@ -16478,7 +16483,7 @@ fi
+@@ -16514,7 +16519,7 @@ fi
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -73,7 +73,7 @@ index eac6039212168e1cd33e1b6c2b938324fd403f12..11d23dba48e5799c31335f71911e1c4d
  	enable_clocale_flag=newlib
  	;;
        *)
-@@ -20569,7 +20574,7 @@ fi
+@@ -20609,7 +20614,7 @@ fi
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -82,7 +82,7 @@ index eac6039212168e1cd33e1b6c2b938324fd403f12..11d23dba48e5799c31335f71911e1c4d
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -29245,7 +29250,7 @@ case "${host}" in
+@@ -29295,7 +29300,7 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
  
@@ -106,7 +106,7 @@ index ec32980aa0db898623804980af65dad588e4d9f5..e060300f3777fbd38795954ca75e9c48
      os_include_dir="os/solaris"
      ;;
 diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
-index ae5283b7ad378934b409455e7409ac9cac26a20a..b9fc96e942cba64aa76de1decc0daa9999fd53e9 100644
+index b3269cb88e077425be95bfe6c424b08106cab93f..3bba9653675c98ae76caf6cb77bbc483886dc80b 100644
 --- a/libstdc++-v3/crossconfig.m4
 +++ b/libstdc++-v3/crossconfig.m4
 @@ -9,7 +9,7 @@ case "${host}" in
