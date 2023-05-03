@@ -77,15 +77,15 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableS
     m_available_space = available_space;
     generate_line_boxes(layout_mode);
 
-    CSSPixels max_line_width = 0;
     CSSPixels content_height = 0;
 
     for (auto& line_box : m_containing_block_state.line_boxes) {
-        max_line_width = max(max_line_width, line_box.width());
         content_height += line_box.height();
     }
 
-    m_automatic_content_width = max_line_width;
+    // NOTE: We ask the parent BFC to calculate the automatic content width of this IFC.
+    //       This ensures that any floated boxes are taken into account.
+    m_automatic_content_width = parent().greatest_child_width(containing_block());
     m_automatic_content_height = content_height;
 }
 
