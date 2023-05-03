@@ -760,6 +760,24 @@ ErrorOr<Result<void>> Implementation::impl$random_get(Configuration& configurati
     return Result<void> {};
 }
 
+ErrorOr<Result<Size>> Implementation::impl$fd_read(Configuration& configuration, FD fd, Pointer<IOVec> iovs, Size iovs_len)
+{
+    auto mapped_fd = map_fd(fd);
+    if (!mapped_fd.has<u32>())
+        return errno_value_from_errno(EBADF);
+
+    u32 fd_value = mapped_fd.get<u32>();
+    Size bytes_read = 0;
+    for (auto& iovec : TRY(copy_typed_array(configuration, iovs, iovs_len))) {
+        auto slice = TRY(slice_typed_memory(configuration, iovec.buf, iovec.buf_len));
+        auto result = read(fd_value, slice.data(), slice.size());
+        if (result < 0)
+            return errno_value_from_errno(errno);
+        bytes_read += static_cast<Size>(result);
+    }
+    return bytes_read;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -777,7 +795,6 @@ ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_size(Configuration&, 
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_times(Configuration&, FD, Timestamp atim, Timestamp mtim, FSTFlags) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_pread(Configuration&, FD, Pointer<IOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_pwrite(Configuration&, FD, Pointer<CIOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
-ErrorOr<Result<Size>> Implementation::impl$fd_read(Configuration&, FD, Pointer<IOVec> iovs, Size iovs_len) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_readdir(Configuration&, FD, Pointer<u8> buf, Size buf_len, DirCookie cookie) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_renumber(Configuration&, FD from, FD to) { return Errno::NoSys; }
 ErrorOr<Result<FileSize>> Implementation::impl$fd_seek(Configuration&, FD, FileDelta offset, Whence whence) { return Errno::NoSys; }
