@@ -1374,11 +1374,28 @@ static TagSignature forward_transform_tag_for_rendering_intent(RenderingIntent r
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBytes) const
+{
+    switch (tag_data.type()) {
+    case Lut16TagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mft2 tags not yet implemented");
+    case Lut8TagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mft1 tags not yet implemented");
+    case LutAToBTagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling for mAB tags not yet implemented");
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 {
     if (color.size() != number_of_components_in_color_space(data_color_space()))
         return Error::from_string_literal("ICC::Profile: input color doesn't match color space size");
 
+    auto get_tag = [&](auto tag) { return m_tag_table.get(tag); };
     auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
     auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
 
@@ -1400,17 +1417,13 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 
         // "b) Use the BToA0Tag, BToA1Tag, BToA2Tag, AToB0Tag, AToB1Tag, or AToB2Tag designated for the
         //     rendering intent if present, when the tag in a) is not used."
-        if (has_tag(forward_transform_tag_for_rendering_intent(rendering_intent()))) {
-            // FIXME
-            return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling not yet implemented");
-        }
+        if (auto tag = get_tag(forward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
+            return to_pcs_a_to_b(*tag.value(), color);
 
         // "c) Use the BToA0Tag or AToB0Tag if present, when the tags in a) and b) are not used."
         // AToB0Tag is for the conversion _to_ PCS (BToA0Tag is for conversion _from_ PCS, so not needed in this function).
-        if (has_tag(AToB0Tag)) {
-            // FIXME
-            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
-        }
+        if (auto tag = get_tag(AToB0Tag); tag.has_value())
+            return to_pcs_a_to_b(*tag.value(), color);
 
         // "d) Use TRCs (redTRCTag, greenTRCTag, blueTRCTag, or grayTRCTag) and colorants
         //     (redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag) when tags in a), b), and c) are not
@@ -1488,6 +1501,22 @@ static TagSignature backward_transform_tag_for_rendering_intent(RenderingIntent 
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const&, Bytes) const
+{
+    switch (tag_data.type()) {
+    case Lut16TagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft2 tags not yet implemented");
+    case Lut8TagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft1 tags not yet implemented");
+    case LutBToATagData::Type:
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mBA tags not yet implemented");
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
 {
     // See `to_pcs()` for spec links.
@@ -1496,6 +1525,7 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
     if (color.size() != number_of_components_in_color_space(data_color_space()))
         return Error::from_string_literal("ICC::Profile: output color doesn't match color space size");
 
+    auto get_tag = [&](auto tag) { return m_tag_table.get(tag); };
     auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
     auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
 
@@ -1506,15 +1536,11 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
     case DeviceClass::ColorSpace: {
         // FIXME: Implement multiProcessElementsType one day.
 
-        if (has_tag(backward_transform_tag_for_rendering_intent(rendering_intent()))) {
-            // FIXME
-            return Error::from_string_literal("ICC::Profile::from_pcs: BToA*Tag handling not yet implemented");
-        }
+        if (auto tag = get_tag(backward_transform_tag_for_rendering_intent(rendering_intent())); tag.has_value())
+            return from_pcs_b_to_a(*tag.value(), pcs, color);
 
-        if (has_tag(BToA0Tag)) {
-            // FIXME
-            return Error::from_string_literal("ICC::Profile::from_pcs: BToA0Tag handling not yet implemented");
-        }
+        if (auto tag = get_tag(BToA0Tag); tag.has_value())
+            return from_pcs_b_to_a(*tag.value(), pcs, color);
 
         if (data_color_space() == ColorSpace::Gray) {
             // FIXME
