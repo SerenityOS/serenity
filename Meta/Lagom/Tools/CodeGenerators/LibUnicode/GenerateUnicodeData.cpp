@@ -218,7 +218,7 @@ static CodePointRange parse_code_point_range(StringView list)
     return code_point_range;
 }
 
-static ErrorOr<void> parse_special_casing(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_special_casing(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -289,7 +289,7 @@ static ErrorOr<void> parse_special_casing(Core::BufferedFile& file, UnicodeData&
     return {};
 }
 
-static ErrorOr<void> parse_case_folding(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_case_folding(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -337,7 +337,7 @@ static ErrorOr<void> parse_case_folding(Core::BufferedFile& file, UnicodeData& u
     return {};
 }
 
-static ErrorOr<void> parse_prop_list(Core::BufferedFile& file, PropList& prop_list, bool multi_value_property = false, bool sanitize_property = false)
+static ErrorOr<void> parse_prop_list(Core::InputBufferedFile& file, PropList& prop_list, bool multi_value_property = false, bool sanitize_property = false)
 {
     Array<u8, 1024> buffer;
 
@@ -370,7 +370,7 @@ static ErrorOr<void> parse_prop_list(Core::BufferedFile& file, PropList& prop_li
     return {};
 }
 
-static ErrorOr<void> parse_alias_list(Core::BufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
+static ErrorOr<void> parse_alias_list(Core::InputBufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
 {
     DeprecatedString current_property;
     Array<u8, 1024> buffer;
@@ -416,7 +416,7 @@ static ErrorOr<void> parse_alias_list(Core::BufferedFile& file, PropList const& 
     return {};
 }
 
-static ErrorOr<void> parse_name_aliases(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_name_aliases(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -447,7 +447,7 @@ static ErrorOr<void> parse_name_aliases(Core::BufferedFile& file, UnicodeData& u
     return {};
 }
 
-static ErrorOr<void> parse_value_alias_list(Core::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
+static ErrorOr<void> parse_value_alias_list(Core::InputBufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
     Array<u8, 1024> buffer;
@@ -493,7 +493,7 @@ static ErrorOr<void> parse_value_alias_list(Core::BufferedFile& file, StringView
     return {};
 }
 
-static ErrorOr<void> parse_normalization_props(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_normalization_props(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -627,7 +627,7 @@ static Optional<CodePointDecomposition> parse_decomposition_mapping(StringView s
     return mapping;
 }
 
-static ErrorOr<void> parse_block_display_names(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_block_display_names(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
     while (TRY(file.can_read_line())) {
@@ -650,7 +650,7 @@ static ErrorOr<void> parse_block_display_names(Core::BufferedFile& file, Unicode
     return {};
 }
 
-static ErrorOr<void> parse_unicode_data(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
 
@@ -755,7 +755,7 @@ static ErrorOr<void> parse_unicode_data(Core::BufferedFile& file, UnicodeData& u
     return {};
 }
 
-static ErrorOr<void> generate_unicode_data_header(Core::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> generate_unicode_data_header(Core::InputBufferedFile& file, UnicodeData& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -870,7 +870,7 @@ ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
     return {};
 }
 
-static ErrorOr<void> generate_unicode_data_implementation(Core::BufferedFile& file, UnicodeData const& unicode_data)
+static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFile& file, UnicodeData const& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };

@@ -178,7 +178,7 @@ void WordGame::read_words()
 
     auto try_load_words = [&]() -> ErrorOr<void> {
         auto response = TRY(Core::File::open("/res/words.txt"sv, Core::File::OpenMode::Read));
-        auto words_file = TRY(Core::BufferedFile::create(move(response)));
+        auto words_file = TRY(Core::InputBufferedFile::create(move(response)));
         Array<u8, 128> buffer;
 
         while (!words_file->is_eof()) {

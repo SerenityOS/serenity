@@ -44,7 +44,7 @@ public:
     ErrorOr<void> set_in(NonnullOwnPtr<Core::File> in)
     {
         m_in_fd = in->fd();
-        m_in = TRY(Core::BufferedFile::create(move(in)));
+        m_in = TRY(Core::InputBufferedFile::create(move(in)));
         set_in_notifier();
         return {};
     }
@@ -62,7 +62,7 @@ private:
     ErrorOr<NonnullOwnPtr<Command>> read_command(StringView line) const;
 
     Optional<int> m_in_fd {};
-    OwnPtr<Core::BufferedFile> m_in;
+    OwnPtr<Core::InputBufferedFile> m_in;
     OwnPtr<Core::File> m_out;
     RefPtr<Core::Notifier> m_in_notifier;
 };

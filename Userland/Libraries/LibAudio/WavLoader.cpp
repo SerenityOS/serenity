@@ -26,7 +26,7 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());

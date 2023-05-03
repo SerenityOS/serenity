@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto infile = TRY(Core::BufferedFile::create(TRY(Core::File::open_file_or_standard_stream(inpath, Core::File::OpenMode::Read))));
+    auto infile = TRY(Core::InputBufferedFile::create(TRY(Core::File::open_file_or_standard_stream(inpath, Core::File::OpenMode::Read))));
     auto outfile = TRY(Core::File::open_file_or_standard_stream(outpath, Core::File::OpenMode::Write));
 
     size_t count = 0;

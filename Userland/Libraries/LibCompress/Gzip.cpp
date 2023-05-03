@@ -185,7 +185,7 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 ErrorOr<void> GzipDecompressor::decompress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
 {
     auto input_file = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
-    auto input_stream = TRY(Core::BufferedFile::create(move(input_file), 256 * KiB));
+    auto input_stream = TRY(Core::InputBufferedFile::create(move(input_file), 256 * KiB));
 
     auto gzip_stream = GzipDecompressor { move(input_stream) };
     auto buffer = TRY(ByteBuffer::create_uninitialized(256 * KiB));

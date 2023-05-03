@@ -323,13 +323,13 @@ struct CanonicalLanguageID {
     Vector<size_t> variants {};
 };
 
-inline ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file(StringView path, Core::File::OpenMode mode)
+inline ErrorOr<NonnullOwnPtr<Core::InputBufferedFile>> open_file(StringView path, Core::File::OpenMode mode)
 {
     if (path.is_empty())
         return Error::from_string_literal("Provided path is empty, please provide all command line options");
 
     auto file = TRY(Core::File::open(path, mode));
-    return Core::BufferedFile::create(move(file));
+    return Core::InputBufferedFile::create(move(file));
 }
 
 inline ErrorOr<JsonValue> read_json_file(StringView path)

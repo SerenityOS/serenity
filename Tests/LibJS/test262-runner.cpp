@@ -695,7 +695,7 @@ int main(int argc, char** argv)
         return exit_setup_input_failure;
 
     Array<u8, 1024> input_buffer {};
-    auto buffered_standard_input_or_error = Core::BufferedFile::create(standard_input_or_error.release_value());
+    auto buffered_standard_input_or_error = Core::InputBufferedFile::create(standard_input_or_error.release_value());
     if (buffered_standard_input_or_error.is_error())
         return exit_setup_input_failure;
 

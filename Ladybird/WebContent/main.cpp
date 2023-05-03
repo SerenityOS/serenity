@@ -100,7 +100,7 @@ static ErrorOr<void> load_content_filters()
         return file_or_error.release_error();
 
     auto file = file_or_error.release_value();
-    auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
+    auto ad_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Vector<String> patterns;
@@ -129,7 +129,7 @@ static ErrorOr<void> load_autoplay_allowlist()
         return file_or_error.release_error();
 
     auto file = file_or_error.release_value();
-    auto allowlist = TRY(Core::BufferedFile::create(move(file)));
+    auto allowlist = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Vector<String> origins;

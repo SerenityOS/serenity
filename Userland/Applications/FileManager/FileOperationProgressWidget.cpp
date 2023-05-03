@@ -18,7 +18,7 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd)
+FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::InputBufferedFile> helper_pipe, int helper_pipe_fd)
     : m_operation(operation)
     , m_helper_pipe(move(helper_pipe))
 {

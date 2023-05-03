@@ -79,12 +79,12 @@ public:
     DeprecatedString const& filename() const { return m_filename; }
 
 private:
-    ConfigFile(DeprecatedString const& filename, OwnPtr<BufferedFile> open_file);
+    ConfigFile(DeprecatedString const& filename, OwnPtr<InputBufferedFile> open_file);
 
     ErrorOr<void> reparse();
 
     DeprecatedString m_filename;
-    OwnPtr<BufferedFile> m_file;
+    OwnPtr<InputBufferedFile> m_file;
     HashMap<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> m_groups;
     bool m_dirty { false };
 };

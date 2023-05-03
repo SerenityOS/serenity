@@ -169,7 +169,7 @@ ErrorOr<void> RunWindow::load_history()
 {
     m_path_history.clear();
     auto file = TRY(Core::File::open(history_file_path(), Core::File::OpenMode::Read));
-    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+    auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> line_buffer;
 
     while (!buffered_file->is_eof()) {

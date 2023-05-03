@@ -29,7 +29,7 @@ ErrorOr<void> DomainListModel::load()
 {
     // FIXME: This should be somewhat shared with Browser.
     auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Read));
-    auto content_filter_list = TRY(Core::BufferedFile::create(move(file)));
+    auto content_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     m_domain_list.clear_with_capacity();

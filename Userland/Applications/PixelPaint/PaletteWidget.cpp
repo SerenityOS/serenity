@@ -215,7 +215,7 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::File
 {
     Vector<Color> palette;
     Array<u8, PAGE_SIZE> buffer;
-    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+    auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 
     while (TRY(buffered_file->can_read_line())) {
         auto line = TRY(buffered_file->read_line(buffer));

@@ -613,7 +613,7 @@ enum class CycleDecision {
 class File {
     AK_MAKE_NONCOPYABLE(File);
 
-    File(LexicalPath input_file_path, NonnullOwnPtr<Core::BufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
+    File(LexicalPath input_file_path, NonnullOwnPtr<Core::InputBufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
         : m_input_file_path(move(input_file_path))
         , m_file(move(file))
         , m_output(move(output))
@@ -625,7 +625,7 @@ public:
     // Used for -i mode.
     static ErrorOr<File> create_with_output_file(LexicalPath input_path, NonnullOwnPtr<Core::File>&& file)
     {
-        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
         auto temp_file = TRY(FileSystem::TempFile::create_temp_file());
         // Open the file as read-write, since we need to later copy its contents to the original file.
         auto output_file = TRY(Core::File::open(temp_file->path(), Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate));
@@ -635,7 +635,7 @@ public:
     // Used for non -i mode.
     static ErrorOr<File> create(LexicalPath input_path, NonnullOwnPtr<Core::File>&& file)
     {
-        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
         return File { move(input_path), move(buffered_file), nullptr, nullptr };
     }
 
@@ -650,7 +650,7 @@ public:
         // We hack standard output into `File` to avoid having two versions of `write_pattern_space`.
         return File {
             LexicalPath { "/proc/self/fd/1" },
-            TRY(Core::BufferedFile::create(TRY(Core::File::standard_input()))),
+            TRY(Core::InputBufferedFile::create(TRY(Core::File::standard_input()))),
             TRY(Core::File::standard_output()),
             nullptr,
         };
@@ -697,12 +697,11 @@ public:
 
 private:
     LexicalPath m_input_file_path;
-    NonnullOwnPtr<Core::BufferedFile> m_file;
+    NonnullOwnPtr<Core::InputBufferedFile> m_file;
 
     // Only in use if we're editing in place.
     OwnPtr<Core::File> m_output;
     OwnPtr<FileSystem::TempFile> m_output_temp_file;
-
     size_t m_line_number { 0 };
     DeprecatedString m_current_line;
     constexpr static size_t MAX_SUPPORTED_LINE_SIZE = 4096;

@@ -27,9 +27,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool had_errors = false;
     for (auto filename : arguments.strings.slice(1)) {
 
-        auto const open_file = [](StringView filename) -> ErrorOr<NonnullOwnPtr<Core::BufferedFile>> {
+        auto const open_file = [](StringView filename) -> ErrorOr<NonnullOwnPtr<Core::InputBufferedFile>> {
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
-            return Core::BufferedFile::create(move(file));
+            return Core::InputBufferedFile::create(move(file));
         };
 
         auto file_or_error = open_file(filename);

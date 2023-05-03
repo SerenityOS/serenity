@@ -29,7 +29,7 @@ public:
 
         auto try_read_lines = [&]() -> ErrorOr<void> {
             auto unbuffered_file = TRY(Core::File::open(source_file_name, Core::File::OpenMode::Read));
-            auto file = TRY(Core::BufferedFile::create(move(unbuffered_file)));
+            auto file = TRY(Core::InputBufferedFile::create(move(unbuffered_file)));
 
             Array<u8, 1024> buffer;
             while (!file->is_eof())
