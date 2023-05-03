@@ -66,7 +66,7 @@ public:
 
     void clear() { m_values.clear(); }
     ErrorOr<void> append(JsonValue value) { return m_values.try_append(move(value)); }
-    ErrorOr<void> set(size_t index, JsonValue value) { return m_values.try_insert(index, move(value)); }
+    void set(size_t index, JsonValue value) { m_values.at(index) = move(value); }
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;

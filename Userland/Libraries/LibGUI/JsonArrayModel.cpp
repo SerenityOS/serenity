@@ -97,7 +97,7 @@ ErrorOr<void> JsonArrayModel::set(int row, Vector<JsonValue>&& fields)
         obj.set(field_spec.json_field_name, move(fields.at(i)));
     }
 
-    TRY(m_array.set(row, move(obj)));
+    m_array.set(row, move(obj));
     did_update();
 
     return {};
