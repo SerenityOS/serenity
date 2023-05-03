@@ -398,6 +398,29 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         height = max(height, calculate_inner_height(box, available_space.height, computed_values.min_height()).to_px(box));
     }
 
+    if (box.document().in_quirks_mode()
+        && box.dom_node()
+        && box.dom_node()->is_html_html_element()
+        && box.computed_values().height().is_auto()) {
+        // 3.6. The html element fills the viewport quirk
+        // https://quirks.spec.whatwg.org/#the-html-element-fills-the-viewport-quirk
+        // FIXME: Handle vertical writing mode.
+
+        auto& box_state = m_state.get_mutable(box);
+
+        // 1. Let margins be sum of the used values of the margin-left and margin-right properties of element
+        //    if element has a vertical writing mode, otherwise let margins be the sum of the used values of
+        //    the margin-top and margin-bottom properties of element.
+        auto margins = box_state.margin_top + box_state.margin_bottom;
+
+        // 2. Let size be the size of the initial containing block in the block flow direction minus margins.
+        auto size = box_state.content_height() - margins;
+
+        // 3. Return the bigger value of size and the normal border box size the element would have
+        //    according to the CSS specification.
+        height = max(size, height);
+    }
+
     m_state.get_mutable(box).set_content_height(height);
 }
 
