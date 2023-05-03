@@ -16,10 +16,10 @@ Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
  8 files changed, 44 insertions(+), 8 deletions(-)
 
 diff --git a/src/hotspot/os/posix/os_posix.cpp b/src/hotspot/os/posix/os_posix.cpp
-index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4abaf58cc404 100644
+index a5c023a5c36aee3919c9e2a9a520d718bdac1dee..ec7e1b8646b5f7d8a269f4059982ff37b57ec68b 100644
 --- a/src/hotspot/os/posix/os_posix.cpp
 +++ b/src/hotspot/os/posix/os_posix.cpp
-@@ -65,7 +65,9 @@
+@@ -66,7 +66,9 @@
  #include <sys/wait.h>
  #include <time.h>
  #include <unistd.h>
@@ -29,7 +29,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
  
  #ifdef __APPLE__
    #include <crt_externs.h>
-@@ -418,6 +420,7 @@ void os::Posix::print_load_average(outputStream* st) {
+@@ -438,6 +440,7 @@ void os::Posix::print_load_average(outputStream* st) {
  // unfortunately it does not work on macOS and Linux because the utx chain has no entry
  // for reboot at least on my test machines
  void os::Posix::print_uptime_info(outputStream* st) {
@@ -37,7 +37,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
    int bootsec = -1;
    int currsec = time(NULL);
    struct utmpx* ent;
-@@ -432,6 +435,9 @@ void os::Posix::print_uptime_info(outputStream* st) {
+@@ -452,6 +455,9 @@ void os::Posix::print_uptime_info(outputStream* st) {
    if (bootsec != -1) {
      os::print_dhm(st, "OS uptime:", (long) (currsec-bootsec));
    }
@@ -47,7 +47,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
  }
  
  static void print_rlimit(outputStream* st, const char* msg,
-@@ -470,7 +476,9 @@ void os::Posix::print_rlimit_info(outputStream* st) {
+@@ -490,7 +496,9 @@ void os::Posix::print_rlimit_info(outputStream* st) {
  
    print_rlimit(st, ", THREADS", RLIMIT_THREADS);
  #else
@@ -57,7 +57,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
  #endif
  
    print_rlimit(st, ", NOFILE", RLIMIT_NOFILE);
-@@ -638,7 +646,11 @@ void os::dll_unload(void *lib) {
+@@ -692,7 +700,11 @@ void os::dll_unload(void *lib) {
  }
  
  jlong os::lseek(int fd, jlong offset, int whence) {
@@ -69,7 +69,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
  }
  
  int os::fsync(int fd) {
-@@ -646,7 +658,11 @@ int os::fsync(int fd) {
+@@ -700,7 +712,11 @@ int os::fsync(int fd) {
  }
  
  int os::ftruncate(int fd, jlong length) {
@@ -83,7 +83,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4aba
  
  const char* os::get_current_directory(char *buf, size_t buflen) {
 diff --git a/src/hotspot/os/posix/signals_posix.cpp b/src/hotspot/os/posix/signals_posix.cpp
-index 2c020a79408049797d5c2f1fcc1e5de8d968323e..9f3316f5b9ad66a47bedf7f56a318610a4d88873 100644
+index 9a27ddc9ae7aaa6501d2e0419f801ce91ac4db18..200d26cf98ce308a30b0cbd5a987c64b292ddc5a 100644
 --- a/src/hotspot/os/posix/signals_posix.cpp
 +++ b/src/hotspot/os/posix/signals_posix.cpp
 @@ -552,6 +552,8 @@ public:
@@ -139,10 +139,10 @@ index 2c020a79408049797d5c2f1fcc1e5de8d968323e..9f3316f5b9ad66a47bedf7f56a318610
  #ifdef SI_TKILL
      { SI_TKILL,     "SI_TKILL",    "Signal sent by tkill (pthread_kill)" },
 diff --git a/src/hotspot/share/runtime/os.cpp b/src/hotspot/share/runtime/os.cpp
-index 9b8e667f9ec38e33ec33e9f8bbf90bfb1efa36bc..4e9a5f0e6c5748a6942af6dd637ccd45b6580796 100644
+index 621efe55f6f8a64c35ad18fc27da785c2b91bedc..1dcf22357bb786568eb971cc474ceecf8c31c82c 100644
 --- a/src/hotspot/share/runtime/os.cpp
 +++ b/src/hotspot/share/runtime/os.cpp
-@@ -155,7 +155,7 @@ char* os::iso8601_time(jlong milliseconds_since_19700101, char* buffer, size_t b
+@@ -156,7 +156,7 @@ char* os::iso8601_time(jlong milliseconds_since_19700101, char* buffer, size_t b
    // No offset when dealing with UTC
    time_t UTC_to_local = 0;
    if (!utc) {
@@ -151,7 +151,7 @@ index 9b8e667f9ec38e33ec33e9f8bbf90bfb1efa36bc..4e9a5f0e6c5748a6942af6dd637ccd45
      UTC_to_local = -(time_struct.tm_gmtoff);
  #elif defined(_WINDOWS)
      long zone;
-@@ -1502,6 +1502,7 @@ size_t os::page_size_for_region_unaligned(size_t region_size, size_t min_pages)
+@@ -1530,6 +1530,7 @@ size_t os::page_size_for_region_unaligned(size_t region_size, size_t min_pages)
  }
  
  static const char* errno_to_string (int e, bool short_text) {
@@ -159,7 +159,7 @@ index 9b8e667f9ec38e33ec33e9f8bbf90bfb1efa36bc..4e9a5f0e6c5748a6942af6dd637ccd45
    #define ALL_SHARED_ENUMS(X) \
      X(E2BIG, "Argument list too long") \
      X(EACCES, "Permission denied") \
-@@ -1579,6 +1580,9 @@ static const char* errno_to_string (int e, bool short_text) {
+@@ -1607,6 +1608,9 @@ static const char* errno_to_string (int e, bool short_text) {
      X(ETXTBSY, "Text file busy") \
      X(EWOULDBLOCK, "Operation would block") \
      X(EXDEV, "Cross-device link")

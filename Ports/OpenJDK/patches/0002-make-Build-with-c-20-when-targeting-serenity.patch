@@ -12,10 +12,10 @@ Subject: [PATCH] make: Build with c++20 when targeting serenity
  5 files changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
-index 62e53a1c421c600ed92eaeb6805fd61e825e3072..9239dfb435521ab276ea1ca566e6bf539f649ddb 100644
+index 88679489fc09019212286e0cb75885a05103dc85..63126c98054760f8a657d6ba7d51d5aeb3eebf18 100644
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
-@@ -154,7 +154,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
+@@ -187,7 +187,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
        WARNINGS_ENABLE_ALL_CFLAGS="-Wall -Wextra -Wformat=2 $WARNINGS_ENABLE_ADDITIONAL"
        WARNINGS_ENABLE_ALL_CXXFLAGS="$WARNINGS_ENABLE_ALL_CFLAGS $WARNINGS_ENABLE_ADDITIONAL_CXX"
  
@@ -25,7 +25,7 @@ index 62e53a1c421c600ed92eaeb6805fd61e825e3072..9239dfb435521ab276ea1ca566e6bf53
        ;;
  
      clang)
-@@ -166,7 +167,7 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
+@@ -200,7 +201,7 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
            -Wunused-function -Wundef -Wunused-value -Woverloaded-virtual"
        WARNINGS_ENABLE_ALL="-Wall -Wextra -Wformat=2 $WARNINGS_ENABLE_ADDITIONAL"
  
@@ -34,7 +34,7 @@ index 62e53a1c421c600ed92eaeb6805fd61e825e3072..9239dfb435521ab276ea1ca566e6bf53
  
        ;;
  
-@@ -529,6 +530,9 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
+@@ -565,6 +566,9 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
    else
      AC_MSG_ERROR([Don't know how to enable C++14 for this toolchain])
    fi
@@ -58,7 +58,7 @@ index 1a899ee2bfb2e8ef20bb98914fe909248f1aec45..13f05cd3a85acde45124b5cda6303f51
    bool is_full() const {
      return _top == end();
 diff --git a/src/hotspot/share/utilities/events.hpp b/src/hotspot/share/utilities/events.hpp
-index b5d67bd6a8ad8eae3d844e904d2d105408f22719..3cf3b399f96cf0be0e5ff15c29fcd7ce12fc2ffd 100644
+index 6f3dadde281c04910d9704de6313276cb74dcd4a..945295deab81fbf75343ea361627c435b2094247 100644
 --- a/src/hotspot/share/utilities/events.hpp
 +++ b/src/hotspot/share/utilities/events.hpp
 @@ -99,7 +99,7 @@ template <class T> class EventLogBase : public EventLog {
