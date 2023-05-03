@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
+#include <AK/IntegralMath.h>
 #include <LibCompress/Lzma.h>
 
 namespace Compress {
@@ -29,7 +31,7 @@ Optional<u64> LzmaHeader::uncompressed_size() const
     // "If "Uncompressed size" field contains ones in all 64 bits, it means that
     //  uncompressed size is unknown and there is the "end marker" in stream,
     //  that indicates the end of decoding point."
-    if (uncompressed_size == UINT64_MAX)
+    if (uncompressed_size == placeholder_for_unknown_uncompressed_size)
         return {};
 
     // "In opposite case, if the value from "Uncompressed size" field is not
@@ -71,6 +73,20 @@ ErrorOr<LzmaModelProperties> LzmaHeader::decode_model_properties(u8 input_bits)
     };
 }
 
+ErrorOr<u8> LzmaHeader::encode_model_properties(LzmaModelProperties const& model_properties)
+{
+    if (model_properties.literal_context_bits > 8)
+        return Error::from_string_literal("LZMA literal context bits are too large to encode");
+
+    if (model_properties.literal_position_bits > 4)
+        return Error::from_string_literal("LZMA literal position bits are too large to encode");
+
+    if (model_properties.position_bits > 4)
+        return Error::from_string_literal("LZMA position bits are too large to encode");
+
+    return (model_properties.position_bits * 5 + model_properties.literal_position_bits) * 9 + model_properties.literal_context_bits;
+}
+
 ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
 {
     auto model_properties = TRY(decode_model_properties(encoded_model_properties));
@@ -82,6 +98,21 @@ ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
         .dictionary_size = dictionary_size(),
         .uncompressed_size = uncompressed_size(),
         .reject_end_of_stream_marker = false,
+    };
+}
+
+ErrorOr<LzmaHeader> LzmaHeader::from_compressor_options(LzmaCompressorOptions const& options)
+{
+    auto encoded_model_properties = TRY(encode_model_properties({
+        .literal_context_bits = options.literal_context_bits,
+        .literal_position_bits = options.literal_position_bits,
+        .position_bits = options.position_bits,
+    }));
+
+    return LzmaHeader {
+        .encoded_model_properties = encoded_model_properties,
+        .unchecked_dictionary_size = options.dictionary_size,
+        .encoded_uncompressed_size = options.uncompressed_size.value_or(placeholder_for_unknown_uncompressed_size),
     };
 }
 
@@ -218,6 +249,39 @@ ErrorOr<void> LzmaDecompressor::normalize_range_decoder()
     return {};
 }
 
+ErrorOr<void> LzmaCompressor::normalize_range_encoder()
+{
+    u64 const maximum_range_value = m_range_encoder_code + m_range_encoder_range;
+
+    // If we hit this, we have the potential to overflow into a byte that we already flushed.
+    VERIFY((maximum_range_value & ((1ull << m_range_encoder_code_used_bits) - 1)) == maximum_range_value);
+
+    constexpr u32 minimum_range_value = 1 << 24;
+
+    if (m_range_encoder_range >= minimum_range_value)
+        return {};
+
+    u64 const flipped_bits = maximum_range_value ^ m_range_encoder_code;
+    u64 const size_of_flipped_bits = count_required_bits(flipped_bits);
+
+    // If we can flush a full byte without impacting future bits, do so.
+    while (m_range_encoder_code_used_bits - 8 >= size_of_flipped_bits) {
+        u8 const next_byte = (m_range_encoder_code >> (m_range_encoder_code_used_bits - 8));
+        m_range_encoder_code -= static_cast<u64>(next_byte) << (m_range_encoder_code_used_bits - 8);
+        m_range_encoder_code_used_bits -= 8;
+        TRY(m_stream->write_value(next_byte));
+    }
+
+    // Now, shift in a fresh null byte from the bottom.
+    m_range_encoder_range <<= 8;
+    m_range_encoder_code <<= 8;
+    m_range_encoder_code_used_bits += 8;
+
+    VERIFY(m_range_encoder_range >= minimum_range_value);
+
+    return {};
+}
+
 ErrorOr<u8> LzmaDecompressor::decode_direct_bit()
 {
     m_range_decoder_range >>= 1;
@@ -233,6 +297,18 @@ ErrorOr<u8> LzmaDecompressor::decode_direct_bit()
     TRY(normalize_range_decoder());
 
     return temp + 1;
+}
+
+ErrorOr<void> LzmaCompressor::encode_direct_bit(u8 value)
+{
+    m_range_encoder_range >>= 1;
+
+    if (value != 0)
+        m_range_encoder_code += m_range_encoder_range;
+
+    TRY(normalize_range_encoder());
+
+    return {};
 }
 
 ErrorOr<u8> LzmaDecompressor::decode_bit_with_probability(Probability& probability)
@@ -260,6 +336,25 @@ ErrorOr<u8> LzmaDecompressor::decode_bit_with_probability(Probability& probabili
     }
 }
 
+ErrorOr<void> LzmaCompressor::encode_bit_with_probability(Probability& probability, u8 value)
+{
+    constexpr size_t probability_shift_width = 5;
+
+    u32 bound = (m_range_encoder_range >> probability_bit_count) * probability;
+
+    if (value == 0) {
+        probability += ((1 << probability_bit_count) - probability) >> probability_shift_width;
+        m_range_encoder_range = bound;
+    } else {
+        probability -= probability >> probability_shift_width;
+        m_range_encoder_code += bound;
+        m_range_encoder_range -= bound;
+    }
+
+    TRY(normalize_range_encoder());
+    return {};
+}
+
 ErrorOr<u16> LzmaDecompressor::decode_symbol_using_bit_tree(size_t bit_count, Span<Probability> probability_tree)
 {
     VERIFY(bit_count <= sizeof(u16) * 8);
@@ -280,6 +375,27 @@ ErrorOr<u16> LzmaDecompressor::decode_symbol_using_bit_tree(size_t bit_count, Sp
     return result;
 }
 
+ErrorOr<void> LzmaCompressor::encode_symbol_using_bit_tree(size_t bit_count, Span<Probability> probability_tree, u16 value)
+{
+    VERIFY(bit_count <= sizeof(u16) * 8);
+    VERIFY(probability_tree.size() >= 1ul << bit_count);
+    VERIFY(value <= (1 << bit_count) - 1);
+
+    // Shift value to make the first sent byte the most significant bit. This makes the shifting logic a lot easier to read.
+    value <<= sizeof(u16) * 8 - bit_count;
+
+    size_t tree_index = 1;
+
+    for (size_t i = 0; i < bit_count; i++) {
+        u8 const next_bit = (value & 0x8000) >> (sizeof(u16) * 8 - 1);
+        value <<= 1;
+        TRY(encode_bit_with_probability(probability_tree[tree_index], next_bit));
+        tree_index = (tree_index << 1) | next_bit;
+    }
+
+    return {};
+}
+
 ErrorOr<u16> LzmaDecompressor::decode_symbol_using_reverse_bit_tree(size_t bit_count, Span<Probability> probability_tree)
 {
     VERIFY(bit_count <= sizeof(u16) * 8);
@@ -295,6 +411,24 @@ ErrorOr<u16> LzmaDecompressor::decode_symbol_using_reverse_bit_tree(size_t bit_c
     }
 
     return result;
+}
+
+ErrorOr<void> LzmaCompressor::encode_symbol_using_reverse_bit_tree(size_t bit_count, Span<Probability> probability_tree, u16 value)
+{
+    VERIFY(bit_count <= sizeof(u16) * 8);
+    VERIFY(probability_tree.size() >= 1ul << bit_count);
+    VERIFY(value <= (1 << bit_count) - 1);
+
+    size_t tree_index = 1;
+
+    for (size_t i = 0; i < bit_count; i++) {
+        u8 const next_bit = value & 1;
+        value >>= 1;
+        TRY(encode_bit_with_probability(probability_tree[tree_index], next_bit));
+        tree_index = (tree_index << 1) | next_bit;
+    }
+
+    return {};
 }
 
 ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
@@ -353,6 +487,139 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
     return {};
 }
 
+ErrorOr<void> LzmaCompressor::encode_literal(u8 literal)
+{
+    // This function largely mirrors `decode_literal_to_output_buffer`, so specification comments have been omitted.
+
+    TRY(encode_match_type(MatchType::Literal));
+
+    // Note: We have already read the next byte from the input buffer, so it's now in the seekback buffer, shifting all seekback offsets by one.
+    u8 previous_byte = 0;
+    if (m_dictionary->seekback_limit() - m_dictionary->used_space() > 1) {
+        auto read_bytes = MUST(m_dictionary->read_with_seekback({ &previous_byte, sizeof(previous_byte) }, 2 + m_dictionary->used_space()));
+        VERIFY(read_bytes.size() == sizeof(previous_byte));
+    }
+    u16 const literal_state_bits_from_position = m_total_processed_bytes & ((1 << m_options.literal_position_bits) - 1);
+    u16 const literal_state_bits_from_output = previous_byte >> (8 - m_options.literal_context_bits);
+    u16 const literal_state = literal_state_bits_from_position << m_options.literal_context_bits | literal_state_bits_from_output;
+
+    Span<Probability> selected_probability_table = m_literal_probabilities.span().slice(literal_probability_table_size * literal_state, literal_probability_table_size);
+
+    u16 result = 1;
+
+    if (m_state >= 7) {
+        u8 matched_byte = 0;
+        auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, current_repetition_offset() + m_dictionary->used_space() + 1));
+        VERIFY(read_bytes.size() == sizeof(matched_byte));
+
+        do {
+            u8 const match_bit = (matched_byte >> 7) & 1;
+            matched_byte <<= 1;
+
+            u8 const encoded_bit = (literal & 0x80) >> 7;
+            literal <<= 1;
+
+            TRY(encode_bit_with_probability(selected_probability_table[((1 + match_bit) << 8) + result], encoded_bit));
+            result = result << 1 | encoded_bit;
+
+            if (match_bit != encoded_bit)
+                break;
+        } while (result < 0x100);
+    }
+
+    while (result < 0x100) {
+        u8 const encoded_bit = (literal & 0x80) >> 7;
+        literal <<= 1;
+
+        TRY(encode_bit_with_probability(selected_probability_table[result], encoded_bit));
+
+        result = (result << 1) | encoded_bit;
+    }
+
+    m_total_processed_bytes += sizeof(literal);
+
+    update_state_after_literal();
+
+    return {};
+}
+
+ErrorOr<void> LzmaCompressor::encode_existing_match(size_t real_distance, size_t real_length)
+{
+    VERIFY(real_distance >= normalized_to_real_match_distance_offset);
+    u32 const normalized_distance = real_distance - normalized_to_real_match_distance_offset;
+
+    VERIFY(real_length >= normalized_to_real_match_length_offset);
+    u16 const normalized_length = real_length - normalized_to_real_match_length_offset;
+
+    if (normalized_distance == m_rep0) {
+        TRY(encode_match_type(MatchType::RepMatch0));
+    } else if (normalized_distance == m_rep1) {
+        TRY(encode_match_type(MatchType::RepMatch1));
+
+        u32 const distance = m_rep1;
+        m_rep1 = m_rep0;
+        m_rep0 = distance;
+    } else if (normalized_distance == m_rep2) {
+        TRY(encode_match_type(MatchType::RepMatch2));
+
+        u32 const distance = m_rep2;
+        m_rep2 = m_rep1;
+        m_rep1 = m_rep0;
+        m_rep0 = distance;
+    } else if (normalized_distance == m_rep3) {
+        TRY(encode_match_type(MatchType::RepMatch3));
+
+        u32 const distance = m_rep3;
+        m_rep3 = m_rep2;
+        m_rep2 = m_rep1;
+        m_rep1 = m_rep0;
+        m_rep0 = distance;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    TRY(encode_normalized_match_length(m_rep_length_coder, normalized_length));
+    update_state_after_rep();
+    MUST(m_dictionary->discard(real_length));
+    m_total_processed_bytes += real_length;
+
+    return {};
+}
+
+ErrorOr<void> LzmaCompressor::encode_new_match(size_t real_distance, size_t real_length)
+{
+    VERIFY(real_distance >= normalized_to_real_match_distance_offset);
+    u32 const normalized_distance = real_distance - normalized_to_real_match_distance_offset;
+
+    VERIFY(real_length >= normalized_to_real_match_length_offset);
+    u16 const normalized_length = real_length - normalized_to_real_match_length_offset;
+
+    TRY(encode_normalized_simple_match(normalized_distance, normalized_length));
+
+    MUST(m_dictionary->discard(real_length));
+    m_total_processed_bytes += real_length;
+
+    return {};
+}
+
+ErrorOr<void> LzmaCompressor::encode_normalized_simple_match(u32 normalized_distance, u16 normalized_length)
+{
+    TRY(encode_match_type(MatchType::SimpleMatch));
+
+    m_rep3 = m_rep2;
+    m_rep2 = m_rep1;
+    m_rep1 = m_rep0;
+
+    TRY(encode_normalized_match_length(m_length_coder, normalized_length));
+
+    update_state_after_match();
+
+    TRY(encode_normalized_match_distance(normalized_length, normalized_distance));
+    m_rep0 = normalized_distance;
+
+    return {};
+}
+
 LzmaState::LzmaLengthCoderState::LzmaLengthCoderState()
 {
     for (auto& array : m_low_length_probabilities)
@@ -385,6 +652,29 @@ ErrorOr<u16> LzmaDecompressor::decode_normalized_match_length(LzmaLengthCoderSta
 
     //   1 1 zzzzzzzz       HighCoder                zzzzzzzz + 16"
     return TRY(decode_symbol_using_bit_tree(8, length_decoder_state.m_high_length_probabilities.span())) + 16;
+}
+
+ErrorOr<void> LzmaCompressor::encode_normalized_match_length(LzmaLengthCoderState& length_coder_state, u16 normalized_length)
+{
+    u16 const position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
+
+    if (normalized_length < 8) {
+        TRY(encode_bit_with_probability(length_coder_state.m_first_choice_probability, 0));
+        TRY(encode_symbol_using_bit_tree(3, length_coder_state.m_low_length_probabilities[position_state].span(), normalized_length));
+        return {};
+    }
+
+    TRY(encode_bit_with_probability(length_coder_state.m_first_choice_probability, 1));
+
+    if (normalized_length < 16) {
+        TRY(encode_bit_with_probability(length_coder_state.m_second_choice_probability, 0));
+        TRY(encode_symbol_using_bit_tree(3, length_coder_state.m_medium_length_probabilities[position_state].span(), normalized_length - 8));
+        return {};
+    }
+
+    TRY(encode_bit_with_probability(length_coder_state.m_second_choice_probability, 1));
+    TRY(encode_symbol_using_bit_tree(8, length_coder_state.m_high_length_probabilities.span(), normalized_length - 16));
+    return {};
 }
 
 ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_match_length)
@@ -458,6 +748,51 @@ ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_m
         distance_prefix = (distance_prefix << 1) | TRY(decode_direct_bit());
     }
     return (distance_prefix << number_of_alignment_bits) | TRY(decode_symbol_using_reverse_bit_tree(number_of_alignment_bits, m_alignment_bit_probabilities));
+}
+
+ErrorOr<void> LzmaCompressor::encode_normalized_match_distance(u16 normalized_match_length, u32 normalized_match_distance)
+{
+    u16 const length_state = min(normalized_match_length, number_of_length_to_position_states - 1);
+
+    if (normalized_match_distance < first_position_slot_with_binary_tree_bits) {
+        // The normalized distance gets encoded as the position slot.
+        TRY(encode_symbol_using_bit_tree(6, m_length_to_position_states[length_state].span(), normalized_match_distance));
+        return {};
+    }
+
+    // Note: This has been deduced, there is no immediate relation to the decoding function.
+    u16 const distance_log2 = AK::log2(normalized_match_distance);
+    u16 number_of_distance_bits = count_required_bits(normalized_match_distance);
+    u16 const position_slot = (distance_log2 << 1) + ((normalized_match_distance >> (distance_log2 - 1)) & 1);
+
+    TRY(encode_symbol_using_bit_tree(6, m_length_to_position_states[length_state].span(), position_slot));
+
+    // Mask off the top two bits of the value, those are already encoded by the position slot.
+    normalized_match_distance &= (1 << (number_of_distance_bits - 2)) - 1;
+    number_of_distance_bits -= 2;
+
+    if (position_slot < first_position_slot_with_direct_encoded_bits) {
+        // The value gets encoded using only a reverse bit tree coder.
+        auto& selected_probability_tree = m_binary_tree_distance_probabilities[position_slot - first_position_slot_with_binary_tree_bits];
+        TRY(encode_symbol_using_reverse_bit_tree(number_of_distance_bits, selected_probability_tree, normalized_match_distance));
+        return {};
+    }
+
+    // The value is split into direct bits (everything except the last four bits) and alignment bits (last four bits).
+    auto direct_bits = normalized_match_distance & ~((1 << number_of_alignment_bits) - 1);
+    auto const alignment_bits = normalized_match_distance & ((1 << number_of_alignment_bits) - 1);
+
+    // Shift to-be-written direct bits to the most significant position for easier access.
+    direct_bits <<= sizeof(direct_bits) * 8 - number_of_distance_bits;
+
+    for (auto i = 0u; i < number_of_distance_bits - number_of_alignment_bits; i++) {
+        TRY(encode_direct_bit((direct_bits & 0x80000000) ? 1 : 0));
+        direct_bits <<= 1;
+    }
+
+    TRY(encode_symbol_using_reverse_bit_tree(number_of_alignment_bits, m_alignment_bit_probabilities, alignment_bits));
+
+    return {};
 }
 
 u32 LzmaState::current_repetition_offset() const
@@ -554,6 +889,77 @@ ErrorOr<LzmaDecompressor::MatchType> LzmaDecompressor::decode_match_type()
     return MatchType::RepMatch3;
 }
 
+ErrorOr<void> LzmaCompressor::encode_match_type(MatchType match_type)
+{
+    u16 position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
+    u16 state2 = (m_state << maximum_number_of_position_bits) + position_state;
+
+    if (match_type == MatchType::Literal) {
+        TRY(encode_bit_with_probability(m_is_match_probabilities[state2], 0));
+        return {};
+    }
+    TRY(encode_bit_with_probability(m_is_match_probabilities[state2], 1));
+
+    if (match_type == MatchType::SimpleMatch) {
+        TRY(encode_bit_with_probability(m_is_rep_probabilities[m_state], 0));
+        return {};
+    }
+    TRY(encode_bit_with_probability(m_is_rep_probabilities[m_state], 1));
+
+    if (match_type == MatchType::ShortRepMatch || match_type == MatchType::RepMatch0) {
+        TRY(encode_bit_with_probability(m_is_rep_g0_probabilities[m_state], 0));
+        TRY(encode_bit_with_probability(m_is_rep0_long_probabilities[state2], match_type == MatchType::RepMatch0));
+        return {};
+    }
+    TRY(encode_bit_with_probability(m_is_rep_g0_probabilities[m_state], 1));
+
+    if (match_type == MatchType::RepMatch1) {
+        TRY(encode_bit_with_probability(m_is_rep_g1_probabilities[m_state], 0));
+        return {};
+    }
+    TRY(encode_bit_with_probability(m_is_rep_g1_probabilities[m_state], 1));
+
+    if (match_type == MatchType::RepMatch2) {
+        TRY(encode_bit_with_probability(m_is_rep_g2_probabilities[m_state], 0));
+        return {};
+    }
+    TRY(encode_bit_with_probability(m_is_rep_g2_probabilities[m_state], 1));
+    return {};
+}
+
+ErrorOr<void> LzmaCompressor::encode_once()
+{
+    // Check if any of our existing match distances are currently usable.
+    Vector<size_t> const existing_distance_hints {
+        m_rep0 + normalized_to_real_match_distance_offset,
+        m_rep1 + normalized_to_real_match_distance_offset,
+        m_rep2 + normalized_to_real_match_distance_offset,
+        m_rep3 + normalized_to_real_match_distance_offset,
+    };
+    auto existing_distance_results = TRY(m_dictionary->find_copy_in_seekback(m_dictionary->used_space(), normalized_to_real_match_length_offset, existing_distance_hints));
+
+    if (existing_distance_results.size() > 0) {
+        auto selected_match = existing_distance_results[0];
+        TRY(encode_existing_match(selected_match.distance, selected_match.length));
+        return {};
+    }
+
+    // If we weren't able to find any viable existing offsets, we now have to search the rest of the dictionary for possible new offsets.
+    auto new_distance_results = TRY(m_dictionary->find_copy_in_seekback(m_dictionary->used_space(), normalized_to_real_match_length_offset));
+
+    if (new_distance_results.size() > 0) {
+        auto selected_match = new_distance_results[0];
+        TRY(encode_new_match(selected_match.distance, selected_match.length));
+        return {};
+    }
+
+    // If we weren't able to find any matches, we don't have any other choice than to encode the next byte as a literal.
+    u8 next_byte { 0 };
+    m_dictionary->read({ &next_byte, sizeof(next_byte) });
+    TRY(encode_literal(next_byte));
+    return {};
+}
+
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 {
     while (m_dictionary->used_space() < bytes.size() && m_dictionary->empty_space() != 0) {
@@ -628,7 +1034,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             // "If the value of "rep0" is equal to 0xFFFFFFFF, it means that we have
             //  "End of stream" marker, so we can stop decoding and check finishing
             //  condition in Range Decoder"
-            if (m_rep0 == 0xFFFFFFFF) {
+            if (m_rep0 == end_of_stream_marker) {
                 // If we should reject end-of-stream markers, do so now.
                 // Note that this is not part of LZMA, as LZMA allows end-of-stream markers in all contexts, so pure LZMA should never set this option.
                 if (m_options.reject_end_of_stream_marker)
@@ -742,6 +1148,118 @@ bool LzmaDecompressor::is_open() const
 
 void LzmaDecompressor::close()
 {
+}
+
+ErrorOr<NonnullOwnPtr<LzmaCompressor>> LzmaCompressor::create_container(MaybeOwned<Stream> stream, LzmaCompressorOptions const& options)
+{
+    auto dictionary = TRY(try_make<CircularBuffer>(TRY(CircularBuffer::create_empty(options.dictionary_size + largest_real_match_length))));
+
+    // "The LZMA Decoder uses (1 << (lc + lp)) tables with CProb values, where each table contains 0x300 CProb values."
+    auto literal_probabilities = TRY(FixedArray<Probability>::create(literal_probability_table_size * (1 << (options.literal_context_bits + options.literal_position_bits))));
+
+    auto header = TRY(LzmaHeader::from_compressor_options(options));
+    TRY(stream->write_value(header));
+
+    // Note: The reference LZMA implementation has a starting null byte due to how their overflow reservoir is implemented and subsequently wrote it into the specification.
+    //       Therefore, we just have to add it manually.
+    TRY(stream->write_value<u8>(0x00));
+
+    auto compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LzmaCompressor(move(stream), options, move(dictionary), move(literal_probabilities))));
+
+    return compressor;
+}
+
+LzmaCompressor::LzmaCompressor(MaybeOwned<AK::Stream> stream, Compress::LzmaCompressorOptions options, MaybeOwned<CircularBuffer> dictionary, FixedArray<Compress::LzmaState::Probability> literal_probabilities)
+    : LzmaState(move(literal_probabilities))
+    , m_stream(move(stream))
+    , m_options(move(options))
+    , m_dictionary(move(dictionary))
+{
+}
+
+ErrorOr<Bytes> LzmaCompressor::read_some(Bytes)
+{
+    return Error::from_errno(EBADF);
+}
+
+ErrorOr<size_t> LzmaCompressor::write_some(ReadonlyBytes bytes)
+{
+    // Fill the input buffer until it's full or until we can't read any more data.
+    size_t processed_bytes = min(bytes.size(), largest_real_match_length - m_dictionary->used_space());
+    bytes = bytes.trim(processed_bytes);
+
+    while (bytes.size() > 0) {
+        auto const written_bytes = m_dictionary->write(bytes);
+        bytes = bytes.slice(written_bytes);
+    }
+
+    VERIFY(m_dictionary->used_space() <= largest_real_match_length);
+
+    if (m_options.uncompressed_size.has_value() && m_total_processed_bytes + m_dictionary->used_space() > m_options.uncompressed_size.value())
+        return Error::from_string_literal("Tried to compress more LZMA data than announced");
+
+    TRY(encode_once());
+
+    // If we read enough data to reach the final uncompressed size, flush automatically.
+    // Flushing will handle encoding the remaining data for us and finalize the stream.
+    if (m_options.uncompressed_size.has_value() && m_total_processed_bytes + m_dictionary->used_space() >= m_options.uncompressed_size.value())
+        TRY(flush());
+
+    return processed_bytes;
+}
+
+ErrorOr<void> LzmaCompressor::flush()
+{
+    if (m_has_flushed_data)
+        return Error::from_string_literal("Flushed an LZMA stream twice");
+
+    while (m_dictionary->used_space() > 0)
+        TRY(encode_once());
+
+    if (m_options.uncompressed_size.has_value() && m_total_processed_bytes < m_options.uncompressed_size.value())
+        return Error::from_string_literal("Flushing LZMA data with known but unreached uncompressed size");
+
+    // The LZMA specification technically also allows both a known size and an end-of-stream marker simultaneously,
+    // but LZMA2 rejects them, so skip emitting the end-of-stream marker if we know the uncompressed size.
+    if (!m_options.uncompressed_size.has_value())
+        TRY(encode_normalized_simple_match(end_of_stream_marker, 0));
+
+    while (m_range_encoder_code_used_bits > 0) {
+        VERIFY(m_range_encoder_code_used_bits >= 8);
+        u8 const next_byte = (m_range_encoder_code >> (m_range_encoder_code_used_bits - 8));
+        m_range_encoder_code -= static_cast<u64>(next_byte) << (m_range_encoder_code_used_bits - 8);
+        m_range_encoder_code_used_bits -= 8;
+        TRY(m_stream->write_value(next_byte));
+    }
+
+    m_has_flushed_data = true;
+    return {};
+}
+
+bool LzmaCompressor::is_eof() const
+{
+    return true;
+}
+
+bool LzmaCompressor::is_open() const
+{
+    return !m_has_flushed_data;
+}
+
+void LzmaCompressor::close()
+{
+    if (!m_has_flushed_data) {
+        // Note: We need a better API for specifying things like this.
+        flush().release_value_but_fixme_should_propagate_errors();
+    }
+}
+
+LzmaCompressor::~LzmaCompressor()
+{
+    if (!m_has_flushed_data) {
+        // Note: We need a better API for specifying things like this.
+        flush().release_value_but_fixme_should_propagate_errors();
+    }
 }
 
 }

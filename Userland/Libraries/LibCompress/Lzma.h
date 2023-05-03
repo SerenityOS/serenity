@@ -32,18 +32,31 @@ struct LzmaDecompressorOptions {
     bool reject_end_of_stream_marker { false };
 };
 
+struct LzmaCompressorOptions {
+    // Note: The default settings have been chosen based on the default settings of other LZMA compressors.
+    u8 literal_context_bits { 3 };
+    u8 literal_position_bits { 0 };
+    u8 position_bits { 2 };
+    u32 dictionary_size { 8 * MiB };
+    Optional<u64> uncompressed_size {};
+};
+
 // Described in section "lzma file format".
 struct [[gnu::packed]] LzmaHeader {
     u32 dictionary_size() const;
     Optional<u64> uncompressed_size() const;
 
     ErrorOr<LzmaDecompressorOptions> as_decompressor_options() const;
+    static ErrorOr<LzmaHeader> from_compressor_options(LzmaCompressorOptions const&);
 
     static ErrorOr<LzmaModelProperties> decode_model_properties(u8 input_bits);
+    static ErrorOr<u8> encode_model_properties(LzmaModelProperties const&);
 
     u8 encoded_model_properties;
     u32 unchecked_dictionary_size;
     u64 encoded_uncompressed_size;
+
+    static constexpr u64 placeholder_for_unknown_uncompressed_size = UINT64_MAX;
 };
 static_assert(sizeof(LzmaHeader) == 13);
 
@@ -82,6 +95,13 @@ protected:
 
     static constexpr u16 normalized_to_real_match_length_offset = 2;
     static constexpr u32 normalized_to_real_match_distance_offset = 1;
+
+    // According to the specification, the largest possible normalized match length is provided by the high coder,
+    // which processes 8 bits (0 to 255) and adds a displacement of 16 on top.
+    // This is the minimum size that our input buffer has to have to not miss any possible repetitions while encoding.
+    static constexpr u16 largest_real_match_length = 255 + 16 + normalized_to_real_match_length_offset;
+
+    static constexpr u32 end_of_stream_marker = 0xFFFFFFFF;
 
     static constexpr size_t number_of_length_to_position_states = 4;
     Array<Array<Probability, (1 << 6)>, number_of_length_to_position_states> m_length_to_position_states;
@@ -183,6 +203,57 @@ private:
     // This deviates from the specification, which states that "unsigned" is at least 16-bit.
     // However, the match distance needs to be at least 32-bit, at the very least to hold the 0xFFFFFFFF end marker value.
     ErrorOr<u32> decode_normalized_match_distance(u16 normalized_match_length);
+};
+
+class LzmaCompressor : public Stream
+    , LzmaState {
+public:
+    /// Creates a compressor for a standalone LZMA container (.lzma file extension, occasionally known as an LZMA 'archive').
+    static ErrorOr<NonnullOwnPtr<LzmaCompressor>> create_container(MaybeOwned<Stream>, LzmaCompressorOptions const&);
+
+    /// Finishes the archive by writing out the remaining data from the range coder.
+    ErrorOr<void> flush();
+
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+
+    virtual ~LzmaCompressor();
+
+private:
+    LzmaCompressor(MaybeOwned<Stream>, LzmaCompressorOptions, MaybeOwned<CircularBuffer>, FixedArray<Probability> literal_probabilities);
+
+    ErrorOr<void> normalize_range_encoder();
+    ErrorOr<void> encode_direct_bit(u8 value);
+    ErrorOr<void> encode_bit_with_probability(Probability&, u8 value);
+    ErrorOr<void> encode_symbol_using_bit_tree(size_t bit_count, Span<Probability> probability_tree, u16 value);
+    ErrorOr<void> encode_symbol_using_reverse_bit_tree(size_t bit_count, Span<Probability> probability_tree, u16 value);
+    ErrorOr<void> encode_normalized_match_length(LzmaLengthCoderState&, u16 normalized_length);
+    ErrorOr<void> encode_normalized_match_distance(u16 normalized_match_length, u32 normalized_match_distance);
+
+    ErrorOr<void> encode_match_type(MatchType);
+    ErrorOr<void> encode_literal(u8 literal);
+    ErrorOr<void> encode_existing_match(size_t real_distance, size_t real_length);
+    ErrorOr<void> encode_new_match(size_t real_distance, size_t real_length);
+    ErrorOr<void> encode_normalized_simple_match(u32 normalized_distance, u16 normalized_length);
+
+    ErrorOr<void> encode_once();
+
+    bool m_has_flushed_data { false };
+
+    MaybeOwned<Stream> m_stream;
+    LzmaCompressorOptions m_options;
+
+    // This doubles as an input buffer, which is appended at the very front of the buffer.
+    // Therefore, the size of this should at least be the dictionary size + the largest possible repetition length.
+    MaybeOwned<CircularBuffer> m_dictionary;
+
+    // Range encoder state.
+    u32 m_range_encoder_range { 0xFFFFFFFF };
+    u64 m_range_encoder_code { 0 };
+    size_t m_range_encoder_code_used_bits { 32 };
 };
 
 }
