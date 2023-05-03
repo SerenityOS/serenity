@@ -1,7 +1,7 @@
 #!/usr/bin/env -S USE_CCACHE=false bash ../.port_include.sh
 
 port='OpenJDK'
-version='17.0.2'
+version='17.0.6'
 workdir="jdk17u-dev-jdk-${version}-ga"
 useconfigure='true'
 use_fresh_config_guess='true'
@@ -9,7 +9,7 @@ config_guess_paths=("make/autoconf/build-aux/autoconf-config.guess")
 use_fresh_config_sub='true'
 config_sub_paths=("make/autoconf/build-aux/autoconf-config.sub")
 auth_type='sha256'
-files="https://github.com/openjdk/jdk17u-dev/archive/refs/tags/jdk-${version}-ga.tar.gz jdk-${version}-ga.tar.gz cb5b2a5d0916723d340f2c5bacd4607f8b8dc3a18dc8019fcfabf5306e2a4112"
+files="https://github.com/openjdk/jdk17u-dev/archive/refs/tags/jdk-${version}-ga.tar.gz jdk-${version}-ga.tar.gz 4bd3d2534d7b584c01711e64b9e5b7e79052a1759d3fded8d64107ebc9d37dc2"
 depends=("fontconfig" "libffi")
 
 configure() {

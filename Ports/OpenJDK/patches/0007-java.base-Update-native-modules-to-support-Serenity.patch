@@ -87,10 +87,10 @@ index 6e960c0347fe7cf8d2d40211a9b8f744673f1a05..cbd1d087ed50ba0a74e35e7e1c1cec0e
  #define O_DSYNC O_FSYNC
  #endif
 diff --git a/src/java.base/share/native/libjli/jli_util.h b/src/java.base/share/native/libjli/jli_util.h
-index 3512b1e96f5820afd0d130d840e2bc591183d84f..e60f7581ff8793a26e8453cdc44e90c351c0cd50 100644
+index 6aa26a04f77a9085f7fda850c006f503d44f9005..35cff6b4005e596cc1cd3224e87b94d634fc80a9 100644
 --- a/src/java.base/share/native/libjli/jli_util.h
 +++ b/src/java.base/share/native/libjli/jli_util.h
-@@ -108,6 +108,9 @@ JLI_CmdToArgs(char *cmdline);
+@@ -104,6 +104,9 @@ JLI_CmdToArgs(char *cmdline);
  #define _LARGFILE64_SOURCE
  #define JLI_Lseek                       lseek64
  #endif
@@ -236,7 +236,7 @@ index d53e88764c5892996bd7bb5a611b6cb7ebc48c2e..eddb5f169d149bb62cc9a317c691675c
  /*
   * Returns the children of the requested pid and optionally each parent and
 diff --git a/src/java.base/unix/native/libjava/TimeZone_md.c b/src/java.base/unix/native/libjava/TimeZone_md.c
-index 94dfc207f965204d6485f3e6154b669ac951e96e..2a6c3851aef90e0a66517efc134f168d4345439d 100644
+index 660665392c12db9879a535f8d30a0262d4ba3b92..c4aebe381330ea77084b674acf2f7a25cef79be3 100644
 --- a/src/java.base/unix/native/libjava/TimeZone_md.c
 +++ b/src/java.base/unix/native/libjava/TimeZone_md.c
 @@ -53,7 +53,7 @@ static char *isFileIdentical(char* buf, size_t size, char *pathname);
@@ -526,7 +526,7 @@ index 42a07359dde3e2daa8b5dfb3b34e1184bae37d94..ca14018610dd531c5efdf46da76d79e4
      return IOS_UNAVAILABLE;
  #else
 diff --git a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
-index 9df8be1e62c21b5d059f1354e699679c26596fa0..993e240db043f10cb41c218b3b2e909e1f78b807 100644
+index ad36e6a19b4716724b5366a9fd1b55ae4a12a5b5..f9135f951a673bcd1891d6678d658d1819c8d54b 100644
 --- a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
 +++ b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
 @@ -57,7 +57,7 @@

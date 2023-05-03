@@ -13,12 +13,12 @@ Co-Authored-By: Timur Sultanov <sultanovts@yandex.ru>
 ---
  src/hotspot/os/bsd/attachListener_bsd.cpp     | 12 +++
  src/hotspot/os/bsd/osThread_bsd.cpp           |  6 +-
- src/hotspot/os/bsd/os_bsd.cpp                 | 76 ++++++++++++++++++-
+ src/hotspot/os/bsd/os_bsd.cpp                 | 77 ++++++++++++++++++-
  src/hotspot/os/bsd/os_perf_bsd.cpp            |  4 +
  .../os_cpu/bsd_zero/bytes_bsd_zero.hpp        |  2 +
  src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp   | 18 ++++-
  src/hotspot/share/classfile/classLoader.cpp   |  2 +-
- 7 files changed, 113 insertions(+), 7 deletions(-)
+ 7 files changed, 114 insertions(+), 7 deletions(-)
 
 diff --git a/src/hotspot/os/bsd/attachListener_bsd.cpp b/src/hotspot/os/bsd/attachListener_bsd.cpp
 index 9daad43dc7ad567dd87c9ce44b1363d18c4f5931..092b4d94ab99eb016fe8583ae9defca4922f807f 100644
@@ -72,7 +72,7 @@ index 9eba7288fbe36fbe2149fb54c5709b5fd3f098ba..d7164e5d5f2151e71b535ccf998a5c9b
    _ucontext         = NULL;
    _expanding_stack  = 0;
 diff --git a/src/hotspot/os/bsd/os_bsd.cpp b/src/hotspot/os/bsd/os_bsd.cpp
-index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c70b778467 100644
+index 94649ae546d9b03217b6086ae0775a88e2a850a9..50225096a826511edacd983a5c6bf670deb8efc5 100644
 --- a/src/hotspot/os/bsd/os_bsd.cpp
 +++ b/src/hotspot/os/bsd/os_bsd.cpp
 @@ -87,8 +87,10 @@
@@ -155,7 +155,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
      }
      Arguments::set_java_home(buf);
      if (!set_boot_path('/', ':')) {
-@@ -877,6 +900,10 @@ pid_t os::Bsd::gettid() {
+@@ -883,6 +906,10 @@ pid_t os::Bsd::gettid() {
      #else
        #ifdef __NetBSD__
    retval = (pid_t) syscall(SYS__lwp_self);
@@ -166,7 +166,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
        #endif
      #endif
    #endif
-@@ -885,6 +912,7 @@ pid_t os::Bsd::gettid() {
+@@ -891,6 +918,7 @@ pid_t os::Bsd::gettid() {
    if (retval == -1) {
      return getpid();
    }
@@ -174,7 +174,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
  }
  
  intx os::current_thread_id() {
-@@ -942,6 +970,25 @@ bool os::address_is_in_vm(address addr) {
+@@ -959,6 +987,26 @@ bool os::address_is_in_vm(address addr) {
    return false;
  }
  
@@ -197,10 +197,11 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
 +  return false;
 +}
 +#endif // SERENITY
- 
- #define MACH_MAXSYMLEN 256
- 
-@@ -1013,7 +1060,7 @@ bool os::dll_address_to_library_name(address addr, char* buf,
++
+ bool os::dll_address_to_function_name(address addr, char *buf,
+                                       int buflen, int *offset,
+                                       bool demangle) {
+@@ -1041,7 +1089,7 @@ bool os::dll_address_to_library_name(address addr, char* buf,
  // in case of error it checks if .dll/.so was built for the
  // same architecture as Hotspot is running on
  
@@ -209,16 +210,16 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
  void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
  #ifdef STATIC_BUILD
    return os::get_default_process_handle();
-@@ -1226,7 +1273,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
+@@ -1254,7 +1302,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
    return NULL;
  #endif // STATIC_BUILD
  }
 -#endif // !__APPLE__
 +#endif // !__APPLE__ || !SERENITY
  
- void* os::get_default_process_handle() {
- #ifdef __APPLE__
-@@ -1305,6 +1352,7 @@ int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *pa
+ int _print_dll_info_cb(const char * name, address base_address, address top_address, void * param) {
+   outputStream * out = (outputStream *) param;
+@@ -1317,6 +1365,7 @@ int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *pa
  }
  
  void os::get_summary_os_info(char* buf, size_t buflen) {
@@ -226,7 +227,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
    // These buffers are small because we want this to be brief
    // and not use a lot of stack while generating the hs_err file.
    char os[100];
-@@ -1342,6 +1390,10 @@ void os::get_summary_os_info(char* buf, size_t buflen) {
+@@ -1354,6 +1403,10 @@ void os::get_summary_os_info(char* buf, size_t buflen) {
        snprintf(buf, buflen, "%s %s, macOS %s (%s)", os, release, osproductversion, build);
      }
    } else
@@ -237,7 +238,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
  #endif
    snprintf(buf, buflen, "%s %s", os, release);
  }
-@@ -1369,6 +1421,7 @@ void os::pd_print_cpu_info(outputStream* st, char* buf, size_t buflen) {
+@@ -1381,6 +1434,7 @@ void os::pd_print_cpu_info(outputStream* st, char* buf, size_t buflen) {
  }
  
  void os::get_summary_cpu_info(char* buf, size_t buflen) {
@@ -245,10 +246,10 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
    unsigned int mhz;
    size_t size = sizeof(mhz);
    int mib[] = { CTL_HW, HW_CPU_FREQ };
-@@ -1399,9 +1452,13 @@ void os::get_summary_cpu_info(char* buf, size_t buflen) {
-   }
+@@ -1415,9 +1469,13 @@ void os::get_summary_cpu_info(char* buf, size_t buflen) {
+ #else
+   snprintf(buf, buflen, "\"%s\" %s %d MHz", model, machine, mhz);
  #endif
-   snprintf(buf, buflen, "\"%s\" %s%s %d MHz", model, machine, emulated, mhz);
 +#else
 +  snprintf(buf, buflen, "%s", "FIXME: Implement CPU Info");
 +#endif
@@ -259,7 +260,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
    xsw_usage swap_usage;
    size_t size = sizeof(swap_usage);
  
-@@ -1423,6 +1480,9 @@ void os::print_memory_info(outputStream* st) {
+@@ -1439,6 +1497,9 @@ void os::print_memory_info(outputStream* st) {
    }
  
    st->cr();
@@ -269,7 +270,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
  }
  
  static char saved_jvm_path[MAXPATHLEN] = {0};
-@@ -1584,6 +1644,10 @@ bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
+@@ -1600,6 +1661,10 @@ bool os::pd_commit_memory(char* addr, size_t size, bool exec) {
      }
    }
  #else
@@ -280,7 +281,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
    uintptr_t res = (uintptr_t) ::mmap(addr, size, prot,
                                       MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
    if (res != (uintptr_t) MAP_FAILED) {
-@@ -1994,6 +2058,10 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr)
+@@ -2003,6 +2068,10 @@ OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr)
  extern void report_error(char* file_name, int line_no, char* title,
                           char* format, ...);
  
@@ -291,7 +292,7 @@ index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c7
  // this is called _before_ the most of global arguments have been parsed
  void os::init(void) {
    char dummy;   // used to get a guess on initial stack address
-@@ -2535,7 +2603,11 @@ bool os::is_thread_cpu_time_supported() {
+@@ -2503,7 +2572,11 @@ bool os::is_thread_cpu_time_supported() {
  // Bsd doesn't yet have a (official) notion of processor sets,
  // so just return the system wide load average.
  int os::loadavg(double loadavg[], int nelem) {
@@ -339,7 +340,7 @@ index 0da7ecc7892dc74b21caf5c9ac831d6ab45aae2e..bd1ee9a6756e040733b30cef6823053f
  #  include <sys/endian.h>
  #endif
 diff --git a/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp b/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
-index a9fda1d4b75aa08462cbb9ca9853fe4199faee80..494f073ac1a040535b3791f94ccc8cab283bbdcd 100644
+index d85822bdec231eeb7d686e2a8d16f893212a5584..9f7dc05986ce999efeeb52cfea45bf98c0c0a88d 100644
 --- a/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
 +++ b/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
 @@ -23,11 +23,15 @@
