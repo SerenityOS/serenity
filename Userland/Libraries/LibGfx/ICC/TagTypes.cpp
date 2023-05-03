@@ -388,6 +388,23 @@ static ErrorOr<Vector<LutCurveType>> read_curves(ReadonlyBytes bytes, u32 offset
     return curves;
 }
 
+static bool is_valid_curve(LutCurveType const& curve)
+{
+    return curve->type() == CurveTagData::Type || curve->type() == ParametricCurveTagData::Type;
+}
+
+bool are_valid_curves(Optional<Vector<LutCurveType>> const& curves)
+{
+    if (!curves.has_value())
+        return true;
+
+    for (auto const& curve : curves.value()) {
+        if (!is_valid_curve(curve))
+            return false;
+    }
+    return true;
+}
+
 ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.12 lutAToBType
