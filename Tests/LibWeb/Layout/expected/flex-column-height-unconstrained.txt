@@ -1,5 +1,5 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x324 [BFC] children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x308 children: not-inline
       Box <div.my-container.column> at (9,9) content-size 782x306 flex-container(column) [FFC] children: not-inline
         BlockContainer <(anonymous)> at (9,9) content-size 0x0 [BFC] children: inline

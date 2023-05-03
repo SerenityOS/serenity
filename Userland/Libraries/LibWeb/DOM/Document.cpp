@@ -867,6 +867,13 @@ void Document::update_layout()
         viewport_state.set_content_width(viewport_rect.width());
         viewport_state.set_content_height(viewport_rect.height());
 
+        if (auto* document_element = this->document_element()) {
+            VERIFY(document_element->layout_node());
+            auto& icb_state = layout_state.get_mutable(verify_cast<Layout::NodeWithStyleAndBoxModelMetrics>(*document_element->layout_node()));
+            icb_state.set_content_width(viewport_rect.width());
+            icb_state.set_content_height(viewport_rect.height());
+        }
+
         root_formatting_context.run(
             *m_layout_root,
             Layout::LayoutMode::Normal,

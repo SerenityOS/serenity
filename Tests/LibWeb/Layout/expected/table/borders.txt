@@ -1,5 +1,5 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x293.625 [BFC] children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x277.625 children: not-inline
       TableWrapper <(anonymous)> at (8,8) content-size 164.296875x66.40625 [BFC] children: not-inline
         TableBox <table.table-border-black> at (9,9) content-size 164.296875x64.40625 [TFC] children: not-inline
