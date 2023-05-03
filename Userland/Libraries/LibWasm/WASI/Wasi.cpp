@@ -850,8 +850,7 @@ struct InvocationOf<impl> {
                 .template operator()<Args...>(MakeIndexSequence<sizeof...(Args)>());
 
                 auto result = args.apply_as_args([&](auto&&... impl_args) { return (self.*impl)(configuration, impl_args...); });
-                dbgln_if(WASI_DEBUG, "WASI: Called {}", function_name);
-
+                dbgln_if(WASI_DEBUG, "WASI: {}({}) = {}", function_name, arguments, result);
                 if (result.is_error())
                     return Wasm::Trap { DeprecatedString::formatted("Invalid call to {}() = {}", function_name, result.error()) };
 
@@ -1026,4 +1025,88 @@ Errno errno_value_from_errno(int value)
         return Errno::Invalid;
     }
 }
+}
+
+namespace AK {
+template<>
+struct Formatter<Wasm::Value> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Value const& value)
+    {
+        return value.value().visit(
+            [&](Wasm::Reference const&) {
+                return Formatter<FormatString>::format(builder, "({}) &r"sv, Wasm::ValueType::kind_name(value.type().kind()));
+            },
+            [&](auto const& v) {
+                return Formatter<FormatString>::format(builder, "({}) {}"sv, Wasm::ValueType::kind_name(value.type().kind()), v);
+            });
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::Errno> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::Errno const& value)
+    {
+        return Formatter<FormatString>::format(builder, "{}"sv, to_underlying(value));
+    }
+};
+
+template<>
+struct Formatter<Empty> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder&, Empty)
+    {
+        return {};
+    }
+};
+
+template<typename T>
+struct Formatter<Wasm::Wasi::Result<T>> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::Result<T> const& value)
+    {
+        if (value.is_error())
+            return Formatter<FormatString>::format(builder, "Error({})"sv, *value.error());
+
+        return Formatter<FormatString>::format(builder, "Ok({})"sv, *value.result());
+    }
+};
+
+template<OneOf<Wasm::Wasi::ArgsSizes, Wasm::Wasi::EnvironSizes> T>
+struct Formatter<T> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, T const& value)
+    {
+        return Formatter<FormatString>::format(builder, "size={}, count={}"sv, value.size, value.count);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::FDStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::FDStat const&)
+    {
+        return Formatter<FormatString>::format(builder, "(rights)"sv);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::FileStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::FileStat const& value)
+    {
+        return Formatter<FormatString>::format(builder, "dev={}, ino={}, ft={}, nlink={}, size={}, atim={}, mtim={}, ctim={}"sv,
+            value.dev, value.ino, to_underlying(value.filetype), value.nlink, value.size, value.atim, value.mtim, value.ctim);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::PreStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::PreStat const& value)
+    {
+        return Formatter<FormatString>::format(builder, "length={}"sv, value.dir.pr_name_len);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::SockRecvResult> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::SockRecvResult const& value)
+    {
+        return Formatter<FormatString>::format(builder, "size={}"sv, value.size);
+    }
+};
 }
