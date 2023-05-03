@@ -30,7 +30,7 @@ typedef struct __Dl_info Dl_info;
 typedef Result<void, DlErrorMessage> (*DlCloseFunction)(void*);
 typedef Result<void*, DlErrorMessage> (*DlOpenFunction)(char const*, int);
 typedef Result<void*, DlErrorMessage> (*DlSymFunction)(void*, char const*);
-typedef Result<void, DlErrorMessage> (*DlAddrFunction)(void*, Dl_info*);
+typedef Result<void, DlErrorMessage> (*DlAddrFunction)(void const*, Dl_info*);
 
 extern "C" {
 extern DlCloseFunction __dlclose;

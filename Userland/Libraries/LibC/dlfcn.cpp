@@ -72,7 +72,7 @@ void* dlsym(void* handle, char const* symbol_name)
     return result.value();
 }
 
-int dladdr(void* addr, Dl_info* info)
+int dladdr(void const* addr, Dl_info* info)
 {
     auto result = __dladdr(addr, info);
     if (result.is_error()) {
