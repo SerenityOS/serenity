@@ -553,11 +553,11 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
         if (S_ISREG(buf.st_mode))
             return FileType::RegularFile;
         if (S_ISFIFO(buf.st_mode))
-            return FileType::Unknown; // no Pipe? :yakfused:
+            return FileType::Unknown; // FIXME: FileType::Pipe is currently not present in WASI (but it should be) so we use Unknown for now.
         if (S_ISLNK(buf.st_mode))
             return FileType::SymbolicLink;
         if (S_ISSOCK(buf.st_mode))
-            return FileType::SocketDGram; // :shrug:
+            return FileType::SocketStream;
         return FileType::Unknown;
     };
 
@@ -696,6 +696,62 @@ ErrorOr<Result<Timestamp>> Implementation::impl$clock_time_get(Configuration&, C
     return Result<Timestamp> { static_cast<u64>(ts.tv_sec) * nanoseconds_in_second + static_cast<u64>(ts.tv_nsec) };
 }
 
+ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, FD fd)
+{
+    int resolved_fd = -1;
+
+    auto mapped_fd = map_fd(fd);
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            resolved_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0755);
+            });
+            entry.opened_fd = resolved_fd;
+        },
+        [&](u32 fd) {
+            resolved_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
+
+    if (resolved_fd < 0)
+        return errno_value_from_errno(errno);
+
+    struct stat stat_buf;
+    if (fstat(resolved_fd, &stat_buf) < 0)
+        return errno_value_from_errno(errno);
+
+    constexpr auto file_type_of = [](struct stat const& buf) {
+        if (S_ISDIR(buf.st_mode))
+            return FileType::Directory;
+        if (S_ISCHR(buf.st_mode))
+            return FileType::CharacterDevice;
+        if (S_ISBLK(buf.st_mode))
+            return FileType::BlockDevice;
+        if (S_ISREG(buf.st_mode))
+            return FileType::RegularFile;
+        if (S_ISFIFO(buf.st_mode))
+            return FileType::Unknown; // no Pipe? :yakfused:
+        if (S_ISLNK(buf.st_mode))
+            return FileType::SymbolicLink;
+        if (S_ISSOCK(buf.st_mode))
+            return FileType::SocketDGram; // :shrug:
+        return FileType::Unknown;
+    };
+
+    return Result(FileStat {
+        .dev = stat_buf.st_dev,
+        .ino = stat_buf.st_ino,
+        .filetype = file_type_of(stat_buf),
+        .nlink = stat_buf.st_nlink,
+        .size = stat_buf.st_size,
+        .atim = stat_buf.st_atime,
+        .mtim = stat_buf.st_mtime,
+        .ctim = stat_buf.st_ctime,
+    });
+}
+
 ErrorOr<Result<void>> Implementation::impl$random_get(Configuration& configuration, Pointer<u8> buf, Size buf_len)
 {
     auto buffer_slice = TRY(slice_typed_memory(configuration, buf, buf_len));
@@ -717,7 +773,6 @@ ErrorOr<Result<void>> Implementation::impl$fd_datasync(Configuration&, FD) { ret
 ErrorOr<Result<FDStat>> Implementation::impl$fd_fdstat_get(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_flags(Configuration&, FD, FDFlags) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_rights(Configuration&, FD, Rights fs_rights_base, Rights fs_rights_inheriting) { return Errno::NoSys; }
-ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_size(Configuration&, FD, FileSize) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_times(Configuration&, FD, Timestamp atim, Timestamp mtim, FSTFlags) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_pread(Configuration&, FD, Pointer<IOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
