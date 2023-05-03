@@ -321,22 +321,42 @@ ErrorOr<void> BookmarksBarWidget::add_bookmark(StringView url, StringView title)
     if (on_bookmark_change)
         on_bookmark_change();
 
-    if (auto result = edit_bookmark(url, PerformEditOn::NewBookmark); result.is_error()) {
-        (void)remove_bookmark(url);
-        return Error::copy(result.release_error());
+    values = BookmarkEditor::edit_bookmark(window(), title, url, PerformEditOn::NewBookmark);
+    if (values.is_empty())
+        return remove_bookmark(url);
+
+    auto model_has_updated = false;
+    for (int item_index = 0; item_index < model()->row_count(); item_index++) {
+        auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
+
+        if (item_url == url) {
+            TRY(update_model(values, [item_index](auto& model, auto&& values) {
+                return model.set(item_index, move(values));
+            }));
+            model_has_updated = true;
+            break;
+        }
     }
+
+    if (!model_has_updated)
+        return Error::from_string_view("Bookmark not found"sv);
+
+    if (on_bookmark_change)
+        on_bookmark_change();
 
     return {};
 }
 
-ErrorOr<void> BookmarksBarWidget::edit_bookmark(StringView url, PerformEditOn perform_edit_on)
+ErrorOr<void> BookmarksBarWidget::edit_bookmark(StringView url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
         auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
 
         if (item_url == url) {
-            auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url, perform_edit_on);
+            auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url, PerformEditOn::ExistingBookmark);
+            if (values.is_empty())
+                return {};
 
             TRY(update_model(values, [item_index](auto& model, auto&& values) {
                 return model.set(item_index, move(values));

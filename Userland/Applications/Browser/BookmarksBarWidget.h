@@ -44,7 +44,7 @@ public:
     bool contains_bookmark(StringView url);
     ErrorOr<void> remove_bookmark(StringView url);
     ErrorOr<void> add_bookmark(StringView url, StringView title);
-    ErrorOr<void> edit_bookmark(StringView url, PerformEditOn perform_edit_on = PerformEditOn::ExistingBookmark);
+    ErrorOr<void> edit_bookmark(StringView url);
 
     virtual Optional<GUI::UISize> calculated_min_size() const override
     {
