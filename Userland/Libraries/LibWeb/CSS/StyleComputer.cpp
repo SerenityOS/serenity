@@ -1466,35 +1466,60 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
     // which sets the box’s computed outer display type to block or inline (respectively).
     // (This has no effect on display types that generate no box at all, such as none or contents.)
 
-    // FIXME: If a block box (block flow) is inlinified, its inner display type is set to flow-root so that it remains a block container.
-    //
-    // FIXME: If an inline box (inline flow) is inlinified, it recursively inlinifies all of its in-flow children,
-    //        so that no block-level descendants break up the inline formatting context in which it participates.
-    //
-    // FIXME: For legacy reasons, if an inline block box (inline flow-root) is blockified, it becomes a block box (losing its flow-root nature).
-    //        For consistency, a run-in flow-root box also blockifies to a block box.
-    //
-    // FIXME: If a layout-internal box is blockified, its inner display type converts to flow so that it becomes a block container.
-    //        Inlinification has no effect on layout-internal boxes. (However, placement in such an inline context will typically cause them
-    //        to be wrapped in an appropriately-typed anonymous inline-level box.)
-
     auto display = style.display();
     if (display.is_none() || display.is_contents())
         return;
+
+    auto new_display = display;
 
     switch (required_box_type_transformation(style, element, pseudo_element)) {
     case BoxTypeTransformation::None:
         break;
     case BoxTypeTransformation::Blockify:
-        if (!display.is_block_outside()) {
-            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, display.inside(), display.list_item() }));
+        if (display.is_block_outside())
+            return;
+        // If a layout-internal box is blockified, its inner display type converts to flow so that it becomes a block container.
+        if (display.is_internal()) {
+            new_display = CSS::Display::from_short(CSS::Display::Short::Block);
+        } else {
+            VERIFY(display.is_outside_and_inside());
+
+            // For legacy reasons, if an inline block box (inline flow-root) is blockified, it becomes a block box (losing its flow-root nature).
+            // For consistency, a run-in flow-root box also blockifies to a block box.
+            if (display.is_inline_block()) {
+                new_display = CSS::Display { CSS::Display::Outside::Block, CSS::Display::Inside::Flow, display.list_item() };
+            } else {
+                new_display = CSS::Display { CSS::Display::Outside::Block, display.inside(), display.list_item() };
+            }
         }
         break;
     case BoxTypeTransformation::Inlinify:
-        if (!display.is_inline_outside())
-            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Inline, display.inside(), display.list_item() }));
+        if (display.is_inline_outside()) {
+            // FIXME: If an inline box (inline flow) is inlinified, it recursively inlinifies all of its in-flow children,
+            //        so that no block-level descendants break up the inline formatting context in which it participates.
+            if (display.is_flow_inside()) {
+                dbgln("FIXME: Inlinify inline box children recursively");
+            }
+            break;
+        }
+        if (display.is_internal()) {
+            // Inlinification has no effect on layout-internal boxes. (However, placement in such an inline context will typically cause them
+            // to be wrapped in an appropriately-typed anonymous inline-level box.)
+        } else {
+            VERIFY(display.is_outside_and_inside());
+
+            // If a block box (block flow) is inlinified, its inner display type is set to flow-root so that it remains a block container.
+            if (display.is_block_outside() && display.is_flow_inside()) {
+                new_display = CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::FlowRoot, display.list_item() };
+            }
+
+            new_display = CSS::Display { CSS::Display::Outside::Inline, display.inside(), display.list_item() };
+        }
         break;
     }
+
+    if (new_display != display)
+        style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create(new_display));
 }
 
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
