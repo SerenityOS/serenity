@@ -24,6 +24,8 @@ class EventTarget : public Bindings::PlatformObject {
 public:
     virtual ~EventTarget() override;
 
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<EventTarget>> construct_impl(JS::Realm&);
+
     virtual bool is_focusable() const { return false; }
 
     void add_event_listener(FlyString const& type, IDLEventListener* callback, Variant<AddEventListenerOptions, bool> const& options);
@@ -62,6 +64,7 @@ protected:
 
     void element_event_handler_attribute_changed(FlyString const& local_name, Optional<String> const& value);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
