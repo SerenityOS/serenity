@@ -64,7 +64,7 @@ static DeprecatedString s_loader_pledge_promises;
 static Result<void, DlErrorMessage> __dlclose(void* handle);
 static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags);
 static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_name);
-static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info);
+static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info);
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(StringView name)
 {
@@ -552,7 +552,7 @@ static Result<void*, DlErrorMessage> __dlsym(void* handle, char const* symbol_na
     return symbol.value().address.as_ptr();
 }
 
-static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
+static Result<void, DlErrorMessage> __dladdr(void const* addr, Dl_info* info)
 {
     VirtualAddress user_addr { addr };
     pthread_mutex_lock(&s_loader_lock);

@@ -27,6 +27,6 @@ int dlclose(void*);
 char* dlerror(void);
 void* dlopen(char const*, int);
 void* dlsym(void*, char const*);
-int dladdr(void*, Dl_info*);
+int dladdr(void const*, Dl_info*);
 
 __END_DECLS
