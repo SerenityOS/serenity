@@ -342,12 +342,34 @@ CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box
 {
     // 17.5.2
     // Table wrapper width should be equal to width of table box it contains
+
+    auto const& computed_values = box.computed_values();
+
+    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block_as_length_for_resolve = available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
+
+    auto zero_value = CSS::Length::make_px(0);
+
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+
+    // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
+    if (margin_left.is_auto())
+        margin_left = zero_value;
+    if (margin_right.is_auto())
+        margin_right = zero_value;
+
+    // table-wrapper can't have borders or paddings but it might have margin taken from table-root.
+    auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
+
     LayoutState throwaway_state(&m_state);
     auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
     auto const* table_box = box.first_child_of_type<TableBox>();
-    return throwaway_state.get(*table_box).content_width();
+
+    auto table_used_width = throwaway_state.get(*table_box).content_width();
+    return table_used_width > available_width ? available_width : table_used_width;
 }
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
