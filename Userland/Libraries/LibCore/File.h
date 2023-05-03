@@ -106,5 +106,6 @@ private:
 AK_ENUM_BITWISE_OPERATORS(File::OpenMode)
 
 using InputBufferedFile = InputBufferedSeekable<File>;
+using OutputBufferedFile = OutputBufferedStream<File>;
 
 }

@@ -322,9 +322,84 @@ private:
     BufferedHelper<T> m_helper;
 };
 
+template<StreamLike T>
+class OutputBufferedStream final : public Stream {
+public:
+    static ErrorOr<NonnullOwnPtr<OutputBufferedStream<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16 * KiB)
+    {
+        if (buffer_size == 0)
+            return Error::from_errno(EINVAL);
+        if (!stream->is_open())
+            return Error::from_errno(ENOTCONN);
+
+        auto buffer = TRY(CircularBuffer::create_empty(buffer_size));
+
+        return adopt_nonnull_own_or_enomem(new OutputBufferedStream<T>(move(stream), move(buffer)));
+    }
+
+    OutputBufferedStream(OutputBufferedStream&& other) = default;
+    OutputBufferedStream& operator=(OutputBufferedStream&& other) = default;
+
+    virtual ErrorOr<Bytes> read_some(Bytes buffer) override
+    {
+        TRY(flush_buffer());
+        return m_stream->read_some(buffer);
+    }
+
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override
+    {
+        if (!m_stream->is_open())
+            return Error::from_errno(ENOTCONN);
+
+        auto const written = m_buffer.write(buffer);
+
+        if (m_buffer.empty_space() == 0)
+            TRY(m_buffer.flush_to_stream(*m_stream));
+
+        return written;
+    }
+
+    virtual bool is_eof() const override
+    {
+        MUST(flush_buffer());
+        return m_stream->is_eof();
+    }
+
+    virtual bool is_open() const override { return m_stream->is_open(); }
+
+    virtual void close() override
+    {
+        MUST(flush_buffer());
+        m_stream->close();
+    }
+
+    ErrorOr<void> flush_buffer() const
+    {
+        while (m_buffer.used_space() > 0)
+            TRY(m_buffer.flush_to_stream(*m_stream));
+        return {};
+    }
+
+    virtual ~OutputBufferedStream() override
+    {
+        MUST(flush_buffer());
+    }
+
+private:
+    OutputBufferedStream(NonnullOwnPtr<T> stream, CircularBuffer buffer)
+        : m_stream(move(stream))
+        , m_buffer(move(buffer))
+    {
+    }
+
+    mutable NonnullOwnPtr<T> m_stream;
+    mutable CircularBuffer m_buffer;
+};
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::BufferedHelper;
 using AK::InputBufferedSeekable;
+using AK::OutputBufferedStream;
 #endif
