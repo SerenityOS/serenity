@@ -466,8 +466,8 @@ u32 LzmaState::current_repetition_offset() const
     // Instead, the values are remapped so that the rep-value n starts reading n + 1 bytes back.
     // The special rep-value 0xFFFFFFFF is reserved for marking the end of the stream,
     // so this should never overflow.
-    VERIFY(m_rep0 < NumericLimits<u32>::max());
-    return m_rep0 + 1;
+    VERIFY(m_rep0 <= NumericLimits<u32>::max() - normalized_to_real_match_distance_offset);
+    return m_rep0 + normalized_to_real_match_distance_offset;
 }
 
 void LzmaState::update_state_after_literal()
