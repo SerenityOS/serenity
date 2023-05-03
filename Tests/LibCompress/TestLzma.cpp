@@ -31,6 +31,50 @@ TEST_CASE(repetition_length_beyond_distance)
     EXPECT_EQ("ABABABA"sv.bytes(), buffer.span());
 }
 
+TEST_CASE(compress_decompress_roundtrip_with_known_size)
+{
+    auto const uncompressed = "Well hello friends, this is a simple text file :)"sv.bytes();
+
+    auto stream = MUST(try_make<AllocatingMemoryStream>());
+
+    Compress::LzmaCompressorOptions const compressor_options {
+        .literal_context_bits = 3,
+        .literal_position_bits = 0,
+        .position_bits = 2,
+        .dictionary_size = 4 * KiB,
+        .uncompressed_size = uncompressed.size(),
+    };
+    auto compressor = TRY_OR_FAIL(Compress::LzmaCompressor::create_container(MaybeOwned<Stream> { *stream }, compressor_options));
+    TRY_OR_FAIL(compressor->write_until_depleted(uncompressed));
+
+    auto decompressor = TRY_OR_FAIL(Compress::LzmaDecompressor::create_from_container(MaybeOwned<Stream> { *stream }));
+    auto result = TRY_OR_FAIL(decompressor->read_until_eof());
+
+    EXPECT_EQ(uncompressed, result.span());
+}
+
+TEST_CASE(compress_decompress_roundtrip_with_unknown_size)
+{
+    auto const uncompressed = "Well hello friends, this is a simple text file :)"sv.bytes();
+
+    auto stream = MUST(try_make<AllocatingMemoryStream>());
+
+    Compress::LzmaCompressorOptions const compressor_options {
+        .literal_context_bits = 3,
+        .literal_position_bits = 0,
+        .position_bits = 2,
+        .dictionary_size = 4 * KiB,
+    };
+    auto compressor = TRY_OR_FAIL(Compress::LzmaCompressor::create_container(MaybeOwned<Stream> { *stream }, compressor_options));
+    TRY_OR_FAIL(compressor->write_until_depleted(uncompressed));
+    TRY_OR_FAIL(compressor->flush());
+
+    auto decompressor = TRY_OR_FAIL(Compress::LzmaDecompressor::create_from_container(MaybeOwned<Stream> { *stream }));
+    auto result = TRY_OR_FAIL(decompressor->read_until_eof());
+
+    EXPECT_EQ(uncompressed, result.span());
+}
+
 // The following tests are based on test files from the LZMA specification, which has been placed in the public domain.
 // LZMA Specification Draft (2015): https://www.7-zip.org/a/lzma-specification.7z
 
