@@ -75,17 +75,17 @@ echo SYSROOT is "$SYSROOT"
 mkdir -p "$DIR/Tarballs"
 
 BINUTILS_VERSION="2.40"
-BINUTILS_MD5SUM="b200db2cdd2f49019ced4016e1f9bfe7"
+BINUTILS_MD5SUM="007b59bd908a737c06e5a8d3d2c737eb"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
-BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
+BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="12.2.0"
-GCC_MD5SUM="d7644b494246450468464ffc2c2b19c3"
+GCC_MD5SUM="73bafd0af874439dcdb9fc063b6fb069"
 GCC_NAME="gcc-$GCC_VERSION"
-GCC_PKG="${GCC_NAME}.tar.gz"
+GCC_PKG="${GCC_NAME}.tar.xz"
 GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
 
 buildstep() {
@@ -208,7 +208,7 @@ pushd "$DIR/Tarballs"
             rm -rf "${DIR}/Build/${ARCH}/${BINUTILS_NAME}"
         fi
         echo "Extracting binutils..."
-        tar -xzf ${BINUTILS_PKG}
+        tar -xJf ${BINUTILS_PKG}
 
         pushd ${BINUTILS_NAME}
             if [ "${git_patch}" = "1" ]; then
@@ -236,7 +236,7 @@ pushd "$DIR/Tarballs"
             rm -rf "${DIR}/Build/${ARCH}/${GCC_NAME}"
         fi
         echo "Extracting gcc..."
-        tar -xzf ${GCC_PKG}
+        tar -xJf ${GCC_PKG}
 
         pushd ${GCC_NAME}
             if [ "${git_patch}" = "1" ]; then
