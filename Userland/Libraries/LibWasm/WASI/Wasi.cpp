@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <AK/FlyString.h>
+#include <AK/Random.h>
 #include <AK/SourceLocation.h>
 #include <AK/Tuple.h>
 #include <LibCore/File.h>
@@ -676,6 +677,14 @@ ErrorOr<Result<Timestamp>> Implementation::impl$clock_time_get(Configuration&, C
     return Result<Timestamp> { static_cast<u64>(ts.tv_sec) * nanoseconds_in_second + static_cast<u64>(ts.tv_nsec) };
 }
 
+ErrorOr<Result<void>> Implementation::impl$random_get(Configuration& configuration, Pointer<u8> buf, Size buf_len)
+{
+    auto buffer_slice = TRY(slice_typed_memory(configuration, buf, buf_len));
+    fill_with_random(buffer_slice);
+
+    return Result<void> {};
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -710,7 +719,6 @@ ErrorOr<Result<void>> Implementation::impl$path_unlink_file(Configuration&, FD, 
 ErrorOr<Result<Size>> Implementation::impl$poll_oneoff(Configuration&, ConstPointer<Subscription> in, Pointer<Event> out, Size nsubscriptions) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$proc_raise(Configuration&, Signal) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$sched_yield(Configuration&) { return Errno::NoSys; }
-ErrorOr<Result<void>> Implementation::impl$random_get(Configuration&, Pointer<u8> buf, Size buf_len) { return Errno::NoSys; }
 ErrorOr<Result<FD>> Implementation::impl$sock_accept(Configuration&, FD fd, FDFlags fd_flags) { return Errno::NoSys; }
 ErrorOr<Result<SockRecvResult>> Implementation::impl$sock_recv(Configuration&, FD fd, Pointer<IOVec> ri_data, Size ri_data_len, RIFlags ri_flags) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$sock_send(Configuration&, FD fd, Pointer<CIOVec> si_data, Size si_data_len, SIFlags si_flags) { return Errno::NoSys; }
