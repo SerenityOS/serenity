@@ -113,7 +113,7 @@ static ErrorOr<void> mount_all()
     bool all_ok = true;
     auto process_fstab_entries = [&](StringView path) -> ErrorOr<void> {
         auto file_unbuffered = TRY(Core::File::open(path, Core::File::OpenMode::Read));
-        auto file = TRY(Core::BufferedFile::create(move(file_unbuffered)));
+        auto file = TRY(Core::InputBufferedFile::create(move(file_unbuffered)));
 
         while (TRY(file->can_read_line())) {
             auto line = TRY(file->read_line(buffer));

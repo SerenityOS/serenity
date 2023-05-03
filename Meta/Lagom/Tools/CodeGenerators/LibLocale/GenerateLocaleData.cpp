@@ -1058,7 +1058,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_header(Core::InputBufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1103,7 +1103,7 @@ namespace Locale {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::InputBufferedFile& file, CLDR& cldr)
 {
     auto string_index_type = cldr.unique_strings.type_that_fits();
 

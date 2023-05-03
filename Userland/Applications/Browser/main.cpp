@@ -48,7 +48,7 @@ DeprecatedString g_webdriver_content_ipc_path;
 static ErrorOr<void> load_content_filters()
 {
     auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
-    auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
+    auto ad_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Browser::g_content_filters.clear_with_capacity();
@@ -68,7 +68,7 @@ static ErrorOr<void> load_content_filters()
 static ErrorOr<void> load_autoplay_allowlist()
 {
     auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
-    auto allowlist = TRY(Core::BufferedFile::create(move(file)));
+    auto allowlist = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
     Browser::g_autoplay_allowlist.clear_with_capacity();

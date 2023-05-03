@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     if (!pattern_file.is_empty()) {
         auto file = TRY(Core::File::open(pattern_file, Core::File::OpenMode::Read));
-        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
         Array<u8, PAGE_SIZE> buffer;
         while (!buffered_file->is_eof()) {
             auto next_pattern = TRY(buffered_file->read_line(buffer));
@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
                                user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
-            auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+            auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 
             for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
                 Array<u8, PAGE_SIZE> buffer;

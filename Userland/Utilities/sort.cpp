@@ -62,7 +62,7 @@ struct Options {
 
 static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line>& lines, HashTable<Line>& seen)
 {
-    auto file = TRY(Core::BufferedFile::create(
+    auto file = TRY(Core::InputBufferedFile::create(
         TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read))));
 
     // FIXME: Unlimited line length

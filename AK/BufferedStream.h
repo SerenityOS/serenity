@@ -264,17 +264,17 @@ private:
 //       needed at the moment.
 
 template<SeekableStreamLike T>
-class BufferedSeekable final : public SeekableStream {
+class InputBufferedSeekable final : public SeekableStream {
     friend BufferedHelper<T>;
 
 public:
-    static ErrorOr<NonnullOwnPtr<BufferedSeekable<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
+    static ErrorOr<NonnullOwnPtr<InputBufferedSeekable<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16384)
     {
-        return BufferedHelper<T>::template create_buffered<BufferedSeekable>(move(stream), buffer_size);
+        return BufferedHelper<T>::template create_buffered<InputBufferedSeekable>(move(stream), buffer_size);
     }
 
-    BufferedSeekable(BufferedSeekable&& other) = default;
-    BufferedSeekable& operator=(BufferedSeekable&& other) = default;
+    InputBufferedSeekable(InputBufferedSeekable&& other) = default;
+    InputBufferedSeekable& operator=(InputBufferedSeekable&& other) = default;
 
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(move(buffer)); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.stream().write_some(buffer); }
@@ -311,11 +311,11 @@ public:
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
 
-    virtual ~BufferedSeekable() override = default;
+    virtual ~InputBufferedSeekable() override = default;
 
 private:
-    BufferedSeekable(NonnullOwnPtr<T> stream, CircularBuffer buffer)
-        : m_helper(Badge<BufferedSeekable<T>> {}, move(stream), move(buffer))
+    InputBufferedSeekable(NonnullOwnPtr<T> stream, CircularBuffer buffer)
+        : m_helper(Badge<InputBufferedSeekable<T>> {}, move(stream), move(buffer))
     {
     }
 
@@ -326,5 +326,5 @@ private:
 
 #if USING_AK_GLOBALLY
 using AK::BufferedHelper;
-using AK::BufferedSeekable;
+using AK::InputBufferedSeekable;
 #endif

@@ -53,7 +53,7 @@ static void set_image_path_for_emoji(StringView emoji_resource_path, EmojiData& 
     emoji.image_path = emoji_data.unique_strings.ensure(move(file));
 }
 
-static ErrorOr<void> parse_emoji_test_data(Core::BufferedFile& file, EmojiData& emoji_data)
+static ErrorOr<void> parse_emoji_test_data(Core::InputBufferedFile& file, EmojiData& emoji_data)
 {
     static constexpr auto group_header = "# group: "sv;
     static constexpr auto subgroup_header = "# subgroup: "sv;
@@ -117,7 +117,7 @@ static ErrorOr<void> parse_emoji_test_data(Core::BufferedFile& file, EmojiData& 
     return {};
 }
 
-static ErrorOr<void> parse_emoji_serenity_data(Core::BufferedFile& file, EmojiData& emoji_data)
+static ErrorOr<void> parse_emoji_serenity_data(Core::InputBufferedFile& file, EmojiData& emoji_data)
 {
     static constexpr auto code_point_header = "U+"sv;
 
@@ -203,7 +203,7 @@ static ErrorOr<void> validate_emoji(StringView emoji_resource_path, EmojiData& e
     return {};
 }
 
-static ErrorOr<void> generate_emoji_data_header(Core::BufferedFile& file, EmojiData const&)
+static ErrorOr<void> generate_emoji_data_header(Core::InputBufferedFile& file, EmojiData const&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -212,7 +212,7 @@ static ErrorOr<void> generate_emoji_data_header(Core::BufferedFile& file, EmojiD
     return {};
 }
 
-static ErrorOr<void> generate_emoji_data_implementation(Core::BufferedFile& file, EmojiData const& emoji_data)
+static ErrorOr<void> generate_emoji_data_implementation(Core::InputBufferedFile& file, EmojiData const& emoji_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -333,7 +333,7 @@ Optional<Emoji> find_emoji_for_code_points(ReadonlySpan<u32> code_points)
     return {};
 }
 
-static ErrorOr<void> generate_emoji_installation(Core::BufferedFile& file, EmojiData const& emoji_data)
+static ErrorOr<void> generate_emoji_installation(Core::InputBufferedFile& file, EmojiData const& emoji_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };

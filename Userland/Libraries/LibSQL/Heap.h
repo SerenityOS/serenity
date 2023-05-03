@@ -128,7 +128,7 @@ private:
     ErrorOr<void> initialize_zero_block();
     ErrorOr<void> update_zero_block();
 
-    OwnPtr<Core::BufferedFile> m_file;
+    OwnPtr<Core::InputBufferedFile> m_file;
     Block::Index m_highest_block_written { 0 };
     Block::Index m_next_block { 1 };
     Block::Index m_schemas_root { 0 };

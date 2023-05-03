@@ -10,10 +10,10 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
-static ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file_or_stdin(StringView filename)
+static ErrorOr<NonnullOwnPtr<Core::InputBufferedFile>> open_file_or_stdin(StringView filename)
 {
     auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
-    return TRY(Core::BufferedFile::create(move(file)));
+    return TRY(Core::InputBufferedFile::create(move(file)));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

@@ -422,7 +422,7 @@ TEST_CASE(buffered_long_file_read)
 {
     auto maybe_file = Core::File::open("/usr/Tests/LibCore/long_lines.txt"sv, Core::File::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
-    auto maybe_buffered_file = Core::BufferedFile::create(maybe_file.release_value());
+    auto maybe_buffered_file = Core::InputBufferedFile::create(maybe_file.release_value());
     EXPECT(!maybe_buffered_file.is_error());
     auto file = maybe_buffered_file.release_value();
 
@@ -444,7 +444,7 @@ TEST_CASE(buffered_small_file_read)
 {
     auto maybe_file = Core::File::open("/usr/Tests/LibCore/small.txt"sv, Core::File::OpenMode::Read);
     EXPECT(!maybe_file.is_error());
-    auto maybe_buffered_file = Core::BufferedFile::create(maybe_file.release_value());
+    auto maybe_buffered_file = Core::InputBufferedFile::create(maybe_file.release_value());
     EXPECT(!maybe_buffered_file.is_error());
     auto file = maybe_buffered_file.release_value();
 
@@ -472,7 +472,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 {
     // We choose a buffer size of 12 bytes to cover half of the input file.
     auto file = Core::File::open("/usr/Tests/LibCore/small.txt"sv, Core::File::OpenMode::Read).release_value();
-    auto buffered_file = Core::BufferedFile::create(move(file), 12).release_value();
+    auto buffered_file = Core::InputBufferedFile::create(move(file), 12).release_value();
 
     // Initial state.
     {
@@ -562,7 +562,7 @@ TEST_CASE(buffered_file_without_newlines)
     EXPECT(!file_wo_newlines->write_until_depleted(new_newlines_message.bytes()).is_error());
     file_wo_newlines->close();
 
-    auto ro_file = Core::BufferedFile::create(Core::File::open(filename, Core::File::OpenMode::Read).release_value(), new_newlines_message.length() + 1).release_value();
+    auto ro_file = Core::InputBufferedFile::create(Core::File::open(filename, Core::File::OpenMode::Read).release_value(), new_newlines_message.length() + 1).release_value();
 
     auto maybe_can_read_line = ro_file->can_read_line();
     EXPECT(!maybe_can_read_line.is_error());

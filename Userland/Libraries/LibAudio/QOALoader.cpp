@@ -26,7 +26,7 @@ QOALoaderPlugin::QOALoaderPlugin(NonnullOwnPtr<AK::SeekableStream> stream)
 
 Result<NonnullOwnPtr<QOALoaderPlugin>, LoaderError> QOALoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<QOALoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());

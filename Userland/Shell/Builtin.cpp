@@ -1795,7 +1795,7 @@ ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
         split_by_any_of = TRY(const_cast<AST::Value&>(*split_by_variable).resolve_as_string(*this));
 
     auto file = TRY(Core::File::standard_input());
-    auto buffered_stream = TRY(Core::BufferedFile::create(move(file)));
+    auto buffered_stream = TRY(Core::InputBufferedFile::create(move(file)));
 
     StringBuilder builder;
     ByteBuffer buffer;

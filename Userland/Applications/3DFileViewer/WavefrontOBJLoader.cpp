@@ -19,7 +19,7 @@ static inline GLuint get_index_value(StringView& representation)
 
 ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+    auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 
     Vector<Vertex> vertices;
     Vector<Vertex> normals;

@@ -48,7 +48,7 @@ ErrorOr<void> Heap::open()
     }
 
     auto file = TRY(Core::File::open(name(), Core::File::OpenMode::ReadWrite));
-    m_file = TRY(Core::BufferedFile::create(move(file)));
+    m_file = TRY(Core::InputBufferedFile::create(move(file)));
 
     if (file_size > 0) {
         if (auto error_maybe = read_zero_block(); error_maybe.is_error()) {
