@@ -1289,9 +1289,6 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
         return width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
     }
 
-    if (!available_width.is_definite())
-        width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
-
     auto& computed_values = box.computed_values();
     if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
         auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
@@ -1315,9 +1312,6 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
     if (height.is_auto()) {
         return height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
     }
-
-    if (!available_height.is_definite())
-        height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
 
     auto& computed_values = box.computed_values();
     if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
