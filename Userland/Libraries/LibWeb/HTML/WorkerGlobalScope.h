@@ -81,6 +81,8 @@ public:
 
     WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>, JS::Realm& realm);
 
+    bool cross_origin_isolated_capability() const { return m_cross_origin_isolated_capability; }
+
 protected:
     explicit WorkerGlobalScope(JS::Realm&);
 
@@ -123,6 +125,7 @@ private:
     // A WorkerGlobalScope object has an associated module map. It is a module map, initially empty.
 
     // https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-cross-origin-isolated-capability
+    // A WorkerGlobalScope object has an associated cross-origin isolated capability boolean. It is initially false.
     bool m_cross_origin_isolated_capability { false };
 };
 

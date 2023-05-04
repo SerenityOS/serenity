@@ -41,6 +41,10 @@ public:
         // 4. Let settings object be a new environment settings object whose algorithms are defined as follows (...)
         auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context)).release_allocated_value_but_fixme_should_propagate_errors();
 
+        // FIXME: This isn't entirely correct, as cross origin isolated capability may
+        //        be changed later, e.g in steps 7 & 8 of "run a worker".
+        settings_object->m_cross_origin_isolated_capability = worker_global_scope.cross_origin_isolated_capability() ? CanUseCrossOriginIsolatedAPIs::Yes : CanUseCrossOriginIsolatedAPIs::No;
+
         // 5. Set settings object's id to a new unique opaque string, creation URL to worker global scope's url, top-level creation URL to null, target browsing context to null, and active service worker to null.
 
         // 6. If worker global scope is a DedicatedWorkerGlobalScope object, then set settings object's top-level origin to outside settings's top-level origin.
@@ -69,13 +73,14 @@ public:
     AK::URL api_base_url() override { return m_url; }
     Origin origin() override { return m_origin; }
     PolicyContainer policy_container() override { return m_policy_container; }
-    CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { TODO(); }
+    CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { return m_cross_origin_isolated_capability; }
 
 private:
     DeprecatedString m_api_url_character_encoding;
     AK::URL m_url;
     HTML::Origin m_origin;
     HTML::PolicyContainer m_policy_container;
+    CanUseCrossOriginIsolatedAPIs m_cross_origin_isolated_capability;
 };
 
 }
