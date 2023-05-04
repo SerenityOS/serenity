@@ -60,6 +60,7 @@ struct EnvironmentSettingsObject
     JS_CELL(EnvironmentSettingsObject, JS::Cell);
 
     virtual ~EnvironmentSettingsObject() override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-target-browsing-context
     JS::ExecutionContext& realm_execution_context();
@@ -124,7 +125,7 @@ protected:
 
 private:
     NonnullOwnPtr<JS::ExecutionContext> m_realm_execution_context;
-    ModuleMap m_module_map;
+    JS::GCPtr<ModuleMap> m_module_map;
 
     EventLoop* m_responsible_event_loop { nullptr };
 

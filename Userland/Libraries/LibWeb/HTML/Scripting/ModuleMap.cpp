@@ -8,6 +8,14 @@
 
 namespace Web::HTML {
 
+void ModuleMap::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& it : m_values) {
+        visitor.visit(it.value.module_script);
+    }
+}
+
 bool ModuleMap::is_fetching(AK::URL const& url, DeprecatedString const& type) const
 {
     return is(url, type, EntryType::Fetching);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 
 namespace Web::HTML {
@@ -33,8 +34,8 @@ private:
 };
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#module-map
-class ModuleMap {
-    AK_MAKE_NONCOPYABLE(ModuleMap);
+class ModuleMap final : public JS::Cell {
+    JS_CELL(ModuleMap, Cell);
 
 public:
     ModuleMap() = default;
@@ -63,6 +64,8 @@ public:
     void wait_for_change(AK::URL const& url, DeprecatedString const& type, Function<void(Entry)> callback);
 
 private:
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
     HashMap<ModuleLocationTuple, Entry> m_values;
     HashMap<ModuleLocationTuple, Vector<Function<void(Entry)>>> m_callbacks;
 };
