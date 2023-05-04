@@ -115,12 +115,28 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         return;
     }
 
+    auto remaining_available_space = available_space;
+    if (available_space.width.is_definite() && creates_block_formatting_context(box)) {
+        // 9.5 Floats
+        // The border box of a table, a block-level replaced element, or an element in the normal flow that establishes a
+        // new block formatting context (such as an element with 'overflow' other than 'visible') must not overlap the margin
+        // box of any floats in the same block formatting context as the element itself. If necessary, implementations should
+        // clear the said element by placing it below any preceding floats, but may place it adjacent to such floats if there is
+        // sufficient space. They may even make the border box of said element narrower than defined by section 10.3.3.
+        // CSS2 does not define when a UA may put said element next to the float or by how much said element may
+        // become narrower.
+        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+        auto space = space_used_by_floats(box_in_root_rect.y());
+        auto remaining_width = available_space.width.to_px() - space.left - space.right;
+        remaining_available_space.width = AvailableSize::make_definite(remaining_width);
+    }
+
     if (is<ReplacedBox>(box)) {
         // FIXME: This should not be done *by* ReplacedBox
         auto& replaced = verify_cast<ReplacedBox>(box);
         // FIXME: This const_cast is gross.
         const_cast<ReplacedBox&>(replaced).prepare_for_replaced_layout();
-        compute_width_for_block_level_replaced_element_in_normal_flow(replaced, available_space);
+        compute_width_for_block_level_replaced_element_in_normal_flow(replaced, remaining_available_space);
         // NOTE: We don't return here.
     }
 
@@ -131,8 +147,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto const& computed_values = box.computed_values();
 
-    auto width_of_containing_block = available_space.width.to_px();
-    auto width_of_containing_block_as_length_for_resolve = available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
+    auto width_of_containing_block = remaining_available_space.width.to_px();
+    auto width_of_containing_block_as_length_for_resolve = remaining_available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
 
     auto zero_value = CSS::Length::make_px(0);
 
@@ -216,10 +232,10 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
             return CSS::Length::make_px(box_state.content_width());
         }
         if (is<TableWrapper>(box))
-            return CSS::Length::make_px(compute_width_for_table_wrapper(box, available_space));
-        if (should_treat_width_as_auto(box, available_space))
+            return CSS::Length::make_px(compute_width_for_table_wrapper(box, remaining_available_space));
+        if (should_treat_width_as_auto(box, remaining_available_space))
             return CSS::Length::make_auto();
-        return calculate_inner_width(box, available_space.width, computed_values.width());
+        return calculate_inner_width(box, remaining_available_space.width, computed_values.width());
     }();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
@@ -228,8 +244,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
     if (!computed_values.max_width().is_none()) {
-        auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
-        auto used_width_px = used_width.is_auto() ? available_space.width.to_px() : used_width.to_px(box);
+        auto max_width = calculate_inner_width(box, remaining_available_space.width, computed_values.max_width());
+        auto used_width_px = used_width.is_auto() ? remaining_available_space.width.to_px() : used_width.to_px(box);
         if (used_width_px > max_width.to_px(box)) {
             used_width = try_compute_width(max_width);
         }
@@ -238,8 +254,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
-        auto min_width = calculate_inner_width(box, available_space.width, computed_values.min_width());
-        auto used_width_px = used_width.is_auto() ? available_space.width.to_px() : used_width.to_px(box);
+        auto min_width = calculate_inner_width(box, remaining_available_space.width, computed_values.min_width());
+        auto used_width_px = used_width.is_auto() ? remaining_available_space.width.to_px() : used_width.to_px(box);
         if (used_width_px < min_width.to_px(box)) {
             used_width = try_compute_width(min_width);
         }
