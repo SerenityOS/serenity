@@ -33,10 +33,18 @@ EnvironmentSettingsObject::~EnvironmentSettingsObject()
     responsible_event_loop().unregister_environment_settings_object({}, *this);
 }
 
+JS::ThrowCompletionOr<void> EnvironmentSettingsObject::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    m_module_map = realm.heap().allocate_without_realm<ModuleMap>();
+    return {};
+}
+
 void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(target_browsing_context);
+    visitor.visit(m_module_map);
     visitor.ignore(m_outstanding_rejected_promises_weak_set);
 }
 
@@ -48,7 +56,7 @@ JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()
 
 ModuleMap& EnvironmentSettingsObject::module_map()
 {
-    return m_module_map;
+    return *m_module_map;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object%27s-realm
