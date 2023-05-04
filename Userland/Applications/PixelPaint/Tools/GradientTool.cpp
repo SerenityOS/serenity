@@ -18,6 +18,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Gradients.h>
@@ -274,7 +275,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::HorizontalOpacitySlider>());
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
         hardness_slider->set_range(1, 99);
         hardness_slider->set_value(m_hardness);
         hardness_slider->on_change = [this](int value) {
