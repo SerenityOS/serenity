@@ -470,7 +470,7 @@ ThrowCompletionOr<Value> ProxyObject::internal_get(PropertyKey const& property_k
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
-    // NOTE: We need to protect ourselves from a Proxy with the handler's prototype set to the
+    // NOTE: We need to protect ourselves from a Proxy with its (or handler's) prototype set to the
     // Proxy itself, which would by default bounce between these functions indefinitely and lead to
     // a stack overflow when the Proxy's (p) or Proxy handler's (h) Object::get() is called and the
     // handler doesn't have a `get` trap:
@@ -538,6 +538,22 @@ ThrowCompletionOr<bool> ProxyObject::internal_set(PropertyKey const& property_ke
 
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
+
+    // NOTE: We need to protect ourselves from a Proxy with its prototype set to the
+    // Proxy itself, which would by default bounce between these functions indefinitely and lead to
+    // a stack overflow when the Proxy's (p) or Proxy handler's (h) Object::get() is called and the
+    // handler doesn't have a `has` trap:
+    //
+    // 1. p -> ProxyObject::internal_set()  <- you are here
+    // 2. target -> Object::internal_set()
+    // 3. target -> Object::ordinary_set_with_own_descriptor()
+    // 4. target.[[Prototype]] -> Object::internal_set()
+    // 5. target.[[Prototype]] -> Object::ordinary_set_with_own_descriptor()
+    // 6. target.[[Prototype]].[[Prototype]] (which is ProxyObject) -> Object::internal_set()
+    //
+    // In JS code: `const proxy = new Proxy({}, {}); proxy.__proto__ = Object.create(proxy); proxy["foo"] = "bar";`
+    if (vm.did_reach_stack_space_limit())
+        return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
 
     // 5. Let trap be ? GetMethod(handler, "set").
     auto trap = TRY(Value(m_handler).get_method(vm, vm.names.set));

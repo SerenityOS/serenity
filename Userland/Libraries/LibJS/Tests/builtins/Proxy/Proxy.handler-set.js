@@ -112,3 +112,20 @@ describe("[[Set]] invariants", () => {
         );
     });
 });
+
+test("Proxy handler that has the Proxy itself as its prototype", () => {
+    const handler = {};
+    const proxy = new Proxy({}, handler);
+    handler.__proto__ = proxy;
+    expect(() => {
+        proxy["foo"] = "bar";
+    }).toThrowWithMessage(InternalError, "Call stack size limit exceeded");
+});
+
+test("Proxy that has the Proxy itself as its prototype", () => {
+    const proxy = new Proxy({}, {});
+    proxy.__proto__ = Object.create(proxy);
+    expect(() => {
+        proxy["foo"] = "bar";
+    }).toThrowWithMessage(InternalError, "Call stack size limit exceeded");
+});
