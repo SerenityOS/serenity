@@ -12,7 +12,7 @@
 
 namespace Web::HTML {
 
-using ModuleCallback = Function<void(JavaScriptModuleScript*)>;
+using ModuleCallback = JS::SafeFunction<void(JavaScriptModuleScript*)>;
 
 class DescendantFetchingContext : public RefCounted<DescendantFetchingContext> {
 public:
