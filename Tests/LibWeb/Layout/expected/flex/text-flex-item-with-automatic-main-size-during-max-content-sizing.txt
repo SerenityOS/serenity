@@ -1,0 +1,9 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x0 [BFC] children: not-inline
+    BlockContainer <body> at (2,2) content-size 311.675781x25.835937 positioned [BFC] children: not-inline
+      Box <div.inner> at (3,3) content-size 309.675781x23.835937 flex-container(row) [FFC] children: not-inline
+        BlockContainer <div.moo> at (4,4) content-size 307.675781x21.835937 flex-item [BFC] children: inline
+          line 0 width: 307.675781, height: 21.835937, bottom: 21.835937, baseline: 16.914062
+            frag 0 from TextNode start: 0, length: 30, rect: [4,4 307.675781x21.835937]
+              "This should all be on one line"
+          TextNode <#text>

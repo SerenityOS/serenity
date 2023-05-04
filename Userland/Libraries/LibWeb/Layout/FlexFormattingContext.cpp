@@ -862,6 +862,16 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
 // https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
 void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 {
+    // AD-HOC: For the purposes of this algorithm, we treat available main axis space
+    //         of min-content and max-content as 0 and infinity respectively.
+    CSSPixels flex_container_inner_main_size;
+    if (m_available_space_for_flex_container->main.is_min_content())
+        flex_container_inner_main_size = 0;
+    else if (m_available_space_for_flex_container->main.is_max_content())
+        flex_container_inner_main_size = INFINITY;
+    else
+        flex_container_inner_main_size = inner_main_size(flex_container());
+
     // 1. Determine the used flex factor.
 
     // Sum the outer hypothetical main sizes of all items on the line.
@@ -878,7 +888,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         }
         // CSS-FLEXBOX-2: Account for gap between flex items.
         sum += main_gap() * (line.items.size() - 1);
-        if (sum < inner_main_size(flex_container()))
+        if (sum < flex_container_inner_main_size)
             return FlexFactor::FlexGrowFactor;
         return FlexFactor::FlexShrinkFactor;
     }();
@@ -924,7 +934,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         }
         // CSS-FLEXBOX-2: Account for gap between flex items.
         sum += main_gap() * (line.items.size() - 1);
-        return inner_main_size(flex_container()) - sum;
+        return flex_container_inner_main_size - sum;
     };
     auto const initial_free_space = calculate_remaining_free_space();
 
