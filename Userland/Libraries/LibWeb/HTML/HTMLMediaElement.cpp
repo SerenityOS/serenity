@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentObserver.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
@@ -46,6 +47,14 @@ JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMediaElementPrototype>(realm, "HTMLMediaElement"));
 
     m_video_tracks = TRY(realm.heap().allocate<VideoTrackList>(realm, realm));
+    m_document_observer = TRY(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
+
+    // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-82
+    m_document_observer->document_became_inactive = [this]() {
+        // If the media element's node document stops being a fully active document, then the playback will stop until
+        // the document is active again.
+        pause_element().release_value_but_fixme_should_propagate_errors();
+    };
 
     return {};
 }
@@ -64,6 +73,7 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_error);
     visitor.visit(m_fetch_controller);
     visitor.visit(m_video_tracks);
+    visitor.visit(m_document_observer);
 }
 
 void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

@@ -208,6 +208,8 @@ private:
     bool m_running_time_update_event_handler { false };
     Optional<Time> m_last_time_update_event_time;
 
+    JS::GCPtr<DOM::DocumentObserver> m_document_observer;
+
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 
     bool m_seek_in_progress = false;
