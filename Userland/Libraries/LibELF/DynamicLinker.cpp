@@ -39,6 +39,7 @@ namespace ELF {
 static HashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
 static DeprecatedString s_main_program_path;
 static OrderedHashMap<DeprecatedString, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
+static HashMap<DeprecatedString, DeprecatedString> s_global_resolved;
 
 using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
@@ -101,6 +102,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(Deprecat
     // This actually maps the library at the intended and final place.
     auto main_library_object = loader->map();
     s_global_objects.set(filepath, *main_library_object);
+    s_global_resolved.set(LexicalPath::basename(filepath), filepath);
 
     return loader;
 }
@@ -144,7 +146,7 @@ Optional<DeprecatedString> DynamicLinker::resolve_library(DeprecatedString const
         }
     }
 
-    return {};
+    return s_global_resolved.get(name);
 }
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(DeprecatedString const& path)
@@ -386,8 +388,10 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
 
     for (auto& loader : loaders) {
         auto dynamic_object = loader->map();
-        if (dynamic_object)
+        if (dynamic_object) {
             s_global_objects.set(dynamic_object->filepath(), *dynamic_object);
+            s_global_resolved.set(LexicalPath::basename(dynamic_object->filepath()), dynamic_object->filepath());
+        }
     }
 
     for (auto& loader : loaders) {
