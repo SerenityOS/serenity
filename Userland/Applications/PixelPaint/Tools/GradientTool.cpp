@@ -272,6 +272,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 
         auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label->set_fixed_size(80, 20);
 
         auto hardness_slider = TRY(hardness_container->try_add<GUI::HorizontalOpacitySlider>());
         hardness_slider->set_range(1, 99);
