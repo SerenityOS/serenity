@@ -877,10 +877,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     for (auto const& input_filename : TRY(script.input_filenames())) {
-        TRY(Core::System::unveil(input_filename, "r"sv));
+        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input_filename)), "r"sv));
     }
     for (auto const& output_filename : TRY(script.output_filenames())) {
-        TRY(Core::System::unveil(output_filename, "w"sv));
+        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(output_filename)), "w"sv));
     }
 
     Vector<InputFile> inputs;
@@ -888,10 +888,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         if (filename == "-"sv) {
             inputs.empend(TRY(InputFile::create_from_stdin()));
         } else {
+            TRY(Core::System::unveil(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"sv : "r"sv));
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
             inputs.empend(TRY(InputFile::create(move(file))));
         }
     }
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     if (inputs.is_empty()) {
         inputs.empend(TRY(InputFile::create_from_stdin()));
     }
