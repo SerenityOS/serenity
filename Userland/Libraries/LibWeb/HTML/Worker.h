@@ -89,7 +89,7 @@ private:
 
     // NOTE: These are inside the worker VM.
     JS::GCPtr<JS::Realm> m_worker_realm;
-    JS::GCPtr<JS::Object> m_worker_scope;
+    JS::GCPtr<WorkerGlobalScope> m_worker_scope;
 
     void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const& options);
 };

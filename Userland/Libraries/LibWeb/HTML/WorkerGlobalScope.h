@@ -9,6 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
+#include <LibWeb/Bindings/WorkerGlobalScopeGlobalMixin.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
@@ -31,11 +32,22 @@ namespace Web::HTML {
 // user agent runs the run a worker algorithm.
 class WorkerGlobalScope
     : public DOM::EventTarget
-    , public WindowOrWorkerGlobalScopeMixin {
+    , public WindowOrWorkerGlobalScopeMixin
+    , public Bindings::WorkerGlobalScopeGlobalMixin {
     WEB_PLATFORM_OBJECT(WorkerGlobalScope, DOM::EventTarget);
 
 public:
     virtual ~WorkerGlobalScope() override;
+
+    using WindowOrWorkerGlobalScopeMixin::atob;
+    using WindowOrWorkerGlobalScopeMixin::btoa;
+    using WindowOrWorkerGlobalScopeMixin::clear_interval;
+    using WindowOrWorkerGlobalScopeMixin::clear_timeout;
+    using WindowOrWorkerGlobalScopeMixin::fetch;
+    using WindowOrWorkerGlobalScopeMixin::queue_microtask;
+    using WindowOrWorkerGlobalScopeMixin::set_interval;
+    using WindowOrWorkerGlobalScopeMixin::set_timeout;
+    using WindowOrWorkerGlobalScopeMixin::structured_clone;
 
     // ^WindowOrWorkerGlobalScopeMixin
     virtual Bindings::PlatformObject& this_impl() override { return *this; }
@@ -66,6 +78,8 @@ public:
     // Spec note: While the WorkerLocation object is created after the WorkerGlobalScope object,
     //            this is not problematic as it cannot be observed from script.
     void set_location(JS::NonnullGCPtr<WorkerLocation> loc) { m_location = move(loc); }
+
+    WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>, JS::Realm& realm);
 
 protected:
     explicit WorkerGlobalScope(JS::Realm&);

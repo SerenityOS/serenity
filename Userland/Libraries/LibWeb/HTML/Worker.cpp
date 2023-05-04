@@ -132,7 +132,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 TODO();
             // FIXME: Make and use subclasses of WorkerGlobalScope, however this requires JS::GlobalObject to
             //        play nicely with the IDL interpreter, to make spec-compliant extensions, which it currently does not.
-            m_worker_scope = m_worker_vm->heap().allocate_without_realm<JS::GlobalObject>(realm);
+            m_worker_scope = m_worker_vm->heap().allocate_without_realm<WorkerGlobalScope>(realm);
             return m_worker_scope.ptr();
         },
         nullptr);
@@ -182,7 +182,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    m_inner_settings = WorkerEnvironmentSettingsObject::setup(move(realm_execution_context));
+    m_inner_settings = WorkerEnvironmentSettingsObject::setup(move(realm_execution_context), outside_settings);
 
     // 10. Set worker global scope's name to the value of options's name member.
     // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
@@ -222,6 +222,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 // Implied
 
                 // 3. Set worker global scope's url to response's url.
+                m_worker_scope->set_url(url);
 
                 // 4. Initialize worker global scope's policy container given worker global scope, response, and inside settings.
                 // FIXME: implement policy container
@@ -276,6 +277,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             outside_port.entangle_with(*inside_port);
 
             // 19. Create a new WorkerLocation object and associate it with worker global scope.
+            m_worker_scope->set_location(m_worker_vm->heap().allocate<WorkerLocation>(m_inner_settings->realm(), *m_worker_scope).release_allocated_value_but_fixme_should_propagate_errors());
 
             // 20. Closing orphan workers: Start monitoring the worker such that no sooner than it
             //     stops being a protected worker, and no later than it stops being a permissible worker,

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Vector.h>
+#include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/Forward.h>
@@ -27,10 +28,6 @@ WorkerGlobalScope::~WorkerGlobalScope() = default;
 JS::ThrowCompletionOr<void> WorkerGlobalScope::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
-    m_navigator = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return WorkerNavigator::create(*this);
-    }));
-
     return {};
 }
 
@@ -83,6 +80,16 @@ JS::NonnullGCPtr<WorkerNavigator> WorkerGlobalScope::navigator() const
     // The navigator attribute of the WorkerGlobalScope interface must return an instance of the WorkerNavigator interface,
     // which represents the identity and state of the user agent (the client).
     return *m_navigator;
+}
+
+WebIDL::ExceptionOr<void> WorkerGlobalScope::initialize_web_interfaces(Badge<WorkerEnvironmentSettingsObject>, JS::Realm& realm)
+{
+    Bindings::add_dedicated_worker_exposed_interfaces(realm.global_object());
+    MUST_OR_THROW_OOM(Bindings::WorkerGlobalScopeGlobalMixin::initialize(realm, *this));
+    m_navigator = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return WorkerNavigator::create(*this);
+    }));
+    return {};
 }
 
 #undef __ENUMERATE
