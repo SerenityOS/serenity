@@ -189,6 +189,7 @@ class CustomEvent;
 class Document;
 class DocumentFragment;
 class DocumentLoadEventDelayer;
+class DocumentObserver;
 class DocumentType;
 class DOMEventListener;
 class DOMImplementation;
