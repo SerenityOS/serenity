@@ -402,6 +402,19 @@ ThrowCompletionOr<bool> ProxyObject::internal_has_property(PropertyKey const& pr
     // 3. Assert: Type(handler) is Object.
     // 4. Let target be O.[[ProxyTarget]].
 
+    // NOTE: We need to protect ourselves from a Proxy with the handler's prototype set to the
+    // Proxy itself, which would by default bounce between these functions indefinitely and lead to
+    // a stack overflow when the Proxy's (p) or Proxy handler's (h) Object::get() is called and the
+    // handler doesn't have a `has` trap:
+    //
+    // 1. p -> ProxyObject::internal_has_property()  <- you are here
+    // 2. target -> Object::internal_has_property()
+    // 3. target.[[Prototype]] (which is internal_has_property) -> Object::internal_has_property()
+    //
+    // In JS code: `const proxy = new Proxy({}, {}); proxy.__proto__ = Object.create(proxy); "foo" in proxy;`
+    if (vm.did_reach_stack_space_limit())
+        return vm.throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
+
     // 5. Let trap be ? GetMethod(handler, "has").
     auto trap = TRY(Value(m_handler).get_method(vm, vm.names.has));
 
