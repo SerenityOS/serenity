@@ -232,15 +232,15 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         mode_combobox->set_model(*GUI::ItemListModel<StringView, decltype(s_mode_names)>::create(s_mode_names));
         mode_combobox->set_selected_index((int)m_mode, GUI::AllowCallback::No);
 
-        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
-        size_container->set_fixed_height(20);
-        (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        auto opacity_container = TRY(properties_widget->try_add<GUI::Widget>());
+        opacity_container->set_fixed_height(20);
+        (void)TRY(opacity_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>(TRY("Opacity:"_string)));
-        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label->set_fixed_size(80, 20);
+        auto opacity_label = TRY(opacity_container->try_add<GUI::Label>(TRY("Opacity:"_string)));
+        opacity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        opacity_label->set_fixed_size(80, 20);
 
-        auto opacity_slider = TRY(size_container->try_add<GUI::HorizontalOpacitySlider>());
+        auto opacity_slider = TRY(opacity_container->try_add<GUI::HorizontalOpacitySlider>());
         opacity_slider->set_range(1, 100);
         opacity_slider->set_value(100);
 
