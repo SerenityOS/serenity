@@ -394,6 +394,9 @@ public:
     void register_node_iterator(Badge<NodeIterator>, NodeIterator&);
     void unregister_node_iterator(Badge<NodeIterator>, NodeIterator&);
 
+    void register_document_observer(Badge<DocumentObserver>, DocumentObserver&);
+    void unregister_document_observer(Badge<DocumentObserver>, DocumentObserver&);
+
     template<typename Callback>
     void for_each_node_iterator(Callback callback)
     {
@@ -587,6 +590,8 @@ private:
     bool m_needs_full_style_update { false };
 
     HashTable<JS::GCPtr<NodeIterator>> m_node_iterators;
+
+    HashTable<JS::NonnullGCPtr<DocumentObserver>> m_document_observers;
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };

@@ -23,6 +23,7 @@
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
+#include <LibWeb/DOM/DocumentObserver.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -370,6 +371,9 @@ void Document::visit_edges(Cell::Visitor& visitor)
 
     for (auto& node_iterator : m_node_iterators)
         visitor.visit(node_iterator);
+
+    for (auto& document_observer : m_document_observers)
+        visitor.visit(document_observer);
 
     for (auto& target : m_pending_scroll_event_targets)
         visitor.visit(target);
@@ -2032,6 +2036,18 @@ void Document::unregister_node_iterator(Badge<NodeIterator>, NodeIterator& node_
     VERIFY(was_removed);
 }
 
+void Document::register_document_observer(Badge<DocumentObserver>, DocumentObserver& document_observer)
+{
+    auto result = m_document_observers.set(document_observer);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Document::unregister_document_observer(Badge<DocumentObserver>, DocumentObserver& document_observer)
+{
+    bool was_removed = m_document_observers.remove(document_observer);
+    VERIFY(was_removed);
+}
+
 void Document::increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
 {
     ++m_number_of_things_delaying_the_load_event;
@@ -2437,6 +2453,11 @@ bool Document::is_allowed_to_use_feature(PolicyControlledFeature feature) const
 void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>)
 {
     tear_down_layout_tree();
+
+    for (auto& document_observer : m_document_observers) {
+        if (document_observer->document_became_inactive)
+            document_observer->document_became_inactive();
+    }
 }
 
 // https://w3c.github.io/editing/docs/execCommand/#querycommandsupported()
