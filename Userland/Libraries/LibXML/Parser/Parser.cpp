@@ -74,7 +74,7 @@ void Parser::append_node(NonnullOwnPtr<Node> node)
         m_entered_node->content.get<Node::Element>().children.append(move(node));
     } else {
         m_root_node = move(node);
-        m_entered_node = m_root_node.ptr();
+        enter_node(*m_root_node);
     }
 }
 
