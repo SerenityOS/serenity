@@ -129,4 +129,4 @@ And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contribu
 
 ## License
 
-SerenityOS is licensed under a 2-clause BSD license.
+SerenityOS is licensed under a 2-clause BSD license. Click <a href="https://github.com/SerenityOS/serenity/blob/master/LICENSE">here</a> for more information.
