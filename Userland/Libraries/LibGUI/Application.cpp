@@ -79,7 +79,7 @@ ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& a
     application->m_event_loop = TRY(try_make<Core::EventLoop>());
 
     ConnectionToWindowServer::the();
-    Clipboard::initialize({});
+    TRY(Clipboard::initialize({}));
 
     if (arguments.argc > 0)
         application->m_invoked_as = arguments.argv[0];

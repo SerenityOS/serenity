@@ -36,7 +36,7 @@ public:
         RefPtr<Gfx::Bitmap> as_bitmap() const;
     };
 
-    static void initialize(Badge<Application>);
+    static ErrorOr<void> initialize(Badge<Application>);
     static Clipboard& the();
 
     DataAndType fetch_data_and_type() const;
