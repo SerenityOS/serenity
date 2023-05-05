@@ -921,6 +921,7 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +#    include <LibGUI/Widget.h>
 +#    include <LibGUI/Window.h>
 +#    include <LibGfx/Bitmap.h>
++#    include <LibMain/Main.h>
 +#    include <dlfcn.h>
 +
 +static SDL_Scancode scancode_map[] = {
@@ -1125,7 +1126,7 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +    dbgln("{}: Initialising SDL application", __FUNCTION__);
 +
 +    if (!g_app) {
-+        g_app = GUI::Application::construct(0, nullptr);
++        g_app = MUST(GUI::Application::create(Main::Arguments {}));
 +        g_app->set_quit_when_last_window_deleted(false);
 +    }
 +
