@@ -59,8 +59,8 @@ public:
     public:
         static ErrorOr<Bug> construct()
         {
-            NonnullRefPtr<Gfx::Bitmap> falling_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/falling.png"sv));
-            NonnullRefPtr<Gfx::Bitmap> flapping_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/flapping.png"sv));
+            NonnullRefPtr<Gfx::Bitmap> falling_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/flappybug/falling.png"sv));
+            NonnullRefPtr<Gfx::Bitmap> flapping_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/flappybug/flapping.png"sv));
             return Bug(move(falling_bitmap), move(flapping_bitmap));
         }
 
@@ -139,9 +139,9 @@ public:
         static ErrorOr<Cloud> construct()
         {
             Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
-                TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_0.png"sv)),
-                TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_1.png"sv)),
-                TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_2.png"sv)),
+                TRY(Gfx::Bitmap::load_from_file("/res/graphics/flappybug/cloud_0.png"sv)),
+                TRY(Gfx::Bitmap::load_from_file("/res/graphics/flappybug/cloud_1.png"sv)),
+                TRY(Gfx::Bitmap::load_from_file("/res/graphics/flappybug/cloud_2.png"sv)),
             };
             return Cloud(move(cloud_bitmaps));
         }
@@ -173,7 +173,7 @@ private:
     float m_last_score {};
     float m_difficulty {};
     float m_restart_cooldown {};
-    NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::load_from_file("/res/icons/flappybug/background.png"sv).release_value_but_fixme_should_propagate_errors() };
+    NonnullRefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::load_from_file("/res/graphics/flappybug/background.png"sv).release_value_but_fixme_should_propagate_errors() };
     const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
     const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 
