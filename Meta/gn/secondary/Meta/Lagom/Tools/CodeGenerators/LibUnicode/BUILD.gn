@@ -1,0 +1,11 @@
+import("//Meta/Lagom/Tools/lagom_tool.gni")
+
+lagom_tool("GenerateUnicodeData") {
+  sources = [ "GenerateUnicodeData.cpp" ]
+  deps = [ "//Userland/Libraries/LibMain" ]
+}
+
+lagom_tool("GenerateEmojiData") {
+  sources = [ "GenerateEmojiData.cpp" ]
+  deps = [ "//Userland/Libraries/LibMain" ]
+}
