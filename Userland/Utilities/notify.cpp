@@ -12,7 +12,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     Core::ArgsParser args_parser;
     StringView title {};

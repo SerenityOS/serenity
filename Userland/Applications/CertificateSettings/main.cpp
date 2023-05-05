@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd unix"));
 
-    auto app = TRY(GUI::Application::try_create(args));
+    auto app = TRY(GUI::Application::create(args));
 
     TRY(Core::System::unveil(TRY(String::formatted("{}/.config/certs.pem", Core::StandardPaths::home_directory())), "rwc"_short_string));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));

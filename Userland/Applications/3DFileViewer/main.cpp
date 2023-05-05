@@ -348,7 +348,7 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec map_fixed"));
 

@@ -102,7 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");

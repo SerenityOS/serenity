@@ -59,7 +59,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     Options options = TRY(parse_options(arguments));
 

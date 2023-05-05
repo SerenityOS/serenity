@@ -22,10 +22,12 @@
 namespace GUI {
 
 class Application : public Core::Object {
-    C_OBJECT(Application);
+    C_OBJECT_ABSTRACT(Application);
 
 public:
     static Application* the();
+
+    static ErrorOr<NonnullRefPtr<Application>> create(Main::Arguments const& arguments);
 
     ~Application();
 
@@ -97,11 +99,7 @@ public:
     void register_recent_file_actions(Badge<GUI::Menu>, Vector<NonnullRefPtr<GUI::Action>>);
 
 private:
-    Application(int argc, char** argv);
-    Application(Main::Arguments const& arguments)
-        : Application(arguments.argc, arguments.argv)
-    {
-    }
+    Application() = default;
 
     virtual void event(Core::Event&) override;
 

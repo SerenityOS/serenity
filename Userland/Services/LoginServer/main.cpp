@@ -61,7 +61,7 @@ static void login(Core::Account const& account, LoginWindow& window)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd cpath chown rpath exec proc id"));
     TRY(Core::System::unveil("/home", "r"));

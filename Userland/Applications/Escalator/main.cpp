@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd thread cpath rpath wpath unix proc exec id"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     auto executable_path = FileSystem::resolve_executable_from_environment(command[0]);
     if (executable_path.is_error()) {

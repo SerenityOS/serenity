@@ -15,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix getkeymap proc exec"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     auto window = TRY(KeymapStatusWindow::try_create());
     window->set_has_alpha_channel(true);

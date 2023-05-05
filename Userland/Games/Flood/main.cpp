@@ -56,7 +56,7 @@ static int get_number_of_moves_from_ai(Board const& board)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flood"sv));
 
     auto window = TRY(GUI::Window::try_create());
