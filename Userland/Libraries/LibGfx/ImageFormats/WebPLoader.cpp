@@ -87,6 +87,28 @@ struct ANIMChunk {
     u16 loop_count;
 };
 
+struct ANMFChunk {
+    u32 frame_x;
+    u32 frame_y;
+    u32 frame_width;
+    u32 frame_height;
+    u32 frame_duration_in_milliseconds;
+
+    enum class BlendingMethod {
+        UseAlphaBlending = 0,
+        DoNotBlend = 1,
+    };
+    BlendingMethod blending_method;
+
+    enum class DisposalMethod {
+        DoNotDispose = 0,
+        DisposeToBackgroundColor = 1,
+    };
+    DisposalMethod disposal_method;
+
+    ReadonlyBytes frame_data;
+};
+
 }
 
 struct WebPLoadingContext {
@@ -97,6 +119,7 @@ struct WebPLoadingContext {
         FirstChunkRead,
         FirstChunkDecoded,
         ChunksDecoded,
+        AnimationFrameChunksDecoded,
         BitmapDecoded,
     };
     State state { State::NotDecoded };
@@ -126,6 +149,10 @@ struct WebPLoadingContext {
 
     Optional<Chunk> animation_header_chunk; // 'ANIM'
     Vector<Chunk> animation_frame_chunks;   // 'ANMF'
+
+    // These are set in state >= AnimationFrameChunksDecoded, if first_chunk.type == 'VP8X' && vp8x_header.has_animation.
+    Optional<ANIMChunk> animation_header_chunk_data;
+    Optional<Vector<ANMFChunk>> animation_frame_chunks_data;
 
     Optional<Chunk> iccp_chunk; // 'ICCP'
     Optional<Chunk> exif_chunk; // 'EXIF'
@@ -1326,7 +1353,47 @@ static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(WebPLoadingContext& context, Ch
     u32 background_color = (u32)data[0] | ((u32)data[1] << 8) | ((u32)data[2] << 16) | ((u32)data[3] << 24);
     u16 loop_count = data[4] | (data[5] << 8);
 
+    dbgln_if(WEBP_DEBUG, "background_color {:x} loop_count {}", background_color, loop_count);
+
     return ANIMChunk { background_color, loop_count };
+}
+
+// https://developers.google.com/speed/webp/docs/riff_container#animation
+static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, Chunk const& anmf_chunk)
+{
+    VERIFY(anmf_chunk.type == FourCC("ANMF"));
+    if (anmf_chunk.data.size() < 16)
+        return context.error("WebPImageDecoderPlugin: ANMF chunk too small");
+
+    u8 const* data = anmf_chunk.data.data();
+
+    // "The X coordinate of the upper left corner of the frame is Frame X * 2."
+    u32 frame_x = ((u32)data[0] | ((u32)data[1] << 8) | ((u32)data[2] << 16)) * 2;
+
+    // "The Y coordinate of the upper left corner of the frame is Frame Y * 2."
+    u32 frame_y = ((u32)data[3] | ((u32)data[4] << 8) | ((u32)data[5] << 16)) * 2;
+
+    // "The frame width is 1 + Frame Width Minus One."
+    u32 frame_width = ((u32)data[6] | ((u32)data[7] << 8) | ((u32)data[8] << 16)) + 1;
+
+    // "The frame height is 1 + Frame Height Minus One."
+    u32 frame_height = ((u32)data[9] | ((u32)data[10] << 8) | ((u32)data[11] << 16)) + 1;
+
+    // "The time to wait before displaying the next frame, in 1 millisecond units.
+    //  Note the interpretation of frame duration of 0 (and often <= 10) is implementation defined.
+    //  Many tools and browsers assign a minimum duration similar to GIF."
+    u32 frame_duration = (u32)data[12] | ((u32)data[13] << 8) | ((u32)data[14] << 16);
+
+    u8 flags = data[15];
+    auto blending_method = static_cast<ANMFChunk::BlendingMethod>((flags >> 1) & 1);
+    auto disposal_method = static_cast<ANMFChunk::DisposalMethod>(flags & 1);
+
+    ReadonlyBytes frame_data = anmf_chunk.data.slice(16);
+
+    dbgln_if(WEBP_DEBUG, "frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
+        frame_x, frame_y, frame_width, frame_height, frame_duration, (int)blending_method, (int)disposal_method);
+
+    return ANMFChunk { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method, frame_data };
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
@@ -1460,6 +1527,23 @@ static ErrorOr<void> decode_webp_chunks(WebPLoadingContext& context)
     return {};
 }
 
+static ErrorOr<void> decode_webp_animation_frame_chunks(WebPLoadingContext& context)
+{
+    if (context.state >= WebPLoadingContext::State::AnimationFrameChunksDecoded)
+        return {};
+
+    context.animation_header_chunk_data = TRY(decode_webp_chunk_ANIM(context, context.animation_header_chunk.value()));
+
+    Vector<ANMFChunk> decoded_chunks;
+    TRY(decoded_chunks.try_ensure_capacity(context.animation_frame_chunks.size()));
+    for (auto const& chunk : context.animation_frame_chunks)
+        TRY(decoded_chunks.try_append(TRY(decode_webp_chunk_ANMF(context, chunk))));
+    context.animation_frame_chunks_data = move(decoded_chunks);
+
+    context.state = WebPLoadingContext::State::AnimationFrameChunksDecoded;
+    return {};
+}
+
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
     : m_context(move(context))
 {
@@ -1530,16 +1614,12 @@ size_t WebPImageDecoderPlugin::loop_count()
     if (!is_animated())
         return 0;
 
-    if (m_context->state < WebPLoadingContext::State::ChunksDecoded) {
-        if (decode_webp_chunks(*m_context).is_error())
+    if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
+        if (decode_webp_animation_frame_chunks(*m_context).is_error())
             return 0;
     }
 
-    auto anim_or_error = decode_webp_chunk_ANIM(*m_context, m_context->animation_header_chunk.value());
-    if (anim_or_error.is_error())
-        return 0;
-
-    return anim_or_error.value().loop_count;
+    return m_context->animation_header_chunk_data->loop_count;
 }
 
 size_t WebPImageDecoderPlugin::frame_count()
@@ -1571,8 +1651,13 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
     if (m_context->state < WebPLoadingContext::State::ChunksDecoded)
         TRY(decode_webp_chunks(*m_context));
 
-    if (is_animated())
+    if (is_animated()) {
+        if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
+            TRY(decode_webp_animation_frame_chunks(*m_context));
+        }
+        // FIXME: Do something with the animation frames.
         return Error::from_string_literal("WebPImageDecoderPlugin: decoding of animated files not yet implemented");
+    }
 
     if (m_context->image_data_chunk.has_value() && m_context->image_data_chunk->type == FourCC("VP8L")) {
         if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
