@@ -7,7 +7,7 @@ each `InodeIndex` actually represent a known object, so it is guaranteed to be
 the same always for global ProcFS objects. For process ID directories, once that
 process has been killed, its primary segment value is no longer valid and hence
 all sub-segments of it are not relevant anymore, but if the process is still alive,
-it is guaranteed that accessing the same `InodeIndex` in regard to a object tied to
+it is guaranteed that accessing the same `InodeIndex` in regard to an object tied to
 a process directory will provide the expected object.
 
 ## The goal - zero allocations when creating new process

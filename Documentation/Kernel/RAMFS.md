@@ -20,7 +20,7 @@ with very small overhead until actual IO is performed.
 Currently, the `/tmp` directory is the **place** for facilitating the inter-process
 communication layer, with many Unix sockets nodes being present in the directory.
 
-Many test suites in the project leverage the `/tmp` for placing their test files
+Many test suites in the project leverage `/tmp` for placing their test files
 when trying to check the correctness of many system-related functionality.
 Other programs rely on `/tmp` for placing their temporary files to properly function.
 

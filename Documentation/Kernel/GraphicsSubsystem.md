@@ -19,7 +19,7 @@ from the framebuffer.
 # DisplayConnector Devices
 
 The Display Connector devices are an abstraction layer to what is essentially the
-management layer of hardware display (commonly known as scanouts too) output connectors.
+management layer of hardware display (commonly known as scanouts) output connectors.
 The idea of using such type of device was inspired by Linux, which has a struct called
 `drm_connector` as a base structure for other derived structures in the various Linux DRM drivers.
 
