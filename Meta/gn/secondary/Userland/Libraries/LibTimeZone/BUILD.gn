@@ -39,11 +39,35 @@ if (enable_timezone_database_download) {
       "southamerica",
     ]
   }
+  compiled_action("generate_timezone_sources") {
+    tool = "//Meta/Lagom/Tools/CodeGenerators/LibTimeZone:GenerateTimeZoneData"
+    deps = [ ":timezone_database_files" ]
+    inputs = get_target_outputs(":timezone_database_files")
+    outputs = [
+      "$target_gen_dir/TimeZoneData.h",
+      "$target_gen_dir/TimeZoneData.cpp",
+    ]
+    args = [
+      "-h",
+      rebase_path(outputs[0], root_build_dir),
+      "-c",
+      rebase_path(outputs[1], root_build_dir),
+      "-z",
+
+      # NOTE: Coordinates file must be inputs[0]
+    ]
+    foreach(data_file, inputs) {
+      args += [ rebase_path(data_file, root_build_dir) ]
+    }
+  }
 }
 
 source_set("LibTimeZone") {
   output_name = "timezone"
-  include_dirs = [ "//Userland/Libraries" ]
+  include_dirs = [
+    "//Userland/Libraries",
+    "$target_gen_dir/..",
+  ]
   sources = [
     "Forward.h",
     "TimeZone.cpp",
@@ -54,6 +78,7 @@ source_set("LibTimeZone") {
     "//Userland/Libraries/LibCore",
   ]
   if (enable_timezone_database_download) {
-    deps += [ ":timezone_database_files" ]
+    deps += [ ":generate_timezone_sources" ]
+    sources += get_target_outputs(":generate_timezone_sources")
   }
 }
