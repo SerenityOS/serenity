@@ -1,0 +1,4 @@
+group("Tests") {
+  deps = [ "//Tests/AK" ]
+  testonly = true
+}
