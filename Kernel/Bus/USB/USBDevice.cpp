@@ -7,10 +7,13 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/HID/USB/MouseDevice.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
 #include <Kernel/StdLib.h>
 
@@ -57,6 +60,11 @@ Device::Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe)
 }
 
 Device::~Device() = default;
+
+void Device::set_interrupt_in_pipe(Badge<USBConfiguration>, NonnullOwnPtr<Pipe> pipe)
+{
+    m_interrupt_in_pipe = move(pipe);
+}
 
 ErrorOr<void> Device::enumerate_device()
 {

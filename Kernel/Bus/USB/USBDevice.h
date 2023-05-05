@@ -57,6 +57,8 @@ public:
     ErrorOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
 
     Vector<USBConfiguration> const& configurations() const { return m_configurations; }
+    Pipe* interrupt_pipe() { return m_interrupt_in_pipe.ptr(); }
+    void set_interrupt_in_pipe(Badge<USBConfiguration>, NonnullOwnPtr<Pipe>);
 
     SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
 
@@ -75,6 +77,7 @@ protected:
 
     NonnullLockRefPtr<USBController> m_controller;
     NonnullOwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
+    OwnPtr<Pipe> m_interrupt_in_pipe;
 
 private:
     IntrusiveListNode<Device, NonnullLockRefPtr<Device>> m_hub_child_node;

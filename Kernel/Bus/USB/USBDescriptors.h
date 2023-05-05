@@ -127,6 +127,7 @@ static constexpr u8 DESCRIPTOR_TYPE_STRING = 0x03;
 static constexpr u8 DESCRIPTOR_TYPE_INTERFACE = 0x04;
 static constexpr u8 DESCRIPTOR_TYPE_ENDPOINT = 0x05;
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE_QUALIFIER = 0x06;
+static constexpr u8 DESCRIPTOR_TYPE_HID = 0x21;
 static constexpr u8 DESCRIPTOR_TYPE_HUB = 0x29;
 
 }
