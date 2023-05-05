@@ -1,0 +1,22 @@
+declare_args() {
+  # If true, Download tzdata from data.iana.org and use it in LibTimeZone
+  # Data will be downloaded to $cache_path/TZDB
+  enable_timezone_database_download = false
+}
+
+source_set("LibTimeZone") {
+  output_name = "timezone"
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [
+    "Forward.h",
+    "TimeZone.cpp",
+    "TimeZone.h",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+  ]
+  if (enable_timezone_database_download) {
+    deps += [ ":timezone_data" ]
+  }
+}

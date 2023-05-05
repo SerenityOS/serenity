@@ -1,7 +1,10 @@
 import("//Meta/gn/build/toolchain/compiler.gni")
 
 group("default") {
-  deps = [ "//Tests" ]
+  deps = [
+    "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler",
+    "//Tests",
+  ]
   testonly = true
 }
 
