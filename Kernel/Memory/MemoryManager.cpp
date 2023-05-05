@@ -740,7 +740,7 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 
     if (faulted_in_range(&start_of_unmap_after_init, &end_of_unmap_after_init)) {
         auto const* kernel_symbol = symbolicate_kernel_address(fault.vaddr().get());
-        dbgln("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault.vaddr(), kernel_symbol ? kernel_symbol->name : "(Unknown)");
+        dbgln("Attempt to access UNMAP_AFTER_INIT section ({}: {})", fault.vaddr(), kernel_symbol ? kernel_symbol->name : "(Unknown)");
         return PageFaultResponse::ShouldCrash;
     }
 
