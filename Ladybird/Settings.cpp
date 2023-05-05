@@ -13,16 +13,6 @@ Settings::Settings()
     m_qsettings = new QSettings("Serenity", "Ladybird", this);
 }
 
-QString Settings::homepage()
-{
-    return m_qsettings->value("homepage", "https://www.serenityos.org/").toString();
-}
-
-void Settings::set_homepage(QString const& homepage)
-{
-    m_qsettings->setValue("homepage", homepage);
-}
-
 QString Settings::new_tab_page()
 {
     return m_qsettings->value("new_tab_page", "about:blank").toString();

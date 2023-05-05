@@ -47,7 +47,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     auto back_icon_path = QString("%1/res/icons/16x16/go-back.png").arg(s_serenity_resource_root.characters());
     auto forward_icon_path = QString("%1/res/icons/16x16/go-forward.png").arg(s_serenity_resource_root.characters());
-    auto home_icon_path = QString("%1/res/icons/16x16/go-home.png").arg(s_serenity_resource_root.characters());
     auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
     m_back_action = make<QAction>(QIcon(back_icon_path), "Back");
     m_back_action->setEnabled(false);
@@ -55,14 +54,12 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_forward_action = make<QAction>(QIcon(forward_icon_path), "Forward");
     m_forward_action->setEnabled(false);
     m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
-    m_home_action = make<QAction>(QIcon(home_icon_path), "Home");
     m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
     m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
 
     m_toolbar->addAction(m_back_action);
     m_toolbar->addAction(m_forward_action);
     m_toolbar->addAction(m_reload_action);
-    m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
     m_reset_zoom_button->setToolTip("Reset zoom level");
     m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
@@ -127,7 +124,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     QObject::connect(m_back_action, &QAction::triggered, this, &Tab::back);
     QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);
-    QObject::connect(m_home_action, &QAction::triggered, this, &Tab::home);
     QObject::connect(m_reload_action, &QAction::triggered, this, &Tab::reload);
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
@@ -212,11 +208,6 @@ void Tab::forward()
     m_is_history_navigation = true;
     m_history.go_forward();
     view().load(m_history.current().url.to_deprecated_string());
-}
-
-void Tab::home()
-{
-    navigate(s_settings->homepage());
 }
 
 void Tab::reload()
