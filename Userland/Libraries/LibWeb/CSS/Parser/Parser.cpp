@@ -2369,7 +2369,7 @@ RefPtr<StyleValue> Parser::parse_url_value(ComponentValue const& component_value
     auto url = parse_url_function(component_value, allowed_data_url_type);
     if (!url.has_value())
         return {};
-    return URLStyleValue::create(*url);
+    return URLStyleValue::create(*url).release_value_but_fixme_should_propagate_errors();
 }
 
 template<typename TElement>
@@ -2621,7 +2621,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
     if (!color_stops.has_value())
         return {};
 
-    return LinearGradientStyleValue::create(gradient_direction, move(*color_stops), gradient_type, repeating_gradient);
+    return LinearGradientStyleValue::create(gradient_direction, move(*color_stops), gradient_type, repeating_gradient).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& component_value)
@@ -2718,7 +2718,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     if (!color_stops.has_value())
         return {};
 
-    return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
+    return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& component_value)
@@ -2869,7 +2869,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
     if (!color_stops.has_value())
         return {};
 
-    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops), repeating_gradient);
+    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops), repeating_gradient).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens, PositionValue initial_value)
@@ -3269,11 +3269,11 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_v
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
         if (ident.equals_ignoring_ascii_case("inherit"sv))
-            return InheritStyleValue::the();
+            return InheritStyleValue::the().release_value_but_fixme_should_propagate_errors();
         if (ident.equals_ignoring_ascii_case("initial"sv))
-            return InitialStyleValue::the();
+            return InitialStyleValue::the().release_value_but_fixme_should_propagate_errors();
         if (ident.equals_ignoring_ascii_case("unset"sv))
-            return UnsetStyleValue::the();
+            return UnsetStyleValue::the().release_value_but_fixme_should_propagate_errors();
         // FIXME: Implement `revert` and `revert-layer` keywords, from Cascade4 and Cascade5 respectively
     }
 
@@ -3323,7 +3323,7 @@ RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Vector<ComponentValu
     };
     dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
 
-    return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value());
+    return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_dynamic_value(ComponentValue const& component_value)
@@ -3690,17 +3690,17 @@ RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component
         return {};
 
     if (dimension->is_angle())
-        return AngleStyleValue::create(dimension->angle());
+        return AngleStyleValue::create(dimension->angle()).release_value_but_fixme_should_propagate_errors();
     if (dimension->is_frequency())
-        return FrequencyStyleValue::create(dimension->frequency());
+        return FrequencyStyleValue::create(dimension->frequency()).release_value_but_fixme_should_propagate_errors();
     if (dimension->is_length())
-        return LengthStyleValue::create(dimension->length());
+        return LengthStyleValue::create(dimension->length()).release_value_but_fixme_should_propagate_errors();
     if (dimension->is_percentage())
-        return PercentageStyleValue::create(dimension->percentage());
+        return PercentageStyleValue::create(dimension->percentage()).release_value_but_fixme_should_propagate_errors();
     if (dimension->is_resolution())
-        return ResolutionStyleValue::create(dimension->resolution());
+        return ResolutionStyleValue::create(dimension->resolution()).release_value_but_fixme_should_propagate_errors();
     if (dimension->is_time())
-        return TimeStyleValue::create(dimension->time());
+        return TimeStyleValue::create(dimension->time()).release_value_but_fixme_should_propagate_errors();
     VERIFY_NOT_REACHED();
 }
 
@@ -3709,8 +3709,8 @@ RefPtr<StyleValue> Parser::parse_numeric_value(ComponentValue const& component_v
     if (component_value.is(Token::Type::Number)) {
         auto const& number = component_value.token();
         if (number.number().is_integer())
-            return NumericStyleValue::create_integer(number.to_integer());
-        return NumericStyleValue::create_float(number.number_value());
+            return NumericStyleValue::create_integer(number.to_integer()).release_value_but_fixme_should_propagate_errors();
+        return NumericStyleValue::create_float(number.number_value()).release_value_but_fixme_should_propagate_errors();
     }
 
     return {};
@@ -3721,7 +3721,7 @@ RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& componen
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
         if (value_id != ValueID::Invalid)
-            return IdentifierStyleValue::create(value_id);
+            return IdentifierStyleValue::create(value_id).release_value_but_fixme_should_propagate_errors();
     }
 
     return {};
@@ -3934,7 +3934,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
         }
     }
 
-    return RectStyleValue::create(EdgeRect { params[0], params[1], params[2], params[3] });
+    return RectStyleValue::create(EdgeRect { params[0], params[1], params[2], params[3] }).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<Color> Parser::parse_color(ComponentValue const& component_value)
@@ -4027,7 +4027,7 @@ RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_val
 {
     auto color = parse_color(component_value);
     if (color.has_value())
-        return ColorStyleValue::create(color.value());
+        return ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors();
 
     return {};
 }
@@ -4035,7 +4035,7 @@ RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_val
 RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors());
+        return StringStyleValue::create(String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
 
     return {};
 }
@@ -4044,7 +4044,7 @@ RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_val
 {
     auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
     if (url.has_value())
-        return ImageStyleValue::create(url.value());
+        return ImageStyleValue::create(url.value()).release_value_but_fixme_should_propagate_errors();
     auto linear_gradient = parse_linear_gradient_function(component_value);
     if (linear_gradient)
         return linear_gradient;
@@ -4076,7 +4076,7 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValu
         return {};
     }
 
-    return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
+    return StyleValueList::create(move(values), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<ComponentValue> const& component_values)
@@ -4247,13 +4247,14 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
             background_color = property_initial_value(m_context.realm(), PropertyID::BackgroundColor);
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
-            StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_sizes), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_repeats), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_attachments), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_origins), StyleValueList::Separator::Comma),
-            StyleValueList::create(move(background_clips), StyleValueList::Separator::Comma));
+            StyleValueList::create(move(background_images), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_sizes), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_repeats), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_attachments), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_origins), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors(),
+            StyleValueList::create(move(background_clips), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors())
+            .release_value_but_fixme_should_propagate_errors();
     }
 
     if (!background_color)
@@ -4284,7 +4285,8 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         background_repeat.release_nonnull(),
         background_attachment.release_nonnull(),
         background_origin.release_nonnull(),
-        background_clip.release_nonnull());
+        background_clip.release_nonnull())
+        .release_value_but_fixme_should_propagate_errors();
 }
 
 static Optional<PositionEdge> identifier_to_edge(ValueID identifier)
@@ -4456,8 +4458,9 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
 
     transaction.commit();
     return PositionStyleValue::create(
-        EdgeStyleValue::create(horizontal->edge, horizontal->offset),
-        EdgeStyleValue::create(vertical->edge, vertical->offset));
+        EdgeStyleValue::create(horizontal->edge, horizontal->offset).release_value_but_fixme_should_propagate_errors(),
+        EdgeStyleValue::create(vertical->edge, vertical->offset).release_value_but_fixme_should_propagate_errors())
+        .release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>& tokens, PropertyID property)
@@ -4489,7 +4492,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenSt
         auto identifier = value->to_identifier();
         if (identifier == ValueID::Center) {
             transaction.commit();
-            return EdgeStyleValue::create(relative_edge, Percentage { 50 });
+            return EdgeStyleValue::create(relative_edge, Percentage { 50 }).release_value_but_fixme_should_propagate_errors();
         }
         if (auto edge = identifier_to_edge(identifier); edge.has_value()) {
             relative_edge = *edge;
@@ -4500,7 +4503,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenSt
             value = parse_value(tokens.peek_token());
             if (!value) {
                 transaction.commit();
-                return EdgeStyleValue::create(relative_edge, Length::make_px(0));
+                return EdgeStyleValue::create(relative_edge, Length::make_px(0)).release_value_but_fixme_should_propagate_errors();
             }
             tokens.next_token();
         }
@@ -4509,7 +4512,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenSt
     auto offset = style_value_to_length_percentage(value);
     if (offset.has_value()) {
         transaction.commit();
-        return EdgeStyleValue::create(relative_edge, *offset);
+        return EdgeStyleValue::create(relative_edge, *offset).release_value_but_fixme_should_propagate_errors();
     }
 
     return {};
@@ -4550,7 +4553,8 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         transaction.commit();
         return BackgroundRepeatStyleValue::create(
             value_id == ValueID::RepeatX ? Repeat::Repeat : Repeat::NoRepeat,
-            value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat);
+            value_id == ValueID::RepeatX ? Repeat::NoRepeat : Repeat::Repeat)
+            .release_value_but_fixme_should_propagate_errors();
     }
 
     auto x_repeat = as_repeat(x_value->to_identifier());
@@ -4563,7 +4567,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
         // We don't have a second value, so use x for both
         transaction.commit();
-        return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value());
+        return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value()).release_value_but_fixme_should_propagate_errors();
     }
     tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
@@ -4575,7 +4579,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Comp
         return nullptr;
 
     transaction.commit();
-    return BackgroundRepeatStyleValue::create(x_repeat.value(), y_repeat.value());
+    return BackgroundRepeatStyleValue::create(x_repeat.value(), y_repeat.value()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
@@ -4609,7 +4613,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
             return nullptr;
 
         transaction.commit();
-        return BackgroundSizeStyleValue::create(x_size.value(), x_size.value());
+        return BackgroundSizeStyleValue::create(x_size.value(), x_size.value()).release_value_but_fixme_should_propagate_errors();
     }
     tokens.next_token();
 
@@ -4621,7 +4625,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
         return nullptr;
 
     transaction.commit();
-    return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
+    return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
@@ -4667,7 +4671,7 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& comp
     if (!border_color)
         border_color = property_initial_value(m_context.realm(), PropertyID::BorderColor);
 
-    return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
+    return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
@@ -4676,7 +4680,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> cons
         auto horizontal = parse_dimension(component_values[0]);
         auto vertical = parse_dimension(component_values[1]);
         if (horizontal.has_value() && horizontal->is_length_percentage() && vertical.has_value() && vertical->is_length_percentage())
-            return BorderRadiusStyleValue::create(horizontal->length_percentage(), vertical->length_percentage());
+            return BorderRadiusStyleValue::create(horizontal->length_percentage(), vertical->length_percentage()).release_value_but_fixme_should_propagate_errors();
 
         return nullptr;
     }
@@ -4684,7 +4688,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> cons
     if (component_values.size() == 1) {
         auto radius = parse_dimension(component_values[0]);
         if (radius.has_value() && radius->is_length_percentage())
-            return BorderRadiusStyleValue::create(radius->length_percentage(), radius->length_percentage());
+            return BorderRadiusStyleValue::create(radius->length_percentage(), radius->length_percentage()).release_value_but_fixme_should_propagate_errors();
         return nullptr;
     }
 
@@ -4761,15 +4765,19 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentV
         return nullptr;
 
     auto top_left_radius = BorderRadiusStyleValue::create(top_left(horizontal_radii),
-        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii));
+        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii))
+                               .release_value_but_fixme_should_propagate_errors();
     auto top_right_radius = BorderRadiusStyleValue::create(top_right(horizontal_radii),
-        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii));
+        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii))
+                                .release_value_but_fixme_should_propagate_errors();
     auto bottom_right_radius = BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii));
+        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii))
+                                   .release_value_but_fixme_should_propagate_errors();
     auto bottom_left_radius = BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii));
+        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii))
+                                  .release_value_but_fixme_should_propagate_errors();
 
-    return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius));
+    return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius)).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
@@ -4879,7 +4887,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
         placement = ShadowPlacement::Outer;
 
     transaction.commit();
-    return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
+    return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& component_values)
@@ -4937,9 +4945,9 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
 
     RefPtr<StyleValueList> alt_text;
     if (!alt_text_values.is_empty())
-        alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space);
+        alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors();
 
-    return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
+    return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors(), move(alt_text)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/css-display-3/#the-display-properties
@@ -5095,7 +5103,7 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
         display = parse_multi_component_display(component_values);
 
     if (display.has_value())
-        return DisplayStyleValue::create(display.value());
+        return DisplayStyleValue::create(display.value()).release_value_but_fixme_should_propagate_errors();
 
     return {};
 }
@@ -5279,7 +5287,7 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> 
     if (filter_value_list.is_empty())
         return {};
 
-    return FilterValueListStyleValue::create(move(filter_value_list));
+    return FilterValueListStyleValue::create(move(filter_value_list)).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
@@ -5293,21 +5301,21 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         if (property_accepts_value(PropertyID::FlexGrow, *value)) {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
-            auto zero_percent = NumericStyleValue::create_integer(0);
-            auto one = NumericStyleValue::create_integer(1);
-            return FlexStyleValue::create(*value, one, zero_percent);
+            auto zero_percent = NumericStyleValue::create_integer(0).release_value_but_fixme_should_propagate_errors();
+            auto one = NumericStyleValue::create_integer(1).release_value_but_fixme_should_propagate_errors();
+            return FlexStyleValue::create(*value, one, zero_percent).release_value_but_fixme_should_propagate_errors();
         }
 
         if (property_accepts_value(PropertyID::FlexBasis, *value)) {
-            auto one = NumericStyleValue::create_integer(1);
-            return FlexStyleValue::create(one, one, *value);
+            auto one = NumericStyleValue::create_integer(1).release_value_but_fixme_should_propagate_errors();
+            return FlexStyleValue::create(one, one, *value).release_value_but_fixme_should_propagate_errors();
         }
 
         if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
             switch (value->to_identifier()) {
             case ValueID::None: {
-                auto zero = NumericStyleValue::create_integer(0);
-                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+                auto zero = NumericStyleValue::create_integer(0).release_value_but_fixme_should_propagate_errors();
+                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
             }
             default:
                 return value;
@@ -5329,7 +5337,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         // Zero is a valid value for basis, but only if grow and shrink are already specified.
         if (value->has_number() && value->to_number() == 0) {
             if (flex_grow && flex_shrink && !flex_basis) {
-                flex_basis = LengthStyleValue::create(Length::make_px(0));
+                flex_basis = LengthStyleValue::create(Length::make_px(0)).release_value_but_fixme_should_propagate_errors();
                 continue;
             }
         }
@@ -5367,7 +5375,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
     if (!flex_basis)
         flex_basis = property_initial_value(m_context.realm(), PropertyID::FlexBasis);
 
-    return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
+    return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
@@ -5401,7 +5409,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& c
     if (!flex_wrap)
         flex_wrap = property_initial_value(m_context.realm(), PropertyID::FlexWrap);
 
-    return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
+    return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 static bool is_generic_font_family(ValueID identifier)
@@ -5518,7 +5526,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!line_height)
         line_height = property_initial_value(m_context.realm(), PropertyID::LineHeight);
 
-    return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
+    return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)
@@ -5547,7 +5555,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
                 return nullptr;
             if (!is_comma_or_eof(i + 1))
                 return nullptr;
-            font_families.append(StringStyleValue::create(String::from_utf8(part.token().string()).release_value_but_fixme_should_propagate_errors()));
+            font_families.append(StringStyleValue::create(String::from_utf8(part.token().string()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
             i++;
             continue;
         }
@@ -5575,7 +5583,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
         if (part.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
+            font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
             current_name_parts.clear();
             // Can't have a trailing comma
             if (i + 1 == component_values.size())
@@ -5585,13 +5593,13 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
+        font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
         current_name_parts.clear();
     }
 
     if (font_families.is_empty())
         return nullptr;
-    return StyleValueList::create(move(font_families), StyleValueList::Separator::Comma);
+    return StyleValueList::create(move(font_families), StyleValueList::Separator::Comma).release_value_but_fixme_should_propagate_errors();
 }
 
 CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
@@ -5829,14 +5837,14 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     if (found_nones == 2) {
         if (list_image || list_type)
             return nullptr;
-        auto none = IdentifierStyleValue::create(ValueID::None);
+        auto none = IdentifierStyleValue::create(ValueID::None).release_value_but_fixme_should_propagate_errors();
         list_image = none;
         list_type = none;
 
     } else if (found_nones == 1) {
         if (list_image && list_type)
             return nullptr;
-        auto none = IdentifierStyleValue::create(ValueID::None);
+        auto none = IdentifierStyleValue::create(ValueID::None).release_value_but_fixme_should_propagate_errors();
         if (!list_image)
             list_image = none;
         if (!list_type)
@@ -5850,7 +5858,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     if (!list_type)
         list_type = property_initial_value(m_context.realm(), PropertyID::ListStyleType);
 
-    return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
+    return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
@@ -5861,7 +5869,7 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& co
             return nullptr;
         auto value = maybe_value.release_nonnull();
         if (property_accepts_value(PropertyID::Overflow, *value))
-            return OverflowStyleValue::create(value, value);
+            return OverflowStyleValue::create(value, value).release_value_but_fixme_should_propagate_errors();
         return nullptr;
     }
 
@@ -5876,7 +5884,7 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& co
         if (!property_accepts_value(PropertyID::OverflowX, x_value) || !property_accepts_value(PropertyID::OverflowY, y_value)) {
             return nullptr;
         }
-        return OverflowStyleValue::create(x_value, y_value);
+        return OverflowStyleValue::create(x_value, y_value).release_value_but_fixme_should_propagate_errors();
     }
 
     return nullptr;
@@ -5938,7 +5946,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
     if (!decoration_color)
         decoration_color = property_initial_value(m_context.realm(), PropertyID::TextDecorationColor);
 
-    return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
+    return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull()).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
@@ -5977,7 +5985,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<Componen
 
     if (style_values.is_empty())
         return nullptr;
-    return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
+    return StyleValueList::create(move(style_values), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
@@ -5996,7 +6004,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             tokens.skip_whitespace();
             if (tokens.has_next_token())
                 return nullptr;
-            return IdentifierStyleValue::create(ValueID::None);
+            return IdentifierStyleValue::create(ValueID::None).release_value_but_fixme_should_propagate_errors();
         }
 
         if (!part.is_function())
@@ -6033,7 +6041,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
                 if (maybe_calc_value && maybe_calc_value->resolves_to_angle()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
-                    values.append(AngleStyleValue::create(Angle::make_degrees(0)));
+                    values.append(AngleStyleValue::create(Angle::make_degrees(0)).release_value_but_fixme_should_propagate_errors());
                 } else {
                     auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value || !dimension_value->is_angle())
@@ -6105,9 +6113,9 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             return nullptr;
         }
 
-        transformations.append(TransformationStyleValue::create(function, move(values)));
+        transformations.append(TransformationStyleValue::create(function, move(values)).release_value_but_fixme_should_propagate_errors());
     }
-    return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
+    return StyleValueList::create(move(transformations), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/css-transforms-1/#propdef-transform-origin
@@ -6131,19 +6139,19 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
         if (value->is_length())
             return AxisOffset { Axis::None, value->as_length() };
         if (value->has_length())
-            return AxisOffset { Axis::None, LengthStyleValue::create(value->to_length()) };
+            return AxisOffset { Axis::None, LengthStyleValue::create(value->to_length()).release_value_but_fixme_should_propagate_errors() };
         if (value->is_identifier()) {
             switch (value->to_identifier()) {
             case ValueID::Top:
-                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(0)) };
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(0)).release_value_but_fixme_should_propagate_errors() };
             case ValueID::Left:
-                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(0)) };
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(0)).release_value_but_fixme_should_propagate_errors() };
             case ValueID::Center:
-                return AxisOffset { Axis::None, PercentageStyleValue::create(Percentage(50)) };
+                return AxisOffset { Axis::None, PercentageStyleValue::create(Percentage(50)).release_value_but_fixme_should_propagate_errors() };
             case ValueID::Bottom:
-                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(100)) };
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(100)).release_value_but_fixme_should_propagate_errors() };
             case ValueID::Right:
-                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(100)) };
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(100)).release_value_but_fixme_should_propagate_errors() };
             default:
                 return {};
             }
@@ -6155,7 +6163,7 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
         StyleValueVector values;
         values.append(x_value);
         values.append(y_value);
-        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
+        return StyleValueList::create(move(values), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors();
     };
 
     switch (component_values.size()) {
@@ -6168,9 +6176,9 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
         switch (single_value->axis) {
         case Axis::None:
         case Axis::X:
-            return make_list(single_value->offset, PercentageStyleValue::create(Percentage(50)));
+            return make_list(single_value->offset, PercentageStyleValue::create(Percentage(50)).release_value_but_fixme_should_propagate_errors());
         case Axis::Y:
-            return make_list(PercentageStyleValue::create(Percentage(50)), single_value->offset);
+            return make_list(PercentageStyleValue::create(Percentage(50)).release_value_but_fixme_should_propagate_errors(), single_value->offset);
         }
         VERIFY_NOT_REACHED();
     }
@@ -6439,11 +6447,11 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
         auto token = tokens.next_token();
         if (token.is_block()) {
             if (last_object_was_line_names && !allow_separate_line_name_blocks)
-                return GridTrackSizeListStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto().release_value_but_fixme_should_propagate_errors();
             last_object_was_line_names = true;
             Vector<String> line_names;
             if (!token.block().is_square())
-                return GridTrackSizeListStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto().release_value_but_fixme_should_propagate_errors();
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
@@ -6458,7 +6466,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
             last_object_was_line_names = false;
             auto track_sizing_function = parse_track_sizing_function(token);
             if (!track_sizing_function.has_value())
-                return GridTrackSizeListStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto().release_value_but_fixme_should_propagate_errors();
             // FIXME: Handle multiple repeat values (should combine them here, or remove
             // any other ones if the first one is auto-fill, etc.)
             track_list.append(track_sizing_function.value());
@@ -6466,7 +6474,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
     }
     while (line_names_list.size() <= track_list.size())
         line_names_list.append({});
-    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
+    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list)).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
@@ -6507,15 +6515,15 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
 
     if (!tokens.has_next_token()) {
         if (is_auto(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement());
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement()).release_value_but_fixme_should_propagate_errors();
         if (is_span(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true)).release_value_but_fixme_should_propagate_errors();
         if (is_valid_integer(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value()))).release_value_but_fixme_should_propagate_errors();
         if (is_line_name(current_token)) {
             auto maybe_string = String::from_utf8(current_token.ident());
             if (!maybe_string.is_error())
-                return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(maybe_string.value()));
+                return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(maybe_string.value())).release_value_but_fixme_should_propagate_errors();
         }
         return {};
     }
@@ -6564,8 +6572,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         span_or_position_value = 1;
 
     if (!line_name_value.is_empty())
-        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(line_name_value, span_or_position_value, span_value));
-    return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value));
+        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(line_name_value, span_or_position_value, span_value)).release_value_but_fixme_should_propagate_errors();
+    return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value)).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const& component_values)
@@ -6596,11 +6604,11 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
 
     auto parsed_start_value = parse_grid_track_placement(track_start_placement_tokens);
     if (parsed_start_value && track_end_placement_tokens.is_empty())
-        return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement().grid_track_placement());
+        return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement().grid_track_placement()).release_value_but_fixme_should_propagate_errors();
 
     auto parsed_end_value = parse_grid_track_placement(track_end_placement_tokens);
     if (parsed_start_value && parsed_end_value)
-        return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement(), parsed_end_value.release_nonnull()->as_grid_track_placement());
+        return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement(), parsed_end_value.release_nonnull()->as_grid_track_placement()).release_value_but_fixme_should_propagate_errors();
 
     return {};
 }
@@ -6649,7 +6657,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(Vector<Com
     return GridTrackSizeListShorthandStyleValue::create(
         parsed_template_areas_values.release_nonnull()->as_grid_template_area(),
         parsed_template_rows_values.release_nonnull()->as_grid_track_size_list(),
-        parsed_template_columns_values.release_nonnull()->as_grid_track_size_list());
+        parsed_template_columns_values.release_nonnull()->as_grid_track_size_list())
+        .release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
@@ -6725,7 +6734,7 @@ RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue
     else
         column_end = row_end;
 
-    return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
+    return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end).release_value_but_fixme_should_propagate_errors();
 }
 
 RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
@@ -6741,7 +6750,7 @@ RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue
         }
         grid_area_rows.append(move(grid_area_columns));
     }
-    return GridTemplateAreaStyleValue::create(grid_area_rows);
+    return GridTemplateAreaStyleValue::create(grid_area_rows).release_value_but_fixme_should_propagate_errors();
 }
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
@@ -6796,7 +6805,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     if (property_id == PropertyID::Custom || contains_var_or_attr)
-        return { UnresolvedStyleValue::create(move(component_values), contains_var_or_attr) };
+        return { UnresolvedStyleValue::create(move(component_values), contains_var_or_attr).release_value_but_fixme_should_propagate_errors() };
 
     if (component_values.is_empty())
         return ParseError::SyntaxError;
@@ -6992,7 +7001,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             parsed_values.append(parsed_value.release_nonnull());
         }
         if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-            return { StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space) };
+            return { StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space).release_value_but_fixme_should_propagate_errors() };
     }
 
     return ParseError::SyntaxError;

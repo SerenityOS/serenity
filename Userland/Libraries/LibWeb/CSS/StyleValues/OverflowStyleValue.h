@@ -15,9 +15,9 @@ namespace Web::CSS {
 
 class OverflowStyleValue final : public StyleValueWithDefaultOperators<OverflowStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<OverflowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
+    static ErrorOr<ValueComparingNonnullRefPtr<OverflowStyleValue>> create(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
     {
-        return adopt_ref(*new OverflowStyleValue(move(overflow_x), move(overflow_y)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) OverflowStyleValue(move(overflow_x), move(overflow_y)));
     }
     virtual ~OverflowStyleValue() override = default;
 

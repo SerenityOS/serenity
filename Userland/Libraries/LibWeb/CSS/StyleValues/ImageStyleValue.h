@@ -20,7 +20,10 @@ class ImageStyleValue final
     : public AbstractImageStyleValue
     , public ImageResourceClient {
 public:
-    static ValueComparingNonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
+    static ErrorOr<ValueComparingNonnullRefPtr<ImageStyleValue>> create(AK::URL const& url)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) ImageStyleValue(url));
+    }
     virtual ~ImageStyleValue() override = default;
 
     virtual ErrorOr<String> to_string() const override;

@@ -32,7 +32,7 @@ void HTMLMarqueeElement::apply_presentational_hints(CSS::StyleProperties& style)
         if (name == HTML::AttributeNames::bgcolor) {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         }
     });
 }

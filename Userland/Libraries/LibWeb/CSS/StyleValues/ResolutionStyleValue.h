@@ -13,9 +13,9 @@ namespace Web::CSS {
 
 class ResolutionStyleValue : public StyleValueWithDefaultOperators<ResolutionStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
+    static ErrorOr<ValueComparingNonnullRefPtr<ResolutionStyleValue>> create(Resolution resolution)
     {
-        return adopt_ref(*new ResolutionStyleValue(move(resolution)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) ResolutionStyleValue(move(resolution)));
     }
     virtual ~ResolutionStyleValue() override = default;
 

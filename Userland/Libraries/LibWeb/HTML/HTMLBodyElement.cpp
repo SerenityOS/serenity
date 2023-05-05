@@ -34,11 +34,11 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
         if (name.equals_ignoring_ascii_case("bgcolor"sv)) {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         } else if (name.equals_ignoring_ascii_case("text"sv)) {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         } else if (name.equals_ignoring_ascii_case("background"sv)) {
             VERIFY(m_background_style_value);
             style.set_property(CSS::PropertyID::BackgroundImage, *m_background_style_value);
@@ -62,7 +62,7 @@ void HTMLBodyElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("background"sv)) {
-        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value));
+        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value)).release_value_but_fixme_should_propagate_errors();
         m_background_style_value->on_animate = [this] {
             if (layout_node()) {
                 layout_node()->set_needs_display();

@@ -32,7 +32,7 @@ void HTMLFontElement::apply_presentational_hints(CSS::StyleProperties& style) co
         if (name.equals_ignoring_ascii_case("color"sv)) {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         }
     });
 }

@@ -480,8 +480,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                     y_positions.unchecked_append(layer);
                 }
             }
-            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()));
-            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()));
+            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
+            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
         } else {
             style.set_property(CSS::PropertyID::BackgroundPositionX, value);
             style.set_property(CSS::PropertyID::BackgroundPositionY, value);
@@ -1363,8 +1363,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     FontCache::the().set(font_selector, *found_font);
 
-    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)));
-    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight));
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors());
+    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors());
 
     style.set_computed_font(found_font.release_nonnull());
 }
@@ -1412,7 +1412,8 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
     if (line_height_value_slot && line_height_value_slot->is_percentage()) {
         line_height_value_slot = LengthStyleValue::create(
-            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()));
+            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()))
+                                     .release_value_but_fixme_should_propagate_errors();
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, root_font_metrics);
@@ -1420,7 +1421,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
     if (line_height_value_slot && line_height_value_slot->is_length())
-        line_height_value_slot = LengthStyleValue::create(Length::make_px(line_height));
+        line_height_value_slot = LengthStyleValue::create(Length::make_px(line_height)).release_value_but_fixme_should_propagate_errors();
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
@@ -1519,7 +1520,7 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
     }
 
     if (new_display != display)
-        style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create(new_display));
+        style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create(new_display).release_value_but_fixme_should_propagate_errors());
 }
 
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
@@ -1528,9 +1529,9 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
     absolutize_values(style, nullptr, {});
-    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())));
-    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())));
-    style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)));
+    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())).release_value_but_fixme_should_propagate_errors());
+    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())).release_value_but_fixme_should_propagate_errors());
+    style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)).release_value_but_fixme_should_propagate_errors());
     return style;
 }
 

@@ -16,14 +16,14 @@ ErrorOr<String> GridTrackSizeListStyleValue::to_string() const
     return m_grid_track_size_list.to_string();
 }
 
-ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue> GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
+ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
 {
-    return adopt_ref(*new GridTrackSizeListStyleValue(grid_track_size_list));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) GridTrackSizeListStyleValue(grid_track_size_list));
 }
 
-ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue> GridTrackSizeListStyleValue::make_auto()
+ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> GridTrackSizeListStyleValue::make_auto()
 {
-    return adopt_ref(*new GridTrackSizeListStyleValue(CSS::GridTrackSizeList()));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) GridTrackSizeListStyleValue(CSS::GridTrackSizeList()));
 }
 
 }
