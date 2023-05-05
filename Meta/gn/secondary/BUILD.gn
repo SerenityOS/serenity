@@ -4,6 +4,7 @@ group("default") {
   deps = [
     "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler",
     "//Tests",
+    "//Userland/Libraries/LibTimeZone",
   ]
   testonly = true
 }

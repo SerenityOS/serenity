@@ -1,7 +1,44 @@
+import("//Meta/gn/build/compiled_action.gni")
+import("//Meta/gn/build/download_cache.gni")
+import("//Meta/gn/build/download_file.gni")
+import("//Meta/gn/build/extract_archive_contents.gni")
+
 declare_args() {
   # If true, Download tzdata from data.iana.org and use it in LibTimeZone
   # Data will be downloaded to $cache_path/TZDB
-  enable_timezone_database_download = false
+  enable_timezone_database_download = true
+}
+
+tzdb_cache = cache_path + "TZDB/"
+
+if (enable_timezone_database_download) {
+  download_file("timezone_database_download") {
+    version = "2023c"
+    url =
+        "https://data.iana.org/time-zones/releases/tzdata" + version + ".tar.gz"
+    cache = tzdb_cache
+    output = "tzdb.tar.gz"
+    version_file = "version.txt"
+  }
+  extract_archive_contents("timezone_database_files") {
+    deps = [ ":timezone_database_download" ]
+    archive = get_target_outputs(":timezone_database_download")
+    directory = tzdb_cache
+
+    # NOSORT
+    files = [
+      "zone1970.tab",
+      "africa",
+      "antarctica",
+      "asia",
+      "australasia",
+      "backward",
+      "etcetera",
+      "europe",
+      "northamerica",
+      "southamerica",
+    ]
+  }
 }
 
 source_set("LibTimeZone") {
@@ -17,6 +54,6 @@ source_set("LibTimeZone") {
     "//Userland/Libraries/LibCore",
   ]
   if (enable_timezone_database_download) {
-    deps += [ ":timezone_data" ]
+    deps += [ ":timezone_database_files" ]
   }
 }
