@@ -1536,7 +1536,7 @@ size_t WebPImageDecoderPlugin::loop_count()
     }
 
     auto anim_or_error = decode_webp_chunk_ANIM(*m_context, m_context->animation_header_chunk.value());
-    if (decode_webp_chunks(*m_context).is_error())
+    if (anim_or_error.is_error())
         return 0;
 
     return anim_or_error.value().loop_count;
