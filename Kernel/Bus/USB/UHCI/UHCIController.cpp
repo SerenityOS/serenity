@@ -561,6 +561,11 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
     while (descriptor) {
         u32 status = descriptor->status();
 
+        if (status & TransferDescriptor::StatusBits::NAKReceived) {
+            transfer_still_in_progress = false;
+            break;
+        }
+
         if (status & TransferDescriptor::StatusBits::Active) {
             transfer_still_in_progress = true;
             break;
