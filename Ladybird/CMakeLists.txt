@@ -73,7 +73,7 @@ add_compile_options(-Wno-user-defined-literals)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg)
 
 set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 
@@ -93,13 +93,14 @@ set(SOURCES
     Tab.cpp
     Utilities.cpp
     WebContentView.cpp
+    ladybird.qrc
     main.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES}
     MANUAL_FINALIZATION
 )
-target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
+target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets Qt::Svg LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)

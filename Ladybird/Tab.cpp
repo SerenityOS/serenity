@@ -13,12 +13,41 @@
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>
+#include <QPainter>
 #include <QPlainTextEdit>
 #include <QPoint>
 #include <QResizeEvent>
+#include <QSvgRenderer>
 
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
+
+static QIcon render_svg_icon_with_theme_colors(QString name, QPalette const& palette)
+{
+    auto path = QString(":/Icons/%1.svg").arg(name);
+
+    QSize icon_size(16, 16);
+
+    QIcon icon;
+
+    auto render = [&](QColor color) -> QPixmap {
+        QImage image(icon_size, QImage::Format_ARGB32);
+        image.fill(Qt::transparent);
+
+        QPainter painter(&image);
+        QSvgRenderer renderer(path);
+        renderer.render(&painter);
+        painter.setBrush(color);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceAtop);
+        painter.fillRect(image.rect(), color);
+        return QPixmap::fromImage(image);
+    };
+
+    icon.addPixmap(render(palette.color(QPalette::ColorGroup::Normal, QPalette::ColorRole::ButtonText)), QIcon::Mode::Normal);
+    icon.addPixmap(render(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)), QIcon::Mode::Disabled);
+
+    return icon;
+}
 
 Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
     : QWidget(window)
@@ -45,17 +74,16 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
 
-    auto back_icon_path = QString("%1/res/icons/16x16/go-back.png").arg(s_serenity_resource_root.characters());
-    auto forward_icon_path = QString("%1/res/icons/16x16/go-forward.png").arg(s_serenity_resource_root.characters());
-    auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
-    m_back_action = make<QAction>(QIcon(back_icon_path), "Back");
+    m_back_action = make<QAction>("Back");
     m_back_action->setEnabled(false);
     m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
-    m_forward_action = make<QAction>(QIcon(forward_icon_path), "Forward");
+    m_forward_action = make<QAction>("Forward");
     m_forward_action->setEnabled(false);
     m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
-    m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
+    m_reload_action = make<QAction>("Reload");
     m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
+
+    rerender_toolbar_icons();
 
     m_toolbar->addAction(m_back_action);
     m_toolbar->addAction(m_forward_action);
@@ -258,4 +286,21 @@ void Tab::update_hover_label()
     m_hover_label->resize(QFontMetrics(m_hover_label->font()).boundingRect(m_hover_label->text()).adjusted(-4, -2, 4, 2).size());
     m_hover_label->move(6, height() - m_hover_label->height() - 8);
     m_hover_label->raise();
+}
+
+bool Tab::event(QEvent* event)
+{
+    if (event->type() == QEvent::PaletteChange) {
+        rerender_toolbar_icons();
+        return QWidget::event(event);
+    }
+
+    return QWidget::event(event);
+}
+
+void Tab::rerender_toolbar_icons()
+{
+    m_back_action->setIcon(render_svg_icon_with_theme_colors("back", palette()));
+    m_forward_action->setIcon(render_svg_icon_with_theme_colors("forward", palette()));
+    m_reload_action->setIcon(render_svg_icon_with_theme_colors("reload", palette()));
 }

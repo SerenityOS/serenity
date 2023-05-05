@@ -51,7 +51,9 @@ signals:
 
 private:
     virtual void resizeEvent(QResizeEvent*) override;
+    virtual bool event(QEvent*) override;
 
+    void rerender_toolbar_icons();
     void update_hover_label();
 
     QBoxLayout* m_layout;
