@@ -2,8 +2,10 @@ import("//Meta/gn/build/toolchain/compiler.gni")
 
 group("default") {
   deps = [
+    "//Ladybird:ladybird",
     "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler",
     "//Tests",
+    "//Userland/Libraries/LibWeb",
     "//Userland/Utilities:js",
   ]
   testonly = true

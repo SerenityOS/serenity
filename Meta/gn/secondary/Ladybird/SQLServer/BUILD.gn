@@ -1,0 +1,33 @@
+import("//Ladybird/link_qt.gni")
+
+link_qt("SQLServer_qt") {
+  qt_components = [
+    "Core",
+    "Gui",
+    "Network",
+  ]
+}
+
+executable("SQLServer") {
+  configs += [
+    "//Ladybird:ladybird_config",
+    ":SQLServer_qt",
+  ]
+  include_dirs = [
+    "//Userland/Libraries",
+    "//Userland/Services",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibSQL",
+  ]
+  sources = [
+    "//Userland/Services/SQLServer/ConnectionFromClient.cpp",
+    "//Userland/Services/SQLServer/DatabaseConnection.cpp",
+    "//Userland/Services/SQLServer/SQLStatement.cpp",
+    "main.cpp",
+  ]
+}
