@@ -32,7 +32,7 @@ so the userland program could know about the situation and act accordingly.
 
 An exception to this is when there's simply no way to propagate the error code to the userland program.
 Maybe it's a `ATAPort` (in the IDE ATA code) that asynchronously tries to handle reading data from the harddrive,
-but because of the async operation, we can't send the `errno` code back to userland, so we what we do is
+but because of the async operation, we can't send the `errno` code back to userland, so what we do is
 to ensure that internal functions still use the `ErrorOr<>` return type, and in main calling function, we use
 other meaningful infrastructure utilities in the Kernel to indicate that the operation failed.
 
