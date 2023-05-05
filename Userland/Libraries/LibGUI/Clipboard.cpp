@@ -37,9 +37,10 @@ static ConnectionToClipboardServer& connection()
     return *s_connection;
 }
 
-void Clipboard::initialize(Badge<Application>)
+ErrorOr<void> Clipboard::initialize(Badge<Application>)
 {
-    s_connection = ConnectionToClipboardServer::try_create().release_value_but_fixme_should_propagate_errors();
+    s_connection = TRY(ConnectionToClipboardServer::try_create());
+    return {};
 }
 
 Clipboard& Clipboard::the()
