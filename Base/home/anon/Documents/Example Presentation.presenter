@@ -62,7 +62,7 @@
                     "type": "image",
 
                     "rect": [50, 50, 200, 100],
-                    "path": "/res/icons/catdog/alert.png",
+                    "path": "/res/graphics/catdog/alert.png",
                     "scaling": "fit-smallest",
                     "scaling-mode": "nearest-neighbor"
                 }
