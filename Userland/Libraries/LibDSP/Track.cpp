@@ -63,7 +63,8 @@ bool NoteTrack::check_processor_chain_valid() const
 
 ErrorOr<void> Track::resize_internal_buffers_to(size_t buffer_size)
 {
-    m_secondary_sample_buffer = TRY(FixedArray<Sample>::create(buffer_size));
+    m_second_temporary_sample_buffer = TRY(FixedArray<Sample>::create(buffer_size));
+    m_first_temporary_sample_buffer = TRY(FixedArray<Sample>::create(buffer_size));
     return {};
 }
 
@@ -71,35 +72,48 @@ void Track::current_signal(FixedArray<Sample>& output_signal)
 {
     // This is real-time code. We must NEVER EVER EVER allocate.
     NoAllocationGuard guard;
-    VERIFY(m_secondary_sample_buffer.type() == SignalType::Sample);
-    VERIFY(output_signal.size() == m_secondary_sample_buffer.get<FixedArray<Sample>>().size());
+    VERIFY(m_first_temporary_sample_buffer.type() == SignalType::Sample);
+    VERIFY(output_signal.size() == m_first_temporary_sample_buffer.get<FixedArray<Sample>>().size());
+    VERIFY(m_second_temporary_sample_buffer.type() == SignalType::Sample);
+    VERIFY(output_signal.size() == m_second_temporary_sample_buffer.get<FixedArray<Sample>>().size());
 
     compute_current_clips_signal();
+    // Source and target signal point into one of our pre-allocated signal members.
     Signal* source_signal = &m_current_signal;
-    // This provides an audio buffer of the right size. It is not allocated here, but whenever we are informed about a buffer size change.
-    Signal* target_signal = &m_secondary_sample_buffer;
+    Signal* target_signal = &m_first_temporary_note_buffer;
+    // Keep track of which buffer to use as the target next.
+    // That way, we don't accidentally alias the source and target buffer.
+    bool use_first_buffer = false;
 
     for (auto& processor : m_processor_chain) {
-        // Depending on what the processor needs to have as output, we need to place either a pre-allocated note hash map or a pre-allocated sample buffer in the target signal.
+        // Depending on what the processor needs to have as output, we need to place either a pre-allocated note list or a pre-allocated sample buffer in the target signal.
         if (processor->output_type() == SignalType::Note)
-            target_signal = &m_secondary_note_buffer;
+            target_signal = use_first_buffer ? &m_first_temporary_note_buffer : &m_second_temporary_note_buffer;
         else
-            target_signal = &m_secondary_sample_buffer;
+            target_signal = use_first_buffer ? &m_first_temporary_sample_buffer : &m_second_temporary_sample_buffer;
+
         processor->process(*source_signal, *target_signal);
+
         swap(source_signal, target_signal);
+        use_first_buffer = !use_first_buffer;
     }
     VERIFY(source_signal->type() == SignalType::Sample);
     VERIFY(output_signal.size() == source_signal->get<FixedArray<Sample>>().size());
     // The last processor is the fixed mastering processor. This can write directly to the output data. We also just trust this processor that it does the right thing :^)
     m_track_mastering->process_to_fixed_array(*source_signal, output_signal);
+
+    m_first_temporary_note_buffer.clear();
+    m_second_temporary_note_buffer.clear();
+    m_first_temporary_sample_buffer.clear();
+    m_second_temporary_sample_buffer.clear();
 }
 
 void NoteTrack::compute_current_clips_signal()
 {
     // FIXME: Handle looping properly
     u32 start_time = m_transport->time();
-    VERIFY(m_secondary_sample_buffer.type() == SignalType::Sample);
-    size_t sample_count = m_secondary_sample_buffer.get<FixedArray<Sample>>().size();
+    VERIFY(m_second_temporary_sample_buffer.type() == SignalType::Sample);
+    size_t sample_count = m_second_temporary_sample_buffer.get<FixedArray<Sample>>().size();
     u32 end_time = start_time + static_cast<u32>(sample_count);
 
     // Find the currently playing clips.

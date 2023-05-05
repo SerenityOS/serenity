@@ -215,6 +215,17 @@ public:
             return SignalType::Note;
         return SignalType::Invalid;
     }
+
+    void clear()
+    {
+        visit(
+            [&](FixedArray<Sample>& sample) {
+                sample.fill_with(SAMPLE_OFF);
+            },
+            [&](RollNotes& notes) {
+                notes.fill({});
+            });
+    }
 };
 
 }

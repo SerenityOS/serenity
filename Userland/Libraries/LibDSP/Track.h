@@ -59,13 +59,15 @@ protected:
     NonnullRefPtr<Effects::Mastering> m_track_mastering;
     NonnullRefPtr<Keyboard> m_keyboard;
     // The current signal is stored here, to prevent unnecessary reallocation.
+    // It may contain either samples or notes, depending on the track type.
     Signal m_current_signal { FixedArray<Sample> {} };
 
-    // These are so that we don't have to allocate a secondary buffer in current_signal().
-    // A sample buffer possibly used by the processor chain.
-    Signal m_secondary_sample_buffer { FixedArray<Sample> {} };
-    // A note buffer possibly used by the processor chain.
-    Signal m_secondary_note_buffer { RollNotes {} };
+    // We need two temporary buffers of each type, since we can't allocate during sample processing.
+    // One buffer will act as the input buffer, one will act as the output.
+    Signal m_first_temporary_sample_buffer { FixedArray<Sample> {} };
+    Signal m_second_temporary_sample_buffer { FixedArray<Sample> {} };
+    Signal m_first_temporary_note_buffer { RollNotes {} };
+    Signal m_second_temporary_note_buffer { RollNotes {} };
 };
 
 class NoteTrack final : public Track {
