@@ -1372,7 +1372,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
     }
 
     // "ANMF Chunk: [...] If the Animation flag is not set, then this chunk SHOULD NOT be present."
-    if (!context.vp8x_header.has_animation && context.animation_header_chunk.has_value()) {
+    if (!context.vp8x_header.has_animation && !context.animation_frame_chunks.is_empty()) {
         dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: Header claims no animation, but ANMF chunks present. Ignoring ANMF chunks.");
         context.animation_frame_chunks.clear();
     }
