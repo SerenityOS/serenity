@@ -304,12 +304,14 @@ if [ -z "$SERENITY_MACHINE" ]; then
         SERENITY_MACHINE="
         -m $SERENITY_RAM_SIZE
         -smp $SERENITY_CPUS
+        -M pc,i8042=off
         -display $SERENITY_QEMU_DISPLAY_BACKEND
         -device $SERENITY_QEMU_DISPLAY_DEVICE
         -device virtio-serial,max_ports=2
         -device virtconsole,chardev=stdout
         -device isa-debugcon,chardev=stdout
         -device virtio-rng-pci
+        -machine vmport=off
         $SERENITY_AUDIO_BACKEND
         $SERENITY_AUDIO_PC_SPEAKER
         $SERENITY_AUDIO_DEVICE
@@ -347,6 +349,7 @@ $SERENITY_MACHINE
 -name SerenityOS
 -d guest_errors
 -usb
+-device usb-mouse
 $SERENITY_SPICE_SERVER_CHARDEV
 "
 
@@ -402,11 +405,6 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x5.0x0
 -device ich9-usb-ehci2,bus=pcie.0,addr=0x5.0x2
 -device ich9-usb-uhci1,bus=pcie.0,multifunction=on,addr=0x7.0x0
--device ich9-usb-uhci2,bus=pcie.0,addr=0x7.0x1
--device ich9-usb-uhci3,bus=pcie.0,addr=0x7.0x2
--device ich9-usb-uhci4,bus=pcie.0,addr=0x7.0x3
--device ich9-usb-uhci5,bus=pcie.0,addr=0x7.0x4
--device ich9-usb-uhci6,bus=pcie.0,addr=0x7.0x5
 -device pcie-root-port,port=0x10,chassis=1,id=pcie.1,bus=pcie.0,multifunction=on,addr=0x6
 -device pcie-root-port,port=0x11,chassis=2,id=pcie.2,bus=pcie.0,addr=0x6.0x1
 -device pcie-root-port,port=0x12,chassis=3,id=pcie.3,bus=pcie.0,addr=0x6.0x2
@@ -417,7 +415,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device pcie-root-port,port=0x17,chassis=8,id=pcie.8,bus=pcie.0,addr=0x6.0x7
 -device ich9-intel-hda,bus=pcie.2,addr=0x03.0x0
 -device bochs-display
--device nec-usb-xhci,bus=pcie.2,addr=0x11.0x0
+-device usb-mouse
 -device pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0
 -device sdhci-pci,bus=bridge1,addr=0x1.0x0
 -display $SERENITY_QEMU_DISPLAY_BACKEND

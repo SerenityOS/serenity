@@ -74,6 +74,7 @@ set(KERNEL_SOURCES
     Devices/HID/MouseDevice.cpp
     Devices/HID/PS2/KeyboardDevice.cpp
     Devices/HID/PS2/MouseDevice.cpp
+    Devices/HID/USB/MouseDevice.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp

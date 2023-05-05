@@ -7,8 +7,11 @@
 #include <AK/FixedArray.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBConfiguration.h>
+#include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/HID/USB/MouseDevice.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
@@ -50,8 +53,38 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
             // FIXME: It looks like HID descriptors come BEFORE the endpoint descriptors for a HID device, so we should load
             // these too eventually.
             // See here: https://www.usb.org/defined-class-codes
-            if (interface_descriptor->interface_class_code == USB_CLASS_HID)
+            if (interface_descriptor->interface_class_code == USB_CLASS_HID) {
+                USBEndpointDescriptor endpoint_descriptor;
+                memcpy(&endpoint_descriptor, raw_endpoint_descriptor_offset, sizeof(USBEndpointDescriptor));
+
+                if constexpr (USB_DEBUG) {
+                    dbgln("Endpoint Descriptor {}", endpoint);
+                    dbgln("Endpoint Address: {}", endpoint_descriptor.endpoint_address);
+                    dbgln("Endpoint Attribute Bitmap: {:08b}", endpoint_descriptor.endpoint_attributes_bitmap);
+                    dbgln("Endpoint Maximum Packet Size: {}", endpoint_descriptor.max_packet_size);
+                    dbgln("Endpoint Poll Interval (in frames): {}", endpoint_descriptor.poll_interval_in_frames);
+                }
+
+                // FIXME: Allow to set different configurations...
+                USBConfigurationDescriptor descriptor;
+                memcpy(&descriptor, &m_descriptor, sizeof(USBConfigurationDescriptor));
+                transfer_length = TRY(m_device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_SET_CONFIGURATION, 1, 0, sizeof(USBConfigurationDescriptor), &descriptor));
+                if constexpr (USB_DEBUG) {
+                    dbgln("USB device configuration was set!");
+                }
+
+                // FIXME: Detect USB HID mouse in an abstracted way...
+                if (interface_descriptor->interface_sub_class_code == 0x1 && interface_descriptor->interface_protocol == 0x2) {
+                    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device().controller(), endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, device().address(), 10));
+                    m_device.set_interrupt_in_pipe({}, move(interrupt_in_pipe));
+                    auto mouse_device = TRY(USBMouseDevice::try_create_instance(m_device));
+                    HIDManagement::the().attach_standalone_hid_device(*mouse_device);
+                }
+
                 raw_endpoint_descriptor_offset += sizeof(USBHIDDescriptor); // Skip the HID descriptor (this was worked out via buffer inspection)
+                endpoint_descriptors.append(endpoint_descriptor);
+                continue;
+            }
 
             USBEndpointDescriptor endpoint_descriptor;
             memcpy(&endpoint_descriptor, raw_endpoint_descriptor_offset, sizeof(USBEndpointDescriptor));
