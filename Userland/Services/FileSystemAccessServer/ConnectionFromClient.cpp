@@ -156,7 +156,7 @@ void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedStri
             async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), user_picked_file);
         }
     } else {
-        async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, Optional<DeprecatedString> {});
+        async_handle_prompt_end(request_id, ECANCELED, Optional<IPC::File> {}, Optional<DeprecatedString> {});
     }
 }
 

@@ -122,7 +122,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
     if (error != 0) {
         // We don't want to show an error message for non-existent files since some applications may want
         // to handle it as opening a new, named file.
-        if (error != -1 && error != ENOENT)
+        if (error != ECANCELED && error != ENOENT)
             GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
         request_data.promise->resolve(Error::from_errno(error)).release_value_but_fixme_should_propagate_errors();
         return;
