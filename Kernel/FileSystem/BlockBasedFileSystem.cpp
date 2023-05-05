@@ -60,6 +60,10 @@ public:
             return nullptr;
         auto& entry = const_cast<CacheEntry&>(*it->value);
         VERIFY(entry.block_index == block_index);
+        if (!entry_is_dirty(entry) && (m_clean_list.first() != &entry)) {
+            // Cache hit! Promote the entry to the front of the list.
+            m_clean_list.prepend(entry);
+        }
         return &entry;
     }
 
