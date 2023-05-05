@@ -1,0 +1,38 @@
+source_set("SVG") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  sources = [
+    "AttributeNames.cpp",
+    "AttributeParser.cpp",
+    "SVGAnimatedLength.cpp",
+    "SVGAnimatedNumber.cpp",
+    "SVGCircleElement.cpp",
+    "SVGClipPathElement.cpp",
+    "SVGDecodedImageData.cpp",
+    "SVGDefsElement.cpp",
+    "SVGElement.cpp",
+    "SVGEllipseElement.cpp",
+    "SVGForeignObjectElement.cpp",
+    "SVGGElement.cpp",
+    "SVGGeometryElement.cpp",
+    "SVGGradientElement.cpp",
+    "SVGGraphicsElement.cpp",
+    "SVGLength.cpp",
+    "SVGLineElement.cpp",
+    "SVGLinearGradientElement.cpp",
+    "SVGPathElement.cpp",
+    "SVGPolygonElement.cpp",
+    "SVGPolylineElement.cpp",
+    "SVGRadialGradientElement.cpp",
+    "SVGRectElement.cpp",
+    "SVGSVGElement.cpp",
+    "SVGStopElement.cpp",
+    "SVGStyleElement.cpp",
+    "SVGSymbolElement.cpp",
+    "SVGTextContentElement.cpp",
+    "SVGTitleElement.cpp",
+    "SVGUseElement.cpp",
+    "TagNames.cpp",
+    "ViewBox.cpp",
+  ]
+}

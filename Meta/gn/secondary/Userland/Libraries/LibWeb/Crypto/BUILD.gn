@@ -1,0 +1,10 @@
+source_set("Crypto") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  sources = [
+    "Crypto.cpp",
+    "Crypto.h",
+    "SubtleCrypto.cpp",
+    "SubtleCrypto.h",
+  ]
+}

@@ -1,0 +1,51 @@
+source_set("Layout") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  include_dirs = [
+    "//Userland/",  # For LibGUI needing WindowServer types
+  ]
+  sources = [
+    "AudioBox.cpp",
+    "AvailableSpace.cpp",
+    "BlockContainer.cpp",
+    "BlockFormattingContext.cpp",
+    "Box.cpp",
+    "BoxModelMetrics.cpp",
+    "BreakNode.cpp",
+    "ButtonBox.cpp",
+    "CanvasBox.cpp",
+    "CheckBox.cpp",
+    "FlexFormattingContext.cpp",
+    "FormattingContext.cpp",
+    "FrameBox.cpp",
+    "GridFormattingContext.cpp",
+    "ImageBox.cpp",
+    "InlineFormattingContext.cpp",
+    "InlineLevelIterator.cpp",
+    "InlineNode.cpp",
+    "Label.cpp",
+    "LabelableNode.cpp",
+    "LayoutState.cpp",
+    "LineBox.cpp",
+    "LineBoxFragment.cpp",
+    "LineBuilder.cpp",
+    "ListItemBox.cpp",
+    "ListItemMarkerBox.cpp",
+    "Node.cpp",
+    "Progress.cpp",
+    "RadioButton.cpp",
+    "ReplacedBox.cpp",
+    "SVGBox.cpp",
+    "SVGFormattingContext.cpp",
+    "SVGGeometryBox.cpp",
+    "SVGGraphicsBox.cpp",
+    "SVGSVGBox.cpp",
+    "SVGTextBox.cpp",
+    "TableFormattingContext.cpp",
+    "TableWrapper.cpp",
+    "TextNode.cpp",
+    "TreeBuilder.cpp",
+    "VideoBox.cpp",
+    "Viewport.cpp",
+  ]
+}
