@@ -4,7 +4,9 @@ group("default") {
   deps = [
     "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler",
     "//Tests",
+    "//Userland/Libraries/LibLocale",
     "//Userland/Libraries/LibTimeZone",
+    "//Userland/Libraries/LibUnicode",
   ]
   testonly = true
 }
