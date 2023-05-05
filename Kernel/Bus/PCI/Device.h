@@ -14,6 +14,25 @@
 
 namespace Kernel::PCI {
 
+enum class InterruptType {
+    PIN,
+    MSI,
+    MSIX
+};
+
+struct InterruptRange {
+    u8 m_start_irq { 0 };
+    u8 m_irq_count { 0 };
+    InterruptType m_type { InterruptType::PIN };
+};
+
+struct [[gnu::packed]] MSIxTableEntry {
+    u32 address_low;
+    u32 address_high;
+    u32 data;
+    u32 vector_control;
+};
+
 class Device {
 public:
     DeviceIdentifier const& device_identifier() const { return *m_pci_identifier; };
@@ -33,12 +52,21 @@ public:
 
     void enable_extended_message_signalled_interrupts();
     void disable_extended_message_signalled_interrupts();
+    ErrorOr<InterruptType> reserve_irqs(u8 number_of_irqs, bool msi);
+    ErrorOr<u8> allocate_irq(u8 index);
+    PCI::InterruptType get_interrupt_type();
+    void enable_interrupt(u8 irq);
+    void disable_interrupt(u8 irq);
 
 protected:
     explicit Device(DeviceIdentifier const& pci_identifier);
 
 private:
+    PhysicalAddress msix_table_entry_address(u8 irq);
+
+private:
     NonnullRefPtr<DeviceIdentifier> const m_pci_identifier;
+    InterruptRange m_interrupt_range;
 };
 
 template<typename... Parameters>
