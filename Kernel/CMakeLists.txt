@@ -393,6 +393,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/PCI/Controller/HostBridge.cpp
         Arch/x86_64/PCI/IDELegacyModeController.cpp
         Arch/x86_64/PCI/Initializer.cpp
+        Arch/x86_64/PCI/MSI.cpp
 
         Arch/x86_64/VGA/IOArbiter.cpp
 
