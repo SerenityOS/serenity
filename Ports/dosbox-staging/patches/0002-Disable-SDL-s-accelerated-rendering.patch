@@ -8,10 +8,10 @@ Subject: [PATCH] Disable SDL's accelerated rendering
  1 file changed, 1 deletion(-)
 
 diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
-index 7039f27..d445ebd 100644
+index c85a9f53cefe09821bb73a154ef7c663b90c3bc9..d0e32221716761d459f537cef5c0e8afe4b75e72 100644
 --- a/src/gui/sdlmain.cpp
 +++ b/src/gui/sdlmain.cpp
-@@ -1048,7 +1048,6 @@ dosurface:
+@@ -1078,7 +1078,6 @@ dosurface:
  		if (sdl.render_driver != "auto")
  			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
  		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
