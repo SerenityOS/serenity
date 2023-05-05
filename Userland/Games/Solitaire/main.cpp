@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc exec"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-solitaire"sv));
 
     auto const man_file = "/usr/share/man/man6/Solitaire.md"sv;

@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 

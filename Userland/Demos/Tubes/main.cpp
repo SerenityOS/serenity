@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(refresh_rate, "Refresh rate", "rate", 'r', "milliseconds");
     args_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath prot_exec map_fixed"));
 

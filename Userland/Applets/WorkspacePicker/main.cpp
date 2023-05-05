@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath proc exec unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     app->set_quit_when_last_window_deleted(false);
 
     // We need to obtain the WM connection here as well before the pledge shortening.

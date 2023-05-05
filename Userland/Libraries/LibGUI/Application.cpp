@@ -68,37 +68,43 @@ Application* Application::the()
     return *s_the;
 }
 
-Application::Application(int argc, char** argv)
+ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& arguments)
 {
-    VERIFY(!*s_the);
-    *s_the = *this;
-    m_event_loop = make<Core::EventLoop>();
+    if (*s_the)
+        return Error::from_string_literal("An Application has already been created for this process!");
+
+    auto application = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Application {}));
+    *s_the = *application;
+
+    application->m_event_loop = TRY(try_make<Core::EventLoop>());
+
     ConnectionToWindowServer::the();
     Clipboard::initialize({});
-    if (argc > 0)
-        m_invoked_as = argv[0];
+
+    if (arguments.argc > 0)
+        application->m_invoked_as = arguments.argv[0];
 
     if (getenv("GUI_FOCUS_DEBUG"))
-        m_focus_debugging_enabled = true;
+        application->m_focus_debugging_enabled = true;
 
     if (getenv("GUI_HOVER_DEBUG"))
-        m_hover_debugging_enabled = true;
+        application->m_hover_debugging_enabled = true;
 
     if (getenv("GUI_DND_DEBUG"))
-        m_dnd_debugging_enabled = true;
+        application->m_dnd_debugging_enabled = true;
 
-    for (int i = 1; i < argc; i++) {
-        DeprecatedString arg(argv[i]);
-        m_args.append(move(arg));
-    }
+    for (auto arg : arguments.strings.slice(1))
+        TRY(application->m_args.try_append(arg));
 
-    m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
-        request_tooltip_show();
-    }).release_value_but_fixme_should_propagate_errors();
+    application->m_tooltip_show_timer = TRY(Core::Timer::create_single_shot(700, [weak_application = application->make_weak_ptr<Application>()] {
+        weak_application->request_tooltip_show();
+    }));
 
-    m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
-        tooltip_hide_timer_did_fire();
-    }).release_value_but_fixme_should_propagate_errors();
+    application->m_tooltip_hide_timer = TRY(Core::Timer::create_single_shot(50, [weak_application = application->make_weak_ptr<Application>()] {
+        weak_application->tooltip_hide_timer_did_fire();
+    }));
+
+    return application;
 }
 
 static bool s_in_teardown;

@@ -160,7 +160,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath unix proc exec thread"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     DeprecatedString coredump_path {};
     bool unlink_on_exit = false;

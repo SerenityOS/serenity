@@ -66,7 +66,7 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix"));
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     Config::pledge_domains({ "GMLPlayground", "Calendar" });
     app->set_config_domain(TRY("GMLPlayground"_string));

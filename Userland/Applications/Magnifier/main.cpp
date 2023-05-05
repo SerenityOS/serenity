@@ -40,7 +40,7 @@ static ErrorOr<ByteBuffer> dump_bitmap(RefPtr<Gfx::Bitmap> bitmap, AK::StringVie
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix"));
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/Magnifier.md") }));
     TRY(Desktop::Launcher::seal_allowlist());

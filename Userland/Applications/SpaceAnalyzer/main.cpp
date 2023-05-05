@@ -43,7 +43,7 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);

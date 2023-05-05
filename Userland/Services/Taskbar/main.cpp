@@ -41,7 +41,7 @@ static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction"));
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     Config::pledge_domains({ "Taskbar", "Calendar" });
     Config::monitor_domain("Taskbar");
     Config::monitor_domain("Calendar");

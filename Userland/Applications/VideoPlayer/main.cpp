@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 480);
     window->set_resizable(true);

@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(file_path, "Path to audio file to play", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
 

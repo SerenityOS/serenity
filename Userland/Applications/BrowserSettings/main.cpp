@@ -18,7 +18,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd unix"));
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     Config::pledge_domain("Browser");
 
     StringView selected_tab;

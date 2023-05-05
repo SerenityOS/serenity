@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     parser.add_positional_argument(adapter, "Adapter to display settings for", "adapter", Core::ArgsParser::Required::No);
     parser.parse(args);
 
-    auto app = TRY(GUI::Application::try_create(args));
+    auto app = TRY(GUI::Application::create(args));
 
     if (getuid() != 0) {
         GUI::MessageBox::show_error(nullptr, "You need to be root to run Network Settings!"sv);

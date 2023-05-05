@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));

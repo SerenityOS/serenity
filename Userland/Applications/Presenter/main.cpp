@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     argument_parser.add_positional_argument(file_to_load, "Presentation to load", "file", Core::ArgsParser::Required::No);
     argument_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Presenter");
     window->set_icon(GUI::Icon::default_icon("app-presenter"sv).bitmap_for_size(16));

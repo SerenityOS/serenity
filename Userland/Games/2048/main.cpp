@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     srand(time(nullptr));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-2048"sv));
 
     auto window = TRY(GUI::Window::try_create());
