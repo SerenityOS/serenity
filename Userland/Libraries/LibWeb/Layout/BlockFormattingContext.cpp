@@ -181,7 +181,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         if (!box.is_inline()) {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
-            if (width.is_auto() && total_px > width_of_containing_block) {
+            if (!width.is_auto() && total_px > width_of_containing_block) {
                 if (margin_left.is_auto())
                     margin_left = zero_value;
                 if (margin_right.is_auto())
