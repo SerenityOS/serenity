@@ -6,20 +6,23 @@ Skip use of glob() in serenity
 
 We don't have that yet.
 
-## `0002-Replace-some-size_t-Bitu.patch`
-
-Replace some size_t => Bitu
-
-FIXME: No information as to why this is a thing exists as of yet, fill
-       them in when that stuff is known.
-
-## `0003-Manually-hardcode-SDL2-library-name.patch`
-
-Manually hardcode SDL2 library name
-
-
-## `0004-Disable-SDL-s-accelerated-rendering.patch`
+## `0002-Disable-SDL-s-accelerated-rendering.patch`
 
 Disable SDL's accelerated rendering
+
+
+## `0003-bios.cpp-Serenity-has-time.h.patch`
+
+Serenity has time.h
+
+
+## `0004-meson.build-Add-serenity-to-list-of-os-families.patch`
+
+Add 'serenity' to list of os families
+
+
+## `0005-libserial.cpp-Patch-out-ioctl-flags-we-currently-do-.patch`
+
+Patch out ioctl flags we currently do not support
 
 
