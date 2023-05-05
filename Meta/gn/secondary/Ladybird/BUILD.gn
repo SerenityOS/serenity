@@ -1,0 +1,123 @@
+import("//Ladybird/compile_qt_resource_file.gni")
+import("//Ladybird/link_qt.gni")
+import("//Ladybird/moc_qt_objects.gni")
+
+moc_qt_objects("generate_moc") {
+  sources = [
+    "BrowserWindow.h",
+    "ConsoleWidget.h",
+    "InspectorWidget.h",
+    "LocationEdit.h",
+    "ModelTranslator.h",
+    "SettingsDialog.h",
+    "Tab.h",
+    "WebContentView.h",
+  ]
+}
+
+compile_qt_resource_file("compile_resource_file") {
+  sources = [ "ladybird.qrc" ]
+}
+
+link_qt("ladybird_qt_components") {
+  qt_components = [
+    "Core",
+    "Gui",
+    "Widgets",
+    "Network",
+    "Svg",
+  ]
+}
+
+config("ladybird_config") {
+  include_dirs = [
+    "//Userland/Applications",
+    "//Userland",
+  ]
+  defines = [ "AK_DONT_REPLACE_STD" ]
+}
+
+executable("ladybird") {
+  configs += [
+    ":ladybird_config",
+    ":ladybird_qt_components",
+  ]
+  data_deps = [
+    ":headless-browser",
+    "SQLServer",
+    "WebContent",
+    "WebDriver",
+  ]
+  deps = [
+    ":compile_resource_file",
+    ":generate_moc",
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibFileSystem",
+    "//Userland/Libraries/LibGUI",
+    "//Userland/Libraries/LibGfx",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibJS",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibSQL",
+    "//Userland/Libraries/LibWeb",
+    "//Userland/Libraries/LibWebView",
+  ]
+  sources = [
+    "//Userland/Applications/Browser/CookieJar.cpp",
+    "//Userland/Applications/Browser/Database.cpp",
+    "//Userland/Applications/Browser/History.cpp",
+    "BrowserWindow.cpp",
+    "ConsoleWidget.cpp",
+    "EventLoopImplementationQt.cpp",
+    "HelperProcess.cpp",
+    "InspectorWidget.cpp",
+    "LocationEdit.cpp",
+    "ModelTranslator.cpp",
+    "Settings.cpp",
+    "SettingsDialog.cpp",
+    "Tab.cpp",
+    "Utilities.cpp",
+    "WebContentView.cpp",
+    "main.cpp",
+  ]
+  sources += get_target_outputs(":generate_moc") +
+             get_target_outputs(":compile_resource_file")
+  if (current_os == "android") {
+    sources += [ "AndroidPlatform.cpp" ]
+  }
+}
+
+link_qt("headless_browser_qt") {
+  qt_components = [ "Core" ]
+}
+
+executable("headless-browser") {
+  include_dirs = [ "//Userland/Services" ]
+  configs += [
+    ":ladybird_config",
+    ":headless_browser_qt",
+  ]
+  deps = [
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibCrypto",
+    "//Userland/Libraries/LibDiff",
+    "//Userland/Libraries/LibFileSystem",
+    "//Userland/Libraries/LibGemini",
+    "//Userland/Libraries/LibGfx",
+    "//Userland/Libraries/LibHTTP",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibJS",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibTLS",
+    "//Userland/Libraries/LibWeb",
+    "//Userland/Libraries/LibWebSocket",
+    "//Userland/Libraries/LibWebView",
+  ]
+  sources = [
+    "//Userland/Services/WebContent/WebDriverConnection.cpp",
+    "//Userland/Utilities/headless-browser.cpp",
+    "HelperProcess.cpp",
+    "Utilities.cpp",
+  ]
+}
