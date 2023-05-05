@@ -16,7 +16,7 @@
 
 namespace GamesSettings {
 
-static constexpr StringView default_card_back_image_path = "/res/icons/cards/buggie-deck.png"sv;
+static constexpr StringView default_card_back_image_path = "/res/graphics/cards/backs/buggie-deck.png"sv;
 
 class CardGamePreview final : public Cards::CardGame {
     C_OBJECT_ABSTRACT(CardGamePreview)
@@ -91,7 +91,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
     };
 
     m_card_back_image_view = find_descendant_of_type_named<GUI::IconView>("cards_back_image");
-    m_card_back_image_view->set_model(GUI::FileSystemModel::create("/res/icons/cards"));
+    m_card_back_image_view->set_model(GUI::FileSystemModel::create("/res/graphics/cards/backs"));
     m_card_back_image_view->set_model_column(GUI::FileSystemModel::Column::Name);
     if (!set_card_back_image_path(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))
         set_card_back_image_path(default_card_back_image_path);

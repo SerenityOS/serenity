@@ -21,7 +21,7 @@ CardPainter& CardPainter::the()
 
 CardPainter::CardPainter()
 {
-    m_background_image_path = Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/icons/cards/buggie-deck.png"sv);
+    m_background_image_path = Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv);
 }
 
 static constexpr Gfx::CharacterBitmap s_diamond {
