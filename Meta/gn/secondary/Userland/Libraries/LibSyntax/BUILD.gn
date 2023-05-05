@@ -1,0 +1,17 @@
+shared_library("LibSyntax") {
+  output_name = "syntax"
+  include_dirs = [
+    "//Userland/Libraries",
+
+    # FIXME: Why does this library need to depend on WindowServer headers?
+    "//Userland",
+  ]
+  sources = [
+    "Highlighter.cpp",
+    "Language.cpp",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibUnicode",
+  ]
+}
