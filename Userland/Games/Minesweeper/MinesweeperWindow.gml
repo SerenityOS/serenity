@@ -18,7 +18,7 @@
 
         @GUI::ImageWidget {
             name: "flag_image"
-            bitmap: "/res/icons/minesweeper/flag.png"
+            bitmap: "/res/graphics/minesweeper/flag.png"
         }
 
         @GUI::Label {
@@ -39,7 +39,7 @@
 
         @GUI::ImageWidget {
             name: "time_image"
-            bitmap: "/res/icons/minesweeper/timer.png"
+            bitmap: "/res/graphics/minesweeper/timer.png"
         }
 
         @GUI::Label {
