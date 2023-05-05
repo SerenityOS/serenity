@@ -1,0 +1,15 @@
+source_set("Parser") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  sources = [
+    "Block.cpp",
+    "ComponentValue.cpp",
+    "Declaration.cpp",
+    "DeclarationOrAtRule.cpp",
+    "Function.cpp",
+    "Parser.cpp",
+    "Rule.cpp",
+    "Token.cpp",
+    "Tokenizer.cpp",
+  ]
+}

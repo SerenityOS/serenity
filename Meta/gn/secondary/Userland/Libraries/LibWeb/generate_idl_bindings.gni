@@ -1,0 +1,367 @@
+#
+# This file introduces templates for generating JS bindings for Web Platform
+# Objects using IDL files.
+#
+# The public generate_idl_bindings template invokes the binding generator
+# for each IDL file in the input idl_list. It creates two source_set targets
+# for the input target_name, one ending in "_generated" and one ending in
+# "_sources". The "_generated" target is simply the code generator invocation,
+# while the "_sources" target is the actual generated C++ sources files.
+#
+#
+# Parameters:
+#   idl_list (required) [string]
+#     List of IDL files that are all the same type.
+#     Expected to be an absolute path.
+#
+#   type (required) string
+#       "global", "iterable", "namespace", or "standard"
+#
+# Example use:
+#
+#  standard_idl_files = get_path_info(
+#    [
+#      "//Library/Foo.idl",
+#      "//Bar.idl"
+#    ],
+#    "abspath")
+#
+#  generate_idl_bindings("standard_idl_bindings") {
+#    idl_list = standard_idl_files
+#    type = "standard"
+#  }
+#
+#  shared_library("Library") {
+#    deps = [
+#      ":standard_idl_bindings_generated"
+#      ":standard_idl_bindings_sources"
+#    ]
+#  }
+#
+
+import("//Meta/gn/build/compiled_action.gni")
+
+# FIXME: rewrite these in terms of action_foreach
+template("_invoke_bindings_generator") {
+  # FIXME: Can we update the bindings generator to output the .h and .cpp at the same time?
+
+  assert(defined(invoker.type), "$target_name must have 'type' defined")
+
+  # FIXME: This is pretty gross. Can we make the source file name match the command line argument to the generator more closely?
+  #        GN can't (and probably shouldn't) siwzzle our strings for us in this way automagically
+  assert(defined(invoker.type_filename_fragment),
+         "$target_name must have 'type_filename_fragment' defined")
+  assert(defined(invoker.name), "$target_name must have 'name' defined")
+  assert(defined(invoker.path), "$target_name must have 'path' defined")
+
+  forward_variables_from(invoker,
+                         [
+                           "configs",
+                           "include_dirs",
+                           "public_configs",
+                           "testonly",
+                           "visibility",
+                         ])
+
+  if (!defined(include_dirs)) {
+    include_dirs = [ "//Userland/Libraries" ]
+  }
+  rel_include_dirs = []
+  foreach(d, include_dirs) {
+    rel_include_dirs += [
+      "-i",
+      rebase_path(d, root_build_dir),
+    ]
+  }
+
+  name_and_type = string_replace(invoker.name + "_" + invoker.type, "-", "_")
+  type = invoker.type
+  gen_dir = get_label_info("//Userland/Libraries/LibWeb", "target_gen_dir")
+
+  out_name = get_path_info(invoker.path, "name")
+
+  compiled_action(name_and_type + "_impl") {
+    tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb/BindingsGenerator"
+    inputs = [ invoker.path + ".idl" ]
+    outputs = [ gen_dir + "/Bindings/" + out_name +
+                invoker.type_filename_fragment + ".cpp" ]
+    depfile = outputs[0] + ".d"
+    args = [
+             "--$type-implementation",
+             "-o",
+             rebase_path(outputs[0], root_build_dir),
+             "--depfile",
+             rebase_path(depfile, root_build_dir),
+             "--depfile-target",
+             rebase_path(outputs[0], root_build_dir),
+           ] + rel_include_dirs +
+           [
+             rebase_path(inputs[0], root_build_dir),
+
+             # FIXME: Get caller path from invoker?
+             rebase_path("//Userland/Libraries/LibWeb", root_build_dir),
+           ]
+  }
+
+  compiled_action(name_and_type + "_header") {
+    tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb/BindingsGenerator"
+    inputs = [ invoker.path + ".idl" ]
+    outputs = [ gen_dir + "/Bindings/" + out_name +
+                invoker.type_filename_fragment + ".h" ]
+    depfile = outputs[0] + ".d"
+    args = [
+             "--$type-header",
+             "-o",
+             rebase_path(outputs[0], root_build_dir),
+             "--depfile",
+             rebase_path(depfile, root_build_dir),
+             "--depfile-target",
+             rebase_path(outputs[0], root_build_dir),
+           ] + rel_include_dirs +
+           [
+             rebase_path(inputs[0], root_build_dir),
+
+             # FIXME: Get caller path from invoker?
+             rebase_path("//Userland/Libraries/LibWeb", root_build_dir),
+           ]
+  }
+
+  source_set("generate_" + name_and_type) {
+    deps = [
+      ":" + name_and_type + "_impl",
+      ":" + name_and_type + "_header",
+    ]
+  }
+
+  source_set(name_and_type + "_sources") {
+    deps = [
+      ":" + name_and_type + "_impl",
+      ":" + name_and_type + "_header",
+    ]
+    sources = get_target_outputs(deps[0]) + get_target_outputs(deps[1])
+    configs += [ "//Userland/Libraries/LibWeb:configs" ]
+    deps += [ "//Userland/Libraries/LibWeb:all_generated" ]
+  }
+}
+
+# FIXME: Deduplicate these templates
+template("_bind_web_namespace") {
+  forward_variables_from(invoker,
+                         [
+                           "configs",
+                           "inputs",
+                           "include_dirs",
+                           "outputs",
+                           "public_configs",
+                           "testonly",
+                           "visibility",
+                         ])
+
+  interface_name = target_name
+
+  _invoke_bindings_generator(interface_name) {
+    type = "namespace"
+    type_filename_fragment = "Namespace"
+    name = interface_name
+    path = invoker.path
+  }
+
+  source_set(interface_name + "_sources") {
+    deps = [ ":" + interface_name + "_namespace_sources" ]
+  }
+
+  source_set("generate_" + interface_name) {
+    deps = [ ":generate_" + interface_name + "_namespace" ]
+  }
+}
+
+# FIXME: Deduplicate these templates
+template("_bind_web_iterable_interface") {
+  forward_variables_from(invoker,
+                         [
+                           "configs",
+                           "inputs",
+                           "include_dirs",
+                           "outputs",
+                           "public_configs",
+                           "testonly",
+                           "visibility",
+                         ])
+
+  interface_name = target_name
+
+  _invoke_bindings_generator(interface_name) {
+    type = "prototype"
+    type_filename_fragment = "Prototype"
+    name = interface_name
+    path = invoker.path
+  }
+
+  _invoke_bindings_generator(interface_name) {
+    type = "constructor"
+    type_filename_fragment = "Constructor"
+    name = interface_name
+    path = invoker.path
+  }
+
+  _invoke_bindings_generator(interface_name) {
+    type = "iterator-prototype"
+    type_filename_fragment = "IteratorPrototype"
+    name = interface_name
+    path = invoker.path
+  }
+
+  source_set(interface_name + "_sources") {
+    deps = [
+      ":" + interface_name + "_prototype_sources",
+      ":" + interface_name + "_constructor_sources",
+      ":" + interface_name + "_iterator_prototype_sources",
+    ]
+  }
+
+  source_set("generate_" + interface_name) {
+    deps = [
+      ":generate_" + interface_name + "_prototype",
+      ":generate_" + interface_name + "_constructor",
+      ":generate_" + interface_name + "_iterator_prototype",
+    ]
+  }
+}
+
+# FIXME: Deduplicate these templates
+template("_bind_web_global_interface") {
+  forward_variables_from(invoker,
+                         [
+                           "configs",
+                           "inputs",
+                           "include_dirs",
+                           "outputs",
+                           "public_configs",
+                           "testonly",
+                           "visibility",
+                         ])
+
+  interface_name = target_name
+
+  _invoke_bindings_generator(interface_name) {
+    type = "prototype"
+    type_filename_fragment = "Prototype"
+    name = interface_name
+    path = invoker.path
+  }
+
+  _invoke_bindings_generator(interface_name) {
+    type = "constructor"
+    type_filename_fragment = "Constructor"
+    name = interface_name
+    path = invoker.path
+  }
+
+  _invoke_bindings_generator(interface_name) {
+    type = "global-mixin"
+    type_filename_fragment = "GlobalMixin"
+    name = interface_name
+    path = invoker.path
+  }
+
+  source_set(interface_name + "_sources") {
+    deps = [
+      ":" + interface_name + "_prototype_sources",
+      ":" + interface_name + "_constructor_sources",
+      ":" + interface_name + "_global_mixin_sources",
+    ]
+  }
+
+  source_set("generate_" + interface_name) {
+    deps = [
+      ":generate_" + interface_name + "_prototype",
+      ":generate_" + interface_name + "_constructor",
+      ":generate_" + interface_name + "_global_mixin",
+    ]
+  }
+}
+
+# FIXME: Deduplicate these templates
+template("_bind_web_interface") {
+  forward_variables_from(invoker,
+                         [
+                           "configs",
+                           "inputs",
+                           "include_dirs",
+                           "outputs",
+                           "public_configs",
+                           "testonly",
+                           "visibility",
+                         ])
+
+  interface_name = target_name
+
+  _invoke_bindings_generator(interface_name) {
+    type = "prototype"
+    type_filename_fragment = "Prototype"
+    name = interface_name
+    path = invoker.path
+  }
+
+  _invoke_bindings_generator(interface_name) {
+    type = "constructor"
+    type_filename_fragment = "Constructor"
+    name = interface_name
+    path = invoker.path
+  }
+
+  source_set(interface_name + "_sources") {
+    deps = [
+      ":" + interface_name + "_prototype_sources",
+      ":" + interface_name + "_constructor_sources",
+    ]
+  }
+
+  source_set("generate_" + interface_name) {
+    deps = [
+      ":generate_" + interface_name + "_prototype",
+      ":generate_" + interface_name + "_constructor",
+    ]
+  }
+}
+
+template("generate_idl_bindings") {
+  forward_variables_from(invoker,
+                         [
+                           "type",
+                           "idl_list",
+                         ])
+  idl_sources = []
+  generate_idl = []
+  foreach(idl, idl_list) {
+    path = get_path_info(rebase_path(idl, "//Userland/Libraries/LibWeb"),
+                         "dir") + "/" + get_path_info(idl, "name")
+    name = string_replace(path, "/", "_")
+    if (type == "standard") {
+      _bind_web_interface(name) {
+        path = path
+      }
+    } else if (type == "iterable") {
+      _bind_web_iterable_interface(name) {
+        path = path
+      }
+    } else if (type == "namespace") {
+      _bind_web_namespace(name) {
+        path = path
+      }
+    } else {
+      assert(type == "global")
+      _bind_web_global_interface(name) {
+        path = path
+      }
+    }
+    generate_idl += [ ":generate_" + name ]
+    idl_sources += [ ":" + name + "_sources" ]
+  }
+  source_set(target_name + "_generated") {
+    deps = generate_idl
+  }
+  source_set(target_name + "_sources") {
+    deps = idl_sources
+  }
+}

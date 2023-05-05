@@ -1,0 +1,39 @@
+source_set("Painting") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  include_dirs = [
+    "//Userland/",  # For LibGfx needing LibGUI needing WindowServer types
+  ]
+  sources = [
+    "AudioPaintable.cpp",
+    "BackgroundPainting.cpp",
+    "BorderPainting.cpp",
+    "BorderRadiusCornerClipper.cpp",
+    "ButtonPaintable.cpp",
+    "CanvasPaintable.cpp",
+    "CheckBoxPaintable.cpp",
+    "FilterPainting.cpp",
+    "GradientPainting.cpp",
+    "ImagePaintable.cpp",
+    "InlinePaintable.cpp",
+    "LabelablePaintable.cpp",
+    "MarkerPaintable.cpp",
+    "MediaPaintable.cpp",
+    "NestedBrowsingContextPaintable.cpp",
+    "PaintContext.cpp",
+    "Paintable.cpp",
+    "PaintableBox.cpp",
+    "ProgressPaintable.cpp",
+    "RadioButtonPaintable.cpp",
+    "SVGGeometryPaintable.cpp",
+    "SVGGraphicsPaintable.cpp",
+    "SVGPaintable.cpp",
+    "SVGSVGPaintable.cpp",
+    "SVGTextPaintable.cpp",
+    "ShadowPainting.cpp",
+    "StackingContext.cpp",
+    "TableBordersPainting.cpp",
+    "TextPaintable.cpp",
+    "VideoPaintable.cpp",
+  ]
+}
