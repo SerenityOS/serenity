@@ -705,6 +705,8 @@ void ColorSlider::pick_value_at_position(GUI::MouseEvent& event)
     auto inner_rect = frame_inner_rect();
     auto position = event.position().constrained(inner_rect).translated(-frame_thickness(), -frame_thickness());
     auto hue = (double)position.y() / inner_rect.height() * 360;
+    if (hue >= 360)
+        hue -= 360;
     m_last_position = position.y();
     m_value = hue;
 
