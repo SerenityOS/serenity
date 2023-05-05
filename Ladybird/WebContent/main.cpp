@@ -62,6 +62,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
+    int webcontent_fd_passing_socket { -1 };
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
+    args_parser.parse(arguments);
+
+    VERIFY(webcontent_fd_passing_socket >= 0);
+
     Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
 
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
@@ -75,14 +83,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto maybe_autoplay_allowlist_error = load_autoplay_allowlist();
     if (maybe_autoplay_allowlist_error.is_error())
         dbgln("Failed to load autoplay allowlist: {}", maybe_autoplay_allowlist_error.error());
-
-    int webcontent_fd_passing_socket { -1 };
-
-    Core::ArgsParser args_parser;
-    args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
-    args_parser.parse(arguments);
-
-    VERIFY(webcontent_fd_passing_socket >= 0);
 
     auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
