@@ -520,7 +520,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
                 DeprecatedString path = entry.host_path.string();
-                return open(path.characters(), O_DIRECTORY, 0755);
+                return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
         },
@@ -583,7 +583,7 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
                 DeprecatedString path = entry.host_path.string();
-                return open(path.characters(), O_DIRECTORY, 0755);
+                return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
         },
@@ -614,7 +614,7 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
             auto& entry = preopened_directories()[descriptor.value()];
             dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
                 DeprecatedString path = entry.host_path.string();
-                return open(path.characters(), O_DIRECTORY, 0755);
+                return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = dir_fd;
         },
@@ -706,7 +706,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, F
             auto& entry = preopened_directories()[descriptor.value()];
             resolved_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
                 DeprecatedString path = entry.host_path.string();
-                return open(path.characters(), O_DIRECTORY, 0755);
+                return open(path.characters(), O_DIRECTORY, 0);
             });
             entry.opened_fd = resolved_fd;
         },
