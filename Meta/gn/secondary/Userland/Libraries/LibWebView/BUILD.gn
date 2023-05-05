@@ -1,0 +1,76 @@
+import("//Meta/gn/build/compiled_action.gni")
+
+compiled_action("WebContentClientEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebContent/WebContentClient.ipc" ]
+  outputs = [ "$root_gen_dir/WebContent/WebContentClientEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("WebContentServerEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebContent/WebContentServer.ipc" ]
+  outputs = [ "$root_gen_dir/WebContent/WebContentServerEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("WebDriverClientEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebContent/WebDriverClient.ipc" ]
+  outputs = [ "$root_gen_dir/WebContent/WebDriverClientEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("WebDriverServerEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebContent/WebDriverServer.ipc" ]
+  outputs = [ "$root_gen_dir/WebContent/WebDriverServerEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+shared_library("LibWebView") {
+  output_name = "webview"
+  include_dirs = [
+    "//Userland/Libraries",
+    "//Userland",
+  ]
+  deps = [
+    ":WebContentClientEndpoint",
+    ":WebContentServerEndpoint",
+    ":WebDriverClientEndpoint",
+    ":WebDriverServerEndpoint",
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibGUI",
+    "//Userland/Libraries/LibGfx",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibWeb",
+  ]
+  sources = [
+    "AccessibilityTreeModel.cpp",
+    "DOMTreeModel.cpp",
+    "StylePropertiesModel.cpp",
+    "ViewImplementation.cpp",
+    "WebContentClient.cpp",
+  ]
+  sources += get_target_outputs(":WebContentClientEndpoint") +
+             get_target_outputs(":WebContentServerEndpoint") +
+             get_target_outputs(":WebDriverClientEndpoint") +
+             get_target_outputs(":WebDriverServerEndpoint")
+}

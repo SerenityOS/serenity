@@ -1,0 +1,43 @@
+import("//Meta/gn/build/download_cache.gni")
+import("//Meta/gn/build/download_file.gni")
+
+declare_args() {
+  # If true, Download root CA certificate bundle from curl.se
+  # Data will be downloaded to $cache_path/CACERT and used by LibTLS
+  enable_cacert_download = true
+}
+
+cacert_cache = cache_path + "CACERT/"
+
+if (enable_cacert_download) {
+  download_file("ca_certificates_download") {
+    version = "2023-01-10"
+    url = "https://curl.se/ca/cacert-" + version + ".pem"
+    output = "$root_build_dir/cacert.pem"
+    version_file = cacert_cache + "version.txt"
+  }
+  # FIXME: Copy file to /etc/cacert.pem on serenity
+}
+
+shared_library("LibTLS") {
+  output_name = "tls"
+  include_dirs = [ "//Userland/Libraries" ]
+  cflags_cc = [ "-Wvla" ]
+  sources = [
+    "Certificate.cpp",
+    "Handshake.cpp",
+    "HandshakeCertificate.cpp",
+    "HandshakeClient.cpp",
+    "HandshakeServer.cpp",
+    "Record.cpp",
+    "Socket.cpp",
+    "TLSv12.cpp",
+  ]
+  deps = [
+    ":ca_certificates_download",
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibCrypto",
+    "//Userland/Libraries/LibFileSystem",
+  ]
+}
