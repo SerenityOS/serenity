@@ -8,36 +8,26 @@
 
 #include <AK/CircularQueue.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
-#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Bus/SerialIO/PS2/Controller.h>
+#include <Kernel/Bus/SerialIO/PS2/Device.h>
+#include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
-class PS2MouseDevice : public IRQHandler
-    , public PS2Device {
+class PS2MouseDevice : public PS2Device {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullOwnPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&, MouseDevice const&);
+    static ErrorOr<NonnullOwnPtr<PS2MouseDevice>> try_to_initialize(PS2Controller const&, PS2PortIndex, MouseDevice const&);
     ErrorOr<void> initialize();
 
     virtual ~PS2MouseDevice() override;
 
-    virtual StringView purpose() const override { return "PS2MouseDevice"sv; }
-
     // ^PS2Device
-    virtual void irq_handle_byte_read(u8 byte) override;
-    virtual void enable_interrupts() override
-    {
-        enable_irq();
-    }
-    virtual Type instrument_type() const override { return Type::Mouse; }
+    virtual void handle_byte_read_from_serial_input(u8 byte) override;
 
 protected:
-    PS2MouseDevice(I8042Controller const&, MouseDevice const&);
-
-    // ^IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    PS2MouseDevice(PS2Controller const&, PS2PortIndex, MouseDevice const&);
 
     struct RawPacket {
         union {
