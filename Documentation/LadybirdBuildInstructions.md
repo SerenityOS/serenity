@@ -7,7 +7,7 @@ Qt6 development packages and a C++20 capable compiler are required. gcc-12 or cl
 On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
-sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools
+sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev libqt6svg6-dev qt6-tools-dev-tools
 ```
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
