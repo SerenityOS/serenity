@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 class LengthStyleValue : public StyleValueWithDefaultOperators<LengthStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<LengthStyleValue> create(Length const&);
+    static ErrorOr<ValueComparingNonnullRefPtr<LengthStyleValue>> create(Length const&);
     virtual ~LengthStyleValue() override = default;
 
     Length const& length() const { return m_length; }

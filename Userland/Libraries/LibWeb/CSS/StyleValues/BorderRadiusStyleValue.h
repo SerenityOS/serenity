@@ -17,9 +17,9 @@ namespace Web::CSS {
 
 class BorderRadiusStyleValue final : public StyleValueWithDefaultOperators<BorderRadiusStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
+    static ErrorOr<ValueComparingNonnullRefPtr<BorderRadiusStyleValue>> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
     {
-        return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) BorderRadiusStyleValue(horizontal_radius, vertical_radius));
     }
     virtual ~BorderRadiusStyleValue() override = default;
 

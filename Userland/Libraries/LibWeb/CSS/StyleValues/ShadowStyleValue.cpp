@@ -26,7 +26,7 @@ ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSP
     auto absolutized_offset_y = m_properties.offset_y.absolutized(viewport_rect, font_metrics, root_font_metrics);
     auto absolutized_blur_radius = m_properties.blur_radius.absolutized(viewport_rect, font_metrics, root_font_metrics);
     auto absolutized_spread_distance = m_properties.spread_distance.absolutized(viewport_rect, font_metrics, root_font_metrics);
-    return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
+    return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement).release_value_but_fixme_should_propagate_errors();
 }
 
 }

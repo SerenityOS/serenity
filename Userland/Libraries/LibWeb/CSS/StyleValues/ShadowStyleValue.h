@@ -22,9 +22,9 @@ enum class ShadowPlacement {
 
 class ShadowStyleValue final : public StyleValueWithDefaultOperators<ShadowStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<ShadowStyleValue> create(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    static ErrorOr<ValueComparingNonnullRefPtr<ShadowStyleValue>> create(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
     {
-        return adopt_ref(*new ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
     }
     virtual ~ShadowStyleValue() override = default;
 

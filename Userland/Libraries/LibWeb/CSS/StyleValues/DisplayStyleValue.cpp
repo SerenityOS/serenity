@@ -8,9 +8,9 @@
 
 namespace Web::CSS {
 
-ValueComparingNonnullRefPtr<DisplayStyleValue> DisplayStyleValue::create(Display const& display)
+ErrorOr<ValueComparingNonnullRefPtr<DisplayStyleValue>> DisplayStyleValue::create(Display const& display)
 {
-    return adopt_ref(*new DisplayStyleValue(display));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) DisplayStyleValue(display));
 }
 
 }

@@ -70,11 +70,11 @@ using FilterFunction = Variant<Filter::Blur, Filter::DropShadow, Filter::HueRota
 
 class FilterValueListStyleValue final : public StyleValueWithDefaultOperators<FilterValueListStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<FilterValueListStyleValue> create(
+    static ErrorOr<ValueComparingNonnullRefPtr<FilterValueListStyleValue>> create(
         Vector<FilterFunction> filter_value_list)
     {
         VERIFY(filter_value_list.size() >= 1);
-        return adopt_ref(*new FilterValueListStyleValue(move(filter_value_list)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) FilterValueListStyleValue(move(filter_value_list)));
     }
 
     Vector<FilterFunction> const& filter_value_list() const { return m_filter_value_list; }

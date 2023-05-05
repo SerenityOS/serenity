@@ -38,10 +38,10 @@ public:
         WebKit
     };
 
-    static ValueComparingNonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
+    static ErrorOr<ValueComparingNonnullRefPtr<LinearGradientStyleValue>> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
     }
 
     virtual ErrorOr<String> to_string() const override;

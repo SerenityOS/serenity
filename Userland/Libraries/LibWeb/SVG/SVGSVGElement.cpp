@@ -54,7 +54,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
         // If the `width` attribute is an empty string, it defaults to 100%.
         // This matches WebKit and Blink, but not Firefox. The spec is unclear.
         // FIXME: Figure out what to do here.
-        style.set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
+        style.set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }).release_value_but_fixme_should_propagate_errors());
     }
 
     // Height defaults to 100%
@@ -65,7 +65,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
         // If the `height` attribute is an empty string, it defaults to 100%.
         // This matches WebKit and Blink, but not Firefox. The spec is unclear.
         // FIXME: Figure out what to do here.
-        style.set_property(CSS::PropertyID::Height, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
+        style.set_property(CSS::PropertyID::Height, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }).release_value_but_fixme_should_propagate_errors());
     }
 }
 

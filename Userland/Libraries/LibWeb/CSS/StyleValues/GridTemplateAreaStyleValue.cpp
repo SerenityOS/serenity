@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
+ErrorOr<ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue>> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
 {
-    return adopt_ref(*new GridTemplateAreaStyleValue(grid_template_area));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) GridTemplateAreaStyleValue(grid_template_area));
 }
 
 ErrorOr<String> GridTemplateAreaStyleValue::to_string() const

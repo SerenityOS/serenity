@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class FrequencyStyleValue : public StyleValueWithDefaultOperators<FrequencyStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<FrequencyStyleValue> create(Frequency frequency)
+    static ErrorOr<ValueComparingNonnullRefPtr<FrequencyStyleValue>> create(Frequency frequency)
     {
-        return adopt_ref(*new FrequencyStyleValue(move(frequency)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) FrequencyStyleValue(move(frequency)));
     }
     virtual ~FrequencyStyleValue() override = default;
 

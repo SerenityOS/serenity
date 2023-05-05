@@ -15,14 +15,14 @@ namespace Web::CSS {
 
 class NumericStyleValue : public StyleValueWithDefaultOperators<NumericStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<NumericStyleValue> create_float(float value)
+    static ErrorOr<ValueComparingNonnullRefPtr<NumericStyleValue>> create_float(float value)
     {
-        return adopt_ref(*new NumericStyleValue(value));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
     }
 
-    static ValueComparingNonnullRefPtr<NumericStyleValue> create_integer(i64 value)
+    static ErrorOr<ValueComparingNonnullRefPtr<NumericStyleValue>> create_integer(i64 value)
     {
-        return adopt_ref(*new NumericStyleValue(value));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
     }
 
     virtual bool has_length() const override { return to_number() == 0; }
