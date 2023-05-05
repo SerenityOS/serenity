@@ -17,7 +17,7 @@
 
 ColorLines::BitmapArray ColorLines::build_marble_color_bitmaps()
 {
-    auto marble_bitmap = MUST(Gfx::Bitmap::load_from_file("/res/icons/colorlines/colorlines.png"sv));
+    auto marble_bitmap = MUST(Gfx::Bitmap::load_from_file("/res/graphics/colorlines/colorlines.png"sv));
     float constexpr hue_degrees[Marble::number_of_colors] = {
         0,   // Red
         45,  // Brown/Yellow
