@@ -1,7 +1,8 @@
 import("//Meta/gn/build/toolchain/compiler.gni")
 
 group("default") {
-  deps = [ "//Userland/Libraries/LibCore" ]
+  deps = [ "//Tests" ]
+  testonly = true
 }
 
 # A pool called "console" in the root BUILD.gn is magic and represents ninja's
