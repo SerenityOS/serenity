@@ -76,7 +76,7 @@ private:
 
 static ErrorOr<RefPtr<Gfx::Bitmap>> load_piece_image(StringView set, StringView image)
 {
-    auto path = TRY(String::formatted("/res/icons/chess/sets/{}/{}", set, image));
+    auto path = TRY(String::formatted("/res/graphics/chess/sets/{}/{}", set, image));
     return Gfx::Bitmap::load_from_file(path.bytes_as_string_view());
 }
 
@@ -246,7 +246,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
     m_preview = find_descendant_of_type_named<ChessGamePreview>("chess_preview");
 
     m_piece_set_combobox = find_descendant_of_type_named<GUI::ComboBox>("piece_set");
-    TRY(Core::Directory::for_each_entry("/res/icons/chess/sets/"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
+    TRY(Core::Directory::for_each_entry("/res/graphics/chess/sets/"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
         TRY(m_piece_sets.try_append(entry.name));
         return IterationDecision::Continue;
     }));

@@ -342,7 +342,7 @@ void ChessWidget::keydown_event(GUI::KeyEvent& event)
     update();
 }
 
-static constexpr StringView set_path = "/res/icons/chess/sets/"sv;
+static constexpr StringView set_path = "/res/graphics/chess/sets/"sv;
 
 static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 {
