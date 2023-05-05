@@ -15,9 +15,6 @@ class Settings : public QObject {
 public:
     Settings();
 
-    QString homepage();
-    void set_homepage(QString const& homepage);
-
     QString new_tab_page();
     void set_new_tab_page(QString const& page);
 

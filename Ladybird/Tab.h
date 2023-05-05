@@ -43,7 +43,6 @@ public slots:
     void page_favicon_changed(QIcon);
     void back();
     void forward();
-    void home();
     void reload();
 
 signals:
@@ -68,7 +67,6 @@ private:
 
     OwnPtr<QAction> m_back_action;
     OwnPtr<QAction> m_forward_action;
-    OwnPtr<QAction> m_home_action;
     OwnPtr<QAction> m_reload_action;
 
     int tab_index();

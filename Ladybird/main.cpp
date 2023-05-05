@@ -106,9 +106,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid()) {
         window.view().load(url);
-    } else if (!s_settings->homepage().isEmpty()) {
-        auto home_url = TRY(ak_string_from_qstring(s_settings->homepage()));
-        window.view().load(TRY(get_formatted_url(home_url.bytes_as_string_view())));
+    } else {
+        window.view().load("about:blank"sv);
     }
 
     return event_loop.exec();
