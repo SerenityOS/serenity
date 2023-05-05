@@ -33,6 +33,7 @@ set(KERNEL_SOURCES
     Bus/PCI/DeviceIdentifier.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
+    Bus/USB/Drivers/HID/MouseDriver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
     Bus/USB/USBController.cpp
@@ -73,6 +74,7 @@ set(KERNEL_SOURCES
     Devices/HID/MouseDevice.cpp
     Devices/HID/PS2/KeyboardDevice.cpp
     Devices/HID/PS2/MouseDevice.cpp
+    Devices/HID/USB/MouseDevice.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
