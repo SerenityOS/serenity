@@ -1562,7 +1562,7 @@ static ErrorOr<ImageData> decode_webp_animation_frame_image_data(WebPLoadingCont
     }
 
     if (chunk.type != FourCC("VP8 ") && chunk.type != FourCC("VP8L"))
-        return Error::from_string_literal("WebPImageDecoderPlugin: no image data found in animation frame");
+        return context.error("WebPImageDecoderPlugin: no image data found in animation frame");
 
     image_data.image_data_chunk = chunk;
 
