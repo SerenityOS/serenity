@@ -24,7 +24,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView out_path;
     args_parser.add_option(out_path, "Path to output image file", "output", 'o', "FILE");
 
-    bool ppm_ascii;
+    int frame_index = 0;
+    args_parser.add_option(frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
+
+    bool ppm_ascii = false;
     args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
 
     StringView assign_color_profile_path;
@@ -52,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // This uses ImageDecoder instead of Bitmap::load_from_file() to have more control
     // over selecting a frame, access color profile data, and so on in the future.
-    auto frame = TRY(decoder->frame(0)).image;
+    auto frame = TRY(decoder->frame(frame_index)).image;
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
     RefPtr<Core::MappedFile> icc_file;
