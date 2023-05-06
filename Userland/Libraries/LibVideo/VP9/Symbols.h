@@ -17,7 +17,7 @@ namespace Video::VP9 {
 
 #define REFS_PER_FRAME 3
 #define MV_FR_SIZE 4
-#define MVREF_NEIGHBOURS 8
+#define MVREF_NEIGHBORS 8
 #define BLOCK_SIZE_GROUPS 4
 #define BLOCK_SIZES 13
 #define BLOCK_INVALID 14

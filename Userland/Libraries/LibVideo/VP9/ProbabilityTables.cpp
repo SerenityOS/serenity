@@ -402,8 +402,8 @@ static constexpr InterModeProbs default_inter_mode_probs = {
     { 7, 166, 63 }, // 2 = two predicted mvs
     { 7, 94, 66 },  // 3 = one predicted/zero and one new mv
     { 8, 64, 46 },  // 4 = two new mvs
-    { 17, 81, 31 }, // 5 = one intra neighbour + x
-    { 25, 29, 30 }, // 6 = two intra neighbours
+    { 17, 81, 31 }, // 5 = one intra neighbor + x
+    { 25, 29, 30 }, // 6 = two intra neighbors
 };
 
 static constexpr InterpFilterProbs default_interp_filter_probs = {

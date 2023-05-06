@@ -295,7 +295,7 @@ filename.
 #### `workdir`
 
 The working directory used for executing other commands via `run` as well as
-cleanup. Usually the directory name of the upacked source archive.
+cleanup. Usually the directory name of the unpacked source archive.
 
 Defaults to `$port-$version`.
 

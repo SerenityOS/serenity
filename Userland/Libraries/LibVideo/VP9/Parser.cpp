@@ -1705,7 +1705,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
     }
     block_context.mode_context[reference_frame] = counter_to_context[context_counter];
 
-    for (auto i = 2u; i < MVREF_NEIGHBOURS; i++) {
+    for (auto i = 2u; i < MVREF_NEIGHBORS; i++) {
         MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
         if (motion_vector_is_inside_tile(block_context.tile_context, candidate)) {
             different_ref_found = true;
@@ -1716,7 +1716,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
         add_motion_vector_if_reference_frame_type_is_same(block_context, base_coordinates, reference_frame, list, true);
 
     if (different_ref_found) {
-        for (auto i = 0u; i < MVREF_NEIGHBOURS; i++) {
+        for (auto i = 0u; i < MVREF_NEIGHBORS; i++) {
             MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
             if (motion_vector_is_inside_tile(block_context.tile_context, candidate))
                 add_motion_vector_if_reference_frame_type_is_different(block_context, candidate, reference_frame, list, false);
