@@ -149,7 +149,6 @@ Optional<FormattingContext::Type> FormattingContext::formatting_context_type_cre
         // HACK: Instead of crashing, create a dummy formatting context that does nothing.
         // FIXME: Remove this once it's no longer needed. It currently swallows problem with standalone
         //        table-related boxes that don't get fixed up by CSS anonymous table box generation.
-        dbgln("FIXME: Child box doesn't create BFC, but inside is also not flow! display={}", MUST(display.to_string()));
         return Type::InternalDummy;
     }
     return {};
