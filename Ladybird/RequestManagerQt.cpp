@@ -40,7 +40,6 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
 {
     QNetworkRequest request { QString(url.to_deprecated_string().characters()) };
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
-    request.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
     request.setAttribute(QNetworkRequest::CookieLoadControlAttribute, QNetworkRequest::Manual);
     request.setAttribute(QNetworkRequest::CookieSaveControlAttribute, QNetworkRequest::Manual);
 
