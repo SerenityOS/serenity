@@ -15,8 +15,8 @@ namespace Gfx {
 template<typename T>
 void Point<T>::constrain(Rect<T> const& rect)
 {
-    m_x = AK::clamp<T>(x(), rect.left(), rect.left() + rect.width());
-    m_y = AK::clamp<T>(y(), rect.top(), rect.top() + rect.height());
+    m_x = AK::clamp<T>(x(), rect.left(), rect.right());
+    m_y = AK::clamp<T>(y(), rect.top(), rect.bottom());
 }
 
 template<typename T>

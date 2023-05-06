@@ -421,7 +421,7 @@ void ScreenInput::on_receive_mouse_data(MousePacket const& packet)
 
     auto* moved_to_screen = Screen::find_by_location(m_cursor_location);
     if (!moved_to_screen) {
-        m_cursor_location = m_cursor_location.constrained(current_screen.rect());
+        m_cursor_location.constrain(current_screen.rect());
         moved_to_screen = &current_screen;
     }
 
