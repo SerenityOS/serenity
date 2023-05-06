@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibCompress/Deflate.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
+#include <LibGfx/Painter.h>
 
 // Overview: https://developers.google.com/speed/webp/docs/compression
 // Container: https://developers.google.com/speed/webp/docs/riff_container
@@ -157,6 +158,7 @@ struct WebPLoadingContext {
     // These are set in state >= AnimationFrameChunksDecoded, if first_chunk.type == 'VP8X' && vp8x_header.has_animation.
     Optional<ANIMChunk> animation_header_chunk_data;
     Optional<Vector<ANMFChunk>> animation_frame_chunks_data;
+    size_t current_frame { 0 };
 
     Optional<Chunk> iccp_chunk; // 'ICCP'
     Optional<Chunk> exif_chunk; // 'EXIF'
@@ -1447,7 +1449,6 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
 
     // https://developers.google.com/speed/webp/docs/riff_container#alpha
     // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    // FIXME: Also check in ANMF chunks.
     if (context.image_data.alpha_chunk.has_value() && context.image_data.image_data_chunk.has_value() && context.image_data.image_data_chunk->type == FourCC("VP8L")) {
         dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
         context.image_data.alpha_chunk.clear();
@@ -1546,6 +1547,90 @@ static ErrorOr<void> decode_webp_animation_frame_chunks(WebPLoadingContext& cont
 
     context.state = WebPLoadingContext::State::AnimationFrameChunksDecoded;
     return {};
+}
+
+static ErrorOr<ImageData> decode_webp_animation_frame_image_data(WebPLoadingContext& context, ANMFChunk const& frame)
+{
+    ReadonlyBytes chunks = frame.frame_data;
+
+    ImageData image_data;
+
+    auto chunk = TRY(decode_webp_advance_chunk(context, chunks));
+    if (chunk.type == FourCC("ALPH")) {
+        image_data.alpha_chunk = chunk;
+        chunk = TRY(decode_webp_advance_chunk(context, chunks));
+    }
+
+    if (chunk.type != FourCC("VP8 ") && chunk.type != FourCC("VP8L"))
+        return Error::from_string_literal("WebPImageDecoderPlugin: no image data found in animation frame");
+
+    image_data.image_data_chunk = chunk;
+
+    // https://developers.google.com/speed/webp/docs/riff_container#alpha
+    // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
+    if (image_data.alpha_chunk.has_value() && image_data.image_data_chunk.has_value() && image_data.image_data_chunk->type == FourCC("VP8L")) {
+        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
+        image_data.alpha_chunk.clear();
+    }
+
+    return image_data;
+}
+
+// https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
+static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingContext& context, size_t frame_index)
+{
+    if (frame_index >= context.animation_frame_chunks_data->size())
+        return context.error("frame_index size too high");
+
+    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(context.vp8x_header.has_animation);
+
+    Color clear_color = Color::from_argb(context.animation_header_chunk_data->background_color);
+
+    size_t start_frame = context.current_frame + 1;
+    dbgln_if(WEBP_DEBUG, "start_frame {} context.current_frame {}", start_frame, context.current_frame);
+    if (context.state < WebPLoadingContext::State::BitmapDecoded) {
+        start_frame = 0;
+        context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { context.vp8x_header.width, context.vp8x_header.height }));
+        context.bitmap->fill(clear_color);
+    } else if (frame_index < context.current_frame) {
+        start_frame = 0;
+    }
+
+    Painter painter(*context.bitmap);
+
+    // FIXME: Honor context.animation_header_chunk_data.loop_count.
+
+    for (size_t i = start_frame; i <= frame_index; ++i) {
+        dbgln_if(WEBP_DEBUG, "drawing frame {} to produce frame {}", i, frame_index);
+
+        auto const& frame_description = context.animation_frame_chunks_data.value()[i];
+
+        if (i > 0) {
+            auto const& previous_frame = context.animation_frame_chunks_data.value()[i - 1];
+            if (previous_frame.disposal_method == ANMFChunk::DisposalMethod::DisposeToBackgroundColor)
+                painter.clear_rect({ previous_frame.frame_x, previous_frame.frame_y, previous_frame.frame_width, previous_frame.frame_height }, clear_color);
+        }
+
+        auto frame_image_data = TRY(decode_webp_animation_frame_image_data(context, frame_description));
+        VERIFY(frame_image_data.image_data_chunk.has_value());
+
+        if (frame_image_data.image_data_chunk->type == FourCC("VP8 "))
+            return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+
+        auto frame_bitmap = TRY(decode_webp_chunk_VP8L(context, frame_image_data.image_data_chunk.value()));
+        if (static_cast<u32>(frame_bitmap->width()) != frame_description.frame_width || static_cast<u32>(frame_bitmap->height()) != frame_description.frame_height)
+            return context.error("WebPImageDecoderPlugin: decoded frame bitmap size doesn't match frame description size");
+
+        // FIXME: "Alpha-blending SHOULD be done in linear color space..."
+        bool apply_alpha = frame_description.blending_method == ANMFChunk::BlendingMethod::UseAlphaBlending;
+        painter.blit({ frame_description.frame_x, frame_description.frame_y }, *frame_bitmap, { {}, frame_bitmap->size() }, /*opacity=*/1.0, apply_alpha);
+
+        context.current_frame = i;
+        context.state = WebPLoadingContext::State::BitmapDecoded;
+    }
+
+    return ImageFrameDescriptor { context.bitmap, static_cast<int>(context.animation_frame_chunks_data.value()[frame_index].frame_duration_in_milliseconds) };
 }
 
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
@@ -1659,8 +1744,7 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
         if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
             TRY(decode_webp_animation_frame_chunks(*m_context));
         }
-        // FIXME: Do something with the animation frames.
-        return Error::from_string_literal("WebPImageDecoderPlugin: decoding of animated files not yet implemented");
+        return decode_webp_animation_frame(*m_context, index);
     }
 
     if (m_context->image_data.image_data_chunk.has_value() && m_context->image_data.image_data_chunk->type == FourCC("VP8L")) {
