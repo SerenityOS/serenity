@@ -613,14 +613,14 @@ void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& availab
     // line.
     if (!grid_container().computed_values().column_gap().is_auto()) {
         for (int column_index = 1; column_index < (m_occupation_grid.column_count() * 2) - 1; column_index += 2) {
-            auto column_gap_width = grid_container().computed_values().column_gap().resolved(grid_container(), CSS::Length::make_px(available_space.width.to_px()));
-            m_grid_columns.insert(column_index, TemporaryTrack(column_gap_width.to_px(grid_container()), true));
+            auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px());
+            m_grid_columns.insert(column_index, TemporaryTrack(column_gap_width, true));
         }
     }
     if (!grid_container().computed_values().row_gap().is_auto()) {
         for (int row_index = 1; row_index < (m_occupation_grid.row_count() * 2) - 1; row_index += 2) {
-            auto column_gap_height = grid_container().computed_values().row_gap().resolved(grid_container(), CSS::Length::make_px(available_space.height.to_px()));
-            m_grid_rows.insert(row_index, TemporaryTrack(column_gap_height.to_px(grid_container()), true));
+            auto column_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px());
+            m_grid_rows.insert(row_index, TemporaryTrack(column_gap_height, true));
         }
     }
 }

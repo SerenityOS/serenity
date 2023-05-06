@@ -29,7 +29,7 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
             }();
         },
         [&](LengthPercentage length_percentage) -> CSSPixels {
-            return length_percentage.resolved(node, Length::make_px(rect.width())).to_px(node);
+            return length_percentage.to_px(node, rect.width());
         });
     CSSPixels y = vertical_position.visit(
         [&](VerticalPreset preset) -> CSSPixels {
@@ -47,7 +47,7 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
             }();
         },
         [&](LengthPercentage length_percentage) -> CSSPixels {
-            return length_percentage.resolved(node, Length::make_px(rect.height())).to_px(node);
+            return length_percentage.to_px(node, rect.height());
         });
     if (x_relative_to == HorizontalEdge::Right)
         x = rect.width() - x;

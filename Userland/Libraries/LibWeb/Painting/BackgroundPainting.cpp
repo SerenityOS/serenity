@@ -170,14 +170,14 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 width = natural_image_width;
                 height = natural_image_height;
             } else if (x_is_auto) {
-                height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
+                height = layer.size_y.to_px(layout_node, background_positioning_area.height());
                 width = natural_image_width * (height / natural_image_height);
             } else if (y_is_auto) {
-                width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
+                width = layer.size_x.to_px(layout_node, background_positioning_area.width());
                 height = natural_image_height * (width / natural_image_width);
             } else {
-                width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
-                height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
+                width = layer.size_x.to_px(layout_node, background_positioning_area.width());
+                height = layer.size_y.to_px(layout_node, background_positioning_area.height());
             }
 
             image_rect.set_size(width, height);
@@ -221,14 +221,14 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixels space_y = background_positioning_area.height() - image_rect.height();
 
         // Position
-        CSSPixels offset_x = layer.position_offset_x.resolved(layout_node, CSS::Length::make_px(space_x)).to_px(layout_node);
+        CSSPixels offset_x = layer.position_offset_x.to_px(layout_node, space_x);
         if (layer.position_edge_x == CSS::PositionEdge::Right) {
             image_rect.set_right_without_resize(background_positioning_area.right() - offset_x);
         } else {
             image_rect.set_left(background_positioning_area.left() + offset_x);
         }
 
-        CSSPixels offset_y = layer.position_offset_y.resolved(layout_node, CSS::Length::make_px(space_y)).to_px(layout_node);
+        CSSPixels offset_y = layer.position_offset_y.to_px(layout_node, space_y);
         if (layer.position_edge_y == CSS::PositionEdge::Bottom) {
             image_rect.set_bottom_without_resize(background_positioning_area.bottom() - offset_y);
         } else {

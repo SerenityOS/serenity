@@ -646,14 +646,14 @@ void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, 
 {
     auto& box_state = state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box, state));
+    auto width_of_containing_block = containing_block_width_for(box, state);
 
-    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).to_px(box);
+    box_state.margin_top = computed_values.margin().top().to_px(box, width_of_containing_block);
+    box_state.margin_bottom = computed_values.margin().bottom().to_px(box, width_of_containing_block);
     box_state.border_top = computed_values.border_top().width;
     box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block).to_px(box);
+    box_state.padding_top = computed_values.padding().top().to_px(box, width_of_containing_block);
+    box_state.padding_bottom = computed_values.padding().bottom().to_px(box, width_of_containing_block);
 }
 
 CSSPixels BlockFormattingContext::BlockMarginState::current_collapsed_margin() const

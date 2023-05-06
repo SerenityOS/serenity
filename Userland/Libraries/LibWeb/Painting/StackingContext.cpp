@@ -428,8 +428,8 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
     auto style_value = m_box->computed_values().transform_origin();
     // FIXME: respect transform-box property
     auto reference_box = paintable_box().absolute_border_box_rect();
-    auto x = reference_box.left() + style_value.x.resolved(m_box, CSS::Length::make_px(reference_box.width())).to_px(m_box);
-    auto y = reference_box.top() + style_value.y.resolved(m_box, CSS::Length::make_px(reference_box.height())).to_px(m_box);
+    auto x = reference_box.left() + style_value.x.to_px(m_box, reference_box.width());
+    auto y = reference_box.top() + style_value.y.to_px(m_box, reference_box.height());
     return { x, y };
 }
 

@@ -107,10 +107,9 @@ void TableFormattingContext::compute_table_measures()
 
     for (auto& cell : m_cells) {
         auto width_of_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
-        auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
         auto& computed_values = cell.box->computed_values();
-        CSSPixels padding_left = computed_values.padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        CSSPixels padding_right = computed_values.padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        CSSPixels padding_left = computed_values.padding().left().to_px(cell.box, width_of_containing_block);
+        CSSPixels padding_right = computed_values.padding().right().to_px(cell.box, width_of_containing_block);
 
         auto is_left_most_cell = cell.column_index == 0;
         auto is_right_most_cell = cell.column_index == m_columns.size() - 1;
@@ -118,18 +117,18 @@ void TableFormattingContext::compute_table_measures()
         CSSPixels border_left = should_hide_borders && !is_left_most_cell ? 0 : computed_values.border_left().width;
         CSSPixels border_right = should_hide_borders && !is_right_most_cell ? 0 : computed_values.border_right().width;
 
-        CSSPixels width = computed_values.width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        CSSPixels width = computed_values.width().to_px(cell.box, width_of_containing_block);
         auto cell_intrinsic_offsets = padding_left + padding_right + border_left + border_right;
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
         CSSPixels min_width = min_content_width;
         if (!computed_values.min_width().is_auto())
-            min_width = max(min_width, computed_values.min_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
+            min_width = max(min_width, computed_values.min_width().to_px(cell.box, width_of_containing_block));
 
         CSSPixels max_width = computed_values.width().is_auto() ? max_content_width.value() : width;
         if (!computed_values.max_width().is_none())
-            max_width = min(max_width, computed_values.max_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
+            max_width = min(max_width, computed_values.max_width().to_px(cell.box, width_of_containing_block));
 
         auto computed_width = computed_values.width();
         if (computed_width.is_percentage()) {
@@ -235,7 +234,7 @@ void TableFormattingContext::compute_table_width()
     // The used min-width of a table is the greater of the resolved min-width, CAPMIN, and GRIDMIN.
     auto used_min_width = grid_min;
     if (!computed_values.min_width().is_auto()) {
-        used_min_width = max(used_min_width, computed_values.min_width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box()));
+        used_min_width = max(used_min_width, computed_values.min_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 
     CSSPixels used_width;
@@ -247,10 +246,10 @@ void TableFormattingContext::compute_table_width()
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
         // of resolved-table-width, and the used min-width of the table.
-        CSSPixels resolved_table_width = computed_values.width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box());
+        CSSPixels resolved_table_width = computed_values.width().to_px(table_box(), width_of_table_wrapper_containing_block);
         used_width = max(resolved_table_width, used_min_width);
         if (!computed_values.max_width().is_none())
-            used_width = min(used_width, computed_values.max_width().resolved(table_box(), CSS::Length::make_px(width_of_table_wrapper_containing_block)).to_px(table_box()));
+            used_width = min(used_width, computed_values.max_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 
     // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
@@ -407,8 +406,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         auto row_computed_height = row.box->computed_values().height();
         if (row_computed_height.is_length()) {
             auto height_of_containing_block = m_state.get(*row.box->containing_block()).content_height();
-            auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
-            auto row_used_height = row_computed_height.resolved(row.box, height_of_containing_block_as_length).to_px(row.box);
+            auto row_used_height = row_computed_height.to_px(row.box, height_of_containing_block);
             row.base_height = max(row.base_height, row_used_height);
         }
     }
@@ -427,10 +425,10 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         auto height_of_containing_block = m_state.get(*cell.box->containing_block()).content_height();
         auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-        cell_state.padding_top = cell.box->computed_values().padding().top().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_bottom = cell.box->computed_values().padding().bottom().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_left = cell.box->computed_values().padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_right = cell.box->computed_values().padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        cell_state.padding_top = cell.box->computed_values().padding().top().to_px(cell.box, width_of_containing_block);
+        cell_state.padding_bottom = cell.box->computed_values().padding().bottom().to_px(cell.box, width_of_containing_block);
+        cell_state.padding_left = cell.box->computed_values().padding().left().to_px(cell.box, width_of_containing_block);
+        cell_state.padding_right = cell.box->computed_values().padding().right().to_px(cell.box, width_of_containing_block);
 
         auto is_top_most_cell = cell.row_index == 0;
         auto is_left_most_cell = cell.column_index == 0;
@@ -445,7 +443,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
 
         auto cell_computed_height = cell.box->computed_values().height();
         if (cell_computed_height.is_length()) {
-            auto cell_used_height = cell_computed_height.resolved(cell.box, height_of_containing_block_as_length).to_px(cell.box);
+            auto cell_used_height = cell_computed_height.to_px(cell.box, height_of_containing_block);
             cell_state.set_content_height(cell_used_height - cell_state.border_box_top() - cell_state.border_box_bottom());
 
             row.base_height = max(row.base_height, cell_used_height);
@@ -476,7 +474,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         // table grid, and will eventually be distributed to the height of the rows if their collective minimum height
         // ends up smaller than this number.
         CSSPixels height_of_table_containing_block = m_state.get(*table_wrapper().containing_block()).content_height();
-        auto specified_table_height = table_box().computed_values().height().resolved(table_box(), CSS::Length::make_px(height_of_table_containing_block)).to_px(table_box());
+        auto specified_table_height = table_box().computed_values().height().to_px(table_box(), height_of_table_containing_block);
         if (m_table_height < specified_table_height) {
             m_table_height = specified_table_height;
         }
@@ -499,7 +497,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
     for (auto& row : m_rows) {
         auto row_computed_height = row.box->computed_values().height();
         if (row_computed_height.is_percentage()) {
-            auto row_used_height = row_computed_height.resolved(row.box, CSS::Length::make_px(m_table_height)).to_px(row.box);
+            auto row_used_height = row_computed_height.to_px(row.box, m_table_height);
             row.reference_height = max(row.reference_height, row_used_height);
         } else {
             continue;
@@ -516,11 +514,9 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         for (size_t i = 0; i < cell.column_span; ++i)
             span_width += m_columns[cell.column_index + i].used_width;
 
-        auto height_of_containing_block_as_length = CSS::Length::make_px(m_table_height);
-
         auto cell_computed_height = cell.box->computed_values().height();
         if (cell_computed_height.is_percentage()) {
-            auto cell_used_height = cell_computed_height.resolved(cell.box, height_of_containing_block_as_length).to_px(cell.box);
+            auto cell_used_height = cell_computed_height.to_px(cell.box, m_table_height);
             cell_state.set_content_height(cell_used_height - cell_state.border_box_top() - cell_state.border_box_bottom());
 
             row.reference_height = max(row.reference_height, cell_used_height);

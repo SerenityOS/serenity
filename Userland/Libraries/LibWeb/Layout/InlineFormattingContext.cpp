@@ -91,25 +91,25 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableS
 
 void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode layout_mode)
 {
-    auto width_of_containing_block = CSS::Length::make_px(m_available_space->width.to_px());
+    auto width_of_containing_block = m_available_space->width.to_px();
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
 
-    box_state.margin_left = computed_values.margin().left().resolved(box, width_of_containing_block).to_px(box);
+    box_state.margin_left = computed_values.margin().left().to_px(box, width_of_containing_block);
     box_state.border_left = computed_values.border_left().width;
-    box_state.padding_left = computed_values.padding().left().resolved(box, width_of_containing_block).to_px(box);
+    box_state.padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
 
-    box_state.margin_right = computed_values.margin().right().resolved(box, width_of_containing_block).to_px(box);
+    box_state.margin_right = computed_values.margin().right().to_px(box, width_of_containing_block);
     box_state.border_right = computed_values.border_right().width;
-    box_state.padding_right = computed_values.padding().right().resolved(box, width_of_containing_block).to_px(box);
+    box_state.padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
 
-    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).to_px(box);
+    box_state.margin_top = computed_values.margin().top().to_px(box, width_of_containing_block);
     box_state.border_top = computed_values.border_top().width;
-    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block).to_px(box);
+    box_state.padding_top = computed_values.padding().top().to_px(box, width_of_containing_block);
 
-    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block).to_px(box);
+    box_state.padding_bottom = computed_values.padding().bottom().to_px(box, width_of_containing_block);
     box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).to_px(box);
+    box_state.margin_bottom = computed_values.margin().bottom().to_px(box, width_of_containing_block);
 
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
@@ -155,7 +155,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     CSSPixels width = unconstrained_width;
     auto computed_max_width = box.computed_values().max_width();
     if (!computed_max_width.is_none()) {
-        auto max_width = computed_max_width.resolved(box, width_of_containing_block).to_px(box);
+        auto max_width = computed_max_width.to_px(box, width_of_containing_block);
         width = min(width, max_width);
     }
 
