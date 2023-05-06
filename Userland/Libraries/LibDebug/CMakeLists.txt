@@ -7,7 +7,6 @@ set(SOURCES
     Dwarf/CompilationUnit.cpp
     Dwarf/DIE.cpp
     Dwarf/DwarfInfo.cpp
-    Dwarf/Expression.cpp
     Dwarf/LineProgram.cpp
     ProcessInspector.cpp
     StackFrameUtils.cpp

@@ -10,7 +10,6 @@
 #include <AK/QuickSort.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
-#include <LibDebug/Dwarf/Expression.h>
 
 namespace Debug {
 
@@ -207,7 +206,7 @@ static ErrorOr<Optional<Dwarf::DIE>> parse_variable_type_die(Dwarf::DIE const& v
     return type_die;
 }
 
-static ErrorOr<void> parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::VariableInfo& variable_info, PtraceRegisters const& regs)
+static ErrorOr<void> parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::VariableInfo& variable_info, PtraceRegisters const&)
 {
     auto location_info = TRY(variable_die.get_attribute(Dwarf::Attribute::Location));
     if (!location_info.has_value()) {
@@ -219,20 +218,13 @@ static ErrorOr<void> parse_variable_location(Dwarf::DIE const& variable_die, Deb
 
     switch (location_info.value().type()) {
     case Dwarf::AttributeValue::Type::UnsignedNumber:
-        variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
-        variable_info.location_data.address = location_info.value().as_unsigned();
-        break;
-    case Dwarf::AttributeValue::Type::DwarfExpression: {
-        auto expression_bytes = location_info.value().as_raw_bytes();
-        auto value = TRY(Dwarf::Expression::evaluate(expression_bytes, regs));
-
-        if (value.type != Dwarf::Expression::Type::None) {
-            VERIFY(value.type == Dwarf::Expression::Type::UnsignedInteger);
+        if (location_info->form() != Dwarf::AttributeDataForm::LocListX) {
             variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
-            variable_info.location_data.address = value.data.as_addr;
+            variable_info.location_data.address = location_info.value().as_unsigned();
+        } else {
+            dbgln("Warning: unsupported Dwarf 5 loclist");
         }
         break;
-    }
     default:
         dbgln("Warning: unhandled Dwarf location type: {}", to_underlying(location_info.value().type()));
     }
