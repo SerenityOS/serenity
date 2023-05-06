@@ -45,27 +45,6 @@ size_t GridFormattingContext::count_of_gap_tracks(Vector<TemporaryTrack> const& 
     return count;
 }
 
-CSSPixels GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSize const& available_size)
-{
-    if (size.is_calculated()) {
-        if (size.calculated().contains_percentage()) {
-            if (!available_size.is_definite())
-                return 0;
-            return size.calculated().resolve_length_percentage(grid_container(), CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(grid_container());
-        }
-        return size.calculated().resolve_length(grid_container())->to_px(grid_container());
-    }
-    if (size.is_length()) {
-        return size.length().to_px(grid_container());
-    }
-    if (size.is_percentage()) {
-        if (!available_size.is_definite())
-            return 0;
-        return available_size.to_px() * size.percentage().as_fraction();
-    }
-    return 0;
-}
-
 int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space)
 {
     auto track_count = 0;
@@ -633,12 +612,16 @@ void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& availab
     // the specified size, which is spanned by any grid items that span across its corresponding grid
     // line.
     if (!grid_container().computed_values().column_gap().is_auto()) {
-        for (int column_index = 1; column_index < (m_occupation_grid.column_count() * 2) - 1; column_index += 2)
-            m_grid_columns.insert(column_index, TemporaryTrack(resolve_size(grid_container().computed_values().column_gap(), available_space.width), true));
+        for (int column_index = 1; column_index < (m_occupation_grid.column_count() * 2) - 1; column_index += 2) {
+            auto column_gap_width = grid_container().computed_values().column_gap().resolved(grid_container(), CSS::Length::make_px(available_space.width.to_px()));
+            m_grid_columns.insert(column_index, TemporaryTrack(column_gap_width.to_px(grid_container()), true));
+        }
     }
     if (!grid_container().computed_values().row_gap().is_auto()) {
-        for (int row_index = 1; row_index < (m_occupation_grid.row_count() * 2) - 1; row_index += 2)
-            m_grid_rows.insert(row_index, TemporaryTrack(resolve_size(grid_container().computed_values().row_gap(), available_space.height), true));
+        for (int row_index = 1; row_index < (m_occupation_grid.row_count() * 2) - 1; row_index += 2) {
+            auto column_gap_height = grid_container().computed_values().row_gap().resolved(grid_container(), CSS::Length::make_px(available_space.height.to_px()));
+            m_grid_rows.insert(row_index, TemporaryTrack(column_gap_height.to_px(grid_container()), true));
+        }
     }
 }
 

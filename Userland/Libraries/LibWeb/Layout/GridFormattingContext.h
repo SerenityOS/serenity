@@ -150,7 +150,6 @@ private:
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
     size_t count_of_gap_tracks(Vector<TemporaryTrack> const& tracks) const;
-    CSSPixels resolve_size(CSS::Size const&, AvailableSize const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
 
