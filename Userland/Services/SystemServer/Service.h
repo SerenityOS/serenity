@@ -22,7 +22,8 @@ public:
 
     bool is_enabled() const;
     ErrorOr<void> activate();
-    ErrorOr<void> did_exit(int exit_code);
+    // Note: This is a `status` as in POSIX's wait syscall, not an exit-code.
+    ErrorOr<void> did_exit(int status);
 
     static Service* find_by_pid(pid_t);
 
