@@ -8,7 +8,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
-#include <LibCore/IODevice.h>
 #include <LibCore/System.h>
 #include <LibSQL/Heap.h>
 #include <sys/stat.h>
