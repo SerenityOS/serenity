@@ -127,6 +127,7 @@ template<>
 struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
     static unsigned hash(Web::CSSPixels const& key)
     {
+        VERIFY(isfinite(key.value()));
         return Traits<Web::CSSPixels::Type>::hash(key.value());
     }
 
