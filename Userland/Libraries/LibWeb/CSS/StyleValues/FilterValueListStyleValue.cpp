@@ -18,7 +18,7 @@ float Filter::Blur::resolved_radius(Layout::Node const& node) const
     // Default value when omitted is 0px.
     auto sigma = 0;
     if (radius.has_value())
-        sigma = radius->resolved(node).to_px(node).value();
+        sigma = radius->to_px(node).value();
     // Note: The radius/sigma of the blur needs to be doubled for LibGfx's blur functions.
     return sigma * 2;
 }
@@ -28,9 +28,9 @@ Filter::DropShadow::Resolved Filter::DropShadow::resolved(Layout::Node const& no
     // The default value for omitted values is missing length values set to 0
     // and the missing used color is taken from the color property.
     return Resolved {
-        offset_x.resolved(node).to_px(node).value(),
-        offset_y.resolved(node).to_px(node).value(),
-        radius.has_value() ? radius->resolved(node).to_px(node).value() : 0.0f,
+        offset_x.to_px(node).value(),
+        offset_y.to_px(node).value(),
+        radius.has_value() ? radius->to_px(node).value() : 0.0f,
         color.has_value() ? *color : node.computed_values().color()
     };
 }
