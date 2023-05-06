@@ -4,13 +4,13 @@ Date: Wed, 16 Jun 2021 11:23:34 +0200
 Subject: [PATCH] chdir() to the resource install path at program startup
 
 The game tries to open its resource files using relative paths, and we
-install them into /opt, so chdr() there.
+install them into /opt, so chdir() there.
 ---
  src/main.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/src/main.c b/src/main.c
-index 8fa842f..e16c35e 100644
+index 8fa842f951fa2cd0a365623d1b6650c536695f59..e16c35e81cc94af006dbb63b0329a60750bd6846 100644
 --- a/src/main.c
 +++ b/src/main.c
 @@ -12,6 +12,8 @@
