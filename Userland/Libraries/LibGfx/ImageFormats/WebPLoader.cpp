@@ -1387,6 +1387,13 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, Ch
     dbgln_if(WEBP_DEBUG, "frame_x {} frame_y {} frame_width {} frame_height {} frame_duration {} blending_method {} disposal_method {}",
         frame_x, frame_y, frame_width, frame_height, frame_duration, (int)blending_method, (int)disposal_method);
 
+    // https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
+    // "assert VP8X.canvasWidth >= frame_right
+    //  assert VP8X.canvasHeight >= frame_bottom"
+    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    if (frame_x + frame_width > context.vp8x_header.width || frame_y + frame_height > context.vp8x_header.height)
+        return context.error("WebPImageDecoderPlugin: ANMF dimensions out of bounds");
+
     return ANMFChunk { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method, frame_data };
 }
 
