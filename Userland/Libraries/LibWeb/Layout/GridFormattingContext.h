@@ -148,21 +148,21 @@ private:
     CSSPixels get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
-    CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
+    CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
     size_t count_of_gap_tracks(Vector<TemporaryTrack> const& tracks) const;
-    CSSPixels resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
-    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
-    int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
+    CSSPixels resolve_size(CSS::Size const&, AvailableSize const&);
+    int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
+    int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
 
-    void build_valid_grid_areas(Box const&);
+    void build_valid_grid_areas();
     int find_valid_grid_area(String const& needle);
 
-    void place_item_with_row_and_column_position(Box const& box, Box const& child_box);
-    void place_item_with_row_position(Box const& box, Box const& child_box);
-    void place_item_with_column_position(Box const& box, Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
+    void place_item_with_row_and_column_position(Box const& child_box);
+    void place_item_with_row_position(Box const& child_box);
+    void place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
-    void initialize_grid_tracks(Box const&, AvailableSpace const&, int column_count, int row_count);
+    void initialize_grid_tracks(AvailableSpace const&, int column_count, int row_count);
     void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
     CSSPixels content_based_minimum_height(GridItem const&);
