@@ -335,7 +335,7 @@ void URL::set_pathname(String const& pathname)
         return;
 
     // 2. Empty this’s URL’s path.
-    auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the path change if the parse failed.
+    auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the path change if the parse failed.
     url.set_paths({});
 
     // 3. Basic URL parse the given value with this’s URL as url and path start state as state override.
@@ -384,7 +384,7 @@ WebIDL::ExceptionOr<void> URL::set_search(String const& search)
     auto input = search_as_string_view.substring_view(search_as_string_view.starts_with('?'));
 
     // 4. Set url’s query to the empty string.
-    auto url_copy = url; // We copy the URL here to follow other browser's behaviour of reverting the search change if the parse failed.
+    auto url_copy = url; // We copy the URL here to follow other browser's behavior of reverting the search change if the parse failed.
     url_copy.set_query(DeprecatedString::empty());
 
     // 5. Basic URL parse input with url as url and query state as state override.
@@ -438,7 +438,7 @@ void URL::set_hash(String const& hash)
     auto input = hash_as_string_view.substring_view(hash_as_string_view.starts_with('#'));
 
     // 3. Set this’s URL’s fragment to the empty string.
-    auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the hash change if the parse failed.
+    auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the hash change if the parse failed.
     url.set_fragment(DeprecatedString::empty());
 
     // 4. Basic URL parse input with this’s URL as url and fragment state as state override.

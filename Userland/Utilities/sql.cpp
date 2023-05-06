@@ -188,7 +188,7 @@ private:
             }
             return line.release_value();
             // If the last file is exhausted but m_quit_when_files_read is false
-            // we fall through to the standard reading from the editor behaviour
+            // we fall through to the standard reading from the editor behavior
         }
         auto line_result = m_editor->get_line(prompt_for_level(m_repl_line_level));
         if (line_result.is_error())

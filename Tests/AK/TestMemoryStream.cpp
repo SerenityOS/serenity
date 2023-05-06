@@ -72,7 +72,7 @@ TEST_CASE(allocating_memory_stream_offset_of_oob)
 {
     AllocatingMemoryStream stream;
     // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
-    //       So we have to assume some things about the behaviour of this class:
+    //       So we have to assume some things about the behavior of this class:
     //       - The chunk size is 4096 bytes.
     //       - A chunk is moved to the end when it's fully read from
     //       - A free chunk is used as-is, no new ones are allocated if one exists.

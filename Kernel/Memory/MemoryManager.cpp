@@ -812,7 +812,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
 {
     dma_buffer_page = TRY(allocate_physical_page());
-    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
     return allocate_kernel_region(dma_buffer_page->paddr(), PAGE_SIZE, name, access, Region::Cacheable::No);
 }
 
@@ -827,7 +827,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
 {
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
-    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behaviour by default)
+    // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
     return allocate_kernel_region(dma_buffer_pages.first()->paddr(), size, name, access, Region::Cacheable::No);
 }
 

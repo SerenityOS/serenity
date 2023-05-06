@@ -304,9 +304,9 @@ public:
         return write_value(forward<U>(value), existing_entry_behavior);
     }
     template<typename U = T>
-    HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behaviour = HashSetExistingEntryBehavior::Replace)
+    HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
-        return MUST(try_set(forward<U>(value), existing_entry_behaviour));
+        return MUST(try_set(forward<U>(value), existing_entry_behavior));
     }
 
     template<typename TUnaryPredicate>

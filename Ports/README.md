@@ -302,7 +302,7 @@ Defaults to `$port-$version`.
 ### Functions
 
 The various steps of the port installation process are split into individual
-Bash functions, some of which can be overridden to provide custom behaviour,
+Bash functions, some of which can be overridden to provide custom behavior,
 like this:
 
 ```bash
