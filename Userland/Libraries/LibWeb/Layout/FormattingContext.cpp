@@ -1186,20 +1186,22 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
         return *box.intrinsic_height();
 
     bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-    Optional<CSSPixels>* cache_slot = nullptr;
-    if (is_cacheable) {
+
+    auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
+        if (!is_cacheable)
+            return {};
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-        if (available_width.is_definite()) {
-            cache_slot = &cache.min_content_height_with_definite_available_width.ensure(available_width.to_px());
-        } else if (available_width.is_min_content()) {
-            cache_slot = &cache.min_content_height_with_min_content_available_width;
-        } else if (available_width.is_max_content()) {
-            cache_slot = &cache.min_content_height_with_max_content_available_width;
-        }
-    }
+        if (available_width.is_definite())
+            return &cache.min_content_height_with_definite_available_width.ensure(available_width.to_px());
+        if (available_width.is_min_content())
+            return &cache.min_content_height_with_min_content_available_width;
+        if (available_width.is_max_content())
+            return &cache.min_content_height_with_max_content_available_width;
+        return {};
+    };
 
-    if (cache_slot && cache_slot->has_value())
+    if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
         return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
@@ -1222,7 +1224,7 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
         min_content_height = 0;
     }
 
-    if (cache_slot) {
+    if (auto* cache_slot = get_cache_slot()) {
         *cache_slot = min_content_height;
     }
     return min_content_height;
@@ -1237,20 +1239,22 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
         return *box.intrinsic_height();
 
     bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-    Optional<CSSPixels>* cache_slot = nullptr;
-    if (is_cacheable) {
+
+    auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
+        if (!is_cacheable)
+            return {};
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-        if (available_width.is_definite()) {
-            cache_slot = &cache.max_content_height_with_definite_available_width.ensure(available_width.to_px());
-        } else if (available_width.is_min_content()) {
-            cache_slot = &cache.max_content_height_with_min_content_available_width;
-        } else if (available_width.is_max_content()) {
-            cache_slot = &cache.max_content_height_with_max_content_available_width;
-        }
-    }
+        if (available_width.is_definite())
+            return &cache.max_content_height_with_definite_available_width.ensure(available_width.to_px());
+        if (available_width.is_min_content())
+            return &cache.max_content_height_with_min_content_available_width;
+        if (available_width.is_max_content())
+            return &cache.max_content_height_with_max_content_available_width;
+        return {};
+    };
 
-    if (cache_slot && cache_slot->has_value())
+    if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
         return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
@@ -1274,7 +1278,7 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
         max_content_height = 0;
     }
 
-    if (cache_slot) {
+    if (auto* cache_slot = get_cache_slot()) {
         *cache_slot = max_content_height;
     }
 
