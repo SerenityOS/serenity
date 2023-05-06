@@ -77,7 +77,7 @@ mkdir -p "${PREFIX_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 pushd "${BUILD_DIR}"
-    "${TARBALLS_DIR}"/cmake-"${CMAKE_VERSION}"/bootstrap --prefix="${PREFIX_DIR}" --parallel="${MAKEJOBS}"
-    make -j "${MAKEJOBS}"
-    make install
+    "${TARBALLS_DIR}"/cmake-"${CMAKE_VERSION}"/bootstrap --generator="Ninja" --prefix="${PREFIX_DIR}" --parallel="${MAKEJOBS}"
+    ninja -j "${MAKEJOBS}"
+    ninja install
 popd
