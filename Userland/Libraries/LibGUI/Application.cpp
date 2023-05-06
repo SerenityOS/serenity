@@ -93,8 +93,10 @@ ErrorOr<NonnullRefPtr<Application>> Application::create(Main::Arguments const& a
     if (getenv("GUI_DND_DEBUG"))
         application->m_dnd_debugging_enabled = true;
 
-    for (auto arg : arguments.strings.slice(1))
-        TRY(application->m_args.try_append(arg));
+    if (!arguments.strings.is_empty()) {
+        for (auto arg : arguments.strings.slice(1))
+            TRY(application->m_args.try_append(arg));
+    }
 
     application->m_tooltip_show_timer = TRY(Core::Timer::create_single_shot(700, [weak_application = application->make_weak_ptr<Application>()] {
         weak_application->request_tooltip_show();
