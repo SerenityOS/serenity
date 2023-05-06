@@ -232,7 +232,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
             return CSS::Length::make_px(box_state.content_width());
         }
         if (is<TableWrapper>(box))
-            return CSS::Length::make_px(compute_width_for_table_wrapper(box, remaining_available_space));
+            return CSS::Length::make_px(compute_table_box_width_inside_table_wrapper(box, remaining_available_space));
         if (should_treat_width_as_auto(box, remaining_available_space))
             return CSS::Length::make_auto();
         return calculate_inner_width(box, remaining_available_space.width, computed_values.width());
@@ -350,7 +350,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
 }
 
-CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box, AvailableSpace const& available_space)
+CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(Box const& box, AvailableSpace const& available_space)
 {
     // 17.5.2
     // Table wrapper width should be equal to width of table box it contains
