@@ -241,14 +241,17 @@ ErrorOr<void> Service::spawn(int socket_fd)
     return {};
 }
 
-ErrorOr<void> Service::did_exit(int exit_code)
+ErrorOr<void> Service::did_exit(int status)
 {
     using namespace AK::TimeLiterals;
 
     VERIFY(m_pid > 0);
     VERIFY(!m_multi_instance);
 
-    dbgln("Service {} has exited with exit code {}", name(), exit_code);
+    if (WIFEXITED(status))
+        dbgln("Service {} has exited with exit code {}", name(), WEXITSTATUS(status));
+    if (WIFSIGNALED(status))
+        dbgln("Service {} terminated due to signal {}", name(), WTERMSIG(status));
 
     s_service_map.remove(m_pid);
     m_pid = -1;
@@ -257,7 +260,7 @@ ErrorOr<void> Service::did_exit(int exit_code)
         return {};
 
     auto run_time = m_run_timer.elapsed_time();
-    bool exited_successfully = exit_code == 0;
+    bool exited_successfully = WIFEXITED(status) == 0;
 
     if (!exited_successfully && run_time < 1_sec) {
         switch (m_restart_attempts) {
