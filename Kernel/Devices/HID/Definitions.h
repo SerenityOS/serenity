@@ -15,6 +15,7 @@ enum class ScanCodeSet {
     Set1 = 1,
     Set2 = 2,
     Set3 = 3,
+    USBBootSet = 4,
 };
 
 struct KeyCodeEntry {

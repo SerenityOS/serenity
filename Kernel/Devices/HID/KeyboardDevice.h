@@ -57,6 +57,7 @@ public:
 protected:
     RawKeyEvent handle_scan_code_input_event_set1(ScanCodeEvent);
     RawKeyEvent handle_scan_code_input_event_set2(ScanCodeEvent);
+    RawKeyEvent handle_scan_code_input_event_usb_boot_set(ScanCodeEvent);
 
     KeyboardDevice();
     mutable Spinlock<LockRank::None> m_queue_lock {};

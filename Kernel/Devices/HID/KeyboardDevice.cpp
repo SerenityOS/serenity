@@ -20,6 +20,285 @@
 
 namespace Kernel {
 
+static constexpr KeyCodeEntry unshifted_scan_code_usb_boot_set_key_map[0xE7] = {
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+
+    { Key_A, 0x1E },
+    { Key_B, 0x30 },
+    { Key_C, 0x2E },
+    { Key_D, 0x20 },
+
+    { Key_E, 0x12 },
+    { Key_F, 0x21 },
+    { Key_G, 0x22 },
+    { Key_H, 0x23 },
+
+    { Key_I, 0x17 },
+    { Key_J, 0x24 },
+    { Key_K, 0x25 },
+    { Key_L, 0x26 },
+
+    { Key_M, 0x32 },
+    { Key_N, 0x31 },
+    { Key_O, 0x18 },
+    { Key_P, 0x19 },
+
+    { Key_Q, 0x10 },
+    { Key_R, 0x13 },
+    { Key_S, 0x1F },
+    { Key_T, 0x14 },
+
+    { Key_U, 0x16 },
+    { Key_V, 0x2F },
+    { Key_W, 0x11 },
+    { Key_X, 0x2D },
+
+    { Key_Y, 0x15 },
+    { Key_Z, 0x2C },
+
+    // COULD BE SHIFTED!
+    { Key_1, 2 },
+    { Key_2, 3 },
+    { Key_3, 4 },
+    { Key_4, 5 },
+    { Key_5, 6 },
+    { Key_6, 7 },
+    { Key_7, 8 },
+    { Key_8, 9 },
+    { Key_9, 0x0A },
+    { Key_0, 0x0B },
+    // ^ COULD BE SHIFTED!
+
+    { Key_Return, 0x1C },
+    { Key_Escape, 1 },
+    { Key_Delete, 0xFF },
+    { Key_Tab, 0x0F },
+
+    { Key_Space, 0x39 },
+
+    // COULD BE SHIFTED!
+    { Key_Minus, 0x0C },
+    { Key_Equal, 0x0D },
+    { Key_LeftBracket, 0x1A },
+    { Key_RightBracket, 0x1B },
+    { Key_Backslash, 0x2B },
+    { Key_Hashtag, 4 },
+    { Key_Semicolon, 0x27 },
+    { Key_Apostrophe, 0x28 },
+    { Key_Backtick, 0x29 },
+    { Key_Comma, 0x33 },
+    { Key_Period, 0x34 },
+    { Key_Slash, 0x35 },
+    { Key_CapsLock, 0x3A },
+    // ^ COULD BE SHIFTED!
+
+    { Key_F1, 0x3B },
+    { Key_F2, 0x3C },
+    { Key_F3, 0x3D },
+    { Key_F4, 0x3E },
+    { Key_F5, 0x3F },
+    { Key_F6, 0x40 },
+    { Key_F7, 0x41 },
+    { Key_F8, 0x42 },
+    { Key_F9, 0x43 },
+    { Key_F10, 0x44 },
+    { Key_F11, 0xFF },
+    { Key_F12, 0xFF },
+    { Key_PrintScreen, 0xFF },
+    { Key_ScrollLock, 0xFF },
+    { Key_PauseBreak, 0xFF },
+    { Key_Insert, 0xFF },
+    { Key_Home, 0x47 },
+    { Key_PageUp, 0xFF },
+    { Key_PageDown, 0xFF },
+
+    { Key_Right, 0xFF },
+    { Key_Left, 0x4B },
+
+    { Key_Down, 0xFF },
+    { Key_Up, 0x48 },
+
+    { Key_NumLock, 0xFF },
+
+    // KEYPAD
+    { Key_Slash, 0x35 },
+    { Key_Asterisk, 0x37 },
+    { Key_Minus, 0x0C },
+    { Key_Plus, 0xFF },
+    { Key_Return, 0x1C },
+    // ^ KEYPAD
+
+    // KEYPAD COULD BE SHIFTED
+    { Key_1, 2 }, //  { Key_End, 0xFF },
+    { Key_2, 3 }, //  { Key_Down, 0xFF },
+    { Key_3, 4 }, //  { Key_PageDown, 0xFF },
+    { Key_4, 5 }, //  { Key_Left, 0x4B },
+    { Key_5, 6 },
+    { Key_6, 7 },         //  { Key_Right, 0xFF },
+    { Key_7, 8 },         //  { Key_Home, 0x47 },
+    { Key_8, 9 },         //  { Key_Up, 0x48 },
+    { Key_9, 0x0A },      // { Key_PageUp, 0xFF },
+    { Key_0, 0x0B },      // { Key_Insert, 0xFF },
+    { Key_Period, 0x34 }, // { Key_Delete, 0xFF },
+    // ^ KEYPAD COULD BE SHIFTED
+
+    // COULD BE SHIFTED!
+    { Key_Slash, 0x35 }, // { Key_Pipe, 0x56 },
+    // ^ COULD BE SHIFTED!
+
+    { Key_Apps, 0xFF },
+    { Key_Power, 0xFF },
+    { Key_Equal, 0x0D },
+
+    // F13-F24
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },
+    // ^ F13-F24
+
+    { Key_Invalid, 0xFF }, // Execute?
+    { Key_Invalid, 0xFF }, // Help?
+    { Key_Menu, 0xFF },
+    { Key_MediaSelect, 0xFF },
+    { Key_Stop, 0xFF },
+    { Key_Invalid, 0xFF }, // Again?
+    { Key_Invalid, 0xFF }, // Cut?
+    { Key_Invalid, 0xFF }, // Copy?
+    { Key_Invalid, 0xFF }, // Paste?
+    { Key_Invalid, 0xFF }, // Find?
+    { Key_Mute, 0xFF },
+    { Key_VolumeUp, 0xFF },
+    { Key_VolumeDown, 0xFF },
+
+    { Key_Invalid, 0xFF }, // Locking Caps Lock?
+    { Key_Invalid, 0xFF }, // Locking Num Lock?
+    { Key_Invalid, 0xFF }, // Locking Scroll Lock?
+
+    // KEYPAD
+    { Key_Comma, 0x33 }, // Locking Scroll Lock?
+    // ^ KEYPAD
+
+    { Key_Invalid, 0xFF }, // International 1?
+    { Key_Invalid, 0xFF }, // International 2?
+    { Key_Invalid, 0xFF }, // International 3?
+    { Key_Invalid, 0xFF }, // International 4?
+    { Key_Invalid, 0xFF }, // International 5?
+    { Key_Invalid, 0xFF }, // International 6?
+    { Key_Invalid, 0xFF }, // International 7?
+    { Key_Invalid, 0xFF }, // International 8?
+    { Key_Invalid, 0xFF }, // International 9?
+
+    { Key_Invalid, 0xFF }, // Lang 1?
+    { Key_Invalid, 0xFF }, // Lang 2?
+    { Key_Invalid, 0xFF }, // Lang 3?
+    { Key_Invalid, 0xFF }, // Lang 4?
+    { Key_Invalid, 0xFF }, // Lang 5?
+    { Key_Invalid, 0xFF }, // Lang 6?
+    { Key_Invalid, 0xFF }, // Lang 7?
+    { Key_Invalid, 0xFF }, // Lang 8?
+    { Key_Invalid, 0xFF }, // Lang 9?
+
+    { Key_Invalid, 0xFF }, // Alternate Erase?
+
+    { Key_SysRq, 0xFF },
+
+    { Key_Invalid, 0xFF }, // Cancel?
+    { Key_Invalid, 0xFF }, // Prior?
+
+    { Key_Return, 0x1C }, // Is it like Enter?
+
+    { Key_Invalid, 0xFF }, // Separator?
+    { Key_Invalid, 0xFF }, // Out?
+    { Key_Invalid, 0xFF }, // Oper?
+    { Key_Invalid, 0xFF }, // Clear/Again?
+    { Key_Invalid, 0xFF }, // CrSel/Props?
+    { Key_Invalid, 0xFF }, // ExSel?
+
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+
+    { Key_Invalid, 0xFF }, // Keypad 00?
+    { Key_Invalid, 0xFF }, // Keypad 000?
+    { Key_Invalid, 0xFF }, // Thousands Separator?
+    { Key_Invalid, 0xFF }, // Decimal Separator?
+    { Key_Invalid, 0xFF }, // Currency Unit?
+    { Key_Invalid, 0xFF }, // Currency Sub-unit?
+    { Key_Invalid, 0xFF }, // Keypad (?
+    { Key_Invalid, 0xFF }, // Keypad )?
+    { Key_Invalid, 0xFF }, // Keypad {?
+    { Key_Invalid, 0xFF }, // Keypad }?
+    { Key_Invalid, 0xFF }, // Keypad Tab?
+    { Key_Invalid, 0xFF }, // Keypad Backspace?
+
+    { Key_Invalid, 0xFF }, // Keypad A?
+    { Key_Invalid, 0xFF }, // Keypad B?
+    { Key_Invalid, 0xFF }, // Keypad C?
+    { Key_Invalid, 0xFF }, // Keypad D?
+    { Key_Invalid, 0xFF }, // Keypad E?
+    { Key_Invalid, 0xFF }, // Keypad F?
+    { Key_Invalid, 0xFF }, // Keypad XOR?
+    { Key_Invalid, 0xFF }, // Keypad ^?
+    { Key_Invalid, 0xFF }, // Keypad %?
+    { Key_Invalid, 0xFF }, // Keypad <?
+    { Key_Invalid, 0xFF }, // Keypad >?
+    { Key_Invalid, 0xFF }, // Keypad &?
+    { Key_Invalid, 0xFF }, // Keypad &&?
+    { Key_Invalid, 0xFF }, // Keypad &&?
+    { Key_Invalid, 0xFF }, // Keypad |?
+    { Key_Invalid, 0xFF }, // Keypad ||?
+    { Key_Invalid, 0xFF }, // Keypad :?
+    { Key_Invalid, 0xFF }, // Keypad #?
+    { Key_Invalid, 0xFF }, // Keypad Space?
+    { Key_Invalid, 0xFF }, // Keypad @?
+    { Key_Invalid, 0xFF }, // Keypad ! ?
+    { Key_Invalid, 0xFF }, // Keypad Memory Store?
+    { Key_Invalid, 0xFF }, // Keypad Memory Recall?
+    { Key_Invalid, 0xFF }, // Keypad Memory Clear?
+    { Key_Invalid, 0xFF }, // Keypad Memory Add?
+    { Key_Invalid, 0xFF }, // Keypad Memory Subtract?
+    { Key_Invalid, 0xFF }, // Keypad Memory Multiply?
+    { Key_Invalid, 0xFF }, // Keypad Memory Divide?
+    { Key_Invalid, 0xFF }, // Keypad +/-?
+    { Key_Invalid, 0xFF }, // Keypad Clear?
+    { Key_Invalid, 0xFF }, // Keypad Clear Entry?
+    { Key_Invalid, 0xFF }, // Keypad Binary?
+    { Key_Invalid, 0xFF }, // Keypad Octal?
+    { Key_Invalid, 0xFF }, // Keypad Decimal?
+    { Key_Invalid, 0xFF }, // Keypad Hexadecimal?
+
+    { Key_Invalid, 0xFF }, // Reserved
+    { Key_Invalid, 0xFF }, // Reserved
+
+    { Key_Control, 0x1D },   // Left Control!!
+    { Key_LeftShift, 0x1D }, // Left Shift!!
+    { Key_Alt, 0x38 },       // Left Alt!!
+    { Key_LeftGUI, 0xFF },
+    { Key_Control, 0x1D },   // Right Control!!
+    { Key_LeftShift, 0x1D }, // Right Shift!!
+    { Key_Alt, 0x38 },       // Right Alt!!
+    { Key_RightGUI, 0xFF },
+};
+
 // clang-format off
 static constexpr KeyCodeEntry unshifted_scan_code_set1_key_map[0x80] = {
     { Key_Invalid, 0xFF },    { Key_Escape, 1 },        { Key_1, 2 },                 { Key_2, 3 },
@@ -444,6 +723,51 @@ KeyboardDevice::RawKeyEvent KeyboardDevice::handle_scan_code_input_event_set2(Sc
     return key_event;
 }
 
+KeyboardDevice::RawKeyEvent KeyboardDevice::handle_scan_code_input_event_usb_boot_set(ScanCodeEvent event)
+{
+    RawKeyEvent key_event {};
+    VERIFY(event.sent_scan_code_set == ScanCodeSet::USBBootSet);
+    VERIFY(event.bytes_count == 1);
+    u8 byte = event.scan_code_bytes[0];
+    bool pressed = !(byte & 0x80);
+    u8 ch = byte & 0x7f;
+
+    key_event.is_press_down = pressed;
+
+    m_entropy_source.add_random_event(byte);
+
+    switch (key_event.code_entry.key_code) {
+    case Key_RightAlt:
+        update_modifier(Mod_AltGr, key_event.is_press());
+        break;
+    case Key_Alt:
+        update_modifier(Mod_Alt, key_event.is_press());
+        break;
+    case Key_Control:
+        update_modifier(Mod_Ctrl, key_event.is_press());
+        break;
+    case Key_Super:
+        m_left_super_pressed = key_event.is_press();
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
+        break;
+    case Key_LeftShift:
+        m_left_shift_pressed = key_event.is_press();
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
+        break;
+    case Key_RightShift:
+        m_right_shift_pressed = key_event.is_press();
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
+        break;
+    default:
+        break;
+    }
+
+    // TODO: Add shifted map?
+    key_event.code_entry = unshifted_scan_code_usb_boot_set_key_map[ch];
+    key_event.scancode = ch;
+    return key_event;
+}
+
 void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
 {
     RawKeyEvent raw_event {};
@@ -451,6 +775,8 @@ void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
         raw_event = handle_scan_code_input_event_set1(event);
     } else if (event.sent_scan_code_set == ScanCodeSet::Set2) {
         raw_event = handle_scan_code_input_event_set2(event);
+    } else if (event.sent_scan_code_set == ScanCodeSet::USBBootSet) {
+        raw_event = handle_scan_code_input_event_usb_boot_set(event);
     } else if (event.sent_scan_code_set == ScanCodeSet::Set3) {
         // FIXME: Implement support for scan code set 3!
         VERIFY_NOT_REACHED();

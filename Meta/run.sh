@@ -350,6 +350,7 @@ $SERENITY_MACHINE
 -d guest_errors
 -usb
 -device usb-mouse
+-device usb-kbd
 $SERENITY_SPICE_SERVER_CHARDEV
 "
 

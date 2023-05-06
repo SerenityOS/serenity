@@ -12,6 +12,7 @@
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/USB/MouseDevice.h>
+#include <Kernel/Devices/HID/USB/KeyboardDevice.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
@@ -79,6 +80,14 @@ ErrorOr<void> USBConfiguration::enumerate_interfaces()
                     m_device.set_interrupt_in_pipe({}, move(interrupt_in_pipe));
                     auto mouse_device = TRY(USBMouseDevice::try_create_instance(m_device));
                     HIDManagement::the().attach_standalone_hid_device(*mouse_device);
+                }
+
+                // FIXME: Detect USB HID keyboard in an abstracted way...
+                if (interface_descriptor->interface_sub_class_code == 0x1 && interface_descriptor->interface_protocol == 0x1) {
+                    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device().controller(), endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, device().address(), 10));
+                    m_device.set_interrupt_in_pipe({}, move(interrupt_in_pipe));
+                    auto keyboard_device = TRY(USBKeyboardDevice::try_create_instance(m_device));
+                    HIDManagement::the().attach_standalone_hid_device(*keyboard_device);
                 }
 
                 raw_endpoint_descriptor_offset += sizeof(USBHIDDescriptor); // Skip the HID descriptor (this was worked out via buffer inspection)
