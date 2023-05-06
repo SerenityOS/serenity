@@ -938,8 +938,6 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-    auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block_as_length).resolved(box);
-
     compute_width_for_absolutely_positioned_element(box, available_space);
 
     // NOTE: We compute height before *and* after doing inside layout.
