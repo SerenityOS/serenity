@@ -12,8 +12,15 @@
 #include <LibChess/UCIEndpoint.h>
 
 class ChessEngine : public Chess::UCI::Endpoint {
-    C_OBJECT(ChessEngine)
+    C_OBJECT_ABSTRACT(ChessEngine)
 public:
+    static ErrorOr<NonnullRefPtr<ChessEngine>> try_create(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out)
+    {
+        auto engine = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ChessEngine()));
+        TRY(engine->set_in(move(in)));
+        engine->set_out(move(out));
+        return engine;
+    }
     virtual ~ChessEngine() override = default;
 
     virtual void handle_uci() override;
@@ -26,8 +33,8 @@ public:
     Function<void(int)> on_quit;
 
 private:
-    ChessEngine(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out)
-        : Endpoint(move(in), move(out))
+    ChessEngine()
+        : Endpoint()
     {
         on_command_read_error = [](auto command, auto error) {
             outln("{}: '{}'", error, command);

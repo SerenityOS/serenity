@@ -55,7 +55,7 @@ void Engine::connect_to_engine_service()
     close(rpipefds[1]);
 
     auto infile = Core::File::adopt_fd(rpipefds[0], Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
-    set_in(move(infile));
+    set_in(move(infile)).release_value_but_fixme_should_propagate_errors();
 
     auto outfile = Core::File::adopt_fd(wpipefds[1], Core::File::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
     set_out(move(outfile));

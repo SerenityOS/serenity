@@ -12,14 +12,6 @@
 
 namespace Chess::UCI {
 
-Endpoint::Endpoint(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out)
-    : m_in_fd(in->fd())
-    , m_in(Core::BufferedFile::create(move(in)).release_value_but_fixme_should_propagate_errors())
-    , m_out(move(out))
-{
-    set_in_notifier();
-}
-
 void Endpoint::send_command(Command const& command)
 {
     auto command_string = command.to_string().release_value_but_fixme_should_propagate_errors();
