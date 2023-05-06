@@ -6,7 +6,7 @@
  */
 
 #include "Engine.h"
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -27,12 +27,12 @@ void Engine::connect_to_engine_service()
 {
     int wpipefds[2];
     int rpipefds[2];
-    if (pipe2(wpipefds, O_CLOEXEC) < 0) {
+    if (pipe2(wpipefds, O_CLOEXEC | O_NONBLOCK) < 0) {
         perror("pipe2");
         VERIFY_NOT_REACHED();
     }
 
-    if (pipe2(rpipefds, O_CLOEXEC) < 0) {
+    if (pipe2(rpipefds, O_CLOEXEC | O_NONBLOCK) < 0) {
         perror("pipe2");
         VERIFY_NOT_REACHED();
     }
@@ -54,13 +54,11 @@ void Engine::connect_to_engine_service()
     close(wpipefds[0]);
     close(rpipefds[1]);
 
-    auto infile = Core::DeprecatedFile::construct();
-    infile->open(rpipefds[0], Core::OpenMode::ReadOnly, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes);
-    set_in(infile);
+    auto infile = Core::File::adopt_fd(rpipefds[0], Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    set_in(move(infile));
 
-    auto outfile = Core::DeprecatedFile::construct();
-    outfile->open(wpipefds[1], Core::OpenMode::WriteOnly, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes);
-    set_out(outfile);
+    auto outfile = Core::File::adopt_fd(wpipefds[1], Core::File::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
+    set_out(move(outfile));
 
     send_command(Chess::UCI::UCICommand());
     m_connected = true;

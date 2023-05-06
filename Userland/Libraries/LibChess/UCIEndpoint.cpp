@@ -8,15 +8,14 @@
 #include "UCIEndpoint.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <LibCore/EventLoop.h>
 
 namespace Chess::UCI {
 
-Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
-    : m_in(in)
-    , m_out(out)
-    , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Type::Read))
+Endpoint::Endpoint(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out)
+    : m_in_fd(in->fd())
+    , m_in(Core::BufferedFile::create(move(in)).release_value_but_fixme_should_propagate_errors())
+    , m_out(move(out))
 {
     set_in_notifier();
 }
@@ -25,7 +24,7 @@ void Endpoint::send_command(Command const& command)
 {
     auto command_string = command.to_string().release_value_but_fixme_should_propagate_errors();
     dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), command_string);
-    m_out->write(command_string);
+    m_out->write_until_depleted(command_string.bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 void Endpoint::event(Core::Event& event)
@@ -73,16 +72,17 @@ void Endpoint::custom_event(Core::CustomEvent& custom_event)
 
 void Endpoint::set_in_notifier()
 {
-    m_in_notifier = Core::Notifier::construct(m_in->fd(), Core::Notifier::Type::Read);
+    m_in_notifier = Core::Notifier::construct(m_in_fd.value(), Core::Notifier::Type::Read);
     m_in_notifier->on_activation = [this] {
-        if (!m_in->can_read_line()) {
+        if (!m_in->can_read_line().release_value_but_fixme_should_propagate_errors()) {
             Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(EndpointEventType::UnexpectedEof));
             m_in_notifier->set_enabled(false);
             return;
         }
+        auto buffer = ByteBuffer::create_zeroed(4096).release_value_but_fixme_should_propagate_errors();
 
-        while (m_in->can_read_line()) {
-            auto line = m_in->read_line(4096).trim_whitespace();
+        while (m_in->can_read_line().release_value_but_fixme_should_propagate_errors()) {
+            auto line = m_in->read_line(buffer).release_value_but_fixme_should_propagate_errors().trim_whitespace();
             if (line.is_empty())
                 continue;
 

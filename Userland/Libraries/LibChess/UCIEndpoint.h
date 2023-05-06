@@ -8,7 +8,7 @@
 #pragma once
 
 #include <LibChess/UCICommand.h>
-#include <LibCore/IODevice.h>
+#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 
@@ -41,19 +41,17 @@ public:
 
     virtual void event(Core::Event&) override;
 
-    Core::IODevice& in() { return *m_in; }
-    Core::IODevice& out() { return *m_out; }
-
-    void set_in(RefPtr<Core::IODevice> in)
+    void set_in(NonnullOwnPtr<Core::File> in)
     {
-        m_in = in;
+        m_in_fd = in->fd();
+        m_in = Core::BufferedFile::create(move(in)).release_value_but_fixme_should_propagate_errors();
         set_in_notifier();
     }
-    void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
+    void set_out(NonnullOwnPtr<Core::File> out) { m_out = move(out); }
 
 protected:
     Endpoint() = default;
-    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
+    Endpoint(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out);
     virtual void custom_event(Core::CustomEvent&) override;
 
 private:
@@ -63,8 +61,9 @@ private:
     void set_in_notifier();
     ErrorOr<NonnullOwnPtr<Command>> read_command(StringView line) const;
 
-    RefPtr<Core::IODevice> m_in;
-    RefPtr<Core::IODevice> m_out;
+    Optional<int> m_in_fd {};
+    OwnPtr<Core::BufferedFile> m_in;
+    OwnPtr<Core::File> m_out;
     RefPtr<Core::Notifier> m_in_notifier;
 };
 
