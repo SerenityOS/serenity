@@ -527,28 +527,31 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
     auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
 
+    auto computed_left = computed_values.inset().left();
+    auto computed_right = computed_values.inset().right();
+
     auto try_compute_width = [&](auto const& a_width) {
         margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length).resolved(box);
         margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length).resolved(box);
 
-        auto left = computed_values.inset().left().resolved(box, width_of_containing_block_as_length).resolved(box);
-        auto right = computed_values.inset().right().resolved(box, width_of_containing_block_as_length).resolved(box);
+        auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
+        auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
         auto width = a_width;
 
         auto solve_for_left = [&] {
-            return CSS::Length::make_px(width_of_containing_block - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box) - right.to_px(box));
+            return width_of_containing_block - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box) - right;
         };
 
         auto solve_for_width = [&] {
-            return CSS::Length::make_px(max(CSSPixels(0), width_of_containing_block - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - padding_right - border_right - margin_right.to_px(box) - right.to_px(box)));
+            return CSS::Length::make_px(max(CSSPixels(0), width_of_containing_block - left - margin_left.to_px(box) - border_left - padding_left - padding_right - border_right - margin_right.to_px(box) - right));
         };
 
         auto solve_for_right = [&] {
-            return CSS::Length::make_px(width_of_containing_block - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box));
+            return width_of_containing_block - left - margin_left.to_px(box) - border_left - padding_left - width.to_px(box) - padding_right - border_right - margin_right.to_px(box);
         };
 
         // If all three of 'left', 'width', and 'right' are 'auto':
-        if (left.is_auto() && width.is_auto() && right.is_auto()) {
+        if (computed_left.is_auto() && width.is_auto() && computed_right.is_auto()) {
             // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
             if (margin_left.is_auto())
                 margin_left = CSS::Length::make_px(0);
@@ -558,11 +561,11 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
             // FIXME: This is very hackish.
-            left = CSS::Length::make_px(0);
+            left = 0;
             goto Rule3;
         }
 
-        if (!left.is_auto() && !width.is_auto() && !right.is_auto()) {
+        if (!computed_left.is_auto() && !width.is_auto() && !computed_right.is_auto()) {
             // FIXME: This should be solved in a more complicated way.
             return width;
         }
@@ -574,7 +577,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
         // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
         //    then the width is shrink-to-fit. Then solve for 'left'
-        if (left.is_auto() && width.is_auto() && !right.is_auto()) {
+        if (computed_left.is_auto() && width.is_auto() && !computed_right.is_auto()) {
             auto result = calculate_shrink_to_fit_widths(box);
             auto available_width = solve_for_width();
             width = CSS::Length::make_px(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width));
@@ -586,16 +589,16 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         //    the static-position containing block is 'ltr' set 'left'
         //    to the static position, otherwise set 'right' to the static position.
         //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-        else if (left.is_auto() && right.is_auto() && !width.is_auto()) {
+        else if (computed_left.is_auto() && computed_right.is_auto() && !width.is_auto()) {
             // FIXME: Check direction
             // FIXME: Use the static-position containing block
-            left = zero_value;
+            left = 0;
             right = solve_for_right();
         }
 
         // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
         //    then the width is shrink-to-fit. Then solve for 'right'
-        else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
+        else if (width.is_auto() && computed_right.is_auto() && !computed_left.is_auto()) {
         Rule3:
             auto result = calculate_shrink_to_fit_widths(box);
             auto available_width = solve_for_width();
@@ -604,17 +607,17 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         }
 
         // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-        else if (left.is_auto() && !width.is_auto() && !right.is_auto()) {
+        else if (computed_left.is_auto() && !width.is_auto() && !computed_right.is_auto()) {
             left = solve_for_left();
         }
 
         // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-        else if (width.is_auto() && !left.is_auto() && !right.is_auto()) {
+        else if (width.is_auto() && !computed_left.is_auto() && !computed_right.is_auto()) {
             width = solve_for_width();
         }
 
         // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
-        else if (right.is_auto() && !left.is_auto() && !width.is_auto()) {
+        else if (computed_right.is_auto() && !computed_left.is_auto() && !width.is_auto()) {
             right = solve_for_right();
         }
 
@@ -1029,28 +1032,28 @@ void FormattingContext::compute_inset(Box const& box)
     if (box.computed_values().position() != CSS::Position::Relative)
         return;
 
-    auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_start, CSS::LengthPercentage const& computed_end, CSSPixels& used_start, CSSPixels& used_end, CSSPixels reference_for_percentage) {
-        auto resolved_first = computed_start.resolved(box, CSS::Length::make_px(reference_for_percentage)).resolved(box);
-        auto resolved_second = computed_end.resolved(box, CSS::Length::make_px(reference_for_percentage)).resolved(box);
+    auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_first, CSS::LengthPercentage const& computed_second, CSSPixels& used_start, CSSPixels& used_end, CSSPixels reference_for_percentage) {
+        auto resolved_first = computed_first.to_px(box, reference_for_percentage);
+        auto resolved_second = computed_second.to_px(box, reference_for_percentage);
 
-        if (resolved_first.is_auto() && resolved_second.is_auto()) {
+        if (computed_first.is_auto() && computed_second.is_auto()) {
             // If opposing inset properties in an axis both compute to auto (their initial values),
             // their used values are zero (i.e., the boxes stay in their original position in that axis).
             used_start = 0;
             used_end = 0;
-        } else if (resolved_first.is_auto() || resolved_second.is_auto()) {
+        } else if (computed_first.is_auto() || computed_second.is_auto()) {
             // If only one is auto, its used value becomes the negation of the other, and the box is shifted by the specified amount.
-            if (resolved_first.is_auto()) {
-                used_end = resolved_second.to_px(box);
+            if (computed_first.is_auto()) {
+                used_end = resolved_second;
                 used_start = -used_end;
             } else {
-                used_start = resolved_first.to_px(box);
+                used_start = resolved_first;
                 used_end = -used_start;
             }
         } else {
             // If neither is auto, the position is over-constrained; (with respect to the writing mode of its containing block)
             // the computed end side value is ignored, and its used value becomes the negation of the start side.
-            used_start = resolved_first.to_px(box);
+            used_start = resolved_first;
             used_end = -used_start;
         }
     };
