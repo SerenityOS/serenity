@@ -65,12 +65,12 @@ bool Variant::operator==(Variant const& other) const
                     return own_value == other_value;
                 else if constexpr (IsSame<T, GUI::Icon>)
                     return &own_value.impl() == &other_value.impl();
-                // FIXME: Figure out if this silly behaviour is actually used anywhere, then get rid of it.
+                // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
                     return to_deprecated_string() == other.to_deprecated_string();
             },
             [&](auto const&) {
-                // FIXME: Figure out if this silly behaviour is actually used anywhere, then get rid of it.
+                // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 return to_deprecated_string() == other.to_deprecated_string();
             });
     });
@@ -91,12 +91,12 @@ bool Variant::operator<(Variant const& other) const
                     return own_value->name() < other_value->name();
                 else if constexpr (requires { own_value < other_value; })
                     return own_value < other_value;
-                // FIXME: Figure out if this silly behaviour is actually used anywhere, then get rid of it.
+                // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
                 else
                     return to_deprecated_string() < other.to_deprecated_string();
             },
             [&](auto const&) -> bool {
-                return to_deprecated_string() < other.to_deprecated_string(); // FIXME: Figure out if this silly behaviour is actually used anywhere, then get rid of it.
+                return to_deprecated_string() < other.to_deprecated_string(); // FIXME: Figure out if this silly behavior is actually used anywhere, then get rid of it.
             });
     });
 }

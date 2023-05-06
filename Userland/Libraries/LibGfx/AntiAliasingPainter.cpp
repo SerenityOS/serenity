@@ -709,7 +709,7 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint current_line_a,
         return;
     if ((previous_horizontal || previous_vertical) && (current_horizontal || current_vertical)) {
         intersection = m_transform.map(current_line_a);
-        // Note: int_thickness used here to match behaviour of draw_line()
+        // Note: int_thickness used here to match behavior of draw_line()
         int int_thickness = AK::ceil(thickness);
         return fill_rect(FloatRect(intersection, { thickness, thickness }).translated(-int_thickness / 2), color);
     }

@@ -309,7 +309,7 @@ void HTMLHyperlinkElementUtils::set_pathname(DeprecatedString pathname)
         return;
 
     // 4. Set url's path to the empty list.
-    auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the path change if the parse failed.
+    auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the path change if the parse failed.
     url->set_paths({});
 
     // 5. Basic URL parse the given value, with url as url and path start state as state override.
@@ -356,7 +356,7 @@ void HTMLHyperlinkElementUtils::set_search(DeprecatedString search)
         auto input = search.substring_view(search.starts_with('?'));
 
         //    2. Set url's query to the empty string.
-        auto url_copy = m_url; // We copy the URL here to follow other browser's behaviour of reverting the search change if the parse failed.
+        auto url_copy = m_url; // We copy the URL here to follow other browser's behavior of reverting the search change if the parse failed.
         url_copy->set_query(DeprecatedString::empty());
 
         //    3. Basic URL parse input, with null, this element's node document's document's character encoding, url as url, and query state as state override.
@@ -404,7 +404,7 @@ void HTMLHyperlinkElementUtils::set_hash(DeprecatedString hash)
         auto input = hash.substring_view(hash.starts_with('#'));
 
         //    2. Set url's fragment to the empty string.
-        auto url_copy = m_url; // We copy the URL here to follow other browser's behaviour of reverting the hash change if the parse failed.
+        auto url_copy = m_url; // We copy the URL here to follow other browser's behavior of reverting the hash change if the parse failed.
         url_copy->set_fragment(DeprecatedString::empty());
 
         //    3. Basic URL parse input, with url as url and fragment state as state override.

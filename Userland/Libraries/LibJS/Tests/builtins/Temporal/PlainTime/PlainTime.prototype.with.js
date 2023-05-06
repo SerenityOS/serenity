@@ -15,7 +15,7 @@ const REJECTED_CALENDAR_TYPES_THREE_ARGUMENTS = [
 
 const REJECTED_CALENDAR_TYPES_TWO_ARGUMENTS = [Temporal.PlainMonthDay, Temporal.PlainYearMonth];
 
-describe("correct behaviour", () => {
+describe("correct behavior", () => {
     test("length is 1", () => {
         expect(Temporal.PlainTime.prototype.with).toHaveLength(1);
     });
