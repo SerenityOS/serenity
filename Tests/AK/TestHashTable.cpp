@@ -347,7 +347,7 @@ TEST_CASE(ordered_deletion_and_reinsertion)
     EXPECT_EQ(table.size(), 1u);
 
     // By adding 1 again but this time in a different position, we
-    // test whether the bucket's neighbours are reset properly.
+    // test whether the bucket's neighbors are reset properly.
     table.set(1);
     EXPECT_EQ(table.size(), 2u);
 

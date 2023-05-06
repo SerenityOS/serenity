@@ -341,7 +341,7 @@ Build + LibC: Enable -fstack-protector-strong in user space
 
 The kernel applies a exploit mitigation technique where vulnerable data
 related to the state of a process is separated out into it's own region
-in memory which is always remmaped as read-only after it's initialized
+in memory which is always remapped as read-only after it's initialized
 or updated. This means that an attacker needs more than an arbitrary
 kernel write primitive to be able to elevate a process to root for example.
 

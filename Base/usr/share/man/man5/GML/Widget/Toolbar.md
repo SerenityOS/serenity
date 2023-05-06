@@ -8,7 +8,7 @@ Defines a GUI toolbar widget.
 
 When `collapsible` is set to `true`, the toolbar can be resized below the size of its items.
 Any items that do not fit the current size, will be placed in an overflow menu.
-To keep groups (i.e. Buttons/items separated by Separators) together, and move them to the overflow menu as one, set the `gouped` property.
+To keep groups (i.e. Buttons/items separated by Separators) together, and move them to the overflow menu as one, set the `grouped` property.
 
 ## Synopsis
 

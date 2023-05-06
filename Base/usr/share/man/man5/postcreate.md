@@ -8,7 +8,7 @@ postcreate - HackStudio postcreate scripts
 
 ## Description
 
-It is possible to define project templates that set up HackStudio projects. These templates can contain custom setup logic in the form of a `*.postcreate` script in the template directory. The script name must match the template's (directory) name. Postcreate scripts are regular shell scripts. They are executed from an undeterminate directory with the following arguments:
+It is possible to define project templates that set up HackStudio projects. These templates can contain custom setup logic in the form of a `*.postcreate` script in the template directory. The script name must match the template's (directory) name. Postcreate scripts are regular shell scripts. They are executed from an indeterminate directory with the following arguments:
 
 - The path to the postcreate script
 - The name of the new project

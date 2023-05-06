@@ -111,7 +111,7 @@ public:
         auto int_loc = static_cast<i64>(floor(loc));
         auto blend = loc - int_loc;
         auto color = get_color(repeat_wrap_if_required(int_loc));
-        // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
+        // Blend between the two neighboring colors (this fixes some nasty aliasing issues at small angles)
         if (blend >= 0.004f)
             color = color_blend(color, get_color(repeat_wrap_if_required(int_loc + 1)), blend);
         return color;

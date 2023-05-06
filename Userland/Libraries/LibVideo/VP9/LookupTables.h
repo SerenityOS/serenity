@@ -295,7 +295,7 @@ static constexpr u8 cat_probs[7][14] = {
     { 254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129 }
 };
 
-static constexpr MotionVector mv_ref_blocks[BLOCK_SIZES][MVREF_NEIGHBOURS] = {
+static constexpr MotionVector mv_ref_blocks[BLOCK_SIZES][MVREF_NEIGHBORS] = {
     { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
     { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
     { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },

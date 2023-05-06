@@ -48,7 +48,7 @@ brew install cmake qt ninja
 
 On OpenIndiana:
 
-Note that OpenIndianas latest GCC port (GCC 11) is too old to build Ladybird, so you need Clang, which is available in the repository.
+Note that OpenIndiana's latest GCC port (GCC 11) is too old to build Ladybird, so you need Clang, which is available in the repository.
 
 ```
 pfexec pkg install cmake ninja clang-15 libglvnd qt6
@@ -130,7 +130,7 @@ The `serenity.sh` build script does not know how to generate Xcode projects, so 
 To be compatible with the script, a few extra options are required. If there is a previous Lagom build directory, CMake will likely complain that the generator has changed.
 
 ```
-cmake -GXcode -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON -DENABLE_LAGOM_LADBIRD=ON
+cmake -GXcode -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON -DENABLE_LAGOM_LADYBIRD=ON
 ```
 
 Alternatively, if you don't need your ladybird build to be compatible with `serenity.sh`, you can use Ladybird as the source directory like so:
@@ -139,7 +139,7 @@ Alternatively, if you don't need your ladybird build to be compatible with `sere
 cmake -GXcode -S Ladybird -B Build/ladybird
 ```
 
-After generating an Xcode project into the specified build directory, you can open `ladbyird.xcodeproj` in Xcode. The project has a ton of targets, many of which are generated code.
+After generating an Xcode project into the specified build directory, you can open `ladybird.xcodeproj` in Xcode. The project has a ton of targets, many of which are generated code.
 The only target that needs a scheme is the ladybird app bundle.
 
 In order for the application to launch properly through Xcode, the `SERENITY_SOURCE_DIR` environment variable must be set to your serenity checkout in the ladybird scheme, per the
@@ -193,7 +193,7 @@ Next, create a build configuration in Qt Creator that uses an ``Android Qt 6.4.0
 
 Ensure that you get Android API 30 or higher, and Android NDK 24 or higher. In the initial standup, an API 33 SDK for Android 13 was used.
 
-Setup Android device settings in Qt Creator following this [link](https://doc.qt.io/qtcreator/creator-developing-android.html). Note that Qt Creator might not like the Android NDK version 24 we downloaded earlier, as it's "too new" and "not supported". No worries, we can force it to like our version by editing the ``sdk_defintions.json`` file as described under [Viewing Android Tool Chain Settings](https://doc.qt.io/qtcreator/creator-developing-android.html#viewing-android-tool-chain-settings).
+Setup Android device settings in Qt Creator following this [link](https://doc.qt.io/qtcreator/creator-developing-android.html). Note that Qt Creator might not like the Android NDK version 24 we downloaded earlier, as it's "too new" and "not supported". No worries, we can force it to like our version by editing the ``sdk_definitions.json`` file as described under [Viewing Android Tool Chain Settings](https://doc.qt.io/qtcreator/creator-developing-android.html#viewing-android-tool-chain-settings).
 
 The relevant snippets of that JSON file are reproduced below. Just have to make sure it's happy with "platforms;android-33" and the exact installed NDK version.
 
