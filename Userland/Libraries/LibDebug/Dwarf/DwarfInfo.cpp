@@ -272,6 +272,7 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
         value.m_data.as_unsigned = index;
         break;
     }
+    case AttributeDataForm::LocListX:
     case AttributeDataForm::RngListX: {
         size_t index = TRY(debug_info_stream.read_value<LEB128<size_t>>());
         value.m_type = AttributeValue::Type::UnsignedNumber;
