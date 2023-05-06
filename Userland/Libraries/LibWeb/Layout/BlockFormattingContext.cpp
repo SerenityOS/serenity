@@ -375,6 +375,7 @@ CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box
     auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
 
     LayoutState throwaway_state(&m_state);
+    throwaway_state.get_mutable(box).set_content_width(available_width);
     auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
