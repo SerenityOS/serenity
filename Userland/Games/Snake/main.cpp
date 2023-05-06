@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto high_score = Config::read_u32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
-    auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "classic"sv);
+    auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
     statusbar.set_text(0, "Score: 0"sv);
@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!was_paused)
             game.start();
     });
-    change_snake_color->set_enabled(snake_skin_name == "classic"sv);
+    change_snake_color->set_enabled(snake_skin_name == "Classic"sv);
     TRY(game_menu->try_add_action(change_snake_color));
 
     GUI::ActionGroup skin_action_group;
@@ -137,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(add_skin_action(entry.name, false));
         return IterationDecision::Continue;
     }));
-    TRY(add_skin_action("classic"sv, true));
+    TRY(add_skin_action("Classic"sv, true));
 
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {

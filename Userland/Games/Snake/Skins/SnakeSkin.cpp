@@ -14,7 +14,7 @@ namespace Snake {
 
 ErrorOr<NonnullOwnPtr<SnakeSkin>> SnakeSkin::create(StringView skin_name, Color color)
 {
-    if (skin_name == "classic"sv)
+    if (skin_name == "Classic"sv)
         return try_make<ClassicSkin>(color);
 
     // Try to find an image-based skin matching the name.
