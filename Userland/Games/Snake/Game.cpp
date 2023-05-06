@@ -68,7 +68,7 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
     }
 
     auto color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, Color(Color::Green).value()));
-    auto skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "classic"sv);
+    auto skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
     auto skin = TRY(SnakeSkin::create(skin_name, color));
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps), color, skin_name, move(skin)));
