@@ -489,7 +489,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
-                    checkbox.set_text(String::from_deprecated_string(DeprecatedString(to_string(role))).release_value_but_fixme_should_propagate_errors());
+                    checkbox.set_text(TRY(String::from_utf8(to_string(role))));
                     checkbox.on_checked = [&, role](bool checked) {
                         set_flag(role, checked);
                     };
