@@ -299,6 +299,14 @@ static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(WebPLoadingContext& conte
     return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale };
 }
 
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(WebPLoadingContext& context, Chunk const& vp8_chunk)
+{
+    VERIFY(vp8_chunk.type == FourCC("VP8 "));
+
+    // FIXME: Implement webp lossy decoding.
+    return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
 static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(WebPLoadingContext& context, Chunk const& vp8l_chunk)
@@ -1584,9 +1592,13 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext&
     }
 
     VERIFY(image_data.image_data_chunk->type == FourCC("VP8 "));
+    auto bitmap = TRY(decode_webp_chunk_VP8(context, image_data.image_data_chunk.value()));
 
-    // FIXME: Implement.
-    return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+    if (image_data.alpha_chunk.has_value()) {
+        // FIXME: Decode alpha chunk and store decoded alpha in `bitmap`.
+    }
+
+    return bitmap;
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
