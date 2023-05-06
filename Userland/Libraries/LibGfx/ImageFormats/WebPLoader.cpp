@@ -1454,9 +1454,12 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
 
     // https://developers.google.com/speed/webp/docs/riff_container#color_profile
     // "This chunk MUST appear before the image data."
-    // FIXME: Doesn't check animated files.
-    if (context.iccp_chunk.has_value() && context.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data_chunk->data.data())
+    if (context.iccp_chunk.has_value()
+        && ((context.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data_chunk->data.data())
+            || (context.alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.alpha_chunk->data.data())
+            || (!context.animation_frame_chunks.is_empty() && context.iccp_chunk->data.data() > context.animation_frame_chunks[0].data.data()))) {
         return context.error("WebPImageDecoderPlugin: ICCP chunk is after image data");
+    }
 
     context.state = WebPLoadingContext::State::ChunksDecoded;
     return {};
