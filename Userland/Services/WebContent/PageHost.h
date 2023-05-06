@@ -49,6 +49,8 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
 
+    [[nodiscard]] Gfx::Color background_color() const;
+
 private:
     // ^PageClient
     virtual bool is_connection_open() const override;
