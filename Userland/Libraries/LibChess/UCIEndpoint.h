@@ -41,17 +41,17 @@ public:
 
     virtual void event(Core::Event&) override;
 
-    void set_in(NonnullOwnPtr<Core::File> in)
+    ErrorOr<void> set_in(NonnullOwnPtr<Core::File> in)
     {
         m_in_fd = in->fd();
-        m_in = Core::BufferedFile::create(move(in)).release_value_but_fixme_should_propagate_errors();
+        m_in = TRY(Core::BufferedFile::create(move(in)));
         set_in_notifier();
+        return {};
     }
     void set_out(NonnullOwnPtr<Core::File> out) { m_out = move(out); }
 
 protected:
     Endpoint() = default;
-    Endpoint(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out);
     virtual void custom_event(Core::CustomEvent&) override;
 
 private:
