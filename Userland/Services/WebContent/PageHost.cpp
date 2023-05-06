@@ -108,6 +108,14 @@ Web::Layout::Viewport* PageHost::layout_root()
     return document->layout_node();
 }
 
+Gfx::Color PageHost::background_color() const
+{
+    auto document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return Gfx::Color::Transparent;
+    return document->background_color();
+}
+
 void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target)
 {
     Gfx::Painter painter(target);
@@ -116,7 +124,11 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     if (auto* document = page().top_level_browsing_context().active_document())
         document->update_layout();
 
-    painter.fill_rect(bitmap_rect, palette().base());
+    auto background_color = this->background_color();
+
+    if (background_color.alpha() < 255)
+        painter.clear_rect(bitmap_rect, palette().base());
+    painter.fill_rect(bitmap_rect, background_color);
 
     auto* layout_root = this->layout_root();
     if (!layout_root) {
