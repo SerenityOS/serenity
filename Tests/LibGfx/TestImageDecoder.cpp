@@ -288,6 +288,8 @@ TEST_CASE(test_webp_simple_lossy)
     EXPECT(!plugin_decoder->loop_count());
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(240, 240));
+
+    // FIXME: test plugin_decoder->frame(0) once webp lossy decoding is implemented.
 }
 
 TEST_CASE(test_webp_simple_lossless)
@@ -328,6 +330,8 @@ TEST_CASE(test_webp_extended_lossy)
     EXPECT(!plugin_decoder->loop_count());
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
+
+    // FIXME: test plugin_decoder->frame(0) once webp lossy decoding is implemented.
 }
 
 TEST_CASE(test_webp_extended_lossless)
@@ -453,4 +457,15 @@ TEST_CASE(test_webp_extended_lossless_animated)
     EXPECT_EQ(plugin_decoder->loop_count(), 42u);
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(990, 1050));
+
+    for (size_t frame_index = 0; frame_index < plugin_decoder->frame_count(); ++frame_index) {
+        auto frame = MUST(plugin_decoder->frame(frame_index));
+        EXPECT_EQ(frame.image->size(), Gfx::IntSize(990, 1050));
+
+        // This pixel happens to be the same color in all frames.
+        EXPECT_EQ(frame.image->get_pixel(500, 700), Gfx::Color::Yellow);
+
+        // This one isn't the same in all frames.
+        EXPECT_EQ(frame.image->get_pixel(500, 0), (frame_index == 2 || frame_index == 6) ? Gfx::Color::Black : Gfx::Color(255, 255, 255, 0));
+    }
 }
