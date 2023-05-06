@@ -154,14 +154,14 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
+    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
 
     auto& box_state = m_state.get_mutable(box);
     box_state.border_left = computed_values.border_left().width;
     box_state.border_right = computed_values.border_right().width;
-    box_state.padding_left = padding_left.to_px(box);
-    box_state.padding_right = padding_right.to_px(box);
+    box_state.padding_left = padding_left;
+    box_state.padding_right = padding_right;
 
     // NOTE: If we are calculating the min-content or max-content width of this box,
     //       and the width should be treated as auto, then we can simply return here,
@@ -174,7 +174,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
         margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
         CSSPixels total_px = computed_values.border_left().width + computed_values.border_right().width;
-        for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
+        for (auto& value : { margin_left, CSS::Length::make_px(padding_left), width, CSS::Length::make_px(padding_right), margin_right }) {
             total_px += value.to_px(box);
         }
 
@@ -281,8 +281,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 
     auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
     auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
+    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
@@ -298,8 +298,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
             // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
             // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
             auto available_width = width_of_containing_block
-                - margin_left.to_px(box) - computed_values.border_left().width - padding_left.to_px(box)
-                - padding_right.to_px(box) - computed_values.border_right().width - margin_right.to_px(box);
+                - margin_left.to_px(box) - computed_values.border_left().width - padding_left
+                - padding_right - computed_values.border_right().width - margin_right.to_px(box);
 
             auto result = calculate_shrink_to_fit_widths(box);
 
@@ -341,8 +341,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
     box_state.margin_right = margin_right.to_px(box);
     box_state.border_left = computed_values.border_left().width;
     box_state.border_right = computed_values.border_right().width;
-    box_state.padding_left = padding_left.to_px(box);
-    box_state.padding_right = padding_right.to_px(box);
+    box_state.padding_left = padding_left;
+    box_state.padding_right = padding_right;
 }
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
