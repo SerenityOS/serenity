@@ -44,15 +44,16 @@
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No)
     {
         auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView()));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
+        (void)is_layout_test_mode;
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths));
+        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode));
 #endif
 
         view->client().async_update_system_theme(move(theme));
@@ -209,6 +210,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto resources_folder = "/res"sv;
     StringView web_driver_ipc_path;
     bool dump_layout_tree = false;
+    bool is_layout_test_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
@@ -216,6 +218,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
+    args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
@@ -232,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Allow passing the window size as an argument.
     static constexpr Gfx::IntSize window_size { 800, 600 };
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No));
     RefPtr<Core::Timer> timer;
 
     if (dump_layout_tree) {

@@ -24,6 +24,11 @@ enum class EnableCallgrindProfiling {
     Yes
 };
 
+enum class IsLayoutTestMode {
+    No,
+    Yes
+};
+
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -131,7 +136,7 @@ protected:
     virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) {};
 
 #if !defined(AK_OS_SERENITY)
-    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No);
+    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No);
 #endif
 
     struct SharedBitmap {

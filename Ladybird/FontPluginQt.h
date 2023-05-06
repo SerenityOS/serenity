@@ -14,7 +14,7 @@ namespace Ladybird {
 
 class FontPluginQt final : public Web::Platform::FontPlugin {
 public:
-    FontPluginQt();
+    FontPluginQt(bool is_layout_test_mode);
     virtual ~FontPluginQt();
 
     virtual Gfx::Font& default_font() override;
@@ -27,6 +27,7 @@ private:
     Vector<DeprecatedString> m_generic_font_names;
     RefPtr<Gfx::Font> m_default_font;
     RefPtr<Gfx::Font> m_default_fixed_width_font;
+    bool m_is_layout_test_mode { false };
 };
 
 }
