@@ -849,9 +849,9 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto const& computed_max_height = box.computed_values().max_height();
 
     if (!computed_max_height.is_none())
-        used_height = min(used_height, computed_max_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+        used_height = min(used_height, computed_max_height.to_px(box, height_of_containing_block));
     if (!computed_min_height.is_auto())
-        used_height = max(used_height, computed_min_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+        used_height = max(used_height, computed_min_height.to_px(box, height_of_containing_block));
 
     // NOTE: The following is not directly part of any spec, but this is where we resolve
     //       the final used values for vertical margin/border/padding.
