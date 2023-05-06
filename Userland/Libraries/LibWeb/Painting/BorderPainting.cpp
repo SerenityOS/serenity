@@ -21,17 +21,15 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelR
     BorderRadiusData top_left_radius_px {};
     BorderRadiusData top_right_radius_px {};
 
-    auto width_length = CSS::Length::make_px(rect.width());
-    bottom_left_radius_px.horizontal_radius = bottom_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
-    bottom_right_radius_px.horizontal_radius = bottom_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
-    top_left_radius_px.horizontal_radius = top_left_radius.horizontal_radius.resolved(node, width_length).to_px(node);
-    top_right_radius_px.horizontal_radius = top_right_radius.horizontal_radius.resolved(node, width_length).to_px(node);
+    bottom_left_radius_px.horizontal_radius = bottom_left_radius.horizontal_radius.to_px(node, rect.width());
+    bottom_right_radius_px.horizontal_radius = bottom_right_radius.horizontal_radius.to_px(node, rect.width());
+    top_left_radius_px.horizontal_radius = top_left_radius.horizontal_radius.to_px(node, rect.width());
+    top_right_radius_px.horizontal_radius = top_right_radius.horizontal_radius.to_px(node, rect.width());
 
-    auto height_length = CSS::Length::make_px(rect.height());
-    bottom_left_radius_px.vertical_radius = bottom_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
-    bottom_right_radius_px.vertical_radius = bottom_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
-    top_left_radius_px.vertical_radius = top_left_radius.vertical_radius.resolved(node, height_length).to_px(node);
-    top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
+    bottom_left_radius_px.vertical_radius = bottom_left_radius.vertical_radius.to_px(node, rect.height());
+    bottom_right_radius_px.vertical_radius = bottom_right_radius.vertical_radius.to_px(node, rect.height());
+    top_left_radius_px.vertical_radius = top_left_radius.vertical_radius.to_px(node, rect.height());
+    top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.to_px(node, rect.height());
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     CSSPixels f = 1.0f;

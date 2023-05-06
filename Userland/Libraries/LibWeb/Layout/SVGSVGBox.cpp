@@ -57,8 +57,8 @@ void SVGSVGBox::prepare_for_replaced_layout()
         if (dom_node.has_attribute(HTML::AttributeNames::width) && dom_node.has_attribute(HTML::AttributeNames::height)) {
             CSSPixelRect rect;
             // FIXME: Allow for relative lengths here
-            rect.set_width(computed_values().width().resolved(*this, CSS::Length::make_px(0)).to_px(*this));
-            rect.set_height(computed_values().height().resolved(*this, CSS::Length::make_px(0)).to_px(*this));
+            rect.set_width(computed_values().width().to_px(*this, 0));
+            rect.set_height(computed_values().height().to_px(*this, 0));
             add_to_united_rect(rect);
             return IterationDecision::Continue;
         }

@@ -112,11 +112,10 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPix
 {
     auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
     auto gradient_length_px = Gfx::calculate_gradient_length(gradient_size, gradient_angle);
-    auto gradient_length = CSS::Length::make_px(gradient_length_px);
 
     auto resolved_color_stops = resolve_color_stop_positions(
         linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.resolved(node, gradient_length).to_px(node).value() / gradient_length_px;
+            return length_percentage.to_px(node, gradient_length_px).value() / gradient_length_px;
         },
         linear_gradient.is_repeating());
 
@@ -137,10 +136,9 @@ ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::Con
 RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
 {
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
-    auto gradient_length = CSS::Length::make_px(gradient_size.width());
     auto resolved_color_stops = resolve_color_stop_positions(
         radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return (length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width()).value();
+            return (length_percentage.to_px(node, gradient_size.width()) / gradient_size.width()).value();
         },
         radial_gradient.is_repeating());
     return { resolved_color_stops };
