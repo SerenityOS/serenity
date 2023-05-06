@@ -26,8 +26,8 @@ public:
     Function<void(int)> on_quit;
 
 private:
-    ChessEngine(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
-        : Endpoint(in, out)
+    ChessEngine(NonnullOwnPtr<Core::File> in, NonnullOwnPtr<Core::File> out)
+        : Endpoint(move(in), move(out))
     {
         on_command_read_error = [](auto command, auto error) {
             outln("{}: '{}'", error, command);
