@@ -754,15 +754,12 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
 
     target.set_column(target.column() - modifier);
 
-    if (target.column() == 0)
-        return target;
-
-    while (target.column() < line.length()) {
+    while (target.column() > 0) {
         if (auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
             auto view_between_target_and_index = line.view().substring_view(*index, target.column() - *index);
 
             if (should_continue_beyond_word(view_between_target_and_index)) {
-                target.set_column(*index - 1);
+                target.set_column(*index == 0 ? 0 : *index - 1);
                 continue;
             }
 
