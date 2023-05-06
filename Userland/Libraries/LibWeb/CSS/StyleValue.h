@@ -115,7 +115,6 @@ public:
         Image,
         Inherit,
         Initial,
-        Invalid,
         Length,
         LinearGradient,
         ListStyle,
@@ -318,7 +317,7 @@ protected:
     explicit StyleValue(Type);
 
 private:
-    Type m_type { Type::Invalid };
+    Type m_type;
 };
 
 template<typename T>
