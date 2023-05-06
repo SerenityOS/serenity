@@ -11,6 +11,11 @@
 
 namespace Web::Layout {
 
+enum class GridDimension {
+    Row,
+    Column
+};
+
 class OccupationGrid {
 public:
     OccupationGrid(int column_count, int row_count);
@@ -45,8 +50,8 @@ public:
     int raw_row_span() { return m_row_span; }
     int raw_column_span() { return m_column_span; }
 
-    int gap_adjusted_row(Box const& parent_box) const;
-    int gap_adjusted_column(Box const& parent_box) const;
+    int gap_adjusted_row(Box const& grid_box) const;
+    int gap_adjusted_column(Box const& grid_box) const;
 
 private:
     JS::NonnullGCPtr<Box const> m_box;
@@ -64,6 +69,8 @@ public:
     virtual void run(Box const&, LayoutMode, AvailableSpace const& available_space) override;
     virtual CSSPixels automatic_content_width() const override;
     virtual CSSPixels automatic_content_height() const override;
+
+    Box const& grid_container() const { return context_box(); }
 
 private:
     CSSPixels m_automatic_content_height { 0 };
@@ -138,13 +145,11 @@ private:
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
-    CSSPixels get_free_space_x(AvailableSpace const& available_space);
-    CSSPixels get_free_space_y(Box const&);
+    CSSPixels get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
-    size_t count_of_gap_columns();
-    size_t count_of_gap_rows();
+    size_t count_of_gap_tracks(Vector<TemporaryTrack> const& tracks) const;
     CSSPixels resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
@@ -158,10 +163,9 @@ private:
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
     void initialize_grid_tracks(Box const&, AvailableSpace const&, int column_count, int row_count);
-    void calculate_sizes_of_columns(Box const&, AvailableSpace const&);
-    void calculate_sizes_of_rows(Box const&);
+    void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
-    CSSPixels content_based_minimum_height(GridItem const&, Box const& parent_box);
+    CSSPixels content_based_minimum_height(GridItem const&);
 };
 
 }
