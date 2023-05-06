@@ -61,15 +61,6 @@ Length Length::percentage_of(Percentage const& percentage) const
     return Length { percentage.as_fraction() * raw_value(), m_type };
 }
 
-Length Length::resolved(Layout::Node const& layout_node) const
-{
-    if (is_relative())
-        return make_px(to_px(layout_node));
-    if (!isfinite(m_value))
-        return make_auto();
-    return *this;
-}
-
 CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
 {
     switch (m_type) {

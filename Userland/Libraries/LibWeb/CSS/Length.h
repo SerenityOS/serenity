@@ -90,8 +90,6 @@ public:
     static Length make_px(CSSPixels value);
     Length percentage_of(Percentage const&) const;
 
-    Length resolved(Layout::Node const& layout_node) const;
-
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_px() const { return m_type == Type::Px; }
 
