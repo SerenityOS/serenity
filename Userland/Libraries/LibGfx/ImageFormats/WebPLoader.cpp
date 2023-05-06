@@ -1212,22 +1212,12 @@ ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<B
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
-static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
 {
     VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
     VERIFY(vp8l_chunk.type == FourCC("VP8L"));
 
     auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context, vp8l_chunk));
-
-    // Check that size in VP8X chunk matches dimensions in VP8L chunk if both are present.
-    if (context.first_chunk->type == FourCC("VP8X")) {
-        if (vp8l_header.width != context.vp8x_header.width)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different widths");
-        if (vp8l_header.height != context.vp8x_header.height)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different heights");
-        if (vp8l_header.is_alpha_used != context.vp8x_header.has_alpha)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different alpha");
-    }
 
     FixedMemoryStream memory_stream { vp8l_chunk.data.slice(5) };
     LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
@@ -1237,7 +1227,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#4_transformations
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
 
-    auto stored_size = context.size.value();
+    auto stored_size = IntSize { vp8l_header.width, vp8l_header.height };
 
     // optional-transform   =  (%b1 transform optional-transform) / %b0
     // "Each transform is allowed to be used only once."
@@ -1290,14 +1280,14 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     }
 
     auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
-    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
+    auto bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
 
     // Transforms have to be applied in the reverse order they appear in in the file.
     // (As far as I can tell, this isn't mentioned in the spec.)
     for (auto const& transform : transforms.in_reverse())
-        context.bitmap = TRY(transform->transform(context.bitmap.release_nonnull()));
+        bitmap = TRY(transform->transform(bitmap));
 
-    return {};
+    return bitmap;
 }
 
 static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
@@ -1668,7 +1658,17 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
 
     if (m_context->image_data.image_data_chunk.has_value() && m_context->image_data.image_data_chunk->type == FourCC("VP8L")) {
         if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
-            TRY(decode_webp_chunk_VP8L(*m_context, m_context->image_data.image_data_chunk.value()));
+            auto bitmap = TRY(decode_webp_chunk_VP8L(*m_context, m_context->image_data.image_data_chunk.value()));
+
+            // Check that size in VP8X chunk matches dimensions in VP8L chunk if both are present.
+            if (m_context->first_chunk->type == FourCC("VP8X")) {
+                if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width)
+                    return m_context->error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different widths");
+                if (static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
+                    return m_context->error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different heights");
+            }
+
+            m_context->bitmap = move(bitmap);
             m_context->state = WebPLoadingContext::State::BitmapDecoded;
         }
 
