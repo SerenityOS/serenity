@@ -659,6 +659,9 @@ void Node::remove(bool suppress_observers)
     // 21. Run the children changed steps for parent.
     parent->children_changed();
 
+    // Since the tree structure has changed, we need to invalidate both style and layout.
+    // In the future, we should find a way to only invalidate the parts that actually need it.
+    document().invalidate_style();
     document().invalidate_layout();
 }
 
