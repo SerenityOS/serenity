@@ -52,6 +52,7 @@ This is a list of useful tips and tricks to help you make the most out of Sereni
 
 ## Development
 * Supplying `# profile` with a process identifier (PID) of `-1` as root enables systemwide profiling.
+* Easily transfer files from QEMU to your host machine by using the built-in web server. In the terminal enter `ws .` to start a WebServer instance for the current working directory. Then open `localhost:8000` on your host machine.
 
 ## See also
 * [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
