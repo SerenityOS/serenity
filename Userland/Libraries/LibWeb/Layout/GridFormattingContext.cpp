@@ -17,14 +17,14 @@ GridFormattingContext::GridFormattingContext(LayoutState& state, Box const& grid
 
 GridFormattingContext::~GridFormattingContext() = default;
 
-CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const& grid_size, AvailableSpace const& available_space, Box const& box)
+CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const& grid_size, AvailableSpace const& available_space)
 {
     VERIFY(grid_size.is_definite());
     switch (grid_size.type()) {
     case CSS::GridSize::Type::Length:
         if (grid_size.length().is_auto())
             break;
-        return grid_size.length().to_px(box);
+        return grid_size.length().to_px(grid_container());
     case CSS::GridSize::Type::Percentage:
         if (available_space.width.is_definite())
             return grid_size.percentage().as_fraction() * available_space.width.to_px().value();
@@ -45,18 +45,18 @@ size_t GridFormattingContext::count_of_gap_tracks(Vector<TemporaryTrack> const& 
     return count;
 }
 
-CSSPixels GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSize const& available_size, Box const& box)
+CSSPixels GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSize const& available_size)
 {
     if (size.is_calculated()) {
         if (size.calculated().contains_percentage()) {
             if (!available_size.is_definite())
                 return 0;
-            return size.calculated().resolve_length_percentage(box, CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(box);
+            return size.calculated().resolve_length_percentage(grid_container(), CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(grid_container());
         }
-        return size.calculated().resolve_length(box)->to_px(box);
+        return size.calculated().resolve_length(grid_container())->to_px(grid_container());
     }
     if (size.is_length()) {
-        return size.length().to_px(box);
+        return size.length().to_px(grid_container());
     }
     if (size.is_percentage()) {
         if (!available_size.is_definite())
@@ -66,7 +66,7 @@ CSSPixels GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSi
     return 0;
 }
 
-int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space, Box const& box)
+int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space)
 {
     auto track_count = 0;
     for (auto const& explicit_grid_track : track_list) {
@@ -79,13 +79,13 @@ int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> co
     if (track_list.size() == 1
         && track_list.first().is_repeat()
         && (track_list.first().repeat().is_auto_fill() || track_list.first().repeat().is_auto_fit())) {
-        track_count = count_of_repeated_auto_fill_or_fit_tracks(track_list, available_space, box);
+        track_count = count_of_repeated_auto_fill_or_fit_tracks(track_list, available_space);
     }
 
     return track_count;
 }
 
-int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space, Box const& box)
+int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-repeat
     // 7.2.3.2. Repeat-to-fill: auto-fill and auto-fit repetitions
@@ -107,13 +107,13 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
         auto track_sizing_function = explicit_grid_track;
         if (track_sizing_function.is_minmax()) {
             if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), available_space, box);
+                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), available_space);
             else if (track_sizing_function.minmax().min_grid_size().is_definite() && !track_sizing_function.minmax().max_grid_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), available_space, box);
+                sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), available_space);
             else if (track_sizing_function.minmax().min_grid_size().is_definite() && track_sizing_function.minmax().max_grid_size().is_definite())
-                sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), available_space, box), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), available_space, box));
+                sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size(), available_space), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size(), available_space));
         } else {
-            sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space, box), resolve_definite_track_size(track_sizing_function.grid_size(), available_space, box));
+            sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
     return max(1, static_cast<int>((get_free_space(available_space.width, m_grid_columns) / sum_of_grid_track_sizes).value()));
@@ -123,7 +123,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
     // floor be 1px.
 }
 
-void GridFormattingContext::place_item_with_row_and_column_position(Box const& box, Box const& child_box)
+void GridFormattingContext::place_item_with_row_and_column_position(Box const& child_box)
 {
     int row_start = child_box.computed_values().grid_row_start().raw_value() - 1;
     int row_end = child_box.computed_values().grid_row_end().raw_value() - 1;
@@ -188,7 +188,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     if (child_box.computed_values().grid_column_end().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
             column_end = m_valid_grid_areas[grid_area_index].column_end;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_end = line_name_index;
         else
             column_end = 1;
@@ -197,7 +197,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     if (child_box.computed_values().grid_column_start().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
             column_start = m_valid_grid_areas[grid_area_index].column_start;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_start = line_name_index;
         else
             column_start = 0;
@@ -205,7 +205,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     if (child_box.computed_values().grid_row_end().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
             row_end = m_valid_grid_areas[grid_area_index].row_end;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_end = line_name_index;
         else
             row_end = 1;
@@ -214,7 +214,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     if (child_box.computed_values().grid_row_start().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
             row_start = m_valid_grid_areas[grid_area_index].row_start;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_start = line_name_index;
         else
             row_start = 0;
@@ -257,7 +257,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 }
 
-void GridFormattingContext::place_item_with_row_position(Box const& box, Box const& child_box)
+void GridFormattingContext::place_item_with_row_position(Box const& child_box)
 {
     int row_start = child_box.computed_values().grid_row_start().raw_value() - 1;
     int row_end = child_box.computed_values().grid_row_end().raw_value() - 1;
@@ -314,7 +314,7 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     if (child_box.computed_values().grid_row_end().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
             row_end = m_valid_grid_areas[grid_area_index].row_end;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_end = line_name_index;
         else
             row_end = 1;
@@ -323,7 +323,7 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     if (child_box.computed_values().grid_row_start().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
             row_start = m_valid_grid_areas[grid_area_index].row_start;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_start = line_name_index;
         else
             row_start = 0;
@@ -381,7 +381,7 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
-void GridFormattingContext::place_item_with_column_position(Box const& box, Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
+void GridFormattingContext::place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
 {
     int column_start = child_box.computed_values().grid_column_start().raw_value() - 1;
     int column_end = child_box.computed_values().grid_column_end().raw_value() - 1;
@@ -442,7 +442,7 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
     if (child_box.computed_values().grid_column_end().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
             column_end = m_valid_grid_areas[grid_area_index].column_end;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_end = line_name_index;
         else
             column_end = 1;
@@ -451,7 +451,7 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
     if (child_box.computed_values().grid_column_start().has_line_name()) {
         if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
             column_start = m_valid_grid_areas[grid_area_index].column_start;
-        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_start = line_name_index;
         else
             column_start = 0;
@@ -563,9 +563,9 @@ finish:
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
-void GridFormattingContext::initialize_grid_tracks(Box const& box, AvailableSpace const& available_space, int column_count, int row_count)
+void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& available_space, int column_count, int row_count)
 {
-    for (auto const& track_in_list : box.computed_values().grid_template_columns().track_list()) {
+    for (auto const& track_in_list : grid_container().computed_values().grid_template_columns().track_list()) {
         auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
         if (track_in_list.is_repeat()) {
             if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
@@ -593,7 +593,7 @@ void GridFormattingContext::initialize_grid_tracks(Box const& box, AvailableSpac
             }
         }
     }
-    for (auto const& track_in_list : box.computed_values().grid_template_rows().track_list()) {
+    for (auto const& track_in_list : grid_container().computed_values().grid_template_rows().track_list()) {
         auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
         if (track_in_list.is_repeat()) {
             if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
@@ -632,13 +632,13 @@ void GridFormattingContext::initialize_grid_tracks(Box const& box, AvailableSpac
     // For the purpose of track sizing, each gutter is treated as an extra, empty, fixed-size track of
     // the specified size, which is spanned by any grid items that span across its corresponding grid
     // line.
-    if (!box.computed_values().column_gap().is_auto()) {
+    if (!grid_container().computed_values().column_gap().is_auto()) {
         for (int column_index = 1; column_index < (m_occupation_grid.column_count() * 2) - 1; column_index += 2)
-            m_grid_columns.insert(column_index, TemporaryTrack(resolve_size(box.computed_values().column_gap(), available_space.width, box), true));
+            m_grid_columns.insert(column_index, TemporaryTrack(resolve_size(grid_container().computed_values().column_gap(), available_space.width), true));
     }
-    if (!box.computed_values().row_gap().is_auto()) {
+    if (!grid_container().computed_values().row_gap().is_auto()) {
         for (int row_index = 1; row_index < (m_occupation_grid.row_count() * 2) - 1; row_index += 2)
-            m_grid_rows.insert(row_index, TemporaryTrack(resolve_size(box.computed_values().row_gap(), available_space.height, box), true));
+            m_grid_rows.insert(row_index, TemporaryTrack(resolve_size(grid_container().computed_values().row_gap(), available_space.height), true));
     }
 }
 
@@ -1176,7 +1176,7 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
     // spanned by such items; otherwise ignore the effects of track alignment in this estimation.
 }
 
-void GridFormattingContext::build_valid_grid_areas(Box const& box)
+void GridFormattingContext::build_valid_grid_areas()
 {
     Vector<GridArea> found_grid_areas;
 
@@ -1191,11 +1191,11 @@ void GridFormattingContext::build_valid_grid_areas(Box const& box)
     // https://www.w3.org/TR/css-grid-2/#grid-template-areas-property
     // If a named grid area spans multiple grid cells, but those cells do not form a single
     // filled-in rectangle, the declaration is invalid.
-    for (int y = 0; y < static_cast<int>(box.computed_values().grid_template_areas().size()); y++) {
-        for (int x = 0; x < static_cast<int>(box.computed_values().grid_template_areas()[y].size()); x++) {
-            auto grid_area_idx = get_index_of_found_grid_area(box.computed_values().grid_template_areas()[y][x]);
+    for (int y = 0; y < static_cast<int>(grid_container().computed_values().grid_template_areas().size()); y++) {
+        for (int x = 0; x < static_cast<int>(grid_container().computed_values().grid_template_areas()[y].size()); x++) {
+            auto grid_area_idx = get_index_of_found_grid_area(grid_container().computed_values().grid_template_areas()[y][x]);
             if (grid_area_idx == -1) {
-                found_grid_areas.append({ box.computed_values().grid_template_areas()[y][x], y, y + 1, x, x + 1 });
+                found_grid_areas.append({ grid_container().computed_values().grid_template_areas()[y][x], y, y + 1, x, x + 1 });
             } else {
                 auto& grid_area = found_grid_areas[grid_area_idx];
                 if (grid_area.row_start == y) {
@@ -1250,12 +1250,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         return IterationDecision::Continue;
     });
 
-    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space, box);
-    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space, box);
+    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space);
+    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space);
 
     m_occupation_grid = OccupationGrid(column_count, row_count);
 
-    build_valid_grid_areas(box);
+    build_valid_grid_areas();
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
@@ -1268,7 +1268,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end())
             || is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
             continue;
-        place_item_with_row_and_column_position(box, child_box);
+        place_item_with_row_and_column_position(child_box);
         m_boxes_to_place.remove(i);
         i--;
     }
@@ -1279,7 +1279,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         auto const& child_box = m_boxes_to_place[i];
         if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end()))
             continue;
-        place_item_with_row_position(box, child_box);
+        place_item_with_row_position(child_box);
         m_boxes_to_place.remove(i);
         i--;
     }
@@ -1309,7 +1309,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
         // 4.1.1. If the item has a definite column position:
         if (!is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
-            place_item_with_column_position(box, child_box, auto_placement_cursor_x, auto_placement_cursor_y);
+            place_item_with_column_position(child_box, auto_placement_cursor_x, auto_placement_cursor_y);
 
         // 4.1.2. If the item has an automatic grid position in both axes:
         else
@@ -1340,7 +1340,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // - A flexible sizing function (<flex>).
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
-    initialize_grid_tracks(box, available_space, column_count, row_count);
+    initialize_grid_tracks(available_space, column_count, row_count);
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
