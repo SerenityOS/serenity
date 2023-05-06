@@ -1576,6 +1576,19 @@ static ErrorOr<ImageData> decode_webp_animation_frame_image_data(WebPLoadingCont
     return image_data;
 }
 
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext& context, ImageData const& image_data)
+{
+    if (image_data.image_data_chunk->type == FourCC("VP8L")) {
+        VERIFY(!image_data.alpha_chunk.has_value());
+        return decode_webp_chunk_VP8L(context, image_data.image_data_chunk.value());
+    }
+
+    VERIFY(image_data.image_data_chunk->type == FourCC("VP8 "));
+
+    // FIXME: Implement.
+    return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
 static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingContext& context, size_t frame_index)
 {
@@ -1615,10 +1628,7 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
         auto frame_image_data = TRY(decode_webp_animation_frame_image_data(context, frame_description));
         VERIFY(frame_image_data.image_data_chunk.has_value());
 
-        if (frame_image_data.image_data_chunk->type == FourCC("VP8 "))
-            return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
-
-        auto frame_bitmap = TRY(decode_webp_chunk_VP8L(context, frame_image_data.image_data_chunk.value()));
+        auto frame_bitmap = TRY(decode_webp_image_data(context, frame_image_data));
         if (static_cast<u32>(frame_bitmap->width()) != frame_description.frame_width || static_cast<u32>(frame_bitmap->height()) != frame_description.frame_height)
             return context.error("WebPImageDecoderPlugin: decoded frame bitmap size doesn't match frame description size");
 
@@ -1741,33 +1751,29 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
         TRY(decode_webp_chunks(*m_context));
 
     if (is_animated()) {
-        if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
+        if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded)
             TRY(decode_webp_animation_frame_chunks(*m_context));
-        }
         return decode_webp_animation_frame(*m_context, index);
     }
 
-    if (m_context->image_data.image_data_chunk.has_value() && m_context->image_data.image_data_chunk->type == FourCC("VP8L")) {
-        if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
-            auto bitmap = TRY(decode_webp_chunk_VP8L(*m_context, m_context->image_data.image_data_chunk.value()));
+    if (!m_context->image_data.image_data_chunk.has_value())
+        return m_context->error("WebPImageDecoderPlugin: Did not find image data chunk");
 
-            // Check that size in VP8X chunk matches dimensions in VP8L chunk if both are present.
-            if (m_context->first_chunk->type == FourCC("VP8X")) {
-                if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width)
-                    return m_context->error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different widths");
-                if (static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
-                    return m_context->error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different heights");
-            }
+    if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
+        auto bitmap = TRY(decode_webp_image_data(*m_context, m_context->image_data));
 
-            m_context->bitmap = move(bitmap);
-            m_context->state = WebPLoadingContext::State::BitmapDecoded;
+        // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
+        if (m_context->first_chunk->type == FourCC("VP8X")) {
+            if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width || static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
+                return m_context->error("WebPImageDecoderPlugin: VP8X and VP8/VP8L chunks store different dimensions");
         }
 
-        VERIFY(m_context->bitmap);
-        return ImageFrameDescriptor { m_context->bitmap, 0 };
+        m_context->bitmap = move(bitmap);
+        m_context->state = WebPLoadingContext::State::BitmapDecoded;
     }
 
-    return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+    VERIFY(m_context->bitmap);
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
