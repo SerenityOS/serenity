@@ -1293,7 +1293,7 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
     auto width_of_containing_block = available_width.to_px();
     auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
     if (width.is_auto()) {
-        return width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+        return width.resolved(box, width_of_containing_block_as_length_for_resolve);
     }
 
     auto& computed_values = box.computed_values();
@@ -1309,7 +1309,7 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
         return CSS::Length::make_px(max(inner_width, 0));
     }
 
-    return width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    return width.resolved(box, width_of_containing_block_as_length_for_resolve);
 }
 
 CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const& available_height, CSS::Size const& height) const
@@ -1317,7 +1317,7 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
     auto height_of_containing_block = available_height.to_px();
     auto height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(height_of_containing_block);
     if (height.is_auto()) {
-        return height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+        return height.resolved(box, height_of_containing_block_as_length_for_resolve);
     }
 
     auto& computed_values = box.computed_values();
@@ -1335,7 +1335,7 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
         return CSS::Length::make_px(max(inner_height, 0));
     }
 
-    return height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+    return height.resolved(box, height_of_containing_block_as_length_for_resolve);
 }
 
 CSSPixels FormattingContext::containing_block_width_for(Box const& box, LayoutState const& state)
