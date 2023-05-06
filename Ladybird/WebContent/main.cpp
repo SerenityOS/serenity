@@ -63,14 +63,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
     int webcontent_fd_passing_socket { -1 };
+    bool is_layout_test_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
+    args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.parse(arguments);
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 
-    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
+    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt(is_layout_test_mode));
 
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 
