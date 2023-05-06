@@ -109,6 +109,15 @@ struct ANMFChunk {
     ReadonlyBytes frame_data;
 };
 
+// "For a still image, the image data consists of a single frame, which is made up of:
+//     An optional alpha subchunk.
+//     A bitstream subchunk."
+struct ImageData {
+    // "This optional chunk contains encoded alpha data for this frame. A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
+    Optional<Chunk> alpha_chunk;      // 'ALPH'
+    Optional<Chunk> image_data_chunk; // Either 'VP8 ' or 'VP8L'. For 'VP8L', alpha_chunk will not have a value.
+};
+
 }
 
 struct WebPLoadingContext {
@@ -139,13 +148,8 @@ struct WebPLoadingContext {
         VP8XHeader vp8x_header;
     };
 
-    // If first_chunk is not a VP8X chunk, then only image_data_chunk is set and all the other Chunks are not set.
-
-    // "For a still image, the image data consists of a single frame, which is made up of:
-    //     An optional alpha subchunk.
-    //     A bitstream subchunk."
-    Optional<Chunk> alpha_chunk;      // 'ALPH'
-    Optional<Chunk> image_data_chunk; // Either 'VP8 ' or 'VP8L'.
+    // If first_chunk is not a VP8X chunk, then only image_data.image_data_chunk is set and all the other Chunks are not set.
+    ImageData image_data;
 
     Optional<Chunk> animation_header_chunk; // 'ANIM'
     Vector<Chunk> animation_frame_chunks;   // 'ANMF'
@@ -1414,7 +1418,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         if (chunk.type == FourCC("ICCP"))
             store(context.iccp_chunk, chunk);
         else if (chunk.type == FourCC("ALPH"))
-            store(context.alpha_chunk, chunk);
+            store(context.image_data.alpha_chunk, chunk);
         else if (chunk.type == FourCC("ANIM"))
             store(context.animation_header_chunk, chunk);
         else if (chunk.type == FourCC("ANMF"))
@@ -1424,7 +1428,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         else if (chunk.type == FourCC("XMP "))
             store(context.xmp_chunk, chunk);
         else if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
-            store(context.image_data_chunk, chunk);
+            store(context.image_data.image_data_chunk, chunk);
     }
 
     // Validate chunks.
@@ -1447,16 +1451,16 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
     // https://developers.google.com/speed/webp/docs/riff_container#alpha
     // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
     // FIXME: Also check in ANMF chunks.
-    if (context.alpha_chunk.has_value() && context.image_data_chunk.has_value() && context.image_data_chunk->type == FourCC("VP8L")) {
+    if (context.image_data.alpha_chunk.has_value() && context.image_data.image_data_chunk.has_value() && context.image_data.image_data_chunk->type == FourCC("VP8L")) {
         dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
-        context.alpha_chunk.clear();
+        context.image_data.alpha_chunk.clear();
     }
 
     // https://developers.google.com/speed/webp/docs/riff_container#color_profile
     // "This chunk MUST appear before the image data."
     if (context.iccp_chunk.has_value()
-        && ((context.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data_chunk->data.data())
-            || (context.alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.alpha_chunk->data.data())
+        && ((context.image_data.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data.image_data_chunk->data.data())
+            || (context.image_data.alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data.alpha_chunk->data.data())
             || (!context.animation_frame_chunks.is_empty() && context.iccp_chunk->data.data() > context.animation_frame_chunks[0].data.data()))) {
         return context.error("WebPImageDecoderPlugin: ICCP chunk is after image data");
     }
@@ -1483,7 +1487,7 @@ static ErrorOr<void> read_webp_first_chunk(WebPLoadingContext& context)
     context.state = WebPLoadingContext::State::FirstChunkRead;
 
     if (first_chunk.type == FourCC("VP8 ") || first_chunk.type == FourCC("VP8L"))
-        context.image_data_chunk = first_chunk;
+        context.image_data.image_data_chunk = first_chunk;
 
     return {};
 }
@@ -1662,9 +1666,9 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
         return Error::from_string_literal("WebPImageDecoderPlugin: decoding of animated files not yet implemented");
     }
 
-    if (m_context->image_data_chunk.has_value() && m_context->image_data_chunk->type == FourCC("VP8L")) {
+    if (m_context->image_data.image_data_chunk.has_value() && m_context->image_data.image_data_chunk->type == FourCC("VP8L")) {
         if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
-            TRY(decode_webp_chunk_VP8L(*m_context, m_context->image_data_chunk.value()));
+            TRY(decode_webp_chunk_VP8L(*m_context, m_context->image_data.image_data_chunk.value()));
             m_context->state = WebPLoadingContext::State::BitmapDecoded;
         }
 
