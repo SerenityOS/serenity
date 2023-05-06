@@ -429,8 +429,8 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(LayoutState cons
     auto width_of_containing_block = available_space.width.to_px();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
-    auto margin_left = box.computed_values().margin().left().resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto margin_right = box.computed_values().margin().right().resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto margin_left = box.computed_values().margin().left().resolved(box, width_of_containing_block_as_length);
+    auto margin_right = box.computed_values().margin().right().resolved(box, width_of_containing_block_as_length);
 
     // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
     if (margin_left.is_auto())
@@ -531,8 +531,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     auto computed_right = computed_values.inset().right();
 
     auto try_compute_width = [&](auto const& a_width) {
-        margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length).resolved(box);
-        margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length).resolved(box);
+        margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length);
+        margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length);
 
         auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
         auto right = computed_values.inset().right().to_px(box, width_of_containing_block);

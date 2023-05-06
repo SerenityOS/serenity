@@ -171,8 +171,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto try_compute_width = [&](auto const& a_width) {
         CSS::Length width = a_width;
-        margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-        margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+        margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
+        margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
         CSSPixels total_px = computed_values.border_left().width + computed_values.border_right().width;
         for (auto& value : { margin_left, CSS::Length::make_px(padding_left), width, CSS::Length::make_px(padding_right), margin_right }) {
             total_px += value.to_px(box);
@@ -279,8 +279,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
     if (!available_space.width.is_definite())
         width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
 
-    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
     auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
     auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
 
@@ -362,8 +362,8 @@ CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box
 
     auto zero_value = CSS::Length::make_px(0);
 
-    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
-    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
