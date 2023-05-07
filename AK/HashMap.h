@@ -40,6 +40,11 @@ public:
             set(item.key, item.value);
     }
 
+    HashMap(HashMap const&) = default; // FIXME: Not OOM-safe! Use clone() instead.
+    HashMap(HashMap&& other) noexcept = default;
+    HashMap& operator=(HashMap const& other) = default; // FIXME: Not OOM-safe! Use clone() instead.
+    HashMap& operator=(HashMap&& other) noexcept = default;
+
     [[nodiscard]] bool is_empty() const
     {
         return m_table.is_empty();
