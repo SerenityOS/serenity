@@ -141,6 +141,8 @@ private:
 
     mutable HashMap<size_t, NonnullOwnPtr<GlyphPage>> m_glyph_pages;
 
+    mutable HashMap<u32, i16> m_kerning_cache;
+
     GlyphPage const& glyph_page(size_t page_index) const;
     void populate_glyph_page(GlyphPage&, size_t page_index) const;
 };
