@@ -13,9 +13,7 @@
 TEST_CASE(test_decode)
 {
     auto decode_equal = [&](StringView input, StringView expected) {
-        auto decoded_option = decode_base64(input);
-        EXPECT(!decoded_option.is_error());
-        auto decoded = decoded_option.release_value();
+        auto decoded = TRY_OR_FAIL(decode_base64(input));
         EXPECT(DeprecatedString::copy(decoded) == expected);
         EXPECT(expected.length() <= calculate_base64_decoded_length(input.bytes()));
     };

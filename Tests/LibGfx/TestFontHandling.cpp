@@ -146,24 +146,21 @@ TEST_CASE(test_write_to_file)
 
     char path[] = "/tmp/new.font.XXXXXX";
     EXPECT(mkstemp(path) != -1);
-    EXPECT(!font->write_to_file(path).is_error());
+    TRY_OR_FAIL(font->write_to_file(path));
     unlink(path);
 }
 
 TEST_CASE(test_character_set_masking)
 {
-    auto font = Gfx::BitmapFont::try_load_from_file(TEST_INPUT("TestFont.font"sv));
-    EXPECT(!font.is_error());
+    auto font = TRY_OR_FAIL(Gfx::BitmapFont::try_load_from_file(TEST_INPUT("TestFont.font"sv)));
 
-    auto unmasked_font = font.value()->unmasked_character_set();
-    EXPECT(!unmasked_font.is_error());
-    EXPECT(unmasked_font.value()->glyph_index(0x0041).value() == 0x0041);
-    EXPECT(unmasked_font.value()->glyph_index(0x0100).value() == 0x0100);
-    EXPECT(unmasked_font.value()->glyph_index(0xFFFD).value() == 0xFFFD);
+    auto unmasked_font = TRY_OR_FAIL(font->unmasked_character_set());
+    EXPECT(unmasked_font->glyph_index(0x0041).value() == 0x0041);
+    EXPECT(unmasked_font->glyph_index(0x0100).value() == 0x0100);
+    EXPECT(unmasked_font->glyph_index(0xFFFD).value() == 0xFFFD);
 
-    auto masked_font = unmasked_font.value()->masked_character_set();
-    EXPECT(!masked_font.is_error());
-    EXPECT(masked_font.value()->glyph_index(0x0041).value() == 0x0041);
-    EXPECT(!masked_font.value()->glyph_index(0x0100).has_value());
-    EXPECT(masked_font.value()->glyph_index(0xFFFD).value() == 0x1FD);
+    auto masked_font = TRY_OR_FAIL(unmasked_font->masked_character_set());
+    EXPECT(masked_font->glyph_index(0x0041).value() == 0x0041);
+    EXPECT(!masked_font->glyph_index(0x0100).has_value());
+    EXPECT(masked_font->glyph_index(0xFFFD).value() == 0x1FD);
 }

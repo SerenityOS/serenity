@@ -50,8 +50,6 @@ TEST_CASE(join_dead_thread)
     // The thread should have exited by then.
     usleep(40 * 1000);
 
-    auto join_result = thread->join<int*>();
-
-    EXPECT(!join_result.is_error());
-    EXPECT_EQ(join_result.value(), static_cast<int*>(0));
+    auto join_result = TRY_OR_FAIL(thread->join<int*>());
+    EXPECT_EQ(join_result, static_cast<int*>(0));
 }

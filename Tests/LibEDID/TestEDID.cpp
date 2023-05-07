@@ -35,9 +35,7 @@ static const u8 edid1_bin[] = {
 
 TEST_CASE(edid1)
 {
-    auto edid_load_result = EDID::Parser::from_bytes({ edid1_bin, sizeof(edid1_bin) });
-    EXPECT(!edid_load_result.is_error());
-    auto edid = edid_load_result.release_value();
+    auto edid = TRY_OR_FAIL(EDID::Parser::from_bytes({ edid1_bin, sizeof(edid1_bin) }));
     EXPECT(edid.legacy_manufacturer_id() == "RHT");
     EXPECT(!edid.aspect_ratio().has_value());
     auto screen_size = edid.screen_size();
@@ -69,7 +67,7 @@ TEST_CASE(edid1)
         };
         static constexpr size_t expected_established_timings_count = sizeof(expected_established_timings) / sizeof(expected_established_timings[0]);
         size_t established_timings_found = 0;
-        auto result = edid.for_each_established_timing([&](auto& established_timings) {
+        auto result = TRY_OR_FAIL(edid.for_each_established_timing([&](auto& established_timings) {
             EXPECT(established_timings_found < expected_established_timings_count);
             auto& expected_timings = expected_established_timings[established_timings_found];
             EXPECT(established_timings.width() == expected_timings.width);
@@ -79,9 +77,8 @@ TEST_CASE(edid1)
             EXPECT(established_timings.dmt_id() == expected_timings.dmt_id);
             established_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(established_timings_found == expected_established_timings_count);
     }
 
@@ -103,7 +100,7 @@ TEST_CASE(edid1)
         };
         static constexpr size_t expected_standard_timings_count = sizeof(expected_standard_established_timings) / sizeof(expected_standard_established_timings[0]);
         size_t standard_timings_found = 0;
-        auto result = edid.for_each_standard_timing([&](auto& standard_timings) {
+        auto result = TRY_OR_FAIL(edid.for_each_standard_timing([&](auto& standard_timings) {
             EXPECT(standard_timings_found < expected_standard_timings_count);
             auto& expected_timings = expected_standard_established_timings[standard_timings_found];
             EXPECT(standard_timings.dmt_id() == expected_timings.dmt_id);
@@ -112,9 +109,8 @@ TEST_CASE(edid1)
             EXPECT(standard_timings.refresh_rate() == expected_timings.refresh_rate);
             standard_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(standard_timings_found == expected_standard_timings_count);
     }
 
@@ -129,7 +125,7 @@ TEST_CASE(edid1)
         };
         static constexpr size_t expected_detailed_timings_count = sizeof(expected_detailed_timings) / sizeof(expected_detailed_timings[0]);
         size_t detailed_timings_found = 0;
-        auto result = edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
+        auto result = TRY_OR_FAIL(edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
             EXPECT(detailed_timings_found < expected_detailed_timings_count);
             auto& expected_timings = expected_detailed_timings[detailed_timings_found];
             EXPECT(block_id == expected_timings.block_id);
@@ -138,9 +134,8 @@ TEST_CASE(edid1)
             EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(detailed_timings_found == expected_detailed_timings_count);
     }
 
@@ -148,31 +143,29 @@ TEST_CASE(edid1)
         static constexpr u8 expected_vic_ids[] = { 125, 101, 96, 89, 31 };
         static constexpr size_t expected_vic_ids_count = sizeof(expected_vic_ids) / sizeof(expected_vic_ids[0]);
         size_t vic_ids_found = 0;
-        auto result = edid.for_each_short_video_descriptor([&](unsigned block_id, bool is_native, EDID::VIC::Details const& vic) {
+        auto result = TRY_OR_FAIL(edid.for_each_short_video_descriptor([&](unsigned block_id, bool is_native, EDID::VIC::Details const& vic) {
             EXPECT(vic_ids_found < expected_vic_ids_count);
             EXPECT(block_id == 1);
             EXPECT(!is_native); // none are marked as native
             EXPECT(vic.vic_id == expected_vic_ids[vic_ids_found]);
             vic_ids_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(vic_ids_found == expected_vic_ids_count);
     }
 
     {
         // This edid has one CEA861 extension block only
         size_t extension_blocks_found = 0;
-        auto result = edid.for_each_extension_block([&](unsigned block_id, u8 tag, u8 revision, ReadonlyBytes) {
+        auto result = TRY_OR_FAIL(edid.for_each_extension_block([&](unsigned block_id, u8 tag, u8 revision, ReadonlyBytes) {
             EXPECT(block_id == 1);
             EXPECT(tag == 0x2);
             EXPECT(revision == 3);
             extension_blocks_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(extension_blocks_found == 1);
     }
 }
@@ -204,9 +197,7 @@ static const u8 edid2_bin[] = {
 
 TEST_CASE(edid2)
 {
-    auto edid_load_result = EDID::Parser::from_bytes({ edid2_bin, sizeof(edid2_bin) });
-    EXPECT(!edid_load_result.is_error());
-    auto edid = edid_load_result.release_value();
+    auto edid = TRY_OR_FAIL(EDID::Parser::from_bytes({ edid2_bin, sizeof(edid2_bin) }));
     EXPECT(edid.legacy_manufacturer_id() == "ACR");
     EXPECT(edid.serial_number() == 1234567890);
     auto digital_interface = edid.digital_display();
@@ -256,7 +247,7 @@ TEST_CASE(edid2)
         };
         static constexpr size_t expected_established_timings_count = sizeof(expected_established_timings) / sizeof(expected_established_timings[0]);
         size_t established_timings_found = 0;
-        auto result = edid.for_each_established_timing([&](auto& established_timings) {
+        auto result = TRY_OR_FAIL(edid.for_each_established_timing([&](auto& established_timings) {
             EXPECT(established_timings_found < expected_established_timings_count);
             auto& expected_timings = expected_established_timings[established_timings_found];
             EXPECT(established_timings.width() == expected_timings.width);
@@ -266,9 +257,8 @@ TEST_CASE(edid2)
             EXPECT(established_timings.dmt_id() == expected_timings.dmt_id);
             established_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(established_timings_found == expected_established_timings_count);
     }
 
@@ -288,7 +278,7 @@ TEST_CASE(edid2)
         };
         static constexpr size_t expected_standard_timings_count = sizeof(expected_standard_established_timings) / sizeof(expected_standard_established_timings[0]);
         size_t standard_timings_found = 0;
-        auto result = edid.for_each_standard_timing([&](auto& standard_timings) {
+        auto result = TRY_OR_FAIL(edid.for_each_standard_timing([&](auto& standard_timings) {
             EXPECT(standard_timings_found < expected_standard_timings_count);
             auto& expected_timings = expected_standard_established_timings[standard_timings_found];
             EXPECT(standard_timings.dmt_id() == expected_timings.dmt_id);
@@ -297,9 +287,8 @@ TEST_CASE(edid2)
             EXPECT(standard_timings.refresh_rate() == expected_timings.refresh_rate);
             standard_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(standard_timings_found == expected_standard_timings_count);
     }
 
@@ -318,7 +307,7 @@ TEST_CASE(edid2)
         };
         static constexpr size_t expected_detailed_timings_count = sizeof(expected_detailed_timings) / sizeof(expected_detailed_timings[0]);
         size_t detailed_timings_found = 0;
-        auto result = edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
+        auto result = TRY_OR_FAIL(edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
             EXPECT(detailed_timings_found < expected_detailed_timings_count);
             auto& expected_timings = expected_detailed_timings[detailed_timings_found];
             EXPECT(block_id == expected_timings.block_id);
@@ -327,9 +316,8 @@ TEST_CASE(edid2)
             EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(detailed_timings_found == expected_detailed_timings_count);
     }
 
@@ -337,31 +325,29 @@ TEST_CASE(edid2)
         static constexpr u8 expected_vic_ids[] = { 18, 19, 4, 31, 16, 20, 5, 1, 17, 2, 3, 74 };
         static constexpr size_t expected_vic_ids_count = sizeof(expected_vic_ids) / sizeof(expected_vic_ids[0]);
         size_t vic_ids_found = 0;
-        auto result = edid.for_each_short_video_descriptor([&](unsigned block_id, bool is_native, EDID::VIC::Details const& vic) {
+        auto result = TRY_OR_FAIL(edid.for_each_short_video_descriptor([&](unsigned block_id, bool is_native, EDID::VIC::Details const& vic) {
             EXPECT(vic_ids_found < expected_vic_ids_count);
             EXPECT(block_id == 1);
             EXPECT(is_native == (vic_ids_found == 4)); // the 5th value is marked native
             EXPECT(vic.vic_id == expected_vic_ids[vic_ids_found]);
             vic_ids_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(vic_ids_found == expected_vic_ids_count);
     }
 
     {
         // This edid has one CEA861 extension block only
         size_t extension_blocks_found = 0;
-        auto result = edid.for_each_extension_block([&](unsigned block_id, u8 tag, u8 revision, ReadonlyBytes) {
+        auto result = TRY_OR_FAIL(edid.for_each_extension_block([&](unsigned block_id, u8 tag, u8 revision, ReadonlyBytes) {
             EXPECT(block_id == 1);
             EXPECT(tag == 0x2);
             EXPECT(revision == 3);
             extension_blocks_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(extension_blocks_found == 1);
     }
 }
@@ -415,9 +401,7 @@ static const u8 edid_extension_maps[] = {
 
 TEST_CASE(edid_extension_maps)
 {
-    auto edid_load_result = EDID::Parser::from_bytes({ edid_extension_maps, sizeof(edid_extension_maps) });
-    EXPECT(!edid_load_result.is_error());
-    auto edid = edid_load_result.release_value();
+    auto edid = TRY_OR_FAIL(EDID::Parser::from_bytes({ edid_extension_maps, sizeof(edid_extension_maps) }));
     EXPECT(edid.legacy_manufacturer_id() == "SII");
 
     {
@@ -440,7 +424,7 @@ TEST_CASE(edid_extension_maps)
         };
         static constexpr size_t expected_detailed_timings_count = sizeof(expected_detailed_timings) / sizeof(expected_detailed_timings[0]);
         size_t detailed_timings_found = 0;
-        auto result = edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
+        auto result = TRY_OR_FAIL(edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
             EXPECT(detailed_timings_found < expected_detailed_timings_count);
             auto& expected_timings = expected_detailed_timings[detailed_timings_found];
             EXPECT(block_id == expected_timings.block_id);
@@ -449,9 +433,8 @@ TEST_CASE(edid_extension_maps)
             EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(detailed_timings_found == expected_detailed_timings_count);
     }
 }
@@ -472,9 +455,7 @@ static const u8 edid_1_0[] = {
 
 TEST_CASE(edid_1_0)
 {
-    auto edid_load_result = EDID::Parser::from_bytes({ edid_1_0, sizeof(edid_1_0) });
-    EXPECT(!edid_load_result.is_error());
-    auto edid = edid_load_result.release_value();
+    auto edid = TRY_OR_FAIL(EDID::Parser::from_bytes({ edid_1_0, sizeof(edid_1_0) }));
     EXPECT(edid.legacy_manufacturer_id() == "MAX");
     EXPECT(edid.serial_number() == 123);
 
@@ -492,7 +473,7 @@ TEST_CASE(edid_1_0)
         };
         static constexpr size_t expected_detailed_timings_count = sizeof(expected_detailed_timings) / sizeof(expected_detailed_timings[0]);
         size_t detailed_timings_found = 0;
-        auto result = edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
+        auto result = TRY_OR_FAIL(edid.for_each_detailed_timing([&](auto& detailed_timing, unsigned block_id) {
             EXPECT(detailed_timings_found < expected_detailed_timings_count);
             auto& expected_timings = expected_detailed_timings[detailed_timings_found];
             EXPECT(block_id == expected_timings.block_id);
@@ -501,9 +482,8 @@ TEST_CASE(edid_1_0)
             EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
-        });
-        EXPECT(!result.is_error());
-        EXPECT(result.value() == IterationDecision::Continue);
+        }));
+        EXPECT(result == IterationDecision::Continue);
         EXPECT(detailed_timings_found == expected_detailed_timings_count);
     }
 }

@@ -688,7 +688,6 @@ TEST_CASE(add)
         SQL::Value value2 { 42 };
 
         auto result = value1.add(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 63);
     }
@@ -697,7 +696,6 @@ TEST_CASE(add)
         SQL::Value value2 { static_cast<u8>(42) };
 
         auto result = value1.add(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 63);
     }
@@ -706,7 +704,6 @@ TEST_CASE(add)
         SQL::Value value2 { 42 };
 
         auto result = value1.add(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 63);
     }
@@ -715,7 +712,6 @@ TEST_CASE(add)
         SQL::Value value2 { 42 };
 
         auto result = value1.add(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 63);
     }
@@ -724,7 +720,6 @@ TEST_CASE(add)
         SQL::Value value2 { 42 };
 
         auto result = value1.add(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Float);
         EXPECT((result.value().to_double().value() - 63.5) < NumericLimits<double>().epsilon());
     }
@@ -777,7 +772,6 @@ TEST_CASE(subtract)
         SQL::Value value2 { 42 };
 
         auto result = value1.subtract(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), -21);
     }
@@ -786,7 +780,6 @@ TEST_CASE(subtract)
         SQL::Value value2 { static_cast<u8>(42) };
 
         auto result = value1.subtract(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), -21);
     }
@@ -795,7 +788,6 @@ TEST_CASE(subtract)
         SQL::Value value2 { 21 };
 
         auto result = value1.subtract(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 21);
     }
@@ -804,7 +796,6 @@ TEST_CASE(subtract)
         SQL::Value value2 { 42 };
 
         auto result = value1.subtract(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), -21);
     }
@@ -813,7 +804,6 @@ TEST_CASE(subtract)
         SQL::Value value2 { 42 };
 
         auto result = value1.subtract(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Float);
         EXPECT((result.value().to_double().value() - 20.5) < NumericLimits<double>().epsilon());
     }
@@ -866,7 +856,6 @@ TEST_CASE(multiply)
         SQL::Value value2 { 21 };
 
         auto result = value1.multiply(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 42);
     }
@@ -875,7 +864,6 @@ TEST_CASE(multiply)
         SQL::Value value2 { static_cast<u8>(21) };
 
         auto result = value1.multiply(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 42);
     }
@@ -884,7 +872,6 @@ TEST_CASE(multiply)
         SQL::Value value2 { 21 };
 
         auto result = value1.multiply(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 42);
     }
@@ -893,7 +880,6 @@ TEST_CASE(multiply)
         SQL::Value value2 { 21 };
 
         auto result = value1.multiply(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 42);
     }
@@ -902,7 +888,6 @@ TEST_CASE(multiply)
         SQL::Value value2 { 21 };
 
         auto result = value1.multiply(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Float);
         EXPECT((result.value().to_double().value() - 52.5) < NumericLimits<double>().epsilon());
     }
@@ -955,7 +940,6 @@ TEST_CASE(divide)
         SQL::Value value2 { -2 };
 
         auto result = value1.divide(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), -21);
     }
@@ -964,7 +948,6 @@ TEST_CASE(divide)
         SQL::Value value2 { static_cast<u8>(2) };
 
         auto result = value1.divide(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 21);
     }
@@ -973,7 +956,6 @@ TEST_CASE(divide)
         SQL::Value value2 { 2 };
 
         auto result = value1.divide(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 21);
     }
@@ -982,7 +964,6 @@ TEST_CASE(divide)
         SQL::Value value2 { 2 };
 
         auto result = value1.divide(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 21);
     }
@@ -991,7 +972,6 @@ TEST_CASE(divide)
         SQL::Value value2 { 2 };
 
         auto result = value1.divide(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Float);
         EXPECT((result.value().to_double().value() - 21.5) < NumericLimits<double>().epsilon());
     }
@@ -1026,7 +1006,6 @@ TEST_CASE(modulo)
         SQL::Value value2 { 2 };
 
         auto result = value1.modulo(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 1);
     }
@@ -1035,7 +1014,6 @@ TEST_CASE(modulo)
         SQL::Value value2 { static_cast<u8>(2) };
 
         auto result = value1.modulo(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 1);
     }
@@ -1044,7 +1022,6 @@ TEST_CASE(modulo)
         SQL::Value value2 { 2 };
 
         auto result = value1.modulo(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 1);
     }
@@ -1053,7 +1030,6 @@ TEST_CASE(modulo)
         SQL::Value value2 { 2 };
 
         auto result = value1.modulo(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 1);
     }
@@ -1115,7 +1091,6 @@ TEST_CASE(shift_left)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_left(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b1100'0000);
     }
@@ -1124,7 +1099,6 @@ TEST_CASE(shift_left)
         SQL::Value value2 { static_cast<u8>(2) };
 
         auto result = value1.shift_left(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b1100'0000);
     }
@@ -1133,7 +1107,6 @@ TEST_CASE(shift_left)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_left(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b1100'0000);
     }
@@ -1142,7 +1115,6 @@ TEST_CASE(shift_left)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_left(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b1100'0000);
     }
@@ -1213,7 +1185,6 @@ TEST_CASE(shift_right)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_right(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b0000'1100);
     }
@@ -1222,7 +1193,6 @@ TEST_CASE(shift_right)
         SQL::Value value2 { static_cast<u8>(2) };
 
         auto result = value1.shift_right(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b0000'1100);
     }
@@ -1231,7 +1201,6 @@ TEST_CASE(shift_right)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_right(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b0000'1100);
     }
@@ -1240,7 +1209,6 @@ TEST_CASE(shift_right)
         SQL::Value value2 { 2 };
 
         auto result = value1.shift_right(value2);
-        EXPECT(!result.is_error());
         EXPECT_EQ(result.value().type(), SQL::SQLType::Integer);
         EXPECT_EQ(result.value(), 0b0000'1100);
     }
