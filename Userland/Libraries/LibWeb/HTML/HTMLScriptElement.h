@@ -58,6 +58,8 @@ public:
 private:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_script_element() const override { return true; }
+
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
 
@@ -123,4 +125,9 @@ private:
     size_t m_source_line_number { 1 };
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLScriptElement>() const { return is_html_script_element(); }
 }

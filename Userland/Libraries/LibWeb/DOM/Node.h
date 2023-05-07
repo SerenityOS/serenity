@@ -89,6 +89,7 @@ public:
     virtual bool is_html_body_element() const { return false; }
     virtual bool is_html_input_element() const { return false; }
     virtual bool is_html_progress_element() const { return false; }
+    virtual bool is_html_script_element() const { return false; }
     virtual bool is_html_template_element() const { return false; }
     virtual bool is_navigable_container() const { return false; }
 
