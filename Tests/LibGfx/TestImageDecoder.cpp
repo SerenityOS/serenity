@@ -156,6 +156,28 @@ TEST_CASE(test_jpeg_sof2_successive_aproximation)
     EXPECT_EQ(frame.image->size(), Gfx::IntSize(600, 800));
 }
 
+TEST_CASE(test_jpeg_sof1_12bits)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("12-bit.jpg"sv)));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(320, 240));
+}
+
+TEST_CASE(test_jpeg_sof2_12bits)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("12-bit-progressive.jpg"sv)));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(320, 240));
+}
+
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pbm"sv)));
