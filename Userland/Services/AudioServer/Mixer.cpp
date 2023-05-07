@@ -13,16 +13,14 @@
 #include <AudioServer/ConnectionFromClient.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Timer.h>
 #include <pthread.h>
 #include <sys/ioctl.h>
 
 namespace AudioServer {
 
-Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
-    // FIXME: Allow AudioServer to use other audio channels as well
-    : m_device(Core::DeprecatedFile::construct("/dev/audio/0", this))
+Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> device)
+    : m_device(move(device))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
               mix();
@@ -31,11 +29,6 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
           "AudioServer[mixer]"sv))
     , m_config(move(config))
 {
-    if (!m_device->open(Core::OpenMode::WriteOnly)) {
-        dbgln("Can't open audio device: {}", m_device->error_string());
-        return;
-    }
-
     m_muted = m_config->read_bool_entry("Master", "Mute", false);
     m_main_volume = static_cast<double>(m_config->read_num_entry("Master", "Volume", 100)) / 100.0;
 
@@ -98,7 +91,7 @@ void Mixer::mix()
 
         // Even though it's not realistic, the user expects no sound at 0%.
         if (m_muted || m_main_volume < 0.01) {
-            m_device->write(m_zero_filled_buffer.data(), static_cast<int>(m_zero_filled_buffer.size()));
+            m_device->write_until_depleted(m_zero_filled_buffer).release_value_but_fixme_should_propagate_errors();
         } else {
             FixedMemoryStream stream { m_stream_buffer.span() };
 
@@ -116,7 +109,8 @@ void Mixer::mix()
 
             auto buffered_bytes = MUST(stream.tell());
             VERIFY(buffered_bytes == m_stream_buffer.size());
-            m_device->write(m_stream_buffer.data(), static_cast<int>(buffered_bytes));
+            m_device->write_until_depleted({ m_stream_buffer.data(), buffered_bytes })
+                .release_value_but_fixme_should_propagate_errors();
         }
     }
 }
