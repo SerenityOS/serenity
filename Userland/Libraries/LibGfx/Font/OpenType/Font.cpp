@@ -676,15 +676,30 @@ Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y
 
 float Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const
 {
-    if (m_gpos.has_value()) {
-        auto kerning = m_gpos->glyph_kerning(left_glyph_id, right_glyph_id);
-        if (kerning.has_value())
-            return kerning.value() * x_scale;
+    if (!m_gpos.has_value() && !m_kern.has_value())
+        return 0.0f;
+
+    // NOTE: OpenType glyph IDs are 16-bit, so this is safe.
+    auto cache_key = (left_glyph_id << 16) | right_glyph_id;
+    if (auto it = m_kerning_cache.find(cache_key); it != m_kerning_cache.end()) {
+        return it->value * x_scale;
     }
 
-    if (m_kern.has_value())
-        return m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
+    if (m_gpos.has_value()) {
+        auto kerning = m_gpos->glyph_kerning(left_glyph_id, right_glyph_id);
+        if (kerning.has_value()) {
+            m_kerning_cache.set(cache_key, kerning.value());
+            return kerning.value() * x_scale;
+        }
+    }
 
+    if (m_kern.has_value()) {
+        auto kerning = m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
+        m_kerning_cache.set(cache_key, kerning);
+        return kerning;
+    }
+
+    m_kerning_cache.set(cache_key, 0);
     return 0.0f;
 }
 
