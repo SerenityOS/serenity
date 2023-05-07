@@ -629,7 +629,7 @@ WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLo
 
 WebPImageDecoderPlugin::~WebPImageDecoderPlugin() = default;
 
-bool WebPImageDecoderPlugin::set_error(ErrorOr<void>&& error_or)
+bool WebPImageDecoderPlugin::set_error(ErrorOr<void> const& error_or)
 {
     if (error_or.is_error()) {
         m_context->state = WebPLoadingContext::State::Error;
@@ -664,9 +664,11 @@ bool WebPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool WebPImageDecoderPlugin::initialize()
+ErrorOr<void> WebPImageDecoderPlugin::initialize()
 {
-    return !set_error(decode_webp_header(*m_context));
+    auto header_okay_or_error = decode_webp_header(*m_context);
+    set_error(header_okay_or_error);
+    return header_okay_or_error;
 }
 
 bool WebPImageDecoderPlugin::sniff(ReadonlyBytes data)

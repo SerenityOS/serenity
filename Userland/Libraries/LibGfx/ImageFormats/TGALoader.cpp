@@ -219,9 +219,11 @@ bool TGAImageDecoderPlugin::decode_tga_header()
     return true;
 }
 
-bool TGAImageDecoderPlugin::initialize()
+ErrorOr<void> TGAImageDecoderPlugin::initialize()
 {
-    return decode_tga_header();
+    if (decode_tga_header())
+        return {};
+    return Error::from_string_literal("Bad TGA header");
 }
 
 ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)

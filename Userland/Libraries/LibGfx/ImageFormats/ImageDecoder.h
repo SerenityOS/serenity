@@ -34,7 +34,7 @@ public:
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;
 
-    virtual bool initialize() = 0;
+    virtual ErrorOr<void> initialize() = 0;
 
     virtual bool is_animated() = 0;
     virtual size_t loop_count() = 0;

@@ -1887,9 +1887,9 @@ bool JPEGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool JPEGImageDecoderPlugin::initialize()
+ErrorOr<void> JPEGImageDecoderPlugin::initialize()
 {
-    return true;
+    return {};
 }
 
 bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)

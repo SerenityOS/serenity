@@ -16,7 +16,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     if (decoder_or_error.is_error())
         return 0;
     auto decoder = decoder_or_error.release_value();
-    decoder->initialize();
+    if (decoder->initialize().is_error()) {
+        return 0;
+    }
     auto& gif_decoder = *decoder;
     auto bitmap_or_error = decoder->frame(0);
     if (!bitmap_or_error.is_error()) {

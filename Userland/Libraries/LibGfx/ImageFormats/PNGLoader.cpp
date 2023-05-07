@@ -1322,9 +1322,11 @@ bool PNGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool PNGImageDecoderPlugin::initialize()
+ErrorOr<void> PNGImageDecoderPlugin::initialize()
 {
-    return decode_png_header(*m_context);
+    if (decode_png_header(*m_context))
+        return {};
+    return Error::from_string_literal("bad image header");
 }
 
 bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)

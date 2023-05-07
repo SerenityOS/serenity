@@ -195,9 +195,9 @@ bool QOIImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool QOIImageDecoderPlugin::initialize()
+ErrorOr<void> QOIImageDecoderPlugin::initialize()
 {
-    return !decode_header_and_update_context(*m_context->stream).is_error();
+    return decode_header_and_update_context(*m_context->stream);
 }
 
 bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
