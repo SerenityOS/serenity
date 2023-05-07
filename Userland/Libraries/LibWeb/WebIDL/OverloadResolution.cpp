@@ -60,8 +60,10 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
     // 2. Let n be the size of args.
     // 3. Initialize argcount to be min(maxarg, n).
     // 4. Remove from S all entries whose type list is not of length argcount.
-    // NOTE: Our caller already performs these steps, so our effective overload set only contains overloads with the correct number of arguments.
-    int argument_count = vm.argument_count();
+    // NOTE: The IDL-generated callers already only provide an overload set containing overloads with the correct number
+    //       of arguments. Therefore, we do not need to remove any entry from that set here. However, we do need to handle
+    //       when the number of user-provided arguments exceeds the overload set's argument count.
+    int argument_count = min(vm.argument_count(), overloads.is_empty() ? 0 : overloads.items()[0].types.size());
 
     // 5. If S is empty, then throw a TypeError.
     if (overloads.is_empty())
