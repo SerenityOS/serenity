@@ -143,11 +143,6 @@ bool DeprecatedFile::is_link() const
     return S_ISLNK(stat.st_mode);
 }
 
-bool DeprecatedFile::looks_like_shared_library() const
-{
-    return m_filename.ends_with(".so"sv) || m_filename.contains(".so."sv);
-}
-
 DeprecatedString DeprecatedFile::real_path_for(DeprecatedString const& filename)
 {
     if (filename.is_null())

@@ -25,14 +25,12 @@ public:
     static ErrorOr<NonnullRefPtr<DeprecatedFile>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
 
     DeprecatedString filename() const { return m_filename; }
-    void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
 
     bool is_directory() const;
     bool is_device() const;
     bool is_block_device() const;
     bool is_char_device() const;
     bool is_link() const;
-    bool looks_like_shared_library() const;
 
     static DeprecatedString current_working_directory();
     static DeprecatedString absolute_path(DeprecatedString const& path);
