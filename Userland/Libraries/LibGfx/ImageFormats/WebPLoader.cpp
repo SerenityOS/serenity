@@ -309,7 +309,6 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L(WebPLoadingContext&
 {
     VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
     VERIFY(vp8l_chunk.type == FourCC("VP8L"));
-
     auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(vp8l_chunk.data));
     return decode_webp_chunk_VP8L_contents(vp8l_header);
 }

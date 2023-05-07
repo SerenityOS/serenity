@@ -19,7 +19,9 @@ struct VP8LHeader {
     ReadonlyBytes lossless_data;
 };
 
+// Parses the header data in a VP8L chunk. Pass the payload of a `VP8L` chunk, after the tag and after the tag's data size.
 ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data);
-ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const& vp8l_header);
+
+ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&);
 
 }
