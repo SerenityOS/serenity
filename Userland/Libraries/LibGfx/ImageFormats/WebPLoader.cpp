@@ -421,7 +421,7 @@ private:
 }
 
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#621_decoding_and_building_the_prefix_codes
-static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, size_t alphabet_size)
+static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(LittleEndianInputBitStream& bit_stream, size_t alphabet_size)
 {
     // prefix-code           =  simple-prefix-code / normal-prefix-code
     bool is_simple_code_length_code = TRY(bit_stream.read_bits(1));
@@ -460,7 +460,7 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
 
     // "If num_code_lengths is > 19, the bit_stream is invalid. [AMENDED3]"
     if (num_code_lengths > 19)
-        return context.error("WebPImageDecoderPlugin: invalid num_code_lengths");
+        return Error::from_string_literal("WebPImageDecoderPlugin: invalid num_code_lengths");
 
     constexpr int kCodeLengthCodes = 19;
     int kCodeLengthCodeOrder[kCodeLengthCodes] = { 17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -481,7 +481,7 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
         max_symbol = 2 + TRY(bit_stream.read_bits(length_nbits));
         dbgln_if(WEBP_DEBUG, "  extended, length_nbits {} max_symbol {}", length_nbits, max_symbol);
         if (max_symbol > alphabet_size)
-            return context.error("WebPImageDecoderPlugin: invalid max_symbol");
+            return Error::from_string_literal("WebPImageDecoderPlugin: invalid max_symbol");
     }
 
     auto const code_length_code = TRY(CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
@@ -534,7 +534,7 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#622_decoding_of_meta_prefix_codes
 // The description of prefix code groups is in "Decoding of Meta Prefix Codes", even though prefix code groups are used
 // in regular images without meta prefix code as well ¯\_(ツ)_/¯.
-static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoadingContext& context, u16 color_cache_size, LittleEndianInputBitStream& bit_stream)
+static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(u16 color_cache_size, LittleEndianInputBitStream& bit_stream)
 {
     // prefix-code-group     =
     //     5prefix-code ; See "Interpretation of Meta Prefix Codes" to
@@ -549,7 +549,7 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoa
 
     PrefixCodeGroup group;
     for (size_t i = 0; i < alphabet_sizes.size(); ++i)
-        group[i] = TRY(decode_webp_chunk_VP8L_prefix_code(context, bit_stream, alphabet_sizes[i]));
+        group[i] = TRY(decode_webp_chunk_VP8L_prefix_code(bit_stream, alphabet_sizes[i]));
     return group;
 }
 
@@ -632,7 +632,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
     Vector<PrefixCodeGroup, 1> groups;
     for (int i = 0; i < num_prefix_groups; ++i)
-        TRY(groups.try_append(TRY(decode_webp_chunk_VP8L_prefix_code_group(context, color_cache_size, bit_stream))));
+        TRY(groups.try_append(TRY(decode_webp_chunk_VP8L_prefix_code_group(color_cache_size, bit_stream))));
 
     auto bitmap = TRY(Bitmap::create(format, size));
 
