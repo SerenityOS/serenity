@@ -48,6 +48,7 @@ set(SOURCES
     ImageFormats/QOIWriter.cpp
     ImageFormats/TGALoader.cpp
     ImageFormats/WebPLoader.cpp
+    ImageFormats/WebPLoaderLossless.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
