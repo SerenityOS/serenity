@@ -30,7 +30,7 @@ that can then be provided to the queue. The application might need to wait aroun
 write to it. For these reasons, there's a utility API in LibAudio's audio server IPC connection which allows audio
 applications to send off a large chunk of samples which get progressively sent in the background.
 
-On the server -> client side, AudioServer has "event" calls that the client receives. These are various mixer state changes (main volume, main mute, client volume).
+On the server → client side, AudioServer has "event" calls that the client receives. These are various mixer state changes (main volume, main mute, client volume).
 
 ### Libraries
 
