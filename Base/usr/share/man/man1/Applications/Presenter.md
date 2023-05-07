@@ -12,11 +12,11 @@ $ Presenter [file]
 
 ## Description
 
-Presenter is a simple slide presentation software, capable of displaying presentations stored in a simple format. It provides a simple user interface and experience that is specifically aimed at "getting out of the way" while you are giving the presentation to a live audience.
+Presenter is a simple slide presentation application, capable of displaying presentations stored in a simple format. It provides a simple user interface and experience that is specifically aimed at "getting out of the way" while you are giving the presentation to a live audience.
 
 ### Opening Files
 
-Use **File -> Open...** to open a presentation in Presenter, or specify it on the command line (see [Synopsis](#synopsis)). The file format currently understood by Presenter is based on JSON and explained in [presenter(5)](help://man/5/presenter).
+Use `File → Open…` to open a presentation in Presenter, or specify it on the command line (see [Synopsis](#synopsis)). The file format currently understood by Presenter is based on JSON and explained in [presenter(5)](help://man/5/presenter).
 
 ### Terminology
 

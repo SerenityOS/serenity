@@ -16,7 +16,7 @@ Terminal is a terminal emulator application for Serenity.
 
 It will generally be launched from Serenity menu, an on-screen menu, or the `Open in Terminal` action in File Manager and on the Desktop. You can also launch the current help item from within the help document, click on the `Open` link above to launch Terminal.
 
-Selecting `File->Terminal Settings` will launch Terminal Settings dialog and display user configurable application properties. This dialog box contains two tabs namely Terminal tab and View tab.
+Selecting `File → Terminal Settings` will launch Terminal Settings dialog and display user configurable application properties. This dialog box contains two tabs namely Terminal tab and View tab.
 
 The _Settings Terminal_ tab shows the option to either enable System beep, or use Visual bell or disable bell altogether. It can also enable or disable the display of terminal scrollbar and to change its exit behavior.
 
