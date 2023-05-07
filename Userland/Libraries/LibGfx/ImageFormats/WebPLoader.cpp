@@ -316,15 +316,13 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(WebPLoadingContext& 
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
-static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(Chunk const& vp8l_chunk)
+static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(ReadonlyBytes vp8l_data)
 {
-    VERIFY(vp8l_chunk.type == FourCC("VP8L"));
-
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#3_riff_header
-    if (vp8l_chunk.data.size() < 5)
+    if (vp8l_data.size() < 5)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8L chunk too small");
 
-    FixedMemoryStream memory_stream { vp8l_chunk.data.trim(5) };
+    FixedMemoryStream memory_stream { vp8l_data.trim(5) };
     LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
 
     u8 signature = TRY(bit_stream.read_bits(8));
@@ -345,7 +343,7 @@ static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(Chunk const& vp8l_chunk
     if (version_number != 0)
         return Error::from_string_literal("WebPImageDecoderPlugin: VP8L chunk invalid version_number");
 
-    return VP8LHeader { width, height, is_alpha_used, vp8l_chunk.data.slice(5) };
+    return VP8LHeader { width, height, is_alpha_used, vp8l_data.slice(5) };
 }
 
 namespace {
@@ -1236,7 +1234,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L(WebPLoadingContext&
     VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
     VERIFY(vp8l_chunk.type == FourCC("VP8L"));
 
-    auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(vp8l_chunk));
+    auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(vp8l_chunk.data));
     return decode_webp_chunk_VP8L_contents(vp8l_header);
 }
 
@@ -1571,7 +1569,7 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
         return {};
     }
     if (context.first_chunk->type == FourCC("VP8L")) {
-        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk.value()));
+        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk->data));
         context.size = IntSize { vp8l_header.width, vp8l_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
