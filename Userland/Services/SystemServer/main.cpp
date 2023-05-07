@@ -13,10 +13,10 @@
 #include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <errno.h>
@@ -72,18 +72,19 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto f = Core::DeprecatedFile::construct("/sys/kernel/constants/system_mode");
-    if (!f->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Failed to read system_mode: {}", f->error_string());
+    auto file_or_error = Core::File::open("/sys/kernel/constants/system_mode"sv, Core::File::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        dbgln("Failed to read system_mode: {}", file_or_error.error());
         // Continue and assume "text" mode.
         return {};
     }
-    const DeprecatedString system_mode = DeprecatedString::copy(f->read_all(), Chomp);
-    if (f->error()) {
-        dbgln("Failed to read system_mode: {}", f->error_string());
+    auto const system_mode_buf_or_error = file_or_error.value()->read_until_eof();
+    if (system_mode_buf_or_error.is_error()) {
+        dbgln("Failed to read system_mode: {}", system_mode_buf_or_error.error());
         // Continue and assume "text" mode.
         return {};
     }
+    DeprecatedString const system_mode = DeprecatedString::copy(system_mode_buf_or_error.value(), Chomp);
 
     g_system_mode = system_mode;
     declare_text_mode_on_failure.disarm();
@@ -187,16 +188,33 @@ static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
     return {};
 }
 
+static ErrorOr<bool> read_one_or_eof(NonnullOwnPtr<Core::File>& file, DeviceEvent& event)
+{
+    auto const read_buf = TRY(file->read_some({ (u8*)&event, sizeof(DeviceEvent) }));
+    if (read_buf.size() == sizeof(DeviceEvent)) {
+        // Good! We could read another DeviceEvent.
+        return true;
+    }
+    if (file->is_eof()) {
+        // Good! We have reached the "natural" end of the file.
+        return false;
+    }
+    // Bad! Kernel and SystemServer apparently disagree on the record size,
+    // which means that previous data is likely to be invalid.
+    return Error::from_string_view("File ended after incomplete record? /dev/devctl seems broken!"sv);
+}
+
 static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
 {
-    auto f = Core::DeprecatedFile::construct("/dev/devctl");
-    if (!f->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open /dev/devctl - {}", f->error_string());
+    auto file_or_error = Core::File::open("/dev/devctl"sv, Core::File::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        warnln("Failed to open /dev/devctl - {}", file_or_error.error());
         VERIFY_NOT_REACHED();
     }
+    auto file = file_or_error.release_value();
 
     DeviceEvent event;
-    while (f->read((u8*)&event, sizeof(DeviceEvent)) > 0) {
+    while (TRY(read_one_or_eof(file, event))) {
         if (event.state != DeviceEvent::Inserted)
             continue;
         auto major_number = event.major_number;
