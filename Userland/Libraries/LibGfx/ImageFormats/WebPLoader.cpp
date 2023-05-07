@@ -107,8 +107,8 @@ struct ANMFChunk {
 //     A bitstream subchunk."
 struct ImageData {
     // "This optional chunk contains encoded alpha data for this frame. A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    Optional<Chunk> alpha_chunk;      // 'ALPH'
-    Optional<Chunk> image_data_chunk; // Either 'VP8 ' or 'VP8L'. For 'VP8L', alpha_chunk will not have a value.
+    Optional<Chunk> alpha_chunk; // 'ALPH'
+    Chunk image_data_chunk;      // Either 'VP8 ' or 'VP8L'. For 'VP8L', alpha_chunk will not have a value.
 };
 
 }
@@ -140,7 +140,8 @@ struct WebPLoadingContext {
     VP8XHeader vp8x_header;
 
     // If first_chunk is not a VP8X chunk, then only image_data.image_data_chunk is set and all the other Chunks are not set.
-    ImageData image_data;
+    // Once state is >= ChunksDecoded, for non-animated images, this will have a value, or decoding will have failed.
+    Optional<ImageData> image_data;
 
     Optional<Chunk> animation_header_chunk; // 'ANIM'
     Vector<Chunk> animation_frame_chunks;   // 'ANMF'
@@ -464,10 +465,27 @@ static ErrorOr<ANMFChunk> decode_webp_chunk_ANMF(WebPLoadingContext& context, Ch
     return ANMFChunk { frame_x, frame_y, frame_width, frame_height, frame_duration, blending_method, disposal_method, frame_data };
 }
 
+static ErrorOr<ImageData> decode_webp_set_image_data(WebPLoadingContext& context, Optional<Chunk> alpha, Optional<Chunk> image_data)
+{
+    if (!image_data.has_value())
+        return context.error("WebPImageDecoderPlugin: missing image data");
+
+    // https://developers.google.com/speed/webp/docs/riff_container#alpha
+    // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
+    if (alpha.has_value() && image_data->type == FourCC("VP8L")) {
+        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
+        alpha.clear();
+    }
+
+    return ImageData { move(alpha), image_data.value() };
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
 static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
     VERIFY(context.first_chunk->type == FourCC("VP8X"));
+
+    Optional<Chunk> alpha, image_data;
 
     // FIXME: This isn't quite to spec, which says
     // "All chunks SHOULD be placed in the same order as listed above.
@@ -482,7 +500,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         if (chunk.type == FourCC("ICCP"))
             store(context.iccp_chunk, chunk);
         else if (chunk.type == FourCC("ALPH"))
-            store(context.image_data.alpha_chunk, chunk);
+            store(alpha, chunk);
         else if (chunk.type == FourCC("ANIM"))
             store(context.animation_header_chunk, chunk);
         else if (chunk.type == FourCC("ANMF"))
@@ -492,7 +510,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         else if (chunk.type == FourCC("XMP "))
             store(context.xmp_chunk, chunk);
         else if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
-            store(context.image_data.image_data_chunk, chunk);
+            store(image_data, chunk);
     }
 
     // Validate chunks.
@@ -512,18 +530,17 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         context.animation_frame_chunks.clear();
     }
 
-    // https://developers.google.com/speed/webp/docs/riff_container#alpha
-    // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    if (context.image_data.alpha_chunk.has_value() && context.image_data.image_data_chunk.has_value() && context.image_data.image_data_chunk->type == FourCC("VP8L")) {
-        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
-        context.image_data.alpha_chunk.clear();
-    }
+    // Image data is not optional -- but the spec doesn't explicitly say that an animated image must have more than 0 frames.
+    // The spec also doesn't say that animated images must not contain a regular image data segment.
+    if (!context.vp8x_header.has_animation || image_data.has_value())
+        context.image_data = TRY(decode_webp_set_image_data(context, move(alpha), move(image_data)));
 
     // https://developers.google.com/speed/webp/docs/riff_container#color_profile
     // "This chunk MUST appear before the image data."
     if (context.iccp_chunk.has_value()
-        && ((context.image_data.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data.image_data_chunk->data.data())
-            || (context.image_data.alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data.alpha_chunk->data.data())
+        && ((context.image_data.has_value()
+                && (context.iccp_chunk->data.data() > context.image_data->image_data_chunk.data.data()
+                    || (context.image_data->alpha_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data->alpha_chunk->data.data())))
             || (!context.animation_frame_chunks.is_empty() && context.iccp_chunk->data.data() > context.animation_frame_chunks[0].data.data()))) {
         return context.error("WebPImageDecoderPlugin: ICCP chunk is after image data");
     }
@@ -550,7 +567,7 @@ static ErrorOr<void> read_webp_first_chunk(WebPLoadingContext& context)
     context.state = WebPLoadingContext::State::FirstChunkRead;
 
     if (first_chunk.type == FourCC("VP8 ") || first_chunk.type == FourCC("VP8L"))
-        context.image_data.image_data_chunk = first_chunk;
+        context.image_data = TRY(decode_webp_set_image_data(context, OptionalNone {}, first_chunk));
 
     return {};
 }
@@ -617,39 +634,28 @@ static ErrorOr<void> decode_webp_animation_frame_chunks(WebPLoadingContext& cont
 static ErrorOr<ImageData> decode_webp_animation_frame_image_data(WebPLoadingContext& context, ANMFChunk const& frame)
 {
     ReadonlyBytes chunks = frame.frame_data;
-
-    ImageData image_data;
-
     auto chunk = TRY(decode_webp_advance_chunk(context, chunks));
+
+    Optional<Chunk> alpha, image_data;
     if (chunk.type == FourCC("ALPH")) {
-        image_data.alpha_chunk = chunk;
+        alpha = chunk;
         chunk = TRY(decode_webp_advance_chunk(context, chunks));
     }
+    if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
+        image_data = chunk;
 
-    if (chunk.type != FourCC("VP8 ") && chunk.type != FourCC("VP8L"))
-        return context.error("WebPImageDecoderPlugin: no image data found in animation frame");
-
-    image_data.image_data_chunk = chunk;
-
-    // https://developers.google.com/speed/webp/docs/riff_container#alpha
-    // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
-    if (image_data.alpha_chunk.has_value() && image_data.image_data_chunk.has_value() && image_data.image_data_chunk->type == FourCC("VP8L")) {
-        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
-        image_data.alpha_chunk.clear();
-    }
-
-    return image_data;
+    return decode_webp_set_image_data(context, move(alpha), move(image_data));
 }
 
 static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext& context, ImageData const& image_data)
 {
-    if (image_data.image_data_chunk->type == FourCC("VP8L")) {
+    if (image_data.image_data_chunk.type == FourCC("VP8L")) {
         VERIFY(!image_data.alpha_chunk.has_value());
-        return decode_webp_chunk_VP8L(context, image_data.image_data_chunk.value());
+        return decode_webp_chunk_VP8L(context, image_data.image_data_chunk);
     }
 
-    VERIFY(image_data.image_data_chunk->type == FourCC("VP8 "));
-    auto bitmap = TRY(decode_webp_chunk_VP8(context, image_data.image_data_chunk.value()));
+    VERIFY(image_data.image_data_chunk.type == FourCC("VP8 "));
+    auto bitmap = TRY(decode_webp_chunk_VP8(context, image_data.image_data_chunk));
 
     if (image_data.alpha_chunk.has_value())
         TRY(decode_webp_chunk_ALPH(context, image_data.alpha_chunk.value(), *bitmap));
@@ -694,8 +700,6 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
         }
 
         auto frame_image_data = TRY(decode_webp_animation_frame_image_data(context, frame_description));
-        VERIFY(frame_image_data.image_data_chunk.has_value());
-
         auto frame_bitmap = TRY(decode_webp_image_data(context, frame_image_data));
         if (static_cast<u32>(frame_bitmap->width()) != frame_description.frame_width || static_cast<u32>(frame_bitmap->height()) != frame_description.frame_height)
             return context.error("WebPImageDecoderPlugin: decoded frame bitmap size doesn't match frame description size");
@@ -824,11 +828,8 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
         return decode_webp_animation_frame(*m_context, index);
     }
 
-    if (!m_context->image_data.image_data_chunk.has_value())
-        return m_context->error("WebPImageDecoderPlugin: Did not find image data chunk");
-
     if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
-        auto bitmap = TRY(decode_webp_image_data(*m_context, m_context->image_data));
+        auto bitmap = TRY(decode_webp_image_data(*m_context, m_context->image_data.value()));
 
         // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
         if (m_context->first_chunk->type == FourCC("VP8X")) {
