@@ -30,7 +30,7 @@ class StringData;
 }
 
 // FIXME: Remove this when Apple Clang and OpenBSD Clang fully supports consteval.
-#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD)
+#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || (defined(__clang__) && __clang_major__ < 15)
 #    define AK_SHORT_STRING_CONSTEVAL constexpr
 #else
 #    define AK_SHORT_STRING_CONSTEVAL consteval
