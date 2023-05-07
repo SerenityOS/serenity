@@ -72,6 +72,12 @@ Optional<Web::Platform::DecodedImage> ImageCodecPluginLadybird::decode_image(Rea
     auto image = decode_image_with_libgfx(data);
     if (image.has_value())
         return image;
+
+    // NOTE: Even though Qt can decode SVG images for us, let's not do that.
+    //       We should handle <img src="foo.svg"> ourselves instead of cheating by using Qt.
+    if (data.starts_with("<?xml"sv.bytes()) || data.starts_with("<svg"sv.bytes()))
+        return {};
+
     return decode_image_with_qt(data);
 }
 
