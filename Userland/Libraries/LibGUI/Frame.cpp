@@ -7,6 +7,7 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -60,7 +61,8 @@ void Frame::paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    Gfx::StylePainter::paint_frame(painter, rect(), palette(), m_style, spans_entire_window_horizontally());
+    bool skip_vertical_lines = window()->is_maximized() && spans_entire_window_horizontally();
+    Gfx::StylePainter::paint_frame(painter, rect(), palette(), m_style, skip_vertical_lines);
 }
 
 Gfx::IntRect Frame::children_clip_rect() const
