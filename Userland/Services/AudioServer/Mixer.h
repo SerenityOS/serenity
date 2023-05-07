@@ -16,6 +16,8 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibAudio/Queue.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibThreading/ConditionVariable.h>
 #include <LibThreading/Mutex.h>
@@ -102,8 +104,15 @@ private:
 };
 
 class Mixer : public Core::Object {
-    C_OBJECT(Mixer)
+    C_OBJECT_ABSTRACT(Mixer)
 public:
+    static ErrorOr<NonnullRefPtr<Mixer>> try_create(NonnullRefPtr<Core::ConfigFile> config)
+    {
+        // FIXME: Allow AudioServer to use other audio channels as well
+        auto device = TRY(Core::File::open("/dev/audio/0"sv, Core::File::OpenMode::Write));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) Mixer(move(config), move(device)));
+    }
+
     virtual ~Mixer() override = default;
 
     NonnullRefPtr<ClientAudioStream> create_queue(ConnectionFromClient&);
@@ -119,7 +128,7 @@ public:
     u32 audiodevice_get_sample_rate() const;
 
 private:
-    Mixer(NonnullRefPtr<Core::ConfigFile> config);
+    Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> device);
 
     void request_setting_sync();
 
@@ -127,7 +136,7 @@ private:
     Threading::Mutex m_pending_mutex;
     Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
 
-    RefPtr<Core::DeprecatedFile> m_device;
+    NonnullOwnPtr<Core::File> m_device;
 
     NonnullRefPtr<Threading::Thread> m_sound_thread;
 
