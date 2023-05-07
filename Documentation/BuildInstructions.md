@@ -38,7 +38,7 @@ you can build the recommended version of QEMU as provided by the toolchain by ru
 Note that you might need additional dev packages in order to build QEMU on your machine:
 
 ```console
-sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libspice-server-dev
+sudo apt install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev libspice-server-dev
 ```
 
 #### CMake version 3.25.0 or later
