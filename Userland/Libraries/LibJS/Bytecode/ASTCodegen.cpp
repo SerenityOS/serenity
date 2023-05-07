@@ -159,7 +159,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             });
         });
 
-        // 11. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviors that cause abnormal terminations in some of the following steps.
+        // 11. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
         // 12. NOTE: Annex B.3.2.2 adds additional steps at this point.
 
         // 12. Let strict be IsStrict of script.
