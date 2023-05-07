@@ -73,6 +73,7 @@
 #define JPEG_EOI 0xFFD9
 #define JPEG_DRI 0XFFDD
 #define JPEG_SOF0 0XFFC0
+#define JPEG_SOF1 0XFFC1
 #define JPEG_SOF2 0xFFC2
 #define JPEG_SOF15 0xFFCF
 #define JPEG_SOI 0XFFD8
@@ -783,6 +784,7 @@ static inline bool is_supported_marker(Marker const marker)
     case JPEG_DRI:
     case JPEG_EOI:
     case JPEG_SOF0:
+    case JPEG_SOF1:
     case JPEG_SOF2:
     case JPEG_SOI:
     case JPEG_SOS:
@@ -906,18 +908,22 @@ static ErrorOr<void> read_restart_interval(Stream& stream, JPEGLoadingContext& c
 
 static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& context)
 {
+    // B.2.4.2 - Huffman table-specification syntax
+
     u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     while (bytes_to_read > 0) {
         HuffmanTable table;
-        u8 table_info = TRY(stream.read_value<u8>());
-        u8 table_type = table_info >> 4;
-        u8 table_destination_id = table_info & 0x0F;
+        u8 const table_info = TRY(stream.read_value<u8>());
+        u8 const table_type = table_info >> 4;
+        u8 const table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
             dbgln_if(JPEG_DEBUG, "Unrecognized huffman table: {}!", table_type);
             return Error::from_string_literal("Unrecognized huffman table");
         }
-        if (table_destination_id > 1) {
+
+        if ((context.frame.type == StartOfFrame::FrameType::Baseline_DCT && table_destination_id > 1)
+            || (context.frame.type != StartOfFrame::FrameType::Baseline_DCT && table_destination_id > 3)) {
             dbgln_if(JPEG_DEBUG, "Invalid huffman table destination id: {}!", table_destination_id);
             return Error::from_string_literal("Invalid huffman table destination id");
         }
@@ -948,7 +954,6 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
-        VERIFY(huffman_table.size() <= 2);
 
         bytes_to_read -= 1 + 16 + total_codes;
     }
@@ -1124,6 +1129,18 @@ static inline void set_macroblock_metadata(JPEGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
+static ErrorOr<void> ensure_standard_precision(StartOfFrame const& frame)
+{
+    // B.2.2 - Frame header syntax
+    // Table B.2 - Frame header parameter sizes and values
+
+    if (frame.precision == 8)
+        return {};
+
+    dbgln_if(JPEG_DEBUG, "Unsupported precision: {}, for SOF type: {}!", frame.precision, static_cast<int>(frame.type));
+    return Error::from_string_literal("Unsupported SOF precision.");
+}
+
 static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& context)
 {
     if (context.state == JPEGLoadingContext::FrameDecoded) {
@@ -1134,10 +1151,8 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     context.frame.precision = TRY(stream.read_value<u8>());
-    if (context.frame.precision != 8) {
-        dbgln_if(JPEG_DEBUG, "SOF precision != 8!");
-        return Error::from_string_literal("SOF precision != 8");
-    }
+
+    TRY(ensure_standard_precision(context.frame));
 
     context.frame.height = TRY(stream.read_value<BigEndian<u16>>());
     context.frame.width = TRY(stream.read_value<BigEndian<u16>>());
@@ -1741,6 +1756,7 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
             dbgln_if(JPEG_DEBUG, "Unexpected marker {:x}!", marker);
             return Error::from_string_literal("Unexpected marker");
         case JPEG_SOF0:
+        case JPEG_SOF1:
         case JPEG_SOF2:
             TRY(read_start_of_frame(stream, context));
             context.state = JPEGLoadingContext::FrameDecoded;
