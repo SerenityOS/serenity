@@ -303,8 +303,16 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(WebPLoadingContext& 
 {
     VERIFY(vp8_chunk.type == FourCC("VP8 "));
 
+    // Uncomment this to test ALPH decoding for WebP-lossy-with-alpha images while lossy decoding isn't implemented yet.
+#if 0
+    auto vp8_header = TRY(decode_webp_chunk_VP8_header(context, vp8_chunk));
+
+    // FIXME: probably want to pass in the bitmap format based on if there's an ALPH chunk.
+    return Bitmap::create(BitmapFormat::BGRA8888, { vp8_header.width, vp8_header.height });
+#else
     // FIXME: Implement webp lossy decoding.
     return context.error("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+#endif
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
@@ -1300,6 +1308,41 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L(WebPLoadingContext&
     return bitmap;
 }
 
+// https://developers.google.com/speed/webp/docs/riff_container#alpha
+static ErrorOr<void> decode_webp_chunk_ALPH(WebPLoadingContext& context, Chunk const& alph_chunk, Bitmap& bitmap)
+{
+    VERIFY(alph_chunk.type == FourCC("ALPH"));
+
+    if (alph_chunk.data.size() < 1)
+        return context.error("WebPImageDecoderPlugin: ALPH chunk too small");
+
+    u8 flags = alph_chunk.data.data()[0];
+    u8 preprocessing = (flags >> 4) & 3;
+    u8 filtering_method = (flags >> 2) & 3;
+    u8 compression_method = flags & 3;
+
+    dbgln_if(WEBP_DEBUG, "preprocessing {} filtering_method {} compression_method {}", preprocessing, filtering_method, compression_method);
+
+    ReadonlyBytes alpha_data = alph_chunk.data.slice(1);
+
+    if (compression_method == 0) {
+        // "Raw data: consists of a byte sequence of length width * height, containing all the 8-bit transparency values in scan order."
+        size_t pixel_count = bitmap.width() * bitmap.height();
+        if (alpha_data.size() < pixel_count)
+            return context.error("WebPImageDecoderPlugin: uncompressed ALPH data too small");
+        for (size_t i = 0; i < pixel_count; ++i)
+            bitmap.begin()[i] |= alpha_data[i] << 24;
+        return {};
+    }
+
+    // "Lossless format compression: the byte sequence is a compressed image-stream (as described in the WebP Lossless Bitstream Format)
+    //  of implicit dimension width x height. That is, this image-stream does NOT contain any headers describing the image dimension.
+    //  Once the image-stream is decoded into ARGB color values, following the process described in the lossless format specification,
+    //  the transparency information must be extracted from the green channel of the ARGB quadruplet."
+    // FIXME
+    return context.error("WebPImageDecoderPlugin: compressed ALPH chunk processing not yet implemented");
+}
+
 static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
 {
     VERIFY(vp8x_chunk.type == FourCC("VP8X"));
@@ -1594,9 +1637,8 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext&
     VERIFY(image_data.image_data_chunk->type == FourCC("VP8 "));
     auto bitmap = TRY(decode_webp_chunk_VP8(context, image_data.image_data_chunk.value()));
 
-    if (image_data.alpha_chunk.has_value()) {
-        // FIXME: Decode alpha chunk and store decoded alpha in `bitmap`.
-    }
+    if (image_data.alpha_chunk.has_value())
+        TRY(decode_webp_chunk_ALPH(context, image_data.alpha_chunk.value(), *bitmap));
 
     return bitmap;
 }
