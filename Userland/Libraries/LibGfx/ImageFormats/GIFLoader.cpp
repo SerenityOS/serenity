@@ -562,10 +562,11 @@ bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->frame_buffer->set_nonvolatile(was_purged);
 }
 
-bool GIFImageDecoderPlugin::initialize()
+ErrorOr<void> GIFImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context->data, m_context->data_size } };
-    return !decode_gif_header(stream).is_error();
+    TRY(decode_gif_header(stream));
+    return {};
 }
 
 bool GIFImageDecoderPlugin::sniff(ReadonlyBytes data)

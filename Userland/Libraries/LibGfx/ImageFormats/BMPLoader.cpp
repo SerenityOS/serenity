@@ -1501,9 +1501,9 @@ bool BMPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool BMPImageDecoderPlugin::initialize()
+ErrorOr<void> BMPImageDecoderPlugin::initialize()
 {
-    return !decode_bmp_header(*m_context).is_error();
+    return decode_bmp_header(*m_context);
 }
 
 bool BMPImageDecoderPlugin::sniff(ReadonlyBytes data)

@@ -150,16 +150,14 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
     ICOImageDescriptor& desc = context.images[real_index];
     if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size })) {
         auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }));
-        if (png_decoder->initialize()) {
-            auto decoded_png_frame = TRY(png_decoder->frame(0));
-            if (!decoded_png_frame.image) {
-                dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
-                return Error::from_string_literal("Encoded image not null");
-            }
-            desc.bitmap = decoded_png_frame.image;
-            return {};
+        TRY(png_decoder->initialize());
+        auto decoded_png_frame = TRY(png_decoder->frame(0));
+        if (!decoded_png_frame.image) {
+            dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
+            return Error::from_string_literal("Encoded image not null");
         }
-        return Error::from_string_literal("Couldn't initialize PNG Decoder");
+        desc.bitmap = decoded_png_frame.image;
+        return {};
     } else {
         auto bmp_decoder = TRY(BMPImageDecoderPlugin::create_as_included_in_ico({}, { context.data + desc.offset, desc.size }));
         // NOTE: We don't initialize a BMP decoder in the usual way, but rather
@@ -230,10 +228,11 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->images[0].bitmap->set_nonvolatile(was_purged);
 }
 
-bool ICOImageDecoderPlugin::initialize()
+ErrorOr<void> ICOImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context->data, m_context->data_size } };
-    return !decode_ico_header(stream).is_error();
+    TRY(decode_ico_header(stream));
+    return {};
 }
 
 bool ICOImageDecoderPlugin::is_animated()

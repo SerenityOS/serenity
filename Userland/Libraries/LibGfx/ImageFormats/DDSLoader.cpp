@@ -645,14 +645,17 @@ bool DDSImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool DDSImageDecoderPlugin::initialize()
+ErrorOr<void> DDSImageDecoderPlugin::initialize()
 {
     // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.
-    return m_context->data_size > 128
+    if (m_context->data_size > 128
         && m_context->data[0] == 0x44
         && m_context->data[1] == 0x44
         && m_context->data[2] == 0x53
-        && m_context->data[3] == 0x20;
+        && m_context->data[3] == 0x20)
+        return {};
+
+    return Error::from_string_literal("Bad image magic");
 }
 
 bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)

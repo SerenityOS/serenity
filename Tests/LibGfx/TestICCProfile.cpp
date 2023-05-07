@@ -24,7 +24,7 @@ TEST_CASE(png)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc-v2.png"sv)));
     auto png = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
-    EXPECT(png->initialize());
+    MUST(png->initialize());
     auto icc_bytes = MUST(png->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -36,7 +36,7 @@ TEST_CASE(jpg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc-v4.jpg"sv)));
     auto jpg = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
-    EXPECT(jpg->initialize());
+    MUST(jpg->initialize());
     auto icc_bytes = MUST(jpg->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -48,7 +48,7 @@ TEST_CASE(webp_extended_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
-    EXPECT(webp->initialize());
+    MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
     EXPECT(icc_bytes.has_value());
 
@@ -60,7 +60,7 @@ TEST_CASE(webp_extended_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
-    EXPECT(webp->initialize());
+    MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
     EXPECT(icc_bytes.has_value());
 
