@@ -313,7 +313,7 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
     });
 
     m_layout_update_timer = Platform::Timer::create_single_shot(0, [this] {
-        force_layout();
+        update_layout();
     });
 }
 
