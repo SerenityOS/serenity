@@ -12,10 +12,7 @@ namespace {
 
 CircularBuffer create_circular_buffer(size_t size)
 {
-    auto buffer_or_error = CircularBuffer::create_empty(size);
-    EXPECT(!buffer_or_error.is_error());
-
-    return buffer_or_error.release_value();
+    return MUST(CircularBuffer::create_empty(size));
 }
 
 void safe_write(CircularBuffer& buffer, u8 i)
@@ -36,8 +33,7 @@ void safe_read(CircularBuffer& buffer, u8 supposed_result)
 
 void safe_discard(CircularBuffer& buffer, size_t size)
 {
-    auto result = buffer.discard(size);
-    EXPECT(!result.is_error());
+    TRY_OR_FAIL(buffer.discard(size));
 };
 
 }
@@ -177,13 +173,9 @@ TEST_CASE(full_write_non_aligned)
 TEST_CASE(create_from_bytebuffer)
 {
     u8 const source[] = { 2, 4, 6 };
-    auto byte_buffer_or_error = ByteBuffer::copy(source, AK::array_size(source));
-    EXPECT(!byte_buffer_or_error.is_error());
-    auto byte_buffer = byte_buffer_or_error.release_value();
+    auto byte_buffer = TRY_OR_FAIL(ByteBuffer::copy(source, AK::array_size(source)));
 
-    auto circular_buffer_or_error = CircularBuffer::create_initialized(move(byte_buffer));
-    EXPECT(!circular_buffer_or_error.is_error());
-    auto circular_buffer = circular_buffer_or_error.release_value();
+    auto circular_buffer = TRY_OR_FAIL(CircularBuffer::create_initialized(move(byte_buffer)));
     EXPECT_EQ(circular_buffer.used_space(), circular_buffer.capacity());
     EXPECT_EQ(circular_buffer.used_space(), 3ul);
 
@@ -247,13 +239,9 @@ TEST_CASE(discard_too_much)
 TEST_CASE(offset_of)
 {
     auto const source = "Well Hello Friends!"sv;
-    auto byte_buffer_or_error = ByteBuffer::copy(source.bytes());
-    EXPECT(!byte_buffer_or_error.is_error());
-    auto byte_buffer = byte_buffer_or_error.release_value();
+    auto byte_buffer = TRY_OR_FAIL(ByteBuffer::copy(source.bytes()));
 
-    auto circular_buffer_or_error = CircularBuffer::create_initialized(byte_buffer);
-    EXPECT(!circular_buffer_or_error.is_error());
-    auto circular_buffer = circular_buffer_or_error.release_value();
+    auto circular_buffer = TRY_OR_FAIL(CircularBuffer::create_initialized(byte_buffer));
 
     auto result = circular_buffer.offset_of("Well"sv);
     EXPECT(result.has_value());
@@ -283,13 +271,9 @@ TEST_CASE(offset_of)
 TEST_CASE(offset_of_with_until_and_after)
 {
     auto const source = "Well Hello Friends!"sv;
-    auto byte_buffer_or_error = ByteBuffer::copy(source.bytes());
-    EXPECT(!byte_buffer_or_error.is_error());
-    auto byte_buffer = byte_buffer_or_error.release_value();
+    auto byte_buffer = TRY_OR_FAIL(ByteBuffer::copy(source.bytes()));
 
-    auto circular_buffer_or_error = CircularBuffer::create_initialized(byte_buffer);
-    EXPECT(!circular_buffer_or_error.is_error());
-    auto circular_buffer = circular_buffer_or_error.release_value();
+    auto circular_buffer = TRY_OR_FAIL(CircularBuffer::create_initialized(byte_buffer));
 
     auto result = circular_buffer.offset_of("Well Hello Friends!"sv, 0, 19);
     EXPECT_EQ(result.value_or(42), 0ul);
@@ -317,13 +301,9 @@ TEST_CASE(offset_of_with_until_and_after)
 TEST_CASE(offset_of_with_until_and_after_wrapping_around)
 {
     auto const source = "Well Hello Friends!"sv;
-    auto byte_buffer_or_error = ByteBuffer::copy(source.bytes());
-    EXPECT(!byte_buffer_or_error.is_error());
-    auto byte_buffer = byte_buffer_or_error.release_value();
+    auto byte_buffer = TRY_OR_FAIL(ByteBuffer::copy(source.bytes()));
 
-    auto circular_buffer_or_error = CircularBuffer::create_empty(19);
-    EXPECT(!circular_buffer_or_error.is_error());
-    auto circular_buffer = circular_buffer_or_error.release_value();
+    auto circular_buffer = TRY_OR_FAIL(CircularBuffer::create_empty(19));
 
     auto written_bytes = circular_buffer.write(byte_buffer.span().trim(5));
     EXPECT_EQ(written_bytes, 5ul);

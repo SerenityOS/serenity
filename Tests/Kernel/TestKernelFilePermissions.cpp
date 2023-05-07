@@ -81,10 +81,9 @@ TEST_CASE(test_change_file_location)
     ftruncate(fd, 0);
     EXPECT(fchmod(fd, 06755) != -1);
 
-    auto suid_path_or_error = FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
-    EXPECT(!suid_path_or_error.is_error());
+    auto suid_path_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
 
-    auto suid_path = suid_path_or_error.release_value().to_deprecated_string();
+    auto suid_path = suid_path_string.to_deprecated_string();
     EXPECT(suid_path.characters());
     auto new_path = DeprecatedString::formatted("{}.renamed", suid_path);
 

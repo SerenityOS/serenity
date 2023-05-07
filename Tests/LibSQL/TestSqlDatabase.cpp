@@ -25,8 +25,7 @@ void commit(SQL::Database&);
 NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
 {
     auto schema = SQL::SchemaDef::construct("TestSchema");
-    auto maybe_error = db.add_schema(schema);
-    EXPECT(!maybe_error.is_error());
+    MUST(db.add_schema(schema));
     return schema;
 }
 
@@ -37,8 +36,7 @@ NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
     table->append_column("TextColumn", SQL::SQLType::Text);
     table->append_column("IntColumn", SQL::SQLType::Integer);
     EXPECT_EQ(table->num_columns(), 2u);
-    auto maybe_error = db.add_table(table);
-    EXPECT(!maybe_error.is_error());
+    MUST(db.add_table(table));
     return table;
 }
 
@@ -53,8 +51,7 @@ void insert_into_table(SQL::Database& db, int count)
 
         row["TextColumn"] = builder.to_deprecated_string();
         row["IntColumn"] = ix;
-        auto maybe_error = db.insert(row);
-        EXPECT(!maybe_error.is_error());
+        TRY_OR_FAIL(db.insert(row));
     }
 }
 
@@ -64,9 +61,8 @@ void verify_table_contents(SQL::Database& db, int expected_count)
 
     int sum = 0;
     int count = 0;
-    auto rows_or_error = db.select_all(*table);
-    EXPECT(!rows_or_error.is_error());
-    for (auto& row : rows_or_error.value()) {
+    auto rows = TRY_OR_FAIL(db.select_all(*table));
+    for (auto& row : rows) {
         StringBuilder builder;
         builder.appendff("Test{}", row["IntColumn"].to_int<i32>().value());
         EXPECT_EQ(row["TextColumn"].to_deprecated_string(), builder.to_deprecated_string());
@@ -79,8 +75,7 @@ void verify_table_contents(SQL::Database& db, int expected_count)
 
 void commit(SQL::Database& db)
 {
-    auto maybe_error = db.commit();
-    EXPECT(!maybe_error.is_error());
+    TRY_OR_FAIL(db.commit());
 }
 
 void insert_and_verify(int count)
@@ -88,19 +83,19 @@ void insert_and_verify(int count)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
         (void)setup_table(db);
         commit(db);
     }
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
         insert_into_table(db, count);
         commit(db);
     }
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
         verify_table_contents(db, count);
     }
 }
@@ -109,7 +104,7 @@ TEST_CASE(create_heap)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto heap = SQL::Heap::construct("/tmp/test.db");
-    EXPECT(!heap->open().is_error());
+    TRY_OR_FAIL(heap->open());
     EXPECT_EQ(heap->version(), SQL::Heap::VERSION);
 }
 
@@ -138,8 +133,7 @@ TEST_CASE(create_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto db = SQL::Database::construct("/tmp/test.db");
-    auto should_not_be_error = db->open();
-    EXPECT(!should_not_be_error.is_error());
+    MUST(db->open());
     commit(db);
 }
 
@@ -147,7 +141,7 @@ TEST_CASE(add_schema_to_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto db = SQL::Database::construct("/tmp/test.db");
-    EXPECT(!db->open().is_error());
+    MUST(db->open());
     (void)setup_schema(db);
     commit(db);
 }
@@ -157,15 +151,14 @@ TEST_CASE(get_schema_from_database)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
         (void)setup_schema(db);
         commit(db);
     }
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
-        auto schema_or_error = db->get_schema("TestSchema");
-        EXPECT(!schema_or_error.is_error());
+        MUST(db->open());
+        auto schema = MUST(db->get_schema("TestSchema"));
     }
 }
 
@@ -173,7 +166,7 @@ TEST_CASE(add_table_to_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     auto db = SQL::Database::construct("/tmp/test.db");
-    EXPECT(!db->open().is_error());
+    MUST(db->open());
     (void)setup_table(db);
     commit(db);
 }
@@ -183,13 +176,13 @@ TEST_CASE(get_table_from_database)
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
         (void)setup_table(db);
         commit(db);
     }
     {
         auto db = SQL::Database::construct("/tmp/test.db");
-        EXPECT(!db->open().is_error());
+        MUST(db->open());
 
         auto table = MUST(db->get_table("TestSchema", "TestTable"));
         EXPECT_EQ(table->name(), "TestTable");

@@ -89,11 +89,9 @@ TEST_CASE(gzip_round_trip)
 {
     auto original = ByteBuffer::create_uninitialized(1024).release_value();
     fill_with_random(original);
-    auto compressed = Compress::GzipCompressor::compress_all(original);
-    EXPECT(!compressed.is_error());
-    auto uncompressed = Compress::GzipDecompressor::decompress_all(compressed.value());
-    EXPECT(!uncompressed.is_error());
-    EXPECT(uncompressed.value() == original);
+    auto compressed = TRY_OR_FAIL(Compress::GzipCompressor::compress_all(original));
+    auto uncompressed = TRY_OR_FAIL(Compress::GzipDecompressor::decompress_all(compressed));
+    EXPECT(uncompressed == original);
 }
 
 TEST_CASE(gzip_truncated_uncompressed_block)

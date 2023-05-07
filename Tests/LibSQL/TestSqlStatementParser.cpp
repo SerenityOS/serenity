@@ -66,12 +66,7 @@ TEST_CASE(create_table)
     };
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, Vector<Column> expected_columns, bool expected_is_temporary = false, bool expected_is_error_if_table_exists = true) {
-        auto result = parse(sql);
-        if (result.is_error())
-            outln("{}: {}", sql, result.error());
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::CreateTable>(*statement));
 
         const auto& table = static_cast<const SQL::AST::CreateTable&>(*statement);
@@ -147,10 +142,7 @@ TEST_CASE(alter_table_rename_table)
     EXPECT(parse("ALTER TABLE table_name RENAME TO new_table"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_new_table) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::RenameTable>(*statement));
 
         const auto& alter = static_cast<const SQL::AST::RenameTable&>(*statement);
@@ -175,10 +167,7 @@ TEST_CASE(alter_table_rename_column)
     EXPECT(parse("ALTER TABLE table_name RENAME column_name TO new_column"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column, StringView expected_new_column) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::RenameColumn>(*statement));
 
         const auto& alter = static_cast<const SQL::AST::RenameColumn&>(*statement);
@@ -207,10 +196,7 @@ TEST_CASE(alter_table_add_column)
     };
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, Column expected_column) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::AddColumn>(*statement));
 
         const auto& alter = static_cast<const SQL::AST::AddColumn&>(*statement);
@@ -254,10 +240,7 @@ TEST_CASE(alter_table_drop_column)
     EXPECT(parse("ALTER TABLE table_name DROP COLUMN column_name"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::DropColumn>(*statement));
 
         const auto& alter = static_cast<const SQL::AST::DropColumn&>(*statement);
@@ -280,10 +263,7 @@ TEST_CASE(drop_table)
     EXPECT(parse("DROP TABLE IF test;"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, bool expected_is_error_if_table_does_not_exist = true) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::DropTable>(*statement));
 
         const auto& table = static_cast<const SQL::AST::DropTable&>(*statement);
@@ -321,10 +301,7 @@ TEST_CASE(insert)
     EXPECT(parse("INSERT OR foo INTO table_name DEFAULT VALUES;"sv).is_error());
 
     auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<StringView> expected_column_names, Vector<size_t> expected_chain_sizes, bool expect_select_statement) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Insert>(*statement));
 
         const auto& insert = static_cast<const SQL::AST::Insert&>(*statement);
@@ -417,10 +394,7 @@ TEST_CASE(update)
     EXPECT(parse("UPDATE OR foo table_name SET column_name=4;"sv).is_error());
 
     auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<DeprecatedString>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Update>(*statement));
 
         const auto& update = static_cast<const SQL::AST::Update&>(*statement);
@@ -514,10 +488,7 @@ TEST_CASE(delete_)
     EXPECT(parse("DELETE FROM table_name WHERE (');"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_alias, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Delete>(*statement));
 
         const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
@@ -613,10 +584,7 @@ TEST_CASE(select)
     };
 
     auto validate = [](StringView sql, Vector<Type> expected_columns, Vector<From> expected_from_list, bool expect_where_clause, size_t expected_group_by_size, bool expect_having_clause, Vector<Ordering> expected_ordering, bool expect_limit_clause, bool expect_offset_clause) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Select>(*statement));
 
         const auto& select = static_cast<const SQL::AST::Select&>(*statement);
@@ -752,10 +720,7 @@ TEST_CASE(common_table_expression)
     };
 
     auto validate = [](StringView sql, SelectedTableList expected_selected_tables) {
-        auto result = parse(sql);
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::Delete>(*statement));
 
         const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
@@ -807,12 +772,7 @@ TEST_CASE(describe_table)
     EXPECT(parse("DESCRIBE table_name;"sv).is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table) {
-        auto result = parse(sql);
-        if (result.is_error())
-            outln("{}: {}", sql, result.error());
-        EXPECT(!result.is_error());
-
-        auto statement = result.release_value();
+        auto statement = TRY_OR_FAIL(parse(sql));
         EXPECT(is<SQL::AST::DescribeTable>(*statement));
 
         const auto& describe_table_statement = static_cast<const SQL::AST::DescribeTable&>(*statement);

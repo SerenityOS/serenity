@@ -20,7 +20,7 @@ TEST_CASE(simple_enqueue)
 {
     auto queue = MUST(TestQueue::create());
     for (size_t i = 0; i < queue.size() - 1; ++i)
-        EXPECT(!queue.enqueue((int)i).is_error());
+        MUST(queue.enqueue((int)i));
 
     auto result = queue.enqueue(0);
     EXPECT(result.is_error());
@@ -34,9 +34,9 @@ TEST_CASE(simple_dequeue)
     for (int i = 0; i < test_count; ++i)
         (void)queue.enqueue(i);
     for (int i = 0; i < test_count; ++i) {
-        auto const element = queue.dequeue();
-        EXPECT(!element.is_error());
-        EXPECT_EQ(element.value(), i);
+        // TODO: This could be TRY_OR_FAIL(), if someone implements Formatter<SharedSingleProducerCircularQueue::QueueStatus>.
+        auto const element = MUST(queue.dequeue());
+        EXPECT_EQ(element, i);
     }
 }
 

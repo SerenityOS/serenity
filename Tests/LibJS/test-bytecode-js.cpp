@@ -12,33 +12,32 @@
 #include <LibJS/Script.h>
 #include <LibTest/TestCase.h>
 
-#define SETUP_AND_PARSE(source)                                                     \
-    auto vm = MUST(JS::VM::create());                                               \
-    auto ast_interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);          \
-                                                                                    \
-    auto script_or_error = JS::Script::parse(source##sv, ast_interpreter->realm()); \
-    EXPECT(!script_or_error.is_error());                                            \
-                                                                                    \
-    auto script = script_or_error.release_value();                                  \
-    auto const& program = script->parse_node();                                     \
+#define SETUP_AND_PARSE(source)                                                  \
+    auto vm = MUST(JS::VM::create());                                            \
+    auto ast_interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);       \
+                                                                                 \
+    auto script = MUST(JS::Script::parse(source##sv, ast_interpreter->realm())); \
+    auto const& program = script->parse_node();                                  \
     JS::Bytecode::Interpreter bytecode_interpreter(ast_interpreter->realm());
 
-#define EXPECT_NO_EXCEPTION(executable)                                 \
-    auto executable = MUST(JS::Bytecode::Generator::generate(program)); \
-    auto result = bytecode_interpreter.run(*executable);                \
-    EXPECT(!result.is_error());                                         \
-    if (result.is_error())                                              \
-        dbgln("Error: {}", MUST(result.throw_completion().value()->to_deprecated_string(vm)));
+#define EXPECT_NO_EXCEPTION(executable)                                                        \
+    auto executable = MUST(JS::Bytecode::Generator::generate(program));                        \
+    auto result = bytecode_interpreter.run(*executable);                                       \
+    if (result.is_error()) {                                                                   \
+        FAIL("unexpected exception");                                                          \
+        dbgln("Error: {}", MUST(result.throw_completion().value()->to_deprecated_string(vm))); \
+    }
 
-#define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                  \
-    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();      \
-    passes.perform(*executable);                                            \
-                                                                            \
-    auto result_with_optimizations = bytecode_interpreter.run(*executable); \
-                                                                            \
-    EXPECT(!result_with_optimizations.is_error());                          \
-    if (result_with_optimizations.is_error())                               \
-        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_deprecated_string(vm)));
+#define EXPECT_NO_EXCEPTION_WITH_OPTIMIZATIONS(executable)                                                        \
+    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();                                            \
+    passes.perform(*executable);                                                                                  \
+                                                                                                                  \
+    auto result_with_optimizations = bytecode_interpreter.run(*executable);                                       \
+                                                                                                                  \
+    if (result_with_optimizations.is_error()) {                                                                   \
+        FAIL("unexpected exception");                                                                             \
+        dbgln("Error: {}", MUST(result_with_optimizations.throw_completion().value()->to_deprecated_string(vm))); \
+    }
 
 #define EXPECT_NO_EXCEPTION_ALL(source)           \
     SETUP_AND_PARSE("(() => {\n" source "\n})()") \
@@ -111,15 +110,14 @@ TEST_CASE(loading_multiple_files)
     }
 
     {
-        auto test_file_script_or_error = JS::Script::parse("if (f() !== 'hello') throw new Exception('failed'); "sv, ast_interpreter->realm());
-        EXPECT(!test_file_script_or_error.is_error());
+        auto test_file_script = MUST(JS::Script::parse(
+            "if (f() !== 'hello') throw new Exception('failed'); "sv, ast_interpreter->realm()));
 
-        auto test_file_script = test_file_script_or_error.release_value();
         auto const& test_file_program = test_file_script->parse_node();
 
         auto executable = MUST(JS::Bytecode::Generator::generate(test_file_program));
-        auto result = bytecode_interpreter.run(*executable);
-        EXPECT(!result.is_error());
+        // TODO: This could be TRY_OR_FAIL(), if someone implements Formatter<JS::Completion>.
+        MUST(bytecode_interpreter.run(*executable));
     }
 }
 

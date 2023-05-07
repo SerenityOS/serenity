@@ -86,10 +86,8 @@ TEST_CASE(test_mkstemp_unique_filename)
         auto fd = mkstemp(path);
         EXPECT_NE(fd, -1);
 
-        auto temp_path_or_error = FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
-        EXPECT(!temp_path_or_error.is_error());
-
-        auto temp_path = temp_path_or_error.release_value().to_deprecated_string();
+        auto temp_path_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
+        auto temp_path = temp_path_string.to_deprecated_string();
         EXPECT(temp_path.characters());
 
         close(fd);
@@ -107,10 +105,8 @@ TEST_CASE(test_mkstemp_unique_filename)
         auto fd = mkstemp(path);
         EXPECT(fd != -1);
 
-        auto path2_or_error = FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
-        EXPECT(!path2_or_error.is_error());
-
-        auto path2 = path2_or_error.release_value().to_deprecated_string();
+        auto path2_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
+        auto path2 = path2_string.to_deprecated_string();
         EXPECT(path2.characters());
 
         close(fd);
@@ -132,10 +128,8 @@ TEST_CASE(test_mkstemps_unique_filename)
         auto fd = mkstemps(path, 6);
         EXPECT_NE(fd, -1);
 
-        auto temp_path_or_error = FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
-        EXPECT(!temp_path_or_error.is_error());
-
-        auto temp_path = temp_path_or_error.release_value().to_deprecated_string();
+        auto temp_path_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
+        auto temp_path = temp_path_string.to_deprecated_string();
         EXPECT(temp_path.characters());
 
         close(fd);
@@ -157,10 +151,8 @@ TEST_CASE(test_mkstemps_unique_filename)
         auto fd = mkstemps(path, 6);
         EXPECT(fd != -1);
 
-        auto path2_or_error = FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
-        EXPECT(!path2_or_error.is_error());
-
-        auto path2 = path2_or_error.release_value().to_deprecated_string();
+        auto path2_string = TRY_OR_FAIL(FileSystem::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd)));
+        auto path2 = path2_string.to_deprecated_string();
         EXPECT(path2.characters());
 
         close(fd);
