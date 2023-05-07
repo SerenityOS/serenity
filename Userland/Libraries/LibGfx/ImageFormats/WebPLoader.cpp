@@ -558,7 +558,7 @@ enum class ImageKind {
     EntropyCoded,
 };
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, ImageKind image_kind, BitmapFormat format, IntSize const& size, LittleEndianInputBitStream& bit_stream)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind image_kind, BitmapFormat format, IntSize const& size, LittleEndianInputBitStream& bit_stream)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
@@ -577,7 +577,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
         // "The range of allowed values for color_cache_code_bits is [1..11]. Compliant decoders must indicate a corrupted bitstream for other values."
         if (color_cache_code_bits < 1 || color_cache_code_bits > 11)
-            return context.error("WebPImageDecoderPlugin: VP8L invalid color_cache_code_bits");
+            return Error::from_string_literal("WebPImageDecoderPlugin: VP8L invalid color_cache_code_bits");
 
         color_cache_size = 1 << color_cache_code_bits;
         dbgln_if(WEBP_DEBUG, "color_cache_size {}", color_cache_size);
@@ -601,7 +601,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
             int block_size = 1 << prefix_bits;
             IntSize prefix_size { ceil_div(size.width(), block_size), ceil_div(size.height(), block_size) };
 
-            entropy_image = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRx8888, prefix_size, bit_stream));
+            entropy_image = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRx8888, prefix_size, bit_stream));
 
             // A "meta prefix image" or "entropy image" can tell the decoder to use different PrefixCodeGroup for
             // tiles of the main, spatially coded, image. It's a bit hidden in the spec:
@@ -692,7 +692,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
         auto symbol = TRY(group[0].read_symbol(bit_stream));
         if (symbol >= 256u + 24u + color_cache_size)
-            return context.error("WebPImageDecoderPlugin: Symbol out of bounds");
+            return Error::from_string_literal("WebPImageDecoderPlugin: Symbol out of bounds");
 
         // "1. if S < 256"
         if (symbol < 256u) {
@@ -751,12 +751,12 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
             if (pixel - begin < distance) {
                 dbgln_if(WEBP_DEBUG, "invalid backref, {} < {}", pixel - begin, distance);
-                return context.error("WebPImageDecoderPlugin: Backward reference distance out of bounds");
+                return Error::from_string_literal("WebPImageDecoderPlugin: Backward reference distance out of bounds");
             }
 
             if (end - pixel < length) {
                 dbgln_if(WEBP_DEBUG, "invalid length, {} < {}", end - pixel, length);
-                return context.error("WebPImageDecoderPlugin: Backward reference length out of bounds");
+                return Error::from_string_literal("WebPImageDecoderPlugin: Backward reference length out of bounds");
             }
 
             ARGB32* src = pixel - distance;
@@ -770,7 +770,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
             // "b. Get ARGB color from the color cache at that index."
             if (index >= color_cache_size)
-                return context.error("WebPImageDecoderPlugin: Color cache index out of bounds");
+                return Error::from_string_literal("WebPImageDecoderPlugin: Color cache index out of bounds");
             *pixel++ = color_cache[index];
         }
     }
@@ -804,7 +804,7 @@ Transform::~Transform() = default;
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#41_predictor_transform
 class PredictorTransform : public Transform {
 public:
-    static ErrorOr<NonnullOwnPtr<PredictorTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, IntSize const& image_size);
+    static ErrorOr<NonnullOwnPtr<PredictorTransform>> read(LittleEndianInputBitStream&, IntSize const& image_size);
     virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
 private:
@@ -888,7 +888,7 @@ private:
     NonnullRefPtr<Bitmap> m_predictor_bitmap;
 };
 
-ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, IntSize const& image_size)
+ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(LittleEndianInputBitStream& bit_stream, IntSize const& image_size)
 {
     // predictor-image      =  3BIT ; sub-pixel code
     //                         entropy-coded-image
@@ -898,7 +898,7 @@ ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(WebPLoadingC
     int block_size = 1 << size_bits;
     IntSize predictor_image_size { ceil_div(image_size.width(), block_size), ceil_div(image_size.height(), block_size) };
 
-    auto predictor_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRx8888, predictor_image_size, bit_stream));
+    auto predictor_bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRx8888, predictor_image_size, bit_stream));
 
     return adopt_nonnull_own_or_enomem(new (nothrow) PredictorTransform(size_bits, move(predictor_bitmap)));
 }
@@ -1027,7 +1027,7 @@ ErrorOr<ARGB32> PredictorTransform::predict(u8 predictor, ARGB32 TL, ARGB32 T, A
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#42_color_transform
 class ColorTransform : public Transform {
 public:
-    static ErrorOr<NonnullOwnPtr<ColorTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, IntSize const& image_size);
+    static ErrorOr<NonnullOwnPtr<ColorTransform>> read(LittleEndianInputBitStream&, IntSize const& image_size);
     virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
 private:
@@ -1048,7 +1048,7 @@ private:
     NonnullRefPtr<Bitmap> m_color_bitmap;
 };
 
-ErrorOr<NonnullOwnPtr<ColorTransform>> ColorTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, IntSize const& image_size)
+ErrorOr<NonnullOwnPtr<ColorTransform>> ColorTransform::read(LittleEndianInputBitStream& bit_stream, IntSize const& image_size)
 {
     // color-image          =  3BIT ; sub-pixel code
     //                         entropy-coded-image
@@ -1058,7 +1058,7 @@ ErrorOr<NonnullOwnPtr<ColorTransform>> ColorTransform::read(WebPLoadingContext& 
     int block_size = 1 << size_bits;
     IntSize color_image_size { ceil_div(image_size.width(), block_size), ceil_div(image_size.height(), block_size) };
 
-    auto color_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRx8888, color_image_size, bit_stream));
+    auto color_bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRx8888, color_image_size, bit_stream));
 
     return adopt_nonnull_own_or_enomem(new (nothrow) ColorTransform(size_bits, move(color_bitmap)));
 }
@@ -1127,7 +1127,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> SubtractGreenTransform::transform(NonnullRefPtr<B
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
 class ColorIndexingTransform : public Transform {
 public:
-    static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, int original_width);
+    static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(LittleEndianInputBitStream&, int original_width);
     virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
     // For a color indexing transform, the green channel of the source image is used as the index into a palette to produce an output color.
@@ -1158,7 +1158,7 @@ private:
     NonnullRefPtr<Bitmap> m_palette_bitmap;
 };
 
-ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, int original_width)
+ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(LittleEndianInputBitStream& bit_stream, int original_width)
 {
     // color-indexing-image =  8BIT ; color count
     //                         entropy-coded-image
@@ -1166,7 +1166,7 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     dbgln_if(WEBP_DEBUG, "colorindexing color_table_size {}", color_table_size);
 
     IntSize palette_image_size { color_table_size, 1 };
-    auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
+    auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
 
     // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
     int pixels_per_pixel = 1;
@@ -1288,16 +1288,16 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(WebPLoadin
 
         switch (transform_type) {
         case PREDICTOR_TRANSFORM:
-            TRY(transforms.try_append(TRY(PredictorTransform::read(context, bit_stream, stored_size))));
+            TRY(transforms.try_append(TRY(PredictorTransform::read(bit_stream, stored_size))));
             break;
         case COLOR_TRANSFORM:
-            TRY(transforms.try_append(TRY(ColorTransform::read(context, bit_stream, stored_size))));
+            TRY(transforms.try_append(TRY(ColorTransform::read(bit_stream, stored_size))));
             break;
         case SUBTRACT_GREEN_TRANSFORM:
             TRY(transforms.try_append(TRY(try_make<SubtractGreenTransform>())));
             break;
         case COLOR_INDEXING_TRANSFORM: {
-            auto color_indexing_transform = TRY(ColorIndexingTransform::read(context, bit_stream, stored_size.width()));
+            auto color_indexing_transform = TRY(ColorIndexingTransform::read(bit_stream, stored_size.width()));
             stored_size.set_width(ceil_div(stored_size.width(), color_indexing_transform->pixels_per_pixel()));
             TRY(transforms.try_append(move(color_indexing_transform)));
             break;
@@ -1306,7 +1306,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(WebPLoadin
     }
 
     auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
-    auto bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
+    auto bitmap = TRY(decode_webp_chunk_VP8L_image(ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
 
     // Transforms have to be applied in the reverse order they appear in in the file.
     // (As far as I can tell, this isn't mentioned in the spec.)
