@@ -14,23 +14,23 @@ $ Terminal [options]
 
 Terminal is a terminal emulator application for Serenity.
 
-It will generally be launched from Serenity menu, an on-screen menu, or the `Open in Terminal` action in File Manager and on the Desktop. You can also launch the current help item from within the help document, click on the `Open` link above to launch Terminal.
+It can be launched from the System Menu or the quick access icon to its right, via the `Open in Terminal` action in File Manager and on the Desktop. You can also click on the `Open` link above to launch Terminal.
 
-Selecting `File->Terminal Settings` will launch Terminal Settings dialog and display user configurable application properties. This dialog box contains two tabs namely Terminal tab and View tab.
+Select `File → Terminal Settings` to launch the Terminal Settings dialog and display user configurable application properties. This dialog box contains two tabs: View and Terminal.
 
-The _Settings Terminal_ tab shows the option to either enable System beep, or use Visual bell or disable bell altogether. It can also enable or disable the display of terminal scrollbar and to change its exit behavior.
+The *View* tab provides the most frequently sought options:
+* Adjust the Terminal font (turn off `Use system default` to select a custom font.
+* Specify background opacity, i.e. the amount to which the Terminal's background is transparent, displaying what's underneath.
+* Change the shape of the cursor from Block, to Underscore or to Vertical bar. You can also opt to enable or disable cursor's blink property.
+* To enable or disable the display of terminal scrollbar.
 
-The _Settings View_ tab shows the option of specifying background opacity. Opacity is the amount in which the Terminal's background is transparent, displaying what's underneath. Set the opacity level to your taste while maintaining readability balance.
+The *Terminal* tab gives less frequently used options:
+* To either enable System beep, or use Visual bell or disable bell mode altogether.
+* To change Terminal's exit behavior
 
-You also have the option of using Terminal's system default font or to select a new one by clicking on the ellipsis. Remember to uncheck `Use system default` checkbox before doing so.
+Clicking on the *Apply* button will cause the currently selected options to take effect immediately.
 
-You can change the shape of the cursor from block type, to underline or to bar type. You can also opt to enable or disable cursor's blink property.
-
-You can select to change the Terminal's color scheme. Just click on the drop-down list and pick a color scheme. Examples of color schemes are Dracula, Monokai, Solarized and Zenburn.
-
-Clicking on the _Apply_ button will cause the currently selected options to take effect immediately.
-
-You can press the shortcut key F11 to display Terminal in fullscreen mode. Press F11 again to revert back to normal window display mode.
+You can toggle Fullscreen mode by pressing F11.
 
 ## Options
 
