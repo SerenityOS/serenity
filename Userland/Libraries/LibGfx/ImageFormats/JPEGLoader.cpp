@@ -486,7 +486,11 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
 
     // For DC coefficients, symbol encodes the length of the coefficient.
     auto dc_length = TRY(scan.huffman_stream.next_symbol(dc_table));
-    if (dc_length > 11) {
+
+    // F.1.2.1.2 - Defining Huffman tables for the DC coefficients
+    // F.1.5.1 - Structure of DC code table for 12-bit sample precision
+    if ((context.frame.precision == 8 && dc_length > 11)
+        || (context.frame.precision == 12 && dc_length > 15)) {
         dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
         return Error::from_string_literal("DC coefficient too long");
     }
@@ -612,7 +616,10 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
             // F.1.2.2 - Huffman encoding of AC coefficients
             u8 const coeff_length = *saved_symbol & 0x0F;
 
-            if (coeff_length > 10) {
+            // F.1.2.2.1 - Structure of AC code table
+            // F.1.5.2 - Structure of AC code table for 12-bit sample precision
+            if ((context.frame.precision == 8 && coeff_length > 10)
+                || (context.frame.precision == 12 && coeff_length > 14)) {
                 dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
                 return Error::from_string_literal("AC coefficient too long");
             }
@@ -1137,6 +1144,12 @@ static ErrorOr<void> ensure_standard_precision(StartOfFrame const& frame)
     if (frame.precision == 8)
         return {};
 
+    if (frame.type == StartOfFrame::FrameType::Extended_Sequential_DCT && frame.precision == 12)
+        return {};
+
+    if (frame.type == StartOfFrame::FrameType::Progressive_DCT && frame.precision == 12)
+        return {};
+
     dbgln_if(JPEG_DEBUG, "Unsupported precision: {}, for SOF type: {}!", frame.precision, static_cast<int>(frame.type));
     return Error::from_string_literal("Unsupported SOF precision.");
 }
@@ -1457,7 +1470,8 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
     }
 
     // F.2.1.5 - Inverse DCT (IDCT)
-
+    auto const level_shift = 1 << (context.frame.precision - 1);
+    auto const max_value = (1 << context.frame.precision) - 1;
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
@@ -1465,10 +1479,19 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
                     for (u8 i = 0; i < 8; ++i) {
                         for (u8 j = 0; j < 8; ++j) {
-                            macroblocks[mb_index].r[i * 8 + j] = clamp(macroblocks[mb_index].r[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].g[i * 8 + j] = clamp(macroblocks[mb_index].g[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].b[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].k[i * 8 + j] = clamp(macroblocks[mb_index].k[i * 8 + j] + 128, 0, 255);
+
+                            // FIXME: This just truncate all coefficients, it's an easy way to support (read hack)
+                            //        12 bits JPEGs without rewriting all color transformations.
+                            auto const clamp_to_8_bits = [&](u16 color) -> u8 {
+                                if (context.frame.precision == 8)
+                                    return static_cast<u8>(color);
+                                return static_cast<u8>(color >> 4);
+                            };
+
+                            macroblocks[mb_index].r[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].r[i * 8 + j] + level_shift, 0, max_value));
+                            macroblocks[mb_index].g[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].g[i * 8 + j] + level_shift, 0, max_value));
+                            macroblocks[mb_index].b[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].b[i * 8 + j] + level_shift, 0, max_value));
+                            macroblocks[mb_index].k[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].k[i * 8 + j] + level_shift, 0, max_value));
                         }
                     }
                 }
