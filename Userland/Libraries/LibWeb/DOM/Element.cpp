@@ -415,8 +415,17 @@ static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties c
             return RequiredInvalidation::Relayout;
         if (*old_value == *new_value)
             continue;
-        if (CSS::property_affects_layout(property_id))
+
+        // OPTIMIZATION: Special handling for CSS `visibility`:
+        if (property_id == CSS::PropertyID::Visibility) {
+            // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
+            if ((old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value->to_identifier() == CSS::ValueID::Collapse))
+                return RequiredInvalidation::Relayout;
+            // Of course, we still have to repaint on any visibility change.
+            requires_repaint = true;
+        } else if (CSS::property_affects_layout(property_id)) {
             return RequiredInvalidation::Relayout;
+        }
         if (CSS::property_affects_stacking_context(property_id))
             requires_stacking_context_tree_rebuild = true;
         requires_repaint = true;
