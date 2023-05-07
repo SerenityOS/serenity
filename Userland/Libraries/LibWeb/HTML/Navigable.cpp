@@ -692,7 +692,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     JS::GCPtr<Fetch::Infrastructure::Response> response,
     bool exceptions_enabled,
     HistoryHandlingBehavior history_handling,
-    String csp_navigation_type,
+    CSPNavigationType csp_navigation_type,
     ReferrerPolicy::ReferrerPolicy referrer_policy)
 {
     // 1. Let sourceSnapshotParams be the result of snapshotting source snapshot params given sourceDocument.
@@ -904,7 +904,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const&, Hist
     TODO();
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, String csp_navigation_type)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type)
 {
     (void)initiator_origin;
     (void)csp_navigation_type;

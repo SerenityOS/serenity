@@ -15,6 +15,11 @@
 
 namespace Web::HTML {
 
+enum class CSPNavigationType {
+    Other,
+    FormSubmission,
+};
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#navigable
 class Navigable : public JS::Cell {
     JS_CELL(Navigable, JS::Cell);
@@ -70,12 +75,12 @@ public:
         JS::GCPtr<Fetch::Infrastructure::Response> = nullptr,
         bool exceptions_enabled = false,
         HistoryHandlingBehavior = HistoryHandlingBehavior::Push,
-        String csp_navigation_type = String::from_utf8_short_string("other"sv),
+        CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
         ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString);
 
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 
-    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, String csp_navigation_type);
+    WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type);
 
 protected:
     Navigable();
