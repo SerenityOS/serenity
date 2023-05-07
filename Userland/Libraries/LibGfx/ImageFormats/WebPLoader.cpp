@@ -1230,14 +1230,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<B
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(WebPLoadingContext& context, VP8LHeader const& vp8l_header, ReadonlyBytes lossless_data);
+
 static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
 {
     VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
     VERIFY(vp8l_chunk.type == FourCC("VP8L"));
 
     auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context, vp8l_chunk));
+    ReadonlyBytes lossless_data = vp8l_chunk.data.slice(5);
+    return decode_webp_chunk_VP8L_contents(context, vp8l_header, lossless_data);
+}
 
-    FixedMemoryStream memory_stream { vp8l_chunk.data.slice(5) };
+// Decodes the lossless webp bitstream following the 5-byte header information.
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(WebPLoadingContext& context, VP8LHeader const& vp8l_header, ReadonlyBytes lossless_data)
+{
+    FixedMemoryStream memory_stream { lossless_data };
     LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
 
     // image-stream = optional-transform spatially-coded-image
@@ -1325,9 +1333,10 @@ static ErrorOr<void> decode_webp_chunk_ALPH(WebPLoadingContext& context, Chunk c
 
     ReadonlyBytes alpha_data = alph_chunk.data.slice(1);
 
+    size_t pixel_count = bitmap.width() * bitmap.height();
+
     if (compression_method == 0) {
         // "Raw data: consists of a byte sequence of length width * height, containing all the 8-bit transparency values in scan order."
-        size_t pixel_count = bitmap.width() * bitmap.height();
         if (alpha_data.size() < pixel_count)
             return context.error("WebPImageDecoderPlugin: uncompressed ALPH data too small");
         for (size_t i = 0; i < pixel_count; ++i)
@@ -1339,8 +1348,16 @@ static ErrorOr<void> decode_webp_chunk_ALPH(WebPLoadingContext& context, Chunk c
     //  of implicit dimension width x height. That is, this image-stream does NOT contain any headers describing the image dimension.
     //  Once the image-stream is decoded into ARGB color values, following the process described in the lossless format specification,
     //  the transparency information must be extracted from the green channel of the ARGB quadruplet."
-    // FIXME
-    return context.error("WebPImageDecoderPlugin: compressed ALPH chunk processing not yet implemented");
+    VP8LHeader vp8l_header = { static_cast<u16>(bitmap.width()), static_cast<u16>(bitmap.height()), /*is_alpha_used=*/false };
+    auto lossless_bitmap = TRY(decode_webp_chunk_VP8L_contents(context, vp8l_header, alpha_data));
+
+    if (pixel_count != static_cast<size_t>(lossless_bitmap->width() * lossless_bitmap->height()))
+        return context.error("WebPImageDecoderPlugin: decompressed ALPH dimensions don't match VP8 dimensions");
+
+    for (size_t i = 0; i < pixel_count; ++i)
+        bitmap.begin()[i] |= (lossless_bitmap->begin()[i] & 0xff00) << 16;
+
+    return {};
 }
 
 static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
