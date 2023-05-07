@@ -11,10 +11,6 @@
 #include <LibCore/IODevice.h>
 #include <sys/stat.h>
 
-// FIXME: Make this a bit prettier.
-#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
-#define DEFAULT_PATH_SV "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv
-
 namespace Core {
 
 ///
