@@ -143,11 +143,9 @@ struct WebPLoadingContext {
 
     // Either 'VP8 ' (simple lossy file), 'VP8L' (simple lossless file), or 'VP8X' (extended file).
     Optional<Chunk> first_chunk;
-    union {
-        VP8Header vp8_header;
-        VP8LHeader vp8l_header;
-        VP8XHeader vp8x_header;
-    };
+
+    // Only valid if first_chunk->type == 'VP8X'.
+    VP8XHeader vp8x_header;
 
     // If first_chunk is not a VP8X chunk, then only image_data.image_data_chunk is set and all the other Chunks are not set.
     ImageData image_data;
@@ -1567,14 +1565,14 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
         TRY(read_webp_first_chunk(context));
 
     if (context.first_chunk->type == FourCC("VP8 ")) {
-        context.vp8_header = TRY(decode_webp_chunk_VP8_header(context, context.first_chunk.value()));
-        context.size = IntSize { context.vp8_header.width, context.vp8_header.height };
+        auto vp8_header = TRY(decode_webp_chunk_VP8_header(context, context.first_chunk.value()));
+        context.size = IntSize { vp8_header.width, vp8_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
     }
     if (context.first_chunk->type == FourCC("VP8L")) {
-        context.vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk.value()));
-        context.size = IntSize { context.vp8l_header.width, context.vp8l_header.height };
+        auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context.first_chunk.value()));
+        context.size = IntSize { vp8l_header.width, vp8l_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
     }
