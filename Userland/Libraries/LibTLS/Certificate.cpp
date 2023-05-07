@@ -365,10 +365,10 @@ static ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Dec
     READ_OBJECT(BitString, Crypto::ASN1::BitStringView, value);
     POP_SCOPE();
 
-    public_key.raw_key = TRY(ByteBuffer::copy(value.raw_bytes()));
+    public_key.raw_key = TRY(ByteBuffer::copy(TRY(value.raw_bytes())));
 
     if (public_key.algorithm.identifier.span() == rsa_encryption_oid.span()) {
-        auto key = Crypto::PK::RSA::parse_rsa_key(value.raw_bytes());
+        auto key = Crypto::PK::RSA::parse_rsa_key(TRY(value.raw_bytes()));
         if (!key.public_key.length()) {
             return Error::from_string_literal("Invalid RSA key");
         }
@@ -773,7 +773,7 @@ ErrorOr<Certificate> Certificate::parse_certificate(ReadonlyBytes buffer, bool)
 
     PUSH_SCOPE("signature"sv);
     READ_OBJECT(BitString, Crypto::ASN1::BitStringView, signature);
-    certificate.signature_value = TRY(ByteBuffer::copy(signature.raw_bytes()));
+    certificate.signature_value = TRY(ByteBuffer::copy(TRY(signature.raw_bytes())));
     POP_SCOPE();
 
     if (!decoder.eof()) {

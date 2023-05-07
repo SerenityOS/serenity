@@ -22,9 +22,10 @@ public:
     {
     }
 
-    ReadonlyBytes raw_bytes() const
+    ErrorOr<ReadonlyBytes> raw_bytes() const
     {
-        VERIFY(m_unused_bits == 0);
+        if (m_unused_bits != 0)
+            return Error::from_string_literal("ASN1::Decoder: BitStringView contains unexpected partial bytes");
         return m_data;
     }
 
