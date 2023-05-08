@@ -63,6 +63,7 @@ struct VP8Header {
     u8 horizontal_scale;
     u32 height;
     u8 vertical_scale;
+    ReadonlyBytes lossy_data;
 };
 
 struct VP8XHeader {
@@ -229,11 +230,9 @@ static ErrorOr<Chunk> decode_webp_advance_chunk(ReadonlyBytes& chunks)
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossy
 // https://datatracker.ietf.org/doc/html/rfc6386#section-19 "Annex A: Bitstream Syntax"
-static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(Chunk const& vp8_chunk)
+static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
 {
-    VERIFY(vp8_chunk.type == FourCC("VP8 "));
-
-    if (vp8_chunk.data.size() < 10)
+    if (vp8_data.size() < 10)
         return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk too small");
 
     // FIXME: Eventually, this should probably call into LibVideo/VP8,
@@ -245,7 +244,7 @@ static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(Chunk const& vp8_chunk)
     //  The first frame presented to the decompressor is [...] a key frame.  [...]
     //  [E]very compressed frame has three or more pieces. It begins with an uncompressed data chunk comprising 10 bytes in the case of key frames
 
-    u8 const* data = vp8_chunk.data.data();
+    u8 const* data = vp8_data.data();
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-9.1 "Uncompressed Data Chunk"
     u32 frame_tag = data[0] | (data[1] << 8) | (data[2] << 16);
@@ -280,20 +279,19 @@ static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(Chunk const& vp8_chunk)
     dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
         version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
 
-    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale };
+    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10) };
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(Chunk const& vp8_chunk, bool include_alpha_channel)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
 {
-    VERIFY(vp8_chunk.type == FourCC("VP8 "));
     auto bitmap_format = include_alpha_channel ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
 
     // Uncomment this to test ALPH decoding for WebP-lossy-with-alpha images while lossy decoding isn't implemented yet.
 #if 0
-    auto vp8_header = TRY(decode_webp_chunk_VP8_header(vp8_chunk));
     return Bitmap::create(bitmap_format, { vp8_header.width, vp8_header.height });
 #else
     // FIXME: Implement webp lossy decoding.
+    (void)vp8_header;
     (void)bitmap_format;
     return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
 #endif
@@ -566,7 +564,7 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
         TRY(read_webp_first_chunk(context));
 
     if (context.first_chunk->type == FourCC("VP8 ")) {
-        auto vp8_header = TRY(decode_webp_chunk_VP8_header(context.first_chunk.value()));
+        auto vp8_header = TRY(decode_webp_chunk_VP8_header(context.first_chunk->data));
         context.size = IntSize { vp8_header.width, vp8_header.height };
         context.state = WebPLoadingContext::State::FirstChunkDecoded;
         return {};
@@ -641,7 +639,8 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(ImageData const& im
     }
 
     VERIFY(image_data.image_data_chunk.type == FourCC("VP8 "));
-    auto bitmap = TRY(decode_webp_chunk_VP8(image_data.image_data_chunk, image_data.alpha_chunk.has_value()));
+    auto vp8_header = TRY(decode_webp_chunk_VP8_header(image_data.image_data_chunk.data));
+    auto bitmap = TRY(decode_webp_chunk_VP8_contents(vp8_header, image_data.alpha_chunk.has_value()));
 
     if (image_data.alpha_chunk.has_value())
         TRY(decode_webp_chunk_ALPH(image_data.alpha_chunk.value(), *bitmap));
