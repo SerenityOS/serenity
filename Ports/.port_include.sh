@@ -115,7 +115,6 @@ else
     PORT_BUILD_DIR="${SERENITY_BUILD_DIR}/Ports/${port}"
 fi
 
-
 mkdir -p "${PORT_BUILD_DIR}"
 cd "${PORT_BUILD_DIR}"
 
@@ -894,7 +893,7 @@ parse_arguments() {
         return
     fi
     case "$1" in
-        fetch|patch|shell|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty|generate_patch_readme)
+        build|clean|clean_all|clean_dist|configure|fetch|generate_patch_readme|install|installdepends|patch|shell|showproperty|uninstall)
             method=$1
             shift
             do_${method} "$@"
@@ -924,7 +923,7 @@ parse_arguments() {
             do_dev
             ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, interactive, clean, clean_dist, clean_all, uninstall, showproperty, generate_patch_readme, dev."
+            >&2 echo "I don't understand $1! Supported arguments: build, clean, clean_all, clean_dist, configure, dev, fetch, generate_patch_readme, install, installdepends, interactive, patch, shell, showproperty, uninstall."
             exit 1
             ;;
     esac
