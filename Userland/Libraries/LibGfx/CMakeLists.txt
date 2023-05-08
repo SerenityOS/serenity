@@ -49,6 +49,7 @@ set(SOURCES
     ImageFormats/TGALoader.cpp
     ImageFormats/WebPLoader.cpp
     ImageFormats/WebPLoaderLossless.cpp
+    ImageFormats/WebPLoaderLossy.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
