@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/TemporaryChange.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>

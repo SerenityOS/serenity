@@ -6,6 +6,7 @@
 
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Serialize.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Window.h>
 
