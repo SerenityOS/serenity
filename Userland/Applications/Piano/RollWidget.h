@@ -51,5 +51,6 @@ private:
     int m_prev_scroll_y { vertical_scrollbar().value() };
 
     u8 get_pitch_for_y(int y) const;
-    int get_note_for_x(int x) const;
+    u32 get_sample_for_x(int x) const;
+    u32 round_sample_to_note(u32 sample) const;
 };

@@ -8,9 +8,9 @@
  */
 
 #include "RollWidget.h"
-#include "LibDSP/Music.h"
 #include "TrackManager.h"
 #include <AK/IntegralMath.h>
+#include <LibDSP/Music.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
@@ -187,7 +187,7 @@ void RollWidget::mousedown_event(GUI::MouseEvent& event)
         return;
 
     if (event.button() == GUI::MouseButton::Secondary) {
-        auto const time = roll_length * (static_cast<double>(get_note_for_x(event.x())) / m_num_notes);
+        u32 const time = get_sample_for_x(event.x());
         auto const note = m_track_manager.current_track()->note_at(time, get_pitch_for_y(event.y()));
 
         if (note.has_value()) {
@@ -211,20 +211,10 @@ u8 RollWidget::get_pitch_for_y(int y) const
     return (note_count - 1) - ((y + vertical_scrollbar().value()) - frame_thickness()) / note_height;
 }
 
-int RollWidget::get_note_for_x(int x) const
+u32 RollWidget::get_sample_for_x(int x) const
 {
-    // There's a case where we can't just use x / m_note_width. For example, if
-    // your m_note_width is 3.1 you will have a rect starting at 3. When that
-    // leftmost pixel of the rect is clicked you will do 3 / 3.1 which is 0
-    // and not 1. We can avoid that case by shifting x by 1 if m_note_width is
-    // fractional, being careful not to shift out of bounds.
     x = (x + horizontal_scrollbar().value()) - frame_thickness();
-    bool const note_width_is_fractional = m_note_width - static_cast<int>(m_note_width) != 0;
-    bool const x_is_not_last = x != widget_inner_rect().width() - 1;
-    if (note_width_is_fractional && x_is_not_last)
-        ++x;
-    x /= m_note_width;
-    return clamp(x, 0, m_num_notes - 1);
+    return roll_length * (x / m_note_width) / m_num_notes;
 }
 
 void RollWidget::mousemove_event(GUI::MouseEvent& event)
@@ -233,12 +223,15 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
         return;
 
     if (m_mousedown_event.value().button() == GUI::MouseButton::Primary) {
-        int const x_start = get_note_for_x(m_mousedown_event.value().x());
-        int const x_end = get_note_for_x(event.x());
-
-        const u32 on_sample = round(roll_length * (static_cast<double>(min(x_start, x_end)) / m_num_notes));
-        const u32 off_sample = round(roll_length * (static_cast<double>(max(x_start, x_end) + 1) / m_num_notes)) - 1;
-        auto const note = RollNote { on_sample, off_sample, get_pitch_for_y(m_mousedown_event.value().y()), 127 };
+        auto sample_start = get_sample_for_x(m_mousedown_event.value().x());
+        auto sample_end = get_sample_for_x(event.x());
+        if (sample_start > sample_end) {
+            swap(sample_start, sample_end);
+        }
+        const u32 note_length = roll_length / m_num_notes;
+        const u32 rounded_sample_start = sample_start / note_length * note_length;
+        const u32 rounded_sample_end = (sample_end / note_length + 1) * note_length;
+        auto const note = RollNote { rounded_sample_start, rounded_sample_end, get_pitch_for_y(m_mousedown_event.value().y()), 127 };
 
         m_track_manager.current_track()->set_note(note);
         update();
