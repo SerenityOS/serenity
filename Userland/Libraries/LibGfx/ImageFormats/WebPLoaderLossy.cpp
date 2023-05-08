@@ -29,7 +29,7 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     // https://datatracker.ietf.org/doc/html/rfc6386#section-4 "Overview of Compressed Data Format"
     // "The decoder is simply presented with a sequence of compressed frames [...]
     //  The first frame presented to the decompressor is [...] a key frame.  [...]
-    //  [E]very compressed frame has three or more pieces. It begins with an uncompressed data chunk comprising 10 bytes in the case of key frames
+    //  [E]very compressed frame has three or more pieces. It begins with an uncompressed data chunk comprising 10 bytes in the case of key frames"
 
     u8 const* data = vp8_data.data();
 
@@ -54,7 +54,7 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     //   1     | Upscale by 5/4.
     //   2     | Upscale by 5/3.
     //   3     | Upscale by 2."
-    // This is a display-time operation and doesn't affect decoding.
+    // This is a display-time operation and doesn't affect decoding."
     u16 width_and_horizontal_scale = data[6] | (data[7] << 8);
     u16 width = width_and_horizontal_scale & 0x3fff;
     u8 horizontal_scale = width_and_horizontal_scale >> 14;
