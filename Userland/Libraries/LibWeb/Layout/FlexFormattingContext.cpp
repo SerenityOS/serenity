@@ -1268,6 +1268,9 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 break;
             case CSS::JustifyContent::Center:
                 initial_offset = (inner_main_size(flex_container()) - used_main_space) / 2.0f;
+                if (is_direction_reverse()) {
+                    initial_offset = inner_main_size(flex_container()) - initial_offset;
+                }
                 break;
             case CSS::JustifyContent::SpaceBetween:
                 space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
