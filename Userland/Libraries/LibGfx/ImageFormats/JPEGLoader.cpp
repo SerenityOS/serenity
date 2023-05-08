@@ -1453,7 +1453,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
                             macroblocks[mb_index].r[i * 8 + j] = clamp(macroblocks[mb_index].r[i * 8 + j] + 128, 0, 255);
                             macroblocks[mb_index].g[i * 8 + j] = clamp(macroblocks[mb_index].g[i * 8 + j] + 128, 0, 255);
                             macroblocks[mb_index].b[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].k[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].k[i * 8 + j] = clamp(macroblocks[mb_index].k[i * 8 + j] + 128, 0, 255);
                         }
                     }
                 }
