@@ -13,7 +13,6 @@
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -118,14 +117,7 @@ public:
     int client_width() const;
     int client_height() const;
 
-    template<typename Callback>
-    void for_each_attribute(Callback callback) const
-    {
-        for (size_t i = 0; i < m_attributes->length(); ++i) {
-            auto const* attribute = m_attributes->item(i);
-            callback(attribute->name(), attribute->value());
-        }
-    }
+    void for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)>) const;
 
     bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Vector<FlyString> const& class_names() const { return m_classes; }

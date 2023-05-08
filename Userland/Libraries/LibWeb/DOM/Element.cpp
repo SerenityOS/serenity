@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -1671,6 +1672,14 @@ void Element::setup_custom_element_from_constructor(HTML::CustomElementDefinitio
 void Element::set_prefix(DeprecatedFlyString const& value)
 {
     m_qualified_name.set_prefix(value);
+}
+
+void Element::for_each_attribute(Function<void(DeprecatedFlyString const&, DeprecatedString const&)> callback) const
+{
+    for (size_t i = 0; i < m_attributes->length(); ++i) {
+        auto const* attribute = m_attributes->item(i);
+        callback(attribute->name(), attribute->value());
+    }
 }
 
 }
