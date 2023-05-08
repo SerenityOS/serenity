@@ -283,18 +283,18 @@ static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(Chunk const& vp8_chunk)
     return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale };
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(Chunk const& vp8_chunk)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8(Chunk const& vp8_chunk, bool include_alpha_channel)
 {
     VERIFY(vp8_chunk.type == FourCC("VP8 "));
+    auto bitmap_format = include_alpha_channel ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
 
     // Uncomment this to test ALPH decoding for WebP-lossy-with-alpha images while lossy decoding isn't implemented yet.
 #if 0
     auto vp8_header = TRY(decode_webp_chunk_VP8_header(vp8_chunk));
-
-    // FIXME: probably want to pass in the bitmap format based on if there's an ALPH chunk.
-    return Bitmap::create(BitmapFormat::BGRA8888, { vp8_header.width, vp8_header.height });
+    return Bitmap::create(bitmap_format, { vp8_header.width, vp8_header.height });
 #else
     // FIXME: Implement webp lossy decoding.
+    (void)bitmap_format;
     return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
 #endif
 }
@@ -641,7 +641,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(ImageData const& im
     }
 
     VERIFY(image_data.image_data_chunk.type == FourCC("VP8 "));
-    auto bitmap = TRY(decode_webp_chunk_VP8(image_data.image_data_chunk));
+    auto bitmap = TRY(decode_webp_chunk_VP8(image_data.image_data_chunk, image_data.alpha_chunk.has_value()));
 
     if (image_data.alpha_chunk.has_value())
         TRY(decode_webp_chunk_ALPH(image_data.alpha_chunk.value(), *bitmap));
