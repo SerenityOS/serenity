@@ -772,6 +772,15 @@ do_dev() {
         exit 1
     fi
 
+    if [ "${1:-}" != "--no-depends" ]; then
+        do_installdepends
+    fi
+    if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
+        if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
+            do_clean
+        fi
+    fi
+
     local force_patch_regeneration='false'
 
     [ -d "$workdir" ] || {
@@ -893,7 +902,7 @@ parse_arguments() {
         return
     fi
     case "$1" in
-        build|clean|clean_all|clean_dist|configure|fetch|generate_patch_readme|install|installdepends|patch|shell|showproperty|uninstall)
+        build|clean|clean_all|clean_dist|configure|dev|fetch|generate_patch_readme|install|installdepends|patch|shell|showproperty|uninstall)
             method=$1
             shift
             do_${method} "$@"
@@ -909,18 +918,6 @@ parse_arguments() {
         interactive)
             export PS1="(serenity):\w$ "
             bash --norc
-            ;;
-        dev)
-            shift
-            if [ "${1:-}" != "--no-depends" ]; then
-                do_installdepends
-            fi
-            if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
-                if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
-                    do_clean
-                fi
-            fi
-            do_dev
             ;;
         *)
             >&2 echo "I don't understand $1! Supported arguments: build, clean, clean_all, clean_dist, configure, dev, fetch, generate_patch_readme, install, installdepends, interactive, patch, shell, showproperty, uninstall."
