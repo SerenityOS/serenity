@@ -63,6 +63,8 @@ namespace Web::CSS {
 
 StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
+    , m_default_font_metrics(16, Gfx::FontDatabase::default_font().pixel_metrics(), 16)
+    , m_root_element_font_metrics(m_default_font_metrics)
 {
 }
 
@@ -1053,24 +1055,14 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-Length::FontMetrics StyleComputer::root_element_font_metrics() const
+Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProperties const& style) const
 {
-    Length::FontMetrics const default_font_metrics { 16, Gfx::FontDatabase::default_font().pixel_metrics(), 16 };
+    auto root_value = style.property(CSS::PropertyID::FontSize);
 
-    auto const* root_element = m_document->first_child_of_type<HTML::HTMLHtmlElement>();
-    if (!root_element)
-        return default_font_metrics;
-
-    auto const* computed_root_style = root_element->computed_css_values();
-    if (!computed_root_style)
-        return default_font_metrics;
-
-    auto root_value = computed_root_style->property(CSS::PropertyID::FontSize);
-
-    auto font_pixel_metrics = computed_root_style->computed_font().pixel_metrics();
-    Length::FontMetrics font_metrics { default_font_metrics.font_size, font_pixel_metrics, font_pixel_metrics.line_spacing() };
+    auto font_pixel_metrics = style.computed_font().pixel_metrics();
+    Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics, font_pixel_metrics.line_spacing() };
     font_metrics.font_size = root_value->to_length().to_px(viewport_rect(), font_metrics, font_metrics);
-    font_metrics.line_height = computed_root_style->line_height(viewport_rect(), font_metrics, font_metrics);
+    font_metrics.line_height = style.line_height(viewport_rect(), font_metrics, font_metrics);
 
     return font_metrics;
 }
@@ -1218,8 +1210,6 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         font_size_in_px *= multiplier;
 
     } else {
-        auto root_font_metrics = root_element_font_metrics();
-
         Gfx::FontPixelMetrics font_pixel_metrics;
         if (parent_element && parent_element->computed_css_values())
             font_pixel_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
@@ -1235,7 +1225,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
                 auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
                 if (length.is_absolute() || length.is_relative()) {
                     Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
-                    return length.to_px(viewport_rect(), font_metrics, root_font_metrics);
+                    return length.to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
                 }
             }
             return font_size_in_px;
@@ -1256,7 +1246,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (maybe_length.has_value()) {
             auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
             Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
-            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, root_font_metrics).value();
+            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics).value();
             if (px != 0)
                 font_size_in_px = px;
         }
@@ -1368,6 +1358,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors());
 
     style.set_computed_font(found_font.release_nonnull());
+
+    if (element && is<HTML::HTMLHtmlElement>(*element)) {
+        const_cast<StyleComputer&>(*this).m_root_element_font_metrics = calculate_root_element_font_metrics(style);
+    }
 }
 
 Gfx::Font const& StyleComputer::initial_font() const
@@ -1378,20 +1372,17 @@ Gfx::Font const& StyleComputer::initial_font() const
 
 CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
-    auto root_font_metrics = root_element_font_metrics();
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
     if (!parent_element)
-        return root_font_metrics.line_height;
-    auto* computed_values = parent_element->computed_css_values();
-    auto parent_font_pixel_metrics = parent_element->layout_node()
-        ? parent_element->layout_node()->font().pixel_metrics()
-        : Gfx::FontDatabase::default_font().pixel_metrics();
+        return m_root_element_font_metrics.line_height;
+    auto const* computed_values = parent_element->computed_css_values();
+    auto parent_font_pixel_metrics = computed_values->computed_font().pixel_metrics();
     auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->to_length();
     // FIXME: Can the parent font size be non-absolute here?
-    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : root_font_metrics.font_size;
+    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : m_root_element_font_metrics.font_size;
     auto parent_parent_line_height = parent_or_root_element_line_height(parent_element, {});
     Length::FontMetrics parent_font_metrics { parent_font_size_value, parent_font_pixel_metrics, parent_parent_line_height };
-    return computed_values->line_height(viewport_rect(), parent_font_metrics, root_font_metrics);
+    return computed_values->line_height(viewport_rect(), parent_font_metrics, m_root_element_font_metrics);
 }
 
 ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -1399,11 +1390,10 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
     auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
 
     auto font_pixel_metrics = style.computed_font().pixel_metrics();
-    auto root_font_metrics = root_element_font_metrics();
 
-    Length::FontMetrics font_metrics { root_font_metrics.font_size, font_pixel_metrics, parent_or_root_line_height };
+    Length::FontMetrics font_metrics { m_root_element_font_metrics.font_size, font_pixel_metrics, parent_or_root_line_height };
 
-    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_metrics);
+    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.font_size = font_size;
 
     // NOTE: Percentage line-height values are relative to the font-size of the element.
@@ -1416,7 +1406,7 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
             Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction())));
     }
 
-    auto line_height = style.line_height(viewport_rect(), font_metrics, root_font_metrics);
+    auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.line_height = line_height;
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
@@ -1427,7 +1417,7 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = TRY(value_slot->absolutized(viewport_rect(), font_metrics, root_font_metrics));
+        value_slot = TRY(value_slot->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics));
     }
     return {};
 }

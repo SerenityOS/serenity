@@ -102,7 +102,7 @@ private:
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
     CSSPixelRect viewport_rect() const;
-    Length::FontMetrics root_element_font_metrics() const;
+    [[nodiscard]] Length::FontMetrics calculate_root_element_font_metrics(StyleProperties const&) const;
     CSSPixels parent_or_root_element_line_height(DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
 
     struct MatchingRuleSet {
@@ -133,6 +133,9 @@ private:
 
     class FontLoader;
     HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
+
+    Length::FontMetrics m_default_font_metrics;
+    Length::FontMetrics m_root_element_font_metrics;
 };
 
 }
