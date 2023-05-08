@@ -339,8 +339,8 @@ void HTMLObjectElement::update_layout_and_child_objects(Representation represent
     }
 
     m_representation = representation;
-    set_needs_style_update(true);
-    document().set_needs_layout();
+    invalidate_style();
+    document().invalidate_layout();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
