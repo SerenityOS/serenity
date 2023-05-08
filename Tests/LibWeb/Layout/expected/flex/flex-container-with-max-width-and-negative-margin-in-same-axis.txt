@@ -1,0 +1,7 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x116 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x100 children: not-inline
+      BlockContainer <div#container-of-flex> at (8,8) content-size 100x100 children: not-inline
+        Box <div#flex> at (-92,8) content-size 200x100 flex-container(row) [FFC] children: not-inline
+          BlockContainer <(anonymous)> at (-92,8) content-size 0x0 [BFC] children: inline
+            TextNode <#text>

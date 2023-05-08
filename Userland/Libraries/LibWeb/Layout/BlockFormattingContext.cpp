@@ -1056,9 +1056,10 @@ CSSPixels BlockFormattingContext::greatest_child_width(Box const& box) const
     return max_width;
 }
 
-void BlockFormattingContext::determine_width_of_child(Box const& box, AvailableSpace const& available_space)
+void BlockFormattingContext::determine_width_of_child(Box const&, AvailableSpace const&)
 {
-    compute_width(box, available_space);
+    // NOTE: We don't do anything here, since we'll have already determined the width of the child
+    //       before recursing into nested layout within the child.
 }
 
 void BlockFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
