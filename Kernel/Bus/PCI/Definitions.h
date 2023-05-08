@@ -80,6 +80,7 @@ static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
 static constexpr u32 bar_address_mask = 0xfffffff0;
 static constexpr u8 msi_control_offset = 2;
+static constexpr u16 msi_control_enable = 0x0001;
 static constexpr u16 msi_address_format_mask = 0x80;
 static constexpr u8 msi_mmc_format_mask = 0xe;
 static constexpr u16 msix_control_table_mask = 0x07ff;
