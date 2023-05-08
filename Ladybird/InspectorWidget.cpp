@@ -37,10 +37,10 @@ InspectorWidget::InspectorWidget()
     auto top_tap_widget = new QTabWidget;
     splitter->addWidget(top_tap_widget);
 
-    auto dom_tree_view = new QTreeView;
-    dom_tree_view->setHeaderHidden(true);
-    dom_tree_view->setModel(&m_dom_model);
-    QObject::connect(dom_tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
+    m_dom_tree_view = new QTreeView;
+    m_dom_tree_view->setHeaderHidden(true);
+    m_dom_tree_view->setModel(&m_dom_model);
+    QObject::connect(m_dom_tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this](QItemSelection const& selected, QItemSelection const&) {
             auto indexes = selected.indexes();
             if (indexes.size()) {
@@ -48,7 +48,7 @@ InspectorWidget::InspectorWidget()
                 set_selection(index);
             }
         });
-    add_tab(top_tap_widget, dom_tree_view, "DOM");
+    add_tab(top_tap_widget, m_dom_tree_view, "DOM");
 
     auto accessibility_tree_view = new QTreeView;
     accessibility_tree_view->setHeaderHidden(true);
@@ -74,6 +74,11 @@ InspectorWidget::InspectorWidget()
 void InspectorWidget::set_dom_json(StringView dom_json)
 {
     m_dom_model.set_underlying_model(WebView::DOMTreeModel::create(dom_json));
+    m_dom_loaded = true;
+    if (m_pending_selection.has_value())
+        set_selection(m_pending_selection.release_value());
+    else
+        select_default_node();
 }
 
 void InspectorWidget::set_accessibility_json(StringView accessibility_json)
@@ -87,6 +92,8 @@ void InspectorWidget::clear_dom_json()
     // The accessibility tree is pretty much another form of the DOM tree, so should be cleared at the time time.
     m_accessibility_model.set_underlying_model(nullptr);
     clear_style_json();
+    clear_selection();
+    m_dom_loaded = false;
 }
 
 void InspectorWidget::load_style_json(StringView computed_style_json, StringView resolved_style_json, StringView custom_properties_json)
@@ -101,6 +108,7 @@ void InspectorWidget::clear_style_json()
     m_computed_style_model.set_underlying_model(nullptr);
     m_resolved_style_model.set_underlying_model(nullptr);
     m_custom_properties_model.set_underlying_model(nullptr);
+    clear_selection();
 }
 
 void InspectorWidget::closeEvent(QCloseEvent* event)
@@ -108,6 +116,40 @@ void InspectorWidget::closeEvent(QCloseEvent* event)
     event->accept();
     if (on_close)
         on_close();
+    clear_selection();
+}
+
+void InspectorWidget::clear_selection()
+{
+    m_selection = {};
+    m_dom_tree_view->clearSelection();
+}
+
+void InspectorWidget::set_selection(Selection selection)
+{
+    if (!m_dom_loaded) {
+        m_pending_selection = selection;
+        return;
+    }
+
+    auto* model = verify_cast<WebView::DOMTreeModel>(m_dom_model.underlying_model().ptr());
+    auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
+    auto qt_index = m_dom_model.to_qt(index);
+
+    if (!qt_index.isValid()) {
+        dbgln("Failed to set DOM inspector selection! Could not find valid model index for node: {}", selection.dom_node_id);
+        return;
+    }
+
+    m_dom_tree_view->scrollTo(qt_index);
+    m_dom_tree_view->setCurrentIndex(qt_index);
+}
+
+void InspectorWidget::select_default_node()
+{
+    clear_style_json();
+    m_dom_tree_view->collapseAll();
+    m_dom_tree_view->setCurrentIndex({});
 }
 
 void InspectorWidget::set_selection(GUI::ModelIndex index)

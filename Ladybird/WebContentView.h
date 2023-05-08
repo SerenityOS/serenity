@@ -93,7 +93,12 @@ public:
     void did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages);
 
     void show_js_console();
-    void show_inspector();
+
+    enum class InspectorTarget {
+        Document,
+        HoveredElement
+    };
+    void show_inspector(InspectorTarget = InspectorTarget::Document);
 
     Ladybird::ConsoleWidget* console() { return m_console_widget; };
 

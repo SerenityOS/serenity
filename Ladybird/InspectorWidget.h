@@ -30,6 +30,13 @@ public:
         bool operator==(Selection const& other) const = default;
     };
 
+    bool dom_loaded() const { return m_dom_loaded; }
+
+    void set_selection(Selection);
+    void clear_selection();
+
+    void select_default_node();
+
     void clear_dom_json();
     void set_dom_json(StringView dom_json);
 
@@ -52,6 +59,11 @@ private:
     ModelTranslator m_computed_style_model {};
     ModelTranslator m_resolved_style_model {};
     ModelTranslator m_custom_properties_model {};
+
+    QTreeView* m_dom_tree_view { nullptr };
+
+    bool m_dom_loaded { false };
+    Optional<Selection> m_pending_selection {};
 };
 
 }
