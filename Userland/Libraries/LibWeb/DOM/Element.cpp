@@ -1682,4 +1682,14 @@ void Element::for_each_attribute(Function<void(DeprecatedFlyString const&, Depre
     }
 }
 
+Layout::NodeWithStyle* Element::layout_node()
+{
+    return static_cast<Layout::NodeWithStyle*>(Node::layout_node());
+}
+
+Layout::NodeWithStyle const* Element::layout_node() const
+{
+    return static_cast<Layout::NodeWithStyle const*>(Node::layout_node());
+}
+
 }
