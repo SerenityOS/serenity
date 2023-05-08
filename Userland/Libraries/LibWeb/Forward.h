@@ -448,6 +448,7 @@ class RadioButton;
 class ReplacedBox;
 class TableWrapper;
 class TextNode;
+class TreeBuilder;
 class VideoBox;
 class Viewport;
 
