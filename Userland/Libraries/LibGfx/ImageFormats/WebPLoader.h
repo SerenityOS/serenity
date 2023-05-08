@@ -31,6 +31,8 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
+    bool set_error(ErrorOr<void>&&);
+
     WebPImageDecoderPlugin(ReadonlyBytes, OwnPtr<WebPLoadingContext>);
 
     OwnPtr<WebPLoadingContext> m_context;
