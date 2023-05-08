@@ -11,7 +11,6 @@
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
-#include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperty.h>
 #include <LibWeb/DOM/ChildNode.h>
