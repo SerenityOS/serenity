@@ -46,7 +46,12 @@ namespace Web {
 #    error Unknown OS
 #endif
 
-#define BROWSER_NAME "Ladybird"
+#if defined(AK_OS_SERENITY)
+#    define BROWSER_NAME "Browser"
+#else
+#    define BROWSER_NAME "Ladybird"
+#endif
+
 #define BROWSER_VERSION "1.0"
 
 constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 " BROWSER_NAME "/" BROWSER_VERSION ""sv;
