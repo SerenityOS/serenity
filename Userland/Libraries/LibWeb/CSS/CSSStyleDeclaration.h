@@ -9,21 +9,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/CSS/StyleProperty.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
-
-enum class Important {
-    No,
-    Yes,
-};
-
-struct StyleProperty {
-    Important important { Important::No };
-    CSS::PropertyID property_id;
-    NonnullRefPtr<StyleValue const> value;
-    DeprecatedString custom_name {};
-};
 
 class CSSStyleDeclaration : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CSSStyleDeclaration, Bindings::PlatformObject);

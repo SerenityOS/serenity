@@ -12,7 +12,7 @@
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/Bindings/WindowGlobalMixin.h>
-#include <LibWeb/CSS/CSSStyleDeclaration.h>
+#include <LibWeb/CSS/StyleProperty.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
@@ -132,8 +132,8 @@ public:
     };
     NeedsRelayout recompute_style();
 
-    Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
-    Layout::NodeWithStyle const* layout_node() const { return static_cast<Layout::NodeWithStyle const*>(Node::layout_node()); }
+    Layout::NodeWithStyle* layout_node();
+    Layout::NodeWithStyle const* layout_node() const;
 
     DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
