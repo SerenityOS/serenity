@@ -23,9 +23,7 @@ Device::Device(DeviceIdentifier const& pci_identifier)
 
 bool Device::is_msi_capable() const
 {
-    return AK::any_of(
-        m_pci_identifier->capabilities(),
-        [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSI; });
+    return m_pci_identifier->is_msi_capable();
 }
 bool Device::is_msix_capable() const
 {
