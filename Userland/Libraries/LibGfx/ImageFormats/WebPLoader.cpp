@@ -158,7 +158,7 @@ struct WebPLoadingContext {
     template<size_t N>
     [[nodiscard]] class Error error(char const (&string_literal)[N])
     {
-        state = WebPLoadingContext::State::Error;
+        // FIXME: Remove this function; make all callers call Error::from_string_literal() directly.
         return Error::from_string_literal(string_literal);
     }
 };
@@ -723,13 +723,22 @@ WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLo
 
 WebPImageDecoderPlugin::~WebPImageDecoderPlugin() = default;
 
+bool WebPImageDecoderPlugin::set_error(ErrorOr<void>&& error_or)
+{
+    if (error_or.is_error()) {
+        m_context->state = WebPLoadingContext::State::Error;
+        return true;
+    }
+    return false;
+}
+
 IntSize WebPImageDecoderPlugin::size()
 {
     if (m_context->state == WebPLoadingContext::State::Error)
         return {};
 
     if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
-        if (decode_webp_first_chunk(*m_context).is_error())
+        if (set_error(decode_webp_first_chunk(*m_context)))
             return {};
     }
 
@@ -751,13 +760,15 @@ bool WebPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool WebPImageDecoderPlugin::initialize()
 {
-    return !decode_webp_header(*m_context).is_error();
+    return !set_error(decode_webp_header(*m_context));
 }
 
 bool WebPImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     WebPLoadingContext context;
     context.data = data;
+
+    // Intentionally no set_error() call: We're just sniffing `data` passed to the function, not reading m_context->data.
     return !decode_webp_header(context).is_error();
 }
 
@@ -773,7 +784,7 @@ bool WebPImageDecoderPlugin::is_animated()
         return false;
 
     if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
-        if (decode_webp_first_chunk(*m_context).is_error())
+        if (set_error(decode_webp_first_chunk(*m_context)))
             return false;
     }
 
@@ -786,7 +797,7 @@ size_t WebPImageDecoderPlugin::loop_count()
         return 0;
 
     if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded) {
-        if (decode_webp_animation_frame_chunks(*m_context).is_error())
+        if (set_error(decode_webp_animation_frame_chunks(*m_context)))
             return 0;
     }
 
@@ -799,7 +810,7 @@ size_t WebPImageDecoderPlugin::frame_count()
         return 1;
 
     if (m_context->state < WebPLoadingContext::State::ChunksDecoded) {
-        if (decode_webp_chunks(*m_context).is_error())
+        if (set_error(decode_webp_chunks(*m_context)))
             return 1;
     }
 
@@ -819,35 +830,48 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
     if (m_context->state == WebPLoadingContext::State::Error)
         return Error::from_string_literal("WebPImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < WebPLoadingContext::State::ChunksDecoded)
-        TRY(decode_webp_chunks(*m_context));
+    // In a a lambda so that only one check to set State::Error is needed, instead of one per TRY.
+    auto decode_frame = [this](size_t index) -> ErrorOr<ImageFrameDescriptor> {
+        if (m_context->state < WebPLoadingContext::State::ChunksDecoded)
+            TRY(decode_webp_chunks(*m_context));
 
-    if (is_animated()) {
-        if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded)
-            TRY(decode_webp_animation_frame_chunks(*m_context));
-        return decode_webp_animation_frame(*m_context, index);
-    }
-
-    if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
-        auto bitmap = TRY(decode_webp_image_data(*m_context, m_context->image_data.value()));
-
-        // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
-        if (m_context->first_chunk->type == FourCC("VP8X")) {
-            if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width || static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
-                return m_context->error("WebPImageDecoderPlugin: VP8X and VP8/VP8L chunks store different dimensions");
+        if (is_animated()) {
+            if (m_context->state < WebPLoadingContext::State::AnimationFrameChunksDecoded)
+                TRY(decode_webp_animation_frame_chunks(*m_context));
+            return decode_webp_animation_frame(*m_context, index);
         }
 
-        m_context->bitmap = move(bitmap);
-        m_context->state = WebPLoadingContext::State::BitmapDecoded;
-    }
+        if (m_context->state < WebPLoadingContext::State::BitmapDecoded) {
+            auto bitmap = TRY(decode_webp_image_data(*m_context, m_context->image_data.value()));
 
-    VERIFY(m_context->bitmap);
-    return ImageFrameDescriptor { m_context->bitmap, 0 };
+            // Check that size in VP8X chunk matches dimensions in VP8 or VP8L chunk if both are present.
+            if (m_context->first_chunk->type == FourCC("VP8X")) {
+                if (static_cast<u32>(bitmap->width()) != m_context->vp8x_header.width || static_cast<u32>(bitmap->height()) != m_context->vp8x_header.height)
+                    return m_context->error("WebPImageDecoderPlugin: VP8X and VP8/VP8L chunks store different dimensions");
+            }
+
+            m_context->bitmap = move(bitmap);
+            m_context->state = WebPLoadingContext::State::BitmapDecoded;
+        }
+
+        VERIFY(m_context->bitmap);
+        return ImageFrameDescriptor { m_context->bitmap, 0 };
+    };
+
+    auto result = decode_frame(index);
+    if (result.is_error()) {
+        m_context->state = WebPLoadingContext::State::Error;
+        return result.release_error();
+    }
+    return result.release_value();
 }
 
 ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
 {
-    TRY(decode_webp_chunks(*m_context));
+    if (auto result = decode_webp_chunks(*m_context); result.is_error()) {
+        m_context->state = WebPLoadingContext::State::Error;
+        return result.release_error();
+    }
 
     // FIXME: "If this chunk is not present, sRGB SHOULD be assumed."
 
