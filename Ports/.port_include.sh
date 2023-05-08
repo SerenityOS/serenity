@@ -480,7 +480,7 @@ func_defined post_install || post_install() {
     :
 }
 clean() {
-    rm -rf "${PORT_BUILD_DIR}"
+    rm -rf "${PORT_BUILD_DIR}/"*
 }
 clean_dist() {
     OLDIFS=$IFS
