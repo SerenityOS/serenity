@@ -513,6 +513,7 @@ set(SOURCES
     SVG/SVGRadialGradientElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/SVGStopElement.cpp
+    SVG/SVGStyleElement.cpp
     SVG/SVGTextContentElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp

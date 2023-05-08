@@ -1,0 +1,13 @@
+#import <CSS/CSSStyleSheet.idl>
+#import <CSS/LinkStyle.idl>
+#import <SVG/SVGElement.idl>
+
+// https://svgwg.org/svg2-draft/styling.html#InterfaceSVGStyleElement
+[Exposed=Window]
+interface SVGStyleElement : SVGElement {
+  // FIXME: attribute DOMString type;
+  // FIXME: attribute DOMString media;
+  // FIXME: attribute DOMString title;
+};
+
+SVGStyleElement includes LinkStyle;
