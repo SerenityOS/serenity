@@ -41,11 +41,17 @@ void Device::disable_pin_based_interrupts() const
 
 void Device::enable_message_signalled_interrupts()
 {
-    TODO();
+    for (auto& capability : m_pci_identifier->capabilities()) {
+        if (capability.id().value() == PCI::Capabilities::ID::MSI)
+            capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msi_control_enable);
+    }
 }
 void Device::disable_message_signalled_interrupts()
 {
-    TODO();
+    for (auto& capability : m_pci_identifier->capabilities()) {
+        if (capability.id().value() == PCI::Capabilities::ID::MSI)
+            capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msi_control_enable));
+    }
 }
 
 void Device::enable_extended_message_signalled_interrupts()
