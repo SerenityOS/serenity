@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/MimeType.h>
 #include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
+#include <LibWeb/HTML/ScrollOptions.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/RequestIdleCallback/IdleRequest.h>
@@ -29,11 +30,6 @@
 namespace Web::HTML {
 
 class IdleCallback;
-
-// https://w3c.github.io/csswg-drafts/cssom-view/#dictdef-scrolloptions
-struct ScrollOptions {
-    Bindings::ScrollBehavior behavior { Bindings::ScrollBehavior::Auto };
-};
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dictdef-scrolltooptions
 struct ScrollToOptions : public ScrollOptions {
