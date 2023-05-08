@@ -62,7 +62,6 @@ public:
     [[nodiscard]] JsonValue take(size_t index) { return m_values.take(index); }
 
     void must_append(JsonValue value) { m_values.append(move(value)); }
-    void must_set(size_t index, JsonValue value) { m_values.insert(index, move(value)); }
 
     void clear() { m_values.clear(); }
     ErrorOr<void> append(JsonValue value) { return m_values.try_append(move(value)); }
