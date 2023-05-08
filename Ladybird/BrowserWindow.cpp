@@ -330,9 +330,26 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(this, &QWidget::customContextMenuRequested, this, &BrowserWindow::show_context_menu);
+
     new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
 
     setCentralWidget(m_tabs_container);
+}
+
+void BrowserWindow::show_context_menu(QPoint const& point)
+{
+    QMenu contextMenu("Context menu", this);
+
+    QAction inspect_action("&Inspect Element", this);
+    connect(&inspect_action, &QAction::triggered, this, [this] {
+        if (!m_current_tab)
+            return;
+        m_current_tab->view().show_inspector(WebContentView::InspectorTarget::HoveredElement);
+    });
+    contextMenu.addAction(&inspect_action);
+    contextMenu.exec(mapToGlobal(point));
 }
 
 void BrowserWindow::set_current_tab(Tab* tab)

@@ -23,6 +23,11 @@ public:
         endResetModel();
     }
 
+    RefPtr<GUI::Model> underlying_model()
+    {
+        return m_model;
+    }
+
     virtual int columnCount(QModelIndex const& parent) const override;
     virtual int rowCount(QModelIndex const& parent) const override;
     virtual QVariant data(QModelIndex const&, int role) const override;

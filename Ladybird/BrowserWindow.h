@@ -49,6 +49,7 @@ public slots:
     void reset_zoom();
     void select_all();
     void copy_selected_text();
+    void show_context_menu(QPoint const&);
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;

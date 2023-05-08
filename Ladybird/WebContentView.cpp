@@ -540,12 +540,22 @@ bool WebContentView::is_inspector_open() const
     return m_inspector_widget && m_inspector_widget->isVisible();
 }
 
-void WebContentView::show_inspector()
+void WebContentView::show_inspector(InspectorTarget inspector_target)
 {
+    bool inspector_previously_loaded = m_inspector_widget;
     ensure_inspector_widget();
+    if (!inspector_previously_loaded || !m_inspector_widget->dom_loaded()) {
+        inspect_dom_tree();
+        inspect_accessibility_tree();
+    }
     m_inspector_widget->show();
-    inspect_dom_tree();
-    inspect_accessibility_tree();
+
+    if (inspector_target == InspectorTarget::HoveredElement) {
+        auto hovered_node = get_hovered_node_id();
+        m_inspector_widget->set_selection({ hovered_node });
+    } else {
+        m_inspector_widget->select_default_node();
+    }
 }
 
 void WebContentView::update_zoom()
