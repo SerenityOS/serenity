@@ -91,7 +91,15 @@ ErrorOr<InterruptType> Device::reserve_irqs(u8 number_of_irqs, bool msi)
         disable_pin_based_interrupts();
         enable_extended_message_signalled_interrupts();
     } else if (msi && is_msi_capable()) {
-        TODO();
+        // TODO: Add MME support. Fallback to pin-based until this support is added.
+        if (number_of_irqs > 1)
+            return m_interrupt_range.m_type;
+
+        m_interrupt_range.m_start_irq = TRY(reserve_interrupt_handlers(number_of_irqs));
+        m_interrupt_range.m_irq_count = number_of_irqs;
+        m_interrupt_range.m_type = InterruptType::MSI;
+        disable_pin_based_interrupts();
+        enable_message_signalled_interrupts();
     }
     return m_interrupt_range.m_type;
 }
@@ -132,7 +140,26 @@ ErrorOr<u8> Device::allocate_irq(u8 index)
 
         return m_interrupt_range.m_start_irq + index;
     } else if ((m_interrupt_range.m_type == InterruptType::MSI) && is_msi_capable()) {
-        TODO();
+        // TODO: Add MME support.
+        if (index > 0)
+            return Error::from_errno(EINVAL);
+
+        auto data = msi_data_register(m_interrupt_range.m_start_irq + index, false, false);
+        auto addr = msi_address_register(0, false, false);
+        for (auto& capability : m_pci_identifier->capabilities()) {
+            if (capability.id().value() == PCI::Capabilities::ID::MSI) {
+                capability.write32(msi_address_low_offset, addr & 0xffffffff);
+
+                if (!m_pci_identifier->is_msi_64bit_address_format()) {
+                    capability.write16(msi_address_high_or_data_offset, data);
+                    break;
+                }
+
+                capability.write32(msi_address_high_or_data_offset, addr >> 32);
+                capability.write16(msi_data_offset, data);
+            }
+        }
+        return m_interrupt_range.m_start_irq + index;
     }
     // For pin based interrupts, we share the IRQ.
     return m_interrupt_range.m_start_irq;
@@ -152,7 +179,7 @@ void Device::enable_interrupt(u8 irq)
         u32 vector_ctrl = msix_vector_control_register(entry_ptr->vector_control, false);
         entry_ptr->vector_control = vector_ctrl;
     } else if ((m_interrupt_range.m_type == InterruptType::MSI) && is_msi_capable()) {
-        TODO();
+        enable_message_signalled_interrupts();
     }
 }
 
@@ -170,7 +197,7 @@ void Device::disable_interrupt(u8 irq)
         u32 vector_ctrl = msix_vector_control_register(entry_ptr->vector_control, true);
         entry_ptr->vector_control = vector_ctrl;
     } else if ((m_interrupt_range.m_type == InterruptType::MSI) && is_msi_capable()) {
-        TODO();
+        disable_message_signalled_interrupts();
     }
 }
 
