@@ -203,7 +203,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
                 [&](JsonArray& array) {
                     // NOTE: If this was a JS array, only indexed properties would be serialized anyway.
                     if (name.is_number())
-                        array.must_set(name.as_number(), cloned_property_result.value());
+                        array.set(name.as_number(), cloned_property_result.value());
                 },
                 [&](JsonObject& object) {
                     object.set(name.to_string(), cloned_property_result.value());
