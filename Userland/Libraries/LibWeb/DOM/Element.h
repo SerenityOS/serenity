@@ -15,7 +15,6 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperty.h>
 #include <LibWeb/DOM/ChildNode.h>
-#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/QualifiedName.h>
@@ -89,7 +88,7 @@ public:
     DeprecatedFlyString const& namespace_uri() const { return namespace_(); }
 
     bool has_attribute(DeprecatedFlyString const& name) const;
-    bool has_attributes() const { return !m_attributes->is_empty(); }
+    bool has_attributes() const;
     DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
@@ -98,7 +97,7 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
     void remove_attribute(DeprecatedFlyString const& name);
     WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
-    size_t attribute_list_size() const { return m_attributes->length(); }
+    size_t attribute_list_size() const;
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<DeprecatedString> get_attribute_names() const;
 

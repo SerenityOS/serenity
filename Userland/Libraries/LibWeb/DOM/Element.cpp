@@ -20,6 +20,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
@@ -1690,6 +1691,16 @@ Layout::NodeWithStyle* Element::layout_node()
 Layout::NodeWithStyle const* Element::layout_node() const
 {
     return static_cast<Layout::NodeWithStyle const*>(Node::layout_node());
+}
+
+bool Element::has_attributes() const
+{
+    return !m_attributes->is_empty();
+}
+
+size_t Element::attribute_list_size() const
+{
+    return m_attributes->length();
 }
 
 }
