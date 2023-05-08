@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::HTML {
 

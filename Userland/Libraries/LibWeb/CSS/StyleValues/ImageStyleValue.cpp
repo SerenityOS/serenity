@@ -8,9 +8,11 @@
  */
 
 #include "ImageStyleValue.h"
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Platform/Timer.h>
 
 namespace Web::CSS {

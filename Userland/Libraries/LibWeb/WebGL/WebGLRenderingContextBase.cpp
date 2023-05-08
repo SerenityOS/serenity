@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <LibGL/GLContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {

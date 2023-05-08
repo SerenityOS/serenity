@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Color.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGAnimatedNumber.h>
 #include <LibWeb/SVG/SVGElement.h>
