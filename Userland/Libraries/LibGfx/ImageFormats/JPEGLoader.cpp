@@ -1042,8 +1042,8 @@ static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGL
     auto const color_transform = TRY(stream.read_value<u8>());
 
     if (bytes_to_read > 6) {
-        dbgln_if(JPEG_DEBUG, "Unread bytes in App14 segment: {}", bytes_to_read - 1);
-        TRY(stream.discard(bytes_to_read - 1));
+        dbgln_if(JPEG_DEBUG, "Unread bytes in App14 segment: {}", bytes_to_read - 6);
+        TRY(stream.discard(bytes_to_read - 6));
     }
 
     switch (color_transform) {
