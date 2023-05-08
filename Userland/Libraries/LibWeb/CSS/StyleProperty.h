@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
+#include <LibWeb/CSS/PropertyID.h>
+
 namespace Web::CSS {
 
 enum class Important {
@@ -14,6 +17,8 @@ enum class Important {
 };
 
 struct StyleProperty {
+    ~StyleProperty();
+
     Important important { Important::No };
     CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue const> value;

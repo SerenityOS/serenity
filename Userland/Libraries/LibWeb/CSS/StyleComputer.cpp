@@ -54,6 +54,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <stdio.h>

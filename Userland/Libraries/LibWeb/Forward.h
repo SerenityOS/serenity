@@ -163,6 +163,8 @@ class URLStyleValue;
 enum class MediaFeatureID;
 enum class PropertyID;
 enum class ValueID;
+
+struct BackgroundLayerData;
 }
 
 namespace Web::CSS::Parser {

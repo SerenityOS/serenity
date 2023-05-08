@@ -1703,4 +1703,9 @@ size_t Element::attribute_list_size() const
     return m_attributes->length();
 }
 
+void Element::set_computed_css_values(RefPtr<CSS::StyleProperties> style)
+{
+    m_computed_css_values = move(style);
+}
+
 }

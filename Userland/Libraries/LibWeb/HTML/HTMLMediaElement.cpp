@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/TrackEvent.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/HTML/VideoTrackList.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/WebIDL/Promise.h>
 

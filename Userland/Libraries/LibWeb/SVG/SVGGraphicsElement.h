@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibGfx/PaintStyle.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/SVG/AttributeParser.h>

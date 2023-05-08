@@ -21,7 +21,6 @@
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/ScrollOptions.h>
 #include <LibWeb/HTML/TagNames.h>
-#include <LibWeb/Layout/Node.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
@@ -137,7 +136,7 @@ public:
 
     CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
-    void set_computed_css_values(RefPtr<CSS::StyleProperties> style) { m_computed_css_values = move(style); }
+    void set_computed_css_values(RefPtr<CSS::StyleProperties>);
     NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
 
     CSS::CSSStyleDeclaration const* inline_style() const;

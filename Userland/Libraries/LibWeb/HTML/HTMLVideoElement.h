@@ -8,9 +8,11 @@
 
 #include <AK/Optional.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {

@@ -64,6 +64,7 @@ set(SOURCES
     CSS/Size.cpp
     CSS/StyleComputer.cpp
     CSS/StyleProperties.cpp
+    CSS/StyleProperty.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp
