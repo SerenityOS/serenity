@@ -167,12 +167,13 @@ UNMAP_AFTER_INIT ErrorOr<void> AHCIController::initialize_hba(PCI::DeviceIdentif
     u32 version = hba().control_regs.version;
 
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
-    PCI::enable_interrupt_line(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
+    TRY(reserve_irqs(1, true));
+    auto irq = MUST(allocate_irq(0));
     enable_global_interrupts();
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
-    m_irq_handler = AHCIInterruptHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
+    m_irq_handler = AHCIInterruptHandler::create(*this, irq, implemented_ports).release_value_but_fixme_should_propagate_errors();
     TRY(reset());
 
     dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", device_identifier().address(), version);

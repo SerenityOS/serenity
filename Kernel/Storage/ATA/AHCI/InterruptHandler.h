@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
@@ -25,7 +25,7 @@ class AsyncBlockDeviceRequest;
 
 class AHCIController;
 class AHCIPort;
-class AHCIInterruptHandler final : public IRQHandler {
+class AHCIInterruptHandler final : public PCIIRQHandler {
     friend class AHCIController;
 
 public:
