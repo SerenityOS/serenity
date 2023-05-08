@@ -152,7 +152,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
         ErrorOr<void> result;
         for (auto const& path : candidate_web_content_paths) {
             constexpr auto callgrind_prefix_length = 3;
-            auto arguments_with_callgrind_prefix = Array {
+            auto arguments = Vector {
                 "valgrind"sv,
                 "--tool=callgrind"sv,
                 "--instr-atstart=no"sv,
@@ -160,11 +160,10 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
                 "--webcontent-fd-passing-socket"sv,
                 webcontent_fd_passing_socket_string
             };
-            auto arguments = arguments_with_callgrind_prefix.span();
             if (enable_callgrind_profiling == EnableCallgrindProfiling::No)
-                arguments = arguments.slice(callgrind_prefix_length);
+                arguments.remove(0, callgrind_prefix_length);
 
-            result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
+            result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
                 break;
         }
