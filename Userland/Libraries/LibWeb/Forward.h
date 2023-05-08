@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibJS/Forward.h>
 #include <LibWeb/Bindings/Forward.h>
 
 namespace Web {
@@ -582,6 +583,8 @@ class DOMException;
 
 template<typename ValueType>
 class ExceptionOr;
+
+using Promise = JS::PromiseCapability;
 }
 
 namespace Web::WebSockets {

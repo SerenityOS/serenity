@@ -5,6 +5,7 @@
  */
 
 #include <AK/GenericLexer.h>
+#include <AK/Random.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/FormDataEvent.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
