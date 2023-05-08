@@ -13,7 +13,6 @@
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
