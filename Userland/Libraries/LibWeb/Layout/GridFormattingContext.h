@@ -145,7 +145,7 @@ private:
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
-    CSSPixels get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
+    AvailableSize get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);

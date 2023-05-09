@@ -95,7 +95,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
-    return max(1, static_cast<int>((get_free_space(available_space.width, m_grid_columns) / sum_of_grid_track_sizes).value()));
+    return max(1, static_cast<int>((get_free_space(available_space.width, m_grid_columns).to_px() / sum_of_grid_track_sizes).value()));
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -639,20 +639,24 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
         switch (track.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        case CSS::GridSize::Type::Length:
+        case CSS::GridSize::Type::Length: {
             if (!track.min_track_sizing_function.length().is_auto())
                 track.base_size = track.min_track_sizing_function.length().to_px(grid_container());
             break;
-        case CSS::GridSize::Type::Percentage:
+        }
+        case CSS::GridSize::Type::Percentage: {
             if (track_available_size.is_definite())
                 track.base_size = track.min_track_sizing_function.percentage().as_fraction() * track_available_size.to_px().value();
             break;
+        }
         // - An intrinsic sizing function
         // Use an initial base size of zero.
         case CSS::GridSize::Type::FlexibleLength:
         case CSS::GridSize::Type::MaxContent:
-        case CSS::GridSize::Type::MinContent:
+        case CSS::GridSize::Type::MinContent: {
+            track.base_size = 0;
             break;
+        }
         default:
             VERIFY_NOT_REACHED();
         }
@@ -661,36 +665,40 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
         switch (track.max_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial growth limit.
-        case CSS::GridSize::Type::Length:
+        case CSS::GridSize::Type::Length: {
             if (!track.max_track_sizing_function.length().is_auto())
                 track.growth_limit = track.max_track_sizing_function.length().to_px(grid_container());
             else
                 // - An intrinsic sizing function
                 // Use an initial growth limit of infinity.
-                track.growth_limit = -1;
+                track.growth_limit = INFINITY;
             break;
-        case CSS::GridSize::Type::Percentage:
+        }
+        case CSS::GridSize::Type::Percentage: {
             if (track_available_size.is_definite())
                 track.growth_limit = track.max_track_sizing_function.percentage().as_fraction() * track_available_size.to_px().value();
             break;
+        }
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
-        case CSS::GridSize::Type::FlexibleLength:
-            track.growth_limit = -1;
+        case CSS::GridSize::Type::FlexibleLength: {
+            track.growth_limit = INFINITY;
             break;
+        }
         // - An intrinsic sizing function
         // Use an initial growth limit of infinity.
         case CSS::GridSize::Type::MaxContent:
-        case CSS::GridSize::Type::MinContent:
-            track.growth_limit = -1;
+        case CSS::GridSize::Type::MinContent: {
+            track.growth_limit = INFINITY;
             break;
+        }
         default:
             VERIFY_NOT_REACHED();
         }
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match
         // the base size.
-        if (track.growth_limit != -1 && track.growth_limit < track.base_size)
+        if (track.growth_limit < track.base_size)
             track.growth_limit = track.base_size;
     }
 
@@ -834,7 +842,7 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
 
         // In all cases, if a track’s growth limit is now less than its base size, increase the growth limit
         // to match the base size.
-        if (track.growth_limit != -1 && track.growth_limit < track.base_size)
+        if (track.growth_limit < track.base_size)
             track.growth_limit = track.base_size;
 
         ++index;
@@ -918,6 +926,11 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
 
     // FIXME: 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
     // it or it is a flexible track), set its growth limit to its base size.
+    for (auto& track : tracks) {
+        if (track.growth_limit == INFINITY) {
+            track.growth_limit = track.base_size;
+        }
+    }
 
     // https://www.w3.org/TR/css-grid-2/#extra-space
     // 12.5.1. Distributing Extra Space Across Spanned Tracks
@@ -945,7 +958,7 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
     for (auto& track : tracks) {
         if (track.is_gap)
             continue;
-        track.space_to_distribute = max(CSSPixels(0), (track.growth_limit == -1 ? track.base_size : track.growth_limit) - track.base_size);
+        track.space_to_distribute = max(CSSPixels(0), track.growth_limit - track.base_size);
     }
 
     auto remaining_free_space = track_available_size.is_definite() ? track_available_size.to_px() - sum_of_track_sizes : 0;
@@ -1018,26 +1031,35 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
     // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
     // 12.6. Maximize Tracks
 
+    auto get_free_space_px = [&]() -> CSSPixels {
+        // For the purpose of this step: if sizing the grid container under a max-content constraint, the
+        // free space is infinite; if sizing under a min-content constraint, the free space is zero.
+        auto free_space = get_free_space(track_available_size, tracks);
+        if (free_space.is_max_content()) {
+            return INFINITY;
+        } else if (free_space.is_min_content()) {
+            return 0;
+        } else {
+            return free_space.to_px();
+        }
+    };
+
+    auto free_space_px = get_free_space_px();
+
     // If the free space is positive, distribute it equally to the base sizes of all tracks, freezing
     // tracks as they reach their growth limits (and continuing to grow the unfrozen tracks as needed).
-    auto free_space = get_free_space(track_available_size, tracks);
-    while (free_space > 0) {
-        auto free_space_to_distribute_per_track = free_space / (tracks.size() - count_of_gap_tracks(tracks));
+    while (free_space_px > 0) {
+        auto free_space_to_distribute_per_track = free_space_px / (tracks.size() - count_of_gap_tracks(tracks));
         for (auto& track : tracks) {
             if (track.is_gap)
                 continue;
-            if (track.growth_limit != -1)
-                track.base_size = min(track.growth_limit, track.base_size + free_space_to_distribute_per_track);
-            else
-                track.base_size = track.base_size + free_space_to_distribute_per_track;
+            VERIFY(track.growth_limit != INFINITY);
+            track.base_size = min(track.growth_limit, track.base_size + free_space_to_distribute_per_track);
         }
-        if (get_free_space(track_available_size, tracks) == free_space)
+        if (get_free_space_px() == free_space_px)
             break;
-        free_space = get_free_space(track_available_size, tracks);
+        free_space_px = get_free_space_px();
     }
-
-    // For the purpose of this step: if sizing the grid container under a max-content constraint, the
-    // free space is infinite; if sizing under a min-content constraint, the free space is zero.
 
     // If this would cause the grid to be larger than the grid container’s inner size as limited by its
     // max-width/height, then redo this step, treating the available grid space as equal to the grid
@@ -1048,83 +1070,64 @@ void GridFormattingContext::run_track_sizing(GridDimension const dimension, Avai
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding
     // the available space.
 
-    // First, find the grid’s used flex fraction:
-    auto flex_factor_sum = 0;
-    for (auto& track : tracks) {
-        if (track.min_track_sizing_function.is_flexible_length())
-            flex_factor_sum++;
-    }
-    // See 12.7.1.
-    // Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less
-    // than 1, set it to 1 instead.
-    if (flex_factor_sum < 1)
-        flex_factor_sum = 1;
+    auto find_the_size_of_an_fr = [&]() -> CSSPixels {
+        // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
 
-    // See 12.7.1.
-    CSSPixels sized_column_widths = 0;
-    for (auto& track : tracks) {
-        if (!track.min_track_sizing_function.is_flexible_length())
-            sized_column_widths += track.base_size;
-    }
-    // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
-    CSSPixels leftover_space = track_available_size.is_definite() ? track_available_size.to_px() - sized_column_widths : 0;
+        VERIFY(track_available_size.is_definite());
 
-    // If the free space is zero or if sizing the grid container under a min-content constraint:
-    // The used flex fraction is zero.
-    // FIXME: Add min-content constraint check.
-
-    // Otherwise, if the free space is a definite length:
-    // The used flex fraction is the result of finding the size of an fr using all of the grid tracks
-    // and a space to fill of the available grid space.
-    if (leftover_space > 0) {
+        // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
+        auto leftover_space = track_available_size.to_px();
         for (auto& track : tracks) {
-            if (track.min_track_sizing_function.is_flexible_length()) {
-                // See 12.7.1.
-                // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
-                auto hypothetical_fr_size = leftover_space / flex_factor_sum;
-                // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
-                // greater than the track’s base size, set its base size to that product.
-                track.base_size = max(track.base_size, hypothetical_fr_size);
+            if (!track.max_track_sizing_function.is_flexible_length()) {
+                leftover_space -= track.base_size;
             }
         }
+
+        // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks.
+        //    If this value is less than 1, set it to 1 instead.
+        auto flex_factor_sum = 0;
+        for (auto& track : tracks) {
+            if (track.max_track_sizing_function.is_flexible_length())
+                flex_factor_sum++;
+        }
+        if (flex_factor_sum < 1)
+            flex_factor_sum = 1;
+
+        // 3. Let the hypothetical fr size be the leftover space divided by the flex factor sum.
+        auto hypothetical_fr_size = leftover_space / flex_factor_sum;
+
+        // FIXME: 4. If the product of the hypothetical fr size and a flexible track’s flex factor is less than the track’s
+        //    base size, restart this algorithm treating all such tracks as inflexible.
+
+        // 5. Return the hypothetical fr size.
+        return hypothetical_fr_size;
+    };
+
+    // First, find the grid’s used flex fraction:
+    auto flex_fraction = [&]() {
+        auto free_space = get_free_space(track_available_size, tracks);
+        // If the free space is zero or if sizing the grid container under a min-content constraint:
+        if (free_space.to_px() == 0 || track_available_size.is_min_content()) {
+            // The used flex fraction is zero.
+            return CSSPixels(0);
+            // Otherwise, if the free space is a definite length:
+        } else if (free_space.is_definite()) {
+            // The used flex fraction is the result of finding the size of an fr using all of the grid tracks and a space
+            // to fill of the available grid space.
+            return find_the_size_of_an_fr();
+        } else {
+            // FIXME
+            return CSSPixels(0);
+        }
+    }();
+
+    // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
+    // the track’s base size, set its base size to that product.
+    for (auto& track : tracks) {
+        if (track.max_track_sizing_function.flexible_length() * flex_fraction > track.base_size) {
+            track.base_size = track.max_track_sizing_function.flexible_length() * flex_fraction;
+        }
     }
-
-    // Otherwise, if the free space is an indefinite length:
-    // FIXME: No tracks will have indefinite length as per current implementation.
-
-    // The used flex fraction is the maximum of:
-    // For each flexible track, if the flexible track’s flex factor is greater than one, the result of
-    // dividing the track’s base size by its flex factor; otherwise, the track’s base size.
-
-    // For each grid item that crosses a flexible track, the result of finding the size of an fr using
-    // all the grid tracks that the item crosses and a space to fill of the item’s max-content
-    // contribution.
-
-    // If using this flex fraction would cause the grid to be smaller than the grid container’s
-    // min-width/height (or larger than the grid container’s max-width/height), then redo this step,
-    // treating the free space as definite and the available grid space as equal to the grid container’s
-    // inner size when it’s sized to its min-width/height (max-width/height).
-
-    // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
-    // greater than the track’s base size, set its base size to that product.
-
-    // https://drafts.csswg.org/css-grid/#algo-find-fr-size
-    // 12.7.1. Find the Size of an fr
-
-    // This algorithm finds the largest size that an fr unit can be without exceeding the target size.
-    // It must be called with a set of grid tracks and some quantity of space to fill.
-
-    // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
-
-    // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks. If this value is less
-    // than 1, set it to 1 instead.
-
-    // 3. Let the hypothetical fr size be the leftover space divided by the flex factor sum.
-
-    // FIXME: 4. If the product of the hypothetical fr size and a flexible track’s flex factor is less than the
-    // track’s base size, restart this algorithm treating all such tracks as inflexible.
-
-    // 5. Return the hypothetical fr size.
 
     // https://drafts.csswg.org/css-grid/#algo-stretch
     // 12.8. Stretch auto Tracks
@@ -1505,19 +1508,20 @@ bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement con
     return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
 }
 
-CSSPixels GridFormattingContext::get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const
+AvailableSize GridFormattingContext::get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const
 {
     // https://www.w3.org/TR/css-grid-2/#algo-terms
     // free space: Equal to the available grid space minus the sum of the base sizes of all the grid
     // tracks (including gutters), floored at zero. If available grid space is indefinite, the free
     // space is indefinite as well.
-    // FIXME: do indefinite space
-    if (!available_size.is_definite())
-        return 0;
-    CSSPixels sum_base_sizes = 0;
-    for (auto& track : tracks)
-        sum_base_sizes += track.base_size;
-    return max(CSSPixels(0), available_size.to_px() - sum_base_sizes);
+    if (available_size.is_definite()) {
+        CSSPixels sum_base_sizes = 0;
+        for (auto& track : tracks)
+            sum_base_sizes += track.base_size;
+        return AvailableSize::make_definite(max(CSSPixels(0), available_size.to_px() - sum_base_sizes));
+    }
+
+    return available_size;
 }
 
 int GridFormattingContext::get_line_index_by_line_name(String const& needle, CSS::GridTrackSizeList grid_track_size_list)
