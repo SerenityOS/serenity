@@ -18,17 +18,17 @@ enum class GridDimension {
 
 class OccupationGrid {
 public:
-    OccupationGrid(int column_count, int row_count);
+    OccupationGrid(size_t column_count, size_t row_count);
     OccupationGrid();
 
-    void maybe_add_column(int needed_number_of_columns);
-    void maybe_add_row(int needed_number_of_rows);
-    void set_occupied(int column_start, int column_end, int row_start, int row_end);
-    void set_occupied(int column_index, int row_index);
+    void maybe_add_column(size_t needed_number_of_columns);
+    void maybe_add_row(size_t needed_number_of_rows);
+    void set_occupied(size_t column_start, size_t column_end, size_t row_start, size_t row_end);
+    void set_occupied(size_t column_index, size_t row_index);
 
-    int column_count() { return static_cast<int>(m_occupation_grid[0].size()); }
-    int row_count() { return static_cast<int>(m_occupation_grid.size()); }
-    bool is_occupied(int column_index, int row_index);
+    size_t column_count() { return m_occupation_grid[0].size(); }
+    size_t row_count() { return m_occupation_grid.size(); }
+    bool is_occupied(size_t column_index, size_t row_index);
 
 private:
     Vector<Vector<bool>> m_occupation_grid;
@@ -47,18 +47,18 @@ public:
 
     Box const& box() const { return m_box; }
 
-    int raw_row_span() { return m_row_span; }
-    int raw_column_span() { return m_column_span; }
+    size_t raw_row_span() { return m_row_span; }
+    size_t raw_column_span() { return m_column_span; }
 
-    int gap_adjusted_row(Box const& grid_box) const;
-    int gap_adjusted_column(Box const& grid_box) const;
+    size_t gap_adjusted_row(Box const& grid_box) const;
+    size_t gap_adjusted_column(Box const& grid_box) const;
 
 private:
     JS::NonnullGCPtr<Box const> m_box;
-    int m_row { 0 };
-    int m_row_span { 1 };
-    int m_column { 0 };
-    int m_column_span { 1 };
+    size_t m_row { 0 };
+    size_t m_row_span { 1 };
+    size_t m_column { 0 };
+    size_t m_column_span { 1 };
 };
 
 class GridFormattingContext final : public FormattingContext {
@@ -131,10 +131,10 @@ private:
 
     struct GridArea {
         String name;
-        int row_start { 0 };
-        int row_end { 1 };
-        int column_start { 0 };
-        int column_end { 1 };
+        size_t row_start { 0 };
+        size_t row_end { 1 };
+        size_t column_start { 0 };
+        size_t column_end { 1 };
     };
     Vector<GridArea> m_valid_grid_areas;
 
