@@ -13,6 +13,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/GML/AutocompleteProvider.h>
 #include <LibGUI/GML/Formatter.h>
 #include <LibGUI/GML/SyntaxHighlighter.h>
@@ -160,7 +161,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, {}, "/usr/src/serenity/Userland/Applications"sv, Core::File::OpenMode::Read,
+            Vector {
+                GUI::FileTypeFilter { "GML Files", { { "gml" } } },
+                GUI::FileTypeFilter::all_files(),
+            });
         if (response.is_error())
             return;
 
