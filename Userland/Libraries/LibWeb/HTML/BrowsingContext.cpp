@@ -539,6 +539,12 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
         previously_active_document->did_stop_being_active_document_in_browsing_context({});
 }
 
+void BrowsingContext::inform_all_viewport_clients_about_the_current_viewport_rect()
+{
+    for (auto* client : m_viewport_clients)
+        client->browsing_context_did_set_viewport_rect(viewport_rect());
+}
+
 void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
 {
     bool did_change = false;

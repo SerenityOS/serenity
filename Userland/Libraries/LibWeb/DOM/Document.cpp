@@ -889,6 +889,9 @@ void Document::update_layout()
 
     layout_state.commit();
 
+    // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
+    browsing_context()->inform_all_viewport_clients_about_the_current_viewport_rect();
+
     browsing_context()->set_needs_display();
 
     if (browsing_context()->is_top_level() && browsing_context()->active_document() == this) {

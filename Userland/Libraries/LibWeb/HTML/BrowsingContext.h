@@ -277,6 +277,8 @@ public:
     virtual String const& window_handle() const override { return m_window_handle; }
     virtual void set_window_handle(String handle) override { m_window_handle = move(handle); }
 
+    void inform_all_viewport_clients_about_the_current_viewport_rect();
+
 private:
     explicit BrowsingContext(Page&, HTML::NavigableContainer*);
 
