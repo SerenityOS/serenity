@@ -7,6 +7,7 @@ serenity_component(
 compile_gml(GMLPlaygroundWindow.gml GMLPlaygroundWindowGML.h gml_playground_window_gml)
 
 set(SOURCES
+    MainWidget.cpp
     main.cpp
 )
 
