@@ -158,14 +158,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
-        if (window.is_modified()) {
-            auto result = GUI::MessageBox::ask_about_unsaved_changes(&window, m_file_path, m_editor->document().undo_stack().last_unmodified_timestamp());
-            if (result == GUI::MessageBox::ExecResult::Yes)
-                m_save_action->activate();
-            if (result != GUI::MessageBox::ExecResult::No && window.is_modified())
-                return;
-        }
-
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
         auto response = FileSystemAccessClient::Client::the().open_file(&window);
         if (response.is_error())
             return;
@@ -179,14 +173,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_separator());
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
-        if (window.is_modified()) {
-            auto result = GUI::MessageBox::ask_about_unsaved_changes(&window, m_file_path, m_editor->document().undo_stack().last_unmodified_timestamp());
-            if (result == GUI::MessageBox::ExecResult::Yes)
-                m_save_action->activate();
-            if (result != GUI::MessageBox::ExecResult::No && window.is_modified())
-                return;
-        }
-
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (response.is_error())
             return;
