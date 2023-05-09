@@ -163,6 +163,7 @@ private:
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
     void initialize_grid_tracks(AvailableSpace const&);
+    void initialize_gap_tracks(AvailableSpace const&);
     void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
     CSSPixels content_based_minimum_height(GridItem const&);

@@ -610,7 +610,10 @@ void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& availab
         m_grid_columns.append(TemporaryTrack());
     for (int row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++)
         m_grid_rows.append(TemporaryTrack());
+}
 
+void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& available_space)
+{
     // https://www.w3.org/TR/css-grid-2/#gutters
     // 11.1. Gutters: the row-gap, column-gap, and gap properties
     // For the purpose of track sizing, each gutter is treated as an extra, empty, fixed-size track of
@@ -1336,6 +1339,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
     initialize_grid_tracks(available_space);
+
+    initialize_gap_tracks(available_space);
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
