@@ -429,15 +429,6 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(LayoutState cons
     auto width_of_containing_block = available_space.width.to_px();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
-    auto margin_left = box.computed_values().margin().left().resolved(box, width_of_containing_block_as_length);
-    auto margin_right = box.computed_values().margin().right().resolved(box, width_of_containing_block_as_length);
-
-    // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
-    if (margin_left.is_auto())
-        margin_left = zero_value;
-    if (margin_right.is_auto())
-        margin_right = zero_value;
-
     auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
