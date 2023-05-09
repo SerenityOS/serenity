@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    if (DeprecatedString(path).is_empty()) {
+    if (path.is_empty()) {
         main_widget->editor().set_text(R"~~~(@GUI::Frame {
     layout: @GUI::VerticalBoxLayout {
     }
