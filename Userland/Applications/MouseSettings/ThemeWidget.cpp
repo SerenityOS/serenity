@@ -97,9 +97,16 @@ void ThemeModel::invalidate()
     Model::invalidate();
 }
 
-ThemeWidget::ThemeWidget()
+ErrorOr<NonnullRefPtr<ThemeWidget>> ThemeWidget::try_create()
 {
-    load_from_gml(theme_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemeWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> ThemeWidget::setup()
+{
+    TRY(load_from_gml(theme_widget_gml));
     m_cursors_tableview = find_descendant_of_type_named<GUI::TableView>("cursors_tableview");
     m_cursors_tableview->set_highlight_selected_rows(true);
     m_cursors_tableview->set_alternating_row_colors(false);
@@ -108,7 +115,7 @@ ThemeWidget::ThemeWidget()
     m_cursors_tableview->set_highlight_key_column(false);
 
     m_mouse_cursor_model = MouseCursorModel::create();
-    auto sorting_proxy_model = MUST(GUI::SortingProxyModel::create(*m_mouse_cursor_model));
+    auto sorting_proxy_model = TRY(GUI::SortingProxyModel::create(*m_mouse_cursor_model));
     sorting_proxy_model->set_sort_role(GUI::ModelRole::Display);
 
     m_cursors_tableview->set_model(sorting_proxy_model);
@@ -127,6 +134,7 @@ ThemeWidget::ThemeWidget()
     m_theme_name_box->set_model(ThemeModel::create());
     m_theme_name_box->model()->invalidate();
     m_theme_name_box->set_text(theme_name, GUI::AllowCallback::No);
+    return {};
 }
 
 void ThemeWidget::apply_settings()
