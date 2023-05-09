@@ -542,69 +542,43 @@ finish:
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
-void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& available_space)
+void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<TemporaryTrack>& tracks)
 {
-    auto grid_template_columns = grid_container().computed_values().grid_template_columns();
-    auto grid_template_rows = grid_container().computed_values().grid_template_rows();
-    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space);
-    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space);
+    auto track_count = get_count_of_tracks(tracks_definition, available_space);
+    for (auto const& track_definition : tracks_definition) {
+        auto repeat_count = (track_definition.is_repeat() && track_definition.repeat().is_default()) ? track_definition.repeat().repeat_count() : 1;
+        if (track_definition.is_repeat()) {
+            if (track_definition.repeat().is_auto_fill() || track_definition.repeat().is_auto_fit())
+                repeat_count = track_count;
+        }
+        for (auto _ = 0; _ < repeat_count; _++) {
+            switch (track_definition.type()) {
+            case CSS::ExplicitGridTrack::Type::MinMax:
+                tracks.append(TemporaryTrack(track_definition.minmax().min_grid_size(), track_definition.minmax().max_grid_size()));
+                break;
+            case CSS::ExplicitGridTrack::Type::Repeat:
+                for (auto& explicit_grid_track : track_definition.repeat().grid_track_size_list().track_list()) {
+                    auto track_sizing_function = explicit_grid_track;
+                    if (track_sizing_function.is_minmax())
+                        tracks.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
+                    else
+                        tracks.append(TemporaryTrack(track_sizing_function.grid_size()));
+                }
+                break;
+            case CSS::ExplicitGridTrack::Type::Default:
+                tracks.append(TemporaryTrack(track_definition.grid_size()));
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+    }
+}
 
-    for (auto const& track_in_list : grid_container().computed_values().grid_template_columns().track_list()) {
-        auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
-        if (track_in_list.is_repeat()) {
-            if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
-                repeat_count = column_count;
-        }
-        for (auto _ = 0; _ < repeat_count; _++) {
-            switch (track_in_list.type()) {
-            case CSS::ExplicitGridTrack::Type::MinMax:
-                m_grid_columns.append(TemporaryTrack(track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size()));
-                break;
-            case CSS::ExplicitGridTrack::Type::Repeat:
-                for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
-                    auto track_sizing_function = explicit_grid_track;
-                    if (track_sizing_function.is_minmax())
-                        m_grid_columns.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
-                    else
-                        m_grid_columns.append(TemporaryTrack(track_sizing_function.grid_size()));
-                }
-                break;
-            case CSS::ExplicitGridTrack::Type::Default:
-                m_grid_columns.append(TemporaryTrack(track_in_list.grid_size()));
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        }
-    }
-    for (auto const& track_in_list : grid_container().computed_values().grid_template_rows().track_list()) {
-        auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
-        if (track_in_list.is_repeat()) {
-            if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
-                repeat_count = row_count;
-        }
-        for (auto _ = 0; _ < repeat_count; _++) {
-            switch (track_in_list.type()) {
-            case CSS::ExplicitGridTrack::Type::MinMax:
-                m_grid_rows.append(TemporaryTrack(track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size()));
-                break;
-            case CSS::ExplicitGridTrack::Type::Repeat:
-                for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
-                    auto track_sizing_function = explicit_grid_track;
-                    if (track_sizing_function.is_minmax())
-                        m_grid_rows.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
-                    else
-                        m_grid_rows.append(TemporaryTrack(track_sizing_function.grid_size()));
-                }
-                break;
-            case CSS::ExplicitGridTrack::Type::Default:
-                m_grid_rows.append(TemporaryTrack(track_in_list.grid_size()));
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        }
-    }
+void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(AvailableSpace const& available_space)
+{
+    initialize_grid_tracks_from_definition(available_space, grid_container().computed_values().grid_template_columns().track_list(), m_grid_columns);
+    initialize_grid_tracks_from_definition(available_space, grid_container().computed_values().grid_template_rows().track_list(), m_grid_rows);
 
     for (int column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++)
         m_grid_columns.append(TemporaryTrack());
@@ -1338,7 +1312,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // - A flexible sizing function (<flex>).
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
-    initialize_grid_tracks(available_space);
+    initialize_grid_tracks_for_columns_and_rows(available_space);
 
     initialize_gap_tracks(available_space);
 
