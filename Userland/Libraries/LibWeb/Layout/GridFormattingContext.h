@@ -156,12 +156,13 @@ private:
     void build_valid_grid_areas();
     int find_valid_grid_area(String const& needle);
 
+    void place_grid_items(AvailableSpace const& available_space);
     void place_item_with_row_and_column_position(Box const& child_box);
     void place_item_with_row_position(Box const& child_box);
     void place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
-    void initialize_grid_tracks(AvailableSpace const&, int column_count, int row_count);
+    void initialize_grid_tracks(AvailableSpace const&);
     void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
     CSSPixels content_based_minimum_height(GridItem const&);

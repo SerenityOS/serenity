@@ -542,8 +542,13 @@ finish:
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
-void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& available_space, int column_count, int row_count)
+void GridFormattingContext::initialize_grid_tracks(AvailableSpace const& available_space)
 {
+    auto grid_template_columns = grid_container().computed_values().grid_template_columns();
+    auto grid_template_rows = grid_container().computed_values().grid_template_rows();
+    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space);
+    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space);
+
     for (auto const& track_in_list : grid_container().computed_values().grid_template_columns().track_list()) {
         auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
         if (track_in_list.is_repeat()) {
@@ -1218,10 +1223,12 @@ int GridFormattingContext::find_valid_grid_area(String const& needle)
     return -1;
 }
 
-void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+void GridFormattingContext::place_grid_items(AvailableSpace const& available_space)
 {
-    auto grid_template_columns = box.computed_values().grid_template_columns();
-    auto grid_template_rows = box.computed_values().grid_template_rows();
+    auto grid_template_columns = grid_container().computed_values().grid_template_columns();
+    auto grid_template_rows = grid_container().computed_values().grid_template_rows();
+    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space);
+    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space);
 
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
@@ -1229,15 +1236,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // flex items), which are then assigned to predefined areas in the grid. They can be explicitly
     // placed using coordinates through the grid-placement properties or implicitly placed into
     // empty areas using auto-placement.
-    box.for_each_child_of_type<Box>([&](Box& child_box) {
+    grid_container().for_each_child_of_type<Box>([&](Box& child_box) {
         if (can_skip_is_anonymous_text_run(child_box))
             return IterationDecision::Continue;
         m_boxes_to_place.append(child_box);
         return IterationDecision::Continue;
     });
-
-    auto column_count = get_count_of_tracks(grid_template_columns.track_list(), available_space);
-    auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space);
 
     m_occupation_grid = OccupationGrid(column_count, row_count);
 
@@ -1306,6 +1310,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
         // FIXME: 4.2. For dense packing:
     }
+}
+
+void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
+{
+    place_grid_items(available_space);
 
     // https://drafts.csswg.org/css-grid/#overview-sizing
     // 2.3. Sizing the Grid
@@ -1326,7 +1335,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // - A flexible sizing function (<flex>).
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
-    initialize_grid_tracks(available_space, column_count, row_count);
+    initialize_grid_tracks(available_space);
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
