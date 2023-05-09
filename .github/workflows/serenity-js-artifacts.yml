@@ -15,7 +15,7 @@ jobs:
         os: [ubuntu-22.04]
         package_type: [Linux-x86_64]
         include:
-          - os: macos-12
+          - os: macos-13
             package_type: macOS-universal2
 
     concurrency:
@@ -35,7 +35,13 @@ jobs:
       - name: Install dependencies macOS
         run: |
           brew install bash ninja unzip
-        if: ${{ matrix.os == 'macos-12' }}
+        if: ${{ matrix.os == 'macos-13' }}
+
+      - name: Select Xcode version
+        uses: mobiledevops/xcode-select-version-action@v1
+        with:
+          xcode-select-version: 14.3
+        if: ${{ matrix.os == 'macos-13' }}
 
       - name: Check versions Ubuntu
         run: |
@@ -45,7 +51,7 @@ jobs:
       - name: Check versions macOS
         run: |
           ninja --version; clang++ --version
-        if: ${{ matrix.os == 'macos-12' }}
+        if: ${{ matrix.os == 'macos-13' }}
 
       - name: Create build directory
         run: |
@@ -89,7 +95,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
             -DBUILD_LAGOM=ON
-        if: ${{ matrix.os == 'macos-12' }}
+        if: ${{ matrix.os == 'macos-13' }}
 
       - name: Build and package js
         working-directory: Build
