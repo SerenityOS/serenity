@@ -258,7 +258,7 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
     };
 }
 
-static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSSPixels w, CSSPixels h, ReplacedBox const& box)
+static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSSPixels input_width, CSSPixels input_height, ReplacedBox const& box)
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
@@ -268,35 +268,42 @@ static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSS
     auto height_of_containing_block = containing_block_state.content_height();
 
     CSSPixels specified_min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
-    CSSPixels specified_max_width = box.computed_values().max_width().is_none() ? w : box.computed_values().max_width().to_px(box, width_of_containing_block);
+    CSSPixels specified_max_width = box.computed_values().max_width().is_none() ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
     CSSPixels specified_min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
-    CSSPixels specified_max_height = box.computed_values().max_height().is_none() ? h : box.computed_values().max_height().to_px(box, height_of_containing_block);
+    CSSPixels specified_max_height = box.computed_values().max_height().is_none() ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
 
     auto min_width = min(specified_min_width, specified_max_width);
     auto max_width = max(specified_min_width, specified_max_width);
     auto min_height = min(specified_min_height, specified_max_height);
     auto max_height = max(specified_min_height, specified_max_height);
 
+    struct Size {
+        CSSPixels width;
+        CSSPixels height;
+    } size = { input_width, input_height };
+    auto& w = size.width;
+    auto& h = size.height;
+
     if (w > max_width)
-        return { w, max(max_width * (h / w), min_height) };
+        size = { max_width, max(max_width * (h / w), min_height) };
     if (w < min_width)
-        return { max_width, min(min_width * (h / w), max_height) };
+        size = { min_width, min(min_width * (h / w), max_height) };
     if (h > max_height)
-        return { max(max_height * (w / h), min_width), max_height };
+        size = { max(max_height * (w / h), min_width), max_height };
     if (h < min_height)
-        return { min(min_height * (w / h), max_width), min_height };
-    if ((w > max_width && h > max_height) && (max_width / w < max_height / h))
-        return { max_width, max(min_height, max_width * (h / w)) };
+        size = { min(min_height * (w / h), max_width), min_height };
+    if ((w > max_width && h > max_height) && (max_width / w <= max_height / h))
+        size = { max_width, max(min_height, max_width * (h / w)) };
     if ((w > max_width && h > max_height) && (max_width / w > max_height / h))
-        return { max(min_width, max_height * (w / h)), max_height };
-    if ((w < min_width && h < min_height) && (min_width / w < min_height / h))
-        return { min(max_width, min_height * (w / h)), min_height };
+        size = { max(min_width, max_height * (w / h)), max_height };
+    if ((w < min_width && h < min_height) && (min_width / w <= min_height / h))
+        size = { min(max_width, min_height * (w / h)), min_height };
     if ((w < min_width && h < min_height) && (min_width / w > min_height / h))
-        return { min_width, min(max_height, min_width * (h / w)) };
+        size = { min_width, min(max_height, min_width * (h / w)) };
     if (w < min_width && h > max_height)
-        return { min_width, max_height };
+        size = { min_width, max_height };
     if (w > max_width && h < min_height)
-        return { max_width, min_height };
+        size = { max_width, min_height };
     return { w, h };
 }
 
@@ -430,9 +437,17 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(LayoutState cons
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
+    auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = tentative_width_for_replaced_element(state, box, computed_width, available_space);
+
+    if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
+        CSSPixels w = used_width;
+        CSSPixels h = tentative_height_for_replaced_element(state, box, computed_height, available_space);
+        used_width = solve_replaced_size_constraint(state, w, h, box).width();
+        return used_width;
+    }
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
@@ -485,28 +500,46 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(LayoutState c
 
 CSSPixels FormattingContext::compute_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, AvailableSpace const& available_space)
 {
-    // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
-    // 'inline-block' replaced elements in normal flow and floating replaced elements
+    // 10.6.2 Inline replaced elements
+    // 10.6.4 Block-level replaced elements in normal flow
+    // 10.6.6 Floating replaced elements
+    // 10.6.10 'inline-block' replaced elements in normal flow
 
     auto height_of_containing_block = state.get(*box.containing_block()).content_height();
     auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
     auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
+    // 1. The tentative used height is calculated (without 'min-height' and 'max-height')
     CSSPixels used_height = tentative_height_for_replaced_element(state, box, computed_height, available_space);
 
+    // However, for replaced elements with both 'width' and 'height' computed as 'auto',
+    // use the algorithm under 'Minimum and maximum widths'
+    // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
+    // to find the used width and height.
     if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
         CSSPixels w = tentative_width_for_replaced_element(state, box, computed_width, available_space);
         CSSPixels h = used_height;
         used_height = solve_replaced_size_constraint(state, w, h, box).height();
+        return used_height;
     }
 
-    auto const& computed_min_height = box.computed_values().min_height();
-    auto const& computed_max_height = box.computed_values().max_height();
+    // 2. If this tentative height is greater than 'max-height', the rules above are applied again,
+    //    but this time using the value of 'max-height' as the computed value for 'height'.
+    auto computed_max_height = box.computed_values().max_height();
+    if (!computed_max_height.is_none()) {
+        if (used_height > computed_max_height.to_px(box, height_of_containing_block)) {
+            used_height = tentative_height_for_replaced_element(state, box, computed_max_height, available_space);
+        }
+    }
 
-    if (!computed_max_height.is_none())
-        used_height = min(used_height, computed_max_height.to_px(box, height_of_containing_block));
-    if (!computed_min_height.is_auto())
-        used_height = max(used_height, computed_min_height.to_px(box, height_of_containing_block));
+    // 3. If the resulting height is smaller than 'min-height', the rules above are applied again,
+    //    but this time using the value of 'min-height' as the computed value for 'height'.
+    auto computed_min_height = box.computed_values().min_height();
+    if (!computed_min_height.is_auto()) {
+        if (used_height < computed_min_height.to_px(box, height_of_containing_block)) {
+            used_height = tentative_height_for_replaced_element(state, box, computed_min_height, available_space);
+        }
+    }
 
     return used_height;
 }
