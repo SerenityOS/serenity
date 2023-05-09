@@ -14,13 +14,16 @@
 #include <LibVT/TerminalWidget.h>
 
 class TerminalSettingsMainWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(TerminalSettingsMainWidget)
+    C_OBJECT_ABSTRACT(TerminalSettingsMainWidget)
 public:
+    static ErrorOr<NonnullRefPtr<TerminalSettingsMainWidget>> try_create();
+
     virtual void apply_settings() override;
     virtual void cancel_settings() override;
 
 private:
-    TerminalSettingsMainWidget();
+    TerminalSettingsMainWidget() = default;
+    ErrorOr<void> setup();
     void write_back_settings() const;
 
     static VT::TerminalWidget::BellMode parse_bell(StringView bell_string);
@@ -34,13 +37,16 @@ private:
 };
 
 class TerminalSettingsViewWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(TerminalSettingsViewWidget)
+    C_OBJECT_ABSTRACT(TerminalSettingsViewWidget)
 public:
+    static ErrorOr<NonnullRefPtr<TerminalSettingsViewWidget>> try_create();
+
     virtual void apply_settings() override;
     virtual void cancel_settings() override;
 
 private:
-    TerminalSettingsViewWidget();
+    TerminalSettingsViewWidget() = default;
+    ErrorOr<void> setup();
     void write_back_settings() const;
 
     RefPtr<Gfx::Font const> m_font;

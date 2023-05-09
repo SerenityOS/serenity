@@ -29,9 +29,16 @@
 #include <LibVT/TerminalWidget.h>
 #include <spawn.h>
 
-TerminalSettingsMainWidget::TerminalSettingsMainWidget()
+ErrorOr<NonnullRefPtr<TerminalSettingsMainWidget>> TerminalSettingsMainWidget::try_create()
 {
-    load_from_gml(terminal_settings_main_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TerminalSettingsMainWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> TerminalSettingsMainWidget::setup()
+{
+    TRY(load_from_gml(terminal_settings_main_gml));
 
     auto& beep_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
     auto& visual_bell_radio = *find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
@@ -77,11 +84,19 @@ TerminalSettingsMainWidget::TerminalSettingsMainWidget()
         set_modified(true);
     };
     confirm_close_checkbox.set_checked(m_confirm_close, GUI::AllowCallback::No);
+    return {};
 }
 
-TerminalSettingsViewWidget::TerminalSettingsViewWidget()
+ErrorOr<NonnullRefPtr<TerminalSettingsViewWidget>> TerminalSettingsViewWidget::try_create()
 {
-    load_from_gml(terminal_settings_view_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TerminalSettingsViewWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> TerminalSettingsViewWidget::setup()
+{
+    TRY(load_from_gml(terminal_settings_view_gml));
 
     auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
     m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);
@@ -101,7 +116,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     else
         m_font = Gfx::FontDatabase::the().get_by_name(font_name);
     m_original_font = m_font;
-    font_text.set_text(String::from_deprecated_string(m_font->human_readable_name()).release_value_but_fixme_should_propagate_errors());
+    font_text.set_text(TRY(String::from_deprecated_string(m_font->human_readable_name())));
     font_text.set_font(m_font);
     font_button.on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), m_font.ptr(), true);
@@ -207,6 +222,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
         set_modified(true);
     };
     show_scrollbar_checkbox.set_checked(m_show_scrollbar, GUI::AllowCallback::No);
+    return {};
 }
 
 VT::TerminalWidget::BellMode TerminalSettingsMainWidget::parse_bell(StringView bell_string)
