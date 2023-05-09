@@ -10,14 +10,17 @@
 #include <LibGUI/SettingsWindow.h>
 
 class CalendarSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(CalendarSettingsWidget)
+    C_OBJECT_ABSTRACT(CalendarSettingsWidget)
 
 public:
+    static ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> try_create();
+
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    CalendarSettingsWidget();
+    CalendarSettingsWidget() = default;
+    ErrorOr<void> setup();
     static constexpr Array<StringView, 2> const m_view_modes = { "Month"sv, "Year"sv };
 
     RefPtr<GUI::ComboBox> m_first_day_of_week_combobox;
