@@ -13,14 +13,17 @@
 namespace NetworkSettings {
 
 class NetworkSettingsWidget : public GUI::SettingsWindow::Tab {
-    C_OBJECT(NetworkSettingsWidget)
+    C_OBJECT_ABSTRACT(NetworkSettingsWidget)
 
 public:
+    static ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> try_create();
+
     virtual void apply_settings() override;
     void switch_adapter(DeprecatedString const& adapter);
 
 private:
-    NetworkSettingsWidget();
+    NetworkSettingsWidget() = default;
+    ErrorOr<void> setup();
 
     struct NetworkAdapterData {
         bool enabled = false;
