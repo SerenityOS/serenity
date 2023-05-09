@@ -6,15 +6,12 @@
 
 #pragma once
 
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
 
-class ImageBox final
-    : public ReplacedBox
-    , public HTML::BrowsingContext::ViewportClient {
+class ImageBox final : public ReplacedBox {
     JS_CELL(ImageBox, ReplacedBox);
 
 public:
@@ -34,12 +31,6 @@ public:
     void dom_node_did_update_alt_text(Badge<HTML::HTMLImageElement>);
 
 private:
-    // ^BrowsingContext::ViewportClient
-    virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) final;
-
-    // ^JS::Cell
-    virtual void finalize() override;
-
     int preferred_width() const;
     int preferred_height() const;
 

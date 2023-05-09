@@ -15,19 +15,9 @@ ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
     : ReplacedBox(document, element, move(style))
     , m_image_loader(image_loader)
 {
-    browsing_context().register_viewport_client(*this);
 }
 
 ImageBox::~ImageBox() = default;
-
-void ImageBox::finalize()
-{
-    Base::finalize();
-
-    // NOTE: We unregister from the browsing context in finalize() to avoid trouble
-    //       in the scenario where our BrowsingContext has already been swept by GC.
-    browsing_context().unregister_viewport_client(*this);
-}
 
 int ImageBox::preferred_width() const
 {
@@ -88,11 +78,6 @@ bool ImageBox::renders_as_alt_text() const
     if (is<HTML::HTMLImageElement>(dom_node()))
         return !m_image_loader.has_image();
     return false;
-}
-
-void ImageBox::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewport_rect)
-{
-    m_image_loader.set_visible_in_viewport(paintable_box() && viewport_rect.intersects(paintable_box()->absolute_rect()));
 }
 
 JS::GCPtr<Painting::Paintable> ImageBox::create_paintable() const
