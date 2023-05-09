@@ -62,8 +62,20 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         painter.fill_rect(tile_rect, (sq.is_light()) ? board_theme().light_square_color : board_theme().dark_square_color);
 
-        if (active_board.last_move().has_value() && (active_board.last_move().value().to == sq || active_board.last_move().value().from == sq)) {
-            painter.fill_rect(tile_rect, m_move_highlight_color);
+        if (active_board.last_move().has_value()) {
+            auto const last_move = active_board.last_move().value();
+            if (last_move.to == sq || last_move.from == sq)
+                painter.fill_rect(tile_rect, m_move_highlight_color);
+
+            auto const piece = active_board.get_piece(sq);
+            if (m_highlight_checks && last_move.is_check && piece.type == Chess::Type::King && piece.color == active_board.turn()) {
+                Array<Gfx::ColorStop, 2> colors = {
+                    Gfx::ColorStop { .color = Color::Red, .position = 0.16f },
+                    Gfx::ColorStop { .color = Color::Transparent, .position = .66f }
+                };
+
+                painter.fill_rect_with_radial_gradient(tile_rect, colors, tile_rect.center() - tile_rect.top_left(), tile_rect.size());
+            }
         }
 
         if (m_coordinates) {
@@ -749,6 +761,9 @@ void ChessWidget::config_bool_did_change(DeprecatedString const& domain, Depreca
 
     if (key == "ShowCoordinates"sv) {
         set_coordinates(value);
+        update();
+    } else if (key == "HighlightChecks"sv) {
+        set_highlight_checks(value);
         update();
     }
 }

@@ -34,6 +34,7 @@ private:
     RefPtr<GUI::ComboBox> m_piece_set_combobox;
     RefPtr<GUI::ComboBox> m_board_theme_combobox;
     RefPtr<GUI::CheckBox> m_show_coordinates_checkbox;
+    RefPtr<GUI::CheckBox> m_highlight_checks_checkbox;
 };
 
 }

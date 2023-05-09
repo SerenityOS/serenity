@@ -54,5 +54,11 @@
             text: "Show coordinates"
             checkbox_position: "Right"
         }
+
+        @GUI::CheckBox {
+            name: "highlight_checks"
+            text: "Highlight checks"
+            checkbox_position: "Right"
+        }
     }
 }

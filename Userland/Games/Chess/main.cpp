@@ -87,6 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     widget->set_board_theme(Config::read_string("Games"sv, "Chess"sv, "BoardTheme"sv, "Beige"sv));
     widget->set_coordinates(Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true));
     widget->set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
+    widget->set_highlight_checks(Config::read_bool("Games"sv, "Chess"sv, "HighlightChecks"sv, true));
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
