@@ -136,6 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         editor->set_text(buffer_or_error.release_value());
         editor->set_focus(true);
+        file_path = file.filename().to_deprecated_string();
         update_title();
 
         GUI::Application::the()->set_most_recently_open_file(file.filename());
@@ -209,7 +210,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, action.text());
         if (response.is_error())
             return;
-        file_path = response.value().filename().to_deprecated_string();
         load_file(response.release_value());
     }));
 
@@ -337,9 +337,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_title();
     } else {
         auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path));
-        file_path = path;
-        editor->set_text(TRY(file.release_stream()->read_until_eof()));
-        update_title();
+        load_file(move(file));
     }
 
     return app->exec();
