@@ -1549,7 +1549,7 @@ ErrorOr<void> unlockpt(int fildes)
     return {};
 }
 
-ErrorOr<void> access(StringView pathname, int mode)
+ErrorOr<void> access(StringView pathname, int mode, int flags)
 {
     if (pathname.is_null())
         return Error::from_syscall("access"sv, -EFAULT);
@@ -1559,12 +1559,13 @@ ErrorOr<void> access(StringView pathname, int mode)
         .dirfd = AT_FDCWD,
         .pathname = { pathname.characters_without_null_termination(), pathname.length() },
         .mode = mode,
-        .flags = 0,
+        .flags = flags,
     };
     int rc = ::syscall(Syscall::SC_faccessat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("access", rc, {});
 #else
     DeprecatedString path_string = pathname;
+    (void)flags;
     if (::access(path_string.characters(), mode) < 0)
         return Error::from_syscall("access"sv, -errno);
     return {};
