@@ -583,7 +583,8 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
     dbgln_if(WEBP_DEBUG, "start_frame {} context.current_frame {}", start_frame, context.current_frame);
     if (context.state < WebPLoadingContext::State::BitmapDecoded) {
         start_frame = 0;
-        context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { context.vp8x_header.width, context.vp8x_header.height }));
+        auto format = context.vp8x_header.has_alpha ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
+        context.bitmap = TRY(Bitmap::create(format, { context.vp8x_header.width, context.vp8x_header.height }));
         context.bitmap->fill(clear_color);
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
