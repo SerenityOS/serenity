@@ -29,6 +29,7 @@ public:
 private:
     LookupServer();
 
+    ErrorOr<HashMap<Name, Vector<Answer>, Name::Traits>> try_load_etc_hosts();
     void load_etc_hosts();
     void put_in_cache(Answer const&);
 

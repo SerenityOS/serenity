@@ -6,13 +6,15 @@
 
 #include "LookupServer.h"
 #include "ConnectionFromClient.h"
+#include <AK/BufferedStream.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Random.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibDNS/Packet.h>
 #include <limits.h>
@@ -77,24 +79,39 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
-    m_etc_hosts.clear();
-    auto add_answer = [this](Name const& name, RecordType record_type, DeprecatedString data) {
-        m_etc_hosts.ensure(name).empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
+    auto new_hosts_or_error = this->try_load_etc_hosts();
+    if (new_hosts_or_error.is_error())
+        dbgln("Ignoring '/etc/hosts', keeping old values");
+    else
+        m_etc_hosts = new_hosts_or_error.release_value();
+}
+
+ErrorOr<HashMap<Name, Vector<Answer>, Name::Traits>> LookupServer::try_load_etc_hosts()
+{
+    HashMap<Name, Vector<Answer>, Name::Traits> map;
+    auto add_answer = [&map](Name const& name, RecordType record_type, DeprecatedString data) -> ErrorOr<void> {
+        // FIXME: Since try_ensure does not return a reference to the contained value, we have to
+        // retrieve it separately. This is a try_ensure bug that should be fixed.
+        TRY(map.try_ensure(name, []() { return Vector<Answer> {}; }));
+        auto& entry = map.find(name)->value;
+        return entry.try_empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
     };
 
-    auto file = Core::DeprecatedFile::construct("/etc/hosts");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
+    auto file_or_error = Core::File::open("/etc/hosts"sv, Core::File::OpenMode::Read);
+    if (file_or_error.is_error()) {
         dbgln("Failed to open '/etc/hosts'");
-        return;
+        return file_or_error.release_error();
     }
+    auto file = TRY(Core::InputBufferedFile::create(file_or_error.release_value()));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(1 * KiB));
 
     u32 line_number = 0;
-    while (!file->eof()) {
-        auto original_line = file->read_line(1024);
+    while (TRY(file->can_read_line())) {
+        auto original_line = TRY(file->read_line(buffer));
         ++line_number;
         if (original_line.is_empty())
             break;
-        auto trimmed_line = original_line.view().trim_whitespace();
+        auto trimmed_line = original_line.trim_whitespace();
         auto replaced_line = trimmed_line.replace(" "sv, "\t"sv, ReplaceMode::All);
         auto fields = replaced_line.split_view('\t');
 
@@ -115,13 +132,15 @@ void LookupServer::load_etc_hosts()
         auto raw_addr = maybe_address->to_in_addr_t();
 
         Name name { fields[1] };
-        add_answer(name, RecordType::A, DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) });
+        TRY(add_answer(name, RecordType::A, DeprecatedString { (char const*)&raw_addr, sizeof(raw_addr) }));
 
         StringBuilder builder;
-        builder.append(maybe_address->to_deprecated_string_reversed());
-        builder.append(".in-addr.arpa"sv);
-        add_answer(builder.to_deprecated_string(), RecordType::PTR, name.as_string());
+        TRY(builder.try_append(maybe_address->to_deprecated_string_reversed()));
+        TRY(builder.try_append(".in-addr.arpa"sv));
+        TRY(add_answer(builder.to_deprecated_string(), RecordType::PTR, name.as_string()));
     }
+
+    return map;
 }
 
 static DeprecatedString get_hostname()
