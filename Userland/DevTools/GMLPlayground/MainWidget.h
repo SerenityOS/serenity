@@ -30,6 +30,9 @@ public:
     GUI::TextEditor& editor() const { return *m_editor; }
 
 private:
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
+
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::TextEditor> m_editor;
     RefPtr<GUI::Toolbar> m_toolbar;

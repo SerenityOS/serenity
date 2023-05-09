@@ -303,3 +303,33 @@ GUI::Window::CloseRequestDecision MainWidget::request_close()
 
     return GUI::Window::CloseRequestDecision::StayOpen;
 }
+
+void MainWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
+void MainWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show(window(), "GML Playground can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
+
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().serialize_path());
+        if (response.is_error())
+            return;
+        load_file(response.release_value());
+    }
+}
