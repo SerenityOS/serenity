@@ -157,6 +157,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
             m_model->set_allowed_file_extensions((*m_allowed_file_types)[index.row()].extensions);
         };
         file_types_filters_combo->set_selected_index(0);
+        m_model->set_allowed_file_extensions((*m_allowed_file_types)[0].extensions);
     } else {
         auto* file_types_filter_label = widget->find_descendant_of_type_named<GUI::Label>("allowed_file_types_label");
         auto& spacer = file_types_filter_label->parent_widget()->add<GUI::Widget>();
