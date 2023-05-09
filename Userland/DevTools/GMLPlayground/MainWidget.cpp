@@ -77,8 +77,8 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
 
     main_widget->m_preview = main_widget->m_preview_frame_widget;
 
-    main_widget->m_editor->set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
-    main_widget->m_editor->set_autocomplete_provider(make<GUI::GML::AutocompleteProvider>());
+    main_widget->m_editor->set_syntax_highlighter(TRY(try_make<GUI::GML::SyntaxHighlighter>()));
+    main_widget->m_editor->set_autocomplete_provider(TRY(try_make<GUI::GML::AutocompleteProvider>()));
     main_widget->m_editor->set_should_autocomplete_automatically(true);
     main_widget->m_editor->set_automatic_indentation_enabled(true);
     main_widget->m_editor->set_ruler_visible(true);
