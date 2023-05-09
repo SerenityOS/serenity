@@ -228,7 +228,7 @@ ErrorOr<void> putenv(StringView);
 ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
-ErrorOr<void> access(StringView pathname, int mode);
+ErrorOr<void> access(StringView pathname, int mode, int flags = 0);
 ErrorOr<DeprecatedString> readlink(StringView pathname);
 ErrorOr<int> poll(Span<struct pollfd>, int timeout);
 
