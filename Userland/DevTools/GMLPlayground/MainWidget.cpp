@@ -9,6 +9,7 @@
  */
 
 #include "MainWidget.h"
+#include <AK/LexicalPath.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
@@ -123,7 +124,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto file_menu = TRY(window.try_add_menu("&File"_short_string));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().save_file(&window, "Untitled", "gml");
+        LexicalPath initial_path(m_file_path.is_empty() ? "Untitled.gml" : m_file_path);
+        auto response = FileSystemAccessClient::Client::the().save_file(&window, initial_path.title(), initial_path.extension());
         if (response.is_error())
             return;
 
