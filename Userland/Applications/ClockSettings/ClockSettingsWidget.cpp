@@ -19,9 +19,16 @@ constexpr auto time_format_12h_seconds = "%r"sv;
 constexpr auto time_format_24h = "%R"sv;
 constexpr auto time_format_24h_seconds = "%T"sv;
 
-ClockSettingsWidget::ClockSettingsWidget()
+ErrorOr<NonnullRefPtr<ClockSettingsWidget>> ClockSettingsWidget::try_create()
 {
-    load_from_gml(clock_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ClockSettingsWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> ClockSettingsWidget::setup()
+{
+    TRY(load_from_gml(clock_settings_widget_gml));
 
     m_24_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("24hour_radio");
     auto& twelve_hour_radio = *find_descendant_of_type_named<GUI::RadioButton>("12hour_radio");
@@ -87,11 +94,13 @@ ClockSettingsWidget::ClockSettingsWidget()
         set_modified(true);
     };
 
-    m_clock_preview_update_timer = Core::Timer::create_repeating(1000, [&]() {
+    m_clock_preview_update_timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         update_clock_preview();
-    }).release_value_but_fixme_should_propagate_errors();
+    }));
     m_clock_preview_update_timer->start();
     update_clock_preview();
+
+    return {};
 }
 
 void ClockSettingsWidget::apply_settings()
