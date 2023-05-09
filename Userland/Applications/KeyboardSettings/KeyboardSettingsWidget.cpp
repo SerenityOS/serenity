@@ -149,26 +149,33 @@ private:
     DeprecatedString m_active_keymap;
 };
 
-KeyboardSettingsWidget::KeyboardSettingsWidget()
+ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> KeyboardSettingsWidget::try_create()
 {
-    load_from_gml(keyboard_widget_gml).release_value_but_fixme_should_propagate_errors();
-    auto proc_keymap = MUST(Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read));
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) KeyboardSettingsWidget()));
+    TRY(widget->setup());
+    return widget;
+}
 
-    auto keymap = proc_keymap->read_until_eof().release_value_but_fixme_should_propagate_errors();
-    auto json = JsonValue::from_string(keymap).release_value_but_fixme_should_propagate_errors();
+ErrorOr<void> KeyboardSettingsWidget::setup()
+{
+    TRY(load_from_gml(keyboard_widget_gml));
+    auto proc_keymap = TRY(Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read));
+
+    auto keymap = TRY(proc_keymap->read_until_eof());
+    auto json = TRY(JsonValue::from_string(keymap));
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
     m_initial_active_keymap = keymap_object.get_deprecated_string("keymap"sv).value();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());
+    auto mapper_config(TRY(Core::ConfigFile::open("/etc/Keyboard.ini")));
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
 
     auto keymaps_vector = keymaps.split(',');
 
     m_selected_keymaps_listview = find_descendant_of_type_named<GUI::ListView>("selected_keymaps");
     m_selected_keymaps_listview->horizontal_scrollbar().set_visible(false);
-    m_selected_keymaps_listview->set_model(adopt_ref(*new KeymapModel()));
+    m_selected_keymaps_listview->set_model(TRY(try_make_ref_counted<KeymapModel>()));
     auto& keymaps_list_model = static_cast<KeymapModel&>(*m_selected_keymaps_listview->model());
 
     for (auto& keymap : keymaps_vector) {
@@ -267,6 +274,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     m_caps_lock_checkbox->on_checked = [&](auto) {
         set_modified(true);
     };
+    return {};
 }
 
 KeyboardSettingsWidget::~KeyboardSettingsWidget()

@@ -16,8 +16,9 @@
 #include <LibGUI/TextEditor.h>
 
 class KeyboardSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(KeyboardSettingsWidget)
+    C_OBJECT_ABSTRACT(KeyboardSettingsWidget)
 public:
+    static ErrorOr<NonnullRefPtr<KeyboardSettingsWidget>> try_create();
     virtual ~KeyboardSettingsWidget() override;
 
     virtual void apply_settings() override;
@@ -25,7 +26,8 @@ public:
     void window_activated(bool is_active_window);
 
 private:
-    KeyboardSettingsWidget();
+    KeyboardSettingsWidget() = default;
+    ErrorOr<void> setup();
 
     void set_keymaps(Vector<DeprecatedString> const& keymaps, DeprecatedString const& active_keymap);
 
