@@ -12,7 +12,7 @@ fi
 
 BROWSER_BINARY="./headless-browser"
 
-find "${SCRIPT_DIR}/input/grid" -type f -name "*.html" -print0 | while IFS= read -r -d '' input_html_path; do
+find "${SCRIPT_DIR}/input/" -type f -name "*.html" -print0 | while IFS= read -r -d '' input_html_path; do
     input_html_file=${input_html_path/${SCRIPT_DIR}"/input/"/}
     input_html_file=${input_html_file/".html"/}
 
