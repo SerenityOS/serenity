@@ -11,6 +11,7 @@
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
+#include <LibCore/File.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -202,7 +203,7 @@ ErrorOr<void> ClipboardHistoryModel::read_from_file(DeprecatedString const& path
 
     auto read_from_file_impl = [this]() -> ErrorOr<void> {
         auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Read));
-        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
 
         auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
 
