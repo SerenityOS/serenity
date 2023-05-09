@@ -29,14 +29,21 @@ void CalendarSettingsWidget::reset_default_values()
     m_default_view_combobox->set_text("Month");
 }
 
-CalendarSettingsWidget::CalendarSettingsWidget()
+ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> CalendarSettingsWidget::try_create()
 {
-    load_from_gml(calendar_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CalendarSettingsWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> CalendarSettingsWidget::setup()
+{
+    TRY(load_from_gml(calendar_settings_widget_gml));
 
     m_first_day_of_week_combobox = *find_descendant_of_type_named<GUI::ComboBox>("first_day_of_week");
     m_first_day_of_week_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv));
     m_first_day_of_week_combobox->set_only_allow_values_from_model(true);
-    m_first_day_of_week_combobox->set_model(*GUI::ItemListModel<StringView, Array<StringView, 7>>::create(AK::long_day_names));
+    m_first_day_of_week_combobox->set_model(*TRY((GUI::ItemListModel<StringView, Array<StringView, 7>>::try_create(AK::long_day_names))));
     m_first_day_of_week_combobox->on_change = [&](auto, auto) {
         set_modified(true);
     };
@@ -44,7 +51,7 @@ CalendarSettingsWidget::CalendarSettingsWidget()
     m_first_day_of_weekend_combobox = *find_descendant_of_type_named<GUI::ComboBox>("first_day_of_weekend");
     m_first_day_of_weekend_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeekend"sv, "Saturday"sv));
     m_first_day_of_weekend_combobox->set_only_allow_values_from_model(true);
-    m_first_day_of_weekend_combobox->set_model(*GUI::ItemListModel<StringView, Array<StringView, 7>>::create(AK::long_day_names));
+    m_first_day_of_weekend_combobox->set_model(*TRY((GUI::ItemListModel<StringView, Array<StringView, 7>>::try_create(AK::long_day_names))));
     m_first_day_of_weekend_combobox->on_change = [&](auto, auto) {
         set_modified(true);
     };
@@ -58,8 +65,9 @@ CalendarSettingsWidget::CalendarSettingsWidget()
     m_default_view_combobox = *find_descendant_of_type_named<GUI::ComboBox>("default_view");
     m_default_view_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "DefaultView"sv, "Month"sv));
     m_default_view_combobox->set_only_allow_values_from_model(true);
-    m_default_view_combobox->set_model(*GUI::ItemListModel<StringView, Array<StringView, 2>>::create(m_view_modes));
+    m_default_view_combobox->set_model(*TRY((GUI::ItemListModel<StringView, Array<StringView, 2>>::try_create(m_view_modes))));
     m_default_view_combobox->on_change = [&](auto, auto) {
         set_modified(true);
     };
+    return {};
 }
