@@ -12,7 +12,7 @@ $ Browser [options] [urls]
 
 ## Description
 
-`Browser` is an application used to view the World Wide Web. It is built on top of Serenity's own `LibWeb` and `LibJS` engines, allowing it to render HTML, CSS, and JavaScript.
+Ladybird (`Browser`) is an application used to view the World Wide Web. It is built on top of Serenity's own `LibWeb` and `LibJS` engines, allowing it to render HTML, CSS, and JavaScript.
 
 ## Options
 

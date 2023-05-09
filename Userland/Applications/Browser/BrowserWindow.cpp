@@ -68,7 +68,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
     resize(730, 560);
     set_icon(app_icon.bitmap_for_size(16));
-    set_title("Browser");
+    set_title("Ladybird");
 
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
@@ -571,7 +571,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_deprecated_string() : title));
+    set_title(DeprecatedString::formatted("{} - Ladybird", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
 Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
