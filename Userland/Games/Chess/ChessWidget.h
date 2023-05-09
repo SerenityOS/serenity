@@ -89,6 +89,9 @@ public:
     void set_coordinates(bool coordinates) { m_coordinates = coordinates; }
     bool coordinates() const { return m_coordinates; }
 
+    void set_highlight_checks(bool highlight_checks) { m_highlight_checks = highlight_checks; }
+    bool highlight_checks() const { return m_highlight_checks; }
+
     struct BoardMarking {
         Chess::Square from { 50, 50 };
         Chess::Square to { 50, 50 };
@@ -146,4 +149,5 @@ private:
     Vector<Chess::Square> m_available_moves;
     RefPtr<Engine> m_engine;
     bool m_coordinates { true };
+    bool m_highlight_checks { true };
 };

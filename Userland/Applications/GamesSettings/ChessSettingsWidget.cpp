@@ -276,6 +276,12 @@ ErrorOr<void> ChessSettingsWidget::initialize()
         m_preview->set_show_coordinates(checked);
     };
 
+    m_highlight_checks_checkbox = find_descendant_of_type_named<GUI::CheckBox>("highlight_checks");
+    m_highlight_checks_checkbox->set_checked(show_coordinates, GUI::AllowCallback::No);
+    m_highlight_checks_checkbox->on_checked = [&](bool) {
+        set_modified(true);
+    };
+
     TRY(m_preview->set_piece_set_name(piece_set_name));
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
@@ -289,6 +295,7 @@ void ChessSettingsWidget::apply_settings()
     Config::write_string("Games"sv, "Chess"sv, "PieceSet"sv, m_piece_set_combobox->text());
     Config::write_string("Games"sv, "Chess"sv, "BoardTheme"sv, m_board_theme_combobox->text());
     Config::write_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, m_show_coordinates_checkbox->is_checked());
+    Config::write_bool("Games"sv, "Chess"sv, "HighlightChecks"sv, m_highlight_checks_checkbox->is_checked());
 }
 
 void ChessSettingsWidget::reset_default_values()
@@ -302,6 +309,7 @@ void ChessSettingsWidget::reset_default_values()
     m_preview->set_dark_square_color(board_theme.dark_square_color);
     m_preview->set_light_square_color(board_theme.light_square_color);
     m_show_coordinates_checkbox->set_checked(true);
+    m_highlight_checks_checkbox->set_checked(true);
 }
 
 }
