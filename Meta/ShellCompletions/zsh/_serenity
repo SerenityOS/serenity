@@ -79,7 +79,7 @@ _serenity() {
         targets)
             case "$command" in
                 install|image|copy-src|kaddr2line|rebuild-toolchain|rebuild-world)
-                    # lagom target is not supported for these, remove from targets
+                    # Lagom target is not supported for these, remove from targets.
                     targets[$targets[(i)lagom]]=()
                     ;;
                 help)
