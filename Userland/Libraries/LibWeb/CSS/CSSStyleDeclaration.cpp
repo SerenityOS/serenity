@@ -206,9 +206,9 @@ bool PropertyOwningCSSStyleDeclaration::set_a_css_declaration(PropertyID propert
 DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_name) const
 {
     auto property_id = property_id_from_string(property_name);
-    if (property_id == CSS::PropertyID::Invalid)
+    if (!property_id.has_value())
         return {};
-    auto maybe_property = property(property_id);
+    auto maybe_property = property(property_id.value());
     if (!maybe_property.has_value())
         return {};
     return maybe_property->value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
@@ -218,9 +218,9 @@ DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_nam
 DeprecatedString CSSStyleDeclaration::get_property_priority(StringView property_name) const
 {
     auto property_id = property_id_from_string(property_name);
-    if (property_id == CSS::PropertyID::Invalid)
+    if (!property_id.has_value())
         return {};
-    auto maybe_property = property(property_id);
+    auto maybe_property = property(property_id.value());
     if (!maybe_property.has_value())
         return {};
     return maybe_property->important == Important::Yes ? "important" : "";
@@ -229,17 +229,17 @@ DeprecatedString CSSStyleDeclaration::get_property_priority(StringView property_
 WebIDL::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
 {
     auto property_id = property_id_from_string(property_name);
-    if (property_id == CSS::PropertyID::Invalid)
+    if (!property_id.has_value())
         return {};
-    return set_property(property_id, css_text, priority);
+    return set_property(property_id.value(), css_text, priority);
 }
 
 WebIDL::ExceptionOr<DeprecatedString> CSSStyleDeclaration::remove_property(StringView property_name)
 {
     auto property_id = property_id_from_string(property_name);
-    if (property_id == CSS::PropertyID::Invalid)
+    if (!property_id.has_value())
         return DeprecatedString::empty();
-    return remove_property(property_id);
+    return remove_property(property_id.value());
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
@@ -326,11 +326,11 @@ static CSS::PropertyID property_id_from_name(StringView name)
     if (name == "cssFloat"sv)
         return CSS::PropertyID::Float;
 
-    if (auto property_id = CSS::property_id_from_camel_case_string(name); property_id != CSS::PropertyID::Invalid)
-        return property_id;
+    if (auto property_id = CSS::property_id_from_camel_case_string(name); property_id.has_value())
+        return property_id.value();
 
-    if (auto property_id = CSS::property_id_from_string(name); property_id != CSS::PropertyID::Invalid)
-        return property_id;
+    if (auto property_id = CSS::property_id_from_string(name); property_id.has_value())
+        return property_id.value();
 
     return CSS::PropertyID::Invalid;
 }

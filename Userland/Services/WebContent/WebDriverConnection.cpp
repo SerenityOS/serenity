@@ -1132,10 +1132,10 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     // -> current browsing context’s active document’s type is not "xml"
     if (!m_page_client.page().top_level_browsing_context().active_document()->is_xml_document()) {
         // computed value of parameter property name from element’s style declarations. property name is obtained from url variables.
-        auto property = Web::CSS::property_id_from_string(name);
-
-        if (auto* computed_values = element->computed_css_values())
-            computed_value = computed_values->property(property)->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        if (auto property = Web::CSS::property_id_from_string(name); property.has_value()) {
+            if (auto* computed_values = element->computed_css_values())
+                computed_value = computed_values->property(property.value())->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        }
     }
     // -> Otherwise
     else {
