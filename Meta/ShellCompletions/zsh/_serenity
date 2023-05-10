@@ -1,11 +1,25 @@
 #compdef serenity serenity.sh
 
+get_top_dir() {
+    git rev-parse --show-toplevel
+}
+
+get_lagom_executables() {
+    # Make completion work with user-defined source directory.
+    SERENITY_SOURCE_DIR="${SERENITY_SOURCE_DIR:-$(get_top_dir)}"
+    # If the Lagom binary directory is missing, this creates an empty list instead of erroring.
+    # Known false positives need to be filtered manually; please add new ones.
+    find "${SERENITY_SOURCE_DIR}/Build/lagom" -mindepth 1 -type f -executable -not -name '*.so*' \
+        -not \( -name 'SQLServer' -o -name 'a.out' -o -name 'CMake*.bin' \) \
+        -printf '%f\n' 2>/dev/null || true
+}
+
 _serenity() {
     local args
     args=(
         '1:command:->commands'
         '2:target:->targets'
-        '3:toolchain:->toolchains'
+        '3:toolchain_or_executable:->toolchains_or_executables'
         '*:: :->args'
     )
 
@@ -41,6 +55,12 @@ _serenity() {
         'Clang:Toolchain clang'
     )
 
+    local lagom_executables
+    # Prevent splitting array on spaces with IFS; bash would have `mapfile` for this.
+    IFS=$'\n'; set -f
+    lagom_executables=($(get_lagom_executables))
+    unset IFS; set +f
+
     _arguments -C -S "$args[@]"
 
     local command
@@ -69,10 +89,13 @@ _serenity() {
             esac
             _describe 'target' targets
             ;;
-        toolchains)
+        toolchains_or_executables)
             if [[ "$command" != help && "$target" != lagom ]]; then
                 # Toolchain-dependent invocations.
-                _describe 'toolchain' toolchains
+                _describe 'toolchain_or_executable' toolchains
+            elif [[ "$command" = run && "$target" = lagom ]]; then
+                # With `run lagom` this already is the executable.
+                _describe 'toolchain_or_executable' lagom_executables
             fi
             ;;
         args)
