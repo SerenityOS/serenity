@@ -625,13 +625,19 @@ ErrorOr<void> MainWidget::create_widgets()
 
 ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
+    VERIFY(window());
+
     if (m_edited_font == edited_font)
         return {};
 
     TRY(m_glyph_map_widget->set_font(*edited_font));
 
+    auto active_glyph = m_glyph_map_widget->active_glyph();
+    m_glyph_map_widget->set_focus(true);
+    m_glyph_map_widget->scroll_to_glyph(active_glyph);
+
     auto selection = m_glyph_map_widget->selection().normalized();
-    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font, *m_glyph_map_widget));
+    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), active_glyph, *edited_font, *m_glyph_map_widget));
     m_undo_stack->clear();
 
     m_path = TRY(String::from_utf8(path));
@@ -642,13 +648,14 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
 
     m_glyph_editor_widget->set_font(*m_edited_font);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+    m_glyph_editor_widget->set_glyph(active_glyph);
 
     m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
     m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width(), GUI::AllowCallback::No);
-    m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(active_glyph), GUI::AllowCallback::No);
 
     m_glyph_editor_present_checkbox->set_visible(m_edited_font->is_fixed_width());
-    m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(active_glyph), GUI::AllowCallback::No);
     m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width(), GUI::AllowCallback::No);
 
     m_name_textbox->set_text(m_edited_font->name(), GUI::AllowCallback::No);
@@ -675,18 +682,9 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
         }
     }
 
+    window()->set_modified(false);
+    update_title();
     update_statusbar();
-
-    deferred_invoke([this] {
-        auto glyph = m_glyph_map_widget->active_glyph();
-        m_glyph_map_widget->set_focus(true);
-        m_glyph_map_widget->scroll_to_glyph(glyph);
-        m_glyph_editor_widget->set_glyph(glyph);
-
-        VERIFY(window());
-        window()->set_modified(false);
-        update_title();
-    });
 
     return {};
 }
@@ -855,13 +853,11 @@ void MainWidget::undo()
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text(""sv);
 
-    deferred_invoke([this, glyph] {
-        auto start = m_undo_selection->restored_start();
-        auto size = m_undo_selection->restored_size();
-        m_glyph_map_widget->restore_selection(start, size, glyph);
-        m_glyph_map_widget->scroll_to_glyph(glyph);
-        m_glyph_map_widget->set_focus(true);
-    });
+    auto start = m_undo_selection->restored_start();
+    auto size = m_undo_selection->restored_size();
+    m_glyph_map_widget->restore_selection(start, size, glyph);
+    m_glyph_map_widget->scroll_to_glyph(glyph);
+    m_glyph_map_widget->set_focus(true);
 
     if (m_edited_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
@@ -885,13 +881,11 @@ void MainWidget::redo()
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text(""sv);
 
-    deferred_invoke([this, glyph] {
-        auto start = m_undo_selection->restored_start();
-        auto size = m_undo_selection->restored_size();
-        m_glyph_map_widget->restore_selection(start, size, glyph);
-        m_glyph_map_widget->scroll_to_glyph(glyph);
-        m_glyph_map_widget->set_focus(true);
-    });
+    auto start = m_undo_selection->restored_start();
+    auto size = m_undo_selection->restored_size();
+    m_glyph_map_widget->restore_selection(start, size, glyph);
+    m_glyph_map_widget->scroll_to_glyph(glyph);
+    m_glyph_map_widget->set_focus(true);
 
     if (m_edited_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
