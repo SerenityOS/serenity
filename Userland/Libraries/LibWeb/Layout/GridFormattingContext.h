@@ -165,6 +165,12 @@ private:
     void initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<TemporaryTrack>& tracks);
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
+
+    void initialize_track_sizes(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
+    void resolve_intrinsic_track_sizes(GridDimension const dimension, AvailableSize const& available_space, Vector<TemporaryTrack>& tracks);
+    void maximize_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
+    void expand_flexible_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
+    void stretch_auto_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
     void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
     CSSPixels content_based_minimum_height(GridItem const&);
