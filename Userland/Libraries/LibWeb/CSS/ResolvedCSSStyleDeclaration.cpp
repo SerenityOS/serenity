@@ -666,6 +666,11 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
 
 Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID property_id) const
 {
+    // https://www.w3.org/TR/cssom-1/#dom-window-getcomputedstyle
+    // NOTE: This is a partial enforcement of step 5 ("If elt is connected, ...")
+    if (!m_element->is_connected())
+        return {};
+
     if (CSS::property_affects_layout(property_id)) {
         const_cast<DOM::Document&>(m_element->document()).update_layout();
     } else {
