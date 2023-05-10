@@ -3235,7 +3235,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     auto property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
-    if (property_id == PropertyID::Invalid) {
+    if (!property_id.has_value()) {
         if (property_name.starts_with("--"sv)) {
             property_id = PropertyID::Custom;
         } else if (has_ignored_vendor_prefix(property_name)) {
@@ -3247,7 +3247,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     }
 
     auto value_token_stream = TokenStream(declaration.values());
-    auto value = parse_css_value(property_id, value_token_stream);
+    auto value = parse_css_value(property_id.value(), value_token_stream);
     if (value.is_error()) {
         if (value.error() == ParseError::SyntaxError) {
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse value for CSS property '{}'.", property_name);
@@ -3258,10 +3258,10 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
         return {};
     }
 
-    if (property_id == PropertyID::Custom)
-        return StyleProperty { declaration.importance(), property_id, value.release_value(), declaration.name() };
+    if (property_id.value() == PropertyID::Custom)
+        return StyleProperty { declaration.importance(), property_id.value(), value.release_value(), declaration.name() };
 
-    return StyleProperty { declaration.importance(), property_id, value.release_value(), {} };
+    return StyleProperty { declaration.importance(), property_id.value(), value.release_value(), {} };
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& component_value)
