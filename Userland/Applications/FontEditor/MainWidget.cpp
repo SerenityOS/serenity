@@ -83,7 +83,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
     TRY(main_widget->load_from_gml(font_preview_window_gml));
 
     m_preview_label = find_descendant_of_type_named<GUI::Label>("preview_label");
-    m_preview_label->set_font(edited_font());
+    m_preview_label->set_font(m_font);
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [this] {
@@ -483,8 +483,8 @@ ErrorOr<void> MainWidget::create_widgets()
             m_undo_selection->set_active_glyph(glyph);
         }
         m_glyph_editor_widget->set_glyph(glyph);
-        auto glyph_width = m_edited_font->raw_glyph_width(glyph);
-        if (m_edited_font->is_fixed_width())
+        auto glyph_width = m_font->raw_glyph_width(glyph);
+        if (m_font->is_fixed_width())
             m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
         else
             m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
@@ -501,20 +501,20 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_name_textbox = find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_name_textbox->on_change = [this] {
-        m_edited_font->set_name(m_name_textbox->text());
+        m_font->set_name(m_name_textbox->text());
         did_modify_font();
     };
 
     m_family_textbox = find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_family_textbox->on_change = [this] {
-        m_edited_font->set_family(m_family_textbox->text());
+        m_font->set_family(m_family_textbox->text());
         did_modify_font();
     };
 
     m_fixed_width_checkbox = find_descendant_of_type_named<GUI::CheckBox>("fixed_width_checkbox");
     m_fixed_width_checkbox->on_checked = [this](bool checked) {
-        m_edited_font->set_fixed_width(checked);
-        auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph());
+        m_font->set_fixed_width(checked);
+        auto glyph_width = m_font->raw_glyph_width(m_glyph_map_widget->active_glyph());
         m_glyph_editor_width_spinbox->set_visible(!checked);
         m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
         m_glyph_editor_present_checkbox->set_visible(checked);
@@ -526,7 +526,7 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_glyph_editor_width_spinbox->on_change = [this](int value) {
         reset_selection_and_push_undo();
-        m_edited_font->set_glyph_width(m_glyph_map_widget->active_glyph(), value);
+        m_font->set_glyph_width(m_glyph_map_widget->active_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
         update_preview();
@@ -536,7 +536,7 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_glyph_editor_present_checkbox->on_checked = [this](bool checked) {
         reset_selection_and_push_undo();
-        m_edited_font->set_glyph_width(m_glyph_map_widget->active_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
+        m_font->set_glyph_width(m_glyph_map_widget->active_glyph(), checked ? m_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
         update_preview();
@@ -546,33 +546,33 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_weight_combobox = find_descendant_of_type_named<GUI::ComboBox>("weight_combobox");
     m_weight_combobox->on_change = [this](auto&, auto&) {
-        m_edited_font->set_weight(Gfx::name_to_weight(m_weight_combobox->text()));
+        m_font->set_weight(Gfx::name_to_weight(m_weight_combobox->text()));
         did_modify_font();
     };
 
     m_slope_combobox = find_descendant_of_type_named<GUI::ComboBox>("slope_combobox");
     m_slope_combobox->on_change = [this](auto&, auto&) {
-        m_edited_font->set_slope(Gfx::name_to_slope(m_slope_combobox->text()));
+        m_font->set_slope(Gfx::name_to_slope(m_slope_combobox->text()));
         did_modify_font();
     };
 
     m_presentation_spinbox = find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
     m_presentation_spinbox->on_change = [this](int value) {
-        m_edited_font->set_presentation_size(value);
+        m_font->set_presentation_size(value);
         update_preview();
         did_modify_font();
     };
 
     m_spacing_spinbox = find_descendant_of_type_named<GUI::SpinBox>("spacing_spinbox");
     m_spacing_spinbox->on_change = [this](int value) {
-        m_edited_font->set_glyph_spacing(value);
+        m_font->set_glyph_spacing(value);
         update_preview();
         did_modify_font();
     };
 
     m_baseline_spinbox = find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
     m_baseline_spinbox->on_change = [this](int value) {
-        m_edited_font->set_baseline(value);
+        m_font->set_baseline(value);
         m_glyph_editor_widget->update();
         update_preview();
         did_modify_font();
@@ -580,7 +580,7 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_mean_line_spinbox = find_descendant_of_type_named<GUI::SpinBox>("mean_line_spinbox");
     m_mean_line_spinbox->on_change = [this](int value) {
-        m_edited_font->set_mean_line(value);
+        m_font->set_mean_line(value);
         m_glyph_editor_widget->update();
         update_preview();
         did_modify_font();
@@ -627,60 +627,60 @@ ErrorOr<void> MainWidget::create_widgets()
     return {};
 }
 
-ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& edited_font)
+ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& mutable_font)
 {
     VERIFY(window());
 
-    if (m_edited_font == edited_font)
+    if (m_font == mutable_font)
         return {};
 
-    TRY(m_glyph_map_widget->set_font(*edited_font));
+    TRY(m_glyph_map_widget->set_font(*mutable_font));
 
     auto active_glyph = m_glyph_map_widget->active_glyph();
     m_glyph_map_widget->set_focus(true);
     m_glyph_map_widget->scroll_to_glyph(active_glyph);
 
     auto selection = m_glyph_map_widget->selection().normalized();
-    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), active_glyph, *edited_font, *m_glyph_map_widget));
+    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), active_glyph, *mutable_font, *m_glyph_map_widget));
     m_undo_stack->clear();
 
     m_path = TRY(String::from_utf8(path));
-    m_edited_font = edited_font;
+    m_font = mutable_font;
 
     if (m_preview_label)
-        m_preview_label->set_font(*m_edited_font);
+        m_preview_label->set_font(*m_font);
 
-    m_glyph_editor_widget->set_font(*m_edited_font);
+    m_glyph_editor_widget->set_font(*m_font);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_glyph_editor_widget->set_glyph(active_glyph);
 
-    m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
-    m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width(), GUI::AllowCallback::No);
-    m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(active_glyph), GUI::AllowCallback::No);
+    m_glyph_editor_width_spinbox->set_visible(!m_font->is_fixed_width());
+    m_glyph_editor_width_spinbox->set_max(m_font->max_glyph_width(), GUI::AllowCallback::No);
+    m_glyph_editor_width_spinbox->set_value(m_font->raw_glyph_width(active_glyph), GUI::AllowCallback::No);
 
-    m_glyph_editor_present_checkbox->set_visible(m_edited_font->is_fixed_width());
-    m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(active_glyph), GUI::AllowCallback::No);
-    m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width(), GUI::AllowCallback::No);
+    m_glyph_editor_present_checkbox->set_visible(m_font->is_fixed_width());
+    m_glyph_editor_present_checkbox->set_checked(m_font->contains_raw_glyph(active_glyph), GUI::AllowCallback::No);
+    m_fixed_width_checkbox->set_checked(m_font->is_fixed_width(), GUI::AllowCallback::No);
 
-    m_name_textbox->set_text(m_edited_font->name(), GUI::AllowCallback::No);
-    m_family_textbox->set_text(m_edited_font->family(), GUI::AllowCallback::No);
+    m_name_textbox->set_text(m_font->name(), GUI::AllowCallback::No);
+    m_family_textbox->set_text(m_font->family(), GUI::AllowCallback::No);
 
-    m_presentation_spinbox->set_value(m_edited_font->presentation_size(), GUI::AllowCallback::No);
-    m_spacing_spinbox->set_value(m_edited_font->glyph_spacing(), GUI::AllowCallback::No);
+    m_presentation_spinbox->set_value(m_font->presentation_size(), GUI::AllowCallback::No);
+    m_spacing_spinbox->set_value(m_font->glyph_spacing(), GUI::AllowCallback::No);
 
-    m_mean_line_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
-    m_baseline_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
-    m_mean_line_spinbox->set_value(m_edited_font->mean_line(), GUI::AllowCallback::No);
-    m_baseline_spinbox->set_value(m_edited_font->baseline(), GUI::AllowCallback::No);
+    m_mean_line_spinbox->set_range(0, max(m_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
+    m_baseline_spinbox->set_range(0, max(m_font->glyph_height() - 2, 0), GUI::AllowCallback::No);
+    m_mean_line_spinbox->set_value(m_font->mean_line(), GUI::AllowCallback::No);
+    m_baseline_spinbox->set_value(m_font->baseline(), GUI::AllowCallback::No);
 
     for (size_t i = 0; i < Gfx::font_weight_names.size(); ++i) {
-        if (Gfx::font_weight_names[i].style == m_edited_font->weight()) {
+        if (Gfx::font_weight_names[i].style == m_font->weight()) {
             m_weight_combobox->set_selected_index(i, GUI::AllowCallback::No);
             break;
         }
     }
     for (size_t i = 0; i < Gfx::font_slope_names.size(); ++i) {
-        if (Gfx::font_slope_names[i].style == m_edited_font->slope()) {
+        if (Gfx::font_slope_names[i].style == m_font->slope()) {
             m_slope_combobox->set_selected_index(i, GUI::AllowCallback::No);
             break;
         }
@@ -757,7 +757,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
 ErrorOr<void> MainWidget::save_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
-    auto masked_font = TRY(m_edited_font->masked_character_set());
+    auto masked_font = TRY(m_font->masked_character_set());
     TRY(masked_font->write_to_file(move(file)));
 
     m_path = TRY(String::from_utf8(path));
@@ -807,7 +807,7 @@ void MainWidget::undo()
     m_undo_stack->undo();
 
     auto glyph = m_undo_selection->restored_active_glyph();
-    auto glyph_width = edited_font().raw_glyph_width(glyph);
+    auto glyph_width = m_font->raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text(""sv);
 
@@ -817,7 +817,7 @@ void MainWidget::undo()
     m_glyph_map_widget->scroll_to_glyph(glyph);
     m_glyph_map_widget->set_focus(true);
 
-    if (m_edited_font->is_fixed_width()) {
+    if (m_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
     } else {
         m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
@@ -835,7 +835,7 @@ void MainWidget::redo()
     m_undo_stack->redo();
 
     auto glyph = m_undo_selection->restored_active_glyph();
-    auto glyph_width = edited_font().raw_glyph_width(glyph);
+    auto glyph_width = m_font->raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text(""sv);
 
@@ -845,7 +845,7 @@ void MainWidget::redo()
     m_glyph_map_widget->scroll_to_glyph(glyph);
     m_glyph_map_widget->set_focus(true);
 
-    if (m_edited_font->is_fixed_width()) {
+    if (m_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
     } else {
         m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
@@ -916,8 +916,8 @@ void MainWidget::update_statusbar()
         builder.appendff(" {}", glyph_name.value());
     }
 
-    if (m_edited_font->contains_raw_glyph(glyph))
-        builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
+    if (m_font->contains_raw_glyph(glyph))
+        builder.appendff(" [{}x{}]", m_font->raw_glyph_width(glyph), m_font->glyph_height());
     else if (Gfx::Emoji::emoji_for_code_point(glyph))
         builder.appendff(" [emoji]");
     m_statusbar->set_text(builder.to_deprecated_string());
@@ -978,10 +978,10 @@ void MainWidget::set_scale_and_save(i32 scale)
 
 ErrorOr<void> MainWidget::copy_selected_glyphs()
 {
-    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     auto selection = m_glyph_map_widget->selection().normalized();
-    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_edited_font->widths() + selection.start();
+    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_font->widths() + selection.start();
 
     ByteBuffer buffer;
     TRY(buffer.try_append(rows, bytes_per_glyph * selection.size()));
@@ -990,8 +990,8 @@ ErrorOr<void> MainWidget::copy_selected_glyphs()
     HashMap<DeprecatedString, DeprecatedString> metadata;
     metadata.set("start", DeprecatedString::number(selection.start()));
     metadata.set("count", DeprecatedString::number(selection.size()));
-    metadata.set("width", DeprecatedString::number(edited_font().max_glyph_width()));
-    metadata.set("height", DeprecatedString::number(edited_font().glyph_height()));
+    metadata.set("width", DeprecatedString::number(m_font->max_glyph_width()));
+    metadata.set("height", DeprecatedString::number(m_font->glyph_height()));
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
 
     return {};
@@ -1023,16 +1023,16 @@ void MainWidget::paste_glyphs()
     m_undo_selection->set_size(range_bound_glyph_count);
     push_undo();
 
-    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
     size_t copyable_bytes_per_glyph = min(bytes_per_glyph, bytes_per_copied_glyph);
-    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_edited_font->widths() + selection.start();
+    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_font->widths() + selection.start();
 
     for (size_t i = 0; i < range_bound_glyph_count; ++i) {
-        auto copyable_width = edited_font().is_fixed_width()
-            ? data[bytes_per_copied_glyph * glyph_count + i] ? edited_font().glyph_fixed_width() : 0
-            : min(edited_font().max_glyph_width(), data[bytes_per_copied_glyph * glyph_count + i]);
+        auto copyable_width = m_font->is_fixed_width()
+            ? data[bytes_per_copied_glyph * glyph_count + i] ? m_font->glyph_fixed_width() : 0
+            : min(m_font->max_glyph_width(), data[bytes_per_copied_glyph * glyph_count + i]);
         memcpy(&rows[i * bytes_per_glyph], &data[i * bytes_per_copied_glyph], copyable_bytes_per_glyph);
         memset(&widths[i], copyable_width, sizeof(u8));
         m_glyph_map_widget->set_glyph_modified(selection.start() + i, true);
@@ -1040,10 +1040,10 @@ void MainWidget::paste_glyphs()
 
     m_glyph_map_widget->set_selection(selection.start() + range_bound_glyph_count - 1, -range_bound_glyph_count + 1);
 
-    if (m_edited_font->is_fixed_width())
-        m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+    if (m_font->is_fixed_width())
+        m_glyph_editor_present_checkbox->set_checked(m_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
     else
-        m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
+        m_glyph_editor_width_spinbox->set_value(m_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
 
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
@@ -1056,13 +1056,13 @@ void MainWidget::delete_selected_glyphs()
     push_undo();
 
     auto selection = m_glyph_map_widget->selection().normalized();
-    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_edited_font->glyph_height();
-    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
-    auto* widths = m_edited_font->widths() + selection.start();
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
+    auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_font->widths() + selection.start();
     memset(rows, 0, bytes_per_glyph * selection.size());
     memset(widths, 0, selection.size());
 
-    if (m_edited_font->is_fixed_width())
+    if (m_font->is_fixed_width())
         m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
     else
         m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
