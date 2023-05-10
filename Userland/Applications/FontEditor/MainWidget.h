@@ -53,6 +53,7 @@ private:
 
     void undo();
     void redo();
+    void restore_state();
     void did_modify_font();
 
     void update_statusbar();

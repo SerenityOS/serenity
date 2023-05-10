@@ -803,12 +803,8 @@ void MainWidget::reset_selection_and_push_undo()
     push_undo();
 }
 
-void MainWidget::undo()
+void MainWidget::restore_state()
 {
-    if (!m_undo_stack->can_undo())
-        return;
-    m_undo_stack->undo();
-
     auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = m_font->raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
@@ -820,15 +816,23 @@ void MainWidget::undo()
     m_glyph_map_widget->scroll_to_glyph(glyph);
     m_glyph_map_widget->set_focus(true);
 
-    if (m_font->is_fixed_width()) {
+    if (m_font->is_fixed_width())
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
-    } else {
+    else
         m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
-    }
+
     m_glyph_editor_widget->update();
     m_glyph_map_widget->update();
     update_preview();
     update_statusbar();
+}
+
+void MainWidget::undo()
+{
+    if (!m_undo_stack->can_undo())
+        return;
+    m_undo_stack->undo();
+    restore_state();
 }
 
 void MainWidget::redo()
@@ -836,27 +840,7 @@ void MainWidget::redo()
     if (!m_undo_stack->can_redo())
         return;
     m_undo_stack->redo();
-
-    auto glyph = m_undo_selection->restored_active_glyph();
-    auto glyph_width = m_font->raw_glyph_width(glyph);
-    if (glyph < m_range.first || glyph > m_range.last)
-        m_search_textbox->set_text(""sv);
-
-    auto start = m_undo_selection->restored_start();
-    auto size = m_undo_selection->restored_size();
-    m_glyph_map_widget->restore_selection(start, size, glyph);
-    m_glyph_map_widget->scroll_to_glyph(glyph);
-    m_glyph_map_widget->set_focus(true);
-
-    if (m_font->is_fixed_width()) {
-        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
-    } else {
-        m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
-    }
-    m_glyph_editor_widget->update();
-    m_glyph_map_widget->update();
-    update_preview();
-    update_statusbar();
+    restore_state();
 }
 
 bool MainWidget::request_close()
