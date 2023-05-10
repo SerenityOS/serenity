@@ -32,7 +32,6 @@ public:
     ErrorOr<void> open_file(StringView, NonnullOwnPtr<Core::File>);
     ErrorOr<void> save_file(StringView, NonnullOwnPtr<Core::File>);
     bool request_close();
-    void update_title();
 
     String const& path() { return m_path; }
     Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
@@ -65,8 +64,11 @@ private:
     void undo();
     void redo();
     void did_modify_font();
+
     void update_statusbar();
     void update_preview();
+    void update_title();
+
     void set_scale_and_save(i32);
 
     ErrorOr<void> copy_selected_glyphs();
