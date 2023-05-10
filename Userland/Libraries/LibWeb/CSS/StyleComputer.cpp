@@ -1053,6 +1053,14 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
         auto property_id = (CSS::PropertyID)i;
         compute_defaulted_property_value(style, element, property_id, pseudo_element);
     }
+
+    // https://www.w3.org/TR/css-color-4/#resolving-other-colors
+    // In the color property, the used value of currentcolor is the inherited value.
+    auto color = style.property(CSS::PropertyID::Color);
+    if (color->to_identifier() == CSS::ValueID::Currentcolor) {
+        color = get_inherit_value(document().realm(), CSS::PropertyID::Color, element, pseudo_element);
+        style.set_property(CSS::PropertyID::Color, color);
+    }
 }
 
 Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProperties const& style) const
