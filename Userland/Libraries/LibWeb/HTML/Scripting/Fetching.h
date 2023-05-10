@@ -12,7 +12,7 @@
 
 namespace Web::HTML {
 
-using ModuleCallback = JS::SafeFunction<void(JavaScriptModuleScript*)>;
+using OnFetchScriptComplete = JS::SafeFunction<void(JS::GCPtr<Script>)>;
 
 class DescendantFetchingContext : public RefCounted<DescendantFetchingContext> {
 public:
@@ -28,7 +28,7 @@ public:
     void set_failed(bool failed) { m_failed = failed; }
 
     void on_complete(JavaScriptModuleScript* module_script) { m_on_complete(module_script); };
-    void set_on_complete(ModuleCallback on_complete) { m_on_complete = move(on_complete); }
+    void set_on_complete(OnFetchScriptComplete on_complete) { m_on_complete = move(on_complete); }
 
 private:
     DescendantFetchingContext() = default;
@@ -36,7 +36,7 @@ private:
     size_t m_pending_count { 0 };
     bool m_failed { false };
 
-    ModuleCallback m_on_complete;
+    OnFetchScriptComplete m_on_complete;
 };
 
 DeprecatedString module_type_from_module_request(JS::ModuleRequest const&);
@@ -44,18 +44,18 @@ WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referrin
 WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
 Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url);
 
-void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete);
-void fetch_external_module_script_graph(AK::URL const&, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete);
-void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete);
+void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
+void fetch_external_module_script_graph(AK::URL const&, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
+void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
 
-void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, ModuleCallback callback);
-void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete);
+void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, OnFetchScriptComplete callback);
+void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
 
 enum class TopLevelModule {
     Yes,
     No
 };
 
-void fetch_single_module_script(AK::URL const&, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, EnvironmentSettingsObject& module_map_settings_object, AK::URL const& referrer, Optional<JS::ModuleRequest> const&, TopLevelModule, ModuleCallback callback);
+void fetch_single_module_script(AK::URL const&, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, EnvironmentSettingsObject& module_map_settings_object, AK::URL const& referrer, Optional<JS::ModuleRequest> const&, TopLevelModule, OnFetchScriptComplete callback);
 
 }

@@ -211,7 +211,7 @@ Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& spec
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#internal-module-script-graph-fetching-procedure
-void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete)
+void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete)
 {
     // 1. Let url be the result of resolving a module specifier given referringScript and moduleRequest.[[Specifier]].
     auto url = MUST(resolve_module_specifier(referring_script, module_request.module_specifier));
@@ -228,7 +228,7 @@ void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request,
     // 5. Fetch a single module script given url, fetch client settings object, destination, options, referringScript's settings object,
     //    referringScript's base URL, moduleRequest, false, and onSingleFetchComplete as defined below. If performFetch was given, pass it along as well.
     // FIXME: Pass options and performFetch if given.
-    fetch_single_module_script(url, fetch_client_settings_object, destination, referring_script.settings_object(), referring_script.base_url(), module_request, TopLevelModule::No, [on_complete = move(on_complete), &fetch_client_settings_object, destination, visited_set](auto* result) mutable {
+    fetch_single_module_script(url, fetch_client_settings_object, destination, referring_script.settings_object(), referring_script.base_url(), module_request, TopLevelModule::No, [on_complete = move(on_complete), &fetch_client_settings_object, destination, visited_set](auto result) mutable {
         // onSingleFetchComplete given result is the following algorithm:
         // 1. If result is null, run onComplete with null, and abort these steps.
         if (!result) {
@@ -238,12 +238,13 @@ void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request,
 
         // 2. Fetch the descendants of result given fetch client settings object, destination, visited set, and with onComplete. If performFetch was given, pass it along as well.
         // FIXME: Pass performFetch if given.
-        fetch_descendants_of_a_module_script(*result, fetch_client_settings_object, destination, visited_set, move(on_complete));
+        auto& module_script = verify_cast<JavaScriptModuleScript>(*result);
+        fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, move(on_complete));
     });
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-a-module-script
-void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, ModuleCallback on_complete)
+void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, OnFetchScriptComplete on_complete)
 {
     // 1. If module script's record is null, run onComplete with module script and return.
     if (!module_script.record()) {
@@ -309,7 +310,7 @@ void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script,
     //     If performFetch was given, pass it along as well.
     for (auto const& module_request : module_requests) {
         // FIXME: Pass options and performFetch if given.
-        fetch_internal_module_script_graph(module_request, fetch_client_settings_object, destination, module_script, visited_set, [context, &module_script](auto const* result) mutable {
+        fetch_internal_module_script_graph(module_request, fetch_client_settings_object, destination, module_script, visited_set, [context, &module_script](auto result) mutable {
             // onInternalFetchingComplete given result is the following algorithm:
             // 1. If failed is true, then abort these steps.
             if (context->failed())
@@ -336,7 +337,7 @@ void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
-void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, StringView, EnvironmentSettingsObject& module_map_settings_object, AK::URL const&, Optional<JS::ModuleRequest> const& module_request, TopLevelModule, ModuleCallback on_complete)
+void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, StringView, EnvironmentSettingsObject& module_map_settings_object, AK::URL const&, Optional<JS::ModuleRequest> const& module_request, TopLevelModule, OnFetchScriptComplete on_complete)
 {
     // 1. Let moduleType be "javascript".
     DeprecatedString module_type = "javascript"sv;
@@ -418,14 +419,14 @@ void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, 
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-script-tree
-void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
+void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
 {
     // 1. Disallow further import maps given settings object.
     settings_object.disallow_further_import_maps();
 
     // 2. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
     // FIXME: Pass options.
-    fetch_single_module_script(url, settings_object, "script"sv, settings_object, "client"sv, {}, TopLevelModule::Yes, [&settings_object, on_complete = move(on_complete), url](auto* result) mutable {
+    fetch_single_module_script(url, settings_object, "script"sv, settings_object, "client"sv, {}, TopLevelModule::Yes, [&settings_object, on_complete = move(on_complete), url](auto result) mutable {
         // 1. If result is null, run onComplete given null, and abort these steps.
         if (!result) {
             on_complete(nullptr);
@@ -437,12 +438,13 @@ void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsO
         visited_set.set({ url, "javascript"sv });
 
         // 3. Fetch the descendants of and link result given settings object, "script", visited set, and onComplete.
-        fetch_descendants_of_and_link_a_module_script(*result, settings_object, "script"sv, move(visited_set), move(on_complete));
+        auto& module_script = verify_cast<JavaScriptModuleScript>(*result);
+        fetch_descendants_of_and_link_a_module_script(module_script, settings_object, "script"sv, move(visited_set), move(on_complete));
     });
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
-void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
+void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete)
 {
     // 1. Disallow further import maps given settings object.
     settings_object.disallow_further_import_maps();
@@ -464,12 +466,12 @@ void fetch_inline_module_script_graph(DeprecatedString const& filename, Deprecat
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-and-link-a-module-script
-void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete)
+void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete)
 {
     // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
     //    If performFetch was given, pass it along as well.
     // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [on_complete = move(on_complete)](JavaScriptModuleScript* result) {
+    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [on_complete = move(on_complete)](auto result) {
         // onFetchDescendantsComplete given result is the following algorithm:
         // 1. If result is null, then run onComplete given result, and abort these steps.
         if (!result) {
@@ -480,9 +482,9 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
         // FIXME: 2. Let parse error be the result of finding the first parse error given result.
 
         // 3. If parse error is null, then:
-        if (result->record()) {
+        if (auto& module_script = verify_cast<JavaScriptModuleScript>(*result); module_script.record()) {
             // 1. Let record be result's record.
-            auto const& record = *result->record();
+            auto const& record = *module_script.record();
 
             // 2. Perform record.Link().
             auto linking_result = const_cast<JS::SourceTextModule&>(record).link(result->vm());
