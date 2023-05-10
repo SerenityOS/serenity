@@ -170,6 +170,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm
     return new_response;
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-cross-origin
+bool Response::is_cors_cross_origin() const
+{
+    // A response whose type is "opaque" or "opaqueredirect" is CORS-cross-origin.
+    return type() == Type::Opaque || type() == Type::OpaqueRedirect;
+}
+
 // Non-standard
 Optional<StringView> Response::network_error_message() const
 {
