@@ -380,20 +380,23 @@ ErrorOr<void> MainWidget::create_toolbars()
 
 ErrorOr<void> MainWidget::create_models()
 {
+    TRY(m_font_slope_list.try_ensure_capacity(Gfx::font_slope_names.size()));
     for (auto& it : Gfx::font_slope_names)
-        TRY(m_font_slope_list.try_append(it.name));
-    m_slope_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_font_slope_list));
+        m_font_slope_list.unchecked_append(TRY(String::from_utf8(it.name)));
+    m_slope_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_slope_list)));
 
+    TRY(m_font_weight_list.try_ensure_capacity(Gfx::font_weight_names.size()));
     for (auto& it : Gfx::font_weight_names)
-        TRY(m_font_weight_list.try_append(it.name));
-    m_weight_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_font_weight_list));
+        m_font_weight_list.unchecked_append(TRY(String::from_utf8(it.name)));
+    m_weight_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_weight_list)));
 
     auto unicode_blocks = Unicode::block_display_names();
-    TRY(m_unicode_block_list.try_append("Show All"));
+    TRY(m_unicode_block_list.try_ensure_capacity(unicode_blocks.size() + 1));
+    m_unicode_block_list.unchecked_append(TRY(String::from_utf8("Show All"sv)));
     for (auto& block : unicode_blocks)
-        TRY(m_unicode_block_list.try_append(block.display_name));
+        m_unicode_block_list.unchecked_append(TRY(String::from_utf8(block.display_name)));
 
-    m_unicode_block_model = GUI::ItemListModel<DeprecatedString>::create(m_unicode_block_list);
+    m_unicode_block_model = TRY(GUI::ItemListModel<String>::try_create(m_unicode_block_list));
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term(""sv);
 

@@ -161,9 +161,9 @@ private:
     RefPtr<GUI::Window> m_font_preview_window;
 
     DeprecatedString m_path;
-    Vector<DeprecatedString> m_font_weight_list;
-    Vector<DeprecatedString> m_font_slope_list;
-    Vector<DeprecatedString> m_unicode_block_list;
+    Vector<String> m_font_weight_list;
+    Vector<String> m_font_slope_list;
+    Vector<String> m_unicode_block_list;
     bool m_font_metadata { true };
     bool m_unicode_blocks { true };
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
