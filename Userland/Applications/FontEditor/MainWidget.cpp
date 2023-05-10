@@ -216,54 +216,59 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_preview_action->set_status_tip("Preview the current font");
 
     bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
-    set_show_font_metadata(show_metadata);
+    m_font_metadata_groupbox->set_visible(show_metadata);
     m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [this](auto& action) {
-        set_show_font_metadata(action.is_checked());
+        m_font_metadata_groupbox->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
     m_show_metadata_action->set_checked(show_metadata);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
 
     bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
-    set_show_unicode_blocks(show_unicode_blocks);
+    m_unicode_block_container->set_visible(show_unicode_blocks);
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [this](auto& action) {
-        set_show_unicode_blocks(action.is_checked());
+        m_unicode_block_container->set_visible(action.is_checked());
+        if (action.is_checked())
+            m_search_textbox->set_focus(true);
+        else
+            m_glyph_map_widget->set_focus(true);
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
 
     bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
-    set_show_toolbar(show_toolbar);
+    m_toolbar_container->set_visible(show_toolbar);
     m_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", [this](auto& action) {
-        set_show_toolbar(action.is_checked());
+        m_toolbar_container->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
     m_show_toolbar_action->set_checked(show_toolbar);
     m_show_toolbar_action->set_status_tip("Show or hide the toolbar");
 
     bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
-    set_show_statusbar(show_statusbar);
+    m_statusbar->set_visible(show_statusbar);
     m_show_statusbar_action = GUI::Action::create_checkable("&Status Bar", [this](auto& action) {
-        set_show_statusbar(action.is_checked());
+        m_statusbar->set_visible(action.is_checked());
+        update_statusbar();
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
     });
     m_show_statusbar_action->set_checked(show_statusbar);
     m_show_statusbar_action->set_status_tip("Show or hide the status bar");
 
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
-    set_highlight_modifications(highlight_modifications);
+    m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
     m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [this](auto& action) {
-        set_highlight_modifications(action.is_checked());
+        m_glyph_map_widget->set_highlight_modifications(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
     m_highlight_modifications_action->set_checked(highlight_modifications);
     m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs. (Green = New, Blue = Modified, Red = Deleted)");
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
-    set_show_system_emoji(show_system_emoji);
+    m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
     m_show_system_emoji_action = GUI::Action::create_checkable("System &Emoji", { Mod_Ctrl, Key_E }, [this](auto& action) {
-        set_show_system_emoji(action.is_checked());
+        m_glyph_map_widget->set_show_system_emoji(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
     });
     m_show_system_emoji_action->set_checked(show_system_emoji);
@@ -761,52 +766,6 @@ ErrorOr<void> MainWidget::save_file(StringView path, NonnullOwnPtr<Core::File> f
     window()->set_modified(false);
     update_title();
     return {};
-}
-
-void MainWidget::set_show_toolbar(bool show)
-{
-    if (m_toolbar_container->is_visible() == show)
-        return;
-    m_toolbar_container->set_visible(show);
-}
-
-void MainWidget::set_show_statusbar(bool show)
-{
-    if (m_statusbar->is_visible() == show)
-        return;
-    m_statusbar->set_visible(show);
-    if (show)
-        update_statusbar();
-}
-
-void MainWidget::set_show_font_metadata(bool show)
-{
-    if (m_font_metadata == show)
-        return;
-    m_font_metadata = show;
-    m_font_metadata_groupbox->set_visible(m_font_metadata);
-}
-
-void MainWidget::set_show_unicode_blocks(bool show)
-{
-    if (m_unicode_blocks == show)
-        return;
-    m_unicode_blocks = show;
-    m_unicode_block_container->set_visible(m_unicode_blocks);
-    if (show)
-        m_search_textbox->set_focus(true);
-    else
-        m_glyph_map_widget->set_focus(true);
-}
-
-void MainWidget::set_highlight_modifications(bool highlight_modifications)
-{
-    m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
-}
-
-void MainWidget::set_show_system_emoji(bool show)
-{
-    m_glyph_map_widget->set_show_system_emoji(show);
 }
 
 ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)

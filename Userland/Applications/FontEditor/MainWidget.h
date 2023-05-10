@@ -36,18 +36,6 @@ public:
     String const& path() { return m_path; }
     Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
 
-    bool is_showing_font_metadata() { return m_font_metadata; }
-    void set_show_font_metadata(bool);
-
-    bool is_showing_unicode_blocks() { return m_unicode_blocks; }
-    void set_show_unicode_blocks(bool);
-
-    void set_show_toolbar(bool);
-    void set_show_statusbar(bool);
-
-    void set_highlight_modifications(bool);
-    void set_show_system_emoji(bool);
-
 private:
     MainWidget() = default;
 
@@ -159,8 +147,6 @@ private:
     Vector<String> m_font_weight_list;
     Vector<String> m_font_slope_list;
     Vector<String> m_unicode_block_list;
-    bool m_font_metadata { true };
-    bool m_unicode_blocks { true };
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
 };
 
