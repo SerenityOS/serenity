@@ -70,6 +70,7 @@ struct RangeHeaderValue {
 struct ExtractHeaderParseFailure {
 };
 
+[[nodiscard]] StringView legacy_extract_an_encoding(Optional<MimeSniff::MimeType> const& mime_type, StringView fallback_encoding);
 [[nodiscard]] ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyBytes);
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);
 [[nodiscard]] bool is_header_name(ReadonlyBytes);
