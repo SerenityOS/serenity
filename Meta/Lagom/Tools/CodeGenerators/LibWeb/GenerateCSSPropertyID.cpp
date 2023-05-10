@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GeneratorUtil.h"
+#include <AK/GenericShorthands.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -13,6 +14,11 @@
 
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file);
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file);
+
+static bool type_name_is_enum(StringView type_name)
+{
+    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -109,6 +115,26 @@ StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm&, PropertyID);
 
+enum class ValueType {
+    Angle,
+    Color,
+    FilterValueList,
+    Frequency,
+    Image,
+    Integer,
+    Length,
+    Number,
+    Paint,
+    Percentage,
+    Position,
+    Rect,
+    Resolution,
+    String,
+    Time,
+    Url,
+};
+bool property_accepts_type(PropertyID, ValueType);
+bool property_accepts_identifier(PropertyID, ValueID);
 bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
 
@@ -397,6 +423,132 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
         }
     });
 
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
+}
+
+bool property_accepts_type(PropertyID property_id, ValueType value_type)
+{
+    switch (property_id) {
+)~~~");
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto& object = value.as_object();
+        if (auto maybe_valid_types = object.get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
+            auto& valid_types = maybe_valid_types.value();
+            auto property_generator = generator.fork();
+            property_generator.set("name:titlecase", title_casify(name));
+            property_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@: {
+        switch (value_type) {
+)~~~");
+
+            bool did_output_accepted_type = false;
+            for (auto& type : valid_types.values()) {
+                VERIFY(type.is_string());
+                auto type_name = type.as_string().split_view(' ').first();
+                if (type_name_is_enum(type_name))
+                    continue;
+
+                if (type_name == "angle") {
+                    property_generator.appendln("        case ValueType::Angle:");
+                } else if (type_name == "color") {
+                    property_generator.appendln("        case ValueType::Color:");
+                } else if (type_name == "frequency") {
+                    property_generator.appendln("        case ValueType::Frequency:");
+                } else if (type_name == "image") {
+                    property_generator.appendln("        case ValueType::Image:");
+                } else if (type_name == "integer") {
+                    property_generator.appendln("        case ValueType::Integer:");
+                } else if (type_name == "length") {
+                    property_generator.appendln("        case ValueType::Length:");
+                } else if (type_name == "number") {
+                    property_generator.appendln("        case ValueType::Number:");
+                } else if (type_name == "percentage") {
+                    property_generator.appendln("        case ValueType::Percentage:");
+                } else if (type_name == "rect") {
+                    property_generator.appendln("        case ValueType::Rect:");
+                } else if (type_name == "resolution") {
+                    property_generator.appendln("        case ValueType::Resolution:");
+                } else if (type_name == "string") {
+                    property_generator.appendln("        case ValueType::String:");
+                } else if (type_name == "time") {
+                    property_generator.appendln("        case ValueType::Time:");
+                } else if (type_name == "url") {
+                    property_generator.appendln("        case ValueType::Url:");
+                } else {
+                    VERIFY_NOT_REACHED();
+                }
+                did_output_accepted_type = true;
+            }
+
+            if (did_output_accepted_type)
+                property_generator.appendln("            return true;");
+
+            property_generator.append(R"~~~(
+        default:
+            return false;
+        }
+    }
+)~~~");
+        }
+    });
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
+}
+
+bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
+{
+    switch (property_id) {
+)~~~");
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto& object = value.as_object();
+
+        auto property_generator = generator.fork();
+        property_generator.set("name:titlecase", title_casify(name));
+        property_generator.appendln("    case PropertyID::@name:titlecase@: {");
+
+        if (auto maybe_valid_identifiers = object.get_array("valid-identifiers"sv); maybe_valid_identifiers.has_value() && !maybe_valid_identifiers->is_empty()) {
+            property_generator.appendln("        switch (identifier) {");
+            auto& valid_identifiers = maybe_valid_identifiers.value();
+            for (auto& identifier : valid_identifiers.values()) {
+                auto identifier_generator = generator.fork();
+                identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
+                identifier_generator.appendln("        case ValueID::@identifier:titlecase@:");
+            }
+            property_generator.append(R"~~~(
+            return true;
+        default:
+            break;
+        }
+)~~~");
+        }
+
+        if (auto maybe_valid_types = object.get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
+            auto& valid_types = maybe_valid_types.value();
+            for (auto& valid_type : valid_types.values()) {
+                auto type_name = valid_type.as_string().split_view(' ').first();
+                if (!type_name_is_enum(type_name))
+                    continue;
+
+                auto type_generator = generator.fork();
+                type_generator.set("type_name:snakecase", snake_casify(type_name));
+                type_generator.append(R"~~~(
+        if (value_id_to_@type_name:snakecase@(identifier).has_value())
+            return true;
+)~~~");
+            }
+        }
+        property_generator.append(R"~~~(
+        return false;
+    }
+)~~~");
+    });
     generator.append(R"~~~(
     default:
         return false;
