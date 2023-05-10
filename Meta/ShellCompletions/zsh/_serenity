@@ -5,6 +5,7 @@ _serenity() {
     args=(
         '1:command:->commands'
         '2:target:->targets'
+        '3:toolchain:->toolchains'
         '*:: :->args'
     )
 
@@ -34,6 +35,12 @@ _serenity() {
         'lagom:Target host machine'
     )
 
+    local toolchains
+    toolchains=(
+        'GNU:Toolchain gcc or $SERENITY_TOOLCHAIN (default)'
+        'Clang:Toolchain clang'
+    )
+
     _arguments -C -S "$args[@]"
 
     local command
@@ -41,6 +48,9 @@ _serenity() {
 
     local target
     target="$line[2]"
+
+    local toolchain
+    toolchain="$line[3]"
 
     case "$state" in
         commands)
@@ -58,6 +68,12 @@ _serenity() {
                     ;;
             esac
             _describe 'target' targets
+            ;;
+        toolchains)
+            if [[ "$command" != help && "$target" != lagom ]]; then
+                # Toolchain-dependent invocations.
+                _describe 'toolchain' toolchains
+            fi
             ;;
         args)
             ;;
