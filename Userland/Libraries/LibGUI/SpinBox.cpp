@@ -78,11 +78,19 @@ void SpinBox::set_value(int value, AllowCallback allow_callback)
 
 void SpinBox::set_value_from_current_text()
 {
+    if (m_editor->text().is_empty())
+        return;
+
     auto value = m_editor->text().to_int();
     if (value.has_value())
         set_value(value.value());
     else
         set_value(min());
+}
+
+void SpinBox::set_text(StringView text, AllowCallback allow_callback)
+{
+    m_editor->set_text(text, allow_callback);
 }
 
 void SpinBox::set_range(int min, int max, AllowCallback allow_callback)

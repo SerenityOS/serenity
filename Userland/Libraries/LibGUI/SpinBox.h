@@ -19,6 +19,7 @@ public:
     int value() const { return m_value; }
     void set_value(int, AllowCallback = AllowCallback::Yes);
     void set_value_from_current_text();
+    void set_text(StringView, AllowCallback = AllowCallback::Yes);
 
     int min() const { return m_min; }
     int max() const { return m_max; }
