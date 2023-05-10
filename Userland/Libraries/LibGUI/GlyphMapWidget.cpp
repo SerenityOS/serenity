@@ -334,6 +334,8 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Left) {
+        if (event.alt())
+            return event.ignore();
         if (m_active_glyph - 1 < first_glyph)
             return;
         if (event.ctrl() && selection.start() - 1 < first_glyph)
@@ -348,6 +350,8 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Right) {
+        if (event.alt())
+            return event.ignore();
         if (m_active_glyph + 1 > last_glyph)
             return;
         if (event.ctrl() && selection.start() + selection.size() > last_glyph)
