@@ -109,8 +109,8 @@ enum class PropertyID {
     generator.append(R"~~~(
 };
 
-PropertyID property_id_from_camel_case_string(StringView);
-PropertyID property_id_from_string(StringView);
+Optional<PropertyID> property_id_from_camel_case_string(StringView);
+Optional<PropertyID> property_id_from_string(StringView);
 StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm&, PropertyID);
@@ -186,7 +186,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& f
 
 namespace Web::CSS {
 
-PropertyID property_id_from_camel_case_string(StringView string)
+Optional<PropertyID> property_id_from_camel_case_string(StringView string)
 {
 )~~~");
 
@@ -204,10 +204,10 @@ PropertyID property_id_from_camel_case_string(StringView string)
     });
 
     generator.append(R"~~~(
-    return PropertyID::Invalid;
+    return {};
 }
 
-PropertyID property_id_from_string(StringView string)
+Optional<PropertyID> property_id_from_string(StringView string)
 {
 )~~~");
 
@@ -224,7 +224,7 @@ PropertyID property_id_from_string(StringView string)
     });
 
     generator.append(R"~~~(
-    return PropertyID::Invalid;
+    return {};
 }
 
 StringView string_from_property_id(PropertyID property_id) {
