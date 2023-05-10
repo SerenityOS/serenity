@@ -12,35 +12,29 @@
 namespace Gfx {
 
 struct FontStyleMapping {
-    // NOTE: __builtin_strlen required to make this work at compile time.
-    constexpr FontStyleMapping(int s, char const* n)
-        : style(s)
-        , name(StringView { n, __builtin_strlen(n) })
-    {
-    }
     int style { 0 };
     StringView name;
 };
 
-static constexpr FontStyleMapping font_weight_names[] = {
-    { 100, "Thin" },
-    { 200, "Extra Light" },
-    { 300, "Light" },
-    { 400, "Regular" },
-    { 500, "Medium" },
-    { 600, "Semi Bold" },
-    { 700, "Bold" },
-    { 800, "Extra Bold" },
-    { 900, "Black" },
-    { 950, "Extra Black" },
-};
+static constexpr Array<FontStyleMapping, 10> font_weight_names = { {
+    { 100, "Thin"sv },
+    { 200, "Extra Light"sv },
+    { 300, "Light"sv },
+    { 400, "Regular"sv },
+    { 500, "Medium"sv },
+    { 600, "Semi Bold"sv },
+    { 700, "Bold"sv },
+    { 800, "Extra Bold"sv },
+    { 900, "Black"sv },
+    { 950, "Extra Black"sv },
+} };
 
-static constexpr FontStyleMapping font_slope_names[] = {
-    { 0, "Regular" },
-    { 1, "Italic" },
-    { 2, "Oblique" },
-    { 3, "Reclined" }
-};
+static constexpr Array<FontStyleMapping, 4> font_slope_names = { {
+    { 0, "Regular"sv },
+    { 1, "Italic"sv },
+    { 2, "Oblique"sv },
+    { 3, "Reclined"sv },
+} };
 
 static constexpr StringView weight_to_name(int weight)
 {
