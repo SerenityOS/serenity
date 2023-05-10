@@ -116,7 +116,6 @@ ErrorOr<void> MainWidget::create_actions()
         auto new_font_wizard = NewFontDialog::construct(window());
         if (new_font_wizard->exec() != GUI::Dialog::ExecResult::OK)
             return;
-        new_font_wizard->hide();
         auto maybe_font = new_font_wizard->create_font();
         if (maybe_font.is_error())
             return show_error(maybe_font.release_error(), "Creating new font failed"sv);
