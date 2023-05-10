@@ -573,9 +573,12 @@ bool GlyphMapWidget::glyph_is_modified(u32 glyph)
     return m_modified_glyphs.contains(glyph);
 }
 
-ErrorOr<void> GlyphMapWidget::set_font(Gfx::Font const& font)
+ErrorOr<void> GlyphMapWidget::initialize(Gfx::Font const* font)
 {
-    m_original_font = TRY(font.try_clone());
+    if (font)
+        m_original_font = TRY(font->try_clone());
+    else
+        m_original_font = nullptr;
     m_modified_glyphs.clear();
     AbstractScrollableWidget::set_font(font);
     return {};
