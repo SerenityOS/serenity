@@ -6,38 +6,31 @@
 
 #include "GridTrackSize.h"
 #include <AK/String.h>
+#include <LibWeb/CSS/Size.h>
 
 namespace Web::CSS {
 
-GridSize::GridSize(Length length)
-    : m_type(Type::Length)
-    , m_length(length)
-{
-}
-
-GridSize::GridSize(Percentage percentage)
-    : m_type(Type::Percentage)
-    , m_length { Length::make_px(0) }
-    , m_percentage(percentage)
-{
-}
+GridSize::GridSize(LengthPercentage length_percentage)
+    : m_type(Type::LengthPercentage)
+    , m_length_percentage(length_percentage) {};
 
 GridSize::GridSize(float flexible_length)
     : m_type(Type::FlexibleLength)
-    , m_length { Length::make_px(0) }
+    , m_length_percentage { Length::make_px(0) }
     , m_flexible_length(flexible_length)
 {
 }
 
 GridSize::GridSize(Type type)
-    : m_length { Length::make_auto() }
+    : m_length_percentage { Length::make_auto() }
 {
     VERIFY(type == Type::MinContent || type == Type::MaxContent);
     m_type = type;
 }
 
 GridSize::GridSize()
-    : m_length { Length::make_auto() }
+    : m_type(Type::LengthPercentage)
+    , m_length_percentage { Length::make_auto() }
 {
 }
 
@@ -48,13 +41,21 @@ GridSize GridSize::make_auto()
     return GridSize(CSS::Length::make_auto());
 }
 
+Size GridSize::css_size() const
+{
+    VERIFY(m_type == Type::LengthPercentage);
+    if (m_length_percentage.is_auto())
+        return CSS::Size::make_auto();
+    if (m_length_percentage.is_length())
+        return CSS::Size::make_length(m_length_percentage.length());
+    return CSS::Size::make_percentage(m_length_percentage.percentage());
+}
+
 ErrorOr<String> GridSize::to_string() const
 {
     switch (m_type) {
-    case Type::Length:
-        return m_length.to_string();
-    case Type::Percentage:
-        return m_percentage.to_string();
+    case Type::LengthPercentage:
+        return m_length_percentage.to_string();
     case Type::FlexibleLength:
         return String::formatted("{}fr", m_flexible_length);
     case Type::MaxContent:
@@ -63,11 +64,6 @@ ErrorOr<String> GridSize::to_string() const
         return "min-content"_string;
     }
     VERIFY_NOT_REACHED();
-}
-
-Length GridSize::length() const
-{
-    return m_length;
 }
 
 GridMinMax::GridMinMax(GridSize min_grid_size, GridSize max_grid_size)

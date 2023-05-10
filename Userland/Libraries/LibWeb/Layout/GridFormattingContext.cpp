@@ -21,14 +21,12 @@ CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const
 {
     VERIFY(grid_size.is_definite());
     switch (grid_size.type()) {
-    case CSS::GridSize::Type::Length:
-        if (grid_size.length().is_auto())
-            break;
-        return grid_size.length().to_px(grid_container());
-    case CSS::GridSize::Type::Percentage:
-        if (available_space.width.is_definite())
-            return grid_size.percentage().as_fraction() * available_space.width.to_px().value();
+    case CSS::GridSize::Type::LengthPercentage: {
+        if (!grid_size.length_percentage().is_auto()) {
+            return grid_size.css_size().to_px(grid_container(), available_space.width.to_px());
+        }
         break;
+    }
     default:
         VERIFY_NOT_REACHED();
     }
@@ -621,14 +619,11 @@ void GridFormattingContext::initialize_track_sizes(AvailableSize const& availabl
         switch (track.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        case CSS::GridSize::Type::Length: {
-            if (!track.min_track_sizing_function.length().is_auto())
-                track.base_size = track.min_track_sizing_function.length().to_px(grid_container());
-            break;
-        }
-        case CSS::GridSize::Type::Percentage: {
-            if (available_size.is_definite())
-                track.base_size = track.min_track_sizing_function.percentage().as_fraction() * available_size.to_px().value();
+        case CSS::GridSize::Type::LengthPercentage: {
+            if (!track.min_track_sizing_function.is_auto()) {
+                track.base_size = track.min_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+            }
+
             break;
         }
         // - An intrinsic sizing function
@@ -647,18 +642,12 @@ void GridFormattingContext::initialize_track_sizes(AvailableSize const& availabl
         switch (track.max_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial growth limit.
-        case CSS::GridSize::Type::Length: {
-            if (!track.max_track_sizing_function.length().is_auto())
-                track.growth_limit = track.max_track_sizing_function.length().to_px(grid_container());
-            else
-                // - An intrinsic sizing function
-                // Use an initial growth limit of infinity.
+        case CSS::GridSize::Type::LengthPercentage: {
+            if (!track.max_track_sizing_function.is_auto()) {
+                track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+            } else {
                 track.growth_limit = INFINITY;
-            break;
-        }
-        case CSS::GridSize::Type::Percentage: {
-            if (available_size.is_definite())
-                track.growth_limit = track.max_track_sizing_function.percentage().as_fraction() * available_size.to_px().value();
+            }
             break;
         }
         // - A flexible sizing function
@@ -766,9 +755,8 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             }
             track.base_size = base_size;
         } break;
-        case CSS::GridSize::Type::Length:
-        case CSS::GridSize::Type::Percentage: {
-            if (track.min_track_sizing_function.length().is_auto() && available_size.is_intrinsic_sizing_constraint()) {
+        case CSS::GridSize::Type::LengthPercentage: {
+            if (track.min_track_sizing_function.is_auto() && available_size.is_intrinsic_sizing_constraint()) {
                 // If the track has an auto min track sizing function and the grid container is being sized under a
                 // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
                 // min-/max-content contributions (respectively), floored at zero. The limited min-/max-content
@@ -823,7 +811,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
                 growth_limit = max(growth_limit, calculate_item_min_content_contribution(item));
             }
             track.growth_limit = growth_limit;
-        } else if (max_track_sizing_function.is_max_content() || (max_track_sizing_function.is_length() && max_track_sizing_function.length().is_auto())) {
+        } else if (max_track_sizing_function.is_max_content() || max_track_sizing_function.is_auto()) {
             // If the track has a max-content max track sizing function, set its growth limit to the maximum of
             // the items’ max-content contributions. For fit-content() maximums, furthermore clamp this growth
             // limit by the fit-content() argument.
@@ -1142,19 +1130,19 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSize const& available_s
     // step instead.
     CSSPixels used_space = 0;
     for (auto& track : tracks) {
-        if (!(track.max_track_sizing_function.is_length() && track.max_track_sizing_function.length().is_auto()))
+        if (!track.max_track_sizing_function.is_auto())
             used_space += track.base_size;
     }
 
     CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px() - used_space : 0;
     auto count_of_auto_max_sizing_tracks = 0;
     for (auto& track : tracks) {
-        if (track.max_track_sizing_function.is_length() && track.max_track_sizing_function.length().is_auto())
+        if (track.max_track_sizing_function.is_auto())
             count_of_auto_max_sizing_tracks++;
     }
 
     for (auto& track : tracks) {
-        if (track.max_track_sizing_function.is_length() && track.max_track_sizing_function.length().is_auto())
+        if (track.max_track_sizing_function.is_auto())
             track.base_size = max(track.base_size, remaining_space / count_of_auto_max_sizing_tracks);
     }
 }
