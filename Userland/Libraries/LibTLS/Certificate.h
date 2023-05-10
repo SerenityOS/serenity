@@ -30,7 +30,7 @@ constexpr static Array<int, 7>
     ecdsa_with_sha224_encryption_oid { 1, 2, 840, 10045, 4, 3, 1 },
     ecdsa_with_sha256_encryption_oid { 1, 2, 840, 10045, 4, 3, 2 },
     ecdsa_with_sha384_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
-    ecdsa_with_sha512_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
+    ecdsa_with_sha512_encryption_oid { 1, 2, 840, 10045, 4, 3, 4 },
     ec_public_key_encryption_oid { 1, 2, 840, 10045, 2, 1 };
 
 constexpr static Array<Array<int, 7>, 9> known_algorithm_identifiers {
