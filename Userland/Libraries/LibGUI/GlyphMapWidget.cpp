@@ -120,6 +120,9 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
 {
     Frame::paint_event(event);
 
+    if (!is_enabled())
+        return;
+
     Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());

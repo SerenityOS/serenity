@@ -715,7 +715,9 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
         return;
 
     Color text_color;
-    if (is_selected)
+    if (!is_enabled())
+        text_color = palette().color(Gfx::ColorRole::DisabledText);
+    else if (is_selected)
         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
     else
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
