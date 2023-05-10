@@ -48,6 +48,9 @@ Size GridSize::css_size() const
         return CSS::Size::make_auto();
     if (m_length_percentage.is_length())
         return CSS::Size::make_length(m_length_percentage.length());
+    if (m_length_percentage.is_calculated()) {
+        return CSS::Size::make_calculated(m_length_percentage.calculated());
+    }
     return CSS::Size::make_percentage(m_length_percentage.percentage());
 }
 
