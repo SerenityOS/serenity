@@ -14,7 +14,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font/BitmapFont.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -47,6 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto font_editor = TRY(window->set_main_widget<FontEditor::MainWidget>());
     TRY(font_editor->initialize_menubar(*window));
+    font_editor->reset();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (font_editor->request_close())
@@ -56,16 +56,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    auto path_to_load = path.is_empty() ? "/res/fonts/KaticaRegular10.font"sv : path;
-    auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load));
-
-    if (!path.is_empty()) {
-        TRY(font_editor->open_file(file.filename(), file.release_stream()));
-    } else {
-        auto mapped_file = TRY(Core::MappedFile::map_from_file(file.release_stream(), path_to_load));
-        auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
-        TRY(font_editor->initialize({}, move(mutable_font)));
-    }
+    auto default_path = TRY(String::from_deprecated_string(Config::read_string("FontEditor"sv, "Defaults"sv, "Font"sv, {})));
+    auto path_to_load = path.is_empty() ? default_path : path;
+    auto open_or_error = [&]() -> ErrorOr<void> {
+        if (path_to_load.is_empty())
+            return {};
+        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load));
+        return TRY(font_editor->open_file(path, file.release_stream()));
+    }();
+    if (open_or_error.is_error())
+        font_editor->show_error(open_or_error.release_error(), "Opening"sv, path_to_load);
 
     return app->exec();
 }

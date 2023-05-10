@@ -9,6 +9,7 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/Array.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
@@ -230,9 +231,9 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [this](auto& action) {
         m_unicode_block_container->set_visible(action.is_checked());
         if (action.is_checked())
-            m_search_textbox->set_focus(true);
+            m_search_textbox->set_focus(m_initialized);
         else
-            m_glyph_map_widget->set_focus(true);
+            m_glyph_map_widget->set_focus(m_initialized);
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
@@ -463,6 +464,7 @@ ErrorOr<void> MainWidget::create_widgets()
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
     m_toolbar_container = find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
+    m_width_control_container = find_descendant_of_type_named<GUI::Widget>("width_control_container");
 
     m_glyph_map_widget = find_descendant_of_type_named<GUI::GlyphMapWidget>("glyph_map_widget");
     m_glyph_editor_widget = find_descendant_of_type_named<GlyphEditorWidget>("glyph_editor_widget");
@@ -637,18 +639,23 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
     if (m_font == mutable_font)
         return {};
 
-    TRY(m_glyph_map_widget->initialize(mutable_font));
+    ScopeGuard reset_on_error([&] {
+        if (!m_initialized)
+            reset();
+    });
 
+    m_initialized = false;
+    m_path = TRY(String::from_utf8(path));
+    m_font = move(mutable_font);
+
+    TRY(m_glyph_map_widget->initialize(m_font));
     auto active_glyph = m_glyph_map_widget->active_glyph();
     m_glyph_map_widget->set_focus(true);
     m_glyph_map_widget->scroll_to_glyph(active_glyph);
 
     auto selection = m_glyph_map_widget->selection().normalized();
-    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), active_glyph, *mutable_font, *m_glyph_map_widget));
+    m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), active_glyph, *m_font, *m_glyph_map_widget));
     m_undo_stack->clear();
-
-    m_path = TRY(String::from_utf8(path));
-    m_font = mutable_font;
 
     if (m_preview_label)
         m_preview_label->set_font(*m_font);
@@ -692,6 +699,9 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
     window()->set_modified(false);
     update_title();
     update_statusbar();
+    set_actions_enabled(true);
+    set_widgets_enabled(true);
+    m_initialized = true;
 
     return {};
 }
@@ -881,6 +891,9 @@ void MainWidget::did_modify_font()
 
 void MainWidget::update_statusbar()
 {
+    if (!m_font)
+        return;
+
     if (!m_statusbar->is_visible())
         return;
 
@@ -1071,6 +1084,90 @@ void MainWidget::show_error(Error error, StringView action, StringView basename)
     auto maybe_message = String::formatted(format, action, file, error);
     if (!maybe_message.is_error())
         (void)GUI::MessageBox::try_show_error(window(), maybe_message.release_value());
+}
+
+void MainWidget::reset()
+{
+    VERIFY(window());
+
+    m_initialized = false;
+    m_font = nullptr;
+    m_path = {};
+    m_undo_selection = nullptr;
+    m_undo_stack->clear();
+
+    (void)m_glyph_map_widget->initialize(nullptr);
+    m_glyph_editor_widget->initialize(nullptr);
+
+    if (m_font_preview_window)
+        m_font_preview_window->close();
+    if (m_preview_label)
+        m_preview_label->set_font(nullptr);
+
+    m_name_textbox->set_text({}, GUI::AllowCallback::No);
+    m_family_textbox->set_text({}, GUI::AllowCallback::No);
+    m_slope_combobox->set_text({}, GUI::AllowCallback::No);
+    m_weight_combobox->set_text({}, GUI::AllowCallback::No);
+    m_presentation_spinbox->set_text({}, GUI::AllowCallback::No);
+    m_baseline_spinbox->set_text({}, GUI::AllowCallback::No);
+    m_mean_line_spinbox->set_text({}, GUI::AllowCallback::No);
+    m_spacing_spinbox->set_text({}, GUI::AllowCallback::No);
+    m_fixed_width_checkbox->set_checked(false, GUI::AllowCallback::No);
+    m_statusbar->set_text(0, {});
+    m_statusbar->set_text(1, {});
+
+    window()->set_modified(false);
+    window()->set_title("Font Editor");
+    set_actions_enabled(false);
+    set_widgets_enabled(false);
+    set_focus(true);
+}
+
+void MainWidget::set_actions_enabled(bool enabled)
+{
+    m_save_action->set_enabled(enabled);
+    m_save_as_action->set_enabled(enabled);
+
+    m_cut_action->set_enabled(enabled);
+    m_copy_action->set_enabled(enabled);
+    m_paste_action->set_enabled(enabled && GUI::Clipboard::the().fetch_mime_type() == "glyph/x-fonteditor");
+    m_delete_action->set_enabled(enabled);
+
+    m_copy_text_action->set_enabled(enabled);
+    m_select_all_action->set_enabled(enabled);
+
+    m_go_to_glyph_action->set_enabled(enabled);
+    m_previous_glyph_action->set_enabled(enabled);
+    m_next_glyph_action->set_enabled(enabled);
+
+    m_move_glyph_action->set_enabled(enabled);
+    m_paint_glyph_action->set_enabled(enabled);
+
+    m_flip_horizontal_action->set_enabled(enabled);
+    m_flip_vertical_action->set_enabled(enabled);
+    m_rotate_clockwise_action->set_enabled(enabled);
+    m_rotate_counterclockwise_action->set_enabled(enabled);
+
+    m_open_preview_action->set_enabled(enabled);
+    m_highlight_modifications_action->set_enabled(enabled);
+    m_show_system_emoji_action->set_enabled(enabled);
+
+    m_scale_five_action->set_enabled(enabled);
+    m_scale_ten_action->set_enabled(enabled);
+    m_scale_fifteen_action->set_enabled(enabled);
+}
+
+void MainWidget::set_widgets_enabled(bool enabled)
+{
+    m_font_metadata_groupbox->set_enabled(enabled);
+    m_unicode_block_container->set_enabled(enabled);
+    m_width_control_container->set_enabled(enabled);
+    m_width_control_container->set_visible(enabled);
+
+    m_glyph_map_widget->set_enabled(enabled);
+    m_glyph_editor_widget->set_enabled(enabled);
+    m_glyph_editor_widget->set_visible(enabled);
+    m_statusbar->segment(1).set_visible(enabled);
 }
 
 }
