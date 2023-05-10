@@ -1260,9 +1260,9 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID med
         auto transaction = tokens.begin_transaction();
         tokens.skip_whitespace();
         auto ident = value_id_from_string(tokens.next_token().token().ident());
-        if (ident != ValueID::Invalid && media_feature_accepts_identifier(media_feature, ident)) {
+        if (ident.has_value() && media_feature_accepts_identifier(media_feature, ident.value())) {
             transaction.commit();
-            return MediaFeatureValue(ident);
+            return MediaFeatureValue(ident.value());
         }
     }
 
@@ -3720,8 +3720,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_identifier_value(ComponentValue const&
 {
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
-        if (value_id != ValueID::Invalid)
-            return IdentifierStyleValue::create(value_id);
+        if (value_id.has_value())
+            return IdentifierStyleValue::create(value_id.value());
     }
 
     return nullptr;
@@ -5653,7 +5653,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
                         break;
                     }
                     auto value_id = value_id_from_string(part.token().ident());
-                    if (is_generic_font_family(value_id)) {
+                    if (value_id.has_value() && is_generic_font_family(value_id.value())) {
                         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
                         had_syntax_error = true;
                         break;
