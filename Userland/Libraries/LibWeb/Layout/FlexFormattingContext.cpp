@@ -585,12 +585,12 @@ CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_
 CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const& box, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const
 {
     if (!max_cross_size.is_none()) {
-        auto max_cross_size_px = max_cross_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        auto max_cross_size_px = max_cross_size.to_px(box, !is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
         main_size = min(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(max_cross_size_px, box.intrinsic_aspect_ratio().value()));
     }
 
     if (!min_cross_size.is_auto()) {
-        auto min_cross_size_px = min_cross_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        auto min_cross_size_px = min_cross_size.to_px(box, !is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
         main_size = max(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(min_cross_size_px, box.intrinsic_aspect_ratio().value()));
     }
 
