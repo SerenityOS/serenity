@@ -42,9 +42,7 @@
     "affects-stacking-context": true,
     "inherited": false,
     "initial": "none",
-    "valid-types": [
-      "filter-value-list"
-    ],
+    "__comment": "FIXME: List `filter-value-list` as a valid-type once it's generically supported.",
     "valid-identifiers": [
       "none"
     ]
@@ -392,6 +390,9 @@
   "border-spacing": {
     "inherited": true,
     "initial": "0",
+    "valid-types": [
+      "length"
+    ],
     "quirks": [
       "unitless-length"
     ]
@@ -413,6 +414,9 @@
     "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
+    "valid-types": [
+      "color"
+    ],
     "quirks": [
       "hashless-hex-color"
     ]
@@ -622,8 +626,10 @@
     "affects-layout": false,
     "inherited": true,
     "initial": "black",
+    "__comment": "FIXME: Use `paint` as the type, once we have a PaintStyleValue and generic parsing for it.",
     "valid-types": [
-      "paint"
+      "color",
+      "url"
     ],
     "valid-identifiers": [
       "none"
