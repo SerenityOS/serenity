@@ -6,13 +6,40 @@
 
 #pragma once
 
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/Scripting/ModuleMap.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
 
 using OnFetchScriptComplete = JS::SafeFunction<void(JS::GCPtr<Script>)>;
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
+struct ScriptFetchOptions {
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-nonce
+    String cryptographic_nonce {};
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-integrity
+    String integrity_metadata {};
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-parser
+    Optional<Fetch::Infrastructure::Request::ParserMetadata> parser_metadata;
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-credentials
+    Fetch::Infrastructure::Request::CredentialsMode credentials_mode { Fetch::Infrastructure::Request::CredentialsMode::SameOrigin };
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-referrer-policy
+    Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy;
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-render-blocking
+    bool render_blocking { false };
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-script-fetch-options-fetch-priority
+    Fetch::Infrastructure::Request::Priority fetch_priority {};
+};
 
 class DescendantFetchingContext : public RefCounted<DescendantFetchingContext> {
 public:
@@ -44,6 +71,7 @@ WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referrin
 WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const&);
 Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& specifier, AK::URL const& base_url);
 
+WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement>, AK::URL const&, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete);
 void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, OnFetchScriptComplete on_complete);
 void fetch_external_module_script_graph(AK::URL const&, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
 void fetch_inline_module_script_graph(DeprecatedString const& filename, DeprecatedString const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, OnFetchScriptComplete on_complete);
