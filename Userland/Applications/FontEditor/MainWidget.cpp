@@ -158,8 +158,8 @@ ErrorOr<void> MainWidget::create_actions()
         if (response.is_error())
             return;
 
-        if (auto result = save_file(lexical_path.string(), response.value().release_stream()); result.is_error())
-            show_error(result.release_error(), "Saving"sv, lexical_path.basename());
+        if (auto result = save_file(response.value().filename(), response.value().release_stream()); result.is_error())
+            show_error(result.release_error(), "Saving"sv, response.value().filename());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([this](auto&) {
