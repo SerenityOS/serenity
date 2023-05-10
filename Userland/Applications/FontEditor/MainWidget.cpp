@@ -9,6 +9,7 @@
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
 #include <AK/Array.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
@@ -125,16 +126,16 @@ ErrorOr<void> MainWidget::create_actions()
         if (m_path.is_empty())
             return m_save_as_action->activate();
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path.to_deprecated_string(), Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 
         if (auto result = save_file(m_path, response.value().release_stream()); result.is_error())
-            show_error(result.release_error(), "Saving"sv, LexicalPath { m_path }.basename());
+            show_error(result.release_error(), "Saving"sv, LexicalPath { m_path.to_deprecated_string() }.basename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
+        LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font"sv : m_path);
 
         auto response = FileSystemAccessClient::Client::the().save_file(window(), lexical_path.title(), lexical_path.extension());
         if (response.is_error())
@@ -604,7 +605,7 @@ MainWidget::MainWidget()
     };
 }
 
-ErrorOr<void> MainWidget::initialize(DeprecatedString const& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& edited_font)
 {
     if (m_edited_font == edited_font)
         return {};
@@ -615,7 +616,7 @@ ErrorOr<void> MainWidget::initialize(DeprecatedString const& path, RefPtr<Gfx::B
     m_undo_selection = TRY(try_make_ref_counted<UndoSelection>(selection.start(), selection.size(), m_glyph_map_widget->active_glyph(), *edited_font, *m_glyph_map_widget));
     m_undo_stack->clear();
 
-    m_path = path;
+    m_path = TRY(String::from_utf8(path));
     m_edited_font = edited_font;
 
     if (m_preview_label)
@@ -734,12 +735,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
-ErrorOr<void> MainWidget::save_file(DeprecatedString const& path, NonnullOwnPtr<Core::File> file)
+ErrorOr<void> MainWidget::save_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     auto masked_font = TRY(m_edited_font->masked_character_set());
     TRY(masked_font->write_to_file(move(file)));
 
-    m_path = path;
+    m_path = TRY(String::from_utf8(path));
     m_undo_stack->set_current_unmodified();
     window()->set_modified(false);
     update_title();
@@ -796,7 +797,7 @@ ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> f
 {
     auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
     auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
-    TRY(initialize(path.to_deprecated_string(), move(unmasked_font)));
+    TRY(initialize(path, move(unmasked_font)));
     return {};
 }
 
