@@ -22,15 +22,7 @@ class GlyphEditorWidget;
 class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget)
 public:
-    static ErrorOr<NonnullRefPtr<MainWidget>> try_create()
-    {
-        NonnullRefPtr<MainWidget> font_editor = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget()));
-        TRY(font_editor->create_actions());
-        TRY(font_editor->create_models());
-        TRY(font_editor->create_toolbars());
-        TRY(font_editor->create_undo_stack());
-        return font_editor;
-    }
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
 
     virtual ~MainWidget() override = default;
 
@@ -58,8 +50,9 @@ public:
     void set_show_system_emoji(bool);
 
 private:
-    MainWidget();
+    MainWidget() = default;
 
+    ErrorOr<void> create_widgets();
     ErrorOr<void> create_actions();
     ErrorOr<void> create_models();
     ErrorOr<void> create_toolbars();

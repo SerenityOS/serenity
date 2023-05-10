@@ -59,6 +59,18 @@ static constexpr Array pangrams = {
     "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"sv
 };
 
+ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
+{
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget()));
+    TRY(main_widget->create_widgets());
+    TRY(main_widget->create_actions());
+    TRY(main_widget->create_models());
+    TRY(main_widget->create_toolbars());
+    TRY(main_widget->create_undo_stack());
+
+    return main_widget;
+}
+
 ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 {
     auto window = TRY(GUI::Window::try_create(this));
@@ -433,9 +445,9 @@ ErrorOr<void> MainWidget::create_undo_stack()
     return {};
 }
 
-MainWidget::MainWidget()
+ErrorOr<void> MainWidget::create_widgets()
 {
-    load_from_gml(font_editor_window_gml).release_value_but_fixme_should_propagate_errors();
+    TRY(load_from_gml(font_editor_window_gml));
 
     m_font_metadata_groupbox = find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
     m_unicode_block_container = find_descendant_of_type_named<GUI::Widget>("unicode_block_container");
@@ -603,6 +615,8 @@ MainWidget::MainWidget()
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
         m_statusbar->set_override_text({});
     };
+
+    return {};
 }
 
 ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& edited_font)
