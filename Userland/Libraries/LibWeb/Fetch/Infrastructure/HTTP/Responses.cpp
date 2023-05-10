@@ -170,6 +170,16 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm
     return new_response;
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#unsafe-response
+JS::NonnullGCPtr<Response> Response::unsafe_response()
+{
+    // A response's unsafe response is its internal response if it has one, and the response itself otherwise.
+    if (is<FilteredResponse>(this))
+        return static_cast<FilteredResponse&>(*this).internal_response();
+
+    return *this;
+}
+
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-cross-origin
 bool Response::is_cors_cross_origin() const
 {
