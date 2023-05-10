@@ -29,6 +29,9 @@ public:
 
     virtual ~MainWidget() override = default;
 
+    void show_error(Error, StringView action, StringView basename = {});
+    void reset();
+
     ErrorOr<void> initialize(StringView path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
@@ -61,6 +64,8 @@ private:
     void update_title();
 
     void set_scale_and_save(i32);
+    void set_actions_enabled(bool);
+    void set_widgets_enabled(bool);
 
     ErrorOr<void> copy_selected_glyphs();
     ErrorOr<void> cut_selected_glyphs();
@@ -69,8 +74,6 @@ private:
 
     void push_undo();
     void reset_selection_and_push_undo();
-
-    void show_error(Error, StringView action, StringView basename = {});
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
@@ -122,6 +125,7 @@ private:
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
     RefPtr<GUI::Widget> m_unicode_block_container;
+    RefPtr<GUI::Widget> m_width_control_container;
     RefPtr<GUI::ComboBox> m_weight_combobox;
     RefPtr<GUI::ComboBox> m_slope_combobox;
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
@@ -150,6 +154,7 @@ private:
     Vector<String> m_font_slope_list;
     Vector<String> m_unicode_block_list;
     Unicode::CodePointRange m_range { 0x0000, 0x10FFFF };
+    bool m_initialized { false };
 };
 
 }
