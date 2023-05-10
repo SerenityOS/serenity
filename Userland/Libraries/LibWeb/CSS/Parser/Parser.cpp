@@ -6238,9 +6238,18 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_as_css_value(PropertyID property_id)
 
 Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
 {
-    // FIXME: Parse calc here if necessary
-    if (component_value.is_function())
+    if (component_value.is_function()) {
+        auto const& function = component_value.function();
+        if (function.name().equals_ignoring_ascii_case("calc"sv)) {
+            auto calculated_style_value = parse_calculated_value(function.values());
+            if (calculated_style_value.is_error()) {
+                // FIXME: Propagate error
+                return {};
+            }
+            return GridSize(LengthPercentage { *calculated_style_value.release_value() });
+        }
         return {};
+    }
     auto token = component_value.token();
     if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_ascii_case("fr"sv)) {
         float numeric_value = token.dimension_value();
@@ -6417,6 +6426,11 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
                 return CSS::ExplicitGridTrack(maybe_min_max_value.value());
             else
                 return {};
+        } else if (function_token.name().equals_ignoring_ascii_case("calc"sv)) {
+            auto grid_size = parse_grid_size(token);
+            if (!grid_size.has_value())
+                return {};
+            return CSS::ExplicitGridTrack(grid_size.value());
         }
         return {};
     } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("auto"sv)) {
