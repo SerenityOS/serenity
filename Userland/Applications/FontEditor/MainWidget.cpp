@@ -277,7 +277,8 @@ ErrorOr<void> MainWidget::create_actions()
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
         String input;
-        if (GUI::InputBox::show(window(), input, {}, "Go to glyph"sv, GUI::InputType::NonemptyText, "Hexadecimal"sv) == GUI::InputBox::ExecResult::OK) {
+        auto result = GUI::InputBox::try_show(window(), input, {}, "Go to glyph"sv, GUI::InputType::NonemptyText, "Hexadecimal"sv);
+        if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
                 return;
@@ -862,13 +863,15 @@ bool MainWidget::request_close()
 {
     if (!window()->is_modified())
         return true;
-    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, m_undo_stack->last_unmodified_timestamp());
-    if (result == GUI::MessageBox::ExecResult::Yes) {
+    auto result = GUI::MessageBox::try_ask_about_unsaved_changes(window(), m_path, m_undo_stack->last_unmodified_timestamp());
+    if (result.is_error())
+        return false;
+    if (result.value() == GUI::MessageBox::ExecResult::Yes) {
         m_save_action->activate();
         if (!window()->is_modified())
             return true;
     }
-    if (result == GUI::MessageBox::ExecResult::No)
+    if (result.value() == GUI::MessageBox::ExecResult::No)
         return true;
     return false;
 }
@@ -1075,15 +1078,15 @@ void MainWidget::delete_selected_glyphs()
     update_statusbar();
 }
 
-void MainWidget::show_error(Error error, StringView preface, StringView basename)
+void MainWidget::show_error(Error error, StringView action, StringView basename)
 {
-    DeprecatedString formatted_error;
-    if (basename.is_empty())
-        formatted_error = DeprecatedString::formatted("{}: {}", preface, error);
-    else
-        formatted_error = DeprecatedString::formatted("{} \"{}\" failed: {}", preface, basename, error);
-    GUI::MessageBox::show_error(window(), formatted_error);
-    warnln(formatted_error);
+    auto format = basename.is_null() ? "{}{}: {}"sv : "{} \"{}\" failed: {}"sv;
+    auto file = basename.is_null() ? StringView {} : basename;
+    warnln(format, action, file, error);
+
+    auto maybe_message = String::formatted(format, action, file, error);
+    if (!maybe_message.is_error())
+        (void)GUI::MessageBox::try_show_error(window(), maybe_message.release_value());
 }
 
 }
