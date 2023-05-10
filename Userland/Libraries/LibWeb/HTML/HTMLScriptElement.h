@@ -8,15 +8,14 @@
 
 #include <AK/Function.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
+#include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/Scripting/Script.h>
-#include <LibWeb/Loader/Resource.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
 
-class HTMLScriptElement final
-    : public HTMLElement
-    , public ResourceClient {
+class HTMLScriptElement final : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLScriptElement, HTMLElement);
 
 public:
@@ -60,11 +59,11 @@ private:
 
     virtual bool is_html_script_element() const override { return true; }
 
-    virtual void resource_did_load() override;
-    virtual void resource_did_fail() override;
-
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
     void prepare_script();
@@ -100,6 +99,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/scripting.html#ready-to-be-parser-executed
     bool m_ready_to_be_parser_executed { false };
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#attr-script-crossorigin
+    CORSSettingAttribute m_crossorigin { CORSSettingAttribute::NoCORS };
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#attr-script-referrerpolicy
+    Optional<ReferrerPolicy::ReferrerPolicy> m_referrer_policy;
 
     bool m_failed_to_load { false };
 
