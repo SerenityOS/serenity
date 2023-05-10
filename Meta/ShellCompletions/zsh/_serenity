@@ -30,7 +30,7 @@ _serenity() {
 
     local targets
     targets=(
-        'x86_64:Target x86_64 (default)'
+        'x86_64:Target x86_64 or $SERENITY_ARCH (default)'
         'aarch64:Target aarch64'
         'lagom:Target host machine'
     )
