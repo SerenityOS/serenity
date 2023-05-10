@@ -637,7 +637,7 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
     if (m_font == mutable_font)
         return {};
 
-    TRY(m_glyph_map_widget->set_font(*mutable_font));
+    TRY(m_glyph_map_widget->initialize(mutable_font));
 
     auto active_glyph = m_glyph_map_widget->active_glyph();
     m_glyph_map_widget->set_focus(true);
