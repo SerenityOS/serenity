@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Resources.h"
 #include "UndoSelection.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/FilteringProxyModel.h>
@@ -16,6 +17,8 @@
 #include <LibGfx/Font/BitmapFont.h>
 
 namespace FontEditor {
+
+extern Resources g_resources;
 
 class GlyphEditorWidget;
 
