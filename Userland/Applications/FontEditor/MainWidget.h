@@ -34,15 +34,15 @@ public:
 
     virtual ~MainWidget() override = default;
 
-    ErrorOr<void> initialize(DeprecatedString const& path, RefPtr<Gfx::BitmapFont>&&);
+    ErrorOr<void> initialize(StringView path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
     ErrorOr<void> open_file(StringView, NonnullOwnPtr<Core::File>);
-    ErrorOr<void> save_file(DeprecatedString const&, NonnullOwnPtr<Core::File>);
+    ErrorOr<void> save_file(StringView, NonnullOwnPtr<Core::File>);
     bool request_close();
     void update_title();
 
-    DeprecatedString const& path() { return m_path; }
+    String const& path() { return m_path; }
     Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
 
     bool is_showing_font_metadata() { return m_font_metadata; }
@@ -160,7 +160,7 @@ private:
     RefPtr<GUI::TextBox> m_preview_textbox;
     RefPtr<GUI::Window> m_font_preview_window;
 
-    DeprecatedString m_path;
+    String m_path;
     Vector<String> m_font_weight_list;
     Vector<String> m_font_slope_list;
     Vector<String> m_unicode_block_list;
