@@ -51,7 +51,7 @@ ErrorOr<void> SectionNode::reify_if_needed() const
         auto entry = dir_iterator.next();
         if (entry->type == Core::DirectoryEntry::Type::Directory)
             TRY(directories.try_append(entry->name));
-        else if (entry->type == Core::DirectoryEntry::Type::File && entry->name.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
+        else if (entry->name.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
             TRY(files.try_set(entry->name));
     }
 
