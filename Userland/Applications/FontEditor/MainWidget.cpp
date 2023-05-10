@@ -87,8 +87,12 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [&] {
-        auto preview = String::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
-        m_preview_label->set_text(preview);
+        auto maybe_preview = [](StringView text) -> ErrorOr<String> {
+            return TRY(String::formatted("{}\n{}", text, TRY(Unicode::to_unicode_uppercase_full(text))));
+        }(m_preview_textbox->text());
+        if (maybe_preview.is_error())
+            return show_error(maybe_preview.release_error(), "Formatting preview text failed"sv);
+        m_preview_label->set_text(maybe_preview.release_value());
     };
     m_preview_textbox->set_text(pangrams[0]);
 
