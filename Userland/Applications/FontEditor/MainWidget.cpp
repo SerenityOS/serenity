@@ -643,21 +643,17 @@ ErrorOr<void> MainWidget::initialize(DeprecatedString const& path, RefPtr<Gfx::B
     m_mean_line_spinbox->set_value(m_edited_font->mean_line(), GUI::AllowCallback::No);
     m_baseline_spinbox->set_value(m_edited_font->baseline(), GUI::AllowCallback::No);
 
-    int i = 0;
-    for (auto& it : Gfx::font_weight_names) {
-        if (it.style == m_edited_font->weight()) {
+    for (size_t i = 0; i < Gfx::font_weight_names.size(); ++i) {
+        if (Gfx::font_weight_names[i].style == m_edited_font->weight()) {
             m_weight_combobox->set_selected_index(i, GUI::AllowCallback::No);
             break;
         }
-        i++;
     }
-    i = 0;
-    for (auto& it : Gfx::font_slope_names) {
-        if (it.style == m_edited_font->slope()) {
+    for (size_t i = 0; i < Gfx::font_slope_names.size(); ++i) {
+        if (Gfx::font_slope_names[i].style == m_edited_font->slope()) {
             m_slope_combobox->set_selected_index(i, GUI::AllowCallback::No);
             break;
         }
-        i++;
     }
 
     update_statusbar();
