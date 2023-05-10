@@ -573,6 +573,30 @@ CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem cons
     return flex_basis;
 }
 
+CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, float aspect_ratio) const
+{
+    if (is_row_layout())
+        return cross_size * aspect_ratio;
+    return cross_size / aspect_ratio;
+}
+
+// This function takes a size in the main axis and adjusts it according to the aspect ratio of the box
+// if the min/max constraints in the cross axis forces us to come up with a new main axis size.
+CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const& box, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const
+{
+    if (!max_cross_size.is_none()) {
+        auto max_cross_size_px = max_cross_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        main_size = min(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(max_cross_size_px, box.intrinsic_aspect_ratio().value()));
+    }
+
+    if (!min_cross_size.is_auto()) {
+        auto min_cross_size_px = min_cross_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        main_size = max(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(min_cross_size_px, box.intrinsic_aspect_ratio().value()));
+    }
+
+    return main_size;
+}
+
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(FlexItem& item)
 {
@@ -612,9 +636,11 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
             && item.used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
-            if (is_row_layout())
-                return inner_cross_size(item.box) * item.box->intrinsic_aspect_ratio().value();
-            return inner_cross_size(item.box) / item.box->intrinsic_aspect_ratio().value();
+            return adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(
+                item.box,
+                calculate_main_size_from_cross_size_and_aspect_ratio(inner_cross_size(item.box), item.box->intrinsic_aspect_ratio().value()),
+                computed_cross_min_size(item.box),
+                computed_cross_max_size(item.box));
         }
 
         // C. If the used flex basis is content or depends on its available space,
@@ -670,6 +696,12 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         return calculate_fit_content_main_size(item);
     }();
 
+    // AD-HOC: This is not mentioned in the spec, but if the item has an aspect ratio,
+    //         we may need to adjust the main size in response to cross size min/max constraints.
+    if (item.box->has_intrinsic_aspect_ratio()) {
+        item.flex_base_size = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(child_box, item.flex_base_size, computed_cross_min_size(child_box), computed_cross_max_size(child_box));
+    }
+
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
     auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : automatic_minimum_size(item);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
@@ -713,8 +745,13 @@ Optional<CSSPixels> FlexFormattingContext::specified_size_suggestion(FlexItem co
 // https://drafts.csswg.org/css-flexbox-1/#content-size-suggestion
 CSSPixels FlexFormattingContext::content_size_suggestion(FlexItem const& item) const
 {
-    // FIXME: Apply clamps
-    return calculate_min_content_main_size(item);
+    auto suggestion = calculate_min_content_main_size(item);
+
+    if (item.box->has_intrinsic_aspect_ratio()) {
+        suggestion = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(item.box, suggestion, computed_cross_min_size(item.box), computed_cross_max_size(item.box));
+    }
+
+    return suggestion;
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#transferred-size-suggestion
@@ -725,10 +762,11 @@ Optional<CSSPixels> FlexFormattingContext::transferred_size_suggestion(FlexItem 
     // (clamped by its minimum and maximum cross sizes if they are definite), converted through the aspect ratio.
     if (item.box->has_intrinsic_aspect_ratio() && has_definite_cross_size(item.box)) {
         auto aspect_ratio = item.box->intrinsic_aspect_ratio().value();
-        // FIXME: Clamp cross size to min/max cross size before this conversion.
-        if (is_row_layout())
-            return inner_cross_size(item.box) * aspect_ratio;
-        return inner_cross_size(item.box) / aspect_ratio;
+        return adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(
+            item.box,
+            calculate_main_size_from_cross_size_and_aspect_ratio(inner_cross_size(item.box), aspect_ratio),
+            computed_cross_min_size(item.box),
+            computed_cross_max_size(item.box));
     }
 
     // It is otherwise undefined.
