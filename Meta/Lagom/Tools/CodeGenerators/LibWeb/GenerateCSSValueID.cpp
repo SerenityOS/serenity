@@ -67,7 +67,7 @@ enum class ValueID {
     generator.append(R"~~~(
 };
 
-ValueID value_id_from_string(StringView);
+Optional<ValueID> value_id_from_string(StringView);
 StringView string_from_value_id(ValueID);
 
 }
@@ -105,10 +105,9 @@ HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringv
     generator.append(R"~~~(
 };
 
-ValueID value_id_from_string(StringView string)
+Optional<ValueID> value_id_from_string(StringView string)
 {
-    auto maybe_value_id = g_stringview_to_value_id_map.get(string);
-    return maybe_value_id.value_or(ValueID::Invalid);
+    return g_stringview_to_value_id_map.get(string);
 }
 
 StringView string_from_value_id(ValueID value_id) {
