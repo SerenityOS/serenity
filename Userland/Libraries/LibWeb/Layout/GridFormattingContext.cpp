@@ -704,6 +704,18 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
         }
     };
 
+    auto calculate_item_max_content_contribution = [&](GridItem const& item) {
+        if (dimension == GridDimension::Column) {
+            return calculate_max_content_width(item.box());
+        } else {
+            auto available_width = AvailableSize::make_definite(m_grid_columns[item.gap_adjusted_column(grid_container())].base_size);
+            return calculate_max_content_height(item.box(), available_width);
+        }
+    };
+
+    // 2. Size tracks to fit non-spanning items: For each track with an intrinsic track sizing function and
+    // not a flexible sizing function, consider the items in it with a span of 1:
+
     size_t index = 0;
     for (auto& track : tracks) {
         if (track.is_gap) {
@@ -736,83 +748,90 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
         }
 
         switch (track.min_track_sizing_function.type()) {
-        // - For min-content minimums:
-        // If the track has a min-content min track sizing function, set its base size to the maximum of the
-        // items’ min-content contributions, floored at zero.
         case CSS::GridSize::Type::MinContent: {
+            // If the track has a min-content min track sizing function, set its base size to the maximum of the
+            // items’ min-content contributions, floored at zero.
             CSSPixels base_size = 0;
             for (auto& item : grid_items_of_track) {
                 base_size = max(base_size, calculate_item_min_content_contribution(item));
             }
             track.base_size = base_size;
         } break;
-        // - For max-content minimums:
-        // If the track has a max-content min track sizing function, set its base size to the maximum of the
-        // items’ max-content contributions, floored at zero.
         case CSS::GridSize::Type::MaxContent: {
+            // If the track has a max-content min track sizing function, set its base size to the maximum of the
+            // items’ max-content contributions, floored at zero.
             CSSPixels base_size = 0;
             for (auto& item : grid_items_of_track) {
                 base_size = max(base_size, calculate_item_min_content_contribution(item));
             }
             track.base_size = base_size;
         } break;
-        // - For auto minimums:
-        // If the track has an auto min track sizing function and the grid container is being sized under a
-        // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
-        // min-/max-content contributions (respectively), floored at zero. The limited min-/max-content
-        // contribution of an item is (for this purpose) its min-/max-content contribution (accordingly),
-        // limited by the max track sizing function (which could be the argument to a fit-content() track
-        // sizing function) if that is fixed and ultimately floored by its minimum contribution (defined
-        // below).
-        // FIXME: Container min/max-content
         case CSS::GridSize::Type::Length:
-        // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
-        // at zero. The minimum contribution of an item is the smallest outer size it can have.
-        // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
-        // containing block in the relevant axis, its minimum contribution is the outer size that would
-        // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
-        // contribution is its min-content contribution. Because the minimum contribution often depends on
-        // the size of the item’s content, it is considered a type of intrinsic size contribution.
-        case CSS::GridSize::Type::Percentage:
-        case CSS::GridSize::Type::FlexibleLength: {
-            CSSPixels base_size = 0;
-            for (auto& item : grid_items_of_track) {
-                base_size = max(base_size, calculate_item_min_content_contribution(item));
+        case CSS::GridSize::Type::Percentage: {
+            if (track.min_track_sizing_function.length().is_auto() && available_size.is_intrinsic_sizing_constraint()) {
+                // If the track has an auto min track sizing function and the grid container is being sized under a
+                // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
+                // min-/max-content contributions (respectively), floored at zero. The limited min-/max-content
+                // contribution of an item is (for this purpose) its min-/max-content contribution (accordingly),
+                // limited by the max track sizing function (which could be the argument to a fit-content() track
+                // sizing function) if that is fixed and ultimately floored by its minimum contribution (defined
+                // below).
+                if (available_size.is_min_content()) {
+                    CSSPixels base_size = 0;
+                    for (auto& item : grid_items_of_track) {
+                        base_size = max(base_size, calculate_item_min_content_contribution(item));
+                    }
+                    track.base_size = base_size;
+                } else if (available_size.is_max_content()) {
+                    CSSPixels base_size = 0;
+                    for (auto& item : grid_items_of_track) {
+                        base_size = max(base_size, calculate_item_min_content_contribution(item));
+                    }
+                    track.base_size = base_size;
+                }
+            } else {
+                // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
+                // at zero. The minimum contribution of an item is the smallest outer size it can have.
+                // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
+                // containing block in the relevant axis, its minimum contribution is the outer size that would
+                // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
+                // contribution is its min-content contribution. Because the minimum contribution often depends on
+                // the size of the item’s content, it is considered a type of intrinsic size contribution.
+                CSSPixels base_size = 0;
+                for (auto& item : grid_items_of_track) {
+                    base_size = max(base_size, calculate_item_min_content_contribution(item));
+                }
+                track.base_size = base_size;
             }
-            track.base_size = base_size;
-        } break;
+
+            break;
+        }
+        case CSS::GridSize::Type::FlexibleLength: {
+            // do nothing
+            break;
+        }
         default:
             VERIFY_NOT_REACHED();
         }
 
-        switch (track.max_track_sizing_function.type()) {
-        // - For min-content maximums:
-        // If the track has a min-content max track sizing function, set its growth limit to the maximum of
-        // the items’ min-content contributions.
-        case CSS::GridSize::Type::MinContent: {
+        auto const& max_track_sizing_function = track.max_track_sizing_function;
+        if (max_track_sizing_function.is_min_content()) {
+            // If the track has a min-content max track sizing function, set its growth limit to the maximum of
+            // the items’ min-content contributions.
             CSSPixels growth_limit = 0;
             for (auto& item : grid_items_of_track) {
                 growth_limit = max(growth_limit, calculate_item_min_content_contribution(item));
             }
             track.growth_limit = growth_limit;
-        } break;
-        // - For max-content maximums:
-        // If the track has a max-content max track sizing function, set its growth limit to the maximum of
-        // the items’ max-content contributions. For fit-content() maximums, furthermore clamp this growth
-        // limit by the fit-content() argument.
-        case CSS::GridSize::Type::MaxContent: {
+        } else if (max_track_sizing_function.is_max_content() || (max_track_sizing_function.is_length() && max_track_sizing_function.length().is_auto())) {
+            // If the track has a max-content max track sizing function, set its growth limit to the maximum of
+            // the items’ max-content contributions. For fit-content() maximums, furthermore clamp this growth
+            // limit by the fit-content() argument.
             CSSPixels growth_limit = 0;
             for (auto& item : grid_items_of_track) {
-                growth_limit = max(growth_limit, calculate_item_min_content_contribution(item));
+                growth_limit = max(growth_limit, calculate_item_max_content_contribution(item));
             }
             track.growth_limit = growth_limit;
-        } break;
-        case CSS::GridSize::Type::Length:
-        case CSS::GridSize::Type::Percentage:
-        case CSS::GridSize::Type::FlexibleLength:
-            break;
-        default:
-            VERIFY_NOT_REACHED();
         }
 
         // In all cases, if a track’s growth limit is now less than its base size, increase the growth limit
