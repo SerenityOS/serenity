@@ -34,7 +34,6 @@ public:
     bool request_close();
 
     String const& path() { return m_path; }
-    Gfx::BitmapFont const& edited_font() { return *m_edited_font; }
 
 private:
     MainWidget() = default;
@@ -68,8 +67,6 @@ private:
     void reset_selection_and_push_undo();
 
     void show_error(Error, StringView action, StringView basename = {});
-
-    RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
@@ -144,6 +141,7 @@ private:
     RefPtr<GUI::Window> m_font_preview_window;
 
     String m_path;
+    RefPtr<Gfx::BitmapFont> m_font;
     Vector<String> m_font_weight_list;
     Vector<String> m_font_slope_list;
     Vector<String> m_unicode_block_list;
