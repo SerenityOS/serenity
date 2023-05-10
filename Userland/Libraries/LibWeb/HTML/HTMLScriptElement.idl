@@ -10,7 +10,9 @@ interface HTMLScriptElement : HTMLElement {
     [CEReactions, Reflect] attribute DOMString type;
     [CEReactions, Reflect=nomodule] attribute boolean noModule;
     [CEReactions, Reflect] attribute boolean defer;
+    [CEReactions, Reflect=crossorigin] attribute DOMString? crossOrigin;
     [CEReactions, Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect=referrerpolicy] attribute DOMString referrerPolicy;
 
     static boolean supports(DOMString type);
 

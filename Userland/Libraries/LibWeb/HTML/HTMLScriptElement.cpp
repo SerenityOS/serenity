@@ -19,7 +19,6 @@
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::HTML {
@@ -46,6 +45,26 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
         visitor.visit(script->ptr());
     visitor.visit(m_parser_document.ptr());
     visitor.visit(m_preparation_time_document.ptr());
+}
+
+void HTMLScriptElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+{
+    Base::parse_attribute(name, value);
+
+    if (name == HTML::AttributeNames::crossorigin)
+        m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    else if (name == HTML::AttributeNames::referrerpolicy)
+        m_referrer_policy = ReferrerPolicy::from_string(value);
+}
+
+void HTMLScriptElement::did_remove_attribute(DeprecatedFlyString const& name)
+{
+    Base::did_remove_attribute(name);
+
+    if (name == HTML::AttributeNames::crossorigin)
+        m_crossorigin = cors_setting_attribute_from_keyword({});
+    else if (name == HTML::AttributeNames::referrerpolicy)
+        m_referrer_policy.clear();
 }
 
 void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& document)
@@ -265,25 +284,57 @@ void HTMLScriptElement::prepare_script()
         }
     }
 
-    // FIXME: 21. If el has a charset attribute, then let encoding be the result of getting an encoding from the value of the charset attribute.
-    //            If el does not have a charset attribute, or if getting an encoding failed, then let encoding be el's node document's the encoding.
+    // 21. If el has a charset attribute, then let encoding be the result of getting an encoding from the value of the charset attribute.
+    //     If el does not have a charset attribute, or if getting an encoding failed, then let encoding be el's node document's the encoding.
+    Optional<String> encoding;
 
-    // FIXME: 22. Let classic script CORS setting be the current state of el's crossorigin content attribute.
+    if (has_attribute(HTML::AttributeNames::charset)) {
+        auto charset = TextCodec::get_standardized_encoding(attribute(HTML::AttributeNames::charset));
+        if (charset.has_value())
+            encoding = String::from_utf8(*charset).release_value_but_fixme_should_propagate_errors();
+    }
 
-    // FIXME: 23. Let module script credentials mode be the CORS settings attribute credentials mode for el's crossorigin content attribute.
+    if (!encoding.has_value()) {
+        auto document_encoding = document().encoding_or_default();
+        encoding = String::from_deprecated_string(document_encoding).release_value_but_fixme_should_propagate_errors();
+    }
+
+    VERIFY(encoding.has_value());
+
+    // 22. Let classic script CORS setting be the current state of el's crossorigin content attribute.
+    auto classic_script_cors_setting = m_crossorigin;
+
+    // 23. Let module script credentials mode be the CORS settings attribute credentials mode for el's crossorigin content attribute.
+    auto module_script_credential_mode = cors_settings_attribute_credentials_mode(m_crossorigin);
 
     // FIXME: 24. Let cryptographic nonce be el's [[CryptographicNonce]] internal slot's value.
 
-    // FIXME: 25. If el has an integrity attribute, then let integrity metadata be that attribute's value.
-    //            Otherwise, let integrity metadata be the empty string.
+    // 25. If el has an integrity attribute, then let integrity metadata be that attribute's value.
+    //     Otherwise, let integrity metadata be the empty string.
+    String integrity_metadata;
+    if (has_attribute(HTML::AttributeNames::integrity)) {
+        auto integrity = attribute(HTML::AttributeNames::integrity);
+        integrity_metadata = String::from_deprecated_string(integrity).release_value_but_fixme_should_propagate_errors();
+    }
 
-    // FIXME: 26. Let referrer policy be the current state of el's referrerpolicy content attribute.
+    // 26. Let referrer policy be the current state of el's referrerpolicy content attribute.
+    auto referrer_policy = m_referrer_policy;
 
-    // FIXME: 27. Let parser metadata be "parser-inserted" if el is parser-inserted, and "not-parser-inserted" otherwise.
+    // 27. Let parser metadata be "parser-inserted" if el is parser-inserted, and "not-parser-inserted" otherwise.
+    auto parser_metadata = is_parser_inserted()
+        ? Fetch::Infrastructure::Request::ParserMetadata::ParserInserted
+        : Fetch::Infrastructure::Request::ParserMetadata::NotParserInserted;
 
-    // FIXME: 28. Let options be a script fetch options whose cryptographic nonce is cryptographic nonce,
-    //            integrity metadata is integrity metadata, parser metadata is parser metadata,
-    //            credentials mode is module script credentials mode, and referrer policy is referrer policy.
+    // 28. Let options be a script fetch options whose cryptographic nonce is cryptographic nonce,
+    //     integrity metadata is integrity metadata, parser metadata is parser metadata,
+    //     credentials mode is module script credentials mode, and referrer policy is referrer policy.
+    ScriptFetchOptions options {
+        .cryptographic_nonce = {}, // FIXME
+        .integrity_metadata = move(integrity_metadata),
+        .parser_metadata = parser_metadata,
+        .credentials_mode = module_script_credential_mode,
+        .referrer_policy = move(referrer_policy),
+    };
 
     // 29. Let settings object be el's node document's relevant settings object.
     auto& settings_object = document().relevant_settings_object();
@@ -334,29 +385,25 @@ void HTMLScriptElement::prepare_script()
         // FIXME: 9. If el is currently render-blocking, then set options's render-blocking to true.
 
         // 10. Let onComplete given result be the following steps:
-        // NOTE: This is weaved into usages of onComplete below. It would be better if we set it up here.
+        OnFetchScriptComplete on_complete = [this](auto result) {
+            // 1. Mark as ready el given result.
+            if (result)
+                mark_as_ready(Result { *result });
+            else
+                mark_as_ready(ResultState::Null {});
+        };
 
         // 11. Switch on el's type:
         // -> "classic"
         if (m_script_type == ScriptType::Classic) {
             // Fetch a classic script given url, settings object, options, classic script CORS setting, encoding, and onComplete.
-
-            // FIXME: This is ad-hoc.
-            auto request = LoadRequest::create_for_url_on_page(url, document().page());
-            auto resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
-            set_resource(resource);
+            fetch_classic_script(*this, url, settings_object, move(options), classic_script_cors_setting, encoding.release_value(), move(on_complete)).release_value_but_fixme_should_propagate_errors();
         }
         // -> "module"
         else if (m_script_type == ScriptType::Module) {
             // Fetch an external module script graph given url, settings object, options, and onComplete.
             // FIXME: Pass options.
-            fetch_external_module_script_graph(url, settings_object, [this](auto result) {
-                // 1. Mark as ready el given result.
-                if (!result)
-                    mark_as_ready(ResultState::Null {});
-                else
-                    mark_as_ready(Result(*result));
-            });
+            fetch_external_module_script_graph(url, settings_object, move(on_complete));
         }
     }
 
@@ -503,34 +550,6 @@ void HTMLScriptElement::prepare_script()
             execute_script();
         }
     }
-}
-
-void HTMLScriptElement::resource_did_load()
-{
-    // FIXME: This is all ad-hoc and needs work.
-
-    auto data = resource()->encoded_data();
-
-    // If the resource has an explicit encoding (i.e from a HTTP Content-Type header)
-    // we have to re-encode it to UTF-8.
-    if (resource()->has_encoding()) {
-        if (auto codec = TextCodec::decoder_for(resource()->encoding().value()); codec.has_value()) {
-            data = codec->to_utf8(data).release_value_but_fixme_should_propagate_errors().to_deprecated_string().to_byte_buffer();
-        }
-    }
-
-    auto script = ClassicScript::create(resource()->url().to_deprecated_string(), data, document().relevant_settings_object(), AK::URL());
-
-    // When the chosen algorithm asynchronously completes, set the script's script to the result. At that time, the script is ready.
-    mark_as_ready(Result(script));
-}
-
-void HTMLScriptElement::resource_did_fail()
-{
-    m_failed_to_load = true;
-    dbgln("HONK! Failed to load script, but ready nonetheless.");
-    m_result = ResultState::Null {};
-    mark_as_ready(m_result);
 }
 
 void HTMLScriptElement::inserted()
