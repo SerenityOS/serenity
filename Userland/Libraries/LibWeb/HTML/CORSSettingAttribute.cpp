@@ -26,4 +26,24 @@ CORSSettingAttribute cors_setting_attribute_from_keyword(Optional<String> const&
     return CORSSettingAttribute::Anonymous;
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attribute-credentials-mode
+Fetch::Infrastructure::Request::CredentialsMode cors_settings_attribute_credentials_mode(CORSSettingAttribute attribute)
+{
+    switch (attribute) {
+    // -> No CORS
+    // -> Anonymous
+    case CORSSettingAttribute::NoCORS:
+    case CORSSettingAttribute::Anonymous:
+        // "same-origin"
+        return Fetch::Infrastructure::Request::CredentialsMode::SameOrigin;
+
+    // -> Use Credentials
+    case CORSSettingAttribute::UseCredentials:
+        // "include"
+        return Fetch::Infrastructure::Request::CredentialsMode::Include;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 }
