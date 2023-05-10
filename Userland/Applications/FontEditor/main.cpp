@@ -23,6 +23,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
 
+    FontEditor::g_resources = FontEditor::Resources::create();
+
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/FontEditor.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
