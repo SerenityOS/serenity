@@ -653,7 +653,7 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
     if (m_preview_label)
         m_preview_label->set_font(*m_font);
 
-    m_glyph_editor_widget->set_font(*m_font);
+    m_glyph_editor_widget->initialize(m_font);
     m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_glyph_editor_widget->set_glyph(active_glyph);
 

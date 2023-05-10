@@ -33,9 +33,7 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    Gfx::BitmapFont& font() { return *m_font; }
-    Gfx::BitmapFont const& font() const { return *m_font; }
-    void set_font(Gfx::BitmapFont&);
+    void initialize(Gfx::BitmapFont*);
 
     int scale() const { return m_scale; }
     void set_scale(int scale);
