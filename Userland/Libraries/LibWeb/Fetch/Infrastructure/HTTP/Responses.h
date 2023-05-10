@@ -108,6 +108,8 @@ public:
 
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::Realm&) const;
 
+    [[nodiscard]] bool is_cors_cross_origin() const;
+
     // Non-standard
     [[nodiscard]] Optional<StringView> network_error_message() const;
 
