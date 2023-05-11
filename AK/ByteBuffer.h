@@ -117,10 +117,24 @@ public:
     [[nodiscard]] bool is_empty() const { return m_size == 0; }
     [[nodiscard]] size_t size() const { return m_size; }
 
-    [[nodiscard]] u8* data() { return m_inline ? m_inline_buffer : m_outline_buffer; }
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+//   Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109727
+#    pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+    [[nodiscard]] u8* data()
+    {
+        return m_inline ? m_inline_buffer : m_outline_buffer;
+    }
     [[nodiscard]] u8 const* data() const { return m_inline ? m_inline_buffer : m_outline_buffer; }
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
+#endif
 
-    [[nodiscard]] Bytes bytes() { return { data(), size() }; }
+    [[nodiscard]] Bytes bytes()
+    {
+        return { data(), size() };
+    }
     [[nodiscard]] ReadonlyBytes bytes() const { return { data(), size() }; }
 
     [[nodiscard]] AK::Bytes span() { return { data(), size() }; }
