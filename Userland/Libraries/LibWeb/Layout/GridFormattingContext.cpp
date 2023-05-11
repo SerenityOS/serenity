@@ -1454,8 +1454,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             else
                 y_end += m_grid_rows[i].full_vertical_size();
         }
-        child_box_state.set_content_width(max(CSSPixels(0), x_end - x_start - m_grid_columns[column_start].border_left - m_grid_columns[column_start].border_right));
-        child_box_state.set_content_height(y_end - y_start);
+
+        // A grid item containing block is created by the grid area to which it belongs.
+        auto containing_block_width = max(CSSPixels(0), x_end - x_start - m_grid_columns[column_start].border_left - m_grid_columns[column_start].border_right);
+        auto containing_block_height = y_end - y_start;
+
+        auto computed_width = child_box.computed_values().width();
+        auto computed_height = child_box.computed_values().height();
+
+        auto used_width = computed_width.is_auto() ? containing_block_width : computed_width.to_px(grid_container(), containing_block_width);
+        auto used_height = computed_height.is_auto() ? containing_block_height : computed_height.to_px(grid_container(), containing_block_height);
+
+        child_box_state.set_content_width(used_width);
+        child_box_state.set_content_height(used_height);
+
         child_box_state.offset = { x_start + m_grid_columns[column_start].border_left, y_start + m_grid_rows[row_start].border_top };
 
         child_box_state.border_left = child_box.computed_values().border_left().width;
