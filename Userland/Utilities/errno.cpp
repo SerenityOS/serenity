@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView keyword;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(keyword, "Error number or string to search", "keyword", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(keyword, "Error number or name to look up", "keyword", Core::ArgsParser::Required::No);
     args_parser.add_option(list, "List all errno values", "list", 'l');
     args_parser.add_option(search, "Search for error descriptions containing keyword", "search", 's');
     args_parser.parse(arguments);
@@ -54,19 +54,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto maybe_error_code = keyword.to_int();
-    if (!maybe_error_code.has_value()) {
-        warnln("ERROR: Not understood: {}", keyword);
-        return 1;
+    if (auto maybe_error_code = keyword.to_int(); maybe_error_code.has_value()) {
+        auto error_code = maybe_error_code.value();
+        auto error = strerror(error_code);
+        if (error == "Unknown error"sv) {
+            warnln("ERROR: Unknown errno: {}", keyword);
+            return 1;
+        }
+        output_errno_description(error_code, error);
+        return 0;
     }
-    auto error_code = maybe_error_code.value();
 
-    auto error = strerror(error_code);
-    if (error == "Unknown error"sv) {
-        warnln("ERROR: Unknown errno: {}", keyword);
-        return 1;
+    for (int i = 0; i < sys_nerr; i++) {
+        if (keyword.equals_ignoring_ascii_case(s_errno_names[i])) {
+            output_errno_description(i, strerror(i));
+            return 0;
+        }
     }
-    output_errno_description(error_code, error);
 
-    return 0;
+    warnln("ERROR: Not understood: {}", keyword);
+    return 1;
 }
