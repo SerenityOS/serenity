@@ -213,10 +213,12 @@ ErrorOr<String> convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte
 
     VERIFY(actual_decoder);
 
-    // FIXME: 3. Process a queue with an instance of encoding’s decoder, ioQueue, output, and "replacement".
-    //        This isn't the exact same as the spec, especially the error mode of "replacement", which we don't have the concept of yet.
+    // 3. Process a queue with an instance of encoding’s decoder, ioQueue, output, and "replacement".
+    // FIXME: This isn't the exact same as the spec, which is written in terms of I/O queues.
+    auto output = TRY(actual_decoder->to_utf8(input));
+
     // 4. Return output.
-    return actual_decoder->to_utf8(input);
+    return output;
 }
 
 ErrorOr<String> Decoder::to_utf8(StringView input)
@@ -242,7 +244,7 @@ ErrorOr<String> UTF8Decoder::to_utf8(StringView input)
         bomless_input = input.substring_view(3);
     }
 
-    return String::from_utf8(bomless_input);
+    return Decoder::to_utf8(bomless_input);
 }
 
 ErrorOr<void> UTF16BEDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
