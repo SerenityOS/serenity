@@ -5,6 +5,8 @@
  */
 
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/DecodedImageData.h>
+#include <LibWeb/HTML/ImageRequest.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/ImagePaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -31,21 +33,48 @@ int ImageBox::preferred_height() const
 
 void ImageBox::prepare_for_replaced_layout()
 {
-    if (!m_image_loader.has_loaded_or_failed()) {
-        set_intrinsic_width(0);
-        set_intrinsic_height(0);
-    } else {
-        if (m_image_loader.width()) {
-            set_intrinsic_width(m_image_loader.width());
-        }
-        if (m_image_loader.height()) {
-            set_intrinsic_height(m_image_loader.height());
-        }
+    HTML::ImageRequest const* image_request = nullptr;
+    if (is<HTML::HTMLImageElement>(dom_node())) {
+        image_request = &static_cast<HTML::HTMLImageElement const&>(dom_node()).current_request();
+    }
 
-        if (m_image_loader.width() && m_image_loader.height()) {
-            set_intrinsic_aspect_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+    if (image_request) {
+        if (!image_request->is_available()) {
+            set_intrinsic_width(0);
+            set_intrinsic_height(0);
+        } else if (auto data = image_request->image_data()) {
+            auto width = data->natural_width();
+            if (width.has_value()) {
+                set_intrinsic_width(width.value());
+            }
+            auto height = data->natural_height();
+            if (height.has_value()) {
+                set_intrinsic_height(height.value());
+            }
+
+            if (width.has_value() && height.has_value() && height.value() != 0) {
+                set_intrinsic_aspect_ratio(static_cast<float>(width.value()) / static_cast<float>(height.value()));
+            } else {
+                set_intrinsic_aspect_ratio({});
+            }
+        }
+    } else {
+        if (!m_image_loader.has_loaded_or_failed()) {
+            set_intrinsic_width(0);
+            set_intrinsic_height(0);
         } else {
-            set_intrinsic_aspect_ratio({});
+            if (m_image_loader.width()) {
+                set_intrinsic_width(m_image_loader.width());
+            }
+            if (m_image_loader.height()) {
+                set_intrinsic_height(m_image_loader.height());
+            }
+
+            if (m_image_loader.width() && m_image_loader.height()) {
+                set_intrinsic_aspect_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+            } else {
+                set_intrinsic_aspect_ratio({});
+            }
         }
     }
 
@@ -76,7 +105,7 @@ void ImageBox::dom_node_did_update_alt_text(Badge<HTML::HTMLImageElement>)
 bool ImageBox::renders_as_alt_text() const
 {
     if (is<HTML::HTMLImageElement>(dom_node()))
-        return !m_image_loader.has_image();
+        return !static_cast<HTML::HTMLImageElement const&>(dom_node()).current_request().is_available();
     return false;
 }
 
