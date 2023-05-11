@@ -14,6 +14,11 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(String
     return make<MatroskaDemuxer>(TRY(Reader::from_file(filename)));
 }
 
+DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    return make<MatroskaDemuxer>(TRY(Reader::from_mapped_file(move(mapped_file))));
+}
+
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
     return make<MatroskaDemuxer>(TRY(Reader::from_data(data)));

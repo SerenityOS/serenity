@@ -25,6 +25,8 @@ public:
     typedef Function<DecoderErrorOr<IterationDecision>(TrackEntry const&)> TrackEntryCallback;
 
     static DecoderErrorOr<Reader> from_file(StringView path);
+    static DecoderErrorOr<Reader> from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file);
+
     static DecoderErrorOr<Reader> from_data(ReadonlyBytes data);
 
     EBMLHeader const& header() const { return m_header.value(); }
