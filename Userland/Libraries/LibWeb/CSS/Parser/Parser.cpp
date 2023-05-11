@@ -7820,4 +7820,51 @@ Optional<CSS::StyleProperty> parse_css_supports_condition(CSS::Parser::ParsingCo
     return parser.parse_as_supports_condition();
 }
 
+// https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
+CSS::Length CSS::Parser::Parser::parse_as_sizes_attribute()
+{
+    Optional<CSS::Length> size;
+
+    // When asked to parse a sizes attribute from an element,
+    // parse a comma-separated list of component values from the value of the element's sizes attribute
+    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
+    auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
+
+    // For each unparsed size in unparsed sizes list:
+    for (auto& unparsed_size : unparsed_sizes_list) {
+        // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, that is a parse error; continue.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            continue;
+
+        // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
+        //    let size be its value and remove the component value from unparsed size.
+        //    FIXME: Any CSS function other than the math functions is invalid.
+        //    Otherwise, there is a parse error; continue.
+        auto length = parse_length(unparsed_size.last());
+        if (length.has_value() && length.value().raw_value() >= 0) {
+            size = length.value();
+            unparsed_size.take_last();
+        } else {
+            continue;
+        }
+
+        // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, return size and exit this algorithm.
+        //    If this was not the last item in unparsed sizes list, that is a parse error.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            return size.value();
+
+        // FIXME: 4. Parse the remaining component values in unparsed size as a <media-condition>.
+        //           If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue. [MQ]
+        dbgln("FIXME: Implement parsing of media conditions in sizes attribute");
+    }
+
+    return CSS::Length(100, CSS::Length::Type::Vw);
+}
+
 }
