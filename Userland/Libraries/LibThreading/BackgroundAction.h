@@ -100,13 +100,15 @@ private:
                     error = result.release_error();
 
                 m_promise->cancel(Error::from_errno(ECANCELED));
-                if (m_on_error) {
+                if (!m_canceled && m_on_error) {
                     callback_scheduled = true;
                     origin_event_loop->deferred_invoke([this, error = move(error)]() mutable {
                         m_on_error(move(error));
                         remove_from_parent();
                     });
                     origin_event_loop->wake();
+                } else if (m_on_error) {
+                    m_on_error(move(error));
                 }
             }
 
