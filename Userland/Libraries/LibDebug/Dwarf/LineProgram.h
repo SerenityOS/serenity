@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <LibDebug/Dwarf/DwarfTypes.h>
 
@@ -108,7 +109,7 @@ class LineProgram {
     AK_MAKE_NONMOVABLE(LineProgram);
 
 public:
-    explicit LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LineProgram>> create(DwarfInfo& dwarf_info, SeekableStream& stream);
 
     struct LineInfo {
         FlatPtr address { 0 };
@@ -133,6 +134,8 @@ public:
     bool looks_like_embedded_resource() const;
 
 private:
+    LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream, size_t unit_offset);
+
     ErrorOr<void> parse_unit_header();
     ErrorOr<void> parse_source_directories();
     ErrorOr<void> parse_source_files();

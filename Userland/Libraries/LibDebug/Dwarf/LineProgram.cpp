@@ -13,15 +13,22 @@
 
 namespace Debug::Dwarf {
 
-LineProgram::LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream)
+LineProgram::LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream, size_t unit_offset)
     : m_dwarf_info(dwarf_info)
     , m_stream(stream)
+    , m_unit_offset(unit_offset)
 {
-    m_unit_offset = m_stream.tell().release_value_but_fixme_should_propagate_errors();
-    parse_unit_header().release_value_but_fixme_should_propagate_errors();
-    parse_source_directories().release_value_but_fixme_should_propagate_errors();
-    parse_source_files().release_value_but_fixme_should_propagate_errors();
-    run_program().release_value_but_fixme_should_propagate_errors();
+}
+
+ErrorOr<NonnullOwnPtr<LineProgram>> LineProgram::create(DwarfInfo& dwarf_info, SeekableStream& stream)
+{
+    auto offset = TRY(stream.tell());
+    auto program = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LineProgram(dwarf_info, stream, offset)));
+    TRY(program->parse_unit_header());
+    TRY(program->parse_source_directories());
+    TRY(program->parse_source_files());
+    TRY(program->run_program());
+    return program;
 }
 
 ErrorOr<void> LineProgram::parse_unit_header()
