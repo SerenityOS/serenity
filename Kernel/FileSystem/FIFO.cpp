@@ -25,7 +25,12 @@ ErrorOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
 ErrorOr<NonnullRefPtr<OpenFileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
     auto description = TRY(OpenFileDescription::try_create(*this));
-    attach(direction);
+    if (direction == Direction::Reader) {
+        ++m_readers;
+    } else if (direction == Direction::Writer) {
+        ++m_writers;
+    }
+    evaluate_block_conditions();
     description->set_fifo_direction({}, direction);
     return description;
 }
@@ -73,19 +78,11 @@ FIFO::FIFO(UserID uid, NonnullOwnPtr<DoubleBuffer> buffer)
 
 FIFO::~FIFO() = default;
 
-void FIFO::attach(Direction direction)
+void FIFO::detach(OpenFileDescription& description)
 {
-    if (direction == Direction::Reader) {
-        ++m_readers;
-    } else if (direction == Direction::Writer) {
-        ++m_writers;
-    }
+    File::detach(description);
 
-    evaluate_block_conditions();
-}
-
-void FIFO::detach(Direction direction)
-{
+    auto direction = description.fifo_direction();
     if (direction == Direction::Reader) {
         VERIFY(m_readers);
         --m_readers;
