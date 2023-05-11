@@ -90,6 +90,8 @@ public:
     static ErrorOr<RefPtr<StyleValue>> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
     static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
 
+    CSS::Length parse_as_sizes_attribute();
+
 private:
     Parser(ParsingContext const&, Vector<Token>);
 
