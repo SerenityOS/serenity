@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -19,7 +20,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
+    Config::pledge_domain("VideoPlayer");
+
     auto app = TRY(GUI::Application::create(arguments));
+    app->set_config_domain(TRY("VideoPlayer"_string));
+
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 480);
     window->set_resizable(true);
