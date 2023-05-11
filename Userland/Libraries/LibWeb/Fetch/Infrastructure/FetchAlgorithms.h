@@ -20,12 +20,14 @@ class FetchAlgorithms : public JS::Cell {
 
 public:
     struct ConsumeBodyFailureTag { };
+    using BodyBytes = Variant<Empty, ConsumeBodyFailureTag, ByteBuffer>;
+
     using ProcessRequestBodyChunkLengthFunction = JS::SafeFunction<void(u64)>;
     using ProcessRequestEndOfBodyFunction = JS::SafeFunction<void()>;
     using ProcessEarlyHintsResponseFunction = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>;
     using ProcessResponseFunction = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>;
     using ProcessResponseEndOfBodyFunction = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>)>;
-    using ProcessResponseConsumeBodyFunction = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>, Variant<Empty, ConsumeBodyFailureTag, ByteBuffer>)>;
+    using ProcessResponseConsumeBodyFunction = JS::SafeFunction<void(JS::NonnullGCPtr<Infrastructure::Response>, BodyBytes)>;
 
     struct Input {
         Optional<ProcessRequestBodyChunkLengthFunction> process_request_body_chunk_length;
