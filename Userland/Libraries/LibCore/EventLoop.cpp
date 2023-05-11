@@ -48,6 +48,7 @@ EventLoop& EventLoop::current()
 
 void EventLoop::quit(int code)
 {
+    ThreadEventQueue::current().cancel_all_pending_jobs();
     m_impl->quit(code);
 }
 

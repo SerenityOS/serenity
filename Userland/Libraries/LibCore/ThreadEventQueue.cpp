@@ -11,6 +11,7 @@
 #include <LibCore/Promise.h>
 #include <LibCore/ThreadEventQueue.h>
 #include <LibThreading/Mutex.h>
+#include <errno.h>
 
 namespace Core {
 
@@ -74,6 +75,15 @@ void ThreadEventQueue::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> pro
 {
     Threading::MutexLocker lock(m_private->mutex);
     m_private->pending_promises.append(move(promise));
+}
+
+void ThreadEventQueue::cancel_all_pending_jobs()
+{
+    Threading::MutexLocker lock(m_private->mutex);
+    for (auto const& promise : m_private->pending_promises)
+        promise->cancel(Error::from_errno(ECANCELED));
+
+    m_private->pending_promises.clear();
 }
 
 size_t ThreadEventQueue::process()

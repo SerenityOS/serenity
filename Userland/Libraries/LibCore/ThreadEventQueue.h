@@ -29,6 +29,7 @@ public:
 
     // Used by Threading::BackgroundAction.
     void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>>);
+    void cancel_all_pending_jobs();
 
     // Returns true if there are events waiting to be flushed.
     bool has_pending_events() const;
