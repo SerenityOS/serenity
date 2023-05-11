@@ -8,6 +8,7 @@
 
 #include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Widget.h>
@@ -26,7 +27,7 @@ public:
     static ErrorOr<NonnullRefPtr<VideoPlayerWidget>> try_create();
     virtual ~VideoPlayerWidget() override = default;
     void close_file();
-    void open_file(StringView filename);
+    void open_file(FileSystemAccessClient::File filename);
     void resume_playback();
     void pause_playback();
     void toggle_pause();
@@ -55,7 +56,7 @@ private:
 
     virtual void drop_event(GUI::DropEvent&) override;
 
-    DeprecatedString m_path;
+    String m_path;
 
     RefPtr<VideoFrameWidget> m_video_display;
     RefPtr<GUI::HorizontalSlider> m_seek_slider;
