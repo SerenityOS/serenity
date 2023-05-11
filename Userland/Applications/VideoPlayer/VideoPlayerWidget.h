@@ -35,6 +35,7 @@ public:
 
     Video::PlaybackManager::SeekMode seek_mode();
     void set_seek_mode(Video::PlaybackManager::SeekMode seek_mode);
+    void set_sizing_mode(VideoSizingMode sizing_mode);
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
@@ -48,6 +49,7 @@ private:
     void on_decoding_error(Video::DecoderError const&);
 
     void cycle_sizing_modes();
+    void set_current_sizing_mode_checked();
 
     void toggle_fullscreen();
 
