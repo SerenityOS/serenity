@@ -48,7 +48,11 @@ public:
         , m_chain_node { nullptr, node }
     {
         m_interpreter.vm().running_execution_context().current_node = &node;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+        // The node pointer is popped from the interpreter in the destructor.
         m_interpreter.push_ast_node(m_chain_node);
+#pragma GCC diagnostic push
     }
 
     ~InterpreterNodeScope()

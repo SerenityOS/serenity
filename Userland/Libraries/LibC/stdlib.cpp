@@ -399,8 +399,8 @@ static void free_environment_variable_if_needed(char const* var)
 {
     if (!s_malloced_environment_variables.contains((FlatPtr)var))
         return;
-    free(const_cast<char*>(var));
     s_malloced_environment_variables.remove((FlatPtr)var);
+    free(const_cast<char*>(var));
 }
 
 char* getenv(char const* name)
