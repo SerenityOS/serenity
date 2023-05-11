@@ -474,6 +474,9 @@ public:
 
     void set_salvageable(bool value) { m_salvageable = value; };
 
+    HTML::ListOfAvailableImages& list_of_available_images();
+    HTML::ListOfAvailableImages const& list_of_available_images() const;
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -639,6 +642,9 @@ private:
 
     // NOTE: This is a cache to make finding the first <base href> element O(1).
     JS::GCPtr<HTML::HTMLBaseElement const> m_first_base_element_with_href_in_tree_order;
+
+    // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
+    OwnPtr<HTML::ListOfAvailableImages> m_list_of_available_images;
 };
 
 template<>

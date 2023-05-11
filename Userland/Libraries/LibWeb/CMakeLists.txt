@@ -315,6 +315,7 @@ set(SOURCES
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
     HTML/ImageRequest.cpp
+    HTML/ListOfAvailableImages.cpp
     HTML/Location.cpp
     HTML/MediaError.cpp
     HTML/MessageChannel.cpp

@@ -58,6 +58,7 @@
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/ListOfAvailableImages.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigable.h>
@@ -329,6 +330,8 @@ JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 
     m_selection = MUST_OR_THROW_OOM(heap().allocate<Selection::Selection>(realm, realm, *this));
+
+    m_list_of_available_images = TRY_OR_THROW_OOM(realm.vm(), try_make<HTML::ListOfAvailableImages>());
 
     return {};
 }
@@ -2565,6 +2568,16 @@ void Document::make_active()
 
     // 4. Set window's relevant settings object's execution ready flag.
     HTML::relevant_settings_object(window).execution_ready = true;
+}
+
+HTML::ListOfAvailableImages& Document::list_of_available_images()
+{
+    return *m_list_of_available_images;
+}
+
+HTML::ListOfAvailableImages const& Document::list_of_available_images() const
+{
+    return *m_list_of_available_images;
 }
 
 }
