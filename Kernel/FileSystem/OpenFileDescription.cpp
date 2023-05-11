@@ -53,8 +53,6 @@ OpenFileDescription::OpenFileDescription(File& file)
 OpenFileDescription::~OpenFileDescription()
 {
     m_file->detach(*this);
-    if (is_fifo())
-        static_cast<FIFO*>(m_file.ptr())->detach(fifo_direction());
     // FIXME: Should this error path be observed somehow?
     (void)m_file->close();
     if (m_inode)

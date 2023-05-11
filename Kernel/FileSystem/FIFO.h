@@ -32,17 +32,12 @@ public:
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
-    void attach(Direction);
-    void detach(Direction);
-#pragma GCC diagnostic pop
-
 private:
     // ^File
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<struct stat> stat() const override;
+    virtual void detach(OpenFileDescription&) override;
     virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
