@@ -5,6 +5,7 @@
  */
 
 #include <AK/NumberFormat.h>
+#include <LibConfig/Client.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -87,20 +88,29 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     find_descendant_of_type_named<GUI::Button>("fullscreen")->set_action(*m_toggle_fullscreen_action);
 
     m_size_fit_action = GUI::Action::create_checkable("&Fit", [&](auto&) {
-        m_video_display->set_sizing_mode(VideoSizingMode::Fit);
+        set_sizing_mode(VideoSizingMode::Fit);
     });
 
     m_size_fill_action = GUI::Action::create_checkable("Fi&ll", [&](auto&) {
-        m_video_display->set_sizing_mode(VideoSizingMode::Fill);
+        set_sizing_mode(VideoSizingMode::Fill);
     });
 
     m_size_stretch_action = GUI::Action::create_checkable("&Stretch", [&](auto&) {
-        m_video_display->set_sizing_mode(VideoSizingMode::Stretch);
+        set_sizing_mode(VideoSizingMode::Stretch);
     });
 
     m_size_fullsize_action = GUI::Action::create_checkable("F&ull Size", [&](auto&) {
-        m_video_display->set_sizing_mode(VideoSizingMode::FullSize);
+        set_sizing_mode(VideoSizingMode::FullSize);
     });
+
+    // Load the current video sizing mode
+    // The default fallback for `read_u32` is 0, which is also our desired default for the sizing mode, VideoSizingMode::Fit
+    auto sizing_mode_value = Config::read_u32("VideoPlayer"sv, "Playback"sv, "SizingMode"sv);
+    if (sizing_mode_value >= to_underlying(VideoSizingMode::Sentinel)) {
+        sizing_mode_value = 0;
+    }
+
+    set_sizing_mode(static_cast<VideoSizingMode>(sizing_mode_value));
 
     return {};
 }
@@ -290,9 +300,12 @@ void VideoPlayerWidget::cycle_sizing_modes()
 {
     auto sizing_mode = m_video_display->sizing_mode();
     sizing_mode = static_cast<VideoSizingMode>((to_underlying(sizing_mode) + 1) % to_underlying(VideoSizingMode::Sentinel));
-    m_video_display->set_sizing_mode(sizing_mode);
+    set_sizing_mode(sizing_mode);
+}
 
-    switch (sizing_mode) {
+void VideoPlayerWidget::set_current_sizing_mode_checked()
+{
+    switch (m_video_display->sizing_mode()) {
     case VideoSizingMode::Fit:
         m_size_fit_action->set_checked(true);
         break;
@@ -349,6 +362,17 @@ void VideoPlayerWidget::set_seek_mode(Video::PlaybackManager::SeekMode seek_mode
     m_use_fast_seeking->set_checked(seek_mode == Video::PlaybackManager::SeekMode::Fast);
 }
 
+void VideoPlayerWidget::set_sizing_mode(VideoSizingMode sizing_mode)
+{
+    if (m_video_display->sizing_mode() == sizing_mode)
+        return;
+
+    m_video_display->set_sizing_mode(sizing_mode);
+    Config::write_u32("VideoPlayer"sv, "Playback"sv, "SizingMode"sv, to_underlying(sizing_mode));
+
+    set_current_sizing_mode_checked();
+}
+
 ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
     // File menu
@@ -385,7 +409,6 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     m_sizing_mode_group->add_action(*m_size_fill_action);
     m_sizing_mode_group->add_action(*m_size_stretch_action);
     m_sizing_mode_group->add_action(*m_size_fullsize_action);
-    m_size_fit_action->set_checked(true);
 
     TRY(sizing_mode_menu->try_add_action(*m_size_fit_action));
     TRY(sizing_mode_menu->try_add_action(*m_size_fill_action));
