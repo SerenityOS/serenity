@@ -411,6 +411,15 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
     TRY(file_menu->try_add_separator());
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        auto path = action.text();
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
+        if (response.is_error())
+            return;
+
+        auto file = response.release_value();
+        open_file(file.filename(), file.release_stream());
+    }));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
@@ -566,6 +575,7 @@ void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File
     window()->set_modified(false);
     m_editor->open_file(move(file));
     set_path(filename.to_deprecated_string());
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
 bool HexEditorWidget::request_close()
