@@ -495,7 +495,8 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(LayoutState c
     if (computed_height.is_auto())
         return 150;
 
-    return computed_height.to_px(box, available_space.height.to_px());
+    // FIXME: Handle cases when available_space is not definite.
+    return computed_height.to_px(box, available_space.height.to_px_or_zero());
 }
 
 CSSPixels FormattingContext::compute_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, AvailableSpace const& available_space)
