@@ -85,6 +85,7 @@ namespace Rounding {
 template<FloatingPoint T>
 constexpr T ceil(T num)
 {
+    // FIXME: SSE4.1 rounds[sd] num, res, 0b110
     if (is_constant_evaluated()) {
         if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
             return num;
@@ -102,6 +103,7 @@ constexpr T ceil(T num)
 template<FloatingPoint T>
 constexpr T floor(T num)
 {
+    // FIXME: SSE4.1 rounds[sd] num, res, 0b101
     if (is_constant_evaluated()) {
         if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
             return num;
@@ -114,6 +116,66 @@ constexpr T floor(T num)
 #else
     return __builtin_floor(num);
 #endif
+}
+
+template<FloatingPoint T>
+constexpr T trunc(T num)
+{
+#if ARCH(AARCH64)
+    if (is_constant_evaluated()) {
+        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+            return num;
+        return static_cast<T>(static_cast<i64>(num));
+    }
+    AARCH64_INSTRUCTION(frintz, num);
+#endif
+    // FIXME: Use dedicated instruction in the non constexpr case
+    //        SSE4.1: rounds[sd] %num, %res, 0b111
+    if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+        return num;
+    return static_cast<T>(static_cast<i64>(num));
+}
+
+template<FloatingPoint T>
+constexpr T rint(T x)
+{
+    CONSTEXPR_STATE(rint, x);
+    // Note: This does break tie to even
+    //       But the behavior of frndint/rounds[ds]/frintx can be configured
+    //       through the floating point control registers.
+    // FIXME: We should decide if we rename this to allow us to get away from
+    //        the configurability "burden" rint has
+    //        this would make us use `rounds[sd] %num, %res, 0b100`
+    //        and `frintn` respectively,
+    //        no such guaranteed round exists for x87 `frndint`
+#if ARCH(X86_64)
+#    ifdef __SSE4_1__
+    if constexpr (IsSame<T, double>) {
+        T r;
+        asm(
+            "roundsd %1, %0"
+            : "=x"(r)
+            : "x"(x));
+        return r;
+    }
+    if constexpr (IsSame<T, float>) {
+        T r;
+        asm(
+            "roundss %1, %0"
+            : "=x"(r)
+            : "x"(x));
+        return r;
+    }
+#    else
+    asm(
+        "frndint"
+        : "+t"(x));
+    return x;
+#    endif
+#elif ARCH(AARCH64)
+    AARCH64_INSTRUCTION(frintx, x);
+#endif
+    TODO();
 }
 
 template<FloatingPoint T>
@@ -286,8 +348,10 @@ ALWAYS_INLINE I round_to(P value)
 
 using Rounding::ceil;
 using Rounding::floor;
+using Rounding::rint;
 using Rounding::round;
 using Rounding::round_to;
+using Rounding::trunc;
 
 namespace Division {
 template<FloatingPoint T>
