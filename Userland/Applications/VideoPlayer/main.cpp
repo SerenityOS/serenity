@@ -6,6 +6,7 @@
 
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -29,15 +30,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_resizable(true);
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     auto main_widget = TRY(window->set_main_widget<VideoPlayer::VideoPlayerWidget>());
     main_widget->update_title();
     TRY(main_widget->initialize_menubar(window));
 
-    if (!filename.is_empty())
-        main_widget->open_file(filename);
-
     window->show();
     window->set_icon(GUI::Icon::default_icon("app-video-player"sv).bitmap_for_size(16));
+
+    if (!filename.is_empty()) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename);
+        if (!response.is_error()) {
+            main_widget->open_file(response.release_value());
+        }
+    }
 
     return app->exec();
 }

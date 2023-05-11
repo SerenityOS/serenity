@@ -121,16 +121,21 @@ void VideoPlayerWidget::close_file()
         m_playback_manager = nullptr;
 }
 
-void VideoPlayerWidget::open_file(StringView filename)
+void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
 {
-    auto load_file_result = Video::PlaybackManager::from_file(filename);
+    auto mapped_file_result = Core::MappedFile::map_from_file(file.release_stream(), file.filename());
+    if (mapped_file_result.is_error()) {
+        GUI::MessageBox::show_error(window(), String::formatted("Failed to read file: {}", file.filename()).release_value_but_fixme_should_propagate_errors());
+        return;
+    }
 
+    auto load_file_result = Video::PlaybackManager::from_mapped_file(mapped_file_result.release_value());
     if (load_file_result.is_error()) {
         on_decoding_error(load_file_result.release_error());
         return;
     }
 
-    m_path = filename;
+    m_path = file.filename();
     update_title();
     close_file();
 
@@ -292,7 +297,8 @@ void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().serialize_path());
         if (response.is_error())
             return;
-        open_file(response.value().filename());
+
+        open_file(response.release_value());
     }
 }
 
@@ -343,7 +349,7 @@ void VideoPlayerWidget::update_title()
     if (m_path.is_empty()) {
         string_builder.append("No video"sv);
     } else {
-        string_builder.append(m_path.view());
+        string_builder.append(m_path);
     }
 
     string_builder.append("[*] - Video Player"sv);
@@ -378,9 +384,11 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     // File menu
     auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
-        if (path.has_value())
-            open_file(path.value());
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, "Open video file...");
+        if (response.is_error())
+            return;
+
+        open_file(response.release_value());
     })));
     TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
