@@ -47,7 +47,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (search) {
         for (int i = 0; i < sys_nerr; i++) {
-            auto error = DeprecatedString::formatted("{}", strerror(i));
+            auto error_string = strerror(i);
+            StringView error { error_string, strlen(error_string) };
             if (error.contains(keyword, CaseSensitivity::CaseInsensitive))
                 output_errno_description(i, error);
         }
