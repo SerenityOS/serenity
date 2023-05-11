@@ -373,6 +373,7 @@ class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
 class ImageRequest;
+class ListOfAvailableImages;
 class Location;
 class MediaError;
 class MessageChannel;
