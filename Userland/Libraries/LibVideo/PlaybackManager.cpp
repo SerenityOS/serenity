@@ -31,6 +31,12 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(String
     return create_with_demuxer(move(demuxer));
 }
 
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    auto demuxer = TRY(Matroska::MatroskaDemuxer::from_mapped_file(move(mapped_file)));
+    return create_with_demuxer(move(demuxer));
+}
+
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(ReadonlyBytes data)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_data(data));
