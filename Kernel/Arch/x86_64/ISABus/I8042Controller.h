@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Bus/SerialIO/PS2/Controller.h>
 #include <Kernel/Devices/HID/Controller.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
@@ -96,7 +97,7 @@ protected:
 class PS2KeyboardDevice;
 class PS2MouseDevice;
 class HIDManagement;
-class I8042Controller final : public HIDController {
+class I8042Controller final : public PS2Controller {
     friend class PS2KeyboardDevice;
     friend class PS2MouseDevice;
 

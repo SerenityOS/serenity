@@ -155,7 +155,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
         return {};
     if (auto result_or_error = i8042_controller->detect_devices(); result_or_error.is_error())
         return {};
-    m_hid_controllers.with([&](auto& list) {
+    m_hid_serial_io_controllers.with([&](auto& list) {
         list.append(i8042_controller);
     });
 #endif
