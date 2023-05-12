@@ -13,9 +13,9 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -54,7 +54,7 @@ enum FollowSymlinks {
     No
 };
 
-static Vector<DeprecatedString> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
+static Vector<String> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
 {
     // Edge cases in which there are guaranteed no solutions
     if (filename.is_empty() || filename.contains('/'))
@@ -65,17 +65,17 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
     if (path_str != nullptr) // maybe && *path_str
         path = { path_str, strlen(path_str) };
 
-    Vector<DeprecatedString> executables;
+    Vector<String> executables;
     auto directories = path.split_view(':');
     for (auto directory : directories) {
-        auto file = DeprecatedString::formatted("{}/{}", directory, filename);
+        auto file = String::formatted("{}/{}", directory, filename).release_value_but_fixme_should_propagate_errors();
 
         if (follow_symlinks == FollowSymlinks::Yes) {
-            auto path_or_error = Core::DeprecatedFile::read_link(file);
+            auto path_or_error = FileSystem::read_link(file);
             if (!path_or_error.is_error())
                 file = path_or_error.release_value();
         }
-        if (access(file.characters(), X_OK) == 0)
+        if (!Core::System::access(file, X_OK).is_error())
             executables.append(move(file));
     }
 
@@ -375,8 +375,8 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
         }
 
         // check if its an executable in PATH
-        auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment(command);
-        if (fullpath.has_value()) {
+        auto fullpath = FileSystem::resolve_executable_from_environment(command);
+        if (!fullpath.is_error()) {
             printf("%s is %s\n", command.characters(), escape_token(fullpath.release_value()).characters());
             continue;
         }
@@ -415,11 +415,12 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
         }
     }
 
-    auto real_path = Core::DeprecatedFile::real_path_for(new_path);
-    if (real_path.is_empty()) {
+    auto real_path_or_error = FileSystem::real_path(new_path);
+    if (real_path_or_error.is_error()) {
         warnln("Invalid path '{}'", new_path);
         return 1;
     }
+    auto real_path = real_path_or_error.release_value().to_deprecated_string();
 
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);
@@ -1251,13 +1252,13 @@ ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
-    auto kill_path = Core::DeprecatedFile::resolve_executable_from_environment("kill"sv);
-    if (!kill_path.has_value()) {
+    auto kill_path_or_error = FileSystem::resolve_executable_from_environment("kill"sv);
+    if (!kill_path_or_error.is_error()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
 
-    replaced_values.append(TRY(String::from_deprecated_string(kill_path.release_value())));
+    replaced_values.append(kill_path_or_error.release_value());
     for (size_t i = 1; i < arguments.strings.size(); ++i) {
         if (auto job_id = resolve_job_spec(arguments.strings[i]); job_id.has_value()) {
             auto job = find_job(job_id.value());
