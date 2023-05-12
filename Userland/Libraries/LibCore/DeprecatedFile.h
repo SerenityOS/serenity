@@ -82,10 +82,6 @@ public:
     bool open(int fd, OpenMode, ShouldCloseFileDescriptor);
     [[nodiscard]] int leak_fd();
 
-    static NonnullRefPtr<DeprecatedFile> standard_input();
-    static NonnullRefPtr<DeprecatedFile> standard_output();
-    static NonnullRefPtr<DeprecatedFile> standard_error();
-
     static Optional<DeprecatedString> resolve_executable_from_environment(StringView filename);
 
 private:

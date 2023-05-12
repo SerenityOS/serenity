@@ -242,37 +242,6 @@ ErrorOr<DeprecatedString> DeprecatedFile::read_link(DeprecatedString const& link
 
 #endif
 
-static RefPtr<DeprecatedFile> stdin_file;
-static RefPtr<DeprecatedFile> stdout_file;
-static RefPtr<DeprecatedFile> stderr_file;
-
-NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_input()
-{
-    if (!stdin_file) {
-        stdin_file = DeprecatedFile::construct();
-        stdin_file->open(STDIN_FILENO, OpenMode::ReadOnly, ShouldCloseFileDescriptor::No);
-    }
-    return *stdin_file;
-}
-
-NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_output()
-{
-    if (!stdout_file) {
-        stdout_file = DeprecatedFile::construct();
-        stdout_file->open(STDOUT_FILENO, OpenMode::WriteOnly, ShouldCloseFileDescriptor::No);
-    }
-    return *stdout_file;
-}
-
-NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_error()
-{
-    if (!stderr_file) {
-        stderr_file = DeprecatedFile::construct();
-        stderr_file->open(STDERR_FILENO, OpenMode::WriteOnly, ShouldCloseFileDescriptor::No);
-    }
-    return *stderr_file;
-}
-
 static DeprecatedString get_duplicate_name(DeprecatedString const& path, int duplicate_count)
 {
     if (duplicate_count == 0) {
