@@ -26,6 +26,8 @@ enum class MediaSeekMode {
     ApproximateForSpeed,
 };
 
+class SourceElementSelector;
+
 class HTMLMediaElement : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMediaElement, HTMLElement);
 
@@ -101,6 +103,8 @@ protected:
     virtual void on_seek(double, MediaSeekMode) { m_seek_in_progress = false; }
 
 private:
+    friend SourceElementSelector;
+
     struct EntireResource { };
     using ByteRange = Variant<EntireResource>; // FIXME: This will need to include "until end" and an actual byte range.
 
@@ -209,6 +213,8 @@ private:
     Optional<Time> m_last_time_update_event_time;
 
     JS::GCPtr<DOM::DocumentObserver> m_document_observer;
+
+    JS::GCPtr<SourceElementSelector> m_source_element_selector;
 
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 
