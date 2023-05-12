@@ -45,9 +45,17 @@ public:
     Gfx::Bitmap const* mask_bitmap() const { return m_mask_bitmap; }
     Gfx::Bitmap* mask_bitmap() { return m_mask_bitmap; }
 
-    ErrorOr<void> create_mask();
+    enum class MaskType {
+        None,
+        BasicMask,
+        EditingMask,
+    };
+
+    ErrorOr<void> create_mask(MaskType);
     void delete_mask();
     void apply_mask();
+    void invert_mask();
+    void clear_mask();
 
     Gfx::Bitmap& get_scratch_edited_bitmap();
 
@@ -91,6 +99,7 @@ public:
     void erase_selection(Selection const&);
 
     bool is_masked() const { return !m_mask_bitmap.is_null(); }
+    MaskType mask_type();
 
     enum class EditMode {
         Content,
@@ -103,6 +112,19 @@ public:
     Gfx::Bitmap& currently_edited_bitmap();
 
     ErrorOr<NonnullRefPtr<Layer>> duplicate(DeprecatedString name);
+
+    ALWAYS_INLINE Color modify_pixel_with_editing_mask(int x, int y, Color const& target_color, Color const& current_color)
+    {
+        if (mask_type() != MaskType::EditingMask)
+            return target_color;
+
+        auto mask = mask_bitmap()->get_pixel(x, y).alpha();
+        if (!mask)
+            return current_color;
+
+        float mask_intensity = mask / 255.0f;
+        return current_color.mixed_with(target_color, mask_intensity);
+    }
 
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
@@ -122,6 +144,7 @@ private:
     int m_opacity_percent { 100 };
 
     EditMode m_edit_mode { EditMode::Content };
+    MaskType m_mask_type { MaskType::None };
 
     void update_cached_bitmap();
 };

@@ -83,4 +83,35 @@ Gfx::IntPoint Tool::constrain_line_angle(Gfx::IntPoint start_pos, Gfx::IntPoint 
         start_pos.y() + (int)(AK::sin(constrained_angle) * line_length) };
 }
 
+template<>
+void Tool::set_pixel_with_possible_mask<Gfx::StorageFormat::BGRA8888>(int x, int y, Gfx::Color color, Gfx::Bitmap& bitmap)
+{
+    if (!m_editor || !m_editor->active_layer())
+        return;
+
+    switch (m_editor->active_layer()->edit_mode()) {
+    case Layer::EditMode::Content:
+        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        break;
+    case Layer::EditMode::Mask:
+        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(x, y, color);
+        break;
+    }
+}
+
+void Tool::set_pixel_with_possible_mask(int x, int y, Gfx::Color color, Gfx::Bitmap& bitmap)
+{
+    if (!m_editor || !m_editor->active_layer())
+        return;
+
+    switch (m_editor->active_layer()->edit_mode()) {
+    case Layer::EditMode::Content:
+        bitmap.set_pixel(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        break;
+    case Layer::EditMode::Mask:
+        bitmap.set_pixel(x, y, color);
+        break;
+    }
+}
+
 }
