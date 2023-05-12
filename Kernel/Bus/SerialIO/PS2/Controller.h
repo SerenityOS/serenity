@@ -26,6 +26,14 @@ enum class PS2DeviceCommand {
 };
 
 class PS2Controller : public SerialIOController {
+public:
+    virtual ErrorOr<void> reset_device(PS2PortIndex) = 0;
+    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command) = 0;
+    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command, u8 data) = 0;
+
+    virtual ErrorOr<u8> read_from_device(PS2PortIndex) = 0;
+    virtual ErrorOr<void> prepare_for_input(PS2PortIndex) = 0;
+    virtual bool irq_process_input_buffer(PS2PortIndex) = 0;
 
 protected:
     PS2Controller() = default;
