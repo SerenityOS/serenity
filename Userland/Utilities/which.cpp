@@ -5,8 +5,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "Name of executable", "executable");
     args_parser.parse(arguments);
 
-    auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment(filename);
-    if (!fullpath.has_value()) {
+    auto fullpath = FileSystem::resolve_executable_from_environment(filename);
+    if (fullpath.is_error()) {
         warnln("no '{}' in path", filename);
         return 1;
     }
