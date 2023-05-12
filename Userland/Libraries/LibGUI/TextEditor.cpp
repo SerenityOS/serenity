@@ -203,7 +203,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
         for_each_visual_line(line_index, [&](Gfx::IntRect const& rect, auto& view, size_t start_of_line, [[maybe_unused]] bool is_last_visual_line) {
-            if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line)
+            if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line && position.y() >= 0)
                 return IterationDecision::Continue;
 
             column_index = start_of_line;
