@@ -5,11 +5,11 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/GetPassword.h>
 #include <LibIMAP/Client.h>
 #include <LibMain/Main.h>
+#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -24,7 +24,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString username;
     Core::SecretString password;
-
     bool interactive_password;
 
     Core::ArgsParser args_parser;
@@ -38,8 +37,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (interactive_password) {
         password = TRY(Core::get_password());
     } else {
-        auto standard_input = Core::DeprecatedFile::standard_input();
-        password = Core::SecretString::take_ownership(standard_input->read_all());
+        auto standard_input = TRY(Core::File::standard_input());
+        // This might leave the clear password in unused memory, but this is only a test program anyway.
+        password = Core::SecretString::take_ownership(TRY(standard_input->read_until_eof()));
     }
 
     Core::EventLoop loop;
