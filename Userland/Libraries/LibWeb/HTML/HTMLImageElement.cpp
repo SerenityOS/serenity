@@ -34,7 +34,6 @@ namespace Web::HTML {
 
 HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_image_loader(*this)
 {
     m_animation_timer = Core::Timer::try_create().release_value_but_fixme_should_propagate_errors();
     m_animation_timer->on_timeout = [this] { animate(); };
@@ -104,14 +103,24 @@ void HTMLImageElement::did_remove_attribute(DeprecatedFlyString const& name)
 
 JS::GCPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), m_image_loader);
+    return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *this);
 }
 
 RefPtr<Gfx::Bitmap const> HTMLImageElement::bitmap() const
 {
+    return current_image_bitmap();
+}
+
+RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap() const
+{
     if (auto data = m_current_request->image_data())
         return data->bitmap(m_current_frame_index);
     return nullptr;
+}
+
+void HTMLImageElement::set_visible_in_viewport(bool)
+{
+    // FIXME: Loosen grip on image data when it's not visible, e.g via volatile memory.
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-width
@@ -130,8 +139,8 @@ unsigned HTMLImageElement::width() const
 
     // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
-    if (m_image_loader.has_image())
-        return m_image_loader.width();
+    if (auto bitmap = current_image_bitmap())
+        return bitmap->width();
 
     // ...or else 0, if the image is not available or does not have intrinsic dimensions.
     return 0;
@@ -158,8 +167,8 @@ unsigned HTMLImageElement::height() const
 
     // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
-    if (m_image_loader.has_image())
-        return m_image_loader.height();
+    if (auto bitmap = current_image_bitmap())
+        return bitmap->height();
 
     // ...or else 0, if the image is not available or does not have intrinsic dimensions.
     return 0;
@@ -175,8 +184,8 @@ unsigned HTMLImageElement::natural_width() const
 {
     // Return the density-corrected intrinsic width of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available.
-    if (m_image_loader.has_image())
-        return m_image_loader.width();
+    if (auto bitmap = current_image_bitmap())
+        return bitmap->width();
 
     // ...or else 0.
     return 0;
@@ -187,8 +196,8 @@ unsigned HTMLImageElement::natural_height() const
 {
     // Return the density-corrected intrinsic height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available.
-    if (m_image_loader.has_image())
-        return m_image_loader.height();
+    if (auto bitmap = current_image_bitmap())
+        return bitmap->height();
 
     // ...or else 0.
     return 0;
@@ -210,7 +219,7 @@ bool HTMLImageElement::complete() const
     // - The img element's current request's state is completely available and its pending request is null.
     // - The img element's current request's state is broken and its pending request is null.
     // FIXME: This is ad-hoc and should be updated once we are loading images via the Fetch mechanism.
-    if (m_image_loader.has_loaded_or_failed())
+    if (auto bitmap = current_image_bitmap())
         return true;
 
     return false;

@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
+#include <LibWeb/Layout/ImageProvider.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
@@ -18,7 +19,8 @@ namespace Web::HTML {
 class HTMLObjectElement final
     : public NavigableContainer
     , public FormAssociatedElement
-    , public ResourceClient {
+    , public ResourceClient
+    , public Layout::ImageProvider {
     WEB_PLATFORM_OBJECT(HTMLObjectElement, NavigableContainer)
     FORM_ASSOCIATED_ELEMENT(NavigableContainer, HTMLObjectElement)
 
@@ -66,6 +68,10 @@ private:
 
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
+
+    // ^Layout::ImageProvider
+    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap() const override;
+    virtual void set_visible_in_viewport(bool) override;
 
     Representation m_representation { Representation::Unknown };
     Optional<ImageLoader> m_image_loader;
