@@ -29,8 +29,6 @@ public:
     u32 pitch() const { return m_pitch; }
     PixelOrder pixel_order() { return m_pixel_order; }
 
-    void draw_logo(u8* framebuffer_data);
-
 private:
     u16 m_width;
     u16 m_height;
