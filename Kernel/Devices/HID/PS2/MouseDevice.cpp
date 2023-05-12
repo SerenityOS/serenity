@@ -1,39 +1,30 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
-#include <Kernel/Arch/x86_64/ISABus/HID/PS2MouseDevice.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/HID/PS2/MouseDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-#define IRQ_MOUSE 12
-
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
-    : IRQHandler(IRQ_MOUSE)
-    , PS2Device(ps2_controller)
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(SerialIOController const& serial_io_controller, SerialIOController::PortIndex port_index, MouseDevice const& mouse_device)
+    : SerialIODevice(serial_io_controller, port_index)
     , m_mouse_device(mouse_device)
 {
 }
 
 UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice() = default;
 
-bool PS2MouseDevice::handle_irq(RegisterState const&)
-{
-    // The controller will read the data and call irq_handle_byte_read
-    // for the appropriate device
-    return m_i8042_controller->irq_process_input_buffer(instrument_type());
-}
-
-void PS2MouseDevice::irq_handle_byte_read(u8 byte)
+void PS2MouseDevice::handle_byte_read_from_serial_input(u8 byte)
 {
     auto commit_packet = [this]() {
         m_data_state = 0;
@@ -131,58 +122,48 @@ MousePacket PS2MouseDevice::parse_data_packet(RawPacket const& raw_packet)
 
 ErrorOr<u8> PS2MouseDevice::get_device_id()
 {
-    TRY(send_command(I8042Command::GetDeviceID));
+    TRY(send_command(SerialIOController::DeviceCommand::GetDeviceID));
     return read_from_device();
 }
 
 ErrorOr<u8> PS2MouseDevice::read_from_device()
 {
-    return m_i8042_controller->read_from_device(instrument_type());
+    return attached_controller().read_from_device(attached_port_index());
 }
 
-ErrorOr<u8> PS2MouseDevice::send_command(u8 command)
+ErrorOr<void> PS2MouseDevice::send_command(SerialIOController::DeviceCommand command)
 {
-    u8 response = TRY(m_i8042_controller->send_command(instrument_type(), command));
-
-    if (response != I8042Response::Acknowledge) {
-        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-        return Error::from_errno(EIO);
-    }
-    return response;
+    TRY(attached_controller().send_command(attached_port_index(), command));
+    return {};
 }
 
-ErrorOr<u8> PS2MouseDevice::send_command(u8 command, u8 data)
+ErrorOr<void> PS2MouseDevice::send_command(SerialIOController::DeviceCommand command, u8 data)
 {
-    u8 response = TRY(m_i8042_controller->send_command(instrument_type(), command, data));
-    if (response != I8042Response::Acknowledge) {
-        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-        return Error::from_errno(EIO);
-    }
-    return response;
+    TRY(attached_controller().send_command(attached_port_index(), command, data));
+    return {};
 }
 
 ErrorOr<void> PS2MouseDevice::set_sample_rate(u8 rate)
 {
-    TRY(send_command(I8042Command::SetSampleRate, rate));
+    TRY(send_command(SerialIOController::DeviceCommand::SetSampleRate, rate));
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(SerialIOController const& serial_io_controller, SerialIOController::PortIndex port_index, MouseDevice const& mouse_device)
 {
-    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2MouseDevice(ps2_controller, mouse_device)));
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2MouseDevice(serial_io_controller, port_index, mouse_device)));
     TRY(device->initialize());
     return device;
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> PS2MouseDevice::initialize()
 {
-    TRY(m_i8042_controller->reset_device(instrument_type()));
+    TRY(attached_controller().reset_device(attached_port_index()));
 
     u8 device_id = TRY(read_from_device());
 
-    TRY(send_command(I8042Command::SetDefaults));
-
-    TRY(send_command(I8042Command::EnablePacketStreaming));
+    TRY(send_command(SerialIOController::DeviceCommand::SetDefaults));
+    TRY(send_command(SerialIOController::DeviceCommand::EnablePacketStreaming));
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
         // Send magical wheel initiation sequence.
