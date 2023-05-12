@@ -26,6 +26,7 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
             warnln("Failed to handle message: {}", result.release_error());
         }
     };
+
     m_clipboard_connection.on_data_changed = [this] {
         if (m_just_set_clip) {
             m_just_set_clip = false;
@@ -39,6 +40,7 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
         auto grab_buffer = ClipboardGrab::make_buffer({ *type });
         send_message(grab_buffer);
     };
+
     auto buffer = AnnounceCapabilities::make_buffer(true, { Capability::ClipboardByDemand });
     send_message(buffer);
 }
@@ -47,14 +49,17 @@ Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(Depr
 {
     if (mime == "text/plain")
         return ClipboardType::Text;
-    else if (mime == "image/jpeg")
+
+    if (mime == "image/jpeg")
         return ClipboardType::JPEG;
-    else if (mime == "image/bmp")
+
+    if (mime == "image/bmp")
         return ClipboardType::BMP;
-    else if (mime == "image/png" || mime == "image/x-serenityos")
+
+    if (mime == "image/png" || mime == "image/x-serenityos")
         return ClipboardType::PNG;
-    else
-        return {};
+
+    return {};
 }
 
 ErrorOr<void> SpiceAgent::on_message_received()
@@ -79,8 +84,10 @@ ErrorOr<void> SpiceAgent::on_message_received()
         auto* request_message = reinterpret_cast<ClipboardRequest*>(message->data);
         auto clipboard = m_clipboard_connection.get_clipboard_data();
         auto& mime = clipboard.mime_type();
+
         ByteBuffer backing_byte_buffer;
         ReadonlyBytes bytes;
+
         if (mime == "image/x-serenityos") {
             auto bitmap = m_clipboard_connection.get_bitmap();
             backing_byte_buffer = MUST(Gfx::PNGWriter::encode(*bitmap));
@@ -89,6 +96,7 @@ ErrorOr<void> SpiceAgent::on_message_received()
             auto data = clipboard.data();
             bytes = { data.data<void>(), data.size() };
         }
+
         auto clipboard_buffer = Clipboard::make_buffer((ClipboardType)request_message->type, bytes);
         send_message(clipboard_buffer);
         break;
@@ -96,6 +104,7 @@ ErrorOr<void> SpiceAgent::on_message_received()
     case (u32)MessageType::ClipboardGrab: {
         auto* grab_message = reinterpret_cast<ClipboardGrab*>(message->data);
         auto found_type = ClipboardType::None;
+
         for (size_t i = 0; i < (message->size / 4); i++) {
             auto type = (ClipboardType)grab_message->types[i];
             if (found_type == ClipboardType::None) {
@@ -112,6 +121,7 @@ ErrorOr<void> SpiceAgent::on_message_received()
                 }
             }
         }
+
         if (found_type == ClipboardType::None)
             return {};
 
