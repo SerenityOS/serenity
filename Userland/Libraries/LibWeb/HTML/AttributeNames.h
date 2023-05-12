@@ -90,6 +90,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(lang)                       \
     __ENUMERATE_HTML_ATTRIBUTE(language)                   \
     __ENUMERATE_HTML_ATTRIBUTE(link)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(loading)                    \
     __ENUMERATE_HTML_ATTRIBUTE(longdesc)                   \
     __ENUMERATE_HTML_ATTRIBUTE(loop)                       \
     __ENUMERATE_HTML_ATTRIBUTE(marginheight)               \

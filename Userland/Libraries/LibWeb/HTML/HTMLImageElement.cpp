@@ -455,7 +455,8 @@ after_step_6:
 
         // FIXME: 21. Set request's priority to the current state of the element's fetchpriority attribute.
 
-        // FIXME: 22. Let delay load event be true if the img's lazy loading attribute is in the Eager state, or if scripting is disabled for the img, and false otherwise.
+        // 22. Let delay load event be true if the img's lazy loading attribute is in the Eager state, or if scripting is disabled for the img, and false otherwise.
+        auto delay_load_event = lazy_loading() == LazyLoading::Eager;
 
         // FIXME: 23. If the will lazy load element steps given the img return true, then:
         // FIXME:     1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
@@ -492,6 +493,12 @@ after_step_6:
 
         // 24. Fetch the image: Fetch request.
         //     Return from this algorithm, and run the remaining steps as part of the fetch's processResponse for the response response.
+
+        // When delay load event is true, fetching the image must delay the load event of the element's node document
+        // until the task that is queued by the networking task source once the resource has been fetched (defined below) has been run.
+        if (delay_load_event)
+            m_load_event_delayer.emplace(document());
+
         auto fetch_controller = Fetch::Fetching::fetch(
             realm(),
             request,
@@ -507,6 +514,10 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageR
 {
     // AD-HOC: At this point, things gets very ad-hoc.
     // FIXME: Bring this closer to spec.
+
+    ScopeGuard undelay_load_event_guard = [this] {
+        m_load_event_delayer.clear();
+    };
 
     auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
     if (!result.has_value()) {
@@ -746,6 +757,15 @@ void HTMLImageElement::animate()
 
     if (layout_node())
         layout_node()->set_needs_display();
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes
+HTMLImageElement::LazyLoading HTMLImageElement::lazy_loading() const
+{
+    auto value = attribute(HTML::AttributeNames::loading);
+    if (value.equals_ignoring_ascii_case("lazy"sv))
+        return LazyLoading::Lazy;
+    return LazyLoading::Eager;
 }
 
 }
