@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("edit-copy"sv));
 
     auto main_window = TRY(GUI::Window::try_create());
-    main_window->set_title("Clipboard history");
+    main_window->set_title("Clipboard History");
     main_window->set_rect(670, 65, 325, 500);
     main_window->set_icon(app_icon.bitmap_for_size(16));
 
