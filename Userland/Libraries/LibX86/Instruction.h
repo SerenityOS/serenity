@@ -973,7 +973,9 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::rea
 template<typename CPU>
 ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, Instruction const& insn)
 {
-    VERIFY(!is_register());
+    if (is_register())
+        return cpu.const_gpr64(reg64());
+
     auto address = resolve(cpu, insn);
     return cpu.read_memory64(address);
 }
