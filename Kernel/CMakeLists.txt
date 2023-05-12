@@ -60,6 +60,8 @@ set(KERNEL_SOURCES
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
+    Devices/HID/PS2/KeyboardDevice.cpp
+    Devices/HID/PS2/MouseDevice.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
@@ -389,8 +391,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Time/RTC.cpp
         Arch/x86_64/PCSpeaker.cpp
 
-        Arch/x86_64/ISABus/HID/PS2KeyboardDevice.cpp
-        Arch/x86_64/ISABus/HID/PS2MouseDevice.cpp
         Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
         Arch/x86_64/ISABus/IDEController.cpp

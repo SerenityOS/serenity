@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
+#include <AK/DistinctNumeric.h>
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtr.h>
@@ -20,7 +21,24 @@ class SerialIOController : public AtomicRefCounted<SerialIOController> {
     friend class HIDManagement;
 
 public:
+    enum class DeviceCommand : u8 {
+        GetDeviceID,
+        SetSampleRate,
+        EnablePacketStreaming,
+        DisablePacketStreaming,
+        SetDefaults,
+    };
+
+    AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, PortIndex);
+
     virtual ~SerialIOController() = default;
+
+    virtual ErrorOr<void> reset_device(PortIndex) = 0;
+    virtual ErrorOr<void> send_command(PortIndex, DeviceCommand command) = 0;
+    virtual ErrorOr<void> send_command(PortIndex, DeviceCommand command, u8 data) = 0;
+
+    virtual ErrorOr<u8> read_from_device(PortIndex) = 0;
+    virtual ErrorOr<void> prepare_for_input(PortIndex) = 0;
 
 protected:
     SerialIOController() = default;
