@@ -21,7 +21,10 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
 {
     m_notifier = Core::Notifier::construct(fd, Core::Notifier::Type::Read);
     m_notifier->on_activation = [this] {
-        on_message_received();
+        auto result = on_message_received();
+        if (result.is_error()) {
+            warnln("Failed to handle message: {}", result.release_error());
+        }
     };
     m_clipboard_connection.on_data_changed = [this] {
         if (m_just_set_clip) {
@@ -54,12 +57,14 @@ Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(Depr
         return {};
 }
 
-void SpiceAgent::on_message_received()
+ErrorOr<void> SpiceAgent::on_message_received()
 {
     ChunkHeader header {};
     read_n(&header, sizeof(header));
-    auto buffer = ByteBuffer::create_uninitialized(header.size).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
+
+    auto buffer = TRY(ByteBuffer::create_uninitialized(header.size));
     read_n(buffer.data(), buffer.size());
+
     auto* message = reinterpret_cast<Message*>(buffer.data());
     switch (message->type) {
     case (u32)MessageType::AnnounceCapabilities: {
@@ -108,7 +113,7 @@ void SpiceAgent::on_message_received()
             }
         }
         if (found_type == ClipboardType::None)
-            return;
+            return {};
 
         auto request_buffer = ClipboardRequest::make_buffer(found_type);
         send_message(request_buffer);
@@ -117,7 +122,7 @@ void SpiceAgent::on_message_received()
     case (u32)MessageType::Clipboard: {
         auto* clipboard_message = reinterpret_cast<Clipboard*>(message->data);
         auto type = (ClipboardType)clipboard_message->type;
-        auto data_buffer = ByteBuffer::create_uninitialized(message->size - sizeof(u32)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
+        auto data_buffer = TRY(ByteBuffer::create_uninitialized(message->size - sizeof(u32)));
 
         auto const total_bytes = message->size - sizeof(Clipboard);
         auto bytes_copied = header.size - sizeof(Message) - sizeof(Clipboard);
@@ -135,37 +140,36 @@ void SpiceAgent::on_message_received()
             if (data_buffer.is_empty()) {
                 m_clipboard_connection.async_set_clipboard_data({}, "text/plain", {});
             } else {
-                auto anon_buffer_or_error = Core::AnonymousBuffer::create_with_size(data_buffer.size());
-                VERIFY(!anon_buffer_or_error.is_error());
-                auto anon_buffer = anon_buffer_or_error.release_value();
+                auto anon_buffer = TRY(Core::AnonymousBuffer::create_with_size(data_buffer.size()));
                 memcpy(anon_buffer.data<void>(), data_buffer.data(), data_buffer.size());
                 m_clipboard_connection.async_set_clipboard_data(anon_buffer, "text/plain", {});
             }
-            return;
+            return {};
         } else {
             ErrorOr<Gfx::ImageFrameDescriptor> frame_or_error = Gfx::ImageFrameDescriptor {};
             if (type == ClipboardType::PNG) {
                 if (Gfx::PNGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
-                    auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
+                    auto png_decoder = TRY(Gfx::PNGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }));
                     if (!png_decoder->initialize().is_error())
                         frame_or_error = png_decoder->frame(0);
                 }
             } else if (type == ClipboardType::BMP) {
                 if (Gfx::BMPImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
-                    auto bmp_decoder = Gfx::BMPImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
+                    auto bmp_decoder = TRY(Gfx::BMPImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }));
                     if (!bmp_decoder->initialize().is_error())
                         frame_or_error = bmp_decoder->frame(0);
                 }
             } else if (type == ClipboardType::JPEG) {
                 if (Gfx::JPEGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
-                    auto jpeg_decoder = Gfx::JPEGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
+                    auto jpeg_decoder = TRY(Gfx::JPEGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }));
                     if (!jpeg_decoder->initialize().is_error())
                         frame_or_error = jpeg_decoder->frame(0);
                 }
             } else {
                 dbgln("Unknown clipboard type: {}", (u32)type);
-                return;
+                return {};
             }
+
             auto const& bitmap = frame_or_error.value().image;
             m_clipboard_connection.set_bitmap(*bitmap);
         }
@@ -174,6 +178,8 @@ void SpiceAgent::on_message_received()
     default:
         dbgln("Unhandled message type {}", message->type);
     }
+
+    return {};
 }
 
 void SpiceAgent::read_n(void* dest, size_t n)

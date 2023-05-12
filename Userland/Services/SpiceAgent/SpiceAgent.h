@@ -119,7 +119,8 @@ private:
     RefPtr<Core::Notifier> m_notifier;
     ConnectionToClipboardServer& m_clipboard_connection;
 
-    void on_message_received();
+    ErrorOr<void> on_message_received();
+
     void send_message(ByteBuffer const& buffer);
     bool m_just_set_clip { false };
     void read_n(void* dest, size_t n);
