@@ -15,7 +15,6 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -43,8 +42,8 @@ struct FileMetadata {
     };
 };
 
-static int do_file_system_object_long(char const* path);
-static int do_file_system_object_short(char const* path);
+static int do_file_system_object_long(DeprecatedString const& path);
+static int do_file_system_object_short(DeprecatedString const& path);
 
 static bool print_names(char const* path, size_t longest_name, Vector<FileMetadata> const& files);
 
@@ -136,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         endgrent();
     }
 
-    auto do_file_system_object = [&](char const* path) {
+    auto do_file_system_object = [&](DeprecatedString const& path) {
         if (flag_long)
             return do_file_system_object_long(path);
         return do_file_system_object_short(path);
@@ -189,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (show_dir_separator) {
             printf("%s:\n", path.characters());
         }
-        auto rc = do_file_system_object(path.characters());
+        auto rc = do_file_system_object(path);
         if (rc != 0)
             status = rc;
         if (show_dir_separator && i != files.size() - 1) {
@@ -235,12 +234,13 @@ static DeprecatedString& hostname()
     return s_hostname;
 }
 
-static size_t print_name(const struct stat& st, DeprecatedString const& name, char const* path_for_link_resolution, char const* path_for_hyperlink)
+static size_t print_name(const struct stat& st, DeprecatedString const& name, Optional<StringView> path_for_link_resolution, StringView path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
-        auto full_path = Core::DeprecatedFile::real_path_for(path_for_hyperlink);
-        if (!full_path.is_null()) {
-            auto url = URL::create_with_file_scheme(full_path, {}, hostname());
+        auto full_path_or_error = FileSystem::real_path(path_for_hyperlink);
+        if (!full_path_or_error.is_error()) {
+            auto fullpath = full_path_or_error.release_value();
+            auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string(), {}, hostname());
             out("\033]8;;{}\033\\", url.serialize());
         }
     }
@@ -274,10 +274,10 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, ch
         printf("%s", end_color);
     }
     if (S_ISLNK(st.st_mode)) {
-        if (path_for_link_resolution) {
-            auto link_destination_or_error = Core::DeprecatedFile::read_link(path_for_link_resolution);
+        if (path_for_link_resolution.has_value()) {
+            auto link_destination_or_error = FileSystem::read_link(path_for_link_resolution.value());
             if (link_destination_or_error.is_error()) {
-                perror("readlink");
+                warnln("readlink of {} failed: {}", path_for_link_resolution.value(), link_destination_or_error.error());
             } else {
                 nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value());
             }
@@ -369,18 +369,18 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
 
     printf("  %s  ", Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string().characters());
 
-    print_name(st, name, path.characters(), path.characters());
+    print_name(st, name, path.view(), path);
 
     printf("\n");
     return true;
 }
 
-static int do_file_system_object_long(char const* path)
+static int do_file_system_object_long(DeprecatedString const& path)
 {
     if (flag_list_directories_only) {
         struct stat stat {
         };
-        int rc = lstat(path, &stat);
+        int rc = lstat(path.characters(), &stat);
         if (rc < 0)
             perror("lstat");
         if (print_filesystem_object(path, path, stat))
@@ -401,14 +401,14 @@ static int do_file_system_object_long(char const* path)
         if (error.code() == ENOTDIR) {
             struct stat stat {
             };
-            int rc = lstat(path, &stat);
+            int rc = lstat(path.characters(), &stat);
             if (rc < 0)
                 perror("lstat");
             if (print_filesystem_object(path, path, stat))
                 return 0;
             return 2;
         }
-        fprintf(stderr, "%s: %s\n", path, strerror(di.error().code()));
+        fprintf(stderr, "%s: %s\n", path.characters(), strerror(di.error().code()));
         return 1;
     }
 
@@ -422,7 +422,7 @@ static int do_file_system_object_long(char const* path)
             continue;
 
         StringBuilder builder;
-        builder.append({ path, strlen(path) });
+        builder.append(path);
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_deprecated_string();
@@ -443,19 +443,19 @@ static int do_file_system_object_long(char const* path)
     return 0;
 }
 
-static bool print_filesystem_object_short(char const* path, char const* name, size_t* nprinted)
+static bool print_filesystem_object_short(DeprecatedString const& path, char const* name, size_t* nprinted)
 {
     struct stat st;
-    int rc = lstat(path, &st);
+    int rc = lstat(path.characters(), &st);
     if (rc == -1) {
-        printf("lstat(%s) failed: %s\n", path, strerror(errno));
+        printf("lstat(%s) failed: %s\n", path.characters(), strerror(errno));
         return false;
     }
 
     if (flag_show_inode)
         printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
 
-    *nprinted = print_name(st, name, nullptr, path);
+    *nprinted = print_name(st, name, {}, path);
     return true;
 }
 
@@ -469,7 +469,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(name);
-        if (!print_filesystem_object_short(builder.to_deprecated_string().characters(), name.characters(), &nprinted))
+        if (!print_filesystem_object_short(builder.to_deprecated_string(), name.characters(), &nprinted))
             return 2;
         int offset = 0;
         if (terminal_columns > longest_name)
@@ -493,11 +493,11 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
     return printed_on_row;
 }
 
-int do_file_system_object_short(char const* path)
+int do_file_system_object_short(DeprecatedString const& path)
 {
     if (flag_list_directories_only) {
         size_t nprinted = 0;
-        bool status = print_filesystem_object_short(path, path, &nprinted);
+        bool status = print_filesystem_object_short(path, path.characters(), &nprinted);
         printf("\n");
         if (status)
             return 0;
@@ -515,13 +515,13 @@ int do_file_system_object_short(char const* path)
         auto error = di.error();
         if (error.code() == ENOTDIR) {
             size_t nprinted = 0;
-            bool status = print_filesystem_object_short(path, path, &nprinted);
+            bool status = print_filesystem_object_short(path, path.characters(), &nprinted);
             printf("\n");
             if (status)
                 return 0;
             return 2;
         }
-        fprintf(stderr, "%s: %s\n", path, strerror(di.error().code()));
+        fprintf(stderr, "%s: %s\n", path.characters(), strerror(di.error().code()));
         return 1;
     }
 
@@ -535,7 +535,7 @@ int do_file_system_object_short(char const* path)
             continue;
 
         StringBuilder builder;
-        builder.append({ path, strlen(path) });
+        builder.append(path);
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_deprecated_string();
@@ -550,7 +550,7 @@ int do_file_system_object_short(char const* path)
     }
     quick_sort(files, filemetadata_comparator);
 
-    if (print_names(path, longest_name, files))
+    if (print_names(path.characters(), longest_name, files))
         printf("\n");
     return 0;
 }
