@@ -12,10 +12,10 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <serenity.h>
 #include <spawn.h>
@@ -303,16 +303,22 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
         return;
 
     if (S_ISLNK(st.st_mode)) {
-        auto link_target_or_error = Core::DeprecatedFile::read_link(path);
+        auto link_target_or_error = FileSystem::read_link(path);
         if (link_target_or_error.is_error()) {
             perror("read_link");
             return;
         }
 
-        auto link_target = LexicalPath { link_target_or_error.release_value() };
+        auto link_target = LexicalPath { link_target_or_error.release_value().to_deprecated_string() };
         LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
-        auto real_path = Core::DeprecatedFile::real_path_for(absolute_link_target.string());
-        return for_each_handler_for_path(real_path, [&](auto const& handler) -> bool {
+        auto real_path_or_error = FileSystem::real_path(absolute_link_target.string());
+        if (real_path_or_error.is_error()) {
+            perror("real_path");
+            return;
+        }
+        auto real_path = real_path_or_error.release_value();
+
+        return for_each_handler_for_path(real_path.to_deprecated_string(), [&](auto const& handler) -> bool {
             return f(handler);
         });
     }
