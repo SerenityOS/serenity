@@ -14,7 +14,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
-#include <Kernel/Devices/HID/Controller.h>
+#include <Kernel/Bus/SerialIO/Controller.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
@@ -60,7 +60,7 @@ private:
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
 
-    SpinlockProtected<IntrusiveList<&HIDController::m_list_node>, LockRank::None> m_hid_controllers;
+    SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_hid_serial_io_controllers;
     Spinlock<LockRank::None> m_client_lock;
 };
 
