@@ -5,8 +5,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     for (auto path : paths) {
-        auto destination = TRY(Core::DeprecatedFile::read_link(path));
+        auto destination = TRY(FileSystem::read_link(path));
         out("{}", destination);
         if (!no_newline)
             outln();
