@@ -113,6 +113,30 @@ public:
             return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
             return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::high_u8>();
+        case X86::RegisterSPL:
+            return m_gpr[X86::RegisterESP].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterBPL:
+            return m_gpr[X86::RegisterEBP].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterSIL:
+            return m_gpr[X86::RegisterSIL].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterDIL:
+            return m_gpr[X86::RegisterEDI].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR8B:
+            return m_gpr[X86::RegisterR8].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR9B:
+            return m_gpr[X86::RegisterR9].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR10B:
+            return m_gpr[X86::RegisterR10].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR11B:
+            return m_gpr[X86::RegisterR11].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR12B:
+            return m_gpr[X86::RegisterR12].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR13B:
+            return m_gpr[X86::RegisterR13].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR14B:
+            return m_gpr[X86::RegisterR14].reference_to<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR15B:
+            return m_gpr[X86::RegisterR15].reference_to<&PartAddressableRegister::low_u8>();
         default:
             VERIFY_NOT_REACHED();
         }
@@ -145,6 +169,22 @@ public:
             return m_gpr[X86::RegisterSIL].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterDIL:
             return m_gpr[X86::RegisterEDI].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR8B:
+            return m_gpr[X86::RegisterR8].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR9B:
+            return m_gpr[X86::RegisterR9].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR10B:
+            return m_gpr[X86::RegisterR10].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR11B:
+            return m_gpr[X86::RegisterR11].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR12B:
+            return m_gpr[X86::RegisterR12].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR13B:
+            return m_gpr[X86::RegisterR13].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR14B:
+            return m_gpr[X86::RegisterR14].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterR15B:
+            return m_gpr[X86::RegisterR15].slice<&PartAddressableRegister::low_u8>();
         default:
             VERIFY_NOT_REACHED();
         }
