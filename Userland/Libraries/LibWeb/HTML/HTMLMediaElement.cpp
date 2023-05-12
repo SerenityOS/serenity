@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLAudioElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
+#include <LibWeb/HTML/HTMLSourceElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/MediaError.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
@@ -72,9 +73,10 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_error);
-    visitor.visit(m_fetch_controller);
     visitor.visit(m_video_tracks);
     visitor.visit(m_document_observer);
+    visitor.visit(m_source_element_selector);
+    visitor.visit(m_fetch_controller);
 }
 
 void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
@@ -435,10 +437,177 @@ enum class SelectMode {
     Children,
 };
 
+class SourceElementSelector final : public JS::Cell {
+    JS_CELL(SourceElementSelector, JS::Cell);
+
+public:
+    SourceElementSelector(JS::NonnullGCPtr<HTMLMediaElement> media_element, JS::NonnullGCPtr<HTMLSourceElement> candidate)
+        : m_media_element(media_element)
+        , m_candidate(candidate)
+    {
+    }
+
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(m_media_element);
+        visitor.visit(m_candidate);
+    }
+
+    WebIDL::ExceptionOr<void> process_candidate()
+    {
+        auto& vm = this->vm();
+
+        // 2. ⌛ Process candidate: If candidate does not have a src attribute, or if its src attribute's value is the
+        //    empty string, then end the synchronous section, and jump down to the failed with elements step below.
+        String candiate_src;
+        if (m_candidate->has_attribute(HTML::AttributeNames::src))
+            candiate_src = TRY_OR_THROW_OOM(vm, String::from_utf8(m_candidate->attribute(HTML::AttributeNames::src)));
+
+        if (candiate_src.is_empty()) {
+            TRY(failed_with_elements());
+            return {};
+        }
+
+        // 3. ⌛ Let urlString and urlRecord be the resulting URL string and the resulting URL record, respectively, that
+        //    would have resulted from parsing the URL specified by candidate's src attribute's value relative to the
+        //    candidate's node document when the src attribute was last changed.
+        auto url_record = m_candidate->document().parse_url(candiate_src);
+        auto url_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
+
+        // 4. ⌛ If urlString was not obtained successfully, then end the synchronous section, and jump down to the failed
+        //    with elements step below.
+        if (!url_record.is_valid()) {
+            TRY(failed_with_elements());
+            return {};
+        }
+
+        // FIXME: 5. ⌛ If candidate has a type attribute whose value, when parsed as a MIME type (including any codecs described
+        //           by the codecs parameter, for types that define that parameter), represents a type that the user agent knows
+        //           it cannot render, then end the synchronous section, and jump down to the failed with elements step below.
+
+        // 6. ⌛ Set the currentSrc attribute to urlString.
+        m_media_element->m_current_src = move(url_string);
+
+        // 7. End the synchronous section, continuing the remaining steps in parallel.
+
+        // 8. Run the resource fetch algorithm with urlRecord. If that algorithm returns without aborting this one, then
+        //    the load failed.
+        TRY(m_media_element->fetch_resource(url_record, [this](auto) {
+            failed_with_elements().release_value_but_fixme_should_propagate_errors();
+        }));
+
+        return {};
+    }
+
+private:
+    WebIDL::ExceptionOr<void> failed_with_elements()
+    {
+        // 9. Failed with elements: Queue a media element task given the media element to fire an event named error at candidate.
+        m_media_element->queue_a_media_element_task([this]() {
+            m_candidate->dispatch_event(DOM::Event::create(m_candidate->realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+        });
+
+        // FIXME: 10. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm until
+        //            the algorithm says the synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
+
+        // 11. ⌛ Forget the media element's media-resource-specific tracks.
+        m_media_element->forget_media_resource_specific_tracks();
+
+        TRY(find_next_candidate(m_candidate));
+        return {};
+    }
+
+    WebIDL::ExceptionOr<void> find_next_candidate(JS::NonnullGCPtr<DOM::Node> previous_candidate)
+    {
+        // 12. ⌛ Find next candidate: Let candidate be null.
+        JS::GCPtr<HTMLSourceElement> candidate;
+
+        // 13. ⌛ Search loop: If the node after pointer is the end of the list, then jump to the waiting step below.
+        auto* next_sibling = previous_candidate->next_sibling();
+        if (!next_sibling) {
+            TRY(waiting(previous_candidate));
+            return {};
+        }
+
+        // 14. ⌛ If the node after pointer is a source element, let candidate be that element.
+        if (is<HTMLSourceElement>(next_sibling))
+            candidate = static_cast<HTMLSourceElement*>(next_sibling);
+
+        // 15. ⌛ Advance pointer so that the node before pointer is now the node that was after pointer, and the node
+        //     after pointer is the node after the node that used to be after pointer, if any.
+
+        // 16. ⌛ If candidate is null, jump back to the search loop step. Otherwise, jump back to the process candidate step.
+        if (!candidate) {
+            TRY(find_next_candidate(*next_sibling));
+            return {};
+        }
+
+        m_candidate = *candidate;
+        TRY(process_candidate());
+
+        return {};
+    }
+
+    WebIDL::ExceptionOr<void> waiting(JS::NonnullGCPtr<DOM::Node> previous_candidate)
+    {
+        // 17. ⌛ Waiting: Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
+        m_media_element->m_network_state = HTMLMediaElement::NetworkState::NoSource;
+
+        // 18. ⌛ Set the element's show poster flag to true.
+        m_media_element->set_show_poster(true);
+
+        // 19. ⌛ Queue a media element task given the media element to set the element's delaying-the-load-event flag
+        //     to false. This stops delaying the load event.
+        m_media_element->queue_a_media_element_task([this]() {
+            m_media_element->m_delaying_the_load_event.clear();
+        });
+
+        // 20. End the synchronous section, continuing the remaining steps in parallel.
+
+        // 21. Wait until the node after pointer is a node other than the end of the list. (This step might wait forever.)
+        TRY(wait_for_next_candidate(previous_candidate));
+
+        return {};
+    }
+
+    WebIDL::ExceptionOr<void> wait_for_next_candidate(JS::NonnullGCPtr<DOM::Node> previous_candidate)
+    {
+        // FIXME: We implement the "waiting" by constantly queueing a microtask to check if the previous candidate now
+        //        has a sibling. It might be nicer for the DOM tree to just tell us when the sibling becomes available.
+        if (previous_candidate->next_sibling() == nullptr) {
+            queue_a_microtask(&m_media_element->document(), [this, previous_candidate]() {
+                wait_for_next_candidate(previous_candidate).release_value_but_fixme_should_propagate_errors();
+            });
+
+            return {};
+        }
+
+        // FIXME: 22. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm until
+        //            the algorithm says the synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
+
+        // 23. ⌛ Set the element's delaying-the-load-event flag back to true (this delays the load event again, in case
+        //     it hasn't been fired yet).
+        m_media_element->m_delaying_the_load_event.emplace(m_media_element->document());
+
+        // 24. ⌛ Set the networkState back to NETWORK_LOADING.
+        m_media_element->m_network_state = HTMLMediaElement::NetworkState::Loading;
+
+        // 25. ⌛ Jump back to the find next candidate step above.
+        TRY(find_next_candidate(previous_candidate));
+
+        return {};
+    }
+
+    JS::NonnullGCPtr<HTMLMediaElement> m_media_element;
+    JS::NonnullGCPtr<HTMLSourceElement> m_candidate;
+};
+
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 {
-    auto& vm = this->vm();
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
 
     // 1. Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_network_state = NetworkState::NoSource;
@@ -454,18 +623,22 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
     // FIXME: 5. ⌛ If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
 
-    auto mode = SelectMode::Children;
+    Optional<SelectMode> mode;
+    JS::GCPtr<HTMLSourceElement> candidate;
 
     // 6. FIXME: ⌛ If the media element has an assigned media provider object, then let mode be object.
-    //
-    //    ⌛ Otherwise, if the media element has no assigned media provider object but has a src attribute, then let mode be attribute.
+
+    // ⌛ Otherwise, if the media element has no assigned media provider object but has a src attribute, then let mode be attribute.
     if (has_attribute(HTML::AttributeNames::src)) {
         mode = SelectMode::Attribute;
     }
-    //    FIXME: ⌛ Otherwise, if the media element does not have an assigned media provider object and does not have a src attribute, but does have
-    //            a source element child, then let mode be children and let candidate be the first such source element child in tree order.
-    //
-    //    ⌛ Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child:
+    // ⌛ Otherwise, if the media element does not have an assigned media provider object and does not have a src attribute, but does have
+    // a source element child, then let mode be children and let candidate be the first such source element child in tree order.
+    else if (auto* source_element = first_child_of_type<HTMLSourceElement>()) {
+        mode = SelectMode::Children;
+        candidate = source_element;
+    }
+    // ⌛ Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child:
     else {
         // 1. ⌛ Set the networkState to NETWORK_EMPTY.
         m_network_state = NetworkState::Empty;
@@ -482,11 +655,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
     // 8. ⌛ Queue a media element task given the media element to fire an event named loadstart at the media element.
     queue_a_media_element_task([this] {
-        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::loadstart).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadstart).release_value_but_fixme_should_propagate_errors());
     });
 
     // 9. Run the appropriate steps from the following list:
-    switch (mode) {
+    switch (*mode) {
     // -> If mode is object
     case SelectMode::Object:
         // FIXME: 1. ⌛ Set the currentSrc attribute to the empty string.
@@ -550,55 +723,31 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
     // -> Otherwise (mode is children)
     case SelectMode::Children:
-        // FIXME: 1. ⌛ Let pointer be a position defined by two adjacent nodes in the media element's child list, treating the start of the list (before the
-        //           first child in the list, if any) and end of the list (after the last child in the list, if any) as nodes in their own right. One node is
-        //           the node before pointer, and the other node is the node after pointer. Initially, let pointer be the position between the candidate node
-        //           and the next node, if there are any, or the end of the list, if it is the last node.
-        //
-        //           As nodes are inserted and removed into the media element, pointer must be updated as follows:
-        //
-        //           If a new node is inserted between the two nodes that define pointer
-        //               Let pointer be the point between the node before pointer and the new node. In other words, insertions at pointer go after pointer.
-        //           If the node before pointer is removed
-        //               Let pointer be the point between the node after pointer and the node before the node after pointer. In other words, pointer doesn't
-        //               move relative to the remaining nodes.
-        //           If the node after pointer is removed
-        //               Let pointer be the point between the node before pointer and the node after the node before pointer. Just as with the previous case,
-        //               pointer doesn't move relative to the remaining nodes.
-        //           Other changes don't affect pointer.
+        VERIFY(candidate);
 
-        // FIXME: 2. ⌛ Process candidate: If candidate does not have a src attribute, or if its src attribute's value is the empty string, then end the
-        //           synchronous section, and jump down to the failed with elements step below.
-        // FIXME: 3. ⌛ Let urlString and urlRecord be the resulting URL string and the resulting URL record, respectively, that would have resulted from parsing
-        //           the URL specified by candidate's src attribute's value relative to the candidate's node document when the src attribute was last changed.
-        // FIXME: 4. ⌛ If urlString was not obtained successfully, then end the synchronous section, and jump down to the failed with elements step below.
-        // FIXME: 5. ⌛ If candidate has a type attribute whose value, when parsed as a MIME type (including any codecs described by the codecs parameter, for
-        //           types that define that parameter), represents a type that the user agent knows it cannot render, then end the synchronous section, and
-        //           jump down to the failed with elements step below.
-        // FIXME: 6. ⌛ Set the currentSrc attribute to urlString.
-        // FIXME: 7. End the synchronous section, continuing the remaining steps in parallel.
-        // FIXME: 8. Run the resource fetch algorithm with urlRecord. If that algorithm returns without aborting this one, then the load failed.
-        // FIXME: 9. Failed with elements: Queue a media element task given the media element to fire an event named error at candidate.
-        // FIXME: 10. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm until the algorithm says the
-        //            synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
-        // FIXME: 11. ⌛ Forget the media element's media-resource-specific tracks.
-        // FIXME: 12. ⌛ Find next candidate: Let candidate be null.
-        // FIXME: 13. ⌛ Search loop: If the node after pointer is the end of the list, then jump to the waiting step below.
-        // FIXME: 14. ⌛ If the node after pointer is a source element, let candidate be that element.
-        // FIXME: 15. ⌛ Advance pointer so that the node before pointer is now the node that was after pointer, and the node after pointer is the node after
-        //            the node that used to be after pointer, if any.
-        // FIXME: 16. ⌛ If candidate is null, jump back to the search loop step. Otherwise, jump back to the process candidate step.
-        // FIXME: 17. ⌛ Waiting: Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
-        // FIXME: 18. ⌛ Set the element's show poster flag to true.
-        // FIXME: 19. ⌛ Queue a media element task given the media element to set the element's delaying-the-load-event flag to false. This stops delaying the
-        //            load event.
-        // FIXME: 20. End the synchronous section, continuing the remaining steps in parallel.
-        // FIXME: 21. Wait until the node after pointer is a node other than the end of the list. (This step might wait forever.)
-        // FIXME: 22. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm until the algorithm says the
-        //            synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
-        // FIXME: 23. ⌛ Set the element's delaying-the-load-event flag back to true (this delays the load event again, in case it hasn't been fired yet).
-        // FIXME: 24. ⌛ Set the networkState back to NETWORK_LOADING.
-        // FIXME: 25. ⌛ Jump back to the find next candidate step above.
+        // 1. ⌛ Let pointer be a position defined by two adjacent nodes in the media element's child list, treating the start of the list (before the
+        //    first child in the list, if any) and end of the list (after the last child in the list, if any) as nodes in their own right. One node is
+        //    the node before pointer, and the other node is the node after pointer. Initially, let pointer be the position between the candidate node
+        //    and the next node, if there are any, or the end of the list, if it is the last node.
+        //
+        //    As nodes are inserted and removed into the media element, pointer must be updated as follows:
+        //
+        //    If a new node is inserted between the two nodes that define pointer
+        //        Let pointer be the point between the node before pointer and the new node. In other words, insertions at pointer go after pointer.
+        //    If the node before pointer is removed
+        //        Let pointer be the point between the node after pointer and the node before the node after pointer. In other words, pointer doesn't
+        //        move relative to the remaining nodes.
+        //    If the node after pointer is removed
+        //        Let pointer be the point between the node before pointer and the node after the node before pointer. Just as with the previous case,
+        //        pointer doesn't move relative to the remaining nodes.
+        //    Other changes don't affect pointer.
+
+        // NOTE: We do not bother with maintaining this pointer. We inspect the DOM tree on the fly, rather than dealing
+        //       with the headache of auto-updating this pointer as the DOM changes.
+
+        m_source_element_selector = TRY(vm.heap().allocate<SourceElementSelector>(realm, *this, *candidate));
+        TRY(m_source_element_selector->process_candidate());
+
         break;
     }
 
@@ -844,6 +993,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
 
         auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, event_init));
         m_video_tracks->dispatch_event(event);
+
+        // AD-HOC: After selecting a track, we do not need the source element selector anymore.
+        m_source_element_selector = nullptr;
     }
 
     // -> Once enough of the media data has been fetched to determine the duration of the media resource, its dimensions, and other metadata
