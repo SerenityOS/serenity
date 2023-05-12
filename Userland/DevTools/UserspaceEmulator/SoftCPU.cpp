@@ -2195,7 +2195,11 @@ void SoftCPU::MOV_reg32_RM32_sign_extend(const X86::Instruction& insn)
 
 void SoftCPU::MOV_reg32_imm32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = shadow_wrap_as_initialized(insn.imm32());
+    if (insn.has_rex_w()) {
+        gpr64(insn.reg64()) = shadow_wrap_as_initialized(insn.imm64());
+    } else {
+        gpr32(insn.reg32()) = shadow_wrap_as_initialized(insn.imm32());
+    }
 }
 
 void SoftCPU::MOV_reg8_RM8(const X86::Instruction& insn)
@@ -2242,15 +2246,28 @@ void SoftCPU::MUL_RM16(const X86::Instruction& insn)
 
 void SoftCPU::MUL_RM32(const X86::Instruction& insn)
 {
-    auto src = insn.modrm().read32(*this, insn);
-    u64 result = (u64)eax().value() * (u64)src.value();
-    auto original_eax = eax();
-    set_eax(shadow_wrap_with_taint_from<u32>(result, src, original_eax));
-    set_edx(shadow_wrap_with_taint_from<u32>(result >> 32, src, original_eax));
-    taint_flags_from(src, original_eax);
 
-    set_cf(edx().value() != 0);
-    set_of(edx().value() != 0);
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        auto src = insn.modrm().read64(*this, insn);
+        u128 result = (u128)rax().value() * (u128)src.value();
+        auto original_rax = rax();
+        set_rax(shadow_wrap_with_taint_from<u64>((u64)result, src, original_rax));
+        set_rdx(shadow_wrap_with_taint_from<u64>((u64)(result >> 64), src, original_rax));
+        taint_flags_from(src, original_rax);
+
+        set_cf(rdx().value() != 0);
+        set_of(rdx().value() != 0);
+    } else {
+        auto src = insn.modrm().read32(*this, insn);
+        u64 result = (u64)eax().value() * (u64)src.value();
+        auto original_eax = eax();
+        set_eax(shadow_wrap_with_taint_from<u32>(result, src, original_eax));
+        set_edx(shadow_wrap_with_taint_from<u32>(result >> 32, src, original_eax));
+        taint_flags_from(src, original_eax);
+
+        set_cf(edx().value() != 0);
+        set_of(edx().value() != 0);
+    }
 }
 
 void SoftCPU::MUL_RM8(const X86::Instruction& insn)
