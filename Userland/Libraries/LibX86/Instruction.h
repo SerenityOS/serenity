@@ -800,7 +800,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
     auto default_segment = SegmentRegister::DS;
     FlatPtr offset = 0;
 
-    switch (rm()) {
+    switch (rm() & 7) {
     case 0 ... 3:
     case 6 ... 7:
         if (processor_mode == ProcessorMode::Long && !address_size_override)
