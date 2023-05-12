@@ -40,6 +40,7 @@ public:
     WebIDL::ExceptionOr<void> set_decoder_error(String error_message);
 
     String const& current_src() const { return m_current_src; }
+    WebIDL::ExceptionOr<void> select_resource();
 
     enum class NetworkState : u16 {
         Empty,
@@ -111,7 +112,6 @@ private:
     Task::Source media_element_event_task_source() const { return m_media_element_event_task_source.source; }
 
     WebIDL::ExceptionOr<void> load_element();
-    WebIDL::ExceptionOr<void> select_resource();
     WebIDL::ExceptionOr<void> fetch_resource(AK::URL const&, Function<void(String)> failure_callback);
     static bool verify_response(JS::NonnullGCPtr<Fetch::Infrastructure::Response>, ByteRange const&);
     WebIDL::ExceptionOr<void> process_media_data(Function<void(String)> failure_callback);

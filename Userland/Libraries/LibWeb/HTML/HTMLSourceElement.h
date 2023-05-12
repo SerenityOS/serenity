@@ -20,6 +20,9 @@ private:
     HTMLSourceElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+    virtual void inserted() override;
+    virtual void removed_from(DOM::Node*) override;
 };
 
 }
