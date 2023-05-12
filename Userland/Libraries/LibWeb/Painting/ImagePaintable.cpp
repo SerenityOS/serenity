@@ -61,17 +61,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             if (alt.is_empty())
                 alt = image_element.src();
             context.painter().draw_text(enclosing_rect, alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
-        } else if (is<HTML::HTMLImageElement>(layout_box().dom_node())) {
-            auto& image_element = static_cast<HTML::HTMLImageElement const&>(layout_box().dom_node());
-            auto& image_request = image_element.current_request();
-            if (auto data = image_request.image_data()) {
-                auto bitmap = data->bitmap(image_element.current_frame_index());
-                VERIFY(bitmap);
-                auto image_rect = context.rounded_device_rect(absolute_rect());
-                ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
-                context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
-            }
-        } else if (auto bitmap = layout_box().image_loader().bitmap(layout_box().image_loader().current_frame_index())) {
+        } else if (auto bitmap = layout_box().image_provider().current_image_bitmap()) {
             auto image_rect = context.rounded_device_rect(absolute_rect());
             ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
@@ -81,7 +71,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
 
 void ImagePaintable::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewport_rect)
 {
-    layout_box().image_loader().set_visible_in_viewport(viewport_rect.intersects(absolute_rect()));
+    const_cast<Layout::ImageProvider&>(layout_box().image_provider()).set_visible_in_viewport(viewport_rect.intersects(absolute_rect()));
 }
 
 }

@@ -9,6 +9,7 @@
 #include <LibCore/MimeData.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/Loader/ImageResource.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>

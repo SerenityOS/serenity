@@ -76,7 +76,7 @@ JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS:
         return nullptr;
     case Representation::Image:
         if (m_image_loader.has_value() && m_image_loader->has_image())
-            return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *m_image_loader);
+            return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *this);
         break;
     default:
         break;
@@ -348,6 +348,18 @@ i32 HTMLObjectElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+RefPtr<Gfx::Bitmap const> HTMLObjectElement::current_image_bitmap() const
+{
+    if (m_image_loader.has_value())
+        return m_image_loader->bitmap(m_image_loader->current_frame_index());
+    return nullptr;
+}
+
+void HTMLObjectElement::set_visible_in_viewport(bool)
+{
+    // FIXME: Loosen grip on image data when it's not visible, e.g via volatile memory.
 }
 
 }

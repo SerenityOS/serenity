@@ -14,13 +14,14 @@
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/SourceSet.h>
-#include <LibWeb/Loader/ImageLoader.h>
+#include <LibWeb/Layout/ImageProvider.h>
 
 namespace Web::HTML {
 
 class HTMLImageElement final
     : public HTMLElement
-    , public FormAssociatedElement {
+    , public FormAssociatedElement
+    , public Layout::ImageProvider {
     WEB_PLATFORM_OBJECT(HTMLImageElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement)
 
@@ -76,6 +77,10 @@ public:
     // https://html.spec.whatwg.org/multipage/images.html#upgrade-the-pending-request-to-the-current-request
     void upgrade_pending_request_to_current_request();
 
+    // ^Layout::ImageProvider
+    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap() const override;
+    virtual void set_visible_in_viewport(bool) override;
+
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 
@@ -93,8 +98,6 @@ private:
     RefPtr<Core::Timer> m_animation_timer;
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
-
-    ImageLoader m_image_loader;
 
     Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
 

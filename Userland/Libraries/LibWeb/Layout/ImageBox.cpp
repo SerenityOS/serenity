@@ -13,69 +13,27 @@
 
 namespace Web::Layout {
 
-ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, ImageLoader const& image_loader)
+ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, ImageProvider const& image_provider)
     : ReplacedBox(document, element, move(style))
-    , m_image_loader(image_loader)
+    , m_image_provider(image_provider)
 {
 }
 
 ImageBox::~ImageBox() = default;
 
-int ImageBox::preferred_width() const
-{
-    return dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
-}
-
-int ImageBox::preferred_height() const
-{
-    return dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
-}
-
 void ImageBox::prepare_for_replaced_layout()
 {
-    HTML::ImageRequest const* image_request = nullptr;
-    if (is<HTML::HTMLImageElement>(dom_node())) {
-        image_request = &static_cast<HTML::HTMLImageElement const&>(dom_node()).current_request();
-    }
+    auto bitmap = m_image_provider.current_image_bitmap();
 
-    if (image_request) {
-        if (!image_request->is_available()) {
-            set_intrinsic_width(0);
-            set_intrinsic_height(0);
-        } else if (auto data = image_request->image_data()) {
-            auto width = data->natural_width();
-            if (width.has_value()) {
-                set_intrinsic_width(width.value());
-            }
-            auto height = data->natural_height();
-            if (height.has_value()) {
-                set_intrinsic_height(height.value());
-            }
-
-            if (width.has_value() && height.has_value() && height.value() != 0) {
-                set_intrinsic_aspect_ratio(static_cast<float>(width.value()) / static_cast<float>(height.value()));
-            } else {
-                set_intrinsic_aspect_ratio({});
-            }
-        }
+    if (!bitmap) {
+        set_intrinsic_width(0);
+        set_intrinsic_height(0);
     } else {
-        if (!m_image_loader.has_loaded_or_failed()) {
-            set_intrinsic_width(0);
-            set_intrinsic_height(0);
-        } else {
-            if (m_image_loader.width()) {
-                set_intrinsic_width(m_image_loader.width());
-            }
-            if (m_image_loader.height()) {
-                set_intrinsic_height(m_image_loader.height());
-            }
-
-            if (m_image_loader.width() && m_image_loader.height()) {
-                set_intrinsic_aspect_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
-            } else {
-                set_intrinsic_aspect_ratio({});
-            }
-        }
+        auto width = bitmap->width();
+        auto height = bitmap->height();
+        set_intrinsic_width(width);
+        set_intrinsic_height(height);
+        set_intrinsic_aspect_ratio(static_cast<float>(width) / static_cast<float>(height));
     }
 
     if (renders_as_alt_text()) {
