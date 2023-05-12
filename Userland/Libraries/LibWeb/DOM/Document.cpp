@@ -811,7 +811,7 @@ AK::URL Document::base_url() const
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
-AK::URL Document::parse_url(DeprecatedString const& url) const
+AK::URL Document::parse_url(StringView url) const
 {
     // FIXME: Pass in document's character encoding.
     return base_url().complete_url(url);
