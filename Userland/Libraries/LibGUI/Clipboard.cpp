@@ -150,7 +150,7 @@ ErrorOr<JsonObject> Clipboard::DataAndType::to_json() const
 void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
     if (data.is_empty()) {
-        connection().async_set_clipboard_data({}, type, metadata);
+        connection().async_set_clipboard_data({}, type, metadata.clone().release_value_but_fixme_should_propagate_errors());
         return;
     }
 
@@ -161,18 +161,18 @@ void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashM
     }
     auto buffer = buffer_or_error.release_value();
     memcpy(buffer.data<void>(), data.data(), data.size());
-    connection().async_set_clipboard_data(move(buffer), type, metadata);
+    connection().async_set_clipboard_data(move(buffer), type, metadata.clone().release_value_but_fixme_should_propagate_errors());
 }
 
 void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap, HashMap<DeprecatedString, DeprecatedString> const& additional_metadata)
 {
-    HashMap<DeprecatedString, DeprecatedString> metadata(additional_metadata);
+    HashMap<DeprecatedString, DeprecatedString> metadata = additional_metadata.clone().release_value_but_fixme_should_propagate_errors();
     metadata.set("width", DeprecatedString::number(bitmap.width()));
     metadata.set("height", DeprecatedString::number(bitmap.height()));
     metadata.set("scale", DeprecatedString::number(bitmap.scale()));
     metadata.set("format", DeprecatedString::number((int)bitmap.format()));
     metadata.set("pitch", DeprecatedString::number(bitmap.pitch()));
-    set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);
+    set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", move(metadata));
 }
 
 void Clipboard::clear()
