@@ -10,6 +10,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/UserTiming/PerformanceMark.h>
+#include <LibWeb/UserTiming/PerformanceMeasure.h>
 
 namespace Web::HighResolutionTime {
 
@@ -26,6 +27,8 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> mark(String const& mark_name, UserTiming::PerformanceMarkOptions const& mark_options = {});
     void clear_marks(Optional<String> mark_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> measure(String const& measure_name, Variant<String, UserTiming::PerformanceMeasureOptions> const& start_or_measure_options, Optional<String> end_mark);
+    void clear_measures(Optional<String> measure_name);
 
     WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries() const;
     WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries_by_type(String const& type) const;
@@ -36,6 +39,9 @@ private:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+    WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> convert_name_to_timestamp(JS::Realm& realm, String const& name);
+    WebIDL::ExceptionOr<HighResolutionTime::DOMHighResTimeStamp> convert_mark_to_timestamp(JS::Realm& realm, Variant<String, HighResolutionTime::DOMHighResTimeStamp> mark);
 
     JS::NonnullGCPtr<HTML::Window> m_window;
     JS::GCPtr<NavigationTiming::PerformanceTiming> m_timing;

@@ -1,0 +1,13 @@
+#import <PerformanceTimeline/PerformanceEntry.idl>
+
+[Exposed=(Window,Worker), UseNewAKString]
+interface PerformanceMeasure : PerformanceEntry {
+    readonly attribute any detail;
+};
+
+dictionary PerformanceMeasureOptions {
+    any detail;
+    (DOMString or DOMHighResTimeStamp) start;
+    DOMHighResTimeStamp duration;
+    (DOMString or DOMHighResTimeStamp) end;
+};

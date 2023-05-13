@@ -567,6 +567,7 @@ class URLSearchParamsIterator;
 
 namespace Web::UserTiming {
 class PerformanceMark;
+class PerformanceMeasure;
 }
 
 namespace Web::WebAssembly {
