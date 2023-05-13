@@ -52,3 +52,16 @@ TEST_CASE(wrapped_count_trailing_zeroes)
     EXPECT_EQ(count_trailing_zeroes(static_cast<u64>(1)), 0);
     EXPECT_EQ(count_trailing_zeroes(static_cast<u64>(2)), 1);
 }
+
+TEST_CASE(wrapped_count_required_bits)
+{
+    EXPECT_EQ(count_required_bits(0b0u), 1ul);
+    EXPECT_EQ(count_required_bits(0b1u), 1ul);
+    EXPECT_EQ(count_required_bits(0b10u), 2ul);
+    EXPECT_EQ(count_required_bits(0b11u), 2ul);
+    EXPECT_EQ(count_required_bits(0b100u), 3ul);
+    EXPECT_EQ(count_required_bits(0b111u), 3ul);
+    EXPECT_EQ(count_required_bits(0b1000u), 4ul);
+    EXPECT_EQ(count_required_bits(0b1111u), 4ul);
+    EXPECT_EQ(count_required_bits(NumericLimits<u32>::max()), sizeof(u32) * 8);
+}

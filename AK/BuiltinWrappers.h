@@ -150,12 +150,23 @@ inline constexpr int bit_scan_forward(IntType value)
 #endif
 }
 
+// Counts the minimum number of bits required to represent the value (i.e. ignoring leading null bits).
+template<Unsigned IntType>
+inline constexpr size_t count_required_bits(IntType value)
+{
+    if (value == 0)
+        return 1;
+
+    return 8 * sizeof(value) - count_leading_zeroes(value);
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::bit_scan_forward;
 using AK::count_leading_zeroes;
 using AK::count_leading_zeroes_safe;
+using AK::count_required_bits;
 using AK::count_trailing_zeroes;
 using AK::count_trailing_zeroes_safe;
 using AK::popcount;
