@@ -129,7 +129,10 @@ public:
     void resize(Gfx::IntSize size) { set_rect({ position(), size }); }
 
     void center_on_screen();
+    void constrain_to_desktop();
+
     void center_within(Window const&);
+    void center_within(Gfx::IntRect const&);
 
     virtual void event(Core::Event&) override;
 

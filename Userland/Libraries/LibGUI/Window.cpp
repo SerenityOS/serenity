@@ -24,6 +24,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -317,6 +318,27 @@ void Window::center_within(Window const& other)
     if (this == &other)
         return;
     set_rect(rect().centered_within(other.rect()));
+}
+
+void Window::center_within(Gfx::IntRect const& other)
+{
+    set_rect(rect().centered_within(other));
+}
+
+void Window::constrain_to_desktop()
+{
+    auto desktop_rect = Desktop::the().rect().shrunken(0, 0, Desktop::the().taskbar_height(), 0);
+    auto titlebar = Application::the()->palette().window_title_height();
+    auto border = Application::the()->palette().window_border_thickness();
+    auto constexpr margin = 1;
+
+    auto framed_rect = rect().inflated(border + titlebar + margin, border, border, border);
+    if (desktop_rect.contains(framed_rect))
+        return;
+
+    auto constrained = framed_rect.constrained_to(desktop_rect);
+    constrained.shrink(border + titlebar + margin, border, border, border);
+    set_rect(constrained.x(), constrained.y(), rect().width(), rect().height());
 }
 
 void Window::set_window_type(WindowType window_type)
