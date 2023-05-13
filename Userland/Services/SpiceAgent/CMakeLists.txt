@@ -5,6 +5,8 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    Message.cpp
+    MessageHeader.cpp
     SpiceAgent.cpp
     ConnectionToClipboardServer.cpp
 )
