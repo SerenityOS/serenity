@@ -85,7 +85,7 @@ int File::open_mode_to_options(OpenMode mode)
         flags |= O_EXCL;
     if (!has_flag(mode, OpenMode::KeepOnExec))
         flags |= O_CLOEXEC;
-    if (!has_flag(mode, OpenMode::Nonblocking))
+    if (has_flag(mode, OpenMode::Nonblocking))
         flags |= O_NONBLOCK;
     return flags;
 }
