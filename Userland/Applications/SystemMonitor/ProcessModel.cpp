@@ -10,7 +10,6 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NumberFormat.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
@@ -31,16 +30,18 @@ ProcessModel::ProcessModel()
     VERIFY(!s_the);
     s_the = this;
 
-    auto file = Core::DeprecatedFile::construct("/sys/kernel/cpuinfo");
-    if (file->open(Core::OpenMode::ReadOnly)) {
-        auto buffer = file->read_all();
-        auto json = JsonValue::from_string({ buffer });
-        auto cpuinfo_array = json.value().as_array();
-        cpuinfo_array.for_each([&](auto& value) {
-            auto& cpu_object = value.as_object();
-            auto cpu_id = cpu_object.get_u32("processor"sv).value();
-            m_cpus.append(make<CpuInfo>(cpu_id));
-        });
+    auto file_or_error = Core::File::open("/sys/kernel/cpuinfo"sv, Core::File::OpenMode::Read);
+    if (!file_or_error.is_error()) {
+        auto buffer_or_error = file_or_error.value()->read_until_eof();
+        if (!buffer_or_error.is_error()) {
+            auto json = JsonValue::from_string({ buffer_or_error.value() });
+            auto cpuinfo_array = json.value().as_array();
+            cpuinfo_array.for_each([&](auto& value) {
+                auto& cpu_object = value.as_object();
+                auto cpu_id = cpu_object.get_u32("processor"sv).value();
+                m_cpus.append(make<CpuInfo>(cpu_id));
+            });
+        }
     }
 
     if (m_cpus.is_empty())
@@ -442,7 +443,7 @@ static DeprecatedString read_command_line(pid_t pid)
 void ProcessModel::update()
 {
     auto previous_tid_count = m_threads.size();
-    auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
+    auto all_processes = Core::ProcessStatisticsReader::get_all(true);
 
     HashTable<int> live_tids;
     u64 total_time_scheduled_diff = 0;
