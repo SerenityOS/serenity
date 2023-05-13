@@ -333,6 +333,42 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(this, &QWidget::customContextMenuRequested, this, &BrowserWindow::show_context_menu);
 
+    m_context_menu = make<QMenu>("Context menu", this);
+    auto* inspect_element_action = new QAction("&Inspect Element", this);
+    connect(inspect_element_action, &QAction::triggered, this, [this] {
+        if (m_current_tab)
+            m_current_tab->view().show_inspector(WebContentView::InspectorTarget::HoveredElement);
+    });
+    m_go_back_action = make<QAction>("Go Back");
+    connect(m_go_back_action, &QAction::triggered, this, [this] {
+        if (m_current_tab)
+            m_current_tab->back();
+    });
+    m_go_forward_action = make<QAction>("Go Forward");
+    connect(m_go_forward_action, &QAction::triggered, this, [this] {
+        if (m_current_tab)
+            m_current_tab->forward();
+    });
+    m_reload_action = make<QAction>("&Reload");
+    connect(m_reload_action, &QAction::triggered, this, [this] {
+        if (m_current_tab)
+            m_current_tab->reload();
+    });
+    m_context_menu->addAction(m_go_back_action);
+    m_context_menu->addAction(m_go_forward_action);
+    m_context_menu->addAction(m_reload_action);
+    m_context_menu->addSeparator();
+    m_context_menu->addAction(copy_action);
+    m_context_menu->addAction(select_all_action);
+    m_context_menu->addSeparator();
+    m_context_menu->addAction(view_source_action);
+    m_context_menu->addAction(inspect_element_action);
+    m_go_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
+    m_go_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
+    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
+    m_go_back_action->setEnabled(false);
+    m_go_forward_action->setEnabled(false);
+
     new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
 
     setCentralWidget(m_tabs_container);
@@ -340,16 +376,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
 void BrowserWindow::show_context_menu(QPoint const& point)
 {
-    QMenu contextMenu("Context menu", this);
-
-    QAction inspect_action("&Inspect Element", this);
-    connect(&inspect_action, &QAction::triggered, this, [this] {
-        if (!m_current_tab)
-            return;
-        m_current_tab->view().show_inspector(WebContentView::InspectorTarget::HoveredElement);
-    });
-    contextMenu.addAction(&inspect_action);
-    contextMenu.exec(mapToGlobal(point));
+    m_context_menu->exec(mapToGlobal(point));
 }
 
 void BrowserWindow::set_current_tab(Tab* tab)
