@@ -1487,11 +1487,10 @@ static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(B
 static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_declarator(Bytecode::Generator& generator, VariableDeclarator const& declarator, VariableDeclaration const& declaration)
 {
     auto initialization_mode = declaration.is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
-    auto environment_mode = declaration.is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
 
     return declarator.target().visit(
         [&](NonnullRefPtr<Identifier const> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode);
             return {};
         },
         [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
