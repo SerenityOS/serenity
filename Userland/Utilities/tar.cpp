@@ -5,6 +5,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DeprecatedString.h>
+#include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
@@ -13,7 +15,6 @@
 #include <LibCompress/Lzma.h>
 #include <LibCompress/Xz.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -166,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                DeprecatedString absolute_path = Core::DeprecatedFile::absolute_path(filename);
+                DeprecatedString absolute_path = TRY(FileSystem::absolute_path(filename)).to_deprecated_string();
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -242,15 +243,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Archive::TarOutputStream tar_stream(move(output_stream));
 
         auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
-            auto file = Core::DeprecatedFile::construct(path);
-            if (!file->open(Core::OpenMode::ReadOnly)) {
-                warnln("Failed to open {}: {}", path, file->error_string());
+            auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
+            if (file_or_error.is_error()) {
+                warnln("Failed to open {}: {}", path, file_or_error.error());
                 return {};
             }
+            auto file = file_or_error.release_value();
 
             auto statbuf = TRY(Core::System::lstat(path));
             auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
-            TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all()));
+            // FIXME: We should stream instead of reading the entire file in one go, but TarOutputStream does not have any interface to do so.
+            auto file_content = TRY(file->read_until_eof());
+            TRY(tar_stream.add_file(canonicalized_path, statbuf.st_mode, file_content));
             if (verbose)
                 outln("{}", canonicalized_path);
 
