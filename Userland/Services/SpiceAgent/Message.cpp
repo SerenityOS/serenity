@@ -186,4 +186,59 @@ ErrorOr<String> ClipboardMessage::debug_description()
     return builder.to_string();
 }
 
+ErrorOr<FileTransferStartMessage> FileTransferStartMessage::read_from_stream(AK::Stream& stream)
+{
+    auto id = TRY(stream.read_value<u32>());
+
+    auto metadata_bytes = TRY(stream.read_until_eof());
+    auto metadata_content = TRY(String::from_utf8(metadata_bytes));
+
+    // TODO: We need some sort of INIParser, or we need to make Core::ConfigFile not depend on having an actual Core::File
+    // The first line in the file should always be `[vdagent-file-xfer]`
+    auto lines = TRY(metadata_content.split('\n'));
+    if (lines.is_empty() || lines.at(0) != "[vdagent-file-xfer]") {
+        return Error::from_string_literal("Failed to parse file transfer metadata");
+    }
+
+    Optional<String> name = {};
+    Optional<u32> size = {};
+
+    for (auto const& line : lines) {
+        // Ignore the header, we already assume that it is [vdagent-file-xfer]
+        if (line.starts_with('['))
+            continue;
+
+        if (line.starts_with_bytes("name="sv)) {
+            auto parsed_name = TRY(line.replace("name="sv, ""sv, ReplaceMode::FirstOnly));
+            if (parsed_name.is_empty()) {
+                return Error::from_string_literal("Failed to parse file name!");
+            }
+
+            name = parsed_name;
+        }
+
+        if (line.starts_with_bytes("size="sv)) {
+            auto size_string = TRY(line.replace("size="sv, ""sv, ReplaceMode::FirstOnly));
+            size = size_string.to_number<u32>(TrimWhitespace::Yes);
+        }
+    }
+
+    // Verify that we actually parsed any data
+    if (!name.has_value() || !size.has_value()) {
+        return Error::from_string_literal("Invalid transfer start message received!");
+    }
+
+    return FileTransferStartMessage(id, Metadata { name.release_value(), size.release_value() });
+}
+
+ErrorOr<String> FileTransferStartMessage::debug_description()
+{
+    StringBuilder builder;
+    TRY(builder.try_append("FileTransferStart { "sv));
+    TRY(builder.try_appendff("id = {}, ", id()));
+    TRY(builder.try_appendff("metadata = Metadata {{ name = {}, size = {} }}", metadata().name, metadata().size));
+    TRY(builder.try_append(" }"sv));
+    return builder.to_string();
+}
+
 }
