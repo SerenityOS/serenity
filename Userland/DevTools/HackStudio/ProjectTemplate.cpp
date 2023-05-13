@@ -9,7 +9,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibFileSystem/FileSystem.h>
 #include <fcntl.h>
@@ -73,7 +72,7 @@ Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString 
     // Verify that the template content directory exists. If it does, copy it's contents.
     // Otherwise, create an empty directory at the project path.
     if (FileSystem::is_directory(content_path())) {
-        auto result = Core::DeprecatedFile::copy_file_or_directory(path, content_path());
+        auto result = FileSystem::copy_file_or_directory(path, content_path());
         dbgln("Copying {} -> {}", content_path(), path);
         if (result.is_error())
             return DeprecatedString::formatted("Failed to copy template contents. Error code: {}", static_cast<Error const&>(result.error()));
