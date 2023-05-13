@@ -322,6 +322,8 @@ ErrorOr<u8> LzmaDecompressor::decode_bit_with_probability(Probability& probabili
 
     u32 bound = (m_range_decoder_range >> probability_bit_count) * probability;
 
+    dbgln_if(LZMA_DEBUG, "Decoding bit {} with probability = {:#x}, bound = {:#x}, code = {:#x}, range = {:#x}", m_range_decoder_code < bound ? 0 : 1, probability, bound, m_range_decoder_code, m_range_decoder_range);
+
     if (m_range_decoder_code < bound) {
         probability += ((1 << probability_bit_count) - probability) >> probability_shift_width;
         m_range_decoder_range = bound;
@@ -341,6 +343,8 @@ ErrorOr<void> LzmaCompressor::encode_bit_with_probability(Probability& probabili
     constexpr size_t probability_shift_width = 5;
 
     u32 bound = (m_range_encoder_range >> probability_bit_count) * probability;
+
+    dbgln_if(LZMA_DEBUG, "Encoding bit {} with probability = {:#x}, bound = {:#x}, code = {:#x}, range = {:#x}", value, probability, bound, m_range_encoder_code, m_range_encoder_range);
 
     if (value == 0) {
         probability += ((1 << probability_bit_count) - probability) >> probability_shift_width;
@@ -372,6 +376,8 @@ ErrorOr<u16> LzmaDecompressor::decode_symbol_using_bit_tree(size_t bit_count, Sp
         tree_index = (tree_index << 1) | next_bit;
     }
 
+    dbgln_if(LZMA_DEBUG, "Decoded value {:#x} with {} bits using bit tree", result, bit_count);
+
     return result;
 }
 
@@ -380,6 +386,8 @@ ErrorOr<void> LzmaCompressor::encode_symbol_using_bit_tree(size_t bit_count, Spa
     VERIFY(bit_count <= sizeof(u16) * 8);
     VERIFY(probability_tree.size() >= 1ul << bit_count);
     VERIFY(value <= (1 << bit_count) - 1);
+
+    auto original_value = value;
 
     // Shift value to make the first sent byte the most significant bit. This makes the shifting logic a lot easier to read.
     value <<= sizeof(u16) * 8 - bit_count;
@@ -392,6 +400,8 @@ ErrorOr<void> LzmaCompressor::encode_symbol_using_bit_tree(size_t bit_count, Spa
         TRY(encode_bit_with_probability(probability_tree[tree_index], next_bit));
         tree_index = (tree_index << 1) | next_bit;
     }
+
+    dbgln_if(LZMA_DEBUG, "Encoded value {:#x} with {} bits using bit tree", original_value, bit_count);
 
     return {};
 }
@@ -410,6 +420,8 @@ ErrorOr<u16> LzmaDecompressor::decode_symbol_using_reverse_bit_tree(size_t bit_c
         tree_index = (tree_index << 1) | next_bit;
     }
 
+    dbgln_if(LZMA_DEBUG, "Decoded value {:#x} with {} bits using reverse bit tree", result, bit_count);
+
     return result;
 }
 
@@ -419,6 +431,8 @@ ErrorOr<void> LzmaCompressor::encode_symbol_using_reverse_bit_tree(size_t bit_co
     VERIFY(probability_tree.size() >= 1ul << bit_count);
     VERIFY(value <= (1 << bit_count) - 1);
 
+    auto original_value = value;
+
     size_t tree_index = 1;
 
     for (size_t i = 0; i < bit_count; i++) {
@@ -427,6 +441,8 @@ ErrorOr<void> LzmaCompressor::encode_symbol_using_reverse_bit_tree(size_t bit_co
         TRY(encode_bit_with_probability(probability_tree[tree_index], next_bit));
         tree_index = (tree_index << 1) | next_bit;
     }
+
+    dbgln_if(LZMA_DEBUG, "Encoded value {:#x} with {} bits using reverse bit tree", original_value, bit_count);
 
     return {};
 }
@@ -463,6 +479,8 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
         auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, current_repetition_offset()));
         VERIFY(read_bytes.size() == sizeof(matched_byte));
 
+        dbgln_if(LZMA_DEBUG, "Decoding literal using match byte {:#x}", matched_byte);
+
         do {
             u8 match_bit = (matched_byte >> 7) & 1;
             matched_byte <<= 1;
@@ -483,6 +501,8 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
     size_t written_bytes = m_dictionary->write({ &actual_result, sizeof(actual_result) });
     VERIFY(written_bytes == sizeof(actual_result));
     m_total_processed_bytes += sizeof(actual_result);
+
+    dbgln_if(LZMA_DEBUG, "Decoded literal {:#x} in state {} using literal state {:#x} (previous byte is {:#x})", actual_result, m_state, literal_state, previous_byte);
 
     return {};
 }
@@ -505,12 +525,15 @@ ErrorOr<void> LzmaCompressor::encode_literal(u8 literal)
 
     Span<Probability> selected_probability_table = m_literal_probabilities.span().slice(literal_probability_table_size * literal_state, literal_probability_table_size);
 
+    auto original_literal = literal;
     u16 result = 1;
 
     if (m_state >= 7) {
         u8 matched_byte = 0;
         auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, current_repetition_offset() + m_dictionary->used_space() + 1));
         VERIFY(read_bytes.size() == sizeof(matched_byte));
+
+        dbgln_if(LZMA_DEBUG, "Encoding literal using match byte {:#x}", matched_byte);
 
         do {
             u8 const match_bit = (matched_byte >> 7) & 1;
@@ -537,6 +560,8 @@ ErrorOr<void> LzmaCompressor::encode_literal(u8 literal)
     }
 
     m_total_processed_bytes += sizeof(literal);
+
+    dbgln_if(LZMA_DEBUG, "Encoded literal {:#x} in state {} using literal state {:#x} (previous byte is {:#x})", original_literal, m_state, literal_state, previous_byte);
 
     update_state_after_literal();
 
@@ -851,14 +876,18 @@ ErrorOr<LzmaDecompressor::MatchType> LzmaDecompressor::decode_match_type()
     //
     //  IsMatch[state2] decode
     //   0 - the Literal"
-    if (TRY(decode_bit_with_probability(m_is_match_probabilities[state2])) == 0)
+    if (TRY(decode_bit_with_probability(m_is_match_probabilities[state2])) == 0) {
+        dbgln_if(LZMA_DEBUG, "Decoded match type 'Literal'");
         return MatchType::Literal;
+    }
 
     // " 1 - the Match
     //     IsRep[state] decode
     //       0 - Simple Match"
-    if (TRY(decode_bit_with_probability(m_is_rep_probabilities[m_state])) == 0)
+    if (TRY(decode_bit_with_probability(m_is_rep_probabilities[m_state])) == 0) {
+        dbgln_if(LZMA_DEBUG, "Decoded match type 'SimpleMatch'");
         return MatchType::SimpleMatch;
+    }
 
     // "     1 - Rep Match
     //         IsRepG0[state] decode
@@ -866,26 +895,34 @@ ErrorOr<LzmaDecompressor::MatchType> LzmaDecompressor::decode_match_type()
     if (TRY(decode_bit_with_probability(m_is_rep_g0_probabilities[m_state])) == 0) {
         // "       IsRep0Long[state2] decode
         //           0 - Short Rep Match"
-        if (TRY(decode_bit_with_probability(m_is_rep0_long_probabilities[state2])) == 0)
+        if (TRY(decode_bit_with_probability(m_is_rep0_long_probabilities[state2])) == 0) {
+            dbgln_if(LZMA_DEBUG, "Decoded match type 'ShortRepMatch'");
             return MatchType::ShortRepMatch;
+        }
 
         // "         1 - Rep Match 0"
+        dbgln_if(LZMA_DEBUG, "Decoded match type 'RepMatch0'");
         return MatchType::RepMatch0;
     }
 
     // "         1 -
     //             IsRepG1[state] decode
     //               0 - Rep Match 1"
-    if (TRY(decode_bit_with_probability(m_is_rep_g1_probabilities[m_state])) == 0)
+    if (TRY(decode_bit_with_probability(m_is_rep_g1_probabilities[m_state])) == 0) {
+        dbgln_if(LZMA_DEBUG, "Decoded match type 'RepMatch1'");
         return MatchType::RepMatch1;
+    }
 
     // "             1 -
     //                 IsRepG2[state] decode
     //                   0 - Rep Match 2"
-    if (TRY(decode_bit_with_probability(m_is_rep_g2_probabilities[m_state])) == 0)
+    if (TRY(decode_bit_with_probability(m_is_rep_g2_probabilities[m_state])) == 0) {
+        dbgln_if(LZMA_DEBUG, "Decoded match type 'RepMatch2'");
         return MatchType::RepMatch2;
+    }
 
     // "                 1 - Rep Match 3"
+    dbgln_if(LZMA_DEBUG, "Decoded match type 'RepMatch3'");
     return MatchType::RepMatch3;
 }
 
@@ -896,12 +933,14 @@ ErrorOr<void> LzmaCompressor::encode_match_type(MatchType match_type)
 
     if (match_type == MatchType::Literal) {
         TRY(encode_bit_with_probability(m_is_match_probabilities[state2], 0));
+        dbgln_if(LZMA_DEBUG, "Encoded match type 'Literal'");
         return {};
     }
     TRY(encode_bit_with_probability(m_is_match_probabilities[state2], 1));
 
     if (match_type == MatchType::SimpleMatch) {
         TRY(encode_bit_with_probability(m_is_rep_probabilities[m_state], 0));
+        dbgln_if(LZMA_DEBUG, "Encoded match type 'SimpleMatch'");
         return {};
     }
     TRY(encode_bit_with_probability(m_is_rep_probabilities[m_state], 1));
@@ -909,21 +948,30 @@ ErrorOr<void> LzmaCompressor::encode_match_type(MatchType match_type)
     if (match_type == MatchType::ShortRepMatch || match_type == MatchType::RepMatch0) {
         TRY(encode_bit_with_probability(m_is_rep_g0_probabilities[m_state], 0));
         TRY(encode_bit_with_probability(m_is_rep0_long_probabilities[state2], match_type == MatchType::RepMatch0));
+        if constexpr (LZMA_DEBUG) {
+            if (match_type == RepMatch0)
+                dbgln("Encoded match type 'RepMatch0'");
+            else
+                dbgln("Encoded match type 'ShortRepMatch'");
+        }
         return {};
     }
     TRY(encode_bit_with_probability(m_is_rep_g0_probabilities[m_state], 1));
 
     if (match_type == MatchType::RepMatch1) {
         TRY(encode_bit_with_probability(m_is_rep_g1_probabilities[m_state], 0));
+        dbgln_if(LZMA_DEBUG, "Encoded match type 'RepMatch1'");
         return {};
     }
     TRY(encode_bit_with_probability(m_is_rep_g1_probabilities[m_state], 1));
 
     if (match_type == MatchType::RepMatch2) {
         TRY(encode_bit_with_probability(m_is_rep_g2_probabilities[m_state], 0));
+        dbgln_if(LZMA_DEBUG, "Encoded match type 'RepMatch2'");
         return {};
     }
     TRY(encode_bit_with_probability(m_is_rep_g2_probabilities[m_state], 1));
+    dbgln_if(LZMA_DEBUG, "Encoded match type 'RepMatch3'");
     return {};
 }
 
