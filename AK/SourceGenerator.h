@@ -27,7 +27,7 @@ public:
     }
     explicit SourceGenerator(StringBuilder& builder, MappingType const& mapping, char opening = '@', char closing = '@')
         : m_builder(builder)
-        , m_mapping(mapping)
+        , m_mapping(mapping.clone().release_value_but_fixme_should_propagate_errors())
         , m_opening(opening)
         , m_closing(closing)
     {
