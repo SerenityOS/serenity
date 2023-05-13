@@ -35,41 +35,6 @@ public:
     static DeprecatedString current_working_directory();
     static DeprecatedString absolute_path(DeprecatedString const& path);
 
-    enum class RecursionMode {
-        Allowed,
-        Disallowed
-    };
-
-    enum class LinkMode {
-        Allowed,
-        Disallowed
-    };
-
-    enum class AddDuplicateFileMarker {
-        Yes,
-        No,
-    };
-
-    enum class PreserveMode {
-        Nothing = 0,
-        Permissions = (1 << 0),
-        Ownership = (1 << 1),
-        Timestamps = (1 << 2),
-    };
-
-    struct CopyError : public Error {
-        CopyError(int error_code, bool t)
-            : Error(error_code)
-            , tried_recursing(t)
-        {
-        }
-        bool tried_recursing;
-    };
-
-    static ErrorOr<void, CopyError> copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, DeprecatedFile& source, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
-
     static DeprecatedString real_path_for(DeprecatedString const& filename);
 
     virtual bool open(OpenMode) override;
@@ -95,7 +60,5 @@ private:
     DeprecatedString m_filename;
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
-
-AK_ENUM_BITWISE_OPERATORS(DeprecatedFile::PreserveMode);
 
 }
