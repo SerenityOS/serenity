@@ -532,6 +532,7 @@ set(SOURCES
     URL/URLSearchParams.cpp
     URL/URLSearchParamsIterator.cpp
     UserTiming/PerformanceMark.cpp
+    UserTiming/PerformanceMeasure.cpp
     WebAssembly/Instance.cpp
     WebAssembly/Memory.cpp
     WebAssembly/Module.cpp

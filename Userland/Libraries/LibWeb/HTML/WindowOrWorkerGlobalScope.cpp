@@ -26,6 +26,7 @@
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/PerformanceTimeline/EntryTypes.h>
 #include <LibWeb/UserTiming/PerformanceMark.h>
+#include <LibWeb/UserTiming/PerformanceMeasure.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -35,8 +36,9 @@ namespace Web::HTML {
 WindowOrWorkerGlobalScopeMixin::~WindowOrWorkerGlobalScopeMixin() = default;
 
 // Please keep these in alphabetical order based on the entry type :^)
-#define ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES \
-    __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::mark, UserTiming::PerformanceMark)
+#define ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES                                                                   \
+    __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::mark, UserTiming::PerformanceMark) \
+    __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::measure, UserTiming::PerformanceMeasure)
 
 JS::ThrowCompletionOr<void> WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm& realm)
 {
