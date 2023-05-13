@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 
 namespace JS::Bytecode {
 
@@ -16,6 +17,9 @@ struct UnwindInfo {
     Executable const* executable;
     BasicBlock const* handler;
     BasicBlock const* finalizer;
+
+    Handle<Environment> lexical_environment;
+    Handle<Environment> variable_environment;
 };
 
 class BasicBlock {
