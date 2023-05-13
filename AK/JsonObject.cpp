@@ -14,7 +14,7 @@ JsonObject::JsonObject() = default;
 JsonObject::~JsonObject() = default;
 
 JsonObject::JsonObject(JsonObject const& other)
-    : m_members(other.m_members)
+    : m_members(other.m_members.clone().release_value_but_fixme_should_propagate_errors())
 {
 }
 
@@ -26,7 +26,7 @@ JsonObject::JsonObject(JsonObject&& other)
 JsonObject& JsonObject::operator=(JsonObject const& other)
 {
     if (this != &other)
-        m_members = other.m_members;
+        m_members = other.m_members.clone().release_value_but_fixme_should_propagate_errors();
     return *this;
 }
 
