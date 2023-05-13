@@ -121,6 +121,8 @@ public:
     }
     void set_checked(bool);
 
+    bool is_activating() const { return m_activating; }
+
     bool swallow_key_event_when_disabled() const { return m_swallow_key_event_when_disabled; }
     void set_swallow_key_event_when_disabled(bool swallow) { m_swallow_key_event_when_disabled = swallow; }
 
@@ -157,6 +159,7 @@ private:
     bool m_checkable { false };
     bool m_checked { false };
     bool m_swallow_key_event_when_disabled { false };
+    bool m_activating { false };
     ShortcutScope m_scope { ShortcutScope::None };
 
     HashTable<Button*> m_buttons;
