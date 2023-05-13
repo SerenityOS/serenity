@@ -1487,10 +1487,36 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             grid_item.box());
     }
 
+    if (available_space.height.is_intrinsic_sizing_constraint() || available_space.width.is_intrinsic_sizing_constraint())
+        determine_intrinsic_size_of_grid_container(available_space);
+
     CSSPixels total_y = 0;
     for (auto& grid_row : m_grid_rows)
         total_y += grid_row.full_vertical_size();
     m_automatic_content_height = total_y;
+}
+
+void GridFormattingContext::determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space)
+{
+    // https://www.w3.org/TR/css-grid-1/#intrinsic-sizes
+    // The max-content size (min-content size) of a grid container is the sum of the grid container’s track sizes
+    // (including gutters) in the appropriate axis, when the grid is sized under a max-content constraint (min-content constraint).
+
+    if (available_space.height.is_intrinsic_sizing_constraint()) {
+        CSSPixels grid_container_height = 0;
+        for (auto& track : m_grid_rows) {
+            grid_container_height += track.full_vertical_size();
+        }
+        m_state.get_mutable(grid_container()).set_content_height(grid_container_height);
+    }
+
+    if (available_space.width.is_intrinsic_sizing_constraint()) {
+        CSSPixels grid_container_width = 0;
+        for (auto& track : m_grid_columns) {
+            grid_container_width += track.full_horizontal_size();
+        }
+        m_state.get_mutable(grid_container()).set_content_width(grid_container_width);
+    }
 }
 
 CSSPixels GridFormattingContext::automatic_content_width() const

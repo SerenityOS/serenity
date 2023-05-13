@@ -146,6 +146,8 @@ private:
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
+    void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
+
     AvailableSize get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
