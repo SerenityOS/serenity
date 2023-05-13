@@ -16,6 +16,12 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Model.h>
 
+namespace FileSystemAccessServer {
+
+class ConnectionFromClient;
+
+}
+
 namespace GUI {
 
 class FilePicker final
@@ -33,6 +39,8 @@ public:
 
     static Optional<DeprecatedString> get_open_filepath(Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent, Optional<Vector<FileTypeFilter>> allowed_file_types = {});
     static Optional<DeprecatedString> get_save_filepath(Window* parent_window, DeprecatedString const& title, DeprecatedString const& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+
+    static ErrorOr<Optional<String>> get_filepath(Badge<FileSystemAccessServer::ConnectionFromClient>, i32 window_server_client_id, i32 parent_window_id, Mode, StringView window_title, StringView file_basename = {}, StringView path = Core::StandardPaths::home_directory(), Optional<Vector<FileTypeFilter>> = {});
 
     virtual ~FilePicker() override;
 

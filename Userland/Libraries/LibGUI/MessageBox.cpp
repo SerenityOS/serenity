@@ -9,6 +9,7 @@
 #include <AK/NumberFormat.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -37,6 +38,18 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_show(Window* parent_window, StringVi
     auto box = TRY(MessageBox::create(parent_window, text, title, type, input_type));
     if (parent_window)
         box->set_icon(parent_window->icon());
+    return box->exec();
+}
+
+ErrorOr<Dialog::ExecResult> MessageBox::try_show(Badge<FileSystemAccessServer::ConnectionFromClient>, i32 window_server_client_id, i32 parent_window_id, StringView text, StringView title)
+{
+    auto box = TRY(MessageBox::create(nullptr, text, title, MessageBox::Type::Warning, MessageBox::InputType::YesNo));
+    auto parent_rect = ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
+    box->center_within(parent_rect);
+    box->constrain_to_desktop();
+    box->set_screen_position(ScreenPosition::DoNotPosition);
+    box->Dialog::show();
+    ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, box->window_id());
     return box->exec();
 }
 

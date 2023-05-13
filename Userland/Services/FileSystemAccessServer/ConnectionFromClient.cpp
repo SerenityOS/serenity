@@ -27,20 +27,6 @@ void ConnectionFromClient::die()
     GUI::Application::the()->quit();
 }
 
-RefPtr<GUI::Window> ConnectionFromClient::create_dummy_child_window(i32 window_server_client_id, i32 parent_window_id)
-{
-    auto window = GUI::Window::construct();
-    window->set_opacity(0);
-    window->set_frameless(true);
-    window->set_window_mode(GUI::WindowMode::Passive);
-    auto rect = GUI::ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
-    window->set_rect(rect);
-    window->show();
-    GUI::ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, window->window_id());
-
-    return window;
-}
-
 void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path, Core::File::OpenMode requested_access, ShouldPrompt prompt)
 {
     VERIFY(path.starts_with("/"sv));
@@ -68,11 +54,10 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
         auto exe_link = LexicalPath("/proc").append(DeprecatedString::number(pid)).append("exe"sv).string();
         auto exe_path = Core::DeprecatedFile::real_path_for(exe_link);
 
-        auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
-
         if (prompt == ShouldPrompt::Yes) {
             auto exe_name = LexicalPath::basename(exe_path);
-            auto result = GUI::MessageBox::show(main_window, DeprecatedString::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path), "File Permissions Requested"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+            auto text = String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path).release_value_but_fixme_should_propagate_errors();
+            auto result = GUI::MessageBox::try_show({}, window_server_client_id, parent_window_id, text, "File Permissions Requested"sv).release_value_but_fixme_should_propagate_errors();
             approved = result == GUI::MessageBox::ExecResult::Yes;
         } else {
             approved = true;
@@ -117,11 +102,10 @@ void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_cl
     auto relevant_permissions = requested_access & (Core::File::OpenMode::Read | Core::File::OpenMode::Write);
     VERIFY(relevant_permissions != Core::File::OpenMode::NotOpen);
 
-    auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
+    auto user_picked_file = GUI::FilePicker::get_filepath({}, window_server_client_id, parent_window_id, GUI::FilePicker::Mode::Open, window_title, {}, path_to_view, allowed_file_types).release_value_but_fixme_should_propagate_errors();
+    auto user_picked_file_but_fixme_should_use_string = user_picked_file.has_value() ? user_picked_file.release_value().to_deprecated_string() : Optional<DeprecatedString> {};
 
-    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view, false, GUI::Dialog::ScreenPosition::CenterWithinParent, allowed_file_types);
-
-    prompt_helper(request_id, user_picked_file, requested_access);
+    prompt_helper(request_id, user_picked_file_but_fixme_should_use_string, requested_access);
 }
 
 void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& name, DeprecatedString const& ext, DeprecatedString const& path_to_view, Core::File::OpenMode requested_access)
@@ -129,11 +113,11 @@ void ConnectionFromClient::prompt_save_file(i32 request_id, i32 window_server_cl
     auto relevant_permissions = requested_access & (Core::File::OpenMode::Read | Core::File::OpenMode::Write);
     VERIFY(relevant_permissions != Core::File::OpenMode::NotOpen);
 
-    auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
+    auto basename = String::formatted("{}.{}", name, ext).release_value_but_fixme_should_propagate_errors();
+    auto user_picked_file = GUI::FilePicker::get_filepath({}, window_server_client_id, parent_window_id, GUI::FilePicker::Mode::Save, {}, basename, path_to_view).release_value_but_fixme_should_propagate_errors();
+    auto user_picked_file_but_fixme_should_use_string = user_picked_file.has_value() ? user_picked_file.release_value().to_deprecated_string() : Optional<DeprecatedString> {};
 
-    auto user_picked_file = GUI::FilePicker::get_save_filepath(main_window, name, ext, path_to_view);
-
-    prompt_helper(request_id, user_picked_file, requested_access);
+    prompt_helper(request_id, user_picked_file_but_fixme_should_use_string, requested_access);
 }
 
 void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedString> const& user_picked_file, Core::File::OpenMode requested_access)

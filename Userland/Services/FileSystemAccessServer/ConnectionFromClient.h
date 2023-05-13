@@ -34,7 +34,6 @@ private:
     virtual void prompt_save_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode) override;
 
     void prompt_helper(i32, Optional<DeprecatedString> const&, Core::File::OpenMode);
-    RefPtr<GUI::Window> create_dummy_child_window(i32, i32);
 
     enum class ShouldPrompt {
         No,

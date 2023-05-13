@@ -13,6 +13,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CommonLocationsProvider.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FilePickerDialogGML.h>
@@ -35,6 +36,26 @@
 #include <unistd.h>
 
 namespace GUI {
+
+ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer::ConnectionFromClient>, i32 window_server_client_id, i32 parent_window_id, Mode mode, StringView window_title, StringView file_basename, StringView path, Optional<Vector<FileTypeFilter>> allowed_file_types)
+{
+    auto picker = TRY(FilePicker::try_create(nullptr, mode, file_basename, path, ScreenPosition::DoNotPosition, move(allowed_file_types)));
+    auto parent_rect = ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
+    picker->center_within(parent_rect);
+    picker->constrain_to_desktop();
+    if (!window_title.is_empty())
+        picker->set_title(window_title);
+    picker->show();
+    ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, picker->window_id());
+
+    if (picker->exec() == ExecResult::OK) {
+        auto file_path = TRY(String::from_deprecated_string(picker->selected_file()));
+        if (file_path.is_empty())
+            return Optional<String> {};
+        return file_path;
+    }
+    return Optional<String> {};
+}
 
 Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, DeprecatedString const& window_title, StringView path, bool folder, ScreenPosition screen_position, Optional<Vector<FileTypeFilter>> allowed_file_types)
 {
