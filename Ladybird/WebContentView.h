@@ -79,6 +79,7 @@ public:
     virtual void mouseMoveEvent(QMouseEvent*) override;
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent*) override;
     virtual void dragEnterEvent(QDragEnterEvent*) override;
     virtual void dropEvent(QDropEvent*) override;
     virtual void keyPressEvent(QKeyEvent* event) override;

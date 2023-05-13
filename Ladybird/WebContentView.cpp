@@ -314,6 +314,21 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     client().async_mouse_up(to_content(position), button, buttons, modifiers);
 }
 
+void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
+    auto button = get_button_from_qt_event(*event);
+    if (button == 0) {
+        // We could not convert Qt buttons to something that Lagom can
+        // recognize - don't even bother propagating this to the web engine
+        // as it will not handle it anyway, and it will (currently) assert
+        return;
+    }
+    auto modifiers = get_modifiers_from_qt_mouse_event(*event);
+    auto buttons = get_buttons_from_qt_event(*event);
+    client().async_doubleclick(to_content(position), button, buttons, modifiers);
+}
+
 void WebContentView::dragEnterEvent(QDragEnterEvent* event)
 {
     if (event->mimeData()->hasUrls())
