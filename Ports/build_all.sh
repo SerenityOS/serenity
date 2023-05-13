@@ -45,7 +45,7 @@ for file in *; do
                 continue
             fi
             if ! [ -f package.sh ]; then
-                echo "ERROR: Skipping $port because its package.sh script is missing."
+                echo "ERROR: Skipping $port because its package.sh script is missing." 2>&1 >> ../build-of-port-not-successful.files
                 popd > /dev/null
                 continue
             fi
@@ -58,19 +58,19 @@ for file in *; do
                 fi
             fi
             if [ "$verbose" == true ]; then
-                if ./package.sh; then
+                if ./package.sh > build-log.files; then
                     echo "Built ${port}."
                 else
-                    echo "ERROR: Build of ${port} was not successful!"
+                    echo "ERROR: Build of ${port} was not successful!" 2>&1 >> ../build-of-port-not-successful.files
                     some_failed=true
                     popd > /dev/null
                     continue
                 fi
             else
-                if ./package.sh > /dev/null 2>&1; then
+                if ./package.sh > build-log.files; then
                     echo "Built ${port}."
                 else
-                    echo "ERROR: Build of ${port} was not successful!"
+                    echo "ERROR: Build of ${port} was not successful!" 2>&1 >> ../build-of-port-not-successful.files
                     some_failed=true
                     popd > /dev/null
                     continue
