@@ -480,7 +480,7 @@ after_step_6:
                 auto process_body = [image_request, url_string, this](ByteBuffer data) {
                     handle_successful_fetch(url_string, image_request, move(data));
                 };
-                auto process_body_error = [this](auto&) {
+                auto process_body_error = [this](auto) {
                     handle_failed_fetch();
                 };
                 // FIXME: See HTMLLinkElement::default_fetch_and_process_linked_resource for thorough notes on the workaround

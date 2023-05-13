@@ -875,7 +875,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
             }
 
             VERIFY(response->body().has_value());
-            auto empty_algorithm = [](auto&) {};
+            auto empty_algorithm = [](auto) {};
 
             // FIXME: We are "fully" reading the response here, rather than "incrementally". Memory concerns aside, this should be okay for now as we are
             //        always setting byteRange to "entire resource". However, we should switch to incremental reads when that is implemented, and then

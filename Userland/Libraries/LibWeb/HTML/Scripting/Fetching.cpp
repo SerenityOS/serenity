@@ -326,7 +326,7 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
             auto process_body = [response, response_handler](auto bytes) {
                 response_handler->process_response(response, move(bytes));
             };
-            auto process_body_error = [response, response_handler](auto&) {
+            auto process_body_error = [response, response_handler](auto) {
                 response_handler->process_response(response, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
             };
 

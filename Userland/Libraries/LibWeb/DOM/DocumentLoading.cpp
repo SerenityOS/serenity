@@ -219,7 +219,7 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
             }
         };
 
-        auto process_body_error = [](auto&) {
+        auto process_body_error = [](auto) {
             // FIXME: Load html page with an error if read of body failed.
             TODO();
         };

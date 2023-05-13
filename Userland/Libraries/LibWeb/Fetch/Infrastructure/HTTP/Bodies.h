@@ -24,8 +24,10 @@ namespace Web::Fetch::Infrastructure {
 class Body final {
 public:
     using SourceType = Variant<Empty, ByteBuffer, JS::Handle<FileAPI::Blob>>;
+    // processBody must be an algorithm accepting a byte sequence.
     using ProcessBodyCallback = JS::SafeFunction<void(ByteBuffer)>;
-    using ProcessBodyErrorCallback = JS::SafeFunction<void(JS::Object&)>;
+    // processBodyError must be an algorithm optionally accepting an exception.
+    using ProcessBodyErrorCallback = JS::SafeFunction<void(JS::GCPtr<WebIDL::DOMException>)>;
 
     explicit Body(JS::Handle<Streams::ReadableStream>);
     Body(JS::Handle<Streams::ReadableStream>, SourceType, Optional<u64>);
