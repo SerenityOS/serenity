@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Vector.h>
 
@@ -35,6 +36,17 @@ enum class Capability : u32 {
     GraphicsCardInfo,
     ClipboardNoReleaseOnRegrab,
     ClipboardGrabSerial
+};
+
+// Used to describe the type of data which is present on the user's clipboard.
+enum class ClipboardDataType : u32 {
+    None = 0,
+    Text,
+    PNG,
+    BMP,
+    TIFF,
+    JPG,
+    __End
 };
 
 class Message {
@@ -98,4 +110,64 @@ private:
     Vector<Capability> m_capabilities;
 };
 
+// Sent/received to tell the server/client that clipboard data is available.
+class ClipboardGrabMessage : public Message {
+public:
+    ClipboardGrabMessage(Vector<ClipboardDataType> const& types)
+        : Message(Type::ClipboardGrab)
+        , m_types(types)
+    {
+    }
+
+    static ErrorOr<ClipboardGrabMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<void> write_to_stream(AK::Stream& stream);
+    ErrorOr<String> debug_description() override;
+
+    Vector<ClipboardDataType> const& types() { return m_types; }
+
+private:
+    Vector<ClipboardDataType> m_types;
+};
+
+}
+
+namespace AK {
+template<>
+struct Formatter<SpiceAgent::ClipboardDataType> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, SpiceAgent::ClipboardDataType const& header)
+    {
+        auto string = "Unknown"sv;
+        switch (header) {
+        case SpiceAgent::ClipboardDataType::None:
+            string = "None"sv;
+            break;
+
+        case SpiceAgent::ClipboardDataType::Text:
+            string = "Text"sv;
+            break;
+
+        case SpiceAgent::ClipboardDataType::PNG:
+            string = "PNG"sv;
+            break;
+
+        case SpiceAgent::ClipboardDataType::BMP:
+            string = "BMP"sv;
+            break;
+
+        case SpiceAgent::ClipboardDataType::TIFF:
+            string = "TIFF"sv;
+            break;
+
+        case SpiceAgent::ClipboardDataType::JPG:
+            string = "JPG"sv;
+            break;
+
+        default:
+            break;
+        }
+
+        return Formatter<StringView>::format(builder, string);
+    }
+};
 }

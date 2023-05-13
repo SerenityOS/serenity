@@ -52,4 +52,37 @@ ErrorOr<String> AnnounceCapabilitiesMessage::debug_description()
     return builder.to_string();
 }
 
+ErrorOr<ClipboardGrabMessage> ClipboardGrabMessage::read_from_stream(AK::Stream& stream)
+{
+    auto types = Vector<ClipboardDataType>();
+    while (!stream.is_eof()) {
+        auto value = TRY(stream.read_value<u32>());
+        if (value >= to_underlying(ClipboardDataType::__End)) {
+            return Error::from_string_literal("Unsupported clipboard type");
+        }
+
+        types.append(static_cast<ClipboardDataType>(value));
+    }
+
+    return ClipboardGrabMessage(types);
+}
+
+ErrorOr<void> ClipboardGrabMessage::write_to_stream(AK::Stream& stream)
+{
+    for (auto type : types()) {
+        TRY(stream.write_value(type));
+    }
+
+    return {};
+}
+
+ErrorOr<String> ClipboardGrabMessage::debug_description()
+{
+    StringBuilder builder;
+    TRY(builder.try_append("ClipboardGrabMessage { "sv));
+    TRY(builder.try_appendff("types = {}", types()));
+    TRY(builder.try_append(" }"sv));
+    return builder.to_string();
+}
+
 }
