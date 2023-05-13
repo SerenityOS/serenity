@@ -43,8 +43,8 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
 
     auto encoding = adopt_ref(*new Encoding());
 
-    encoding->m_descriptors = base_encoding->m_descriptors;
-    encoding->m_name_mapping = base_encoding->m_name_mapping;
+    encoding->m_descriptors = TRY(base_encoding->m_descriptors.clone());
+    encoding->m_name_mapping = TRY(base_encoding->m_name_mapping.clone());
 
     auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
 
