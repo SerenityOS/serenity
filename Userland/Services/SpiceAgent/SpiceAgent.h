@@ -7,10 +7,11 @@
 
 #pragma once
 
-#include "ConnectionToClipboardServer.h"
 #include "Message.h"
 #include "MessageHeader.h"
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 
 namespace SpiceAgent {
@@ -26,7 +27,7 @@ public:
     };
 
     static ErrorOr<NonnullOwnPtr<SpiceAgent>> create(StringView device_path);
-    SpiceAgent(NonnullOwnPtr<Core::File> spice_device, ConnectionToClipboardServer& clipboard_connection, Vector<Capability> const& capabilities);
+    SpiceAgent(NonnullOwnPtr<Core::File> spice_device, Vector<Capability> const& capabilities);
 
     ErrorOr<void> start();
 
@@ -61,10 +62,12 @@ public:
 
 private:
     NonnullOwnPtr<Core::File> m_spice_device;
-    ConnectionToClipboardServer& m_clipboard_connection;
     Vector<Capability> m_capabilities;
 
     RefPtr<Core::Notifier> m_notifier;
+
+    // Fired when we receive clipboard data from the spice server.
+    ErrorOr<void> did_receive_clipboard_message(ClipboardMessage& message);
 
     ErrorOr<void> on_message_received();
     ErrorOr<ByteBuffer> read_message_buffer();
