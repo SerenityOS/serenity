@@ -1436,14 +1436,14 @@ static void populate_general_category_unions(PropList& general_categories)
     populate_union("C"sv, Array { "Cc"sv, "Cf"sv, "Cs"sv, "Co"sv, "Cn"sv });
 }
 
-static void normalize_script_extensions(PropList& script_extensions, PropList const& script_list, Vector<Alias> const& script_aliases)
+static ErrorOr<void> normalize_script_extensions(PropList& script_extensions, PropList const& script_list, Vector<Alias> const& script_aliases)
 {
     // The ScriptExtensions UCD file lays out its code point ranges rather uniquely compared to
     // other files. The Script listed on each line may either be a full Script string or an aliased
     // abbreviation. Further, the extensions may or may not include the base Script list. Normalize
     // the extensions here to be keyed by the full Script name and always include the base list.
     auto extensions = move(script_extensions);
-    script_extensions = script_list;
+    script_extensions = TRY(script_list.clone());
 
     for (auto const& extension : extensions) {
         auto it = find_if(script_aliases.begin(), script_aliases.end(), [&](auto const& alias) { return extension.key == alias.alias; });
@@ -1481,6 +1481,7 @@ static void normalize_script_extensions(PropList& script_extensions, PropList co
 
     auto inherited_code_points = get_code_points_without_other_extensions("Inherited"sv);
     script_extensions.set("Inherited"sv, form_code_point_ranges(inherited_code_points));
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -1574,7 +1575,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
     TRY(parse_value_alias_list(*prop_value_alias_file, "blk"sv, unicode_data.block_list.keys(), unicode_data.block_aliases, false, true));
-    normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);
+    TRY(normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases));
 
     TRY(generate_unicode_data_header(*generated_header_file, unicode_data));
     TRY(generate_unicode_data_implementation(*generated_implementation_file, unicode_data));
