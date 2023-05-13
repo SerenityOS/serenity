@@ -251,3 +251,79 @@ TEST_CASE(take)
     baz = map.take("baz"_short_string);
     EXPECT(!baz.has_value());
 }
+
+TEST_CASE(clone_same_template_args)
+{
+    HashMap<int, int> orig;
+    orig.set(1, 10);
+    orig.set(2, 20);
+    orig.set(3, 30);
+    EXPECT_EQ(orig.size(), static_cast<size_t>(3));
+    EXPECT_EQ(orig.get(2), Optional<int>(20));
+
+    auto second = TRY_OR_FAIL(orig.clone());
+
+    EXPECT_EQ(orig.size(), static_cast<size_t>(3));
+    EXPECT_EQ(orig.get(2), Optional<int>(20));
+    EXPECT_EQ(second.size(), static_cast<size_t>(3));
+    EXPECT_EQ(second.get(2), Optional<int>(20));
+}
+
+TEST_CASE(clone_different_traits)
+{
+    HashMap<StringView, StringView> orig;
+    orig.set("Well"sv, "hello friends!"sv);
+    orig.set("Thank"sv, "you, very cool!"sv);
+    EXPECT_EQ(orig.size(), static_cast<size_t>(2));
+    EXPECT_EQ(orig.get("Well"sv), Optional<StringView>("hello friends!"sv));
+    EXPECT_EQ(orig.get("weLL"sv), Optional<StringView>());
+
+    auto second = TRY_OR_FAIL(orig.clone<CaseInsensitiveASCIIStringViewTraits>());
+
+    EXPECT_EQ(orig.size(), static_cast<size_t>(2));
+    EXPECT_EQ(orig.get("Well"sv), Optional<StringView>("hello friends!"sv));
+    EXPECT_EQ(orig.get("weLL"sv), Optional<StringView>());
+    EXPECT_EQ(second.size(), static_cast<size_t>(2));
+    EXPECT_EQ(second.get("Well"sv), Optional<StringView>("hello friends!"sv));
+    EXPECT_EQ(second.get("weLL"sv), Optional<StringView>("hello friends!"sv));
+}
+
+TEST_CASE(move_construct)
+{
+    HashMap<int, int> orig;
+    orig.set(1, 10);
+    orig.set(2, 20);
+    orig.set(3, 30);
+    EXPECT_EQ(orig.size(), static_cast<size_t>(3));
+    EXPECT_EQ(orig.get(2), Optional<int>(20));
+
+    HashMap<int, int> second = move(orig);
+
+    EXPECT_EQ(orig.size(), static_cast<size_t>(0));
+    EXPECT_EQ(orig.get(2), Optional<int>());
+    EXPECT_EQ(second.size(), static_cast<size_t>(3));
+    EXPECT_EQ(second.get(2), Optional<int>(20));
+}
+
+TEST_CASE(move_assign)
+{
+    HashMap<int, int> orig;
+    HashMap<int, int> second;
+    orig.set(1, 10);
+    orig.set(2, 20);
+    orig.set(3, 30);
+
+    EXPECT_EQ(orig.size(), static_cast<size_t>(3));
+    EXPECT_EQ(orig.get(2), Optional<int>(20));
+    EXPECT_EQ(second.size(), static_cast<size_t>(0));
+    EXPECT_EQ(second.get(2), Optional<int>());
+
+    // 'Hashtable::operator=(Hashtable&&)' allocates temporarily an empty table,
+    // so we can't use NoAllocationGuard here. :(
+    second = move(orig);
+
+    EXPECT_EQ(orig.size(), static_cast<size_t>(0));
+    EXPECT_EQ(orig.get(2), Optional<int>());
+    EXPECT_EQ(second.size(), static_cast<size_t>(3));
+    EXPECT_EQ(second.get(2), Optional<int>(20));
+}
