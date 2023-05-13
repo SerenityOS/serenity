@@ -91,6 +91,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 if (unwind_context.executable != m_current_executable)
                     break;
                 if (unwind_context.handler) {
+                    vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
+                    vm().running_execution_context().variable_environment = unwind_context.variable_environment;
                     m_current_block = unwind_context.handler;
                     unwind_context.handler = nullptr;
 
@@ -205,7 +207,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
 void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)
 {
-    unwind_contexts().empend(m_current_executable, handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
+    unwind_contexts().empend(
+        m_current_executable,
+        handler_target.has_value() ? &handler_target->block() : nullptr,
+        finalizer_target.has_value() ? &finalizer_target->block() : nullptr,
+        vm().running_execution_context().lexical_environment,
+        vm().running_execution_context().variable_environment);
 }
 
 void Interpreter::leave_unwind_context()
