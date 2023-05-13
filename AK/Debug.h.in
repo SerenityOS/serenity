@@ -254,6 +254,10 @@
 #    cmakedefine01 LOOKUPSERVER_DEBUG
 #endif
 
+#ifndef LZMA_DEBUG
+#    cmakedefine01 LZMA_DEBUG
+#endif
+
 #ifndef MALLOC_DEBUG
 #    cmakedefine01 MALLOC_DEBUG
 #endif
