@@ -103,21 +103,25 @@ struct Array {
     {
         static_assert(Size > 0, "No values to max() over");
 
-        T value = __data[0];
+        size_t candidate = 0;
         for (size_t i = 1; i < Size; ++i)
-            value = AK::max(__data[i], value);
-        return value;
+            if (__data[candidate] < __data[i])
+                candidate = i;
+
+        return __data[candidate];
     }
 
     [[nodiscard]] constexpr T min() const
-    requires(requires(T x, T y) { x > y; })
+    requires(requires(T x, T y) { x < y; })
     {
         static_assert(Size > 0, "No values to min() over");
 
-        T value = __data[0];
+        size_t candidate = 0;;
         for (size_t i = 1; i < Size; ++i)
-            value = AK::min(__data[i], value);
-        return value;
+            if (__data[i] < __data[candidate])
+                candidate = i;
+
+        return __data[candidate];
     }
 
     bool contains_slow(T const& value) const
