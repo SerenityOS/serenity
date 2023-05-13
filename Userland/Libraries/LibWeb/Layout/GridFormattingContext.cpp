@@ -1521,7 +1521,7 @@ void GridFormattingContext::determine_intrinsic_size_of_grid_container(Available
 
 CSSPixels GridFormattingContext::automatic_content_width() const
 {
-    return greatest_child_width(context_box());
+    return m_state.get(grid_container()).content_width();
 }
 
 CSSPixels GridFormattingContext::automatic_content_height() const
