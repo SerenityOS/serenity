@@ -6,7 +6,6 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
@@ -18,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown"));
 
     bool link = false;
-    auto preserve = Core::DeprecatedFile::PreserveMode::Nothing;
+    auto preserve = FileSystem::PreserveMode::Nothing;
     bool recursion_allowed = false;
     bool verbose = false;
     Vector<StringView> sources;
@@ -34,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "attributes",
         [&preserve](StringView s) {
             if (s.is_empty()) {
-                preserve = Core::DeprecatedFile::PreserveMode::Permissions | Core::DeprecatedFile::PreserveMode::Ownership | Core::DeprecatedFile::PreserveMode::Timestamps;
+                preserve = FileSystem::PreserveMode::Permissions | FileSystem::PreserveMode::Ownership | FileSystem::PreserveMode::Timestamps;
                 return true;
             }
 
@@ -42,11 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             s.for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
                 if (value == "mode"sv) {
-                    preserve |= Core::DeprecatedFile::PreserveMode::Permissions;
+                    preserve |= FileSystem::PreserveMode::Permissions;
                 } else if (value == "ownership"sv) {
-                    preserve |= Core::DeprecatedFile::PreserveMode::Ownership;
+                    preserve |= FileSystem::PreserveMode::Ownership;
                 } else if (value == "timestamps"sv) {
-                    preserve |= Core::DeprecatedFile::PreserveMode::Timestamps;
+                    preserve |= FileSystem::PreserveMode::Timestamps;
                 } else {
                     warnln("cp: Unknown or unimplemented --preserve attribute: '{}'", value);
                     values_ok = false;
@@ -64,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
     args_parser.parse(arguments);
 
-    if (has_flag(preserve, Core::DeprecatedFile::PreserveMode::Permissions)) {
+    if (has_flag(preserve, FileSystem::PreserveMode::Permissions)) {
         umask(0);
     } else {
         TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
@@ -77,15 +76,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             ? DeprecatedString::formatted("{}/{}", destination, LexicalPath::basename(source))
             : destination;
 
-        auto result = Core::DeprecatedFile::copy_file_or_directory(
+        auto result = FileSystem::copy_file_or_directory(
             destination_path, source,
-            recursion_allowed ? Core::DeprecatedFile::RecursionMode::Allowed : Core::DeprecatedFile::RecursionMode::Disallowed,
-            link ? Core::DeprecatedFile::LinkMode::Allowed : Core::DeprecatedFile::LinkMode::Disallowed,
-            Core::DeprecatedFile::AddDuplicateFileMarker::No,
+            recursion_allowed ? FileSystem::RecursionMode::Allowed : FileSystem::RecursionMode::Disallowed,
+            link ? FileSystem::LinkMode::Allowed : FileSystem::LinkMode::Disallowed,
+            FileSystem::AddDuplicateFileMarker::No,
             preserve);
 
         if (result.is_error()) {
-            if (result.error().tried_recursing)
+            if (result.error().code() == EISDIR)
                 warnln("cp: -R not specified; omitting directory '{}'", source);
             else
                 warnln("cp: unable to copy '{}' to '{}': {}", source, destination_path, strerror(result.error().code()));
