@@ -192,29 +192,29 @@ struct BasicConstraints {
 
 class RelativeDistinguishedName {
 public:
-    ErrorOr<String> to_string();
+    ErrorOr<String> to_string() const;
 
     ErrorOr<AK::HashSetResult> set(String key, String value)
     {
         return m_members.try_set(key, value);
     }
 
-    Optional<String> get(StringView key)
+    Optional<String> get(StringView key) const
     {
         return m_members.get(key);
     }
 
-    Optional<String> get(AttributeType key)
+    Optional<String> get(AttributeType key) const
     {
         return m_members.get(enum_value(key));
     }
 
-    Optional<String> get(ObjectClass key)
+    Optional<String> get(ObjectClass key) const
     {
         return m_members.get(enum_value(key));
     }
 
-    String common_name()
+    String common_name() const
     {
         auto entry = get(AttributeType::Cn);
         if (entry.has_value()) {

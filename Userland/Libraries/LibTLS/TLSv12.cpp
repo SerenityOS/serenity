@@ -231,7 +231,7 @@ static bool wildcard_matches(StringView host, StringView subject)
     return false;
 }
 
-static bool certificate_subject_matches_host(Certificate& cert, StringView host)
+static bool certificate_subject_matches_host(Certificate const& cert, StringView host)
 {
     if (wildcard_matches(host, cert.subject.common_name()))
         return true;
@@ -269,7 +269,7 @@ bool Context::verify_chain(StringView host) const
     // it in any case.
 
     if (!host.is_empty()) {
-        auto first_certificate = local_chain->first();
+        auto const& first_certificate = local_chain->first();
         auto subject_matches = certificate_subject_matches_host(first_certificate, host);
         if (!subject_matches) {
             dbgln("verify_chain: First certificate does not match the hostname");
@@ -282,7 +282,7 @@ bool Context::verify_chain(StringView host) const
     }
 
     for (size_t cert_index = 0; cert_index < local_chain->size(); ++cert_index) {
-        auto cert = local_chain->at(cert_index);
+        auto const& cert = local_chain->at(cert_index);
 
         auto subject_string = MUST(cert.subject.to_string());
         auto issuer_string = MUST(cert.issuer.to_string());
@@ -316,7 +316,7 @@ bool Context::verify_chain(StringView host) const
             return false;
         }
 
-        auto parent_certificate = local_chain->at(cert_index + 1);
+        auto const& parent_certificate = local_chain->at(cert_index + 1);
         if (issuer_string != MUST(parent_certificate.subject.to_string())) {
             dbgln("verify_chain: Next certificate in the chain is not the issuer of this certificate");
             return false;
