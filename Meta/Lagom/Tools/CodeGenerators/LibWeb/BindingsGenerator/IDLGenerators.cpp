@@ -1007,7 +1007,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
             // The lambda must take the JS::Value to convert as a parameter instead of capturing it in order to support union types being variadic.
             dictionary_generator.append(R"~~~(
-    auto @js_name@@js_suffix@_to_dictionary = [&vm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
+    auto @js_name@@js_suffix@_to_dictionary = [&vm, &realm](JS::Value @js_name@@js_suffix@) -> JS::ThrowCompletionOr<@dictionary.type@> {
+        // This might be unused.
+        (void)realm;
 )~~~");
 
             IDL::Parameter dictionary_parameter { .type = *dictionary_type, .name = acceptable_cpp_name, .optional_default_value = {}, .extended_attributes = {} };
