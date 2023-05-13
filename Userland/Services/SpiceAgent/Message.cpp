@@ -11,6 +11,38 @@
 
 namespace SpiceAgent {
 
+ErrorOr<String> clipboard_data_type_to_mime_type(ClipboardDataType data_type)
+{
+    switch (data_type) {
+    case ClipboardDataType::Text:
+        return "text/plain"_string;
+
+    case ClipboardDataType::PNG:
+        return "image/png"_string;
+
+    case ClipboardDataType::BMP:
+        return "image/bitmap"_string;
+
+    case ClipboardDataType::JPG:
+        return "image/jpeg"_string;
+
+    case ClipboardDataType::TIFF:
+        return "image/tiff"_string;
+
+    default:
+        return Error::from_string_literal("Unable to determine mime type!");
+    }
+}
+
+ErrorOr<ClipboardDataType> clipboard_data_type_from_raw_value(u32 value)
+{
+    if (value >= to_underlying(ClipboardDataType::__End)) {
+        return Error::from_string_literal("Unsupported clipboard type");
+    }
+
+    return static_cast<ClipboardDataType>(value);
+}
+
 ErrorOr<AnnounceCapabilitiesMessage> AnnounceCapabilitiesMessage::read_from_stream(AK::Stream& stream)
 {
     // If this message is a capabilities request, we don't have to parse anything else.
@@ -57,11 +89,7 @@ ErrorOr<ClipboardGrabMessage> ClipboardGrabMessage::read_from_stream(AK::Stream&
     auto types = Vector<ClipboardDataType>();
     while (!stream.is_eof()) {
         auto value = TRY(stream.read_value<u32>());
-        if (value >= to_underlying(ClipboardDataType::__End)) {
-            return Error::from_string_literal("Unsupported clipboard type");
-        }
-
-        types.append(static_cast<ClipboardDataType>(value));
+        types.append(TRY(clipboard_data_type_from_raw_value(value)));
     }
 
     return ClipboardGrabMessage(types);
@@ -88,11 +116,7 @@ ErrorOr<String> ClipboardGrabMessage::debug_description()
 ErrorOr<ClipboardRequestMessage> ClipboardRequestMessage::read_from_stream(AK::Stream& stream)
 {
     auto value = TRY(stream.read_value<u32>());
-    if (value >= to_underlying(ClipboardDataType::__End)) {
-        return Error::from_string_literal("Unsupported clipboard type");
-    }
-
-    auto type = static_cast<ClipboardDataType>(value);
+    auto type = TRY(clipboard_data_type_from_raw_value(value));
     return ClipboardRequestMessage(type);
 }
 
