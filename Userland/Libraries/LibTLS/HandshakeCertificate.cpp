@@ -78,7 +78,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
             auto certificate = Certificate::parse_certificate(buffer.slice(res_cert, certificate_size_specific), false);
             if (!certificate.is_error()) {
-                m_context.certificates.append(certificate.value());
+                m_context.certificates.empend(certificate.value());
                 valid_certificate = true;
             } else {
                 dbgln("Failed to parse client cert: {}", certificate.error());
