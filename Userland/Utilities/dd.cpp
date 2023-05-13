@@ -7,8 +7,10 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
+#include <AK/NumberFormat.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -43,6 +45,7 @@ struct {
     size_t total_bytes_copied = 0;
     size_t total_blocks_in = 0, partial_blocks_in = 0;
     size_t total_blocks_out = 0, partial_blocks_out = 0;
+    Core::ElapsedTimer timer { true };
 } statistics;
 
 static void closing_statistics()
@@ -52,7 +55,13 @@ static void closing_statistics()
     warnln("{}+{} blocks in", statistics.total_blocks_in, statistics.partial_blocks_in);
     warnln("{}+{} blocks out", statistics.total_blocks_out, statistics.partial_blocks_out);
     if (statistics.status != Noxfer) {
-        warnln("{} bytes copied.", statistics.total_bytes_copied);
+        auto elapsed_time = statistics.timer.elapsed_time();
+        DeprecatedString copy_speed = "INF B/s";
+        if (!elapsed_time.is_zero()) {
+            auto speed = statistics.total_bytes_copied * 1000 / elapsed_time.to_milliseconds();
+            copy_speed = human_readable_quantity(speed, AK::HumanReadableBasedOn::Base2, "B/s"sv);
+        }
+        warnln("{} bytes copied ({}), {} ms, {}", statistics.total_bytes_copied, human_readable_size(statistics.total_bytes_copied), elapsed_time.to_milliseconds(), copy_speed);
     }
 }
 
@@ -214,6 +223,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         closing_statistics();
         exit(status);
     }));
+
+    statistics.timer.start();
 
     while (1) {
         nread = read(input_fd, buffer, block_size);
