@@ -71,7 +71,6 @@ public:
     static ErrorOr<void, CopyError> copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
     static DeprecatedString real_path_for(DeprecatedString const& filename);
-    static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
 
     virtual bool open(OpenMode) override;
 
