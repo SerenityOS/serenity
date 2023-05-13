@@ -130,6 +130,26 @@ private:
     Vector<ClipboardDataType> m_types;
 };
 
+// Request clipboard data with the specified type.
+class ClipboardRequestMessage : public Message {
+public:
+    ClipboardRequestMessage(ClipboardDataType data_type)
+        : Message(Type::ClipboardRequest)
+        , m_data_type(data_type)
+    {
+    }
+
+    static ErrorOr<ClipboardRequestMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<void> write_to_stream(AK::Stream& stream);
+    ErrorOr<String> debug_description() override;
+
+    ClipboardDataType data_type() { return m_data_type; }
+
+private:
+    ClipboardDataType m_data_type;
+};
+
 }
 
 namespace AK {
