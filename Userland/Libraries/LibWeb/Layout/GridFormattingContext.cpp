@@ -1664,7 +1664,7 @@ CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item
 CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& item, GridDimension const dimension) const
 {
     auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-    auto const track_index = dimension == GridDimension::Column ? item.gap_adjusted_column(grid_container()) : item.gap_adjusted_column(grid_container());
+    auto const track_index = dimension == GridDimension::Column ? item.gap_adjusted_column(grid_container()) : item.gap_adjusted_row(grid_container());
     return tracks[track_index].base_size;
 }
 
