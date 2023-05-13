@@ -32,6 +32,21 @@ public:
 
     int tab_index(Tab*);
 
+    QAction& go_back_action()
+    {
+        return *m_go_back_action;
+    }
+
+    QAction& go_forward_action()
+    {
+        return *m_go_forward_action;
+    }
+
+    QAction& reload_action()
+    {
+        return *m_reload_action;
+    }
+
 public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
@@ -67,6 +82,11 @@ private:
     Vector<NonnullOwnPtr<Tab>> m_tabs;
     Tab* m_current_tab { nullptr };
     QMenu* m_zoom_menu { nullptr };
+
+    OwnPtr<QMenu> m_context_menu {};
+    OwnPtr<QAction> m_go_back_action {};
+    OwnPtr<QAction> m_go_forward_action {};
+    OwnPtr<QAction> m_reload_action {};
 
     Browser::CookieJar& m_cookie_jar;
 

@@ -74,20 +74,11 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
 
-    m_back_action = make<QAction>("Back");
-    m_back_action->setEnabled(false);
-    m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
-    m_forward_action = make<QAction>("Forward");
-    m_forward_action->setEnabled(false);
-    m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
-    m_reload_action = make<QAction>("Reload");
-    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
-
     rerender_toolbar_icons();
 
-    m_toolbar->addAction(m_back_action);
-    m_toolbar->addAction(m_forward_action);
-    m_toolbar->addAction(m_reload_action);
+    m_toolbar->addAction(&m_window->go_back_action());
+    m_toolbar->addAction(&m_window->go_forward_action());
+    m_toolbar->addAction(&m_window->reload_action());
     m_toolbar->addWidget(m_location_edit);
     m_reset_zoom_button->setToolTip("Reset zoom level");
     m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
@@ -143,16 +134,12 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         }
         m_is_history_navigation = false;
 
-        m_back_action->setEnabled(m_history.can_go_back());
-        m_forward_action->setEnabled(m_history.can_go_forward());
+        m_window->go_back_action().setEnabled(m_history.can_go_back());
+        m_window->go_forward_action().setEnabled(m_history.can_go_forward());
     });
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
     QObject::connect(m_view, &WebContentView::title_changed, this, &Tab::page_title_changed);
     QObject::connect(m_view, &WebContentView::favicon_changed, this, &Tab::page_favicon_changed);
-
-    QObject::connect(m_back_action, &QAction::triggered, this, &Tab::back);
-    QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);
-    QObject::connect(m_reload_action, &QAction::triggered, this, &Tab::reload);
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
     QObject::connect(m_view, &WebContentView::got_source, this, [this](AK::URL, QString const& source) {
@@ -300,7 +287,7 @@ bool Tab::event(QEvent* event)
 
 void Tab::rerender_toolbar_icons()
 {
-    m_back_action->setIcon(render_svg_icon_with_theme_colors("back", palette()));
-    m_forward_action->setIcon(render_svg_icon_with_theme_colors("forward", palette()));
-    m_reload_action->setIcon(render_svg_icon_with_theme_colors("reload", palette()));
+    m_window->go_back_action().setIcon(render_svg_icon_with_theme_colors("back", palette()));
+    m_window->go_forward_action().setIcon(render_svg_icon_with_theme_colors("forward", palette()));
+    m_window->reload_action().setIcon(render_svg_icon_with_theme_colors("reload", palette()));
 }

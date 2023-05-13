@@ -67,10 +67,6 @@ private:
     QString m_title;
     QLabel* m_hover_label { nullptr };
 
-    OwnPtr<QAction> m_back_action;
-    OwnPtr<QAction> m_forward_action;
-    OwnPtr<QAction> m_reload_action;
-
     int tab_index();
 
     bool m_is_history_navigation { false };
