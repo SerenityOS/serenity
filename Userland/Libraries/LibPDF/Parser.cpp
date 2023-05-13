@@ -432,7 +432,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
         return error("Expected dict to end with \">>\"");
     m_reader.consume_whitespace();
 
-    return make_object<DictObject>(map);
+    return make_object<DictObject>(move(map));
 }
 
 PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
