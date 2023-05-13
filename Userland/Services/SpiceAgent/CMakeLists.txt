@@ -7,9 +7,8 @@ set(SOURCES
     main.cpp
     Message.cpp
     SpiceAgent.cpp
-    ConnectionToClipboardServer.cpp
 )
 
 serenity_bin(SpiceAgent)
-target_link_libraries(SpiceAgent PRIVATE LibGfx LibCore LibIPC LibMain)
+target_link_libraries(SpiceAgent PRIVATE LibCore LibGfx LibGUI LibMain)
 add_dependencies(SpiceAgent Clipboard)
