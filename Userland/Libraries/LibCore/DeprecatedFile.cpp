@@ -181,67 +181,6 @@ DeprecatedString DeprecatedFile::absolute_path(DeprecatedString const& path)
     return LexicalPath::canonicalized_path(full_path.string());
 }
 
-#ifdef AK_OS_SERENITY
-
-ErrorOr<DeprecatedString> DeprecatedFile::read_link(DeprecatedString const& link_path)
-{
-    // First, try using a 64-byte buffer, that ought to be enough for anybody.
-    char small_buffer[64];
-
-    int rc = serenity_readlink(link_path.characters(), link_path.length(), small_buffer, sizeof(small_buffer));
-    if (rc < 0)
-        return Error::from_errno(errno);
-
-    size_t size = rc;
-    // If the call was successful, the syscall (unlike the LibC wrapper)
-    // returns the full size of the link. Let's see if our small buffer
-    // was enough to read the whole link.
-    if (size <= sizeof(small_buffer))
-        return DeprecatedString { small_buffer, size };
-    // Nope, but at least now we know the right size.
-    char* large_buffer_ptr;
-    auto large_buffer = StringImpl::create_uninitialized(size, large_buffer_ptr);
-
-    rc = serenity_readlink(link_path.characters(), link_path.length(), large_buffer_ptr, size);
-    if (rc < 0)
-        return Error::from_errno(errno);
-
-    size_t new_size = rc;
-    if (new_size == size)
-        return { *large_buffer };
-
-    // If we're here, the symlink has changed while we were looking at it.
-    // If it became shorter, our buffer is valid, we just have to trim it a bit.
-    if (new_size < size)
-        return DeprecatedString { large_buffer_ptr, new_size };
-    // Otherwise, here's not much we can do, unless we want to loop endlessly
-    // in this case. Let's leave it up to the caller whether to loop.
-    errno = EAGAIN;
-    return Error::from_errno(errno);
-}
-
-#else
-
-// This is a sad version for other systems. It has to always make a copy of the
-// link path, and to always make two syscalls to get the right size first.
-ErrorOr<DeprecatedString> DeprecatedFile::read_link(DeprecatedString const& link_path)
-{
-    struct stat statbuf = {};
-    int rc = lstat(link_path.characters(), &statbuf);
-    if (rc < 0)
-        return Error::from_errno(errno);
-    char* buffer_ptr;
-    auto buffer = StringImpl::create_uninitialized(statbuf.st_size, buffer_ptr);
-    if (readlink(link_path.characters(), buffer_ptr, statbuf.st_size) < 0)
-        return Error::from_errno(errno);
-    // (See above.)
-    if (rc == statbuf.st_size)
-        return { *buffer };
-    return DeprecatedString { buffer_ptr, (size_t)rc };
-}
-
-#endif
-
 static DeprecatedString get_duplicate_name(DeprecatedString const& path, int duplicate_count)
 {
     if (duplicate_count == 0) {
