@@ -69,14 +69,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView raw_url;
     StringView webdriver_content_ipc_path;
     bool enable_callgrind_profiling = false;
-    bool disable_sql_database = false;
+    bool enable_sql_database = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
-    args_parser.add_option(disable_sql_database, "Disable SQL database", "disable-sql-database", 0);
+    args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
     args_parser.parse(arguments);
 
     auto get_formatted_url = [&](StringView const& raw_url) -> ErrorOr<URL> {
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<Browser::Database> database;
 
-    if (!disable_sql_database) {
+    if (enable_sql_database) {
         auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
         auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
         database = TRY(Browser::Database::create(move(sql_client)));
