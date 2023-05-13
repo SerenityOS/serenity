@@ -114,18 +114,21 @@ public:
 
     ErrorOr<String> to_string() const
     {
+        if (is_calculated())
+            return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string();
         if (is_percentage())
             return m_value.template get<Percentage>().to_string();
-
         return m_value.template get<T>().to_string();
     }
 
     bool operator==(PercentageOr<T> const& other) const
     {
-        if (is_calculated())
+        if (is_calculated() != other.is_calculated())
             return false;
         if (is_percentage() != other.is_percentage())
             return false;
+        if (is_calculated())
+            return (*m_value.template get<NonnullRefPtr<CalculatedStyleValue>>() == *other.m_value.template get<NonnullRefPtr<CalculatedStyleValue>>());
         if (is_percentage())
             return (m_value.template get<Percentage>() == other.m_value.template get<Percentage>());
         return (m_value.template get<T>() == other.m_value.template get<T>());
