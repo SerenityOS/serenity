@@ -43,6 +43,27 @@ ErrorOr<ClipboardDataType> clipboard_data_type_from_raw_value(u32 value)
     return static_cast<ClipboardDataType>(value);
 }
 
+ErrorOr<ClipboardDataType> clipboard_data_type_from_mime_type(String const& mime_type)
+{
+    if (mime_type == "text/plain")
+        return ClipboardDataType::Text;
+
+    // We treat image/x-serenityos as a standard PNG here
+    if (mime_type == "image/png" || mime_type == "image/x-serenityos")
+        return ClipboardDataType::PNG;
+
+    if (mime_type == "image/bitmap")
+        return ClipboardDataType::BMP;
+
+    if (mime_type == "image/jpeg")
+        return ClipboardDataType::JPG;
+
+    if (mime_type == "image/tiff")
+        return ClipboardDataType::TIFF;
+
+    return Error::from_string_literal("Unable to determine clipboard data type!");
+}
+
 ErrorOr<AnnounceCapabilitiesMessage> AnnounceCapabilitiesMessage::read_from_stream(AK::Stream& stream)
 {
     // If this message is a capabilities request, we don't have to parse anything else.
