@@ -146,6 +146,7 @@ target_link_libraries(unzip PRIVATE LibArchive LibCompress LibCrypto LibFileSyst
 target_link_libraries(update-cpp-test-results PRIVATE LibCpp)
 target_link_libraries(useradd PRIVATE LibCrypt)
 target_link_libraries(userdel PRIVATE LibFileSystem)
+target_link_libraries(usermod PRIVATE LibFileSystem)
 target_link_libraries(wallpaper PRIVATE LibGfx LibGUI)
 target_link_libraries(wasm PRIVATE LibWasm LibLine LibJS)
 target_link_libraries(watch PRIVATE LibFileSystem)
