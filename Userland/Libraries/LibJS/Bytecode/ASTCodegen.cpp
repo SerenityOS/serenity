@@ -2254,10 +2254,10 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         if (m_finalizer) {
             generator.emit<Bytecode::Op::Jump>(finalizer_target);
         } else {
-            auto& block = generator.make_block();
+            if (!next_block)
+                next_block = &generator.make_block();
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
-            generator.emit<Bytecode::Op::Jump>(Bytecode::Label { block });
-            next_block = &block;
+            generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *next_block });
         }
     }
 
