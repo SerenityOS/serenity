@@ -794,7 +794,7 @@ ErrorOr<Certificate> Certificate::parse_certificate(ReadonlyBytes buffer, bool)
 #undef DROP_OBJECT
 #undef REWRITE_TAG
 
-ErrorOr<String> RelativeDistinguishedName::to_string()
+ErrorOr<String> RelativeDistinguishedName::to_string() const
 {
 #define ADD_IF_RECOGNIZED(identifier, shorthand_code)             \
     if (it->key == identifier) {                                  \
