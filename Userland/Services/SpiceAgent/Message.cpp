@@ -114,4 +114,41 @@ ErrorOr<String> ClipboardGrabMessage::debug_description()
     return builder.to_string();
 }
 
+ClipboardRequestMessage::ClipboardRequestMessage(ClipboardDataType data_type)
+    : Message(Type::ClipboardRequest)
+    , m_data_type(data_type)
+{
+}
+
+ErrorOr<ClipboardRequestMessage> ClipboardRequestMessage::create(ClipboardDataType data_type)
+{
+    return ClipboardRequestMessage(data_type);
+}
+
+ErrorOr<ClipboardRequestMessage> ClipboardRequestMessage::read_from_stream(AK::Stream& stream)
+{
+    auto value = TRY(stream.read_value<u32>());
+    if (value >= to_underlying(ClipboardDataType::__End)) {
+        return Error::from_string_literal("Unsupported clipboard type");
+    }
+
+    auto type = static_cast<ClipboardDataType>(value);
+    return ClipboardRequestMessage::create(type);
+}
+
+ErrorOr<void> ClipboardRequestMessage::write_to_stream(AK::Stream& stream)
+{
+    TRY(stream.write_value(data_type()));
+    return {};
+}
+
+ErrorOr<String> ClipboardRequestMessage::debug_description()
+{
+    StringBuilder builder;
+    builder.append("ClipboardRequest { "sv);
+    builder.appendff("data_type = {}", data_type());
+    builder.append(" }"sv);
+    return builder.to_string();
+}
+
 }

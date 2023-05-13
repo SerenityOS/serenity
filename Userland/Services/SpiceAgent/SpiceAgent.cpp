@@ -74,7 +74,10 @@ ErrorOr<void> SpiceAgent::on_message_received()
         if (data_type == ClipboardDataType::None)
             break;
 
-        dbgln("The spice server has notified us of new clipboard data! Type: {}", data_type);
+        dbgln_if(SPICE_AGENT_DEBUG, "The spice server has notified us of new clipboard data of type `{}`", data_type);
+
+        auto request = TRY(ClipboardRequestMessage::create(data_type));
+        TRY(this->send_message(request));
 
         break;
     }
