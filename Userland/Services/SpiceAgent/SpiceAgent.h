@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "ChunkHeader.h"
 #include "Message.h"
 #include "MessageHeader.h"
 #include <AK/MemoryStream.h>
@@ -18,14 +19,6 @@ namespace SpiceAgent {
 
 class SpiceAgent {
 public:
-    // Indicates where the message has come from
-    enum class Port : u32 {
-        Client = 1,
-
-        // There are currently no messages which are meant for the server, so all messages sent by the agent (us) with this port are discarded.
-        Server
-    };
-
     static ErrorOr<NonnullOwnPtr<SpiceAgent>> create(StringView device_path);
     SpiceAgent(NonnullOwnPtr<Core::File> spice_device, Vector<Capability> const& capabilities);
 
@@ -39,22 +32,21 @@ public:
         TRY(message.write_to_stream(message_stream));
 
         // Create a header to be sent
-        auto header_stream = AK::AllocatingMemoryStream();
-        auto header = TRY(MessageHeader::create(message.type(), message_stream.used_buffer_size()));
-        TRY(header.write_to_stream(header_stream));
+        auto message_header_stream = AK::AllocatingMemoryStream();
+        auto message_header = TRY(MessageHeader::create(message.type(), message_stream.used_buffer_size()));
+        TRY(message_header.write_to_stream(message_header_stream));
 
-        // TODO(Caoimhe): `ChunkHeader` class?
+        // The length given in the chunk header is the length of the message header, and the message combined
+        auto length = message_header_stream.used_buffer_size() + message_stream.used_buffer_size();
 
         // Currently, there are no messages from the agent which are meant for the server.
         // So, all messages sent by the agent with a port of Port::Server get dropped silently.
-        TRY(m_spice_device->write_value(Port::Client));
+        auto chunk_header = ChunkHeader::create(ChunkHeader::Port::Client, length);
 
-        // The length of the subsequent data
-        auto length = header_stream.used_buffer_size() + message_stream.used_buffer_size();
-        TRY(m_spice_device->write_value<u32>(length));
+        TRY(m_spice_device->write_value(chunk_header));
 
         // The message's header
-        TRY(m_spice_device->write_some(TRY(header_stream.read_until_eof())));
+        TRY(m_spice_device->write_some(TRY(message_header_stream.read_until_eof())));
 
         // The message content
         TRY(m_spice_device->write_some(TRY(message_stream.read_until_eof())));

@@ -5,6 +5,7 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    ChunkHeader.cpp
     Message.cpp
     MessageHeader.cpp
     SpiceAgent.cpp

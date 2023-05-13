@@ -121,15 +121,18 @@ ErrorOr<void> SpiceAgent::on_clipboard_message(ClipboardMessage& message)
 
 ErrorOr<ByteBuffer> SpiceAgent::read_message_buffer()
 {
-    // TODO(Caoimhe): `ChunkHeader` class?
-    auto port = TRY(m_spice_device->read_value<Port>());
-    if (port != Port::Client) {
-        return Error::from_string_literal("Attempted to read message bytes from a port that wasn't meant for the client!");
-    }
-
-    auto size = TRY(m_spice_device->read_value<u32>());
-    auto buffer = TRY(ByteBuffer::create_uninitialized(size));
+    auto header = TRY(ChunkHeader::read_from_stream(*m_spice_device));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(header.size()));
     TRY(m_spice_device->read_until_filled(buffer));
+
+    // If the header's size is bigger than or equal to 2048, we may have more data incoming
+    while (header.size() >= 2048) {
+        header = TRY(ChunkHeader::read_from_stream(*m_spice_device));
+
+        auto new_buffer = TRY(ByteBuffer::create_uninitialized(header.size()));
+        TRY(m_spice_device->read_until_filled(new_buffer));
+        TRY(buffer.try_append(new_buffer));
+    }
 
     return buffer;
 }
