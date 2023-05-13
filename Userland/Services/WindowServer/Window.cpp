@@ -689,6 +689,8 @@ bool Window::is_active() const
 Window* Window::blocking_modal_window()
 {
     auto maybe_blocker = WindowManager::the().for_each_window_in_modal_chain(*this, [&](auto& window) {
+        if (parent_window() == window.parent_window() && is_blocking())
+            return IterationDecision::Continue;
         if (is_descendant_of(window))
             return IterationDecision::Continue;
         if (window.is_blocking() && this != &window)
