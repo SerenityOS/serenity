@@ -155,6 +155,13 @@ ErrorOr<void> SpiceAgent::on_message_received()
         break;
     }
 
+    case Message::Type::FileTransferStart: {
+        auto message = TRY(FileTransferStartMessage::read_from_stream(stream));
+        dbgln("File transfer request received: {}", TRY(message.debug_description()));
+
+        break;
+    }
+
     // Ignored messages
     case Message::Type::MonitorsConfig:
         dbgln_if(SPICE_AGENT_DEBUG, "Ignored message: {}", header);
