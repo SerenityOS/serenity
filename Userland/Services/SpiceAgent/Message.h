@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Vector.h>
@@ -148,6 +149,29 @@ public:
 
 private:
     ClipboardDataType m_data_type;
+};
+
+// Used to send the clipboard's contents to the client/server.
+class ClipboardMessage : public Message {
+public:
+    ClipboardMessage(ClipboardDataType data_type, ByteBuffer const& contents)
+        : Message(Type::Clipboard)
+        , m_data_type(data_type)
+        , m_contents(contents)
+    {
+    }
+
+    static ErrorOr<ClipboardMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<void> write_to_stream(AK::Stream& stream);
+    ErrorOr<String> debug_description() override;
+
+    ClipboardDataType data_type() { return m_data_type; }
+    ByteBuffer const& contents() { return m_contents; }
+
+private:
+    ClipboardDataType m_data_type;
+    ByteBuffer m_contents;
 };
 
 }
