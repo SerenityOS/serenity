@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 
 namespace SpiceAgent {
 
@@ -74,14 +75,23 @@ ErrorOr<void> SpiceAgent::on_clipboard_update(String const& mime_type)
 ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
 {
     auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
-    auto mime_type = TRY(to_mime_type(data_type));
+    auto requested_mime_type = TRY(to_mime_type(data_type));
 
-    // If the requested mime type doesn't match what's on the clipboard, we won't send anything back
-    if (mime_type.to_deprecated_string() != data_and_type.mime_type) {
+    // We have an exception for `image/x-serenityos`, where we treat it as a PNG when talking to the spice server
+    auto is_serenity_image = data_and_type.mime_type == "image/x-serenityos" && data_type == ClipboardDataType::PNG;
+    if (!is_serenity_image && requested_mime_type.to_deprecated_string() != data_and_type.mime_type) {
+        // If the requested mime type doesn't match what's on the clipboard, we won't send anything back
         return Error::from_string_literal("Requested mime type doesn't match the clipboard's contents!");
     }
 
-    auto message = TRY(ClipboardMessage::create(data_type, data_and_type.data));
+    // If the mime type is `image/x-serenityos`, we need to encode the image that's on the clipboard as a PNG
+    auto clipboard_data = data_and_type.data;
+    if (is_serenity_image) {
+        auto bitmap = data_and_type.as_bitmap();
+        clipboard_data = TRY(Gfx::PNGWriter::encode(*bitmap));
+    }
+
+    auto message = TRY(ClipboardMessage::create(data_type, clipboard_data));
     TRY(this->send_message(message));
 
     return {};

@@ -48,7 +48,8 @@ ErrorOr<ClipboardDataType> from_mime_type(String const& mime_type)
     if (mime_type == "text/plain")
         return ClipboardDataType::Text;
 
-    if (mime_type == "image/png")
+    // We treat image/x-serenityos as a standard PNG here
+    if (mime_type == "image/png" || mime_type == "image/x-serenityos")
         return ClipboardDataType::PNG;
 
     if (mime_type == "image/bitmap")
