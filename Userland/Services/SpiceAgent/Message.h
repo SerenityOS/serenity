@@ -179,6 +179,33 @@ private:
     ByteBuffer m_contents;
 };
 
+// Sent to the agent to indicate that a file transfer has been requested.
+class FileTransferStartMessage : public Message {
+public:
+    struct Metadata {
+        String name;
+        u32 size;
+    };
+
+    static ErrorOr<FileTransferStartMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<String> debug_description() override;
+
+    u32 id() const { return m_id; }
+    Metadata const& metadata() { return m_metadata; }
+
+private:
+    FileTransferStartMessage(u32 id, FileTransferStartMessage::Metadata const& metadata)
+        : Message(Type::FileTransferStart)
+        , m_id(id)
+        , m_metadata(metadata)
+    {
+    }
+
+    u32 m_id { 0 };
+    Metadata m_metadata;
+};
+
 }
 
 namespace AK {
