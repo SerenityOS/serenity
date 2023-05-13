@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TemporaryChange.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -132,7 +133,7 @@ Action::~Action()
 
 void Action::process_event(Window& window, Event& event)
 {
-    if (is_enabled() && is_visible()) {
+    if (is_enabled() && is_visible() && !is_activating()) {
         flash_menubar_menu(window);
         activate();
         event.accept();
@@ -148,6 +149,10 @@ void Action::process_event(Window& window, Event& event)
 
 void Action::activate(Core::Object* activator)
 {
+    if (is_activating())
+        return;
+    TemporaryChange change { m_activating, true };
+
     if (!on_activation)
         return;
 
