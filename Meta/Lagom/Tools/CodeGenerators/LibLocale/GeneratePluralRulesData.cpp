@@ -577,7 +577,7 @@ static constexpr Array<PluralCategory, @size@> @name@ { { PluralCategory::Other)
         generator.append("} };");
     };
 
-    for (auto [locale, rules] : cldr.locales) {
+    for (auto const& [locale, rules] : cldr.locales) {
         append_rules("cardinal"sv, locale, rules.cardinal_rules);
         append_rules("ordinal"sv, locale, rules.ordinal_rules);
         append_ranges(locale, rules.plural_ranges);
