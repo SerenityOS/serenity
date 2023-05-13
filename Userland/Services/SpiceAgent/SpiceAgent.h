@@ -64,8 +64,16 @@ private:
 
     RefPtr<Core::Notifier> m_notifier;
 
+    bool m_clipboard_dirty { false };
+
     // Fired when we receive clipboard data from the spice server.
     ErrorOr<void> did_receive_clipboard_message(ClipboardMessage& message);
+
+    // Fired when the user's clipboard changes
+    ErrorOr<void> on_clipboard_update(String const& mime_type);
+
+    // Sends the GUI::Clipboard's current contents to the spice server
+    ErrorOr<void> send_clipboard_contents(ClipboardDataType data_type);
 
     ErrorOr<void> on_message_received();
     ErrorOr<ByteBuffer> read_message_buffer();

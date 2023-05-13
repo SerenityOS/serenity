@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 
 namespace SpiceAgent {
 
@@ -39,6 +40,59 @@ ErrorOr<void> SpiceAgent::start()
     // The server usually requests this from us anyways, but there's no harm in sending it.
     auto capabilities_message = AnnounceCapabilitiesMessage(false, m_capabilities);
     TRY(this->send_message(capabilities_message));
+
+    GUI::Clipboard::the().on_change = [this](auto const& mime_type) {
+        auto result = this->on_clipboard_update(String::from_deprecated_string(mime_type).release_value_but_fixme_should_propagate_errors());
+        if (result.is_error()) {
+            dbgln("Failed to inform the spice server of a clipboard update: {}", result.release_error());
+        }
+    };
+
+    return {};
+}
+
+ErrorOr<void> SpiceAgent::on_clipboard_update(String const& mime_type)
+{
+    // If we just copied something to the clipboard, we shouldn't do anything here.
+    if (m_clipboard_dirty) {
+        m_clipboard_dirty = false;
+        return {};
+    }
+
+    // If the clipboard has just been cleared, we shouldn't send anything.
+    if (mime_type.is_empty()) {
+        return {};
+    }
+
+    // Notify the spice server about new content being available.
+    auto clipboard_data_type = TRY(clipboard_data_type_from_mime_type(mime_type));
+    auto message = ClipboardGrabMessage({ clipboard_data_type });
+    TRY(this->send_message(message));
+
+    return {};
+}
+
+ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
+{
+    auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+    auto requested_mime_type = TRY(clipboard_data_type_to_mime_type(data_type));
+
+    // We have an exception for `image/x-serenityos`, where we treat it as a PNG when talking to the spice server.
+    auto is_serenity_image = data_and_type.mime_type == "image/x-serenityos" && data_type == ClipboardDataType::PNG;
+    if (!is_serenity_image && requested_mime_type.to_deprecated_string() != data_and_type.mime_type) {
+        // If the requested mime type doesn't match what's on the clipboard, we won't send anything back.
+        return Error::from_string_literal("Requested mime type doesn't match the clipboard's contents!");
+    }
+
+    // If the mime type is `image/x-serenityos`, we need to encode the image that's on the clipboard as a PNG.
+    auto clipboard_data = data_and_type.data;
+    if (is_serenity_image) {
+        auto bitmap = data_and_type.as_bitmap();
+        clipboard_data = TRY(Gfx::PNGWriter::encode(*bitmap));
+    }
+
+    auto message = ClipboardMessage(data_type, clipboard_data);
+    TRY(this->send_message(message));
 
     return {};
 }
@@ -91,6 +145,15 @@ ErrorOr<void> SpiceAgent::on_message_received()
         break;
     }
 
+    case Message::Type::ClipboardRequest: {
+        dbgln("The spice server has requsted our clipboard's contents");
+
+        auto message = TRY(ClipboardRequestMessage::read_from_stream(stream));
+        TRY(this->send_clipboard_contents(message.data_type()));
+
+        break;
+    }
+
     // We ignore certain messages to prevent it from clogging up the logs.
     case Message::Type::MonitorsConfig:
         dbgln_if(SPICE_AGENT_DEBUG, "Ignored message: {}", header);
@@ -138,6 +201,7 @@ ErrorOr<void> SpiceAgent::did_receive_clipboard_message(ClipboardMessage& messag
         return Error::from_string_literal("Unsupported clipboard data type!");
     }
 
+    m_clipboard_dirty = true;
     return {};
 }
 

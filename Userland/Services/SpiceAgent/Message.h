@@ -53,6 +53,7 @@ enum class ClipboardDataType : u32 {
 
 ErrorOr<String> clipboard_data_type_to_mime_type(ClipboardDataType type);
 ErrorOr<ClipboardDataType> clipboard_data_type_from_raw_value(u32 value);
+ErrorOr<ClipboardDataType> clipboard_data_type_from_mime_type(String const& mime_type);
 
 class Message {
 public:
