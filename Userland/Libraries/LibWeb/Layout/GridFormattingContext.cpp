@@ -760,7 +760,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
                     }
                     track.base_size = base_size;
                 }
-            } else {
+            } else if (track.min_track_sizing_function.is_auto()) {
                 // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
                 // at zero. The minimum contribution of an item is the smallest outer size it can have.
                 // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
