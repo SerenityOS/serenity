@@ -137,7 +137,7 @@ private:
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
 
-    void update_loaded_libs();
+    ErrorOr<void> update_loaded_libs();
 
     int m_debuggee_pid { -1 };
     DeprecatedString m_source_root;
