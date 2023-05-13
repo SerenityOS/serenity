@@ -57,10 +57,10 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
         return {};
     };
 
-    // 3. Let errorSteps be to queue a fetch task to run processBodyError, with taskDestination.
-    auto error_steps = [process_body_error = move(process_body_error), task_destination_object = JS::make_handle(task_destination_object)](JS::Error& error) mutable {
-        queue_fetch_task(*task_destination_object, [process_body_error = move(process_body_error), error = JS::make_handle(error)]() {
-            process_body_error(*error);
+    // 3. Let errorSteps optionally given an exception exception be to queue a fetch task to run processBodyError given exception, with taskDestination.
+    auto error_steps = [process_body_error = move(process_body_error), task_destination_object = JS::make_handle(task_destination_object)](JS::GCPtr<WebIDL::DOMException> exception) mutable {
+        queue_fetch_task(*task_destination_object, [process_body_error = move(process_body_error), exception = JS::make_handle(exception)]() {
+            process_body_error(*exception);
         });
     };
 
@@ -71,7 +71,7 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
         TRY_OR_THROW_OOM(vm, success_steps(*byte_buffer));
     } else {
         // Empty, Blob, FormData
-        error_steps(TRY(JS::InternalError::create(realm, "Reading from Blob, FormData or null source is not yet implemented"sv)));
+        error_steps(WebIDL::DOMException::create(realm, "DOMException", "Reading from Blob, FormData or null source is not yet implemented"sv));
     }
     return {};
 }

@@ -481,27 +481,21 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             if (!request->integrity_metadata().is_empty()) {
                 // 1. Let processBodyError be this step: run fetch response handover given fetchParams and a network
                 //    error.
-                // FIXME: The spec disagrees on whether fully_read()'s process_body_error should take an argument or not.
-                //        See https://github.com/whatwg/fetch/issues/1636
-                //        For now, define two versions of processBodyError
-                auto process_body_error_no_argument = [&realm, &vm, &fetch_params]() {
-                    TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv)));
-                };
-                Infrastructure::Body::ProcessBodyErrorCallback process_body_error = [&realm, &vm, &fetch_params](auto&) {
+                Infrastructure::Body::ProcessBodyErrorCallback process_body_error = [&realm, &vm, &fetch_params](auto) {
                     TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv)));
                 };
 
                 // 2. If response’s body is null, then run processBodyError and abort these steps.
                 if (!response->body().has_value()) {
-                    process_body_error_no_argument();
+                    process_body_error({});
                     return;
                 }
 
                 // 3. Let processBody given bytes be these steps:
-                Infrastructure::Body::ProcessBodyCallback process_body = [&realm, &request, &response, &fetch_params, process_body_error = move(process_body_error_no_argument)](ByteBuffer bytes) {
+                Infrastructure::Body::ProcessBodyCallback process_body = [&realm, &request, &response, &fetch_params, process_body_error = move(process_body_error)](ByteBuffer bytes) {
                     // 1. If bytes do not match request’s integrity metadata, then run processBodyError and abort these steps.
                     if (!TRY_OR_IGNORE(SRI::do_bytes_match_metadata_list(bytes, request->integrity_metadata()))) {
-                        process_body_error();
+                        process_body_error({});
                         return;
                     }
 
@@ -657,7 +651,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
 
         // 2. Let processBodyError be this step: run fetchParams’s process response consume body given response and
         //    failure.
-        auto process_body_error = [&fetch_params, &response](auto&) {
+        auto process_body_error = [&fetch_params, &response](auto) {
             (*fetch_params.algorithms()->process_response_consume_body())(response, Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
         };
 

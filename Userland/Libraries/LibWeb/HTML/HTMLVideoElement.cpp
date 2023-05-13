@@ -195,7 +195,7 @@ WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optio
         };
 
         VERIFY(response->body().has_value());
-        auto empty_algorithm = [](auto&) {};
+        auto empty_algorithm = [](auto) {};
 
         response->body()->fully_read(realm, move(on_image_data_read), move(empty_algorithm), JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
     };

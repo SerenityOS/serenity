@@ -324,7 +324,7 @@ void HTMLLinkElement::default_fetch_and_process_linked_resource()
                                 };
 
                                 // NOTE: `this` and `unsafe_response` are protected by `fully_read` using JS::SafeFunction.
-                                auto process_body_error = [this, unsafe_response](auto&) {
+                                auto process_body_error = [this, unsafe_response](auto) {
                                     process_linked_resource(false, unsafe_response, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
                                 };
 

@@ -158,13 +158,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
 
     // 3. Let errorSteps given error be to reject promise with error.
     // NOTE: `promise` and `realm` is protected by JS::SafeFunction.
-    auto error_steps = [promise, &realm](JS::Object& error) {
+    auto error_steps = [promise, &realm](JS::GCPtr<WebIDL::DOMException> error) {
         // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
         //       (In this case, Promise's reject function)
         auto& environment_settings_object = Bindings::host_defined_environment_settings_object(realm);
         environment_settings_object.prepare_to_run_script();
 
-        WebIDL::reject_promise(realm, promise, &error);
+        WebIDL::reject_promise(realm, promise, error);
 
         // See above NOTE.
         environment_settings_object.clean_up_after_running_script();
