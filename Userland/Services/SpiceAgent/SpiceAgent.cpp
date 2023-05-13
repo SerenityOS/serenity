@@ -40,6 +40,50 @@ ErrorOr<void> SpiceAgent::start()
     auto capabilities_message = TRY(AnnounceCapabilitiesMessage::create(m_capabilities));
     TRY(this->send_message(capabilities_message));
 
+    GUI::Clipboard::the().on_change = [this](auto const& mime_type) {
+        auto result = this->on_clipboard_update(String::from_deprecated_string(mime_type).release_value_but_fixme_should_propagate_errors());
+        if (result.is_error()) {
+            dbgln("Failed to inform the spice server of a clipboard update: {}", result.release_error());
+        }
+    };
+
+    return {};
+}
+
+ErrorOr<void> SpiceAgent::on_clipboard_update(String const& mime_type)
+{
+    // If we just copied something to the clipboard, we shouldn't do anything here
+    if (m_just_updated_clipboard) {
+        m_just_updated_clipboard = false;
+        return {};
+    }
+
+    // If the clipboard has just been cleared, we shouldn't send anything
+    if (mime_type.is_empty()) {
+        return {};
+    }
+
+    // Notify the spice server about new content being available
+    auto clipboard_data_type = TRY(from_mime_type(mime_type));
+    auto message = TRY(ClipboardGrabMessage::create({ clipboard_data_type }));
+    TRY(this->send_message(message));
+
+    return {};
+}
+
+ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
+{
+    auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+    auto mime_type = TRY(to_mime_type(data_type));
+
+    // If the requested mime type doesn't match what's on the clipboard, we won't send anything back
+    if (mime_type.to_deprecated_string() != data_and_type.mime_type) {
+        return Error::from_string_literal("Requested mime type doesn't match the clipboard's contents!");
+    }
+
+    auto message = TRY(ClipboardMessage::create(data_type, data_and_type.data));
+    TRY(this->send_message(message));
+
     return {};
 }
 
@@ -92,6 +136,15 @@ ErrorOr<void> SpiceAgent::on_message_received()
         break;
     }
 
+    case Message::Type::ClipboardRequest: {
+        dbgln("The spice server has requsted our clipboard's contents");
+
+        auto message = TRY(ClipboardRequestMessage::read_from_stream(stream));
+        TRY(this->send_clipboard_contents(message.data_type()));
+
+        break;
+    }
+
     // Ignored messages
     case Message::Type::MonitorsConfig:
         dbgln_if(SPICE_AGENT_DEBUG, "Ignored message: {}", header);
@@ -137,6 +190,7 @@ ErrorOr<void> SpiceAgent::on_clipboard_message(ClipboardMessage& message)
         return Error::from_string_literal("Unsupported clipboard data type!");
     }
 
+    m_just_updated_clipboard = true;
     return {};
 }
 

@@ -43,6 +43,26 @@ ErrorOr<ClipboardDataType> from_raw(u32 value)
     return static_cast<ClipboardDataType>(value);
 }
 
+ErrorOr<ClipboardDataType> from_mime_type(String const& mime_type)
+{
+    if (mime_type == "text/plain")
+        return ClipboardDataType::Text;
+
+    if (mime_type == "image/png")
+        return ClipboardDataType::PNG;
+
+    if (mime_type == "image/bitmap")
+        return ClipboardDataType::BMP;
+
+    if (mime_type == "image/jpeg")
+        return ClipboardDataType::JPG;
+
+    if (mime_type == "image/tiff")
+        return ClipboardDataType::TIFF;
+
+    return Error::from_string_literal("Unable to determine clipboard data type!");
+}
+
 ErrorOr<void> Message::write_to_stream(AK::Stream&)
 {
     return Error::from_string_literal("write_to_stream not implemented!");
