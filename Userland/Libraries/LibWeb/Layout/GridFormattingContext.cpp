@@ -742,35 +742,25 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             if (track.min_track_sizing_function.is_auto() && available_size.is_intrinsic_sizing_constraint()) {
                 // If the track has an auto min track sizing function and the grid container is being sized under a
                 // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
-                // min-/max-content contributions (respectively), floored at zero. The limited min-/max-content
-                // contribution of an item is (for this purpose) its min-/max-content contribution (accordingly),
-                // limited by the max track sizing function (which could be the argument to a fit-content() track
-                // sizing function) if that is fixed and ultimately floored by its minimum contribution (defined
-                // below).
+                // min-/max-content contributions (respectively), floored at zero.
                 if (available_size.is_min_content()) {
                     CSSPixels base_size = 0;
                     for (auto& item : grid_items_of_track) {
-                        base_size = max(base_size, calculate_min_content_contribution(item, dimension));
+                        base_size = max(base_size, calculate_limited_min_content_contribution(item, dimension));
                     }
                     track.base_size = base_size;
                 } else if (available_size.is_max_content()) {
                     CSSPixels base_size = 0;
                     for (auto& item : grid_items_of_track) {
-                        base_size = max(base_size, calculate_max_content_contribution(item, dimension));
+                        base_size = max(base_size, calculate_limited_max_content_contribution(item, dimension));
                     }
                     track.base_size = base_size;
                 }
             } else if (track.min_track_sizing_function.is_auto()) {
-                // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
-                // at zero. The minimum contribution of an item is the smallest outer size it can have.
-                // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
-                // containing block in the relevant axis, its minimum contribution is the outer size that would
-                // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
-                // contribution is its min-content contribution. Because the minimum contribution often depends on
-                // the size of the item’s content, it is considered a type of intrinsic size contribution.
+                // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored at zero.
                 CSSPixels base_size = 0;
                 for (auto& item : grid_items_of_track) {
-                    base_size = max(base_size, calculate_min_content_contribution(item, dimension));
+                    base_size = max(base_size, calculate_minimum_contribution(item, dimension));
                 }
                 track.base_size = base_size;
             }
@@ -1741,6 +1731,126 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
     return preferred_size.to_px(grid_container(), containing_block_size);
+}
+
+CSSPixels GridFormattingContext::calculate_limited_min_content_contribution(GridItem const& item, GridDimension const dimension) const
+{
+    // The limited min-content contribution of an item is its min-content contribution,
+    // limited by the max track sizing function (which could be the argument to a fit-content() track
+    // sizing function) if that is fixed and ultimately floored by its minimum contribution.
+    // FIXME: limit by max track sizing function
+    auto min_content_contribution = calculate_min_content_contribution(item, dimension);
+    auto minimum_contribution = calculate_minimum_contribution(item, dimension);
+    if (min_content_contribution < minimum_contribution)
+        return minimum_contribution;
+    return min_content_contribution;
+}
+
+CSSPixels GridFormattingContext::calculate_limited_max_content_contribution(GridItem const& item, GridDimension const dimension) const
+{
+    // The limited max-content contribution of an item is its max-content contribution,
+    // limited by the max track sizing function (which could be the argument to a fit-content() track
+    // sizing function) if that is fixed and ultimately floored by its minimum contribution.
+    // FIXME: limit by max track sizing function
+    auto max_content_contribution = calculate_max_content_contribution(item, dimension);
+    auto minimum_contribution = calculate_minimum_contribution(item, dimension);
+    if (max_content_contribution < minimum_contribution)
+        return minimum_contribution;
+    return max_content_contribution;
+}
+
+CSS::Size const& GridFormattingContext::get_item_minimum_size(GridItem const& item, GridDimension const dimension) const
+{
+    if (dimension == GridDimension::Column)
+        return item.box().computed_values().min_width();
+    return item.box().computed_values().min_height();
+}
+
+CSSPixels GridFormattingContext::content_size_suggestion(GridItem const& item, GridDimension const dimension) const
+{
+    // The content size suggestion is the min-content size in the relevant axis
+    // FIXME: clamped, if it has a preferred aspect ratio, by any definite opposite-axis minimum and maximum sizes
+    // converted through the aspect ratio.
+    return calculate_min_content_size(item, dimension);
+}
+
+Optional<CSSPixels> GridFormattingContext::specified_size_suggestion(GridItem const& item, GridDimension const dimension) const
+{
+    // https://www.w3.org/TR/css-grid-1/#specified-size-suggestion
+    // If the item’s preferred size in the relevant axis is definite, then the specified size suggestion is that size.
+    // It is otherwise undefined.
+    auto const& used_values = m_state.get(item.box());
+    auto has_definite_preferred_size = dimension == GridDimension::Column ? used_values.has_definite_width() : used_values.has_definite_height();
+    if (has_definite_preferred_size) {
+        // FIXME: consider margins, padding and borders because it is outer size.
+        auto containing_block_size = containing_block_size_for_item(item, dimension);
+        return item.box().computed_values().width().to_px(item.box(), containing_block_size);
+    }
+
+    return {};
+}
+
+CSSPixels GridFormattingContext::content_based_minimum_size(GridItem const& item, GridDimension const dimension) const
+{
+    // https://www.w3.org/TR/css-grid-1/#content-based-minimum-size
+    // The content-based minimum size for a grid item in a given dimension is its specified size suggestion if it exists
+    if (auto specified_size_suggestion = this->specified_size_suggestion(item, dimension); specified_size_suggestion.has_value()) {
+        return specified_size_suggestion.value();
+    }
+    // FIXME: otherwise its transferred size suggestion if that exists
+    // else its content size suggestion
+    return content_size_suggestion(item, dimension);
+}
+
+CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, GridDimension const dimension) const
+{
+    // To provide a more reasonable default minimum size for grid items, the used value of its automatic minimum size
+    // in a given axis is the content-based minimum size if all of the following are true:
+    // - it is not a scroll container
+    // - it spans at least one track in that axis whose min track sizing function is auto
+    // FIXME: - if it spans more than one track in that axis, none of those tracks are flexible
+    auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+    auto item_track_index = [&] {
+        if (dimension == GridDimension::Column)
+            return item.gap_adjusted_column(grid_container());
+        return item.gap_adjusted_row(grid_container());
+    }();
+
+    // FIXME: Check all tracks spanned by an item
+    auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto();
+    if (item_spans_auto_tracks && !item.box().is_scroll_container()) {
+        return content_based_minimum_size(item, dimension);
+    }
+
+    // Otherwise, the automatic minimum size is zero, as usual.
+    return 0;
+}
+
+CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& item, GridDimension const dimension) const
+{
+    // The minimum contribution of an item is the smallest outer size it can have.
+    // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
+    // containing block in the relevant axis, its minimum contribution is the outer size that would
+    // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
+    // contribution is its min-content contribution. Because the minimum contribution often depends on
+    // the size of the item’s content, it is considered a type of intrinsic size contribution.
+
+    auto preferred_size = get_item_preferred_size(item, dimension);
+    auto should_treat_preferred_size_as_auto = [&] {
+        if (dimension == GridDimension::Column)
+            return should_treat_width_as_auto(item.box(), get_available_space_for_item(item));
+        return should_treat_height_as_auto(item.box(), get_available_space_for_item(item));
+    }();
+
+    if (should_treat_preferred_size_as_auto) {
+        auto minimum_size = get_item_minimum_size(item, dimension);
+        if (minimum_size.is_auto())
+            return automatic_minimum_size(item, dimension);
+        auto containing_block_size = containing_block_size_for_item(item, dimension);
+        return minimum_size.to_px(grid_container(), containing_block_size);
+    }
+
+    return calculate_min_content_contribution(item, dimension);
 }
 
 }

@@ -184,8 +184,18 @@ private:
     CSSPixels calculate_min_content_contribution(GridItem const&, GridDimension const) const;
     CSSPixels calculate_max_content_contribution(GridItem const&, GridDimension const) const;
 
+    CSSPixels calculate_limited_min_content_contribution(GridItem const&, GridDimension const) const;
+    CSSPixels calculate_limited_max_content_contribution(GridItem const&, GridDimension const) const;
+
     CSSPixels containing_block_size_for_item(GridItem const&, GridDimension const) const;
     AvailableSpace get_available_space_for_item(GridItem const&) const;
+
+    CSS::Size const& get_item_minimum_size(GridItem const&, GridDimension const) const;
+    CSSPixels content_size_suggestion(GridItem const&, GridDimension const) const;
+    Optional<CSSPixels> specified_size_suggestion(GridItem const&, GridDimension const) const;
+    CSSPixels content_based_minimum_size(GridItem const&, GridDimension const) const;
+    CSSPixels automatic_minimum_size(GridItem const&, GridDimension const) const;
+    CSSPixels calculate_minimum_contribution(GridItem const&, GridDimension const) const;
 };
 
 }
