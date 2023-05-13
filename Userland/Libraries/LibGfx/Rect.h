@@ -610,9 +610,9 @@ public:
         if (bottom() > constrain_rect.bottom())
             move_y = constrain_rect.bottom() - bottom();
         if (x() < constrain_rect.x())
-            move_x = x() - constrain_rect.x();
+            move_x = constrain_rect.x() - x();
         if (y() < constrain_rect.y())
-            move_y = y() - constrain_rect.y();
+            move_y = constrain_rect.y() - y();
         auto rect = *this;
         if (move_x != 0 || move_y != 0)
             rect.translate_by(move_x, move_y);
