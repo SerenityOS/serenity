@@ -64,6 +64,20 @@ ErrorOr<void> SpiceAgent::on_message_received()
         break;
     }
 
+    case Message::Type::ClipboardGrab: {
+        auto message = TRY(ClipboardGrabMessage::read_from_stream(stream));
+        if (message.types().is_empty())
+            break;
+
+        auto data_type = message.types().first();
+        if (data_type == ClipboardDataType::None)
+            break;
+
+        dbgln_if(SPICE_AGENT_DEBUG, "The spice server has notified us of new clipboard data of type: {}", data_type);
+
+        break;
+    }
+
     // We ignore certain messages to prevent it from clogging up the logs.
     case Message::Type::MonitorsConfig:
         dbgln_if(SPICE_AGENT_DEBUG, "Ignored message: {}", header);
