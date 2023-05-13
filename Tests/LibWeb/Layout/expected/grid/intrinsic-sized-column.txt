@@ -1,10 +1,10 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x35.46875 [BFC] children: inline
     TextNode <#text>
-    BlockContainer <body> at (8,8) content-size 0x19.46875 floating [BFC] children: not-inline
-      BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+    BlockContainer <body> at (8,8) content-size 22x19.46875 floating [BFC] children: not-inline
+      BlockContainer <(anonymous)> at (8,8) content-size 22x0 children: inline
         TextNode <#text>
-      Box <div.grid> at (8,8) content-size 0x19.46875 [GFC] children: not-inline
+      Box <div.grid> at (8,8) content-size 22x19.46875 [GFC] children: not-inline
         BlockContainer <(anonymous)>  [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.whee> at (9,9) content-size 18x17.46875 [BFC] children: inline
