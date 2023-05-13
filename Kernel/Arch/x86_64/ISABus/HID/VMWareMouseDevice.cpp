@@ -1,25 +1,30 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Arch/x86_64/ISABus/HID/VMWareMouseDevice.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/HID/PS2/MouseDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(PS2Controller const& ps2_controller, PS2PortIndex port_index, MouseDevice const& mouse_device)
+ErrorOr<NonnullOwnPtr<PS2Device>> VMWareMouseDevice::probe_and_initialize_instance(PS2Controller& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type)
 {
-    // FIXME: return the correct error
+    if (!PS2MouseDevice::is_valid_mouse_type(device_type))
+        return Error::from_errno(ENODEV);
     if (!VMWareBackdoor::the())
-        return Error::from_errno(EIO);
-    if (!VMWareBackdoor::the()->vmmouse_is_absolute())
-        return Error::from_errno(EIO);
-    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VMWareMouseDevice(ps2_controller, port_index, mouse_device)));
-    TRY(device->initialize());
+        return Error::from_errno(ENODEV);
+    if (!kernel_command_line().is_vmmouse_enabled())
+        return Error::from_errno(ENODEV);
+    auto mouse_device = TRY(MouseDevice::try_to_initialize());
+    device_type = TRY(PS2MouseDevice::do_initialization_sequence(ps2_controller, port_index));
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VMWareMouseDevice(ps2_controller, port_index, device_type, mouse_device)));
+    VMWareBackdoor::the()->enable_absolute_vmmouse();
     return device;
 }
 
@@ -46,10 +51,12 @@ void VMWareMouseDevice::handle_byte_read_from_serial_input(u8)
     }
 }
 
-VMWareMouseDevice::VMWareMouseDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, MouseDevice const& mouse_device)
-    : PS2MouseDevice(ps2_controller, port_index, mouse_device)
+VMWareMouseDevice::VMWareMouseDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type, MouseDevice const& mouse_device)
+    : PS2Device(ps2_controller, port_index, device_type)
+    , m_mouse_device(mouse_device)
 {
 }
+
 VMWareMouseDevice::~VMWareMouseDevice() = default;
 
 }

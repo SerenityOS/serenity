@@ -16,10 +16,17 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, MouseDevice const& mouse_device)
-    : PS2Device(ps2_controller, port_index)
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type, MouseDevice const& mouse_device)
+    : PS2Device(ps2_controller, port_index, device_type)
     , m_mouse_device(mouse_device)
 {
+    if (device_type == PS2DeviceType::ScrollWheelMouse || device_type == PS2DeviceType::MouseWith5Buttons) {
+        m_has_wheel = true;
+    }
+
+    if (device_type == PS2DeviceType::MouseWith5Buttons) {
+        m_has_five_buttons = true;
+    }
 }
 
 UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice() = default;
@@ -120,78 +127,80 @@ MousePacket PS2MouseDevice::parse_data_packet(RawPacket const& raw_packet)
     return packet;
 }
 
-ErrorOr<u8> PS2MouseDevice::get_device_id()
+static ErrorOr<void> send_ps2_command_while_device_port_locked(PS2Controller& ps2_controller, PS2PortIndex port_index, PS2DeviceCommand command, u8 data)
 {
-    TRY(send_command(PS2DeviceCommand::GetDeviceID));
-    return read_from_device();
-}
-
-ErrorOr<u8> PS2MouseDevice::read_from_device()
-{
-    return m_ps2_controller->read_from_device(m_attached_port_index);
-}
-
-ErrorOr<void> PS2MouseDevice::send_command(PS2DeviceCommand command)
-{
-    TRY(m_ps2_controller->send_command(m_attached_port_index, command));
+    TRY(ps2_controller.send_command_while_device_port_locked(port_index, command, data));
     return {};
 }
 
-ErrorOr<void> PS2MouseDevice::send_command(PS2DeviceCommand command, u8 data)
+static ErrorOr<void> send_ps2_command_while_device_port_locked(PS2Controller& ps2_controller, PS2PortIndex port_index, PS2DeviceCommand command)
 {
-    TRY(m_ps2_controller->send_command(m_attached_port_index, command, data));
+    TRY(ps2_controller.send_command_while_device_port_locked(port_index, command));
     return {};
 }
 
-ErrorOr<void> PS2MouseDevice::set_sample_rate(u8 rate)
+bool PS2MouseDevice::is_valid_mouse_type(PS2DeviceType device_type)
 {
-    TRY(send_command(PS2DeviceCommand::SetSampleRate, rate));
+    if (device_type == PS2DeviceType::ScrollWheelMouse)
+        return true;
+    if (device_type == PS2DeviceType::MouseWith5Buttons)
+        return true;
+    if (device_type == PS2DeviceType::StandardMouse)
+        return true;
+    return false;
+}
+
+static ErrorOr<void> set_sample_rate_on_mouse_device(PS2Controller& ps2_controller, PS2PortIndex port_index, u8 rate)
+{
+    TRY(send_ps2_command_while_device_port_locked(ps2_controller, port_index, PS2DeviceCommand::SetSampleRate, rate));
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(PS2Controller const& ps2_controller, PS2PortIndex port_index, MouseDevice const& mouse_device)
+ErrorOr<PS2DeviceType> PS2MouseDevice::do_initialization_sequence(PS2Controller& ps2_controller, PS2PortIndex port_index)
 {
-    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2MouseDevice(ps2_controller, port_index, mouse_device)));
-    TRY(device->initialize());
-    return device;
-}
+    SpinlockLocker locker(ps2_controller.device_port_spinlock(port_index));
 
-UNMAP_AFTER_INIT ErrorOr<void> PS2MouseDevice::initialize()
-{
-    TRY(m_ps2_controller->reset_device(m_attached_port_index));
+    TRY(ps2_controller.reset_while_device_port_locked(port_index));
+    auto device_id_byte = TRY(ps2_controller.read_from_device_while_device_port_locked(port_index));
 
-    u8 device_id = TRY(read_from_device());
+    TRY(send_ps2_command_while_device_port_locked(ps2_controller, port_index, PS2DeviceCommand::SetDefaults));
+    TRY(send_ps2_command_while_device_port_locked(ps2_controller, port_index, PS2DeviceCommand::EnablePacketStreaming));
 
-    TRY(send_command(PS2DeviceCommand::SetDefaults));
-    TRY(send_command(PS2DeviceCommand::EnablePacketStreaming));
-
-    if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
+    Array<u8, 2> device_id_bytes = { device_id_byte, 0 };
+    if (device_id_bytes[0] == 0) {
         // Send magical wheel initiation sequence.
-        TRY(set_sample_rate(200));
-        TRY(set_sample_rate(100));
-        TRY(set_sample_rate(80));
-        device_id = TRY(get_device_id());
-    }
-    if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
-        m_has_wheel = true;
-        dmesgln("PS2MouseDevice: Mouse wheel enabled!");
-    } else {
-        dmesgln("PS2MouseDevice: No mouse wheel detected!");
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 200));
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 100));
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 80));
+        device_id_bytes = TRY(ps2_controller.read_device_id_while_device_port_locked(port_index));
     }
 
-    if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
+    if (device_id_bytes[0] == PS2MOUSE_INTELLIMOUSE_ID) {
         // Try to enable 5 buttons as well!
-        TRY(set_sample_rate(200));
-        TRY(set_sample_rate(200));
-        TRY(set_sample_rate(80));
-        device_id = TRY(get_device_id());
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 200));
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 200));
+        TRY(set_sample_rate_on_mouse_device(ps2_controller, port_index, 80));
+        device_id_bytes = TRY(ps2_controller.read_device_id_while_device_port_locked(port_index));
     }
 
-    if (device_id == PS2MOUSE_INTELLIMOUSE_EXPLORER_ID) {
-        m_has_five_buttons = true;
-        dmesgln("PS2MouseDevice: 5 buttons enabled!");
-    }
-    return {};
+    if (device_id_bytes[0] == PS2MOUSE_INTELLIMOUSE_EXPLORER_ID)
+        return PS2DeviceType::MouseWith5Buttons;
+    else if (device_id_bytes[0] == PS2MOUSE_INTELLIMOUSE_ID)
+        return PS2DeviceType::ScrollWheelMouse;
+    else if (device_id_bytes[0] == 0)
+        return PS2DeviceType::StandardMouse;
+    return Error::from_errno(ENODEV);
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2Device>> PS2MouseDevice::probe_and_initialize_instance(PS2Controller& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type)
+{
+    if (!is_valid_mouse_type(device_type))
+        return Error::from_errno(ENODEV);
+
+    auto mouse_device = TRY(MouseDevice::try_to_initialize());
+    device_type = TRY(do_initialization_sequence(ps2_controller, port_index));
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2MouseDevice(ps2_controller, port_index, device_type, mouse_device)));
+    return device;
 }
 
 }

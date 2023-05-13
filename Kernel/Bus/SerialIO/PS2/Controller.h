@@ -14,6 +14,8 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/SerialIO/Controller.h>
 #include <Kernel/Bus/SerialIO/PS2/Definitions.h>
+#include <Kernel/Locking/LockRank.h>
+#include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel {
 
@@ -25,17 +27,22 @@ enum class PS2DeviceCommand {
     SetDefaults,
 };
 
+class PS2Device;
 class PS2Controller : public SerialIOController {
 public:
-    virtual ErrorOr<void> reset_device(PS2PortIndex) = 0;
-    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command) = 0;
-    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command, u8 data) = 0;
+    virtual ErrorOr<Array<u8, 2>> read_device_id_while_device_port_locked(PS2PortIndex) = 0;
+    virtual ErrorOr<void> reset_while_device_port_locked(PS2PortIndex) = 0;
 
-    virtual ErrorOr<u8> read_from_device(PS2PortIndex) = 0;
-    virtual ErrorOr<void> prepare_for_input(PS2PortIndex) = 0;
+    virtual Spinlock<LockRank::None>& device_port_spinlock(PS2PortIndex) = 0;
+    virtual ErrorOr<void> send_command_while_device_port_locked(PS2PortIndex, PS2DeviceCommand command) = 0;
+    virtual ErrorOr<void> send_command_while_device_port_locked(PS2PortIndex, PS2DeviceCommand command, u8 data) = 0;
+
+    virtual ErrorOr<u8> read_from_device_while_device_port_locked(PS2PortIndex) = 0;
     virtual bool irq_process_input_buffer(PS2PortIndex) = 0;
 
 protected:
+    ErrorOr<NonnullOwnPtr<PS2Device>> detect_device_on_port(PS2PortIndex);
+
     PS2Controller() = default;
 };
 

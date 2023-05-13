@@ -94,20 +94,15 @@ public:
     static ErrorOr<NonnullRefPtr<I8042Controller>> create();
 
     ErrorOr<void> detect_devices();
-    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command) override;
-    virtual ErrorOr<void> send_command(PS2PortIndex, PS2DeviceCommand command, u8 data) override;
+    virtual ErrorOr<void> reset_while_device_port_locked(PS2PortIndex) override;
 
-    virtual ErrorOr<void> reset_device(PS2PortIndex port_index) override
-    {
-        SpinlockLocker lock(m_lock);
-        return do_reset_device(port_index);
-    }
-    virtual ErrorOr<u8> read_from_device(PS2PortIndex port_index) override
-    {
-        SpinlockLocker lock(m_lock);
-        return do_read_from_device(port_index);
-    }
-    virtual ErrorOr<void> prepare_for_input(PS2PortIndex) override;
+    virtual ErrorOr<Array<u8, 2>> read_device_id_while_device_port_locked(PS2PortIndex) override;
+
+    virtual Spinlock<LockRank::None>& device_port_spinlock(PS2PortIndex) override;
+    virtual ErrorOr<void> send_command_while_device_port_locked(PS2PortIndex, PS2DeviceCommand command) override;
+    virtual ErrorOr<void> send_command_while_device_port_locked(PS2PortIndex, PS2DeviceCommand command, u8 data) override;
+
+    virtual ErrorOr<u8> read_from_device_while_device_port_locked(PS2PortIndex) override;
     virtual bool irq_process_input_buffer(PS2PortIndex) override;
 
     // Note: This function exists only for the initialization process of the controller
@@ -117,6 +112,8 @@ public:
 
 private:
     I8042Controller();
+
+    virtual StringView controller_type_name() const override { return "i8042"sv; }
 
     ErrorOr<void> send_command_to_specific_port(PS2PortIndex port_index, u8 command)
     {
@@ -132,6 +129,7 @@ private:
     }
 
     ErrorOr<void> prepare_for_output();
+    ErrorOr<void> prepare_for_input(PS2PortIndex);
 
     ErrorOr<void> prepare_for_any_input();
 
@@ -139,7 +137,6 @@ private:
     ErrorOr<void> do_send_command(PS2PortIndex port_index, u8 data);
     ErrorOr<void> do_send_command(PS2PortIndex port_index, u8 command, u8 data);
     ErrorOr<void> do_write_to_device(PS2PortIndex port_index, u8 data);
-    ErrorOr<u8> do_read_from_device(PS2PortIndex port_index);
     ErrorOr<void> do_wait_then_write(u8 port, u8 data);
 
     // NOTE: The meaning of "any input" here is that this is not attached
@@ -178,6 +175,7 @@ private:
         // NOTE: This value is being used as 1:1 map between the I8042 port being handled, to
         // the either the MouseDevice or KeyboardDevice being attached.
         Optional<PS2DeviceType> device_type;
+        Spinlock<LockRank::None> lock {};
     };
 
     // NOTE: Each i8042 controller can have at most 2 devices - a mouse and keyboard,

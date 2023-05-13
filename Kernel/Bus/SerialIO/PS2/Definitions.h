@@ -24,7 +24,7 @@ enum class PS2DeviceType {
     ThinkPadKeyboard,
     NCDKeyboard,
     HostConnected122KeysKeyboard,
-    StandardKeyboard, // 122 keys keyboard
+    KeyboardWith122Keys,
     JapaneseGKeyboard,
     JapanesePKeyboard,
     JapaneseAKeyboard,

@@ -15,12 +15,14 @@
 #include <Kernel/Random.h>
 
 namespace Kernel {
-class PS2MouseDevice : public PS2Device {
+class PS2MouseDevice final : public PS2Device {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullOwnPtr<PS2MouseDevice>> try_to_initialize(PS2Controller const&, PS2PortIndex, MouseDevice const&);
-    ErrorOr<void> initialize();
+    static bool is_valid_mouse_type(PS2DeviceType device_type);
+    static ErrorOr<PS2DeviceType> do_initialization_sequence(PS2Controller&, PS2PortIndex);
+
+    static ErrorOr<NonnullOwnPtr<PS2Device>> probe_and_initialize_instance(PS2Controller&, PS2PortIndex, PS2DeviceType);
 
     virtual ~PS2MouseDevice() override;
 
@@ -28,7 +30,7 @@ public:
     virtual void handle_byte_read_from_serial_input(u8 byte) override;
 
 protected:
-    PS2MouseDevice(PS2Controller const&, PS2PortIndex, MouseDevice const&);
+    PS2MouseDevice(PS2Controller const&, PS2PortIndex, PS2DeviceType, MouseDevice const&);
 
     struct RawPacket {
         union {
@@ -37,9 +39,6 @@ protected:
         };
     };
 
-    ErrorOr<u8> read_from_device();
-    ErrorOr<void> send_command(PS2DeviceCommand command);
-    ErrorOr<void> send_command(PS2DeviceCommand command, u8 data);
     MousePacket parse_data_packet(RawPacket const&);
     ErrorOr<void> set_sample_rate(u8);
     ErrorOr<u8> get_device_id();

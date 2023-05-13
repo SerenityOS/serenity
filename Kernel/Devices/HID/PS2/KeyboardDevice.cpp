@@ -34,22 +34,23 @@ void PS2KeyboardDevice::handle_byte_read_from_serial_input(u8 byte)
     m_keyboard_device->handle_scan_code_input_event(event);
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(PS2Controller const& ps2_controller, PS2PortIndex port_index, KeyboardDevice const& keyboard_device)
+ErrorOr<NonnullOwnPtr<PS2Device>> PS2KeyboardDevice::probe_and_initialize_instance(PS2Controller& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type)
 {
-    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2KeyboardDevice(ps2_controller, port_index, keyboard_device)));
-    TRY(device->initialize());
-    return device;
-}
+    if (device_type != PS2DeviceType::MF2Keyboard)
+        return Error::from_errno(ENODEV);
 
-UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
-{
-    return m_ps2_controller->reset_device(m_attached_port_index);
+    auto keyboard_device = TRY(KeyboardDevice::try_to_initialize());
+    {
+        SpinlockLocker locker(ps2_controller.device_port_spinlock(port_index));
+        TRY(ps2_controller.reset_while_device_port_locked(port_index));
+    }
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2KeyboardDevice(ps2_controller, port_index, device_type, keyboard_device)));
 }
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
-UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, KeyboardDevice const& keyboard_device)
-    : PS2Device(ps2_controller, port_index)
+UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(PS2Controller const& ps2_controller, PS2PortIndex port_index, PS2DeviceType device_type, KeyboardDevice const& keyboard_device)
+    : PS2Device(ps2_controller, port_index, device_type)
     , m_keyboard_device(keyboard_device)
 {
 }

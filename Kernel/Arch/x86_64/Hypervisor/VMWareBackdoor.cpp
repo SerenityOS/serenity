@@ -95,8 +95,6 @@ VMWareBackdoor* VMWareBackdoor::the()
 
 UNMAP_AFTER_INIT VMWareBackdoor::VMWareBackdoor()
 {
-    if (kernel_command_line().is_vmmouse_enabled())
-        enable_absolute_vmmouse();
 }
 
 bool VMWareBackdoor::detect_vmmouse()

@@ -21,15 +21,15 @@ class PS2KeyboardDevice final : public PS2Device {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> try_to_initialize(PS2Controller const&, PS2PortIndex port_index, KeyboardDevice const&);
+    static ErrorOr<NonnullOwnPtr<PS2Device>> probe_and_initialize_instance(PS2Controller&, PS2PortIndex, PS2DeviceType);
+
     virtual ~PS2KeyboardDevice() override;
-    ErrorOr<void> initialize();
 
     // ^PS2Device
     virtual void handle_byte_read_from_serial_input(u8 byte) override;
 
 private:
-    PS2KeyboardDevice(PS2Controller const&, PS2PortIndex port_index, KeyboardDevice const&);
+    PS2KeyboardDevice(PS2Controller const&, PS2PortIndex port_index, PS2DeviceType, KeyboardDevice const&);
 
     bool m_has_e0_prefix { false };
 

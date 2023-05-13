@@ -164,7 +164,7 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
             configuration |= I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortClock;
         } else {
-            dbgln("I8042: Keyboard port not available");
+            dbgln("I8042: First port not available");
         }
 
         TRY(drain_output_buffer());
@@ -178,7 +178,7 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
                 configuration |= I8042ConfigurationFlag::SecondPS2PortInterrupt;
                 configuration &= ~I8042ConfigurationFlag::SecondPS2PortClock;
             } else {
-                dbgln("I8042: Mouse port not available");
+                dbgln("I8042: Second port not available");
             }
         }
 
@@ -193,51 +193,34 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
 
     // Try to detect and initialize the devices
     if (m_first_port_available) {
-        // FIXME: Actually figure out the connected PS2 device type
-        m_first_ps2_port.device_type = PS2DeviceType::StandardKeyboard;
-        auto keyboard_device = TRY(KeyboardDevice::try_to_initialize());
-        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this, I8042PS2PortIndex::FirstPort, *keyboard_device);
-        if (error_or_device.is_error()) {
-            dbgln("I8042: Keyboard device failed to initialize, disable");
+        if (auto device_or_error = detect_device_on_port(I8042PS2PortIndex::FirstPort); device_or_error.is_error()) {
             m_first_port_available = false;
-            configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration |= I8042ConfigurationFlag::FirstPS2PortClock;
-            m_first_ps2_port.device = nullptr;
-            m_first_ps2_port.device_type = {};
-            SpinlockLocker lock(m_lock);
-            // NOTE: Before setting the actual scan code set, stop packet streaming entirely.
-            TRY(send_command_to_specific_port(I8042PS2PortIndex::FirstPort, I8042Command::DisablePacketStreaming));
-            TRY(do_wait_then_write(I8042Port::Buffer, I8042Command::SetScanCodeSet));
-            TRY(do_wait_then_write(I8042Port::Buffer, 0x2));
-
-            TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
-            TRY(do_wait_then_write(I8042Port::Buffer, configuration));
-        } else {
-            m_first_ps2_port.device = error_or_device.release_value();
-        }
-    }
-    if (m_second_port_available) {
-        // FIXME: Actually figure out the connected PS2 device type
-        m_second_ps2_port.device_type = PS2DeviceType::StandardMouse;
-        auto mouse_device = TRY(MouseDevice::try_to_initialize());
-        auto vmmouse_device_or_error = VMWareMouseDevice::try_to_initialize(*this, I8042PS2PortIndex::SecondPort, *mouse_device);
-        if (vmmouse_device_or_error.is_error()) {
-            // FIXME: is there something to do with the VMWare errors?
-            auto mouse_device_or_error = PS2MouseDevice::try_to_initialize(*this, I8042PS2PortIndex::SecondPort, *mouse_device);
-            if (mouse_device_or_error.is_error()) {
-                dbgln("I8042: Mouse device failed to initialize, disable");
-                m_second_port_available = false;
-                configuration |= I8042ConfigurationFlag::SecondPS2PortClock;
-                m_second_ps2_port.device = nullptr;
-                m_second_ps2_port.device_type = {};
+            configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
+            {
                 SpinlockLocker lock(m_lock);
                 TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
                 TRY(do_wait_then_write(I8042Port::Buffer, configuration));
-            } else {
-                m_second_ps2_port.device = mouse_device_or_error.release_value();
             }
         } else {
-            m_second_ps2_port.device = vmmouse_device_or_error.release_value();
+            m_first_ps2_port.device = device_or_error.release_value();
+            m_first_ps2_port.device_type = m_first_ps2_port.device->device_type();
+        }
+    }
+
+    if (m_second_port_available) {
+        if (auto device_or_error = detect_device_on_port(I8042PS2PortIndex::SecondPort); device_or_error.is_error()) {
+            m_first_port_available = false;
+            configuration |= I8042ConfigurationFlag::SecondPS2PortClock;
+            configuration &= ~I8042ConfigurationFlag::SecondPS2PortInterrupt;
+            {
+                SpinlockLocker lock(m_lock);
+                TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
+                TRY(do_wait_then_write(I8042Port::Buffer, configuration));
+            }
+        } else {
+            m_second_ps2_port.device = device_or_error.release_value();
+            m_second_ps2_port.device_type = m_second_ps2_port.device->device_type();
         }
     }
 
@@ -252,8 +235,45 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
     return {};
 }
 
-ErrorOr<void> I8042Controller::send_command(PS2PortIndex port_index, PS2DeviceCommand command)
+ErrorOr<void> I8042Controller::reset_while_device_port_locked(PS2PortIndex port_index)
 {
+    VERIFY(device_port_spinlock(port_index).is_locked());
+    SpinlockLocker lock(m_lock);
+    return do_reset_device(port_index);
+}
+
+ErrorOr<Array<u8, 2>> I8042Controller::read_device_id_while_device_port_locked(PS2PortIndex port_index)
+{
+    VERIFY(device_port_spinlock(port_index).is_locked());
+    Array<u8, 2> device_id { 0, 0 };
+    TRY(send_command_while_device_port_locked(port_index, PS2DeviceCommand::GetDeviceID));
+    device_id[0] = TRY(read_from_device_while_device_port_locked(port_index));
+    // NOTE: If the first byte is 0xAB or 0xAC then we have another byte waiting for us to read!
+    if (device_id[0] == 0xAB || device_id[0] == 0xAC)
+        device_id[1] = TRY(read_from_device_while_device_port_locked(port_index));
+    return device_id;
+}
+
+Spinlock<LockRank::None>& I8042Controller::device_port_spinlock(PS2PortIndex port_index)
+{
+    if (port_index == I8042PS2PortIndex::FirstPort)
+        return m_first_ps2_port.lock;
+    if (port_index == I8042PS2PortIndex::SecondPort)
+        return m_second_ps2_port.lock;
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<u8> I8042Controller::read_from_device_while_device_port_locked(PS2PortIndex port_index)
+{
+    VERIFY(device_port_spinlock(port_index).is_locked());
+    SpinlockLocker lock(m_lock);
+    TRY(prepare_for_input(port_index));
+    return IO::in8(I8042Port::Buffer);
+}
+
+ErrorOr<void> I8042Controller::send_command_while_device_port_locked(PS2PortIndex port_index, PS2DeviceCommand command)
+{
+    VERIFY(device_port_spinlock(port_index).is_locked());
     switch (command) {
     case PS2DeviceCommand::GetDeviceID:
         return send_command_to_specific_port(port_index, I8042Command::GetDeviceID);
@@ -273,8 +293,9 @@ ErrorOr<void> I8042Controller::send_command(PS2PortIndex port_index, PS2DeviceCo
     }
 }
 
-ErrorOr<void> I8042Controller::send_command(PS2PortIndex port_index, PS2DeviceCommand command, u8 data)
+ErrorOr<void> I8042Controller::send_command_while_device_port_locked(PS2PortIndex port_index, PS2DeviceCommand command, u8 data)
 {
+    VERIFY(device_port_spinlock(port_index).is_locked());
     switch (command) {
     // NOTE: Only the sample rate command supports sending data byte with it!
     case PS2DeviceCommand::SetSampleRate:
@@ -389,12 +410,6 @@ ErrorOr<void> I8042Controller::do_write_to_device(PS2PortIndex port_index, u8 da
         return Error::from_errno(EBUSY);
     }
     return {};
-}
-
-ErrorOr<u8> I8042Controller::do_read_from_device(PS2PortIndex port_index)
-{
-    TRY(prepare_for_input(port_index));
-    return IO::in8(I8042Port::Buffer);
 }
 
 ErrorOr<void> I8042Controller::prepare_for_any_input()

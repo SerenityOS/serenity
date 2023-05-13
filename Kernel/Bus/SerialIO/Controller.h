@@ -23,6 +23,8 @@ class SerialIOController : public AtomicRefCounted<SerialIOController> {
 public:
     virtual ~SerialIOController() = default;
 
+    virtual StringView controller_type_name() const = 0;
+
 protected:
     SerialIOController() = default;
 
