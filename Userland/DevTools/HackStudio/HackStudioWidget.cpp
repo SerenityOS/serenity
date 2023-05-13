@@ -27,7 +27,6 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/FileWatcher.h>
@@ -903,10 +902,11 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         auto const old_filename = current_editor_wrapper().filename();
         LexicalPath const old_path(old_filename);
 
+        auto suggested_path = FileSystem::absolute_path(old_path.string()).release_value_but_fixme_should_propagate_errors();
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
             old_filename.is_null() ? "Untitled"sv : old_path.title(),
             old_filename.is_null() ? "txt"sv : old_path.extension(),
-            Core::DeprecatedFile::absolute_path(old_path.dirname()));
+            suggested_path);
         if (!save_path.has_value()) {
             return;
         }
