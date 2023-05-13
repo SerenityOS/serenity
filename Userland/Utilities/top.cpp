@@ -35,6 +35,7 @@ struct TopOption {
 
     SortBy sort_by { SortBy::Cpu };
     int delay_time { 1 };
+    HashTable<pid_t> pids_to_filter_by;
 };
 
 struct ThreadData {
@@ -88,12 +89,15 @@ struct Snapshot {
     u64 total_time_scheduled_kernel { 0 };
 };
 
-static ErrorOr<Snapshot> get_snapshot()
+static ErrorOr<Snapshot> get_snapshot(HashTable<pid_t> const& pids)
 {
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
     Snapshot snapshot;
     for (auto& process : all_processes.processes) {
+        if (!pids.is_empty() && !pids.contains(process.pid))
+            continue;
+
         for (auto& thread : process.threads) {
             ThreadData thread_data;
             thread_data.tid = thread.tid;
@@ -163,13 +167,31 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
             return true;
         }
     };
-
+    HashTable<pid_t> pids;
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Display information about processes");
     args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr);
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "A comma-separated list of pids to filter by",
+        .long_name = "pids",
+        .short_name = 'p',
+        .accept_value = [&pids](auto comma_separated_pids) {
+            for (auto pid : comma_separated_pids.split_view(',')) {
+                auto maybe_integer = pid.to_int();
+                if (!maybe_integer.has_value())
+                    return false;
+
+                pids.set(maybe_integer.value());
+            }
+
+            return true;
+        },
+    });
     args_parser.add_option(move(sort_by_option));
     args_parser.parse(arguments);
+    top_option.pids_to_filter_by = move(pids);
 }
 
 static bool check_quit()
@@ -214,7 +236,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     enable_nonblocking_stdin();
 
     Vector<ThreadData*> threads;
-    auto prev = TRY(get_snapshot());
+    auto prev = TRY(get_snapshot(top_option.pids_to_filter_by));
     usleep(10000);
     for (;;) {
         if (g_window_size_changed) {
@@ -222,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             g_window_size_changed = false;
         }
 
-        auto current = TRY(get_snapshot());
+        auto current = TRY(get_snapshot(top_option.pids_to_filter_by));
         auto total_scheduled_diff = current.total_time_scheduled - prev.total_time_scheduled;
 
         printf("\033[3J\033[H\033[2J");
