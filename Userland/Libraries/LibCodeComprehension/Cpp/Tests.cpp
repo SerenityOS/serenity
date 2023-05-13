@@ -89,9 +89,8 @@ int run_tests()
 
 static void add_file(FileDB& filedb, DeprecatedString const& name)
 {
-    auto file = Core::DeprecatedFile::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
-    VERIFY(!file.is_error());
-    filedb.add(name, DeprecatedString::copy(file.value()->read_all()));
+    auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    filedb.add(name, DeprecatedString::copy(MUST(file->read_until_eof())));
 }
 
 void test_complete_local_args()
