@@ -17,8 +17,8 @@ class Dictionary {
 public:
     Dictionary() = default;
 
-    Dictionary(HashMap<DeprecatedString, DeprecatedString> const& initial_entries)
-        : m_entries(initial_entries)
+    Dictionary(HashMap<DeprecatedString, DeprecatedString>&& initial_entries)
+        : m_entries(move(initial_entries))
     {
     }
 

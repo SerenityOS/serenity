@@ -38,7 +38,7 @@ void ConnectionFromClient::set_clipboard_data(Core::AnonymousBuffer const& data,
 Messages::ClipboardServer::GetClipboardDataResponse ConnectionFromClient::get_clipboard_data()
 {
     auto& storage = Storage::the();
-    return { storage.buffer(), storage.mime_type(), storage.metadata() };
+    return { storage.buffer(), storage.mime_type(), storage.metadata().clone().release_value_but_fixme_should_propagate_errors() };
 }
 
 void ConnectionFromClient::notify_about_clipboard_change()
