@@ -312,7 +312,7 @@ Vector<Parameter> Parser::parse_parameters()
         bool variadic = lexer.consume_specific("..."sv);
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch) || ch == ',' || ch == ')' || ch == '='; });
-        Parameter parameter = { move(type), move(name), optional, {}, extended_attributes, variadic };
+        Parameter parameter = { move(type), move(name), optional, {}, move(extended_attributes), variadic };
         consume_whitespace();
         if (variadic) {
             // Variadic parameters must be last and do not have default values.
