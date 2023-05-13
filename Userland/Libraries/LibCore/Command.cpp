@@ -7,7 +7,7 @@
 #include "Command.h"
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -72,16 +72,13 @@ ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<Deprecate
     close(stdout_pipe[1]);
     close(stderr_pipe[1]);
 
-    auto read_all_from_pipe = [](int pipe[2]) {
-        auto result_file = Core::DeprecatedFile::construct();
-        if (!result_file->open(pipe[0], Core::OpenMode::ReadOnly, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes)) {
-            perror("open");
-            VERIFY_NOT_REACHED();
-        }
-        return DeprecatedString::copy(result_file->read_all());
+    auto read_all_from_pipe = [](int pipe[2]) -> ErrorOr<ByteBuffer> {
+        auto result_file_or_error = Core::File::adopt_fd(pipe[0], Core::File::OpenMode::Read, Core::File::ShouldCloseFileDescriptor::Yes);
+        auto result_file = TRY(result_file_or_error);
+        return result_file->read_until_eof();
     };
-    auto output = read_all_from_pipe(stdout_pipe);
-    auto error = read_all_from_pipe(stderr_pipe);
+    auto output = TRY(read_all_from_pipe(stdout_pipe));
+    auto error = TRY(read_all_from_pipe(stderr_pipe));
 
     int wstatus { 0 };
     waitpid(pid, &wstatus, 0);

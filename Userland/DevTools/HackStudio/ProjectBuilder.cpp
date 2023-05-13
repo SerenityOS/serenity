@@ -209,7 +209,7 @@ void ProjectBuilder::for_each_library_definition(Function<void(DeprecatedString,
     }
 
     static Regex<ECMA262> const parse_library_definition(R"~~~(.+:serenity_lib[c]?\((\w+) (\w+)\).*)~~~");
-    for (auto& line : res.value().output.split('\n')) {
+    for (auto& line : StringView(res.value().output).split_view('\n')) {
         RegexResult result;
         if (!parse_library_definition.search(line, result))
             continue;
@@ -234,10 +234,10 @@ void ProjectBuilder::for_each_library_dependencies(Function<void(DeprecatedStrin
         warnln("{}", res.error());
         return;
     }
+    auto libraries = StringView(res.value().output).split_view('\n');
 
     static Regex<ECMA262> const parse_library_definition(R"~~~(.+:target_link_libraries\((\w+) ([\w\s]+)\).*)~~~");
-    for (auto& line : res.value().output.split('\n')) {
-
+    for (auto& line : libraries) {
         RegexResult result;
         if (!parse_library_definition.search(line, result))
             continue;
