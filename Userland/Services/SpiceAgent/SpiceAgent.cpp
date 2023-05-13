@@ -6,21 +6,19 @@
  */
 
 #include "SpiceAgent.h"
-#include "ConnectionToClipboardServer.h"
+#include <AK/Debug.h>
+#include <LibGUI/Clipboard.h>
 
 namespace SpiceAgent {
 
 ErrorOr<NonnullOwnPtr<SpiceAgent>> SpiceAgent::create(StringView device_path)
 {
     auto device = TRY(Core::File::open(device_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Nonblocking));
-    auto clipboard_connection = TRY(ConnectionToClipboardServer::try_create());
-
-    return try_make<SpiceAgent>(move(device), clipboard_connection, Vector { Capability::ClipboardByDemand });
+    return try_make<SpiceAgent>(move(device), Vector { Capability::ClipboardByDemand });
 }
 
-SpiceAgent::SpiceAgent(NonnullOwnPtr<Core::File> spice_device, ConnectionToClipboardServer& clipboard_connection, Vector<Capability> const& capabilities)
+SpiceAgent::SpiceAgent(NonnullOwnPtr<Core::File> spice_device, Vector<Capability> const& capabilities)
     : m_spice_device(move(spice_device))
-    , m_clipboard_connection(clipboard_connection)
     , m_capabilities(capabilities)
 {
     m_notifier = Core::Notifier::construct(
@@ -75,9 +73,20 @@ ErrorOr<void> SpiceAgent::on_message_received()
             break;
 
         dbgln_if(SPICE_AGENT_DEBUG, "The spice server has notified us of new clipboard data of type `{}`", data_type);
+        dbgln_if(SPICE_AGENT_DEBUG, "Sending a request for data of type `{}`", data_type);
 
         auto request = TRY(ClipboardRequestMessage::create(data_type));
         TRY(this->send_message(request));
+
+        break;
+    }
+
+    case Message::Type::Clipboard: {
+        auto message = TRY(ClipboardMessage::read_from_stream(stream));
+        if (message.data_type() == ClipboardDataType::None)
+            break;
+
+        TRY(this->on_clipboard_message(message));
 
         break;
     }
@@ -93,6 +102,21 @@ ErrorOr<void> SpiceAgent::on_message_received()
     }
 
     return {};
+}
+
+ErrorOr<void> SpiceAgent::on_clipboard_message(ClipboardMessage& message)
+{
+    dbgln_if(SPICE_AGENT_DEBUG, "Attempting to parse clipboard data of type `{}`", message.data_type());
+
+    switch (message.data_type()) {
+    case ClipboardDataType::Text: {
+        // The default mime_type for set_data is `text/plain`
+        GUI::Clipboard::the().set_data(message.contents());
+        return {};
+    }
+    default:
+        return Error::from_string_literal("Unsupported clipboard data type!");
+    }
 }
 
 ErrorOr<ByteBuffer> SpiceAgent::read_message_buffer()
