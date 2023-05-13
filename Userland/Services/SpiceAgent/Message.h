@@ -55,6 +55,19 @@ ErrorOr<String> clipboard_data_type_to_mime_type(ClipboardDataType type);
 ErrorOr<ClipboardDataType> clipboard_data_type_from_raw_value(u32 value);
 ErrorOr<ClipboardDataType> clipboard_data_type_from_mime_type(String const& mime_type);
 
+// Used to describe what state the current file transfer is in
+enum class FileTransferStatus : u32 {
+    CanSendData = 0,
+    Cancelled,
+    Error,
+    Success,
+    NotEnoughSpace,
+    SessionLocked,
+    AgentNotConnected,
+    Disabled,
+    __End
+};
+
 class Message {
 public:
     // The spice protocol headers contain a bit of documentation about these, but nothing major:
@@ -206,6 +219,29 @@ private:
     Metadata m_metadata;
 };
 
+// Sent/recieved to indicate the status of the current file transfer.
+class FileTransferStatusMessage : public Message {
+public:
+    FileTransferStatusMessage(u32 id, FileTransferStatus status)
+        : Message(Type::FileTransferStatus)
+        , m_id(id)
+        , m_status(status)
+    {
+    }
+
+    static ErrorOr<FileTransferStatusMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<void> write_to_stream(AK::Stream& stream);
+    ErrorOr<String> debug_description() override;
+
+    u32 id() const { return m_id; }
+    FileTransferStatus const& status() { return m_status; }
+
+private:
+    u32 m_id { 0 };
+    FileTransferStatus m_status;
+};
+
 }
 
 namespace AK {
@@ -237,6 +273,52 @@ struct Formatter<SpiceAgent::ClipboardDataType> : Formatter<StringView> {
 
         case SpiceAgent::ClipboardDataType::JPG:
             string = "JPG"sv;
+            break;
+
+        default:
+            break;
+        }
+
+        return Formatter<StringView>::format(builder, string);
+    }
+};
+
+template<>
+struct Formatter<SpiceAgent::FileTransferStatus> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, SpiceAgent::FileTransferStatus const& header)
+    {
+        auto string = "Unknown"sv;
+        switch (header) {
+        case SpiceAgent::FileTransferStatus::AgentNotConnected:
+            string = "AgentNotConnected"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::Cancelled:
+            string = "Cancelled"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::CanSendData:
+            string = "CanSendData"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::Disabled:
+            string = "Disabled"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::Error:
+            string = "Error"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::NotEnoughSpace:
+            string = "NotEnoughSpace"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::SessionLocked:
+            string = "SessionLocked"sv;
+            break;
+
+        case SpiceAgent::FileTransferStatus::Success:
+            string = "Success"sv;
             break;
 
         default:

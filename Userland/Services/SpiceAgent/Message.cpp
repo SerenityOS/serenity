@@ -241,4 +241,30 @@ ErrorOr<String> FileTransferStartMessage::debug_description()
     return builder.to_string();
 }
 
+ErrorOr<FileTransferStatusMessage> FileTransferStatusMessage::read_from_stream(AK::Stream& stream)
+{
+    auto id = TRY(stream.read_value<u32>());
+    auto status = TRY(stream.read_value<FileTransferStatus>());
+
+    return FileTransferStatusMessage(id, status);
+}
+
+ErrorOr<void> FileTransferStatusMessage::write_to_stream(AK::Stream& stream)
+{
+    TRY(stream.write_value(id()));
+    TRY(stream.write_value(status()));
+
+    return {};
+}
+
+ErrorOr<String> FileTransferStatusMessage::debug_description()
+{
+    StringBuilder builder;
+    TRY(builder.try_append("FileTransferStatus { "sv));
+    TRY(builder.try_appendff("id = {}, ", id()));
+    TRY(builder.try_appendff("status = {}", status()));
+    TRY(builder.try_append(" }"sv));
+    return builder.to_string();
+}
+
 }

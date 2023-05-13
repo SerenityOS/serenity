@@ -154,6 +154,13 @@ ErrorOr<void> SpiceAgent::on_message_received()
         break;
     }
 
+    case Message::Type::FileTransferStatus: {
+        auto message = TRY(FileTransferStatusMessage::read_from_stream(stream));
+        dbgln("File transfer {} has been cancelled: {}", message.id(), message.status());
+
+        break;
+    }
+
     case Message::Type::FileTransferStart: {
         auto message = TRY(FileTransferStartMessage::read_from_stream(stream));
         dbgln("File transfer request received: {}", TRY(message.debug_description()));
