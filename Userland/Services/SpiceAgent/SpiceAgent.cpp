@@ -8,6 +8,7 @@
 #include "SpiceAgent.h"
 #include <AK/Debug.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace SpiceAgent {
 
@@ -112,11 +113,31 @@ ErrorOr<void> SpiceAgent::on_clipboard_message(ClipboardMessage& message)
     case ClipboardDataType::Text: {
         // The default mime_type for set_data is `text/plain`
         GUI::Clipboard::the().set_data(message.contents());
-        return {};
+        break;
     }
+
+    // For the image formats, let's try to find a decoder from LibGfx
+    case ClipboardDataType::PNG:
+    case ClipboardDataType::BMP:
+    case ClipboardDataType::JPG:
+    case ClipboardDataType::TIFF: {
+        auto mime_type = TRY(to_mime_type(message.data_type()));
+        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(message.contents(), mime_type.to_deprecated_string());
+        if (!decoder || (decoder->frame_count() == 0)) {
+            return Error::from_string_literal("Failed to find a suitable decoder for a pasted image!");
+        }
+
+        auto frame = TRY(decoder->frame(0));
+        GUI::Clipboard::the().set_bitmap(*frame.image);
+
+        break;
+    }
+
     default:
         return Error::from_string_literal("Unsupported clipboard data type!");
     }
+
+    return {};
 }
 
 ErrorOr<ByteBuffer> SpiceAgent::read_message_buffer()

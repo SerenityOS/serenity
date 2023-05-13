@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace SpiceAgent {
@@ -48,6 +49,9 @@ enum class ClipboardDataType : u32 {
     JPG,
     __End
 };
+
+ErrorOr<String> to_mime_type(ClipboardDataType type);
+ErrorOr<ClipboardDataType> from_raw(u32 value);
 
 class Message {
 public:

@@ -11,6 +11,7 @@
 #include "Message.h"
 #include "MessageHeader.h"
 #include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
