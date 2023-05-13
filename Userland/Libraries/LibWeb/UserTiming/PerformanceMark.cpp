@@ -34,8 +34,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceMark>> PerformanceMark::construc
     if (is<HTML::Window>(current_global_object)) {
         bool matched = false;
 
-#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name)   \
-    if (mark_name == NavigationTiming::EntryNames::name) \
+#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name, _) \
+    if (mark_name == NavigationTiming::EntryNames::name)  \
         matched = true;
         ENUMERATE_NAVIGATION_TIMING_ENTRY_NAMES
 #undef __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME

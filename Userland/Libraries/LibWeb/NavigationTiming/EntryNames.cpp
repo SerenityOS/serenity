@@ -8,7 +8,7 @@
 
 namespace Web::NavigationTiming::EntryNames {
 
-#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name) FlyString name;
+#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name, _) FlyString name;
 ENUMERATE_NAVIGATION_TIMING_ENTRY_NAMES
 #undef __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME
 
@@ -17,7 +17,7 @@ ErrorOr<void> initialize_strings()
     static bool s_initialized = false;
     VERIFY(!s_initialized);
 
-#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name) \
+#define __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME(name, _) \
     name = TRY(#name##_fly_string);
     ENUMERATE_NAVIGATION_TIMING_ENTRY_NAMES
 #undef __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME
