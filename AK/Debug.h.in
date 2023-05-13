@@ -394,6 +394,10 @@
 #    cmakedefine01 SPAM_DEBUG
 #endif
 
+#ifndef SPICE_AGENT_DEBUG
+#    cmakedefine01 SPICE_AGENT_DEBUG
+#endif
+
 #ifndef SQL_DEBUG
 #    cmakedefine01 SQL_DEBUG
 #endif
