@@ -82,6 +82,7 @@ private:
         CSS::GridSize min_track_sizing_function;
         CSS::GridSize max_track_sizing_function;
         CSSPixels base_size { 0 };
+        bool has_definite_base_size { false };
         CSSPixels growth_limit { 0 };
         CSSPixels space_to_distribute { 0 };
         CSSPixels planned_increase { 0 };
@@ -173,7 +174,16 @@ private:
     void stretch_auto_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
     void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
 
-    CSSPixels content_based_minimum_height(GridItem const&);
+    CSS::Size const& get_item_preferred_size(GridItem const&, GridDimension const) const;
+
+    CSSPixels calculate_min_content_size(GridItem const&, GridDimension const) const;
+    CSSPixels calculate_max_content_size(GridItem const&, GridDimension const) const;
+
+    CSSPixels calculate_min_content_contribution(GridItem const&, GridDimension const) const;
+    CSSPixels calculate_max_content_contribution(GridItem const&, GridDimension const) const;
+
+    CSSPixels containing_block_size_for_item(GridItem const&, GridDimension const) const;
+    AvailableSpace get_available_space_for_item(GridItem const&) const;
 };
 
 }

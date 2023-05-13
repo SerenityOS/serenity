@@ -685,23 +685,6 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
 
     // FIXME: 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
-    auto calculate_item_min_content_contribution = [&](GridItem const& item) {
-        if (dimension == GridDimension::Column) {
-            return calculate_min_content_width(item.box());
-        } else {
-            return content_based_minimum_height(item);
-        }
-    };
-
-    auto calculate_item_max_content_contribution = [&](GridItem const& item) {
-        if (dimension == GridDimension::Column) {
-            return calculate_max_content_width(item.box());
-        } else {
-            auto available_width = AvailableSize::make_definite(m_grid_columns[item.gap_adjusted_column(grid_container())].base_size);
-            return calculate_max_content_height(item.box(), available_width);
-        }
-    };
-
     // 2. Size tracks to fit non-spanning items: For each track with an intrinsic track sizing function and
     // not a flexible sizing function, consider the items in it with a span of 1:
 
@@ -742,7 +725,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             // items’ min-content contributions, floored at zero.
             CSSPixels base_size = 0;
             for (auto& item : grid_items_of_track) {
-                base_size = max(base_size, calculate_item_min_content_contribution(item));
+                base_size = max(base_size, calculate_min_content_contribution(item, dimension));
             }
             track.base_size = base_size;
         } break;
@@ -751,7 +734,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             // items’ max-content contributions, floored at zero.
             CSSPixels base_size = 0;
             for (auto& item : grid_items_of_track) {
-                base_size = max(base_size, calculate_item_min_content_contribution(item));
+                base_size = max(base_size, calculate_max_content_contribution(item, dimension));
             }
             track.base_size = base_size;
         } break;
@@ -767,13 +750,13 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
                 if (available_size.is_min_content()) {
                     CSSPixels base_size = 0;
                     for (auto& item : grid_items_of_track) {
-                        base_size = max(base_size, calculate_item_min_content_contribution(item));
+                        base_size = max(base_size, calculate_min_content_contribution(item, dimension));
                     }
                     track.base_size = base_size;
                 } else if (available_size.is_max_content()) {
                     CSSPixels base_size = 0;
                     for (auto& item : grid_items_of_track) {
-                        base_size = max(base_size, calculate_item_min_content_contribution(item));
+                        base_size = max(base_size, calculate_max_content_contribution(item, dimension));
                     }
                     track.base_size = base_size;
                 }
@@ -787,7 +770,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
                 // the size of the item’s content, it is considered a type of intrinsic size contribution.
                 CSSPixels base_size = 0;
                 for (auto& item : grid_items_of_track) {
-                    base_size = max(base_size, calculate_item_min_content_contribution(item));
+                    base_size = max(base_size, calculate_min_content_contribution(item, dimension));
                 }
                 track.base_size = base_size;
             }
@@ -808,7 +791,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             // the items’ min-content contributions.
             CSSPixels growth_limit = 0;
             for (auto& item : grid_items_of_track) {
-                growth_limit = max(growth_limit, calculate_item_min_content_contribution(item));
+                growth_limit = max(growth_limit, calculate_min_content_contribution(item, dimension));
             }
             track.growth_limit = growth_limit;
         } else if (max_track_sizing_function.is_max_content() || max_track_sizing_function.is_auto()) {
@@ -817,7 +800,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
             // limit by the fit-content() argument.
             CSSPixels growth_limit = 0;
             for (auto& item : grid_items_of_track) {
-                growth_limit = max(growth_limit, calculate_item_max_content_contribution(item));
+                growth_limit = max(growth_limit, calculate_max_content_contribution(item, dimension));
             }
             track.growth_limit = growth_limit;
         }
@@ -1009,6 +992,9 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
     // limit, set it to the track’s base size plus the planned increase.)
     for (auto& track : tracks)
         track.base_size += track.planned_increase;
+
+    for (auto& track : tracks)
+        track.has_definite_base_size = true;
 }
 
 void GridFormattingContext::maximize_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
@@ -1649,17 +1635,86 @@ size_t GridItem::gap_adjusted_column(Box const& grid_box) const
     return grid_box.computed_values().column_gap().is_auto() ? m_column : m_column * 2;
 }
 
-// https://www.w3.org/TR/css-grid-2/#min-size-auto
-CSSPixels GridFormattingContext::content_based_minimum_height(GridItem const& item)
+CSS::Size const& GridFormattingContext::get_item_preferred_size(GridItem const& item, GridDimension const dimension) const
 {
-    // The content-based minimum size for a grid item in a given dimension is its specified size suggestion if it exists
-    if (!item.box().computed_values().height().is_auto()) {
-        if (item.box().computed_values().height().is_length())
-            return item.box().computed_values().height().length().to_px(item.box());
+    if (dimension == GridDimension::Column)
+        return item.box().computed_values().width();
+    return item.box().computed_values().height();
+}
+
+CSSPixels GridFormattingContext::calculate_min_content_size(GridItem const& item, GridDimension const dimension) const
+{
+    if (dimension == GridDimension::Column) {
+        return calculate_min_content_width(item.box());
+    } else {
+        return calculate_min_content_height(item.box(), get_available_space_for_item(item).width);
     }
-    // FIXME: otherwise its transferred size suggestion if that exists
-    // else its content size suggestion
     return calculate_min_content_height(item.box(), AvailableSize::make_definite(m_grid_columns[item.gap_adjusted_column(grid_container())].base_size));
+}
+
+CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item, GridDimension const dimension) const
+{
+    if (dimension == GridDimension::Column) {
+        return calculate_max_content_width(item.box());
+    } else {
+        return calculate_max_content_height(item.box(), get_available_space_for_item(item).width);
+    }
+}
+
+CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& item, GridDimension const dimension) const
+{
+    auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+    auto const track_index = dimension == GridDimension::Column ? item.gap_adjusted_column(grid_container()) : item.gap_adjusted_column(grid_container());
+    return tracks[track_index].base_size;
+}
+
+AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem const& item) const
+{
+    auto const& column_track = m_grid_columns[item.gap_adjusted_column(grid_container())];
+    AvailableSize available_width = column_track.has_definite_base_size ? AvailableSize::make_definite(column_track.base_size) : AvailableSize::make_indefinite();
+
+    auto const& row_track = m_grid_rows[item.gap_adjusted_row(grid_container())];
+    AvailableSize available_height = row_track.has_definite_base_size ? AvailableSize::make_definite(row_track.base_size) : AvailableSize::make_indefinite();
+
+    return AvailableSpace(available_width, available_height);
+}
+
+CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem const& item, GridDimension const dimension) const
+{
+    auto available_space_for_item = get_available_space_for_item(item);
+
+    auto should_treat_preferred_size_as_auto = [&] {
+        if (dimension == GridDimension::Column)
+            return should_treat_width_as_auto(item.box(), available_space_for_item);
+        return should_treat_height_as_auto(item.box(), available_space_for_item);
+    }();
+
+    if (should_treat_preferred_size_as_auto) {
+        return calculate_min_content_size(item, dimension);
+    }
+
+    auto preferred_size = get_item_preferred_size(item, dimension);
+    auto containing_block_size = containing_block_size_for_item(item, dimension);
+    return preferred_size.to_px(grid_container(), containing_block_size);
+}
+
+CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem const& item, GridDimension const dimension) const
+{
+    auto available_space_for_item = get_available_space_for_item(item);
+
+    auto should_treat_preferred_size_as_auto = [&] {
+        if (dimension == GridDimension::Column)
+            return should_treat_width_as_auto(item.box(), available_space_for_item);
+        return should_treat_height_as_auto(item.box(), available_space_for_item);
+    }();
+
+    if (should_treat_preferred_size_as_auto) {
+        return calculate_max_content_size(item, dimension);
+    }
+
+    auto preferred_size = get_item_preferred_size(item, dimension);
+    auto containing_block_size = containing_block_size_for_item(item, dimension);
+    return preferred_size.to_px(grid_container(), containing_block_size);
 }
 
 }
