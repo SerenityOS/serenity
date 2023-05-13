@@ -328,4 +328,32 @@ ErrorOr<String> FileTransferStatusMessage::debug_description()
     return builder.to_string();
 }
 
+FileTransferDataMessage::FileTransferDataMessage(u32 id, ByteBuffer const& contents)
+    : Message(Type::FileTransferData)
+    , m_id(id)
+    , m_contents(contents)
+{
+}
+
+ErrorOr<FileTransferDataMessage> FileTransferDataMessage::read_from_stream(AK::Stream& stream)
+{
+    auto id = TRY(stream.read_value<u32>());
+    auto size = TRY(stream.read_value<u64>());
+
+    auto contents = TRY(ByteBuffer::create_uninitialized(size));
+    TRY(stream.read_until_filled(contents));
+
+    return FileTransferDataMessage(id, contents);
+}
+
+ErrorOr<String> FileTransferDataMessage::debug_description()
+{
+    StringBuilder builder;
+    builder.append("FileTransferData { "sv);
+    builder.appendff("id = {}, ", id());
+    builder.appendff("contents.size() = {}", contents().size());
+    builder.append(" }"sv);
+    return builder.to_string();
+}
+
 }
