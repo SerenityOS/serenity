@@ -625,11 +625,6 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
             did_misbehave("CreateWindow with bad parent_window_id");
             return;
         }
-
-        if (auto* blocker = parent_window->blocking_modal_window(); blocker && mode == (i32)WindowMode::Blocking) {
-            did_misbehave("CreateWindow with illegal mode: reciprocally blocked");
-            return;
-        }
     }
 
     if (type < 0 || type >= (i32)WindowType::_Count) {
@@ -648,6 +643,11 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
     }
 
     auto window = Window::construct(*this, (WindowType)type, (WindowMode)mode, window_id, minimizable, closeable, frameless, resizable, fullscreen, parent_window);
+
+    if (auto* blocker = window->blocking_modal_window(); blocker && mode == to_underlying(WindowMode::Blocking)) {
+        did_misbehave("CreateWindow with illegal mode: Reciprocally blocked");
+        return;
+    }
 
     window->set_forced_shadow(forced_shadow);
 
@@ -1360,6 +1360,12 @@ void ConnectionFromClient::set_window_parent_from_client(i32 client_id, i32 pare
         child_window->set_parent_window(*parent_window);
     } else {
         did_misbehave("SetWindowParentFromClient: Window is not stealable");
+    }
+
+    auto is_also_blocking = to_underlying(child_window->mode()) == to_underlying(WindowMode::Blocking);
+    if (auto* blocker = child_window->blocking_modal_window(); blocker && is_also_blocking) {
+        did_misbehave("SetWindowParentFromClient: Reciprocally blocked");
+        return;
     }
 }
 
