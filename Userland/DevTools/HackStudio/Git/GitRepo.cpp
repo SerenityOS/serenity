@@ -80,10 +80,10 @@ DeprecatedString GitRepo::command(Vector<DeprecatedString> const& command_parts)
 
 DeprecatedString GitRepo::command_wrapper(Vector<DeprecatedString> const& command_parts, DeprecatedString const& chdir)
 {
-    auto result = Core::command("git", command_parts, LexicalPath(chdir));
+    auto const result = Core::command("git", command_parts, LexicalPath(chdir));
     if (result.is_error() || result.value().exit_code != 0)
         return {};
-    return result.value().output;
+    return DeprecatedString(result.value().output.bytes());
 }
 
 bool GitRepo::git_is_installed()
