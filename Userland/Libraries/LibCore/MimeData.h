@@ -41,7 +41,7 @@ public:
 private:
     MimeData() = default;
     explicit MimeData(HashMap<DeprecatedString, ByteBuffer> const& data)
-        : m_data(data)
+        : m_data(data.clone().release_value_but_fixme_should_propagate_errors())
     {
     }
 
