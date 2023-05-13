@@ -7,7 +7,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
@@ -76,14 +75,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         rc = rename(old_path.characters(), new_path.characters());
         if (rc < 0) {
             if (errno == EXDEV) {
-                auto result = Core::DeprecatedFile::copy_file_or_directory(
+                auto result = FileSystem::copy_file_or_directory(
                     new_path, old_path,
-                    Core::DeprecatedFile::RecursionMode::Allowed,
-                    Core::DeprecatedFile::LinkMode::Disallowed,
-                    Core::DeprecatedFile::AddDuplicateFileMarker::No);
+                    FileSystem::RecursionMode::Allowed,
+                    FileSystem::LinkMode::Disallowed,
+                    FileSystem::AddDuplicateFileMarker::No);
 
                 if (result.is_error()) {
-                    warnln("mv: could not move '{}': {}", old_path, static_cast<Error const&>(result.error()));
+                    warnln("mv: could not move '{}': {}", old_path, result.error());
                     return 1;
                 }
                 rc = unlink(old_path.characters());
