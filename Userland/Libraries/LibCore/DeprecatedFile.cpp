@@ -10,6 +10,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -140,11 +141,6 @@ bool DeprecatedFile::is_link() const
     if (fstat(fd(), &stat) < 0)
         return false;
     return S_ISLNK(stat.st_mode);
-}
-
-bool DeprecatedFile::looks_like_shared_library() const
-{
-    return m_filename.ends_with(".so"sv) || m_filename.contains(".so."sv);
 }
 
 DeprecatedString DeprecatedFile::real_path_for(DeprecatedString const& filename)

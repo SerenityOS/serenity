@@ -16,6 +16,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>

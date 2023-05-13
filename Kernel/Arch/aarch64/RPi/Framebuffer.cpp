@@ -11,9 +11,6 @@
 #include <Kernel/BootInfo.h>
 #include <Kernel/Sections.h>
 
-extern const u32 serenity_boot_logo_start;
-extern const u32 serenity_boot_logo_size;
-
 namespace Kernel::RPi {
 
 Framebuffer::Framebuffer()
@@ -130,56 +127,6 @@ void Framebuffer::initialize()
         // NOTE: The required pixel format for MULTIBOOT_FRAMEBUFFER_TYPE_RGB is actually BGRx8888.
         VERIFY(framebuffer.pixel_order() == PixelOrder::BGR);
         multiboot_framebuffer_type = MULTIBOOT_FRAMEBUFFER_TYPE_RGB;
-    }
-}
-
-void Framebuffer::draw_logo(u8* framebuffer_data)
-{
-    BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
-    if (!logo_parser.parse()) {
-        dbgln("Failed to parse boot logo.");
-        return;
-    }
-
-    dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
-
-    auto fb_ptr = framebuffer_data;
-    auto image_left = (width() - logo_parser.image.width) / 2;
-    auto image_right = image_left + logo_parser.image.width;
-    auto image_top = (height() - logo_parser.image.height) / 2;
-    auto image_bottom = image_top + logo_parser.image.height;
-    auto logo_pixels = logo_parser.image.pixel_data;
-
-    for (u32 y = 0; y < height(); y++) {
-        for (u32 x = 0; x < width(); x++) {
-            if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
-                switch (pixel_order()) {
-                case RPi::Framebuffer::PixelOrder::RGB:
-                    fb_ptr[0] = logo_pixels[0];
-                    fb_ptr[1] = logo_pixels[1];
-                    fb_ptr[2] = logo_pixels[2];
-                    break;
-                case RPi::Framebuffer::PixelOrder::BGR:
-                    fb_ptr[0] = logo_pixels[2];
-                    fb_ptr[1] = logo_pixels[1];
-                    fb_ptr[2] = logo_pixels[0];
-                    break;
-                default:
-                    dbgln("Unsupported pixel format");
-                    VERIFY_NOT_REACHED();
-                }
-
-                logo_pixels += 3;
-            } else {
-                fb_ptr[0] = 0xBD;
-                fb_ptr[1] = 0xBD;
-                fb_ptr[2] = 0xBD;
-            }
-
-            fb_ptr[3] = 0xFF;
-            fb_ptr += 4;
-        }
-        fb_ptr += pitch() - width() * 4;
     }
 }
 

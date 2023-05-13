@@ -1,10 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=nethack
-version=3.6.6
-workdir=NetHack-NetHack-${version}_Released
-files="https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz nethack-${version//.}-src.tgz cfde0c3ab6dd7c22ae82e1e5a59ab80152304eb23fb06e3129439271e5643ed2"
-auth_type=sha256
-depends=("ncurses" "bash")
+port='nethack'
+version='3.6.7'
+workdir="NetHack-${version}"
+files="https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz nethack-${version//.}-src.tgz 98cf67df6debf9668a61745aa84c09bcab362e5d33f5b944ec5155d44d2aacb2"
+auth_type='sha256'
+depends=(
+    'ncurses'
+    'bash'
+)
 
 build() {
     run sys/unix/setup.sh sys/unix/hints/serenity

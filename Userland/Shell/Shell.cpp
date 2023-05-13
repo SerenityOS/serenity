@@ -25,6 +25,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibLine/Editor.h>
 #include <Shell/PosixParser.h>
 #include <errno.h>

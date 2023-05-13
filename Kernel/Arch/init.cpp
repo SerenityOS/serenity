@@ -239,9 +239,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     if (!kernel_command_line().is_early_boot_console_disabled()) {
         if (!multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
-#if ARCH(AARCH64)
-            RPi::Framebuffer::the().draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
-#endif
         } else {
             g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
         }

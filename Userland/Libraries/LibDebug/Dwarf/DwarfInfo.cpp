@@ -59,7 +59,7 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
 
-        auto line_program = make<LineProgram>(*this, line_info_stream);
+        auto line_program = TRY(LineProgram::create(*this, line_info_stream));
 
         // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
         // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
