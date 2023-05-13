@@ -116,7 +116,7 @@ struct Array {
     {
         static_assert(Size > 0, "No values to min() over");
 
-        size_t candidate = 0;;
+        size_t candidate = 0;
         for (size_t i = 1; i < Size; ++i)
             if (__data[i] < __data[candidate])
                 candidate = i;
