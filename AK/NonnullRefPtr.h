@@ -226,7 +226,7 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
 }
 
-// Use like `adopt_nonnull_own_or_enomem(new (nothrow) T(args...))`.
+// Use like `adopt_nonnull_ref_or_enomem(new (nothrow) T(args...))`.
 template<typename T>
 inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
 {
