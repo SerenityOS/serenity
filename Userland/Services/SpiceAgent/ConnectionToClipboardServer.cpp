@@ -71,5 +71,5 @@ void ConnectionToClipboardServer::set_bitmap(Gfx::Bitmap const& bitmap)
     VERIFY(!buffer_or_error.is_error());
     auto buffer = buffer_or_error.release_value();
     memcpy(buffer.data<u8>(), data.data(), data.size());
-    this->async_set_clipboard_data(buffer, "image/x-serenityos", metadata);
+    this->async_set_clipboard_data(buffer, "image/x-serenityos", move(metadata));
 }
