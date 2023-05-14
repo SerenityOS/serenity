@@ -71,7 +71,7 @@ public:
     void run_javascript(StringView);
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
-    virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) = 0;
+    virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_change_selection(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;
@@ -142,6 +142,7 @@ protected:
     struct SharedBitmap {
         i32 id { -1 };
         i32 pending_paints { 0 };
+        Gfx::IntSize last_painted_size;
         RefPtr<Gfx::Bitmap> bitmap;
     };
 

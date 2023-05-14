@@ -205,11 +205,12 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
     client().async_update_screen_rects(event.rects(), event.main_screen_index());
 }
 
-void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
+void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
     if (m_client_state.back_bitmap.id == bitmap_id) {
         m_client_state.has_usable_bitmap = true;
         m_client_state.back_bitmap.pending_paints--;
+        m_client_state.back_bitmap.last_painted_size = size;
         swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
         // We don't need the backup bitmap anymore, so drop it.
         m_backup_bitmap = nullptr;
