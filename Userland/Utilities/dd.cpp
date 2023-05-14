@@ -47,11 +47,13 @@ struct {
 
 static void closing_statistics()
 {
-    if (statistics.status != Default)
+    if (statistics.status == None)
         return;
     warnln("{}+{} blocks in", statistics.total_blocks_in, statistics.partial_blocks_in);
     warnln("{}+{} blocks out", statistics.total_blocks_out, statistics.partial_blocks_out);
-    warnln("{} bytes copied.", statistics.total_bytes_copied);
+    if (statistics.status != Noxfer) {
+        warnln("{} bytes copied.", statistics.total_bytes_copied);
+    }
 }
 
 static StringView split_at_equals(StringView argument)
