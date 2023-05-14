@@ -99,6 +99,8 @@ private:
         CSSPixels growth_limit { 0 };
         CSSPixels space_to_distribute { 0 };
         CSSPixels planned_increase { 0 };
+        CSSPixels item_incurred_increase { 0 };
+        bool frozen { false };
         bool is_gap { false };
 
         CSSPixels border_left { 0 };
@@ -189,6 +191,9 @@ private:
 
     void initialize_track_sizes(AvailableSpace const&, GridDimension const);
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
+    void distribute_extra_space_across_spanned_tracks(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
+    void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(GridDimension const, size_t span);
+    void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
     void maximize_tracks(AvailableSpace const&, GridDimension const);
     void expand_flexible_tracks(AvailableSpace const&, GridDimension const);
     void stretch_auto_tracks(AvailableSpace const&, GridDimension const);
