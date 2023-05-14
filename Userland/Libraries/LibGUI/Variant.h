@@ -21,7 +21,7 @@ namespace Detail {
 struct Boolean {
     bool value;
 };
-using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, double, i32, i64, u32, u64, ByteString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::WindowThemeProvider, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::WindowThemeRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, double, i32, i64, u32, u64, ByteString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::WindowThemeProvider, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
 }
 
 class Variant : public Detail::VariantUnderlyingType {
@@ -84,12 +84,6 @@ public:
     bool is_rect() const { return has<Gfx::IntRect>(); }
     bool is_font() const { return has<NonnullRefPtr<Gfx::Font const>>(); }
     bool is_text_alignment() const { return has<Gfx::TextAlignment>(); }
-    bool is_color_role() const { return has<Gfx::ColorRole>(); }
-    bool is_alignment_role() const { return has<Gfx::AlignmentRole>(); }
-    bool is_flag_role() const { return has<Gfx::FlagRole>(); }
-    bool is_metric_role() const { return has<Gfx::MetricRole>(); }
-    bool is_path_role() const { return has<Gfx::PathRole>(); }
-    bool is_window_theme_role() const { return has<Gfx::WindowThemeRole>(); }
 
     bool as_bool() const { return get<Detail::Boolean>().value; }
 
@@ -160,48 +154,6 @@ public:
         return default_value;
     }
 
-    Gfx::ColorRole to_color_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::ColorRole>())
-            return *p;
-        return Gfx::ColorRole::NoRole;
-    }
-
-    Gfx::AlignmentRole to_alignment_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::AlignmentRole>())
-            return *p;
-        return Gfx::AlignmentRole::NoRole;
-    }
-
-    Gfx::WindowThemeRole to_window_theme_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::WindowThemeRole>())
-            return *p;
-        return Gfx::WindowThemeRole::NoRole;
-    }
-
-    Gfx::FlagRole to_flag_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::FlagRole>())
-            return *p;
-        return Gfx::FlagRole::NoRole;
-    }
-
-    Gfx::MetricRole to_metric_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::MetricRole>())
-            return *p;
-        return Gfx::MetricRole::NoRole;
-    }
-
-    Gfx::PathRole to_path_role() const
-    {
-        if (auto const* p = get_pointer<Gfx::PathRole>())
-            return *p;
-        return Gfx::PathRole::NoRole;
-    }
-
     Color to_color(Color default_value = {}) const
     {
         if (auto const* p = get_pointer<Color>())
@@ -218,12 +170,6 @@ public:
             [](ByteString v) { return v; },
             [](Gfx::TextAlignment v) { return ByteString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
             [](Gfx::WindowThemeProvider v) { return ByteString::formatted("Gfx::WindowThemeProvider::{}", Gfx::to_string(v)); },
-            [](Gfx::ColorRole v) { return ByteString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
-            [](Gfx::AlignmentRole v) { return ByteString::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
-            [](Gfx::WindowThemeRole v) { return ByteString::formatted("Gfx::WindowThemeRole::{}", Gfx::to_string(v)); },
-            [](Gfx::FlagRole v) { return ByteString::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
-            [](Gfx::MetricRole v) { return ByteString::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
-            [](Gfx::PathRole v) { return ByteString::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
             [](NonnullRefPtr<Gfx::Font const> const& font) { return ByteString::formatted("[Font: {}]", font->name()); },
             [](NonnullRefPtr<Gfx::Bitmap const> const&) -> ByteString { return "[Gfx::Bitmap]"; },
             [](GUI::Icon const&) -> ByteString { return "[GUI::Icon]"; },
