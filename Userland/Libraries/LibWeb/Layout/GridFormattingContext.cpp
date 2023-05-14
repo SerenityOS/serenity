@@ -879,109 +879,13 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
     // than zero, distributing space to such tracks according to the ratios of their flexible sizing
     // functions rather than distributing space equally
 
-    // FIXME: 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
+    // 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
     // it or it is a flexible track), set its growth limit to its base size.
     for (auto& track : tracks) {
         if (track.growth_limit == INFINITY) {
             track.growth_limit = track.base_size;
         }
     }
-
-    // https://www.w3.org/TR/css-grid-2/#extra-space
-    // 12.5.1. Distributing Extra Space Across Spanned Tracks
-    // To distribute extra space by increasing the affected sizes of a set of tracks as required by a
-    // set of intrinsic size contributions,
-    CSSPixels sum_of_track_sizes = 0;
-    for (auto& it : tracks)
-        sum_of_track_sizes += it.base_size;
-
-    // 1. Maintain separately for each affected base size or growth limit a planned increase, initially
-    // set to 0. (This prevents the size increases from becoming order-dependent.)
-
-    // 2. For each considered item,
-
-    // 2.1. Find the space to distribute: Subtract the corresponding size (base size or growth limit) of
-    // every spanned track from the item’s size contribution to find the item’s remaining size
-    // contribution. (For infinite growth limits, substitute the track’s base size.) This is the space
-    // to distribute. Floor it at zero.
-
-    // For base sizes, the limit is its growth limit. For growth limits, the limit is infinity if it is
-    // marked as infinitely growable, and equal to the growth limit otherwise. If the affected size was
-    // a growth limit and the track is not marked infinitely growable, then each item-incurred increase
-    // will be zero.
-    // extra-space = max(0, size-contribution - ∑track-sizes)
-    for (auto& track : tracks) {
-        if (track.is_gap)
-            continue;
-        track.space_to_distribute = max(CSSPixels(0), track.growth_limit - track.base_size);
-    }
-
-    auto remaining_free_space = available_size.is_definite() ? available_size.to_px() - sum_of_track_sizes : 0;
-
-    // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
-    // affected size by: distributing the space equally among such tracks, freezing a track’s
-    // item-incurred increase as its affected size + item-incurred increase reaches its limit (and
-    // continuing to grow the unfrozen tracks as needed).
-    auto count_of_unfrozen_tracks = 0;
-    for (auto& track : tracks) {
-        if (track.space_to_distribute > 0)
-            count_of_unfrozen_tracks++;
-    }
-    while (remaining_free_space > 0) {
-        if (count_of_unfrozen_tracks == 0)
-            break;
-        auto free_space_to_distribute_per_track = remaining_free_space / count_of_unfrozen_tracks;
-
-        for (auto& track : tracks) {
-            if (track.space_to_distribute == 0)
-                continue;
-            // 2.4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned
-            // increase set the track’s planned increase to that value.
-            if (track.space_to_distribute <= free_space_to_distribute_per_track) {
-                track.planned_increase += track.space_to_distribute;
-                remaining_free_space -= track.space_to_distribute;
-                track.space_to_distribute = 0;
-            } else {
-                track.space_to_distribute -= free_space_to_distribute_per_track;
-                track.planned_increase += free_space_to_distribute_per_track;
-                remaining_free_space -= free_space_to_distribute_per_track;
-            }
-        }
-
-        count_of_unfrozen_tracks = 0;
-        for (auto& track : tracks) {
-            if (track.space_to_distribute > 0)
-                count_of_unfrozen_tracks++;
-        }
-        if (remaining_free_space == 0)
-            break;
-    }
-
-    // 2.3. Distribute space beyond limits: If space remains after all tracks are frozen, unfreeze and
-    // continue to distribute space to the item-incurred increase of…
-
-    // - when accommodating minimum contributions or accommodating min-content contributions: any affected
-    // track that happens to also have an intrinsic max track sizing function; if there are no such
-    // tracks, then all affected tracks.
-
-    // - when accommodating max-content contributions: any affected track that happens to also have a
-    // max-content max track sizing function; if there are no such tracks, then all affected tracks.
-
-    // - when handling any intrinsic growth limit: all affected tracks.
-
-    // For this purpose, the max track sizing function of a fit-content() track is treated as
-    // max-content until it reaches the limit specified as the fit-content() argument, after which it is
-    // treated as having a fixed sizing function of that argument.
-
-    // This step prioritizes the distribution of space for accommodating space required by the
-    // tracks’ min track sizing functions beyond their current growth limits based on the types of their
-    // max track sizing functions.
-
-    // 3. Update the tracks' affected sizes by adding in the planned increase so that the next round of
-    // space distribution will account for the increase. (If the affected size is an infinite growth
-    // limit, set it to the track’s base size plus the planned increase.)
-    for (auto& track : tracks)
-        track.base_size += track.planned_increase;
 
     for (auto& track : tracks)
         track.has_definite_base_size = true;
