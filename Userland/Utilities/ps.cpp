@@ -54,10 +54,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     bool every_process_flag = false;
+    bool every_terminal_process_flag = false;
     bool full_format_flag = false;
     StringView pid_list;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(every_terminal_process_flag, "Show every process associated with terminals", nullptr, 'a');
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'A');
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
@@ -140,8 +142,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto const& process : processes) {
         auto tty = TRY(String::from_deprecated_string(process.tty));
-        if (!every_process_flag && tty != this_pseudo_tty_name)
+        if (every_process_flag) {
+            // Don't skip any.
+        } else if (every_terminal_process_flag) {
+            if (tty.is_empty())
+                continue;
+        } else if (tty != this_pseudo_tty_name) {
             continue;
+        }
 
         Vector<String> row;
         TRY(row.try_resize(columns.size()));
