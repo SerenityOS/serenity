@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -203,6 +203,12 @@ private:
     void update_viewport_rect();
     void handle_resize();
 
+    enum class WindowResizeInProgress {
+        No,
+        Yes,
+    };
+    void resize_backing_stores_if_needed(WindowResizeInProgress);
+
     void ensure_js_console_widget();
     void ensure_inspector_widget();
 
@@ -222,6 +228,9 @@ private:
     void handle_web_content_process_crash();
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
+    Gfx::IntSize m_backup_bitmap_size;
 
     StringView m_webdriver_content_ipc_path;
+
+    RefPtr<Core::Timer> m_backing_store_shrink_timer;
 };

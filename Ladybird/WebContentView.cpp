@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -77,6 +77,10 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     });
 
     create_client(enable_callgrind_profiling);
+
+    m_backing_store_shrink_timer = Core::Timer::create_single_shot(3000, [this] {
+        resize_backing_stores_if_needed(WindowResizeInProgress::No);
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 WebContentView::~WebContentView()
@@ -410,9 +414,29 @@ void WebContentView::paintEvent(QPaintEvent*)
     QPainter painter(viewport());
     painter.scale(m_inverse_pixel_scaling_ratio, m_inverse_pixel_scaling_ratio);
 
-    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
+    Gfx::Bitmap const* bitmap = nullptr;
+    Gfx::IntSize bitmap_size;
+
+    if (m_client_state.has_usable_bitmap) {
+        bitmap = m_client_state.front_bitmap.bitmap.ptr();
+        bitmap_size = m_client_state.front_bitmap.last_painted_size;
+
+    } else {
+        bitmap = m_backup_bitmap.ptr();
+        bitmap_size = m_backup_bitmap_size;
+    }
+
+    if (bitmap) {
         QImage q_image(bitmap->scanline_u8(0), bitmap->width(), bitmap->height(), QImage::Format_RGB32);
-        painter.drawImage(QPoint(0, 0), q_image);
+        painter.drawImage(QPoint(0, 0), q_image, QRect(0, 0, bitmap_size.width(), bitmap_size.height()));
+
+        if (bitmap_size.width() < width()) {
+            painter.fillRect(bitmap_size.width(), 0, width() - bitmap_size.width(), bitmap->height(), palette().base());
+        }
+        if (bitmap_size.height() < height()) {
+            painter.fillRect(0, bitmap_size.height(), width(), height() - bitmap_size.height(), palette().base());
+        }
+
         return;
     }
 
@@ -423,43 +447,57 @@ void WebContentView::resizeEvent(QResizeEvent* event)
 {
     QAbstractScrollArea::resizeEvent(event);
     handle_resize();
+    m_backing_store_shrink_timer->restart();
 }
 
 void WebContentView::handle_resize()
 {
     update_viewport_rect();
+    resize_backing_stores_if_needed(WindowResizeInProgress::Yes);
+}
 
+void WebContentView::resize_backing_stores_if_needed(WindowResizeInProgress window_resize_in_progress)
+{
     if (m_client_state.has_usable_bitmap) {
         // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
         m_backup_bitmap = m_client_state.front_bitmap.bitmap;
+        m_backup_bitmap_size = m_client_state.front_bitmap.last_painted_size;
     }
 
-    if (m_client_state.front_bitmap.bitmap)
-        client().async_remove_backing_store(m_client_state.front_bitmap.id);
-
-    if (m_client_state.back_bitmap.bitmap)
-        client().async_remove_backing_store(m_client_state.back_bitmap.id);
-
-    m_client_state.front_bitmap = {};
-    m_client_state.back_bitmap = {};
     m_client_state.has_usable_bitmap = false;
 
-    auto available_size = m_viewport_rect.size();
-
-    if (available_size.is_empty())
+    if (m_viewport_rect.is_empty())
         return;
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
-        m_client_state.front_bitmap.bitmap = new_bitmap_or_error.release_value();
-        m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
+    Gfx::IntSize minimum_needed_size;
+
+    if (window_resize_in_progress == WindowResizeInProgress::Yes) {
+        // Pad the minimum needed size so that we don't have to keep reallocating backing stores while the window is being resized.
+        minimum_needed_size = { m_viewport_rect.width() + 256, m_viewport_rect.height() + 256 };
+    } else {
+        // If we're not in the middle of a resize, we can shrink the backing store size to match the viewport size.
+        minimum_needed_size = m_viewport_rect.size();
+        m_client_state.front_bitmap = {};
+        m_client_state.back_bitmap = {};
     }
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
-        m_client_state.back_bitmap.bitmap = new_bitmap_or_error.release_value();
-        m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
-    }
+    auto reallocate_backing_store_if_needed = [&](SharedBitmap& backing_store) {
+        if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size)) {
+            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, minimum_needed_size); !new_bitmap_or_error.is_error()) {
+                if (backing_store.bitmap)
+                    client().async_remove_backing_store(backing_store.id);
+
+                backing_store.pending_paints = 0;
+                backing_store.bitmap = new_bitmap_or_error.release_value();
+                backing_store.id = m_client_state.next_bitmap_id++;
+                client().async_add_backing_store(backing_store.id, backing_store.bitmap->to_shareable_bitmap());
+            }
+            backing_store.last_painted_size = m_viewport_rect.size();
+        }
+    };
+
+    reallocate_backing_store_if_needed(m_client_state.front_bitmap);
+    reallocate_backing_store_if_needed(m_client_state.back_bitmap);
 
     request_repaint();
 }
