@@ -58,10 +58,6 @@
 #    cmakedefine01 CRYPTO_DEBUG
 #endif
 
-#ifndef CSOCKET_DEBUG
-#    cmakedefine01 CSOCKET_DEBUG
-#endif
-
 #ifndef CSS_LOADER_DEBUG
 #    cmakedefine01 CSS_LOADER_DEBUG
 #endif
@@ -74,16 +70,8 @@
 #    cmakedefine01 CSS_TOKENIZER_DEBUG
 #endif
 
-#ifndef CURSOR_TOOL_DEBUG
-#    cmakedefine01 CURSOR_TOOL_DEBUG
-#endif
-
 #ifndef DDS_DEBUG
 #    cmakedefine01 DDS_DEBUG
-#endif
-
-#ifndef DEFERRED_INVOKE_DEBUG
-#    cmakedefine01 DEFERRED_INVOKE_DEBUG
 #endif
 
 #ifndef DHCPV4_DEBUG
@@ -138,10 +126,6 @@
 #    cmakedefine01 EVENT_DEBUG
 #endif
 
-#ifndef EVENTLOOP_DEBUG
-#    cmakedefine01 EVENTLOOP_DEBUG
-#endif
-
 #ifndef FILE_CONTENT_DEBUG
 #    cmakedefine01 FILE_CONTENT_DEBUG
 #endif
@@ -156,10 +140,6 @@
 
 #ifndef GEMINI_DEBUG
 #    cmakedefine01 GEMINI_DEBUG
-#endif
-
-#ifndef GEMINIJOB_DEBUG
-#    cmakedefine01 GEMINIJOB_DEBUG
 #endif
 
 #ifndef GENERATE_DEBUG
@@ -186,10 +166,6 @@
 #    cmakedefine01 GPT_DEBUG
 #endif
 
-#ifndef GZIP_DEBUG
-#    cmakedefine01 GZIP_DEBUG
-#endif
-
 #ifndef HEAP_DEBUG
 #    cmakedefine01 HEAP_DEBUG
 #endif
@@ -212,10 +188,6 @@
 
 #ifndef HTTPJOB_DEBUG
 #    cmakedefine01 HTTPJOB_DEBUG
-#endif
-
-#ifndef HTTPSJOB_DEBUG
-#    cmakedefine01 HTTPSJOB_DEBUG
 #endif
 
 #ifndef HUNKS_DEBUG
@@ -310,14 +282,6 @@
 #    cmakedefine01 MENU_DEBUG
 #endif
 
-#ifndef MENUS_DEBUG
-#    cmakedefine01 MENUS_DEBUG
-#endif
-
-#ifndef MINIMIZE_ANIMATION_DEBUG
-#    cmakedefine01 MINIMIZE_ANIMATION_DEBUG
-#endif
-
 #ifndef MOVE_DEBUG
 #    cmakedefine01 MOVE_DEBUG
 #endif
@@ -392,10 +356,6 @@
 
 #ifndef RSA_PARSE_DEBUG
 #    cmakedefine01 RSA_PARSE_DEBUG
-#endif
-
-#ifndef SAFE_SYSCALL_DEBUG
-#    cmakedefine01 SAFE_SYSCALL_DEBUG
 #endif
 
 #ifndef SERVICE_DEBUG
