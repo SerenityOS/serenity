@@ -32,7 +32,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(DeprecatedString const&) override;
-    virtual Messages::RequestServer::StartRequestResponse start_request(DeprecatedString const&, URL const&, IPC::Dictionary const&, ByteBuffer const&, Core::ProxyData const&) override;
+    virtual Messages::RequestServer::StartRequestResponse start_request(DeprecatedString const&, URL const&, HashMap<DeprecatedString, DeprecatedString> const&, ByteBuffer const&, Core::ProxyData const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
     virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, DeprecatedString const&, DeprecatedString const&) override;
     virtual void ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
