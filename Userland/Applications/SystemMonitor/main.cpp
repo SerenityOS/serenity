@@ -123,11 +123,11 @@ public:
             auto& fs_table_view = *self.find_child_of_type_named<GUI::TableView>("storage_table");
 
             Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
-            df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
-            df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
-            df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("mount_point", "Mount point"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("class_name", "Class"_short_string, Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("source", "Source"_short_string, Gfx::TextAlignment::CenterLeft);
             df_fields.empend(
-                "Size", Gfx::TextAlignment::CenterRight,
+                "Size"_short_string, Gfx::TextAlignment::CenterRight,
                 [](JsonObject const& object) {
                     StringBuilder size_builder;
                     size_builder.append(' ');
@@ -148,7 +148,7 @@ public:
                     return percentage;
                 });
             df_fields.empend(
-                "Used", Gfx::TextAlignment::CenterRight,
+                "Used"_short_string, Gfx::TextAlignment::CenterRight,
                 [](JsonObject const& object) {
             auto total_blocks = object.get_u64("total_block_count"sv).value_or(0);
             auto free_blocks = object.get_u64("free_block_count"sv).value_or(0);
@@ -161,19 +161,19 @@ public:
                     return used_blocks * object.get_u64("block_size"sv).value_or(0);
                 });
             df_fields.empend(
-                "Available", Gfx::TextAlignment::CenterRight,
+                "Available"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight,
                 [](JsonObject const& object) {
                     return human_readable_size(object.get_u64("free_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0));
                 },
                 [](JsonObject const& object) {
                     return object.get_u64("free_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0);
                 });
-            df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
+            df_fields.empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
                 bool readonly = object.get_bool("readonly"sv).value_or(false);
                 int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
                 return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
             });
-            df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
+            df_fields.empend("Mount flags"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
                 int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
                 StringBuilder builder;
                 bool first = true;
@@ -197,11 +197,11 @@ public:
                     return DeprecatedString("defaults");
                 return builder.to_deprecated_string();
             });
-            df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
-            df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
-            df_fields.empend("free_inode_count", "Free inodes", Gfx::TextAlignment::CenterRight);
-            df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
-            df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
+            df_fields.empend("free_block_count", "Free blocks"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+            df_fields.empend("total_block_count", "Total blocks"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+            df_fields.empend("free_inode_count", "Free inodes"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+            df_fields.empend("total_inode_count", "Total inodes"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+            df_fields.empend("block_size", "Block size"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
 
             fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/sys/kernel/df", move(df_fields)))));
 
