@@ -65,14 +65,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<Column> columns;
 
-    int uid_column = -1;
-    int pid_column = -1;
-    int ppid_column = -1;
-    int pgid_column = -1;
-    int sid_column = -1;
-    int state_column = -1;
-    int tty_column = -1;
-    int cmd_column = -1;
+    Optional<size_t> uid_column;
+    Optional<size_t> pid_column;
+    Optional<size_t> ppid_column;
+    Optional<size_t> pgid_column;
+    Optional<size_t> sid_column;
+    Optional<size_t> state_column;
+    Optional<size_t> tty_column;
+    Optional<size_t> cmd_column;
 
     auto add_column = [&](auto title, auto alignment) {
         columns.unchecked_append({ title, alignment, 0, {} });
@@ -148,24 +148,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (tty == "")
             tty = "n/a"_short_string;
 
-        if (uid_column != -1)
-            row[uid_column] = TRY(String::from_deprecated_string(process.username));
-        if (pid_column != -1)
-            row[pid_column] = TRY(String::number(process.pid));
-        if (ppid_column != -1)
-            row[ppid_column] = TRY(String::number(process.ppid));
-        if (pgid_column != -1)
-            row[pgid_column] = TRY(String::number(process.pgid));
-        if (sid_column != -1)
-            row[sid_column] = TRY(String::number(process.sid));
-        if (tty_column != -1)
-            row[tty_column] = tty;
-        if (state_column != -1)
-            row[state_column] = process.threads.is_empty()
+        if (uid_column.has_value())
+            row[*uid_column] = TRY(String::from_deprecated_string(process.username));
+        if (pid_column.has_value())
+            row[*pid_column] = TRY(String::number(process.pid));
+        if (ppid_column.has_value())
+            row[*ppid_column] = TRY(String::number(process.ppid));
+        if (pgid_column.has_value())
+            row[*pgid_column] = TRY(String::number(process.pgid));
+        if (sid_column.has_value())
+            row[*sid_column] = TRY(String::number(process.sid));
+        if (tty_column.has_value())
+            row[*tty_column] = tty;
+        if (state_column.has_value())
+            row[*state_column] = process.threads.is_empty()
                 ? "Zombie"_short_string
                 : TRY(String::from_deprecated_string(process.threads.first().state));
-        if (cmd_column != -1)
-            row[cmd_column] = TRY(String::from_deprecated_string(process.name));
+        if (cmd_column.has_value())
+            row[*cmd_column] = TRY(String::from_deprecated_string(process.name));
 
         rows.unchecked_append(move(row));
     }
