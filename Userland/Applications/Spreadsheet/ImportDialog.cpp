@@ -186,7 +186,7 @@ ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_r
         auto contents_or_error = file.read_until_eof();
         if (contents_or_error.is_error())
             return DeprecatedString::formatted("{}", contents_or_error.release_error());
-        CSVImportDialogPage page { contents_or_error.release_value() };
+        CSVImportDialogPage page { contents_or_error.value() };
         wizard->replace_page(page.page());
         auto result = wizard->exec();
 
