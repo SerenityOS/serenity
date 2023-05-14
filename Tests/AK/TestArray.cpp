@@ -46,3 +46,15 @@ TEST_CASE(first_index_of)
     EXPECT(array.first_index_of(7) == 7u);
     EXPECT(!array.first_index_of(42).has_value());
 }
+
+TEST_CASE(max)
+{
+    constexpr Array<int, 8> array = { 0, 31, 2, 3, 41, 5, -6, 7 };
+    EXPECT(array.max() == 41);
+}
+
+TEST_CASE(min)
+{
+    constexpr Array<int, 8> array = { 0, 31, 2, 3, 41, 5, -6, 7 };
+    EXPECT(array.min() == -6);
+}
