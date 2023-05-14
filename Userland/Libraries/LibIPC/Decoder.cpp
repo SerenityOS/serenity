@@ -13,7 +13,6 @@
 #include <LibCore/Proxy.h>
 #include <LibCore/Socket.h>
 #include <LibIPC/Decoder.h>
-#include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
 #include <fcntl.h>
 
@@ -82,21 +81,6 @@ ErrorOr<URL> decode(Decoder& decoder)
 {
     auto url = TRY(decoder.decode<DeprecatedString>());
     return URL { url };
-}
-
-template<>
-ErrorOr<Dictionary> decode(Decoder& decoder)
-{
-    auto size = TRY(decoder.decode_size());
-    Dictionary dictionary {};
-
-    for (size_t i = 0; i < size; ++i) {
-        auto key = TRY(decoder.decode<DeprecatedString>());
-        auto value = TRY(decoder.decode<DeprecatedString>());
-        dictionary.add(move(key), move(value));
-    }
-
-    return dictionary;
 }
 
 template<>

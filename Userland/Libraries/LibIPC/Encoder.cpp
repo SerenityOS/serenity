@@ -19,7 +19,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/System.h>
-#include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
 
@@ -95,20 +94,6 @@ template<>
 ErrorOr<void> encode(Encoder& encoder, URL const& value)
 {
     return encoder.encode(value.to_deprecated_string());
-}
-
-template<>
-ErrorOr<void> encode(Encoder& encoder, Dictionary const& dictionary)
-{
-    TRY(encoder.encode_size(dictionary.size()));
-
-    TRY(dictionary.try_for_each_entry([&](auto const& key, auto const& value) -> ErrorOr<void> {
-        TRY(encoder.encode(key));
-        TRY(encoder.encode(value));
-        return {};
-    }));
-
-    return {};
 }
 
 template<>
