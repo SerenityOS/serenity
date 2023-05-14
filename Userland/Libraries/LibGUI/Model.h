@@ -9,11 +9,11 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Forward.h>
@@ -66,7 +66,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const = 0;
     virtual int column_count(ModelIndex const& = ModelIndex()) const = 0;
-    virtual DeprecatedString column_name(int) const { return {}; }
+    virtual String column_name(int) const { return {}; }
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const = 0;
     virtual TriState data_matches(ModelIndex const&, Variant const&) const { return TriState::Unknown; }
     virtual void invalidate();

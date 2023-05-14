@@ -122,17 +122,17 @@ int SourceModel::row_count(GUI::ModelIndex const&) const
     return m_source_lines.size();
 }
 
-DeprecatedString SourceModel::column_name(int column) const
+String SourceModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? "% Samples" : "# Samples";
+        return m_profile.show_percentages() ? "% Samples"_string.release_value_but_fixme_should_propagate_errors() : "# Samples"_string.release_value_but_fixme_should_propagate_errors();
     case Column::SourceCode:
-        return "Source Code";
+        return "Source Code"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Location:
-        return "Location";
+        return "Location"_string.release_value_but_fixme_should_propagate_errors();
     case Column::LineNumber:
-        return "Line";
+        return "Line"_short_string;
     default:
         VERIFY_NOT_REACHED();
         return {};

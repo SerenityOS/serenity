@@ -15,13 +15,13 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
-DeprecatedString MouseCursorModel::column_name(int column_index) const
+String MouseCursorModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Bitmap:
         return {};
     case Column::Name:
-        return "Name";
+        return "Name"_short_string;
     }
     VERIFY_NOT_REACHED();
 }

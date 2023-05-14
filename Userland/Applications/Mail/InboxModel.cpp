@@ -17,13 +17,13 @@ int InboxModel::row_count(GUI::ModelIndex const&) const
     return m_entries.size();
 }
 
-DeprecatedString InboxModel::column_name(int column_index) const
+String InboxModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::From:
-        return "From";
+        return "From"_short_string;
     case Subject:
-        return "Subject";
+        return "Subject"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

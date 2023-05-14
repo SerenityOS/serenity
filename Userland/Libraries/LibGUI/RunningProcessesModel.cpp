@@ -45,17 +45,17 @@ int RunningProcessesModel::column_count(const GUI::ModelIndex&) const
     return Column::__Count;
 }
 
-DeprecatedString RunningProcessesModel::column_name(int column_index) const
+String RunningProcessesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Icon:
         return {};
     case Column::PID:
-        return "PID";
+        return "PID"_short_string;
     case Column::UID:
-        return "UID";
+        return "UID"_short_string;
     case Column::Name:
-        return "Name";
+        return "Name"_short_string;
     }
     VERIFY_NOT_REACHED();
 }

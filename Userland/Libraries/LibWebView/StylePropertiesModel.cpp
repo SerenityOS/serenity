@@ -30,13 +30,13 @@ int StylePropertiesModel::row_count(GUI::ModelIndex const&) const
     return m_values.size();
 }
 
-DeprecatedString StylePropertiesModel::column_name(int column_index) const
+String StylePropertiesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::PropertyName:
-        return "Name";
+        return "Name"_short_string;
     case Column::PropertyValue:
-        return "Value";
+        return "Value"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

@@ -34,15 +34,15 @@ ErrorOr<void> CertificateStoreModel::load()
     return {};
 }
 
-DeprecatedString CertificateStoreModel::column_name(int column) const
+String CertificateStoreModel::column_name(int column) const
 {
     switch (column) {
     case Column::IssuedTo:
-        return "Issued To";
+        return "Issued To"_string.release_value_but_fixme_should_propagate_errors();
     case Column::IssuedBy:
-        return "Issued By";
+        return "Issued By"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Expire:
-        return "Expiration Date";
+        return "Expiration Date"_string.release_value_but_fixme_should_propagate_errors();
     default:
         VERIFY_NOT_REACHED();
     }

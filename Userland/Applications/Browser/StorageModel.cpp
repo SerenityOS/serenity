@@ -35,13 +35,13 @@ int StorageModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-DeprecatedString StorageModel::column_name(int column) const
+String StorageModel::column_name(int column) const
 {
     switch (column) {
     case Column::Key:
-        return "Key";
+        return "Key"_short_string;
     case Column::Value:
-        return "Value";
+        return "Value"_short_string;
     case Column::__Count:
         return {};
     }

@@ -18,19 +18,19 @@ NonnullRefPtr<PartitionModel> PartitionModel::create()
     return adopt_ref(*new PartitionModel);
 }
 
-DeprecatedString PartitionModel::column_name(int column) const
+String PartitionModel::column_name(int column) const
 {
     switch (column) {
     case Column::Partition:
-        return "Partition";
+        return "Partition"_string.release_value_but_fixme_should_propagate_errors();
     case Column::StartBlock:
-        return "Start Block";
+        return "Start Block"_string.release_value_but_fixme_should_propagate_errors();
     case Column::EndBlock:
-        return "End Block";
+        return "End Block"_string.release_value_but_fixme_should_propagate_errors();
     case Column::TotalBlocks:
-        return "Total Blocks";
+        return "Total Blocks"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Size:
-        return "Size";
+        return "Size"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

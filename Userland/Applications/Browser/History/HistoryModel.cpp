@@ -34,13 +34,13 @@ int HistoryModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-DeprecatedString HistoryModel::column_name(int column) const
+String HistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Title:
-        return "Title";
+        return "Title"_short_string;
     case Column::URL:
-        return "URL";
+        return "URL"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

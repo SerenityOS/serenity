@@ -73,21 +73,21 @@ DeprecatedString PlaylistModel::format_duration(u32 duration_in_seconds)
     return DeprecatedString::formatted("{:02}:{:02}:{:02}", duration_in_seconds / 3600, duration_in_seconds / 60, duration_in_seconds % 60);
 }
 
-DeprecatedString PlaylistModel::column_name(int column) const
+String PlaylistModel::column_name(int column) const
 {
     switch (column) {
     case 0:
-        return "Title";
+        return "Title"_short_string;
     case 1:
-        return "Duration";
+        return "Duration"_string.release_value_but_fixme_should_propagate_errors();
     case 2:
-        return "Group";
+        return "Group"_short_string;
     case 3:
-        return "Album";
+        return "Album"_short_string;
     case 4:
-        return "Artist";
+        return "Artist"_short_string;
     case 5:
-        return "Filesize";
+        return "Filesize"_string.release_value_but_fixme_should_propagate_errors();
     }
     VERIFY_NOT_REACHED();
 }

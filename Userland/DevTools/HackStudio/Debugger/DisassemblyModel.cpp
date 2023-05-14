@@ -73,15 +73,15 @@ int DisassemblyModel::row_count(const GUI::ModelIndex&) const
     return m_instructions.size();
 }
 
-DeprecatedString DisassemblyModel::column_name(int column) const
+String DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
-        return "Address";
+        return "Address"_short_string;
     case Column::InstructionBytes:
-        return "Insn Bytes";
+        return "Insn Bytes"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Disassembly:
-        return "Disassembly";
+        return "Disassembly"_string.release_value_but_fixme_should_propagate_errors();
     default:
         VERIFY_NOT_REACHED();
         return {};

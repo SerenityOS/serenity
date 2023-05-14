@@ -29,7 +29,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
-    virtual DeprecatedString column_name(int) const override;
+    virtual String column_name(int) const override;
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;

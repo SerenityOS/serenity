@@ -106,7 +106,7 @@ ModelIndex SortingProxyModel::map_to_proxy(ModelIndex const& source_index) const
     return create_index(proxy_row, proxy_column, &mapping);
 }
 
-DeprecatedString SortingProxyModel::column_name(int column) const
+String SortingProxyModel::column_name(int column) const
 {
     return source().column_name(column);
 }

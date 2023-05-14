@@ -142,15 +142,15 @@ int FileEventModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-DeprecatedString FileEventModel::column_name(int column) const
+String FileEventModel::column_name(int column) const
 {
     switch (column) {
     case Column::Path:
-        return "Path";
+        return "Path"_short_string;
     case Column::Count:
-        return "Event Count";
+        return "Event Count"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Duration:
-        return "Duration [ms]";
+        return "Duration [ms]"_string.release_value_but_fixme_should_propagate_errors();
     default:
         VERIFY_NOT_REACHED();
         return {};
