@@ -1467,7 +1467,6 @@ CSSPixels GridFormattingContext::calculate_min_content_size(GridItem const& item
     } else {
         return calculate_min_content_height(item.box(), get_available_space_for_item(item).width);
     }
-    return calculate_min_content_height(item.box(), AvailableSize::make_definite(m_grid_columns[item.gap_adjusted_column(grid_container())].base_size));
 }
 
 CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item, GridDimension const dimension) const
