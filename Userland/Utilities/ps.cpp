@@ -75,11 +75,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int cmd_column = -1;
 
     auto add_column = [&](auto title, auto alignment) {
-        columns.append({ title, alignment, 0, {} });
+        columns.unchecked_append({ title, alignment, 0, {} });
         return columns.size() - 1;
     };
 
     if (full_format_flag) {
+        TRY(columns.try_ensure_capacity(8));
         uid_column = add_column("UID"_short_string, Alignment::Left);
         pid_column = add_column("PID"_short_string, Alignment::Right);
         ppid_column = add_column("PPID"_short_string, Alignment::Right);
@@ -89,6 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         tty_column = add_column("TTY"_short_string, Alignment::Left);
         cmd_column = add_column("CMD"_short_string, Alignment::Left);
     } else {
+        TRY(columns.try_ensure_capacity(3));
         pid_column = add_column("PID"_short_string, Alignment::Right);
         tty_column = add_column("TTY"_short_string, Alignment::Left);
         cmd_column = add_column("CMD"_short_string, Alignment::Left);
@@ -133,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(header.try_ensure_capacity(columns.size()));
     for (auto& column : columns)
         header.unchecked_append(column.title);
-    rows.append(move(header));
+    rows.unchecked_append(move(header));
 
     for (auto const& process : processes) {
         auto tty = TRY(String::from_deprecated_string(process.tty));
@@ -165,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (cmd_column != -1)
             row[cmd_column] = TRY(String::from_deprecated_string(process.name));
 
-        TRY(rows.try_append(move(row)));
+        rows.unchecked_append(move(row));
     }
 
     for (size_t i = 0; i < columns.size(); i++) {
