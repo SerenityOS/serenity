@@ -17,7 +17,7 @@ RefPtr<Gfx::Bitmap> ConnectionToClipboardServer::get_bitmap()
     if (clipping.mime_type() != "image/x-serenityos")
         return nullptr;
 
-    HashMap<DeprecatedString, DeprecatedString> const& metadata = clipping.metadata().entries();
+    HashMap<DeprecatedString, DeprecatedString> const& metadata = clipping.metadata();
     auto width = metadata.get("width").value_or("0").to_uint();
     if (!width.has_value() || width.value() == 0)
         return nullptr;
