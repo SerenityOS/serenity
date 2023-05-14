@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/String.h>

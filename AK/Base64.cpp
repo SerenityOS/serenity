@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Base64.h>
 #include <AK/CharacterTypes.h>
