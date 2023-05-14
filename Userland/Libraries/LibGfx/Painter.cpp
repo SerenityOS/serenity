@@ -47,6 +47,19 @@ static bool should_paint_as_space(u32 code_point)
     return is_ascii_space(code_point) || code_point == 0xa0;
 }
 
+ALWAYS_INLINE static Color color_for_format(BitmapFormat format, ARGB32 value)
+{
+    switch (format) {
+    case BitmapFormat::BGRA8888:
+        return Color::from_argb(value);
+    case BitmapFormat::BGRx8888:
+        return Color::from_rgb(value);
+    // FIXME: Handle other formats
+    default:
+        VERIFY_NOT_REACHED();
+    }
+};
+
 template<BitmapFormat format = BitmapFormat::Invalid>
 ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
 {
@@ -121,9 +134,10 @@ void Painter::fill_physical_rect(IntRect const& physical_rect, Color color)
     ARGB32* dst = m_target->scanline(physical_rect.top()) + physical_rect.left();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
+    auto dst_format = target()->format();
     for (int i = physical_rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < physical_rect.width(); ++j)
-            dst[j] = Color::from_argb(dst[j]).blend(color).value();
+            dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
@@ -401,10 +415,11 @@ void Painter::fill_rounded_corner(IntRect const& a_rect, int radius, Color color
         return distance2 <= (radius2 + radius + 0.25);
     };
 
+    auto dst_format = target()->format();
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_in_circle(j, rect.height() - i + clip_offset))
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
+                dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
@@ -440,12 +455,13 @@ void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint cente
     };
 
     ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    auto dst_format = target()->format();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_on_arc(j, rect.height() - i + clip_offset))
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
+                dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
         dst += dst_skip;
     }
 
@@ -680,13 +696,14 @@ void Painter::draw_bitmap(IntPoint p, GlyphBitmap const& bitmap, Color color)
 
     int scale = this->scale();
     ARGB32* dst = m_target->scanline(clipped_rect.y() * scale) + clipped_rect.x() * scale;
+    auto dst_format = target()->format();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     if (scale == 1) {
         for (int row = first_row; row <= last_row; ++row) {
             for (int j = 0; j <= (last_column - first_column); ++j) {
                 if (bitmap.bit_at(j + first_column, row))
-                    dst[j] = Color::from_argb(dst[j]).blend(color).value();
+                    dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
             }
             dst += dst_skip;
         }
@@ -697,7 +714,7 @@ void Painter::draw_bitmap(IntPoint p, GlyphBitmap const& bitmap, Color color)
                     for (int iy = 0; iy < scale; ++iy)
                         for (int ix = 0; ix < scale; ++ix) {
                             auto pixel_index = j * scale + ix + iy * dst_skip;
-                            dst[pixel_index] = Color::from_argb(dst[pixel_index]).blend(color).value();
+                            dst[pixel_index] = color_for_format(dst_format, dst[pixel_index]).blend(color).value();
                         }
                 }
             }
@@ -943,6 +960,8 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
     int const last_column = clipped_rect.right() - dst_rect.left();
     ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
+    auto dst_format = target()->format();
+    auto src_format = source.format();
 
     int s = scale / source.scale();
     if (s == 1) {
@@ -951,17 +970,17 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
 
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
-                u8 alpha = Color::from_argb(src[x]).alpha();
+                u8 alpha = color_for_format(src_format, src[x]).alpha();
                 if (alpha == 0xff) {
                     auto color = filter(Color::from_argb(src[x]));
                     if (color.alpha() == 0xff)
                         dst[x] = color.value();
                     else
-                        dst[x] = Color::from_argb(dst[x]).blend(color).value();
+                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
                 } else if (!alpha)
                     continue;
                 else
-                    dst[x] = Color::from_argb(dst[x]).blend(filter(Color::from_argb(src[x]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x]))).value();
             }
             dst += dst_skip;
             src += src_skip;
@@ -970,17 +989,17 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
         for (int row = first_row; row <= last_row; ++row) {
             ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x <= (last_column - first_column); ++x) {
-                u8 alpha = Color::from_argb(src[x / s]).alpha();
+                u8 alpha = color_for_format(src_format, src[x / s]).alpha();
                 if (alpha == 0xff) {
-                    auto color = filter(Color::from_argb(src[x / s]));
+                    auto color = filter(color_for_format(src_format, src[x / s]));
                     if (color.alpha() == 0xff)
                         dst[x] = color.value();
                     else
-                        dst[x] = Color::from_argb(dst[x]).blend(color).value();
+                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
                 } else if (!alpha)
                     continue;
                 else
-                    dst[x] = Color::from_argb(dst[x]).blend(filter(Color::from_argb(src[x / s]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x / s]))).value();
             }
             dst += dst_skip;
         }
@@ -1856,7 +1875,7 @@ void Painter::set_physical_pixel(IntPoint physical_point, Color color, bool blen
     if (!blend || color.alpha() == 255)
         dst = color.value();
     else if (color.alpha())
-        dst = Color::from_argb(dst).blend(color).value();
+        dst = color_for_format(target()->format(), dst).blend(color).value();
 }
 
 Optional<Color> Painter::get_pixel(IntPoint p)
@@ -1865,7 +1884,7 @@ Optional<Color> Painter::get_pixel(IntPoint p)
     point.translate_by(state().translation);
     if (!clip_rect().contains(point / scale()))
         return {};
-    return Color::from_argb(m_target->scanline(point.y())[point.x()]);
+    return m_target->get_pixel(point);
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Painter::get_region_bitmap(IntRect const& region, BitmapFormat format, Optional<IntRect&> actual_region)
@@ -1899,7 +1918,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
 {
     // This always draws a single physical scanline, independent of scale().
     // This should only be called by routines that already handle scale.
-
+    auto dst_format = m_target->format();
     switch (draw_op()) {
     case DrawOp::Copy:
         fast_u32_fill(m_target->scanline(y) + x, color.value(), width);
@@ -1908,7 +1927,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
         auto* pixel = m_target->scanline(y) + x;
         auto* end = pixel + width;
         while (pixel < end) {
-            *pixel = Color::from_argb(*pixel).xored(color).value();
+            *pixel = color_for_format(dst_format, *pixel).xored(color).value();
             pixel++;
         }
         break;
@@ -1917,7 +1936,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
         auto* pixel = m_target->scanline(y) + x;
         auto* end = pixel + width;
         while (pixel < end) {
-            *pixel = Color::from_argb(*pixel).inverted().value();
+            *pixel = color_for_format(dst_format, *pixel).inverted().value();
             pixel++;
         }
         break;
@@ -1937,7 +1956,7 @@ void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int t
 
     if (thickness == 1) { // Implies scale() == 1.
         auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
-        return set_physical_pixel_with_draw_op(pixel, Color::from_argb(pixel).blend(color));
+        return set_physical_pixel_with_draw_op(pixel, color_for_format(m_target->format(), pixel).blend(color));
     }
 
     IntRect rect { physical_position, { thickness, thickness } };
