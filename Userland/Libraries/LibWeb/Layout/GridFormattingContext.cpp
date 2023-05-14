@@ -1029,16 +1029,24 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSize const& available_s
 
 void GridFormattingContext::run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks)
 {
+    // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
+    // 12.3. Track Sizing Algorithm
+
     auto track_available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
+    // 1. Initialize Track Sizes
     initialize_track_sizes(track_available_size, tracks);
 
+    // 2. Resolve Intrinsic Track Sizes
     resolve_intrinsic_track_sizes(dimension, track_available_size, tracks);
 
+    // 3. Maximize Tracks
     maximize_tracks(track_available_size, tracks);
 
+    // 4. Expand Flexible Tracks
     expand_flexible_tracks(track_available_size, tracks);
 
+    // 5. Expand Stretched auto Tracks
     stretch_auto_tracks(track_available_size, tracks);
 
     // If calculating the layout of a grid item in this step depends on the available space in the block
@@ -1197,122 +1205,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 {
     place_grid_items(available_space);
 
-    // https://drafts.csswg.org/css-grid/#overview-sizing
-    // 2.3. Sizing the Grid
-    // Once the grid items have been placed, the sizes of the grid tracks (rows and columns) are
-    // calculated, accounting for the sizes of their contents and/or available space as specified in
-    // the grid definition.
-
-    // https://www.w3.org/TR/css-grid-2/#layout-algorithm
-    // 12. Grid Sizing
-    // This section defines the grid sizing algorithm, which determines the size of all grid tracks and,
-    // by extension, the entire grid.
-
-    // Each track has specified minimum and maximum sizing functions (which may be the same). Each
-    // sizing function is either:
-
-    // - A fixed sizing function (<length> or resolvable <percentage>).
-    // - An intrinsic sizing function (min-content, max-content, auto, fit-content()).
-    // - A flexible sizing function (<flex>).
-
-    // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
     initialize_grid_tracks_for_columns_and_rows(available_space);
 
     initialize_gap_tracks(available_space);
 
-    // https://www.w3.org/TR/css-grid-2/#algo-overview
-    // 12.1. Grid Sizing Algorithm
-
-    // 1. First, the track sizing algorithm is used to resolve the sizes of the grid columns.
-    // In this process, any grid item which is subgridded in the grid container’s inline axis is treated
-    // as empty and its grid items (the grandchildren) are treated as direct children of the grid
-    // container (their grandparent). This introspection is recursive.
-
-    // Items which are subgridded only in the block axis, and whose grid container size in the inline
-    // axis depends on the size of its contents are also introspected: since the size of the item in
-    // this dimension can be dependent on the sizing of its subgridded tracks in the other, the size
-    // contribution of any such item to this grid’s column sizing (see Resolve Intrinsic Track Sizes) is
-    // taken under the provision of having determined its track sizing only up to the same point in the
-    // Grid Sizing Algorithm as this itself. E.g. for the first pass through this step, the item will
-    // have its tracks sized only through this first step; if a second pass of this step is triggered
-    // then the item will have completed a first pass through steps 1-3 as well as the second pass of
-    // this step prior to returning its size for consideration in this grid’s column sizing. Again, this
-    // introspection is recursive.
-
-    // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
-    // 12.3. Track Sizing Algorithm
-
-    // The remainder of this section is the track sizing algorithm, which calculates from the min and
-    // max track sizing functions the used track size. Each track has a base size, a <length> which
-    // grows throughout the algorithm and which will eventually be the track’s final size, and a growth
-    // limit, a <length> which provides a desired maximum size for the base size. There are 5 steps:
-
-    // 1. Initialize Track Sizes
-    // 2. Resolve Intrinsic Track Sizes
-    // 3. Maximize Tracks
-    // 4. Expand Flexible Tracks
-    // 5. Expand Stretched auto Tracks
-
     run_track_sizing(GridDimension::Column, available_space, m_grid_columns);
-
-    // https://www.w3.org/TR/css-grid-2/#algo-overview
-    // 12.1. Grid Sizing Algorithm
-    // 2. Next, the track sizing algorithm resolves the sizes of the grid rows.
-    // In this process, any grid item which is subgridded in the grid container’s block axis is treated
-    // as empty and its grid items (the grandchildren) are treated as direct children of the grid
-    // container (their grandparent). This introspection is recursive.
-
-    // As with sizing columns, items which are subgridded only in the inline axis, and whose grid
-    // container size in the block axis depends on the size of its contents are also introspected. (As
-    // with sizing columns, the size contribution to this grid’s row sizing is taken under the provision
-    // of having determined its track sizing only up to this corresponding point in the algorithm; and
-    // again, this introspection is recursive.)
-
-    // To find the inline-axis available space for any items whose block-axis size contributions require
-    // it, use the grid column sizes calculated in the previous step. If the grid container’s inline
-    // size is definite, also apply justify-content to account for the effective column gap sizes.
-
-    // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
-    // 12.3. Track Sizing Algorithm
-
-    // The remainder of this section is the track sizing algorithm, which calculates from the min and
-    // max track sizing functions the used track size. Each track has a base size, a <length> which
-    // grows throughout the algorithm and which will eventually be the track’s final size, and a growth
-    // limit, a <length> which provides a desired maximum size for the base size. There are 5 steps:
-
-    // 1. Initialize Track Sizes
-    // 2. Resolve Intrinsic Track Sizes
-    // 3. Maximize Tracks
-    // 4. Expand Flexible Tracks
-    // 5. Expand Stretched auto Tracks
-
     run_track_sizing(GridDimension::Row, available_space, m_grid_rows);
-
-    // https://www.w3.org/TR/css-grid-2/#algo-overview
-    // 12.1. Grid Sizing Algorithm
-    // 3. Then, if the min-content contribution of any grid item has changed based on the row sizes and
-    // alignment calculated in step 2, re-resolve the sizes of the grid columns with the new min-content
-    // and max-content contributions (once only).
-
-    // To find the block-axis available space for any items whose inline-axis size contributions require
-    // it, use the grid row sizes calculated in the previous step. If the grid container’s block size is
-    // definite, also apply align-content to account for the effective row gap sizes
-
-    // 4. Next, if the min-content contribution of any grid item has changed based on the column sizes and
-    // alignment calculated in step 3, re-resolve the sizes of the grid rows with the new min-content
-    // and max-content contributions (once only).
-
-    // To find the inline-axis available space for any items whose block-axis size contributions require
-    // it, use the grid column sizes calculated in the previous step. If the grid container’s inline
-    // size is definite, also apply justify-content to account for the effective column gap sizes.
-
-    // 5. Finally, the grid container is sized using the resulting size of the grid as its content size,
-    // and the tracks are aligned within the grid container according to the align-content and
-    // justify-content properties.
-
-    // Once the size of each grid area is thus established, the grid items are laid out into their
-    // respective containing blocks. The grid area’s width and height are considered definite for this
-    // purpose.
 
     auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
         if (column_start < 0 || row_start < 0)
