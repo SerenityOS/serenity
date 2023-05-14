@@ -16,10 +16,10 @@ WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::LocalSocket> socket)
 
 RefPtr<WebSocket> WebSocketClient::connect(const URL& url, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols, Vector<DeprecatedString> const& extensions, HashMap<DeprecatedString, DeprecatedString> const& request_headers)
 {
-    IPC::Dictionary header_dictionary;
-    for (auto& it : request_headers)
-        header_dictionary.add(it.key, it.value);
-    auto connection_id = IPCProxy::connect(url, origin, protocols, extensions, header_dictionary);
+    auto headers_or_error = request_headers.clone();
+    if (headers_or_error.is_error())
+        return nullptr;
+    auto connection_id = IPCProxy::connect(url, origin, protocols, extensions, headers_or_error.release_value());
     if (connection_id < 0)
         return nullptr;
     auto connection = WebSocket::create_from_id({}, *this, connection_id);
