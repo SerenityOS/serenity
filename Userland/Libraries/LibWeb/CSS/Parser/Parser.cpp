@@ -4606,12 +4606,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
 
     auto maybe_y_value = TRY(parse_css_value(tokens.peek_token()));
     if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value)) {
+        auto y_value = LengthPercentage { Length::make_auto() };
         auto x_size = get_length_percentage(*x_value);
         if (!x_size.has_value())
             return nullptr;
 
         transaction.commit();
-        return BackgroundSizeStyleValue::create(x_size.value(), x_size.value());
+        return BackgroundSizeStyleValue::create(x_size.value(), y_value);
     }
     tokens.next_token();
 
