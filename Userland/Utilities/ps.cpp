@@ -14,13 +14,7 @@
 
 static ErrorOr<DeprecatedString> determine_tty_pseudo_name()
 {
-    struct stat tty_stat;
-    if (fstat(STDIN_FILENO, &tty_stat) < 0) {
-        int saved_errno = errno;
-        perror("fstat");
-        return Error::from_errno(saved_errno);
-    }
-
+    auto tty_stat = TRY(Core::System::fstat(STDIN_FILENO));
     int tty_device_major = major(tty_stat.st_rdev);
     int tty_device_minor = minor(tty_stat.st_rdev);
 
