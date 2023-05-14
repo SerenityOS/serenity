@@ -235,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             output_stream = TRY(try_make<Compress::GzipCompressor>(move(output_stream)));
 
         if (lzma)
-            TODO();
+            output_stream = TRY(Compress::LzmaCompressor::create_container(move(output_stream), {}));
 
         if (xz)
             TODO();
