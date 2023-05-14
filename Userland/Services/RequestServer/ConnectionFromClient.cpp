@@ -36,7 +36,7 @@ Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_su
     return supported;
 }
 
-Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(DeprecatedString const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
+Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(DeprecatedString const& method, URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
@@ -47,7 +47,7 @@ Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_reques
         dbgln("StartRequest: No protocol handler for URL: '{}'", url);
         return { -1, Optional<IPC::File> {} };
     }
-    auto request = protocol->start_request(*this, method, url, request_headers.entries(), request_body, proxy_data);
+    auto request = protocol->start_request(*this, method, url, request_headers, request_body, proxy_data);
     if (!request) {
         dbgln("StartRequest: Protocol handler failed to start request: '{}'", url);
         return { -1, Optional<IPC::File> {} };
@@ -72,10 +72,7 @@ Messages::RequestServer::StopRequestResponse ConnectionFromClient::stop_request(
 
 void ConnectionFromClient::did_receive_headers(Badge<Request>, Request& request)
 {
-    IPC::Dictionary response_headers;
-    for (auto& it : request.response_headers())
-        response_headers.add(it.key, it.value);
-
+    auto response_headers = request.response_headers().clone().release_value_but_fixme_should_propagate_errors();
     async_headers_became_available(request.id(), move(response_headers), request.status_code());
 }
 

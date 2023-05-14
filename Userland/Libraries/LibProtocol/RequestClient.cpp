@@ -22,15 +22,14 @@ void RequestClient::ensure_connection(URL const& url, ::RequestServer::CacheLeve
 template<typename RequestHashMapTraits>
 RefPtr<Request> RequestClient::start_request(DeprecatedString const& method, URL const& url, HashMap<DeprecatedString, DeprecatedString, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy_data)
 {
-    IPC::Dictionary header_dictionary;
-    for (auto& it : request_headers)
-        header_dictionary.add(it.key, it.value);
-
+    auto headers_or_error = request_headers.template clone<Traits<DeprecatedString>>();
+    if (headers_or_error.is_error())
+        return nullptr;
     auto body_result = ByteBuffer::copy(request_body);
     if (body_result.is_error())
         return nullptr;
 
-    auto response = IPCProxy::start_request(method, url, header_dictionary, body_result.release_value(), proxy_data);
+    auto response = IPCProxy::start_request(method, url, headers_or_error.release_value(), body_result.release_value(), proxy_data);
     auto request_id = response.request_id();
     if (request_id < 0 || !response.response_fd().has_value())
         return nullptr;
@@ -71,13 +70,20 @@ void RequestClient::request_progress(i32 request_id, Optional<u32> const& total_
     }
 }
 
-void RequestClient::headers_became_available(i32 request_id, IPC::Dictionary const& response_headers, Optional<u32> const& status_code)
+void RequestClient::headers_became_available(i32 request_id, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> const& status_code)
 {
-    if (auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr))) {
-        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> headers;
-        response_headers.for_each_entry([&](auto& name, auto& value) { headers.set(name, value); });
-        request->did_receive_headers({}, headers, status_code);
+    auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
+    if (!request) {
+        warnln("Received headers for non-existent request {}", request_id);
+        return;
     }
+    auto response_headers_clone_or_error = response_headers.clone();
+    if (response_headers_clone_or_error.is_error()) {
+        warnln("Error while receiving headers for request {}: {}", request_id, response_headers_clone_or_error.error());
+        return;
+    }
+
+    request->did_receive_headers({}, response_headers_clone_or_error.release_value(), status_code);
 }
 
 void RequestClient::certificate_requested(i32 request_id)
