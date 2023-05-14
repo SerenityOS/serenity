@@ -47,8 +47,21 @@ public:
 
     Box const& box() const { return m_box; }
 
-    size_t raw_row_span() { return m_row_span; }
-    size_t raw_column_span() { return m_column_span; }
+    size_t span(GridDimension const dimension) const
+    {
+        return dimension == GridDimension::Column ? m_column_span : m_row_span;
+    }
+
+    size_t raw_position(GridDimension const dimension) const
+    {
+        return dimension == GridDimension::Column ? m_column : m_row;
+    }
+
+    size_t raw_row() const { return m_row; }
+    size_t raw_column() const { return m_column; }
+
+    size_t raw_row_span() const { return m_row_span; }
+    size_t raw_column_span() const { return m_column_span; }
 
     size_t gap_adjusted_row(Box const& grid_box) const;
     size_t gap_adjusted_column(Box const& grid_box) const;
@@ -142,17 +155,22 @@ private:
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
+    Vector<TemporaryTrack> m_row_gap_tracks;
+    Vector<TemporaryTrack> m_column_gap_tracks;
+
+    Vector<TemporaryTrack&> m_grid_rows_and_gaps;
+    Vector<TemporaryTrack&> m_grid_columns_and_gaps;
+
     OccupationGrid m_occupation_grid;
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
     void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
 
-    AvailableSize get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const;
+    AvailableSize get_free_space(AvailableSpace const&, GridDimension const) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&);
-    size_t count_of_gap_tracks(Vector<TemporaryTrack> const& tracks) const;
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
 
@@ -169,12 +187,12 @@ private:
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
 
-    void initialize_track_sizes(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
-    void resolve_intrinsic_track_sizes(GridDimension const dimension, AvailableSize const& available_space, Vector<TemporaryTrack>& tracks);
-    void maximize_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
-    void expand_flexible_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
-    void stretch_auto_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks);
-    void run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks);
+    void initialize_track_sizes(AvailableSpace const&, GridDimension const);
+    void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
+    void maximize_tracks(AvailableSpace const&, GridDimension const);
+    void expand_flexible_tracks(AvailableSpace const&, GridDimension const);
+    void stretch_auto_tracks(AvailableSpace const&, GridDimension const);
+    void run_track_sizing(AvailableSpace const&, GridDimension const);
 
     CSS::Size const& get_item_preferred_size(GridItem const&, GridDimension const) const;
 

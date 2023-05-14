@@ -33,16 +33,6 @@ CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const
     return 0;
 }
 
-size_t GridFormattingContext::count_of_gap_tracks(Vector<TemporaryTrack> const& tracks) const
-{
-    size_t count = 0;
-    for (auto& track : tracks) {
-        if (track.is_gap)
-            count++;
-    }
-    return count;
-}
-
 int GridFormattingContext::get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const& available_space)
 {
     auto track_count = 0;
@@ -93,7 +83,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
-    return max(1, static_cast<int>((get_free_space(available_space.width, m_grid_columns).to_px() / sum_of_grid_track_sizes).value()));
+    return max(1, static_cast<int>((get_free_space(available_space, GridDimension::Column).to_px() / sum_of_grid_track_sizes).value()));
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -592,27 +582,46 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
     // the specified size, which is spanned by any grid items that span across its corresponding grid
     // line.
     if (!grid_container().computed_values().column_gap().is_auto()) {
-        for (size_t column_index = 1; column_index < (m_occupation_grid.column_count() * 2) - 1; column_index += 2) {
-            auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px());
-            m_grid_columns.insert(column_index, TemporaryTrack(column_gap_width, true));
+        auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px());
+        for (size_t column_index = 0; column_index < m_grid_columns.size(); column_index++) {
+            m_grid_columns_and_gaps.append(m_grid_columns[column_index]);
+            if (column_index != m_grid_columns.size() - 1) {
+                m_column_gap_tracks.append(TemporaryTrack(column_gap_width, true));
+                m_grid_columns_and_gaps.append(m_column_gap_tracks.last());
+            }
+        }
+    } else {
+        for (auto& track : m_grid_columns) {
+            m_grid_columns_and_gaps.append(track);
         }
     }
     if (!grid_container().computed_values().row_gap().is_auto()) {
-        for (size_t row_index = 1; row_index < (m_occupation_grid.row_count() * 2) - 1; row_index += 2) {
-            auto column_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px());
-            m_grid_rows.insert(row_index, TemporaryTrack(column_gap_height, true));
+        auto row_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px());
+        for (size_t row_index = 0; row_index < m_grid_rows.size(); row_index++) {
+            m_grid_rows_and_gaps.append(m_grid_rows[row_index]);
+            if (row_index != m_grid_rows.size() - 1) {
+                m_row_gap_tracks.append(TemporaryTrack(row_gap_height, true));
+                m_grid_rows_and_gaps.append(m_row_gap_tracks.last());
+            }
+        }
+    } else {
+        for (auto& track : m_grid_rows) {
+            m_grid_rows_and_gaps.append(track);
         }
     }
 }
 
-void GridFormattingContext::initialize_track_sizes(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::initialize_track_sizes(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-init
     // 12.4. Initialize Track Sizes
     // Initialize each track’s base size and growth limit.
 
+    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+
     // For each track, if the track’s min track sizing function is:
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.is_gap)
             continue;
 
@@ -674,7 +683,7 @@ void GridFormattingContext::initialize_track_sizes(AvailableSize const& availabl
     }
 }
 
-void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const dimension, AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-content
     // 12.5. Resolve Intrinsic Track Sizes
@@ -683,13 +692,16 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
     // the space requirements of items that span multiple tracks, evenly distributing the extra space
     // across those tracks insofar as possible.
 
+    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+
     // FIXME: 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
     // 2. Size tracks to fit non-spanning items: For each track with an intrinsic track sizing function and
     // not a flexible sizing function, consider the items in it with a span of 1:
 
     size_t index = 0;
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.is_gap) {
             ++index;
             continue;
@@ -881,25 +893,27 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(GridDimension const di
 
     // 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
     // it or it is a flexible track), set its growth limit to its base size.
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.growth_limit == INFINITY) {
             track.growth_limit = track.base_size;
         }
     }
 
-    for (auto& track : tracks)
+    for (auto& track : tracks_and_gaps)
         track.has_definite_base_size = true;
 }
 
-void GridFormattingContext::maximize_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::maximize_tracks(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
     // 12.6. Maximize Tracks
 
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+
     auto get_free_space_px = [&]() -> CSSPixels {
         // For the purpose of this step: if sizing the grid container under a max-content constraint, the
         // free space is infinite; if sizing under a min-content constraint, the free space is zero.
-        auto free_space = get_free_space(available_size, tracks);
+        auto free_space = get_free_space(available_space, dimension);
         if (free_space.is_max_content()) {
             return INFINITY;
         } else if (free_space.is_min_content()) {
@@ -914,10 +928,8 @@ void GridFormattingContext::maximize_tracks(AvailableSize const& available_size,
     // If the free space is positive, distribute it equally to the base sizes of all tracks, freezing
     // tracks as they reach their growth limits (and continuing to grow the unfrozen tracks as needed).
     while (free_space_px > 0) {
-        auto free_space_to_distribute_per_track = free_space_px / (tracks.size() - count_of_gap_tracks(tracks));
+        auto free_space_to_distribute_per_track = free_space_px / tracks.size();
         for (auto& track : tracks) {
-            if (track.is_gap)
-                continue;
             VERIFY(track.growth_limit != INFINITY);
             track.base_size = min(track.growth_limit, track.base_size + free_space_to_distribute_per_track);
         }
@@ -931,12 +943,15 @@ void GridFormattingContext::maximize_tracks(AvailableSize const& available_size,
     // container’s inner size when it’s sized to its max-width/height.
 }
 
-void GridFormattingContext::expand_flexible_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://drafts.csswg.org/css-grid/#algo-flex-tracks
     // 12.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding
     // the available space.
+
+    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
     auto find_the_size_of_an_fr = [&]() -> CSSPixels {
         // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
@@ -945,7 +960,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSize const& availabl
 
         // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
         auto leftover_space = available_size.to_px();
-        for (auto& track : tracks) {
+        for (auto& track : tracks_and_gaps) {
             if (!track.max_track_sizing_function.is_flexible_length()) {
                 leftover_space -= track.base_size;
             }
@@ -954,7 +969,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSize const& availabl
         // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks.
         //    If this value is less than 1, set it to 1 instead.
         auto flex_factor_sum = 0;
-        for (auto& track : tracks) {
+        for (auto& track : tracks_and_gaps) {
             if (track.max_track_sizing_function.is_flexible_length())
                 flex_factor_sum++;
         }
@@ -973,7 +988,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSize const& availabl
 
     // First, find the grid’s used flex fraction:
     auto flex_fraction = [&]() {
-        auto free_space = get_free_space(available_size, tracks);
+        auto free_space = get_free_space(available_space, dimension);
         // If the free space is zero or if sizing the grid container under a min-content constraint:
         if (free_space.to_px() == 0 || available_size.is_min_content()) {
             // The used flex fraction is zero.
@@ -991,17 +1006,20 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSize const& availabl
 
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
     // the track’s base size, set its base size to that product.
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.max_track_sizing_function.flexible_length() * flex_fraction > track.base_size) {
             track.base_size = track.max_track_sizing_function.flexible_length() * flex_fraction;
         }
     }
 }
 
-void GridFormattingContext::stretch_auto_tracks(AvailableSize const& available_size, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://drafts.csswg.org/css-grid/#algo-stretch
     // 12.8. Stretch auto Tracks
+
+    auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
     // When the content-distribution property of the grid container is normal or stretch in this axis,
     // this step expands tracks that have an auto max track sizing function by dividing any remaining
@@ -1009,45 +1027,43 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSize const& available_s
     // container has a definite min-width/height, use that size to calculate the free space for this
     // step instead.
     CSSPixels used_space = 0;
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (!track.max_track_sizing_function.is_auto())
             used_space += track.base_size;
     }
 
     CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px() - used_space : 0;
     auto count_of_auto_max_sizing_tracks = 0;
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.max_track_sizing_function.is_auto())
             count_of_auto_max_sizing_tracks++;
     }
 
-    for (auto& track : tracks) {
+    for (auto& track : tracks_and_gaps) {
         if (track.max_track_sizing_function.is_auto())
             track.base_size = max(track.base_size, remaining_space / count_of_auto_max_sizing_tracks);
     }
 }
 
-void GridFormattingContext::run_track_sizing(GridDimension const dimension, AvailableSpace const& available_space, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::run_track_sizing(AvailableSpace const& available_space, GridDimension const dimension)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
     // 12.3. Track Sizing Algorithm
 
-    auto track_available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
-
     // 1. Initialize Track Sizes
-    initialize_track_sizes(track_available_size, tracks);
+    initialize_track_sizes(available_space, dimension);
 
     // 2. Resolve Intrinsic Track Sizes
-    resolve_intrinsic_track_sizes(dimension, track_available_size, tracks);
+    resolve_intrinsic_track_sizes(available_space, dimension);
 
     // 3. Maximize Tracks
-    maximize_tracks(track_available_size, tracks);
+    maximize_tracks(available_space, dimension);
 
     // 4. Expand Flexible Tracks
-    expand_flexible_tracks(track_available_size, tracks);
+    expand_flexible_tracks(available_space, dimension);
 
     // 5. Expand Stretched auto Tracks
-    stretch_auto_tracks(track_available_size, tracks);
+    stretch_auto_tracks(available_space, dimension);
 
     // If calculating the layout of a grid item in this step depends on the available space in the block
     // axis, assume the available space that it would have if any row with a definite max track sizing
@@ -1209,8 +1225,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     initialize_gap_tracks(available_space);
 
-    run_track_sizing(GridDimension::Column, available_space, m_grid_columns);
-    run_track_sizing(GridDimension::Row, available_space, m_grid_rows);
+    run_track_sizing(available_space, GridDimension::Column);
+    run_track_sizing(available_space, GridDimension::Row);
 
     auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
         if (column_start < 0 || row_start < 0)
@@ -1221,20 +1237,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         CSSPixels y_start = 0;
         CSSPixels y_end = 0;
         for (int i = 0; i < column_start; i++)
-            x_start += m_grid_columns[i].base_size;
+            x_start += m_grid_columns_and_gaps[i].base_size;
         for (int i = 0; i < column_end; i++)
-            x_end += m_grid_columns[i].base_size;
+            x_end += m_grid_columns_and_gaps[i].base_size;
         for (int i = 0; i < row_start; i++)
-            y_start += m_grid_rows[i].full_vertical_size();
+            y_start += m_grid_rows_and_gaps[i].full_vertical_size();
         for (int i = 0; i < row_end; i++) {
             if (i >= row_start)
-                y_end += m_grid_rows[i].base_size;
+                y_end += m_grid_rows_and_gaps[i].base_size;
             else
-                y_end += m_grid_rows[i].full_vertical_size();
+                y_end += m_grid_rows_and_gaps[i].full_vertical_size();
         }
 
         // A grid item containing block is created by the grid area to which it belongs.
-        auto containing_block_width = max(CSSPixels(0), x_end - x_start - m_grid_columns[column_start].border_left - m_grid_columns[column_start].border_right);
+        auto containing_block_width = max(CSSPixels(0), x_end - x_start - m_grid_columns_and_gaps[column_start].border_left - m_grid_columns_and_gaps[column_start].border_right);
         auto containing_block_height = y_end - y_start;
 
         auto computed_width = child_box.computed_values().width();
@@ -1246,7 +1262,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         child_box_state.set_content_width(used_width);
         child_box_state.set_content_height(used_height);
 
-        child_box_state.offset = { x_start + m_grid_columns[column_start].border_left, y_start + m_grid_rows[row_start].border_top };
+        child_box_state.offset = { x_start + m_grid_columns_and_gaps[column_start].border_left, y_start + m_grid_rows_and_gaps[row_start].border_top };
 
         child_box_state.border_left = child_box.computed_values().border_left().width;
         child_box_state.border_right = child_box.computed_values().border_right().width;
@@ -1263,13 +1279,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         if (!box.computed_values().row_gap().is_auto() && grid_item.gap_adjusted_row(box) == 0)
             resolved_row_span -= 1;
         if (grid_item.gap_adjusted_row(box) + resolved_row_span > m_grid_rows.size())
-            resolved_row_span = m_grid_rows.size() - grid_item.gap_adjusted_row(box);
+            resolved_row_span = m_grid_rows_and_gaps.size() - grid_item.gap_adjusted_row(box);
 
         auto resolved_column_span = box.computed_values().column_gap().is_auto() ? grid_item.raw_column_span() : grid_item.raw_column_span() * 2;
         if (!box.computed_values().column_gap().is_auto() && grid_item.gap_adjusted_column(box) == 0)
             resolved_column_span -= 1;
-        if (grid_item.gap_adjusted_column(box) + resolved_column_span > m_grid_columns.size())
-            resolved_column_span = m_grid_columns.size() - grid_item.gap_adjusted_column(box);
+        if (grid_item.gap_adjusted_column(box) + resolved_column_span > m_grid_columns_and_gaps.size())
+            resolved_column_span = m_grid_columns_and_gaps.size() - grid_item.gap_adjusted_column(box);
 
         layout_box(
             grid_item.gap_adjusted_row(box),
@@ -1283,7 +1299,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         determine_intrinsic_size_of_grid_container(available_space);
 
     CSSPixels total_y = 0;
-    for (auto& grid_row : m_grid_rows)
+    for (auto& grid_row : m_grid_rows_and_gaps)
         total_y += grid_row.full_vertical_size();
     m_automatic_content_height = total_y;
 }
@@ -1336,12 +1352,14 @@ bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement con
     return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
 }
 
-AvailableSize GridFormattingContext::get_free_space(AvailableSize const& available_size, Vector<TemporaryTrack> const& tracks) const
+AvailableSize GridFormattingContext::get_free_space(AvailableSpace const& available_space, GridDimension const dimension) const
 {
     // https://www.w3.org/TR/css-grid-2/#algo-terms
     // free space: Equal to the available grid space minus the sum of the base sizes of all the grid
     // tracks (including gutters), floored at zero. If available grid space is indefinite, the free
     // space is indefinite as well.
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
     if (available_size.is_definite()) {
         CSSPixels sum_base_sizes = 0;
         for (auto& track : tracks)
@@ -1481,16 +1499,16 @@ CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item
 CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& item, GridDimension const dimension) const
 {
     auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-    auto const track_index = dimension == GridDimension::Column ? item.gap_adjusted_column(grid_container()) : item.gap_adjusted_row(grid_container());
+    auto const track_index = item.raw_position(dimension);
     return tracks[track_index].base_size;
 }
 
 AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem const& item) const
 {
-    auto const& column_track = m_grid_columns[item.gap_adjusted_column(grid_container())];
+    auto const& column_track = m_grid_columns[item.raw_column()];
     AvailableSize available_width = column_track.has_definite_base_size ? AvailableSize::make_definite(column_track.base_size) : AvailableSize::make_indefinite();
 
-    auto const& row_track = m_grid_rows[item.gap_adjusted_row(grid_container())];
+    auto const& row_track = m_grid_rows[item.raw_row()];
     AvailableSize available_height = row_track.has_definite_base_size ? AvailableSize::make_definite(row_track.base_size) : AvailableSize::make_indefinite();
 
     return AvailableSpace(available_width, available_height);
@@ -1611,11 +1629,7 @@ CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, Gr
     // - it spans at least one track in that axis whose min track sizing function is auto
     // FIXME: - if it spans more than one track in that axis, none of those tracks are flexible
     auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-    auto item_track_index = [&] {
-        if (dimension == GridDimension::Column)
-            return item.gap_adjusted_column(grid_container());
-        return item.gap_adjusted_row(grid_container());
-    }();
+    auto item_track_index = item.raw_position(dimension);
 
     // FIXME: Check all tracks spanned by an item
     auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto();
