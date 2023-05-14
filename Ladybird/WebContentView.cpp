@@ -1105,7 +1105,7 @@ void WebContentView::request_repaint()
         return;
     }
     m_client_state.back_bitmap.pending_paints++;
-    client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontalScrollBar()->value(), verticalScrollBar()->value()), m_client_state.back_bitmap.id);
+    client().async_paint(m_viewport_rect, m_client_state.back_bitmap.id);
 }
 
 bool WebContentView::event(QEvent* event)
