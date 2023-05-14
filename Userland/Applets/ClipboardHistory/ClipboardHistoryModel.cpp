@@ -23,17 +23,17 @@ ClipboardHistoryModel::ClipboardHistoryModel()
 {
 }
 
-DeprecatedString ClipboardHistoryModel::column_name(int column) const
+String ClipboardHistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Data:
-        return "Data";
+        return "Data"_short_string;
     case Column::Type:
-        return "Type";
+        return "Type"_short_string;
     case Column::Size:
-        return "Size";
+        return "Size"_short_string;
     case Column::Time:
-        return "Time";
+        return "Time"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

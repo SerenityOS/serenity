@@ -27,13 +27,13 @@ public:
 
     virtual int row_count(const GUI::ModelIndex&) const override { return m_cursors.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
-    virtual DeprecatedString column_name(int column_index) const override
+    virtual String column_name(int column_index) const override
     {
         switch (column_index) {
         case Column::Bitmap:
             return {};
         case Column::Name:
-            return "Name";
+            return "Name"_short_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -112,7 +112,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex&) const override { return m_icon_sets.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
-    virtual DeprecatedString column_name(int column_index) const override
+    virtual String column_name(int column_index) const override
     {
         switch (column_index) {
         case Column::BigIcon:
@@ -120,7 +120,7 @@ public:
         case Column::LittleIcon:
             return {};
         case Column::Name:
-            return "Name";
+            return "Name"_short_string;
         }
         VERIFY_NOT_REACHED();
     }

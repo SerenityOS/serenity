@@ -40,13 +40,13 @@ public:
         return 2;
     }
 
-    DeprecatedString column_name(int column) const override
+    String column_name(int column) const override
     {
         switch (column) {
         case Column::Offset:
-            return "Offset";
+            return "Offset"_short_string;
         case Column::Value:
-            return "Value";
+            return "Value"_short_string;
         }
         VERIFY_NOT_REACHED();
     }

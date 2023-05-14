@@ -25,7 +25,7 @@ public:
     virtual int row_count(const GUI::ModelIndex&) const override { return m_cursors.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
-    virtual DeprecatedString column_name(int column_index) const override;
+    virtual String column_name(int column_index) const override;
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
     virtual void invalidate() override;
 

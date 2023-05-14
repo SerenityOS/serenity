@@ -761,27 +761,27 @@ int FileSystemModel::column_count(ModelIndex const&) const
     return Column::__Count;
 }
 
-DeprecatedString FileSystemModel::column_name(int column) const
+String FileSystemModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return "";
+        return {};
     case Column::Name:
-        return "Name";
+        return "Name"_short_string;
     case Column::Size:
-        return "Size";
+        return "Size"_short_string;
     case Column::User:
-        return "User";
+        return "User"_short_string;
     case Column::Group:
-        return "Group";
+        return "Group"_short_string;
     case Column::Permissions:
-        return "Mode";
+        return "Mode"_short_string;
     case Column::ModificationTime:
-        return "Modified";
+        return "Modified"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Inode:
-        return "Inode";
+        return "Inode"_short_string;
     case Column::SymlinkTarget:
-        return "Symlink target";
+        return "Symlink target"_string.release_value_but_fixme_should_propagate_errors();
     }
     VERIFY_NOT_REACHED();
 }

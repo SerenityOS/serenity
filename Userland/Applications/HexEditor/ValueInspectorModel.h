@@ -63,13 +63,13 @@ public:
         return 2;
     }
 
-    DeprecatedString column_name(int column) const override
+    String column_name(int column) const override
     {
         switch (column) {
         case Column::Type:
-            return "Type";
+            return "Type"_short_string;
         case Column::Value:
-            return m_is_little_endian ? "Value (Little Endian)" : "Value (Big Endian)";
+            return m_is_little_endian ? "Value (Little Endian)"_string.release_value_but_fixme_should_propagate_errors() : "Value (Big Endian)"_string.release_value_but_fixme_should_propagate_errors();
         }
         VERIFY_NOT_REACHED();
     }

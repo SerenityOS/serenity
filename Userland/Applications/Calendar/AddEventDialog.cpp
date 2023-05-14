@@ -120,21 +120,21 @@ int AddEventDialog::MeridiemListModel::row_count(const GUI::ModelIndex&) const
     return 2;
 }
 
-DeprecatedString AddEventDialog::MonthListModel::column_name(int column) const
+String AddEventDialog::MonthListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Month:
-        return "Month";
+        return "Month"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-DeprecatedString AddEventDialog::MeridiemListModel::column_name(int column) const
+String AddEventDialog::MeridiemListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Meridiem:
-        return "Meridiem";
+        return "Meridiem"_string.release_value_but_fixme_should_propagate_errors();
     default:
         VERIFY_NOT_REACHED();
     }

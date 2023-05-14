@@ -30,15 +30,15 @@ public:
     int row_count(GUI::ModelIndex const&) const override { return m_symbols.size(); };
     bool is_column_sortable(int) const override { return false; }
 
-    DeprecatedString column_name(int column) const override
+    String column_name(int column) const override
     {
         switch (column) {
         case Column::Address:
-            return "Address";
+            return "Address"_short_string;
         case Column::Object:
-            return "Object";
+            return "Object"_short_string;
         case Column::Symbol:
-            return "Symbol";
+            return "Symbol"_short_string;
         default:
             VERIFY_NOT_REACHED();
         }

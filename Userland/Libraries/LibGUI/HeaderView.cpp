@@ -358,7 +358,7 @@ Menu& HeaderView::ensure_context_menu()
         int section_count = this->section_count();
         for (int section = 0; section < section_count; ++section) {
             auto& column_data = this->section_data(section);
-            auto name = model()->column_name(section);
+            auto name = model()->column_name(section).to_deprecated_string();
             column_data.visibility_action = Action::create_checkable(name, [this, section](auto& action) {
                 set_section_visible(section, action.is_checked());
             });

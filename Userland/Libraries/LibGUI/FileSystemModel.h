@@ -127,7 +127,7 @@ public:
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
-    virtual DeprecatedString column_name(int column) const override;
+    virtual String column_name(int column) const override;
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual ModelIndex parent_index(ModelIndex const&) const override;
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const override;

@@ -29,15 +29,15 @@ int IndividualSampleModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-DeprecatedString IndividualSampleModel::column_name(int column) const
+String IndividualSampleModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
-        return "Address";
+        return "Address"_short_string;
     case Column::ObjectName:
-        return "Object";
+        return "Object"_short_string;
     case Column::Symbol:
-        return "Symbol";
+        return "Symbol"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

@@ -71,71 +71,71 @@ int ProcessModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-DeprecatedString ProcessModel::column_name(int column) const
+String ProcessModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return "";
+        return {};
     case Column::PID:
-        return "PID";
+        return "PID"_short_string;
     case Column::TID:
-        return "TID";
+        return "TID"_short_string;
     case Column::PPID:
-        return "PPID";
+        return "PPID"_short_string;
     case Column::PGID:
-        return "PGID";
+        return "PGID"_short_string;
     case Column::SID:
-        return "SID";
+        return "SID"_short_string;
     case Column::State:
-        return "State";
+        return "State"_short_string;
     case Column::User:
-        return "User";
+        return "User"_short_string;
     case Column::Priority:
-        return "Pr";
+        return "Pr"_short_string;
     case Column::Virtual:
-        return "Virtual";
+        return "Virtual"_short_string;
     case Column::Physical:
-        return "Physical";
+        return "Physical"_string.release_value_but_fixme_should_propagate_errors();
     case Column::DirtyPrivate:
-        return "Private";
+        return "Private"_short_string;
     case Column::CleanInode:
-        return "CleanI";
+        return "CleanI"_short_string;
     case Column::PurgeableVolatile:
-        return "Purg:V";
+        return "Purg:V"_short_string;
     case Column::PurgeableNonvolatile:
-        return "Purg:N";
+        return "Purg:N"_short_string;
     case Column::CPU:
-        return "CPU";
+        return "CPU"_short_string;
     case Column::Processor:
-        return "Processor";
+        return "Processor"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Name:
-        return "Name";
+        return "Name"_short_string;
     case Column::Syscalls:
-        return "Syscalls";
+        return "Syscalls"_string.release_value_but_fixme_should_propagate_errors();
     case Column::InodeFaults:
-        return "F:Inode";
+        return "F:Inode"_short_string;
     case Column::ZeroFaults:
-        return "F:Zero";
+        return "F:Zero"_short_string;
     case Column::CowFaults:
-        return "F:CoW";
+        return "F:CoW"_short_string;
     case Column::IPv4SocketReadBytes:
-        return "IPv4 In";
+        return "IPv4 In"_short_string;
     case Column::IPv4SocketWriteBytes:
-        return "IPv4 Out";
+        return "IPv4 Out"_string.release_value_but_fixme_should_propagate_errors();
     case Column::UnixSocketReadBytes:
-        return "Unix In";
+        return "Unix In"_short_string;
     case Column::UnixSocketWriteBytes:
-        return "Unix Out";
+        return "Unix Out"_string.release_value_but_fixme_should_propagate_errors();
     case Column::FileReadBytes:
-        return "File In";
+        return "File In"_short_string;
     case Column::FileWriteBytes:
-        return "File Out";
+        return "File Out"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Pledge:
-        return "Pledge";
+        return "Pledge"_short_string;
     case Column::Veil:
-        return "Veil";
+        return "Veil"_short_string;
     case Column::Command:
-        return "Command";
+        return "Command"_short_string;
     default:
         VERIFY_NOT_REACHED();
     }

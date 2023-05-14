@@ -71,11 +71,11 @@ public:
         return 1;
     }
 
-    virtual DeprecatedString column_name(int index) const override
+    virtual String column_name(int index) const override
     {
         if constexpr (IsTwoDimensional)
             return m_column_names[index];
-        return "Data";
+        return "Data"_short_string;
     }
 
     virtual Variant data(ModelIndex const& index, ModelRole role) const override

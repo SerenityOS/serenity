@@ -34,21 +34,21 @@ int CookiesModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-DeprecatedString CookiesModel::column_name(int column) const
+String CookiesModel::column_name(int column) const
 {
     switch (column) {
     case Column::Domain:
-        return "Domain";
+        return "Domain"_short_string;
     case Column::Path:
-        return "Path";
+        return "Path"_short_string;
     case Column::Name:
-        return "Name";
+        return "Name"_short_string;
     case Column::Value:
-        return "Value";
+        return "Value"_short_string;
     case Column::ExpiryTime:
-        return "Expiry time";
+        return "Expiry time"_string.release_value_but_fixme_should_propagate_errors();
     case Column::SameSite:
-        return "SameSite";
+        return "SameSite"_string.release_value_but_fixme_should_propagate_errors();
     case Column::__Count:
         return {};
     }

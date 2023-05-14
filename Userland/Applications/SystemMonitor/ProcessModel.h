@@ -63,7 +63,7 @@ public:
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(GUI::ModelIndex const&) const override;
     virtual int column_count(GUI::ModelIndex const&) const override;
-    virtual DeprecatedString column_name(int column) const override;
+    virtual String column_name(int column) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent = {}) const override;
     virtual GUI::ModelIndex parent_index(GUI::ModelIndex const&) const override;

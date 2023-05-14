@@ -27,10 +27,7 @@ public:
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_frames.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
 
-    virtual DeprecatedString column_name(int) const override
-    {
-        return "";
-    }
+    virtual String column_name(int) const override { return {}; }
 
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 

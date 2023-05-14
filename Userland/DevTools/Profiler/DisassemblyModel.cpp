@@ -131,19 +131,19 @@ int DisassemblyModel::row_count(GUI::ModelIndex const&) const
     return m_instructions.size();
 }
 
-DeprecatedString DisassemblyModel::column_name(int column) const
+String DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? "% Samples" : "# Samples";
+        return m_profile.show_percentages() ? "% Samples"_string.release_value_but_fixme_should_propagate_errors() : "# Samples"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Address:
-        return "Address";
+        return "Address"_short_string;
     case Column::InstructionBytes:
-        return "Insn Bytes";
+        return "Insn Bytes"_string.release_value_but_fixme_should_propagate_errors();
     case Column::Disassembly:
-        return "Disassembly";
+        return "Disassembly"_string.release_value_but_fixme_should_propagate_errors();
     case Column::SourceLocation:
-        return "Source Location";
+        return "Source Location"_string.release_value_but_fixme_should_propagate_errors();
     default:
         VERIFY_NOT_REACHED();
         return {};

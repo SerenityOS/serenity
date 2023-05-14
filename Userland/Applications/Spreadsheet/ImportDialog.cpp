@@ -166,10 +166,12 @@ void CSVImportDialogPage::update_preview()
         return;
     }
 
-    auto headers = reader.headers();
+    Vector<String> headers;
+    for (auto const& header : reader.headers())
+        headers.append(String::from_deprecated_string(header).release_value_but_fixme_should_propagate_errors());
 
     m_data_preview_table_view->set_model(
-        GUI::ItemListModel<Reader::XSV::Row, Reader::XSV, Vector<DeprecatedString>>::create(reader, headers, min(8ul, reader.size())));
+        GUI::ItemListModel<Reader::XSV::Row, Reader::XSV, Vector<String>>::create(reader, headers, min(8ul, reader.size())));
     m_data_preview_widget->set_active_widget(m_data_preview_table_view);
     m_data_preview_table_view->update();
 }

@@ -64,13 +64,13 @@ public:
         return Columns::Page;
     }
 
-    DeprecatedString column_name(int index) const override
+    String column_name(int index) const override
     {
         switch (index) {
         case 0:
-            return "Page";
+            return "Page"_short_string;
         case 1:
-            return "Message";
+            return "Message"_short_string;
         default:
             VERIFY_NOT_REACHED();
         }

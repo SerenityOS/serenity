@@ -39,15 +39,15 @@ public:
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_matches.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
 
-    virtual DeprecatedString column_name(int column) const override
+    virtual String column_name(int column) const override
     {
         switch (column) {
         case Column::Filename:
-            return "Filename";
+            return "Filename"_string.release_value_but_fixme_should_propagate_errors();
         case Column::Location:
-            return "#";
+            return "#"_short_string;
         case Column::MatchedText:
-            return "Text";
+            return "Text"_short_string;
         default:
             VERIFY_NOT_REACHED();
         }
