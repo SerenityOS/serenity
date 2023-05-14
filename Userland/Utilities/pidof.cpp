@@ -17,6 +17,7 @@ struct Options {
     bool single_shot { false };
     Optional<pid_t> pid_to_omit;
     StringView process_name;
+    StringView pid_separator { " "sv };
 };
 
 static ErrorOr<int> pid_of(Options const& options)
@@ -29,7 +30,11 @@ static ErrorOr<int> pid_of(Options const& options)
         if (it.name != options.process_name || options.pid_to_omit == it.pid)
             continue;
 
-        out(displayed_at_least_one ? " {}"sv : "{}"sv, it.pid);
+        if (displayed_at_least_one)
+            out("{}{}"sv, options.pid_separator, it.pid);
+        else
+            out("{}"sv, it.pid);
+
         displayed_at_least_one = true;
 
         if (options.single_shot)
@@ -75,6 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(options.single_shot, "Only return one pid", nullptr, 's');
+    args_parser.add_option(options.pid_separator, "Use `separator` to separate multiple pids", nullptr, 'S', "separator");
     args_parser.add_positional_argument(options.process_name, "Process name to search for", "process-name");
 
     args_parser.parse(args);
