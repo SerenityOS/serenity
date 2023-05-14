@@ -385,7 +385,10 @@ after_step_6:
         if (!url_string.is_valid()) {
             // 1. Abort the image request for the current request and the pending request.
             m_current_request->abort(realm());
-            m_pending_request->abort(realm());
+
+            // FIXME: Spec bug? Seems like pending request can be null here.
+            if (m_pending_request)
+                m_pending_request->abort(realm());
 
             // 2. Set the current request's state to broken.
             m_current_request->set_state(ImageRequest::State::Broken);
@@ -415,7 +418,9 @@ after_step_6:
         //     queue an element task on the DOM manipulation task source given the img element
         //     to restart the animation if restart animation is set, and return.
         if (url_string == m_current_request->current_url() && m_current_request->state() == ImageRequest::State::PartiallyAvailable) {
-            m_pending_request->abort(realm());
+            // FIXME: Spec bug? Seems like pending request can be null here.
+            if (m_pending_request)
+                m_pending_request->abort(realm());
             if (restart_animations) {
                 queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
                     restart_the_animation();
