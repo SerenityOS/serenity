@@ -59,9 +59,14 @@ Clipboard::DataAndType Clipboard::fetch_data_and_type() const
 {
     auto response = connection().get_clipboard_data();
     auto type = response.mime_type();
-    auto metadata = response.metadata().entries();
+    auto metadata = response.metadata();
+
+    auto metadata_clone_or_error = metadata.clone();
+    if (metadata_clone_or_error.is_error())
+        return {};
+
     if (!response.data().is_valid())
-        return { {}, type, metadata };
+        return { {}, type, metadata_clone_or_error.release_value() };
     auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
     if (data.is_error())
         return {};

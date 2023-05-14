@@ -30,9 +30,9 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-void ConnectionFromClient::set_clipboard_data(Core::AnonymousBuffer const& data, DeprecatedString const& mime_type, IPC::Dictionary const& metadata)
+void ConnectionFromClient::set_clipboard_data(Core::AnonymousBuffer const& data, DeprecatedString const& mime_type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
-    Storage::the().set_data(data, mime_type, metadata.entries());
+    Storage::the().set_data(data, mime_type, metadata);
 }
 
 Messages::ClipboardServer::GetClipboardDataResponse ConnectionFromClient::get_clipboard_data()
