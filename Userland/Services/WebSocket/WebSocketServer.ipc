@@ -3,7 +3,7 @@
 endpoint WebSocketServer
 {
     // Connection API
-    connect(URL url, DeprecatedString origin, Vector<DeprecatedString> protocols, Vector<DeprecatedString> extensions, IPC::Dictionary additional_request_headers) => (i32 connection_id)
+    connect(URL url, DeprecatedString origin, Vector<DeprecatedString> protocols, Vector<DeprecatedString> extensions, HashMap<DeprecatedString,DeprecatedString> additional_request_headers) => (i32 connection_id)
     ready_state(i32 connection_id) => (u32 ready_state)
     subprotocol_in_use(i32 connection_id) => (DeprecatedString subprotocol_in_use)
     send(i32 connection_id, bool is_text, ByteBuffer data) =|

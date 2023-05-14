@@ -26,7 +26,7 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, DeprecatedString const&, Vector<DeprecatedString> const&, Vector<DeprecatedString> const&, IPC::Dictionary const&) override;
+    virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, DeprecatedString const&, Vector<DeprecatedString> const&, Vector<DeprecatedString> const&, HashMap<DeprecatedString, DeprecatedString> const&) override;
     virtual Messages::WebSocketServer::ReadyStateResponse ready_state(i32) override;
     virtual Messages::WebSocketServer::SubprotocolInUseResponse subprotocol_in_use(i32) override;
     virtual void send(i32, bool, ByteBuffer const&) override;

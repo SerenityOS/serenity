@@ -27,7 +27,7 @@ void ConnectionFromClient::die()
 }
 
 Messages::WebSocketServer::ConnectResponse ConnectionFromClient::connect(URL const& url, DeprecatedString const& origin,
-    Vector<DeprecatedString> const& protocols, Vector<DeprecatedString> const& extensions, IPC::Dictionary const& additional_request_headers)
+    Vector<DeprecatedString> const& protocols, Vector<DeprecatedString> const& extensions, HashMap<DeprecatedString, DeprecatedString> const& additional_request_headers)
 {
     if (!url.is_valid()) {
         dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);
@@ -40,7 +40,7 @@ Messages::WebSocketServer::ConnectResponse ConnectionFromClient::connect(URL con
     connection_info.set_extensions(extensions);
 
     Vector<ConnectionInfo::Header> headers;
-    for (auto const& header : additional_request_headers.entries()) {
+    for (auto const& header : additional_request_headers) {
         headers.append({ header.key, header.value });
     }
     connection_info.set_headers(headers);
