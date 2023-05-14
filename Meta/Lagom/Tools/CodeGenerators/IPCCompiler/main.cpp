@@ -135,6 +135,11 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
             // FIXME: This is not entirely correct. Types can have spaces, for example `HashMap<int, DeprecatedString>`.
             //        Maybe we should use LibCpp::Parser for parsing types.
             parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
+            if (parameter.type.ends_with(',')) {
+                warnln("Parameter type '{}' looks invalid!", parameter.type);
+                warnln("Note that templates must not include spaces.");
+                VERIFY_NOT_REACHED();
+            }
             VERIFY(!lexer.is_eof());
             consume_whitespace();
             parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
