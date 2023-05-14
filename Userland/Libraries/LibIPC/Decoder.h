@@ -100,9 +100,6 @@ template<>
 ErrorOr<URL> decode(Decoder&);
 
 template<>
-ErrorOr<Dictionary> decode(Decoder&);
-
-template<>
 ErrorOr<File> decode(Decoder&);
 
 template<>
