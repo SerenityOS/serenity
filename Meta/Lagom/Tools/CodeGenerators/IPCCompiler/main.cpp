@@ -779,7 +779,6 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 #include <AK/Utf8View.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
-#include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
 #include <LibIPC/Message.h>

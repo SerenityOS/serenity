@@ -129,9 +129,6 @@ template<>
 ErrorOr<void> encode(Encoder&, URL const&);
 
 template<>
-ErrorOr<void> encode(Encoder&, Dictionary const&);
-
-template<>
 ErrorOr<void> encode(Encoder&, File const&);
 
 template<>
