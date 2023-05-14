@@ -41,7 +41,7 @@ void OpacitySlider::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_transparency_grid(painter, inner_rect, palette());
 
     // Alpha gradient
-    painter.fill_rect_with_linear_gradient(inner_rect, Array { Gfx::ColorStop { Color::Transparent, 0 }, Gfx::ColorStop { m_base_color, 1 } },
+    painter.fill_rect_with_linear_gradient(inner_rect, Array { Gfx::ColorStop { Color::Transparent, 0 }, Gfx::ColorStop { m_base_color.with_alpha(255), 1 } },
         orientation() == Orientation::Horizontal ? 90.0f : 180.0f);
 
     constexpr int notch_size = 3;
