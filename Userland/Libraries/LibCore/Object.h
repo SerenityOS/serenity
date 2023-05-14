@@ -128,12 +128,26 @@ public:
     requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(DeprecatedString const&)
+    T* find_child_of_type_named(StringView)
     requires IsBaseOf<Object, T>;
 
+    template<typename T, size_t N>
+    ALWAYS_INLINE T* find_child_of_type_named(char const (&string_literal)[N])
+    requires IsBaseOf<Object, T>
+    {
+        return find_child_of_type_named<T>(StringView { string_literal, N - 1 });
+    }
+
     template<typename T>
-    T* find_descendant_of_type_named(DeprecatedString const&)
+    T* find_descendant_of_type_named(StringView)
     requires IsBaseOf<Object, T>;
+
+    template<typename T, size_t N>
+    ALWAYS_INLINE T* find_descendant_of_type_named(char const (&string_literal)[N])
+    requires IsBaseOf<Object, T>
+    {
+        return find_descendant_of_type_named<T>(StringView { string_literal, N - 1 });
+    }
 
     bool is_ancestor_of(Object const&) const;
 
@@ -243,7 +257,7 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(DeprecatedString const& name)
+T* Object::find_child_of_type_named(StringView name)
 requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
@@ -259,7 +273,7 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(DeprecatedString const& name)
+T* Object::find_descendant_of_type_named(StringView name)
 requires IsBaseOf<Object, T>
 {
     if (is<T>(*this) && this->name() == name) {
