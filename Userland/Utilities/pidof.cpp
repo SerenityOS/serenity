@@ -13,22 +13,27 @@
 #include <string.h>
 #include <unistd.h>
 
-static ErrorOr<int> pid_of(DeprecatedString const& process_name, bool single_shot, bool omit_pid, pid_t pid)
+struct Options {
+    bool single_shot { false };
+    Optional<pid_t> pid_to_omit;
+    StringView process_name;
+};
+
+static ErrorOr<int> pid_of(Options const& options)
 {
     bool displayed_at_least_one = false;
 
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
     for (auto& it : all_processes.processes) {
-        if (it.name == process_name) {
-            if (!omit_pid || it.pid != pid) {
-                out(displayed_at_least_one ? " {}"sv : "{}"sv, it.pid);
-                displayed_at_least_one = true;
+        if (it.name != options.process_name || options.pid_to_omit == it.pid)
+            continue;
 
-                if (single_shot)
-                    break;
-            }
-        }
+        out(displayed_at_least_one ? " {}"sv : "{}"sv, it.pid);
+        displayed_at_least_one = true;
+
+        if (options.single_shot)
+            break;
     }
 
     if (displayed_at_least_one)
@@ -44,30 +49,34 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    bool single_shot = false;
-    StringView omit_pid_value;
-    StringView process_name;
+    Options options;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(single_shot, "Only return one pid", nullptr, 's');
-    args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid");
-    args_parser.add_positional_argument(process_name, "Process name to search for", "process-name");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Omit the given PID, or the parent process if the special value %PPID is passed",
+        .short_name = 'o',
+        .value_name = "pid",
+        .accept_value = [&options](auto omit_pid_value) {
+            if (omit_pid_value.is_empty())
+                return false;
+
+            if (omit_pid_value == "%PPID"sv) {
+                options.pid_to_omit = getppid();
+                return true;
+            }
+
+            auto number = omit_pid_value.to_uint();
+            if (!number.has_value())
+                return false;
+
+            options.pid_to_omit = number.value();
+            return true;
+        },
+    });
+    args_parser.add_option(options.single_shot, "Only return one pid", nullptr, 's');
+    args_parser.add_positional_argument(options.process_name, "Process name to search for", "process-name");
 
     args_parser.parse(args);
-
-    pid_t pid_to_omit = 0;
-    if (!omit_pid_value.is_empty()) {
-        if (omit_pid_value == "%PPID"sv) {
-            pid_to_omit = getppid();
-        } else {
-            auto number = omit_pid_value.to_uint();
-            if (!number.has_value()) {
-                warnln("Invalid value for -o");
-                args_parser.print_usage(stderr, args.strings[0]);
-                return 1;
-            }
-            pid_to_omit = number.value();
-        }
-    }
-    return pid_of(process_name, single_shot, !omit_pid_value.is_empty(), pid_to_omit);
+    return pid_of(options);
 }
