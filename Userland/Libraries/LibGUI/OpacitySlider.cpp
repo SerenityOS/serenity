@@ -185,7 +185,7 @@ void OpacitySlider::mousewheel_event(MouseEvent& event)
 Optional<UISize> OpacitySlider::calculated_min_size() const
 {
     if (orientation() == Gfx::Orientation::Vertical)
-        return { { 22, 40 } };
+        return { { 33, 40 } };
     return { { 40, 22 } };
 }
 
