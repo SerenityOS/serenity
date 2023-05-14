@@ -16,7 +16,7 @@ namespace GUI {
 class JsonArrayModel final : public Model {
 public:
     struct FieldSpec {
-        FieldSpec(DeprecatedString const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
+        FieldSpec(String const& a_column_name, Gfx::TextAlignment a_text_alignment, Function<Variant(JsonObject const&)>&& a_massage_for_display, Function<Variant(JsonObject const&)>&& a_massage_for_sort = {}, Function<Variant(JsonObject const&)>&& a_massage_for_custom = {})
             : column_name(a_column_name)
             , text_alignment(a_text_alignment)
             , massage_for_display(move(a_massage_for_display))
@@ -25,7 +25,7 @@ public:
         {
         }
 
-        FieldSpec(DeprecatedString const& a_json_field_name, DeprecatedString const& a_column_name, Gfx::TextAlignment a_text_alignment)
+        FieldSpec(DeprecatedString const& a_json_field_name, String const& a_column_name, Gfx::TextAlignment a_text_alignment)
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
@@ -33,7 +33,7 @@ public:
         }
 
         DeprecatedString json_field_name;
-        DeprecatedString column_name;
+        String column_name;
         Gfx::TextAlignment text_alignment;
         Function<Variant(JsonObject const&)> massage_for_display;
         Function<Variant(JsonObject const&)> massage_for_sort;
@@ -49,7 +49,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override { return m_array.size(); }
     virtual int column_count(ModelIndex const& = ModelIndex()) const override { return m_fields.size(); }
-    virtual String column_name(int column) const override { return String::from_deprecated_string(m_fields[column].column_name).release_value_but_fixme_should_propagate_errors(); }
+    virtual String column_name(int column) const override { return m_fields[column].column_name; }
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
     virtual void update();

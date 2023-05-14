@@ -286,7 +286,7 @@ ErrorOr<void> MainWidget::setup()
 
         Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
         for (auto& column_name : m_result_column_names)
-            query_result_fields.empend(column_name, column_name, Gfx::TextAlignment::CenterLeft);
+            query_result_fields.empend(column_name, String::from_deprecated_string(column_name).release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
 
         auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
         m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));

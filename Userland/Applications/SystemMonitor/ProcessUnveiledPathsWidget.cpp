@@ -22,8 +22,8 @@ ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
     m_table_view = add<GUI::TableView>();
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
-    pid_unveil_fields.empend("path", "Path", Gfx::TextAlignment::CenterLeft);
-    pid_unveil_fields.empend("permissions", "Permissions", Gfx::TextAlignment::CenterLeft);
+    pid_unveil_fields.empend("path", "Path"_short_string, Gfx::TextAlignment::CenterLeft);
+    pid_unveil_fields.empend("permissions", "Permissions"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
     m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_model)));
