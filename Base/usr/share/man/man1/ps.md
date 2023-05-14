@@ -5,7 +5,7 @@ ps - list currently running processes
 ## Synopsis
 
 ```**sh
-$ ps [--version] [-A] [-e] [-f] [-q pid-list]
+$ ps [--version] [-a] [-A] [-e] [-f] [-q pid-list]
 ```
 
 ## Description
@@ -15,6 +15,7 @@ For each process, print its PID (process ID), to which TTY it belongs, and invok
 
 ## Options
 
+* `-a`: Consider all processes that are associated with a TTY.
 * `-A` or `-e`: Consider all processes, not just those in the current TTY.
 * `-f`: Also print for each process: UID (as resolved username), PPID (parent PID), and STATE (Runnable, Sleeping, Selecting, Reading, etc.)
 * `-q pid-list`: Only consider the given PIDs, if they exist.
