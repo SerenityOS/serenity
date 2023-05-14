@@ -397,12 +397,12 @@ void WebContentView::focusOutEvent(QFocusEvent*)
 
 Gfx::IntPoint WebContentView::to_content(Gfx::IntPoint viewport_position) const
 {
-    return viewport_position.translated(horizontalScrollBar()->value(), verticalScrollBar()->value());
+    return viewport_position.translated(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()));
 }
 
 Gfx::IntPoint WebContentView::to_widget(Gfx::IntPoint content_position) const
 {
-    return content_position.translated(-horizontalScrollBar()->value(), -verticalScrollBar()->value());
+    return content_position.translated(-(max(0, horizontalScrollBar()->value())), -(max(0, verticalScrollBar()->value())));
 }
 
 void WebContentView::paintEvent(QPaintEvent*)
@@ -484,7 +484,7 @@ void WebContentView::update_viewport_rect()
 {
     auto scaled_width = int(viewport()->width() / m_inverse_pixel_scaling_ratio);
     auto scaled_height = int(viewport()->height() / m_inverse_pixel_scaling_ratio);
-    Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
+    Gfx::IntRect rect(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()), scaled_width, scaled_height);
 
     set_viewport_rect(rect);
 
@@ -787,8 +787,8 @@ void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, Dep
 
 void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
 {
-    horizontalScrollBar()->setValue(horizontalScrollBar()->value() + x_delta);
-    verticalScrollBar()->setValue(verticalScrollBar()->value() + y_delta);
+    horizontalScrollBar()->setValue(max(0, horizontalScrollBar()->value() + x_delta));
+    verticalScrollBar()->setValue(max(0, verticalScrollBar()->value() + y_delta));
 }
 
 void WebContentView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
