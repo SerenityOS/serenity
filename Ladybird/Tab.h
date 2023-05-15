@@ -67,6 +67,8 @@ private:
     QString m_title;
     QLabel* m_hover_label { nullptr };
 
+    OwnPtr<QMenu> m_page_context_menu;
+
     int tab_index();
 
     bool m_is_history_navigation { false };

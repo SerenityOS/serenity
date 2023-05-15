@@ -13,6 +13,7 @@
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>
+#include <QMenu>
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QPoint>
@@ -177,6 +178,22 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
     });
+
+    m_page_context_menu = make<QMenu>("Context menu", this);
+    m_page_context_menu->addAction(&m_window->go_back_action());
+    m_page_context_menu->addAction(&m_window->go_forward_action());
+    m_page_context_menu->addAction(&m_window->reload_action());
+    m_page_context_menu->addSeparator();
+    m_page_context_menu->addAction(&m_window->copy_selection_action());
+    m_page_context_menu->addAction(&m_window->select_all_action());
+    m_page_context_menu->addSeparator();
+    m_page_context_menu->addAction(&m_window->view_source_action());
+    m_page_context_menu->addAction(&m_window->inspect_dom_node_action());
+
+    view().on_context_menu_request = [this](auto widget_position) {
+        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        m_page_context_menu->exec(screen_position);
+    };
 }
 
 void Tab::update_reset_zoom_button()

@@ -62,15 +62,15 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
     auto* edit_menu = menuBar()->addMenu("&Edit");
 
-    auto* copy_action = new QAction("&Copy", this);
-    copy_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
-    edit_menu->addAction(copy_action);
-    QObject::connect(copy_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
+    m_copy_selection_action = make<QAction>("&Copy", this);
+    m_copy_selection_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
+    edit_menu->addAction(m_copy_selection_action);
+    QObject::connect(m_copy_selection_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
 
-    auto* select_all_action = new QAction("Select &All", this);
-    select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
-    edit_menu->addAction(select_all_action);
-    QObject::connect(select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
+    m_select_all_action = make<QAction>("Select &All", this);
+    m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
+    edit_menu->addAction(m_select_all_action);
+    QObject::connect(m_select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
 
     auto* view_menu = menuBar()->addMenu("&View");
 
@@ -133,11 +133,11 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
-    auto* view_source_action = new QAction("View &Source", this);
-    view_source_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-html.png").arg(s_serenity_resource_root.characters())));
-    view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
-    inspect_menu->addAction(view_source_action);
-    QObject::connect(view_source_action, &QAction::triggered, this, [this] {
+    m_view_source_action = make<QAction>("View &Source", this);
+    m_view_source_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-html.png").arg(s_serenity_resource_root.characters())));
+    m_view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
+    inspect_menu->addAction(m_view_source_action);
+    QObject::connect(m_view_source_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
             m_current_tab->view().get_source();
         }
@@ -330,12 +330,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(this, &QWidget::customContextMenuRequested, this, &BrowserWindow::show_context_menu);
-
-    m_context_menu = make<QMenu>("Context menu", this);
-    auto* inspect_element_action = new QAction("&Inspect Element", this);
-    connect(inspect_element_action, &QAction::triggered, this, [this] {
+    m_inspect_dom_node_action = make<QAction>("&Inspect Element", this);
+    connect(m_inspect_dom_node_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
             m_current_tab->view().show_inspector(WebContentView::InspectorTarget::HoveredElement);
     });
@@ -354,15 +350,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         if (m_current_tab)
             m_current_tab->reload();
     });
-    m_context_menu->addAction(m_go_back_action);
-    m_context_menu->addAction(m_go_forward_action);
-    m_context_menu->addAction(m_reload_action);
-    m_context_menu->addSeparator();
-    m_context_menu->addAction(copy_action);
-    m_context_menu->addAction(select_all_action);
-    m_context_menu->addSeparator();
-    m_context_menu->addAction(view_source_action);
-    m_context_menu->addAction(inspect_element_action);
+
     m_go_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
     m_go_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
     m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
@@ -372,11 +360,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
 
     setCentralWidget(m_tabs_container);
-}
-
-void BrowserWindow::show_context_menu(QPoint const& point)
-{
-    m_context_menu->exec(mapToGlobal(point));
+    setContextMenuPolicy(Qt::PreventContextMenu);
 }
 
 void BrowserWindow::set_current_tab(Tab* tab)

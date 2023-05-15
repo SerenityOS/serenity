@@ -47,6 +47,26 @@ public:
         return *m_reload_action;
     }
 
+    QAction& copy_selection_action()
+    {
+        return *m_copy_selection_action;
+    }
+
+    QAction& select_all_action()
+    {
+        return *m_select_all_action;
+    }
+
+    QAction& view_source_action()
+    {
+        return *m_view_source_action;
+    }
+
+    QAction& inspect_dom_node_action()
+    {
+        return *m_inspect_dom_node_action;
+    }
+
 public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
@@ -64,7 +84,6 @@ public slots:
     void reset_zoom();
     void select_all();
     void copy_selected_text();
-    void show_context_menu(QPoint const&);
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
@@ -83,10 +102,13 @@ private:
     Tab* m_current_tab { nullptr };
     QMenu* m_zoom_menu { nullptr };
 
-    OwnPtr<QMenu> m_context_menu {};
     OwnPtr<QAction> m_go_back_action {};
     OwnPtr<QAction> m_go_forward_action {};
     OwnPtr<QAction> m_reload_action {};
+    OwnPtr<QAction> m_copy_selection_action {};
+    OwnPtr<QAction> m_select_all_action {};
+    OwnPtr<QAction> m_view_source_action {};
+    OwnPtr<QAction> m_inspect_dom_node_action {};
 
     Browser::CookieJar& m_cookie_jar;
 
