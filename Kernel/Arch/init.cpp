@@ -63,6 +63,7 @@
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
+#    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #endif
 
 // Defined in the linker script
@@ -359,6 +360,8 @@ void init_stage2(void*)
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
+#elif ARCH(AARCH64)
+    (void)MUST(RPi::MiniUART::create()).leak_ref();
 #endif
 
 #if ARCH(X86_64)
