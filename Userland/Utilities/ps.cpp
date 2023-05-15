@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
@@ -12,20 +14,20 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
-static ErrorOr<DeprecatedString> determine_tty_pseudo_name()
+static ErrorOr<String> determine_tty_pseudo_name()
 {
     auto tty_stat = TRY(Core::System::fstat(STDIN_FILENO));
     int tty_device_major = major(tty_stat.st_rdev);
     int tty_device_minor = minor(tty_stat.st_rdev);
 
     if (tty_device_major == 201) {
-        return DeprecatedString::formatted("pts:{}", tty_device_minor);
+        return String::formatted("pts:{}", tty_device_minor);
     }
 
     if (tty_device_major == 4) {
-        return DeprecatedString::formatted("tty:{}", tty_device_minor);
+        return String::formatted("tty:{}", tty_device_minor);
     }
-    return "n/a";
+    return "n/a"_short_string;
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -45,15 +47,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        DeprecatedString title;
+        String title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        DeprecatedString buffer;
+        String buffer;
     };
 
     bool every_process_flag = false;
     bool full_format_flag = false;
-    DeprecatedString pid_list;
+    StringView pid_list;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e');
@@ -78,18 +80,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     if (full_format_flag) {
-        uid_column = add_column("UID", Alignment::Left);
-        pid_column = add_column("PID", Alignment::Right);
-        ppid_column = add_column("PPID", Alignment::Right);
-        pgid_column = add_column("PGID", Alignment::Right);
-        sid_column = add_column("SID", Alignment::Right);
-        state_column = add_column("STATE", Alignment::Left);
-        tty_column = add_column("TTY", Alignment::Left);
-        cmd_column = add_column("CMD", Alignment::Left);
+        uid_column = add_column("UID"_short_string, Alignment::Left);
+        pid_column = add_column("PID"_short_string, Alignment::Right);
+        ppid_column = add_column("PPID"_short_string, Alignment::Right);
+        pgid_column = add_column("PGID"_short_string, Alignment::Right);
+        sid_column = add_column("SID"_short_string, Alignment::Right);
+        state_column = add_column("STATE"_short_string, Alignment::Left);
+        tty_column = add_column("TTY"_short_string, Alignment::Left);
+        cmd_column = add_column("CMD"_short_string, Alignment::Left);
     } else {
-        pid_column = add_column("PID", Alignment::Right);
-        tty_column = add_column("TTY", Alignment::Left);
-        cmd_column = add_column("CMD", Alignment::Left);
+        pid_column = add_column("PID"_short_string, Alignment::Right);
+        tty_column = add_column("TTY"_short_string, Alignment::Left);
+        cmd_column = add_column("CMD"_short_string, Alignment::Left);
     }
 
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
@@ -124,44 +126,44 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
     }
 
-    Vector<Vector<DeprecatedString>> rows;
+    Vector<Vector<String>> rows;
     TRY(rows.try_ensure_capacity(1 + processes.size()));
 
-    Vector<DeprecatedString> header;
+    Vector<String> header;
     TRY(header.try_ensure_capacity(columns.size()));
     for (auto& column : columns)
         header.unchecked_append(column.title);
     rows.append(move(header));
 
     for (auto const& process : processes) {
-        auto tty = process.tty;
+        auto tty = TRY(String::from_deprecated_string(process.tty));
         if (!every_process_flag && tty != this_pseudo_tty_name)
             continue;
 
-        auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
-
-        Vector<DeprecatedString> row;
+        Vector<String> row;
         TRY(row.try_resize(columns.size()));
 
         if (tty == "")
-            tty = "n/a";
+            tty = "n/a"_short_string;
 
         if (uid_column != -1)
-            row[uid_column] = process.username;
+            row[uid_column] = TRY(String::from_deprecated_string(process.username));
         if (pid_column != -1)
-            row[pid_column] = DeprecatedString::number(process.pid);
+            row[pid_column] = TRY(String::number(process.pid));
         if (ppid_column != -1)
-            row[ppid_column] = DeprecatedString::number(process.ppid);
+            row[ppid_column] = TRY(String::number(process.ppid));
         if (pgid_column != -1)
-            row[pgid_column] = DeprecatedString::number(process.pgid);
+            row[pgid_column] = TRY(String::number(process.pgid));
         if (sid_column != -1)
-            row[sid_column] = DeprecatedString::number(process.sid);
+            row[sid_column] = TRY(String::number(process.sid));
         if (tty_column != -1)
             row[tty_column] = tty;
         if (state_column != -1)
-            row[state_column] = state;
+            row[state_column] = process.threads.is_empty()
+                ? "Zombie"_short_string
+                : TRY(String::from_deprecated_string(process.threads.first().state));
         if (cmd_column != -1)
-            row[cmd_column] = process.name;
+            row[cmd_column] = TRY(String::from_deprecated_string(process.name));
 
         TRY(rows.try_append(move(row)));
     }
@@ -169,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (size_t i = 0; i < columns.size(); i++) {
         auto& column = columns[i];
         for (auto& row : rows)
-            column.width = max(column.width, static_cast<int>(row[i].length()));
+            column.width = max(column.width, static_cast<int>(row[i].code_points().length()));
     }
 
     for (auto& row : rows) {
