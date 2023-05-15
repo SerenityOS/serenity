@@ -67,6 +67,7 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void did_remove_attribute(DeprecatedFlyString const& name) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -81,7 +82,7 @@ private:
         False,
         Inherit,
     };
-    ContentEditableState content_editable_state() const;
+    ContentEditableState m_content_editable_state { ContentEditableState::Inherit };
 
     JS::GCPtr<DOMStringMap> m_dataset;
 

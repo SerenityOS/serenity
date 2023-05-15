@@ -77,22 +77,9 @@ void HTMLElement::set_dir(DeprecatedString const& dir)
     MUST(set_attribute(HTML::AttributeNames::dir, dir));
 }
 
-HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
-{
-    auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
-    // "true", an empty string or a missing value map to the "true" state.
-    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_ascii_case("true"sv))
-        return ContentEditableState::True;
-    // "false" maps to the "false" state.
-    if (contenteditable.equals_ignoring_ascii_case("false"sv))
-        return ContentEditableState::False;
-    // Having no such attribute or an invalid value maps to the "inherit" state.
-    return ContentEditableState::Inherit;
-}
-
 bool HTMLElement::is_editable() const
 {
-    switch (content_editable_state()) {
+    switch (m_content_editable_state) {
     case ContentEditableState::True:
         return true;
     case ContentEditableState::False:
@@ -106,7 +93,7 @@ bool HTMLElement::is_editable() const
 
 DeprecatedString HTMLElement::content_editable() const
 {
-    switch (content_editable_state()) {
+    switch (m_content_editable_state) {
     case ContentEditableState::True:
         return "true";
     case ContentEditableState::False:
@@ -242,6 +229,19 @@ void HTMLElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedStr
 {
     Element::parse_attribute(name, value);
 
+    if (name == HTML::AttributeNames::contenteditable) {
+        if ((!value.is_null() && value.is_empty()) || value.equals_ignoring_ascii_case("true"sv)) {
+            // "true", an empty string or a missing value map to the "true" state.
+            m_content_editable_state = ContentEditableState::True;
+        } else if (value.equals_ignoring_ascii_case("false"sv)) {
+            // "false" maps to the "false" state.
+            m_content_editable_state = ContentEditableState::False;
+        } else {
+            // Having no such attribute or an invalid value maps to the "inherit" state.
+            m_content_editable_state = ContentEditableState::Inherit;
+        }
+    }
+
     // 1. If namespace is not null, or localName is not the name of an event handler content attribute on element, then return.
     // FIXME: Add the namespace part once we support attribute namespaces.
 #undef __ENUMERATE
@@ -251,6 +251,14 @@ void HTMLElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedStr
     }
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
+}
+
+void HTMLElement::did_remove_attribute(DeprecatedFlyString const& name)
+{
+    Base::did_remove_attribute(name);
+    if (name == HTML::AttributeNames::contenteditable) {
+        m_content_editable_state = ContentEditableState::Inherit;
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
