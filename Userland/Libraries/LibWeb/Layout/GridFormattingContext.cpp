@@ -1316,6 +1316,14 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     }
 }
 
+void GridFormattingContext::determine_grid_container_height()
+{
+    CSSPixels total_y = 0;
+    for (auto& grid_row : m_grid_rows_and_gaps)
+        total_y += grid_row.full_vertical_size();
+    m_automatic_content_height = total_y;
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     place_grid_items(available_space);
@@ -1326,6 +1334,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     run_track_sizing(available_space, GridDimension::Column);
     run_track_sizing(available_space, GridDimension::Row);
+
+    determine_grid_container_height();
+
+    if (available_space.height.is_intrinsic_sizing_constraint() || available_space.width.is_intrinsic_sizing_constraint()) {
+        determine_intrinsic_size_of_grid_container(available_space);
+        return;
+    }
 
     auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
         if (column_start < 0 || row_start < 0)
@@ -1393,14 +1408,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             grid_item.gap_adjusted_column(box) + resolved_column_span,
             grid_item.box());
     }
-
-    if (available_space.height.is_intrinsic_sizing_constraint() || available_space.width.is_intrinsic_sizing_constraint())
-        determine_intrinsic_size_of_grid_container(available_space);
-
-    CSSPixels total_y = 0;
-    for (auto& grid_row : m_grid_rows_and_gaps)
-        total_y += grid_row.full_vertical_size();
-    m_automatic_content_height = total_y;
 }
 
 void GridFormattingContext::determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space)
