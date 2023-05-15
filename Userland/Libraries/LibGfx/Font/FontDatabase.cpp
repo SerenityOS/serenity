@@ -116,8 +116,8 @@ Font& FontDatabase::default_fixed_width_font()
 }
 
 struct FontDatabase::Private {
-    HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>> full_name_to_font_map;
-    HashMap<DeprecatedFlyString, Vector<NonnullRefPtr<Typeface>>> typefaces;
+    HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>, CaseInsensitiveStringTraits> full_name_to_font_map;
+    HashMap<DeprecatedFlyString, Vector<NonnullRefPtr<Typeface>>, CaseInsensitiveStringTraits> typefaces;
 };
 
 void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
