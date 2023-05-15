@@ -1130,6 +1130,19 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
+class ResolveSuperBase final : public Instruction {
+public:
+    explicit ResolveSuperBase()
+        : Instruction(Type::ResolveSuperBase)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
 class GetNewTarget final : public Instruction {
 public:
     explicit GetNewTarget()

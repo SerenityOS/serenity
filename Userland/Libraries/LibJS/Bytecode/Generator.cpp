@@ -151,22 +151,61 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
     }
     if (is<MemberExpression>(node)) {
         auto& expression = static_cast<MemberExpression const&>(node);
-        TRY(expression.object().generate_bytecode(*this));
 
-        if (expression.is_computed()) {
-            auto object_reg = allocate_register();
-            emit<Bytecode::Op::Store>(object_reg);
+        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+        if (is<SuperExpression>(expression.object())) {
+            // 1. Let env be GetThisEnvironment().
+            // 2. Let actualThis be ? env.GetThisBinding().
+            // NOTE: Whilst this isn't used, it's still observable (e.g. it throws if super() hasn't been called)
+            emit<Bytecode::Op::ResolveThisBinding>();
 
-            TRY(expression.property().generate_bytecode(*this));
-            emit<Bytecode::Op::GetByValue>(object_reg);
-        } else if (expression.property().is_identifier()) {
-            auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
-            emit<Bytecode::Op::GetById>(identifier_table_ref);
+            Optional<Bytecode::Register> computed_property_value_register;
+
+            if (expression.is_computed()) {
+                // SuperProperty : super [ Expression ]
+                // 3. Let propertyNameReference be ? Evaluation of Expression.
+                // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+                TRY(expression.property().generate_bytecode(*this));
+                computed_property_value_register = allocate_register();
+                emit<Bytecode::Op::Store>(*computed_property_value_register);
+            }
+
+            // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+            // https://tc39.es/ecma262/#sec-makesuperpropertyreference
+            // 1. Let env be GetThisEnvironment().
+            // 2. Assert: env.HasSuperBinding() is true.
+            // 3. Let baseValue be ? env.GetSuperBase().
+            emit<Bytecode::Op::ResolveSuperBase>();
+
+            // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+            if (computed_property_value_register.has_value()) {
+                // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+                // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
+                emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
+            } else {
+                // 3. Let propertyKey be StringValue of IdentifierName.
+                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                emit<Bytecode::Op::GetById>(identifier_table_ref);
+            }
         } else {
-            return CodeGenerationError {
-                &expression,
-                "Unimplemented non-computed member expression"sv
-            };
+            TRY(expression.object().generate_bytecode(*this));
+
+            if (expression.is_computed()) {
+                auto object_reg = allocate_register();
+                emit<Bytecode::Op::Store>(object_reg);
+
+                TRY(expression.property().generate_bytecode(*this));
+                emit<Bytecode::Op::GetByValue>(object_reg);
+            } else if (expression.property().is_identifier()) {
+                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                emit<Bytecode::Op::GetById>(identifier_table_ref);
+            } else {
+                return CodeGenerationError {
+                    &expression,
+                    "Unimplemented non-computed member expression"sv
+                };
+            }
         }
         return {};
     }

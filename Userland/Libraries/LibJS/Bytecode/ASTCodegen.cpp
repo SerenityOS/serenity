@@ -1523,29 +1523,57 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     if (is<NewExpression>(this)) {
         TRY(m_callee->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Store>(callee_reg);
-    } else if (is<SuperExpression>(*m_callee)) {
-        return Bytecode::CodeGenerationError {
-            this,
-            "Unimplemented callee kind: SuperExpression"sv,
-        };
     } else if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
+
+        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
         if (is<SuperExpression>(member_expression.object())) {
-            return Bytecode::CodeGenerationError {
-                this,
-                "Unimplemented callee kind: MemberExpression on SuperExpression"sv,
-            };
+            // 1. Let env be GetThisEnvironment().
+            // 2. Let actualThis be ? env.GetThisBinding().
+            generator.emit<Bytecode::Op::ResolveThisBinding>();
+            generator.emit<Bytecode::Op::Store>(this_reg);
+
+            Optional<Bytecode::Register> computed_property_value_register;
+
+            if (member_expression.is_computed()) {
+                // SuperProperty : super [ Expression ]
+                // 3. Let propertyNameReference be ? Evaluation of Expression.
+                // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+                TRY(member_expression.property().generate_bytecode(generator));
+                computed_property_value_register = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(*computed_property_value_register);
+            }
+
+            // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+            // https://tc39.es/ecma262/#sec-makesuperpropertyreference
+            // 1. Let env be GetThisEnvironment().
+            // 2. Assert: env.HasSuperBinding() is true.
+            // 3. Let baseValue be ? env.GetSuperBase().
+            generator.emit<Bytecode::Op::ResolveSuperBase>();
+
+            // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+            if (computed_property_value_register.has_value()) {
+                // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+                // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
+                generator.emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
+            } else {
+                // 3. Let propertyKey be StringValue of IdentifierName.
+                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            }
+        } else {
+            TRY(member_expression.object().generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Store>(this_reg);
+            if (member_expression.is_computed()) {
+                TRY(member_expression.property().generate_bytecode(generator));
+                generator.emit<Bytecode::Op::GetByValue>(this_reg);
+            } else {
+                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            }
         }
 
-        TRY(member_expression.object().generate_bytecode(generator));
-        generator.emit<Bytecode::Op::Store>(this_reg);
-        if (member_expression.is_computed()) {
-            TRY(member_expression.property().generate_bytecode(generator));
-            generator.emit<Bytecode::Op::GetByValue>(this_reg);
-        } else {
-            auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-        }
         generator.emit<Bytecode::Op::Store>(callee_reg);
     } else {
         // FIXME: this = global object in sloppy mode.
