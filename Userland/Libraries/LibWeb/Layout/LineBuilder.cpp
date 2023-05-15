@@ -15,6 +15,7 @@ LineBuilder::LineBuilder(InlineFormattingContext& context, LayoutState& layout_s
     , m_layout_state(layout_state)
     , m_containing_block_state(layout_state.get_mutable(context.containing_block()))
 {
+    m_text_indent = m_context.containing_block().computed_values().text_indent().to_px(m_context.containing_block(), m_containing_block_state.content_width());
     begin_new_line(false);
 }
 
@@ -66,6 +67,11 @@ void LineBuilder::begin_new_line(bool increment_y, bool is_first_break_in_sequen
     recalculate_available_space();
     m_max_height_on_current_line = 0;
     m_last_line_needs_update = true;
+
+    // FIXME: Support text-indent with "each-line".
+    if (m_containing_block_state.line_boxes.size() <= 1) {
+        ensure_last_line_box().m_width += m_text_indent;
+    }
 }
 
 LineBox& LineBuilder::ensure_last_line_box()
