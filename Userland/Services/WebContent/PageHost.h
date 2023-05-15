@@ -49,6 +49,10 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
 
+    Web::WebIDL::ExceptionOr<void> toggle_video_play_state();
+    Web::WebIDL::ExceptionOr<void> toggle_video_loop_state();
+    Web::WebIDL::ExceptionOr<void> toggle_video_controls_state();
+
     [[nodiscard]] Gfx::Color background_color() const;
 
 private:

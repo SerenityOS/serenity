@@ -70,6 +70,10 @@ public:
 
     void run_javascript(StringView);
 
+    void toggle_video_play_state();
+    void toggle_video_loop_state();
+    void toggle_video_controls_state();
+
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;

@@ -5,10 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -279,6 +281,84 @@ void Page::did_request_video_context_menu(i32 video_id, CSSPixelPoint position, 
 {
     m_video_context_menu_element_id = video_id;
     client().page_did_request_video_context_menu(position, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+}
+
+WebIDL::ExceptionOr<void> Page::toggle_video_play_state()
+{
+    auto video_element = video_context_menu_element();
+    if (!video_element)
+        return {};
+
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = video_element->document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+
+    if (video_element->potentially_playing())
+        TRY(video_element->pause());
+    else
+        TRY(video_element->play());
+
+    return {};
+}
+
+WebIDL::ExceptionOr<void> Page::toggle_video_loop_state()
+{
+    auto video_element = video_context_menu_element();
+    if (!video_element)
+        return {};
+
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = video_element->document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+
+    if (video_element->has_attribute(HTML::AttributeNames::loop))
+        video_element->remove_attribute(HTML::AttributeNames::loop);
+    else
+        TRY(video_element->set_attribute(HTML::AttributeNames::loop, {}));
+
+    return {};
+}
+
+WebIDL::ExceptionOr<void> Page::toggle_video_controls_state()
+{
+    auto video_element = video_context_menu_element();
+    if (!video_element)
+        return {};
+
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = video_element->document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+
+    if (video_element->has_attribute(HTML::AttributeNames::controls))
+        video_element->remove_attribute(HTML::AttributeNames::controls);
+    else
+        TRY(video_element->set_attribute(HTML::AttributeNames::controls, {}));
+
+    return {};
+}
+
+JS::GCPtr<HTML::HTMLVideoElement> Page::video_context_menu_element()
+{
+    if (!m_video_context_menu_element_id.has_value())
+        return nullptr;
+
+    auto* dom_node = DOM::Node::from_id(*m_video_context_menu_element_id);
+    if (dom_node == nullptr)
+        return nullptr;
+
+    if (!is<HTML::HTMLVideoElement>(dom_node))
+        return nullptr;
+
+    return static_cast<HTML::HTMLVideoElement*>(dom_node);
 }
 
 }
