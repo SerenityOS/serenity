@@ -151,4 +151,35 @@ u32 Timer::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo
     return message_queue.set_clock_rate.rate_hz;
 }
 
+class GetClockRateMboxMessage : Mailbox::Message {
+public:
+    u32 clock_id;
+    u32 rate_hz;
+
+    GetClockRateMboxMessage()
+        : Mailbox::Message(0x0003'0002, 8)
+    {
+        clock_id = 0;
+        rate_hz = 0;
+    }
+};
+
+u32 Timer::get_clock_rate(ClockID clock_id)
+{
+    struct __attribute__((aligned(16))) {
+        Mailbox::MessageHeader header;
+        GetClockRateMboxMessage get_clock_rate;
+        Mailbox::MessageTail tail;
+    } message_queue;
+
+    message_queue.get_clock_rate.clock_id = static_cast<u32>(clock_id);
+
+    if (!Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
+        dbgln("Timer::get_clock_rate() failed!");
+        return 0;
+    }
+
+    return message_queue.get_clock_rate.rate_hz;
+}
+
 }

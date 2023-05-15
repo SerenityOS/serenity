@@ -63,6 +63,7 @@ public:
         PIXEL_BVB = 14,
     };
     static u32 set_clock_rate(ClockID, u32 rate_hz, bool skip_setting_turbo = true);
+    static u32 get_clock_rate(ClockID);
 
 private:
     Timer();
