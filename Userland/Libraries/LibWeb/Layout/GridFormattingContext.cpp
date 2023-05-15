@@ -1702,7 +1702,7 @@ Optional<CSSPixels> GridFormattingContext::specified_size_suggestion(GridItem co
     if (has_definite_preferred_size) {
         // FIXME: consider margins, padding and borders because it is outer size.
         auto containing_block_size = containing_block_size_for_item(item, dimension);
-        return item.box().computed_values().width().to_px(item.box(), containing_block_size);
+        return get_item_preferred_size(item, dimension).to_px(item.box(), containing_block_size);
     }
 
     return {};
