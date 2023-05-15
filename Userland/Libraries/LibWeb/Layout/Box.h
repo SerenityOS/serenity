@@ -38,7 +38,7 @@ public:
 
     virtual ~Box() override;
 
-    virtual void did_set_rect() { }
+    virtual void did_set_content_size() { }
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 

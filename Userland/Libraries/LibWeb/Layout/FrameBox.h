@@ -26,7 +26,7 @@ public:
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
-    virtual void did_set_rect() override;
+    virtual void did_set_content_size() override;
 };
 
 }
