@@ -418,6 +418,8 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
             m_current_tab->view().on_tab_open_request(url, Web::HTML::ActivateTab::No);
         } else if (target == "_blank") {
             m_current_tab->view().on_tab_open_request(url, Web::HTML::ActivateTab::Yes);
+        } else {
+            m_current_tab->view().load(url);
         }
     };
 
