@@ -6,7 +6,13 @@
 
 .section .text.vector_table
 
-#define REGISTER_STATE_SIZE 264
+// NOTE: This size must be a multiple of 16 bytes, to ensure that the stack pointer
+//       stays 16 byte aligned.
+#define REGISTER_STATE_SIZE 272
+#if REGISTER_STATE_SIZE % 16 != 0
+#    error "REGISTER_STATE_SIZE is not a multiple of 16 bytes!"
+#endif
+
 #define SPSR_EL1_SLOT       (31 * 8)
 #define ELR_EL1_SLOT        (32 * 8)
 #define SP_EL0_SLOT         (33 * 8)
