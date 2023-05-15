@@ -89,6 +89,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
         auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
         if (page_fault_or_error.is_error()) {
+            dump_registers(*trap_frame->regs);
             handle_crash(*trap_frame->regs, "Unknown page fault", SIGSEGV, false);
         } else {
             auto page_fault = page_fault_or_error.release_value();
@@ -97,6 +98,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
         syscall_handler(trap_frame);
     } else {
+        dump_registers(*trap_frame->regs);
         handle_crash(*trap_frame->regs, "Unexpected exception", SIGSEGV, false);
     }
 
