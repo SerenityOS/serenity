@@ -30,6 +30,28 @@ static ErrorOr<String> determine_tty_pseudo_name()
     return "n/a"_short_string;
 }
 
+template<typename Value, typename ParseValue>
+Core::ArgsParser::Option make_list_option(Vector<Value>& value_list, char const* help_string, char const* long_name, char short_name, char const* value_name, ParseValue parse_value)
+{
+    return Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = help_string,
+        .long_name = long_name,
+        .short_name = short_name,
+        .value_name = value_name,
+        .accept_value = [&](StringView s) {
+            auto parts = s.split_view_if([](char c) { return c == ',' || c == ' '; });
+            for (auto const& part : parts) {
+                auto value = parse_value(part);
+                if (!value.has_value())
+                    return false;
+                value_list.append(value.value());
+            }
+            return true;
+        },
+    };
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
@@ -56,14 +78,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool every_process_flag = false;
     bool every_terminal_process_flag = false;
     bool full_format_flag = false;
-    StringView pid_list;
+    Vector<pid_t> pid_list;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(every_terminal_process_flag, "Show every process associated with terminals", nullptr, 'a');
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'A');
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
-    args_parser.add_option(pid_list, "A comma-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list");
+    args_parser.add_option(make_list_option(pid_list, "A comma- or space-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list", [](StringView pid_string) {
+        auto pid = pid_string.to_int();
+        if (!pid.has_value())
+            warnln("Could not parse '{}' as a PID.", pid_string);
+        return pid;
+    }));
     args_parser.parse(arguments);
 
     Vector<Column> columns;
@@ -105,26 +132,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!pid_list.is_empty()) {
         every_process_flag = true;
-        auto string_parts = pid_list.split_view(',');
-        Vector<pid_t> selected_pids;
-        selected_pids.ensure_capacity(string_parts.size());
 
-        for (size_t i = 0; i < string_parts.size(); i++) {
-            auto pid = string_parts[i].to_int();
+        processes.remove_all_matching([&](auto& a) { return !pid_list.contains_slow(a.pid); });
 
-            if (!pid.has_value()) {
-                warnln("Invalid value for -q: {}", pid_list);
-                warnln("Could not parse '{}' as a PID.", string_parts[i]);
-                return 1;
-            }
-
-            selected_pids.append(pid.value());
-        }
-
-        processes.remove_all_matching([&](auto& a) { return selected_pids.find(a.pid) == selected_pids.end(); });
-
-        auto processes_sort_predicate = [&selected_pids](auto& a, auto& b) {
-            return selected_pids.find_first_index(a.pid).value() < selected_pids.find_first_index(b.pid).value();
+        auto processes_sort_predicate = [&pid_list](auto& a, auto& b) {
+            return pid_list.find_first_index(a.pid).value() < pid_list.find_first_index(b.pid).value();
         };
         quick_sort(processes, processes_sort_predicate);
     } else {
