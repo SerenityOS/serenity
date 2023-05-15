@@ -27,10 +27,8 @@ namespace Detail {
 
 template<typename T>
 constexpr inline bool IsHashMap = false;
-template<typename K, typename V>
-constexpr inline bool IsHashMap<HashMap<K, V>> = true;
-template<typename K, typename V>
-constexpr inline bool IsHashMap<OrderedHashMap<K, V>> = true;
+template<typename K, typename V, typename KeyTraits, typename ValueTraits, bool IsOrdered>
+constexpr inline bool IsHashMap<HashMap<K, V, KeyTraits, ValueTraits, IsOrdered>> = true;
 
 template<typename T>
 constexpr inline bool IsOptional = false;
