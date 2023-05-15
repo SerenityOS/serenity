@@ -260,6 +260,7 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
+    Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
@@ -405,7 +406,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
         kprintf.cpp
-        Panic.cpp
     )
 
     set(KERNEL_SOURCES
