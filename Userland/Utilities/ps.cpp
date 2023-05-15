@@ -145,11 +145,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& processes = all_processes.processes;
 
+    // Filter
     if (!pid_list.is_empty()) {
-        every_process_flag = true;
         processes.remove_all_matching([&](auto& process) { return !pid_list.contains_slow(process.pid); });
+    } else if (every_terminal_process_flag) {
+        processes.remove_all_matching([&](auto& process) { return process.tty.is_empty(); });
+    } else if (!every_process_flag) {
+        // Default is to show processes from the current TTY
+        processes.remove_all_matching([&](Core::ProcessStatistics& process) { return process.tty.view() != this_pseudo_tty_name.bytes_as_string_view(); });
     }
 
+    // Sort
     if (provided_quick_pid_list) {
         auto processes_sort_predicate = [&pid_list](auto& a, auto& b) {
             return pid_list.find_first_index(a.pid).value() < pid_list.find_first_index(b.pid).value();
@@ -169,21 +175,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rows.unchecked_append(move(header));
 
     for (auto const& process : processes) {
-        auto tty = TRY(String::from_deprecated_string(process.tty));
-        if (every_process_flag) {
-            // Don't skip any.
-        } else if (every_terminal_process_flag) {
-            if (tty.is_empty())
-                continue;
-        } else if (tty != this_pseudo_tty_name) {
-            continue;
-        }
-
         Vector<String> row;
         TRY(row.try_resize(columns.size()));
-
-        if (tty == "")
-            tty = "n/a"_short_string;
 
         if (uid_column.has_value())
             row[*uid_column] = TRY(String::from_deprecated_string(process.username));
@@ -196,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (sid_column.has_value())
             row[*sid_column] = TRY(String::number(process.sid));
         if (tty_column.has_value())
-            row[*tty_column] = tty;
+            row[*tty_column] = process.tty == "" ? "n/a"_short_string : TRY(String::from_deprecated_string(process.tty));
         if (state_column.has_value())
             row[*state_column] = process.threads.is_empty()
                 ? "Zombie"_short_string
