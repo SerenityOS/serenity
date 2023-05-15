@@ -63,13 +63,12 @@ PaintableWithLines::~PaintableWithLines()
 void PaintableBox::set_offset(CSSPixelPoint offset)
 {
     m_offset = offset;
-    layout_box().did_set_rect();
 }
 
 void PaintableBox::set_content_size(CSSPixelSize size)
 {
     m_content_size = size;
-    layout_box().did_set_rect();
+    layout_box().did_set_content_size();
 }
 
 CSSPixelPoint PaintableBox::effective_offset() const

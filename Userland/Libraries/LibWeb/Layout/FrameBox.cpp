@@ -28,9 +28,9 @@ void FrameBox::prepare_for_replaced_layout()
     set_intrinsic_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
-void FrameBox::did_set_rect()
+void FrameBox::did_set_content_size()
 {
-    ReplacedBox::did_set_rect();
+    ReplacedBox::did_set_content_size();
 
     VERIFY(dom_node().nested_browsing_context());
     dom_node().nested_browsing_context()->set_size(paintable_box()->content_size());
