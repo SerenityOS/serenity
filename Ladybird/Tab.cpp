@@ -197,6 +197,39 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_page_context_menu->exec(screen_position);
     };
 
+    auto* open_link_action = new QAction("&Open", this);
+    open_link_action->setIcon(QIcon(QString("%1/res/icons/16x16/go-forward.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_link_action, &QAction::triggered, this, [this]() {
+        open_link(m_link_context_menu_url);
+    });
+
+    auto* open_link_in_new_tab_action = new QAction("&Open in New &Tab", this);
+    open_link_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_link_in_new_tab_action, &QAction::triggered, this, [this]() {
+        open_link_in_new_tab(m_link_context_menu_url);
+    });
+
+    auto* copy_url_action = new QAction("Copy &URL", this);
+    copy_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(copy_url_action, &QAction::triggered, this, [this]() {
+        copy_link_url(m_link_context_menu_url);
+    });
+
+    m_link_context_menu = make<QMenu>("Link context menu", this);
+    m_link_context_menu->addAction(open_link_action);
+    m_link_context_menu->addAction(open_link_in_new_tab_action);
+    m_link_context_menu->addSeparator();
+    m_link_context_menu->addAction(copy_url_action);
+    m_link_context_menu->addSeparator();
+    m_link_context_menu->addAction(&m_window->inspect_dom_node_action());
+
+    view().on_link_context_menu_request = [this](auto const& url, auto widget_position) {
+        m_link_context_menu_url = url;
+
+        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        m_link_context_menu->exec(screen_position);
+    };
+
     m_video_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
     m_video_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
 
