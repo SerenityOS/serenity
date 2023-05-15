@@ -507,6 +507,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (text_align.has_value())
         computed_values.set_text_justify(text_justify.value());
 
+    if (auto text_indent = computed_style.length_percentage(CSS::PropertyID::TextIndent); text_indent.has_value())
+        computed_values.set_text_indent(text_indent.release_value());
+
     auto white_space = computed_style.white_space();
     if (white_space.has_value())
         computed_values.set_white_space(white_space.value());

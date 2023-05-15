@@ -57,6 +57,7 @@ private:
     CSSPixels m_available_width_for_current_line { 0 };
     CSSPixels m_current_y { 0 };
     CSSPixels m_max_height_on_current_line { 0 };
+    CSSPixels m_text_indent { 0 };
 
     bool m_last_line_needs_update { false };
 };
