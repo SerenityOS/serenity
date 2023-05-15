@@ -349,7 +349,7 @@ void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, Dev
 VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary)
-        return DispatchEventOfSameName::No;
+        return DispatchEventOfSameName::Yes;
 
     auto& video_element = layout_box().dom_node();
     auto const& cached_layout_boxes = video_element.cached_layout_boxes({});
