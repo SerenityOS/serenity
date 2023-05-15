@@ -144,6 +144,12 @@ private:
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
 
+    RefPtr<GUI::Menu> m_video_context_menu;
+    RefPtr<GUI::Action> m_video_context_menu_play_pause_action;
+    RefPtr<GUI::Action> m_video_context_menu_controls_action;
+    RefPtr<GUI::Action> m_video_context_menu_loop_action;
+    URL m_video_context_menu_url;
+
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;
     RefPtr<GUI::Menu> m_go_back_context_menu;
