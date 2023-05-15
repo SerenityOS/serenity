@@ -78,6 +78,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool every_process_flag = false;
     bool every_terminal_process_flag = false;
     bool full_format_flag = false;
+    bool provided_pid_list = false;
+    bool provided_quick_pid_list = false;
     Vector<pid_t> pid_list;
 
     Core::ArgsParser args_parser;
@@ -85,13 +87,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'A');
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
-    args_parser.add_option(make_list_option(pid_list, "A comma- or space-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list", [](StringView pid_string) {
+    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
+        provided_pid_list = true;
+        auto pid = pid_string.to_int();
+        if (!pid.has_value())
+            warnln("Could not parse '{}' as a PID.", pid_string);
+        return pid;
+    }));
+    args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list.) Processes will be listed in the order given.", nullptr, 'q', "pid-list", [&](StringView pid_string) {
+        provided_quick_pid_list = true;
         auto pid = pid_string.to_int();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
     }));
     args_parser.parse(arguments);
+
+    if (provided_pid_list && provided_quick_pid_list) {
+        warnln("`-p` and `-q` cannot be specified together.");
+        return 1;
+    }
 
     Vector<Column> columns;
 
@@ -132,9 +147,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!pid_list.is_empty()) {
         every_process_flag = true;
+        processes.remove_all_matching([&](auto& process) { return !pid_list.contains_slow(process.pid); });
+    }
 
-        processes.remove_all_matching([&](auto& a) { return !pid_list.contains_slow(a.pid); });
-
+    if (provided_quick_pid_list) {
         auto processes_sort_predicate = [&pid_list](auto& a, auto& b) {
             return pid_list.find_first_index(a.pid).value() < pid_list.find_first_index(b.pid).value();
         };
