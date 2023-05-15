@@ -90,14 +90,26 @@ constexpr SizeType array_size(T (&)[N])
     return N;
 }
 
-template<typename T>
-constexpr T min(T const& a, IdentityType<T> const& b)
+constexpr auto min(auto&& a, auto&& b)
+requires IsSame<RemoveCVReference<decltype(a)>, RemoveCVReference<decltype(b)>>
+{
+    return b < a ? forward<decltype(b)>(b) : forward<decltype(a)>(a);
+}
+
+constexpr auto min(auto& a, auto& b) -> auto&
+requires IsSame<RemoveCVReference<decltype(a)>, RemoveCVReference<decltype(b)>>
 {
     return b < a ? b : a;
 }
 
-template<typename T>
-constexpr T max(T const& a, IdentityType<T> const& b)
+constexpr auto max(auto&& a, auto&& b)
+requires IsSame<RemoveCVReference<decltype(a)>, RemoveCVReference<decltype(b)>>
+{
+    return a < b ? forward<decltype(b)>(b) : forward<decltype(a)>(a);
+}
+
+constexpr auto max(auto& a, auto& b) -> auto&
+requires IsSame<RemoveCVReference<decltype(a)>, RemoveCVReference<decltype(b)>>
 {
     return a < b ? b : a;
 }

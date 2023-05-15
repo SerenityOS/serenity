@@ -50,6 +50,7 @@ set(AK_TEST_SOURCES
     TestMACAddress.cpp
     TestMemory.cpp
     TestMemoryStream.cpp
+    TestMinMax.cpp
     TestNeverDestroyed.cpp
     TestNonnullOwnPtr.cpp
     TestNonnullRefPtr.cpp
