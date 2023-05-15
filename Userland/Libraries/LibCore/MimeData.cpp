@@ -100,6 +100,8 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "text/csv"sv;
     if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
         return "application/x-sheets+json"sv;
+    if (path.ends_with(".webm"sv, CaseSensitivity::CaseInsensitive))
+        return "video/webm"sv;
     // FIXME: Share this, TextEditor and HackStudio language detection somehow.
     auto basename = LexicalPath::basename(path);
     if (path.ends_with(".cpp"sv, CaseSensitivity::CaseInsensitive)
