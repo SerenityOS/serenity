@@ -513,21 +513,38 @@ elif [ "$SERENITY_RUN" = "limine" ]; then
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
     echo "Running QEMU in CI"
-    "$SERENITY_QEMU_BIN" \
-        $SERENITY_EXTRA_QEMU_ARGS \
-        $SERENITY_VIRT_TECH_ARG \
-        -m $SERENITY_RAM_SIZE \
-        -cpu $SERENITY_QEMU_CPU \
-        -d guest_errors \
-        -no-reboot \
-        -smp ${SERENITY_CPUS} \
-        -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk \
-        -device ich9-ahci \
-        -nographic \
-        -display none \
-        -debugcon file:debug.log \
-        $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+    if [ "$SERENITY_ARCH" = "aarch64" ]; then
+      "$SERENITY_QEMU_BIN" \
+            $SERENITY_EXTRA_QEMU_ARGS \
+            $SERENITY_VIRT_TECH_ARG \
+            -M raspi3b \
+            -d guest_errors \
+            -no-reboot \
+            -drive file=${SERENITY_DISK_IMAGE},if=sd,format=raw \
+            -nographic \
+            -monitor none \
+            -display none \
+            -serial file:debug.log \
+            -serial stdio \
+            $SERENITY_KERNEL_AND_INITRD \
+            -append "${SERENITY_KERNEL_CMDLINE}"
+    else
+        "$SERENITY_QEMU_BIN" \
+            $SERENITY_EXTRA_QEMU_ARGS \
+            $SERENITY_VIRT_TECH_ARG \
+            -m $SERENITY_RAM_SIZE \
+            -cpu $SERENITY_QEMU_CPU \
+            -d guest_errors \
+            -no-reboot \
+            -smp ${SERENITY_CPUS} \
+            -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk \
+            -device ich9-ahci \
+            -nographic \
+            -display none \
+            -debugcon file:debug.log \
+            $SERENITY_KERNEL_AND_INITRD \
+            -append "${SERENITY_KERNEL_CMDLINE}"
+    fi
 else
     # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
