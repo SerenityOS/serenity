@@ -214,8 +214,10 @@ static void activate_mmu()
     Aarch64::TCR_EL1::write(tcr_el1);
 
     // Enable MMU in the system control register
-    Aarch64::SCTLR_EL1 sctlr_el1 = Aarch64::SCTLR_EL1::read();
+    Aarch64::SCTLR_EL1 sctlr_el1 = Aarch64::SCTLR_EL1::reset_value();
     sctlr_el1.M = 1; // Enable MMU
+    sctlr_el1.C = 1; // Enable data cache
+    sctlr_el1.I = 1; // Enable instruction cache
     Aarch64::SCTLR_EL1::write(sctlr_el1);
 
     Aarch64::Asm::flush();
