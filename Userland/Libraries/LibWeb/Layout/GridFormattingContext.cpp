@@ -581,8 +581,9 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
     // For the purpose of track sizing, each gutter is treated as an extra, empty, fixed-size track of
     // the specified size, which is spanned by any grid items that span across its corresponding grid
     // line.
-    if (!grid_container().computed_values().column_gap().is_auto()) {
+    if (!grid_container().computed_values().column_gap().is_auto() && m_grid_columns.size() > 0) {
         auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px());
+        m_column_gap_tracks.ensure_capacity(m_grid_columns.size() - 1);
         for (size_t column_index = 0; column_index < m_grid_columns.size(); column_index++) {
             m_grid_columns_and_gaps.append(m_grid_columns[column_index]);
             if (column_index != m_grid_columns.size() - 1) {
@@ -595,8 +596,9 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
             m_grid_columns_and_gaps.append(track);
         }
     }
-    if (!grid_container().computed_values().row_gap().is_auto()) {
+    if (!grid_container().computed_values().row_gap().is_auto() && m_grid_rows.size() > 0) {
         auto row_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px());
+        m_row_gap_tracks.ensure_capacity(m_grid_rows.size() - 1);
         for (size_t row_index = 0; row_index < m_grid_rows.size(); row_index++) {
             m_grid_rows_and_gaps.append(m_grid_rows[row_index]);
             if (row_index != m_grid_rows.size() - 1) {
