@@ -56,6 +56,10 @@ private:
     void rerender_toolbar_icons();
     void update_hover_label();
 
+    void open_link(URL const&);
+    void open_link_in_new_tab(URL const&);
+    void copy_link_url(URL const&);
+
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };
@@ -68,6 +72,14 @@ private:
     QLabel* m_hover_label { nullptr };
 
     OwnPtr<QMenu> m_page_context_menu;
+
+    OwnPtr<QMenu> m_video_context_menu;
+    OwnPtr<QIcon> m_video_context_menu_play_icon;
+    OwnPtr<QIcon> m_video_context_menu_pause_icon;
+    OwnPtr<QAction> m_video_context_menu_play_pause_action;
+    OwnPtr<QAction> m_video_context_menu_controls_action;
+    OwnPtr<QAction> m_video_context_menu_loop_action;
+    URL m_video_context_menu_url;
 
     int tab_index();
 
