@@ -876,14 +876,25 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
     }
 
-    auto used_height = height.to_px(box, height_of_containing_block);
+    // Compute the height based on box type and CSS properties:
+    // https://www.w3.org/TR/css-sizing-3/#box-sizing
+    CSSPixels used_height = 0;
+    if (should_treat_height_as_auto(box, available_space)) {
+        used_height = height.to_px(box, height_of_containing_block);
+    } else {
+        used_height = calculate_inner_height(box, available_space.height, height).to_px(box);
+    }
     auto const& computed_min_height = box.computed_values().min_height();
     auto const& computed_max_height = box.computed_values().max_height();
 
-    if (!computed_max_height.is_none())
-        used_height = min(used_height, computed_max_height.to_px(box, height_of_containing_block));
-    if (!computed_min_height.is_auto())
-        used_height = max(used_height, computed_min_height.to_px(box, height_of_containing_block));
+    if (!computed_max_height.is_none()) {
+        auto inner_max_height = calculate_inner_height(box, available_space.height, computed_max_height);
+        used_height = min(used_height, inner_max_height.to_px(box));
+    }
+    if (!computed_min_height.is_auto()) {
+        auto inner_min_height = calculate_inner_height(box, available_space.height, computed_min_height);
+        used_height = max(used_height, inner_min_height.to_px(box));
+    }
 
     // NOTE: The following is not directly part of any spec, but this is where we resolve
     //       the final used values for vertical margin/border/padding.
