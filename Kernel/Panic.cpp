@@ -8,6 +8,8 @@
 #include <Kernel/Arch/Processor.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Shutdown.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/Watchdog.h>
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/KSyms.h>
@@ -21,6 +23,8 @@ namespace Kernel {
 #if ARCH(X86_64)
     qemu_shutdown();
     virtualbox_shutdown();
+#elif ARCH(AARCH64)
+    RPi::Watchdog::the().system_shutdown();
 #endif
     // Note: If we failed to invoke platform shutdown, we need to halt afterwards
     // to ensure no further execution on any CPU still happens.
