@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
@@ -302,6 +303,17 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                         auto image_url = image_element.document().parse_url(image_element.src());
                         if (auto* page = m_browsing_context->page())
                             page->client().page_did_request_image_context_menu(m_browsing_context->to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
+                    } else if (is<HTML::HTMLVideoElement>(*node)) {
+                        auto& video_element = verify_cast<HTML::HTMLVideoElement>(*node);
+
+                        auto video_id = video_element.id();
+                        auto video_url = video_element.document().parse_url(video_element.current_src());
+                        auto is_playing = !video_element.potentially_playing();
+                        auto has_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls);
+                        auto is_looping = video_element.has_attribute(HTML::AttributeNames::loop);
+
+                        if (auto* page = m_browsing_context->page())
+                            page->did_request_video_context_menu(video_id, m_browsing_context->to_top_level_position(position), video_url, "", modifiers, is_playing, has_user_agent_controls, is_looping);
                     } else if (auto* page = m_browsing_context->page()) {
                         page->client().page_did_request_context_menu(m_browsing_context->to_top_level_position(position));
                     }

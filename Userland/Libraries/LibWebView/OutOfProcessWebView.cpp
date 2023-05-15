@@ -320,6 +320,12 @@ void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<Web
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
 }
 
+void OutOfProcessWebView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
+{
+    if (on_video_context_menu_request)
+        on_video_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), is_playing, has_user_agent_controls, is_looping);
+}
+
 void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
     m_dialog = GUI::MessageBox::create(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK).release_value_but_fixme_should_propagate_errors();

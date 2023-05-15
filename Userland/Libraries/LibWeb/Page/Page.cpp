@@ -275,4 +275,10 @@ void Page::accept_dialog()
     }
 }
 
+void Page::did_request_video_context_menu(i32 video_id, CSSPixelPoint position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+{
+    m_video_context_menu_element_id = video_id;
+    client().page_did_request_video_context_menu(position, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+}
+
 }

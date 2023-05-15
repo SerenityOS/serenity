@@ -94,6 +94,7 @@ private:
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
     virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual void page_did_request_video_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, DeprecatedString const&) override;
     virtual DeprecatedString page_did_request_cookie(const URL&, Web::Cookie::Source) override;

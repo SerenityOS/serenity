@@ -113,6 +113,7 @@ private:
     void notify_server_did_request_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }
     void notify_server_did_request_link_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned) override { }
     void notify_server_did_request_image_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override { }
+    void notify_server_did_request_video_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned, bool, bool, bool) override { }
     void notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const&, String const&) override { }
