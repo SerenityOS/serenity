@@ -885,6 +885,12 @@ void WebContentView::notify_server_did_request_image_context_menu(Badge<WebConte
     (void)bitmap;
 }
 
+void WebContentView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
+{
+    if (on_video_context_menu_request)
+        on_video_context_menu_request(url, to_widget(content_position), is_playing, has_user_agent_controls, is_looping);
+}
+
 void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
     m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_ak_string(message), QMessageBox::StandardButton::Ok, this);

@@ -151,6 +151,11 @@ void WebContentClient::did_request_image_context_menu(Gfx::IntPoint content_posi
     m_view.notify_server_did_request_image_context_menu({}, content_position, url, target, modifiers, bitmap);
 }
 
+void WebContentClient::did_request_video_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+{
+    m_view.notify_server_did_request_video_context_menu({}, content_position, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+}
+
 void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const& source)
 {
     m_view.notify_server_did_get_source(url, source);

@@ -67,6 +67,7 @@ public:
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
+    Function<void(const AK::URL&, Gfx::IntPoint screen_position, bool, bool, bool)> on_video_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void(DeprecatedString const&)> on_title_change;
@@ -148,6 +149,7 @@ private:
     virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint) override;
     virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers) override;
     virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) override;
+    virtual void notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping) override;
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) override;
     virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) override;
     virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) override;

@@ -115,6 +115,8 @@ public:
     void dismiss_dialog();
     void accept_dialog();
 
+    void did_request_video_context_menu(i32 video_id, CSSPixelPoint, AK::URL const&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping);
+
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
@@ -142,6 +144,8 @@ private:
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
     Optional<Optional<String>> m_pending_prompt_response;
+
+    Optional<int> m_video_context_menu_element_id;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-supported
     // Each user agent has a PDF viewer supported boolean, whose value is implementation-defined (and might vary according to user preferences).
@@ -178,6 +182,7 @@ public:
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
     virtual void page_did_request_link_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_request_image_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
+    virtual void page_did_request_video_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, [[maybe_unused]] bool is_playing, [[maybe_unused]] bool has_user_agent_controls, [[maybe_unused]] bool is_looping) { }
     virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_enter_tooltip_area(CSSPixelPoint, DeprecatedString const&) { }

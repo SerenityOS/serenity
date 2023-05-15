@@ -93,6 +93,7 @@ public:
     virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint) = 0;
     virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers) = 0;
     virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, Gfx::ShareableBitmap const&) = 0;
+    virtual void notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint, const AK::URL&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping) = 0;
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) = 0;
     virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) = 0;
     virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) = 0;

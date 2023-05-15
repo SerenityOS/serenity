@@ -355,6 +355,11 @@ void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint content_po
     m_client.async_did_request_image_context_menu({ content_position.x().value(), content_position.y().value() }, url, target, modifiers, bitmap);
 }
 
+void PageHost::page_did_request_video_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+{
+    m_client.async_did_request_video_context_menu({ content_position.x().value(), content_position.y().value() }, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+}
+
 Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)
 {
     return m_client.did_request_all_cookies(url);
