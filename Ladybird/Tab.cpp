@@ -10,11 +10,13 @@
 #include "Settings.h"
 #include "Utilities.h"
 #include <Browser/History.h>
+#include <LibGfx/ImageFormats/BMPWriter.h>
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>
 #include <QGuiApplication>
+#include <QImage>
 #include <QMenu>
 #include <QPainter>
 #include <QPlainTextEdit>
@@ -228,6 +230,60 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
         auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
         m_link_context_menu->exec(screen_position);
+    };
+
+    auto* open_image_action = new QAction("&Open Image", this);
+    open_image_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_image_action, &QAction::triggered, this, [this]() {
+        open_link(m_image_context_menu_url);
+    });
+
+    auto* open_image_in_new_tab_action = new QAction("&Open Image in New &Tab", this);
+    open_image_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_image_in_new_tab_action, &QAction::triggered, this, [this]() {
+        open_link_in_new_tab(m_image_context_menu_url);
+    });
+
+    auto* copy_image_action = new QAction("&Copy Image", this);
+    copy_image_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(copy_image_action, &QAction::triggered, this, [this]() {
+        auto* bitmap = m_image_context_menu_bitmap.bitmap();
+        if (bitmap == nullptr)
+            return;
+
+        auto data = Gfx::BMPWriter::encode(*bitmap);
+        if (data.is_error())
+            return;
+
+        auto image = QImage::fromData(data.value().data(), data.value().size(), "BMP");
+        if (image.isNull())
+            return;
+
+        auto* clipboard = QGuiApplication::clipboard();
+        clipboard->setImage(image);
+    });
+
+    auto* copy_image_url_action = new QAction("Copy Image &URL", this);
+    copy_image_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(copy_image_url_action, &QAction::triggered, this, [this]() {
+        copy_link_url(m_image_context_menu_url);
+    });
+
+    m_image_context_menu = make<QMenu>("Image context menu", this);
+    m_image_context_menu->addAction(open_image_action);
+    m_image_context_menu->addAction(open_image_in_new_tab_action);
+    m_image_context_menu->addSeparator();
+    m_image_context_menu->addAction(copy_image_action);
+    m_image_context_menu->addAction(copy_image_url_action);
+    m_image_context_menu->addSeparator();
+    m_image_context_menu->addAction(&m_window->inspect_dom_node_action());
+
+    view().on_image_context_menu_request = [this](auto& image_url, auto widget_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+        m_image_context_menu_url = image_url;
+        m_image_context_menu_bitmap = shareable_bitmap;
+
+        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        m_image_context_menu->exec(screen_position);
     };
 
     m_video_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
