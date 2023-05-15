@@ -124,14 +124,27 @@ public:
     virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 
+    virtual Gfx::IntRect viewport_rect() const = 0;
+
 protected:
     static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
     static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
     static constexpr auto ZOOM_STEP = 0.1f;
 
+    ViewImplementation();
+
     WebContentClient& client();
     WebContentClient const& client() const;
     virtual void update_zoom() = 0;
+
+    enum class WindowResizeInProgress {
+        No,
+        Yes,
+    };
+    void resize_backing_stores_if_needed(WindowResizeInProgress);
+
+    void request_repaint();
+    void handle_resize();
 
     virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) {};
 
@@ -160,6 +173,11 @@ protected:
 
     float m_zoom_level { 1.0 };
     float m_device_pixel_ratio { 1.0 };
+
+    RefPtr<Core::Timer> m_backing_store_shrink_timer;
+
+    RefPtr<Gfx::Bitmap> m_backup_bitmap;
+    Gfx::IntSize m_backup_bitmap_size;
 };
 
 }
