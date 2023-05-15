@@ -32,6 +32,7 @@ static int min_ms;
 static int max_ms;
 static DeprecatedString host;
 static int payload_size = -1;
+static bool quiet = false;
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 static constexpr int max_optional_header_size_in_bytes = 40;
@@ -41,7 +42,9 @@ static void closing_statistics()
 {
     int packet_loss = 100;
 
-    outln();
+    if (!quiet)
+        outln();
+
     outln("--- {} ping statistics ---", host);
 
     if (total_pings)
@@ -65,6 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(host, "Host to ping", "host");
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
+    args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
@@ -151,7 +155,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto result = Core::System::recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
             if (result.is_error()) {
                 if (result.error().code() == EAGAIN) {
-                    outln("Request (seq={}) timed out.", ntohs(ping_hdr->un.echo.sequence));
+                    if (!quiet)
+                        outln("Request (seq={}) timed out.", ntohs(ping_hdr->un.echo.sequence));
+
                     break;
                 }
                 return result.release_error();
@@ -159,7 +165,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             i8 internet_header_length = *pong_packet.data() & 0x0F;
             if (internet_header_length < min_header_size_in_bytes) {
-                outln("ping: illegal ihl field value {:x}", internet_header_length);
+                if (!quiet)
+                    outln("ping: illegal ihl field value {:x}", internet_header_length);
+
                 continue;
             }
 
@@ -194,12 +202,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 max_ms = ms;
 
             char addr_buf[INET_ADDRSTRLEN];
-            outln("Pong from {}: id={}, seq={}{}, time={}ms, size={}",
-                inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
-                ntohs(pong_hdr->un.echo.id),
-                ntohs(pong_hdr->un.echo.sequence),
-                pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence ? "(!)" : "",
-                ms, result.value());
+            if (!quiet)
+                outln("Pong from {}: id={}, seq={}{}, time={}ms, size={}",
+                    inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
+                    ntohs(pong_hdr->un.echo.id),
+                    ntohs(pong_hdr->un.echo.sequence),
+                    pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence ? "(!)" : "",
+                    ms, result.value());
 
             // If this was a response to an earlier packet, we still need to wait for the current one.
             if (pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence)
