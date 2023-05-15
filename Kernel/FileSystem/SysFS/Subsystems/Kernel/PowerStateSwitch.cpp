@@ -9,6 +9,8 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/I8042Reboot.h>
 #    include <Kernel/Arch/x86_64/Shutdown.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/Watchdog.h>
 #endif
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
@@ -101,6 +103,8 @@ void SysFSPowerStateSwitchNode::poweroff()
 #if ARCH(X86_64)
     qemu_shutdown();
     virtualbox_shutdown();
+#elif ARCH(AARCH64)
+    RPi::Watchdog::the().system_shutdown();
 #endif
     dbgln("shutdown attempts failed, applications will stop responding.");
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");

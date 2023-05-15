@@ -446,6 +446,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
+        Arch/aarch64/RPi/Watchdog.cpp
     )
     set(SOURCES_RUNNING_WITHOUT_MMU
         Arch/aarch64/Exceptions.cpp
