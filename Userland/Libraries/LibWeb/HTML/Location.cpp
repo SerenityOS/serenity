@@ -340,6 +340,29 @@ void Location::replace(String const& url) const
     window.did_call_location_replace({}, url.to_deprecated_string());
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-assign
+WebIDL::ExceptionOr<void> Location::assign(String const& url) const
+{
+    // 1. If this's relevant Document is null, then return.
+    auto const relevant_document = this->relevant_document();
+    if (!relevant_document)
+        return {};
+
+    // 2. If this's relevant Document's origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+    if (!relevant_document->origin().is_same_origin_domain(entry_settings_object().origin()))
+        return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"sv);
+
+    // 3. Parse url relative to the entry settings object. If that failed, throw a "SyntaxError" DOMException.
+    auto assign_url = entry_settings_object().parse_url(url);
+    if (!assign_url.is_valid())
+        return WebIDL::SyntaxError::create(realm(), DeprecatedString::formatted("Invalid URL '{}'", url));
+
+    // 4. Location-object navigate this to the resulting URL record.
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
+    window.did_set_location_href({}, assign_url);
+    return {};
+}
+
 // 7.10.5.1 [[GetPrototypeOf]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-getprototypeof
 JS::ThrowCompletionOr<JS::Object*> Location::internal_get_prototype_of() const
 {
