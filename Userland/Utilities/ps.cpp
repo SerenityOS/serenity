@@ -7,6 +7,7 @@
 
 #include <AK/QuickSort.h>
 #include <AK/String.h>
+#include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
@@ -61,6 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     enum class Alignment {
@@ -81,6 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool provided_pid_list = false;
     bool provided_quick_pid_list = false;
     Vector<pid_t> pid_list;
+    Vector<uid_t> uid_list;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(every_terminal_process_flag, "Show every process associated with terminals", nullptr, 'a');
@@ -100,6 +103,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
+    }));
+    args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
+        if (auto uid = user_string.to_uint<uid_t>(); uid.has_value()) {
+            return uid.value();
+        }
+
+        auto maybe_account = Core::Account::from_name(user_string, Core::Account::Read::PasswdOnly);
+        if (maybe_account.is_error()) {
+            warnln("Could not find user '{}': {}", user_string, maybe_account.error());
+            return {};
+        }
+        return maybe_account.value().uid();
     }));
     args_parser.parse(arguments);
 
@@ -148,6 +163,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Filter
     if (!pid_list.is_empty()) {
         processes.remove_all_matching([&](auto& process) { return !pid_list.contains_slow(process.pid); });
+    } else if (!uid_list.is_empty()) {
+        processes.remove_all_matching([&](auto& process) { return !uid_list.contains_slow(process.uid); });
     } else if (every_terminal_process_flag) {
         processes.remove_all_matching([&](auto& process) { return process.tty.is_empty(); });
     } else if (!every_process_flag) {
