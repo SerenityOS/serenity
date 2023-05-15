@@ -116,10 +116,15 @@ public:
     void accept_dialog();
 
     void did_request_video_context_menu(i32 video_id, CSSPixelPoint, AK::URL const&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping);
+    WebIDL::ExceptionOr<void> toggle_video_play_state();
+    WebIDL::ExceptionOr<void> toggle_video_loop_state();
+    WebIDL::ExceptionOr<void> toggle_video_controls_state();
 
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
+    JS::GCPtr<HTML::HTMLVideoElement> video_context_menu_element();
+
     PageClient& m_client;
 
     JS::Handle<HTML::BrowsingContext> m_top_level_browsing_context;

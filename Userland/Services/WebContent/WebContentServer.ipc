@@ -76,4 +76,8 @@ endpoint WebContentServer
     alert_closed() =|
     confirm_closed(bool accepted) =|
     prompt_closed(Optional<String> response) =|
+
+    toggle_video_play_state() =|
+    toggle_video_loop_state() =|
+    toggle_video_controls_state() =|
 }

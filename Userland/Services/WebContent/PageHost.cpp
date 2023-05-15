@@ -334,6 +334,21 @@ void PageHost::prompt_closed(Optional<String> response)
     page().prompt_closed(move(response));
 }
 
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_play_state()
+{
+    return page().toggle_video_play_state();
+}
+
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_loop_state()
+{
+    return page().toggle_video_loop_state();
+}
+
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_controls_state()
+{
+    return page().toggle_video_controls_state();
+}
+
 void PageHost::page_did_request_accept_dialog()
 {
     m_client.async_did_request_accept_dialog();

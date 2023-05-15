@@ -131,6 +131,21 @@ void ViewImplementation::run_javascript(StringView js_source)
     client().async_run_javascript(js_source);
 }
 
+void ViewImplementation::toggle_video_play_state()
+{
+    client().async_toggle_video_play_state();
+}
+
+void ViewImplementation::toggle_video_loop_state()
+{
+    client().async_toggle_video_loop_state();
+}
+
+void ViewImplementation::toggle_video_controls_state()
+{
+    client().async_toggle_video_controls_state();
+}
+
 void ViewImplementation::handle_resize()
 {
     resize_backing_stores_if_needed(WindowResizeInProgress::Yes);

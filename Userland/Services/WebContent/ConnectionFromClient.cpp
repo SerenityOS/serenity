@@ -756,6 +756,21 @@ void ConnectionFromClient::prompt_closed(Optional<String> const& response)
     m_page_host->prompt_closed(response);
 }
 
+void ConnectionFromClient::toggle_video_play_state()
+{
+    m_page_host->toggle_video_play_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::toggle_video_loop_state()
+{
+    m_page_host->toggle_video_loop_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::toggle_video_controls_state()
+{
+    m_page_host->toggle_video_controls_state().release_value_but_fixme_should_propagate_errors();
+}
+
 void ConnectionFromClient::inspect_accessibility_tree()
 {
     if (auto* doc = page().top_level_browsing_context().active_document()) {
