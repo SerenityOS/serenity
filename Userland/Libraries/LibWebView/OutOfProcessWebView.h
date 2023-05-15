@@ -179,8 +179,7 @@ private:
     virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
-    void request_repaint();
-    void handle_resize();
+    virtual Gfx::IntRect viewport_rect() const override;
 
     void handle_web_content_process_crash();
 
@@ -188,7 +187,6 @@ private:
     void enqueue_input_event(InputEvent const&);
     void process_next_input_event();
 
-    RefPtr<Gfx::Bitmap> m_backup_bitmap;
     RefPtr<GUI::Dialog> m_dialog;
 
     bool m_is_awaiting_response_for_input_event { false };

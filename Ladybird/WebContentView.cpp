@@ -77,10 +77,6 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     });
 
     create_client(enable_callgrind_profiling);
-
-    m_backing_store_shrink_timer = Core::Timer::create_single_shot(3000, [this] {
-        resize_backing_stores_if_needed(WindowResizeInProgress::No);
-    }).release_value_but_fixme_should_propagate_errors();
 }
 
 WebContentView::~WebContentView()
@@ -446,60 +442,8 @@ void WebContentView::paintEvent(QPaintEvent*)
 void WebContentView::resizeEvent(QResizeEvent* event)
 {
     QAbstractScrollArea::resizeEvent(event);
-    handle_resize();
-    m_backing_store_shrink_timer->restart();
-}
-
-void WebContentView::handle_resize()
-{
     update_viewport_rect();
-    resize_backing_stores_if_needed(WindowResizeInProgress::Yes);
-}
-
-void WebContentView::resize_backing_stores_if_needed(WindowResizeInProgress window_resize_in_progress)
-{
-    if (m_client_state.has_usable_bitmap) {
-        // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
-        m_backup_bitmap = m_client_state.front_bitmap.bitmap;
-        m_backup_bitmap_size = m_client_state.front_bitmap.last_painted_size;
-    }
-
-    m_client_state.has_usable_bitmap = false;
-
-    if (m_viewport_rect.is_empty())
-        return;
-
-    Gfx::IntSize minimum_needed_size;
-
-    if (window_resize_in_progress == WindowResizeInProgress::Yes) {
-        // Pad the minimum needed size so that we don't have to keep reallocating backing stores while the window is being resized.
-        minimum_needed_size = { m_viewport_rect.width() + 256, m_viewport_rect.height() + 256 };
-    } else {
-        // If we're not in the middle of a resize, we can shrink the backing store size to match the viewport size.
-        minimum_needed_size = m_viewport_rect.size();
-        m_client_state.front_bitmap = {};
-        m_client_state.back_bitmap = {};
-    }
-
-    auto reallocate_backing_store_if_needed = [&](SharedBitmap& backing_store) {
-        if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size)) {
-            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, minimum_needed_size); !new_bitmap_or_error.is_error()) {
-                if (backing_store.bitmap)
-                    client().async_remove_backing_store(backing_store.id);
-
-                backing_store.pending_paints = 0;
-                backing_store.bitmap = new_bitmap_or_error.release_value();
-                backing_store.id = m_client_state.next_bitmap_id++;
-                client().async_add_backing_store(backing_store.id, backing_store.bitmap->to_shareable_bitmap());
-            }
-            backing_store.last_painted_size = m_viewport_rect.size();
-        }
-    };
-
-    reallocate_backing_store_if_needed(m_client_state.front_bitmap);
-    reallocate_backing_store_if_needed(m_client_state.back_bitmap);
-
-    request_repaint();
+    handle_resize();
 }
 
 void WebContentView::set_viewport_rect(Gfx::IntRect rect)
@@ -1131,19 +1075,9 @@ void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, Dep
         client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
 }
 
-void WebContentView::request_repaint()
+Gfx::IntRect WebContentView::viewport_rect() const
 {
-    // If this widget was instantiated but not yet added to a window,
-    // it won't have a back bitmap yet, so we can just skip repaint requests.
-    if (!m_client_state.back_bitmap.bitmap)
-        return;
-    // Don't request a repaint until pending paint requests have finished.
-    if (m_client_state.back_bitmap.pending_paints) {
-        m_client_state.got_repaint_requests_while_painting = true;
-        return;
-    }
-    m_client_state.back_bitmap.pending_paints++;
-    client().async_paint(m_viewport_rect, m_client_state.back_bitmap.id);
+    return m_viewport_rect;
 }
 
 bool WebContentView::event(QEvent* event)

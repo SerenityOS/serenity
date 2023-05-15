@@ -198,16 +198,9 @@ private:
     // ^WebView::ViewImplementation
     virtual void create_client(WebView::EnableCallgrindProfiling = WebView::EnableCallgrindProfiling::No) override;
     virtual void update_zoom() override;
+    virtual Gfx::IntRect viewport_rect() const override;
 
-    void request_repaint();
     void update_viewport_rect();
-    void handle_resize();
-
-    enum class WindowResizeInProgress {
-        No,
-        Yes,
-    };
-    void resize_backing_stores_if_needed(WindowResizeInProgress);
 
     void ensure_js_console_widget();
     void ensure_inspector_widget();
@@ -227,10 +220,5 @@ private:
 
     void handle_web_content_process_crash();
 
-    RefPtr<Gfx::Bitmap> m_backup_bitmap;
-    Gfx::IntSize m_backup_bitmap_size;
-
     StringView m_webdriver_content_ipc_path;
-
-    RefPtr<Core::Timer> m_backing_store_shrink_timer;
 };

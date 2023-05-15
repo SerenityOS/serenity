@@ -59,7 +59,8 @@ public:
         view->client().async_update_system_theme(move(theme));
         view->client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
-        view->client().async_set_viewport_rect({ { 0, 0 }, window_size });
+        view->m_viewport_rect = { { 0, 0 }, window_size };
+        view->client().async_set_viewport_rect(view->m_viewport_rect);
         view->client().async_set_window_size(window_size);
 
         if (!web_driver_ipc_path.is_empty())
@@ -154,6 +155,11 @@ private:
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
     void create_client(WebView::EnableCallgrindProfiling) override { }
+
+    virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
+
+private:
+    Gfx::IntRect m_viewport_rect;
 };
 
 static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)

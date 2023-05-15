@@ -105,44 +105,13 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     Super::resize_event(event);
+    client().async_set_viewport_rect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
     handle_resize();
 }
 
-void OutOfProcessWebView::handle_resize()
+Gfx::IntRect OutOfProcessWebView::viewport_rect() const
 {
-    client().async_set_viewport_rect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
-
-    if (m_client_state.has_usable_bitmap) {
-        // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
-        m_backup_bitmap = m_client_state.front_bitmap.bitmap;
-    }
-
-    if (m_client_state.front_bitmap.bitmap)
-        client().async_remove_backing_store(m_client_state.front_bitmap.id);
-
-    if (m_client_state.back_bitmap.bitmap)
-        client().async_remove_backing_store(m_client_state.back_bitmap.id);
-
-    m_client_state.front_bitmap = {};
-    m_client_state.back_bitmap = {};
-    m_client_state.has_usable_bitmap = false;
-
-    if (available_size().is_empty())
-        return;
-
-    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
-        m_client_state.front_bitmap.bitmap = new_bitmap_or_error.release_value();
-        m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
-    }
-
-    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
-        m_client_state.back_bitmap.bitmap = new_bitmap_or_error.release_value();
-        m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
-        client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
-    }
-
-    request_repaint();
+    return visible_content_rect();
 }
 
 void OutOfProcessWebView::update_zoom()
@@ -554,21 +523,6 @@ void OutOfProcessWebView::did_scroll()
 {
     client().async_set_viewport_rect(visible_content_rect());
     request_repaint();
-}
-
-void OutOfProcessWebView::request_repaint()
-{
-    // If this widget was instantiated but not yet added to a window,
-    // it won't have a back bitmap yet, so we can just skip repaint requests.
-    if (!m_client_state.back_bitmap.bitmap)
-        return;
-    // Don't request a repaint until pending paint requests have finished.
-    if (m_client_state.back_bitmap.pending_paints) {
-        m_client_state.got_repaint_requests_while_painting = true;
-        return;
-    }
-    m_client_state.back_bitmap.pending_paints++;
-    client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
 
 void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
