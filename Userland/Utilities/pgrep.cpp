@@ -19,11 +19,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    auto pid_delimiter = "\n"sv;
     bool case_insensitive = false;
     bool invert_match = false;
     StringView pattern;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', nullptr);
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
@@ -50,9 +52,18 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     quick_sort(matches);
 
+    auto displayed_at_least_one = false;
     for (auto& match : matches) {
-        outln("{}", match);
+        if (displayed_at_least_one)
+            out("{}{}"sv, pid_delimiter, match);
+        else
+            out("{}"sv, match);
+
+        displayed_at_least_one = true;
     }
+
+    if (displayed_at_least_one)
+        outln();
 
     return 0;
 }
