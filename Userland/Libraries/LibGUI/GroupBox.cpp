@@ -43,8 +43,14 @@ void GroupBox::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameStyle::SunkenBox);
 
     if (!m_title.is_empty()) {
-        Gfx::IntRect text_rect { 6, 1, font().width_rounded_up(m_title) + 6, font().pixel_size_rounded_up() };
-        painter.fill_rect(text_rect, palette().button());
+        // Fill with button background behind the text (covering the frame).
+        Gfx::IntRect text_background_rect { 6, 1, font().width_rounded_up(m_title) + 6, font().pixel_size_rounded_up() };
+        painter.fill_rect(text_background_rect, palette().button());
+
+        // Center text within button background rect to ensure symmetric padding on both sides.
+        // Note that we don't use TextAlignment::Center here to avoid subpixel jitter.
+        Gfx::IntRect text_rect { 0, 0, text_background_rect.width() - 6, text_background_rect.height() };
+        text_rect.center_within(text_background_rect);
         painter.draw_text(text_rect, m_title, Gfx::TextAlignment::CenterLeft, palette().button_text());
     }
 }
