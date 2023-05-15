@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -527,7 +528,7 @@ void TerminalWidget::relayout(Gfx::IntSize size)
 
 Gfx::IntSize TerminalWidget::compute_base_size() const
 {
-    int base_width = frame_thickness() * 2 + m_inset * 2 + m_scrollbar->width();
+    int base_width = frame_thickness() * 2 + m_inset * 2 + (m_scrollbar->is_visible() ? m_scrollbar->width() : 0);
     int base_height = frame_thickness() * 2 + m_inset * 2;
     return { base_width, base_height };
 }
@@ -557,6 +558,7 @@ void TerminalWidget::set_opacity(u8 new_opacity)
 void TerminalWidget::set_show_scrollbar(bool show_scrollbar)
 {
     m_scrollbar->set_visible(show_scrollbar);
+    relayout(size());
 }
 
 bool TerminalWidget::has_selection() const
