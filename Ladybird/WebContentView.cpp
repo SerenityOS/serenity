@@ -878,10 +878,8 @@ void WebContentView::notify_server_did_request_link_context_menu(Badge<WebConten
 
 void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
-    // FIXME
-    (void)content_position;
-    (void)url;
-    (void)bitmap;
+    if (on_image_context_menu_request)
+        on_image_context_menu_request(url, to_widget(content_position), bitmap);
 }
 
 void WebContentView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)

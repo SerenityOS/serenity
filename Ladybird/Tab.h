@@ -76,6 +76,10 @@ private:
     OwnPtr<QMenu> m_link_context_menu;
     URL m_link_context_menu_url;
 
+    OwnPtr<QMenu> m_image_context_menu;
+    Gfx::ShareableBitmap m_image_context_menu_bitmap;
+    URL m_image_context_menu_url;
+
     OwnPtr<QMenu> m_video_context_menu;
     OwnPtr<QIcon> m_video_context_menu_play_icon;
     OwnPtr<QIcon> m_video_context_menu_pause_icon;
