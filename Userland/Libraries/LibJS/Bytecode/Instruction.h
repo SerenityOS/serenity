@@ -76,6 +76,7 @@
     O(PutById)                       \
     O(PutByValue)                    \
     O(ResolveThisBinding)            \
+    O(ResolveSuperBase)              \
     O(Return)                        \
     O(RightShift)                    \
     O(ScheduleJump)                  \

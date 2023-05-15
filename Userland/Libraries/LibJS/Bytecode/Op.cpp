@@ -530,6 +530,26 @@ ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
+// https://tc39.es/ecma262/#sec-makesuperpropertyreference
+ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // 1. Let env be GetThisEnvironment().
+    auto& env = verify_cast<FunctionEnvironment>(*get_this_environment(vm));
+
+    // 2. Assert: env.HasSuperBinding() is true.
+    VERIFY(env.has_super_binding());
+
+    // 3. Let baseValue be ? env.GetSuperBase().
+    auto base_value = TRY(env.get_super_base());
+
+    // 4. Let bv be ? RequireObjectCoercible(baseValue).
+    interpreter.accumulator() = TRY(require_object_coercible(vm, base_value));
+
+    return {};
+}
+
 ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = interpreter.vm().get_new_target();
@@ -1381,6 +1401,11 @@ DeprecatedString IteratorResultValue::to_deprecated_string_impl(Executable const
 DeprecatedString ResolveThisBinding::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "ResolveThisBinding"sv;
+}
+
+DeprecatedString ResolveSuperBase::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ResolveSuperBase"sv;
 }
 
 DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable const&) const
