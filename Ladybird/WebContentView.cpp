@@ -872,9 +872,8 @@ void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClie
 
 void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned)
 {
-    // FIXME
-    (void)content_position;
-    (void)url;
+    if (on_link_context_menu_request)
+        on_link_context_menu_request(url, to_widget(content_position));
 }
 
 void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
