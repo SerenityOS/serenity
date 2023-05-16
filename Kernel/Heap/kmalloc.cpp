@@ -349,6 +349,8 @@ struct KmallocGlobalData {
             if (cpu_supports_nx)
                 pte->set_execute_disabled(true);
             pte->set_present(true);
+
+            Processor::flush_tlb_local(VirtualAddress((FlatPtr)pte), 1);
         }
 
         add_subheap(new_subheap_base.as_ptr(), new_subheap_size);

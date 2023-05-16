@@ -225,6 +225,8 @@ bool Region::map_individual_page_impl(size_t page_index, RefPtr<PhysicalPage> pa
     if (!pte)
         return false;
 
+    ScopeGuard flush_tlb_guard = [pte] { Processor::flush_tlb_local(VirtualAddress((FlatPtr)pte), 1); };
+
     if (!page || (!is_readable() && !is_writable())) {
         pte->clear();
         return true;

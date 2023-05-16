@@ -109,8 +109,12 @@ void Processor::initialize(u32)
         asm volatile("wfi");
 }
 
-void Processor::flush_tlb_local(VirtualAddress, size_t)
+void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
+    // We must flush the data cache here, such that the updated page tables actually
+    // end up in main memory, and thus actually get used by the MMU.
+    Aarch64::Asm::flush_data_cache(vaddr.get(), PAGE_SIZE * page_count);
+
     // FIXME: Figure out how to flush a single page
     asm volatile("dsb ishst");
     asm volatile("tlbi vmalle1");

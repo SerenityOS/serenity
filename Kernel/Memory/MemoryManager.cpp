@@ -630,6 +630,8 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     pde.set_writable(true);
     pde.set_global(&page_directory == m_kernel_page_directory.ptr());
 
+    flush_tlb_local(VirtualAddress((FlatPtr)&pde));
+
     // NOTE: This leaked ref is matched by the unref in MemoryManager::release_pte()
     (void)page_table.leak_ref();
 
@@ -650,6 +652,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
         auto* page_table = quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()));
         auto& pte = page_table[page_table_index];
         pte.clear();
+        flush_tlb_local(VirtualAddress((FlatPtr)&pte));
 
         if (is_last_pte_release == IsLastPTERelease::Yes || page_table_index == 0x1ff) {
             // If this is the last PTE in a region or the last PTE in a page table then
@@ -664,6 +667,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
             if (all_clear) {
                 get_physical_page_entry(PhysicalAddress { pde.page_table_base() }).allocated.physical_page.unref();
                 pde.clear();
+                flush_tlb_local(VirtualAddress((FlatPtr)&pde));
             }
         }
     }
