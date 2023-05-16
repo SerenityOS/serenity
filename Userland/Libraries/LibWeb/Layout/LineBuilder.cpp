@@ -65,6 +65,7 @@ void LineBuilder::begin_new_line(bool increment_y, bool is_first_break_in_sequen
         }
     }
     recalculate_available_space();
+    ensure_last_line_box().m_original_available_width = m_available_width_for_current_line;
     m_max_height_on_current_line = 0;
     m_last_line_needs_update = true;
 
@@ -335,6 +336,8 @@ void LineBuilder::recalculate_available_space()
     auto available_at_top_of_line_box = m_context.available_space_for_line(m_current_y);
     auto available_at_bottom_of_line_box = m_context.available_space_for_line(m_current_y + current_line_height - 1);
     m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box);
+    if (!m_containing_block_state.line_boxes.is_empty())
+        m_containing_block_state.line_boxes.last().m_original_available_width = m_available_width_for_current_line;
 }
 
 }
