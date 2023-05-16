@@ -265,7 +265,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
         (*ctor)();
 
     InterruptManagement::initialize();
+#if ARCH(X86_64)
     ACPI::initialize();
+#endif
 
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
