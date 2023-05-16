@@ -870,8 +870,10 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
 
 void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks)
 {
-    for (auto& track : spanned_tracks)
+    for (auto& track : spanned_tracks) {
         track.planned_increase = 0;
+        track.item_incurred_increase = 0;
+    }
 
     // 1. Find the space to distribute:
     CSSPixels spanned_tracks_sizes_sum = 0;
