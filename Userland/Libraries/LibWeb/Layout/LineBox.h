@@ -30,6 +30,8 @@ public:
     bool is_empty_or_ends_in_whitespace() const;
     bool is_empty() const { return m_fragments.is_empty() && !m_has_break; }
 
+    CSSPixels original_available_width() const { return m_original_available_width; }
+
 private:
     friend class BlockContainer;
     friend class InlineFormattingContext;
@@ -40,6 +42,10 @@ private:
     CSSPixels m_height { 0 };
     CSSPixels m_bottom { 0 };
     CSSPixels m_baseline { 0 };
+
+    // The amount of available width that was originally available when creating this line box. Used for text justification.
+    CSSPixels m_original_available_width { 0 };
+
     bool m_has_break { false };
 };
 

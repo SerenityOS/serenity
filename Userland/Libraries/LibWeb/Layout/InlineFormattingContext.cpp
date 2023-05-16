@@ -193,7 +193,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         break;
     }
 
-    CSSPixels excess_horizontal_space = m_available_space->width.to_px() - line_box.width();
+    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
 
     // Only justify the text if the excess horizontal space is less than or
     // equal to 10%, or if we are not looking at the last line box.
