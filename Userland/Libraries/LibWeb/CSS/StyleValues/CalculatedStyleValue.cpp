@@ -583,22 +583,22 @@ void CalculatedStyleValue::CalculationResult::negate()
 {
     m_value.visit(
         [&](Number const& number) {
-            m_value = Number { number.type(), 1 - number.value() };
+            m_value = Number { number.type(), 0 - number.value() };
         },
         [&](Angle const& angle) {
-            m_value = Angle { 1 - angle.raw_value(), angle.type() };
+            m_value = Angle { 0 - angle.raw_value(), angle.type() };
         },
         [&](Frequency const& frequency) {
-            m_value = Frequency { 1 - frequency.raw_value(), frequency.type() };
+            m_value = Frequency { 0 - frequency.raw_value(), frequency.type() };
         },
         [&](Length const& length) {
-            m_value = Length { 1 - length.raw_value(), length.type() };
+            m_value = Length { 0 - length.raw_value(), length.type() };
         },
         [&](Time const& time) {
-            m_value = Time { 1 - time.raw_value(), time.type() };
+            m_value = Time { 0 - time.raw_value(), time.type() };
         },
         [&](Percentage const& percentage) {
-            m_value = Percentage { 1 - percentage.value() };
+            m_value = Percentage { 0 - percentage.value() };
         });
 }
 
