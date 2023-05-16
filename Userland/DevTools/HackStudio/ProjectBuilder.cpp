@@ -167,7 +167,7 @@ DeprecatedString ProjectBuilder::generate_cmake_file_content() const
         builder.appendff("add_library({} SHARED IMPORTED GLOBAL)\n", library.key);
         builder.appendff("set_target_properties({} PROPERTIES IMPORTED_LOCATION {})\n", library.key, library.value->path);
 
-        if (library.key == "LibCStaticWithoutDeps"sv || library.key == "DumpLayoutTree"sv)
+        if (library.key == "LibCStaticWithoutDeps"sv)
             continue;
 
         // We need to specify the dependencies for each defined library in CMake because some applications do not specify
