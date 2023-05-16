@@ -34,6 +34,8 @@ static CSS::Size to_css_size(CSS::LengthPercentage const& length_percentage)
         return CSS::Size::make_auto();
     if (length_percentage.is_length())
         return CSS::Size::make_length(length_percentage.length());
+    if (length_percentage.is_calculated())
+        return CSS::Size::make_calculated(length_percentage.calculated());
     return CSS::Size::make_percentage(length_percentage.percentage());
 }
 
@@ -612,13 +614,21 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
                 return false;
             if (flex_basis.length_percentage->is_length())
                 return true;
+
+            bool can_resolve_percentages = is_row_layout()
+                ? m_flex_container_state.has_definite_width()
+                : m_flex_container_state.has_definite_height();
+
             if (flex_basis.length_percentage->is_calculated()) {
-                // FIXME: Handle calc() in used flex basis.
+                auto const& calc_value = *flex_basis.length_percentage->calculated();
+                if (calc_value.resolves_to_length())
+                    return true;
+                if (calc_value.resolves_to_percentage() || (calc_value.resolves_to_length() && calc_value.contains_percentage()))
+                    return can_resolve_percentages;
                 return false;
             }
-            if (is_row_layout())
-                return m_flex_container_state.has_definite_width();
-            return m_flex_container_state.has_definite_height();
+            VERIFY(flex_basis.length_percentage->is_percentage());
+            return can_resolve_percentages;
         }(item.used_flex_basis);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
