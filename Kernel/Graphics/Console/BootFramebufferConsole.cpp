@@ -14,12 +14,12 @@ BootFramebufferConsole::BootFramebufferConsole(PhysicalAddress framebuffer_addr,
     : GenericFramebufferConsoleImpl(width, height, pitch)
 {
     // NOTE: We're very early in the boot process, memory allocations shouldn't really fail
-    auto framebuffer_end = Memory::page_round_up(framebuffer_addr.offset(height * pitch * sizeof(u32)).get()).release_value();
+    auto framebuffer_end = Memory::page_round_up(framebuffer_addr.offset(height * pitch).get()).release_value();
     m_framebuffer = MM.allocate_kernel_region(framebuffer_addr.page_base(), framebuffer_end - framebuffer_addr.page_base().get(), "Boot Framebuffer"sv, Memory::Region::Access::ReadWrite).release_value();
 
     [[maybe_unused]] auto result = m_framebuffer->set_write_combine(true);
     m_framebuffer_data = m_framebuffer->vaddr().offset(framebuffer_addr.offset_in_page()).as_ptr();
-    memset(m_framebuffer_data, 0, height * pitch * sizeof(u32));
+    memset(m_framebuffer_data, 0, height * pitch);
 }
 
 void BootFramebufferConsole::clear(size_t x, size_t y, size_t length)
