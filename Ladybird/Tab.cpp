@@ -221,7 +221,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_page_context_menu->addAction(&m_window->inspect_dom_node_action());
 
     view().on_context_menu_request = [this](auto widget_position) {
-        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
         m_page_context_menu->exec(screen_position);
     };
 
@@ -254,7 +254,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     view().on_link_context_menu_request = [this](auto const& url, auto widget_position) {
         m_link_context_menu_url = url;
 
-        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
         m_link_context_menu->exec(screen_position);
     };
 
@@ -308,7 +308,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
 
-        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
         m_image_context_menu->exec(screen_position);
     };
 
@@ -377,7 +377,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_video_context_menu_controls_action->setChecked(has_user_agent_controls);
         m_video_context_menu_loop_action->setChecked(is_looping);
 
-        auto screen_position = mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
         m_video_context_menu->exec(screen_position);
     };
 }
