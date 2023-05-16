@@ -130,32 +130,28 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         if (!request_close())
             return;
-
-        auto result = FileSystemAccessClient::Client::the().open_file(window(), "Open font file", "/res/fonts"sv);
-        if (result.is_error())
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Open font file", "/res/fonts"sv);
+        if (response.is_error())
             return;
-
-        auto file = result.release_value();
+        auto file = response.release_value();
         if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
-            show_error(result.release_error(), "Opening"sv, LexicalPath { file.filename().to_deprecated_string() }.basename());
+            show_error(result.release_error(), "Opening"sv, file.filename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([this](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
-
         auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path.to_deprecated_string(), Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
-
-        if (auto result = save_file(m_path, response.value().release_stream()); result.is_error())
-            show_error(result.release_error(), "Saving"sv, LexicalPath { m_path.to_deprecated_string() }.basename());
+        auto file = response.release_value();
+        if (auto result = save_file(m_path, file.release_stream()); result.is_error())
+            show_error(result.release_error(), "Saving"sv, m_path);
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([this](auto&) {
-        LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font"sv : m_path);
-
-        auto response = FileSystemAccessClient::Client::the().save_file(window(), lexical_path.title(), lexical_path.extension());
+        auto default_path = LexicalPath(m_path.is_empty() ? "Untitled.font"sv : m_path);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), default_path.title(), default_path.extension());
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -1005,7 +1001,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
 
         auto file = result.release_value();
         if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
-            show_error(result.release_error(), "Opening"sv, LexicalPath { file.filename().to_deprecated_string() }.basename());
+            show_error(result.release_error(), "Opening"sv, file.filename());
     }
 }
 
@@ -1115,10 +1111,10 @@ void MainWidget::delete_selected_glyphs()
     update_statusbar();
 }
 
-void MainWidget::show_error(Error error, StringView action, StringView basename)
+void MainWidget::show_error(Error error, StringView action, StringView filename)
 {
-    auto format = basename.is_null() ? "{}{}: {}"sv : "{} \"{}\" failed: {}"sv;
-    auto file = basename.is_null() ? StringView {} : basename;
+    auto format = filename.is_null() ? "{}{}: {}"sv : "{} \"{}\" failed: {}"sv;
+    auto file = filename.is_null() ? StringView {} : filename;
     warnln(format, action, file, error);
 
     auto maybe_message = String::formatted(format, action, file, error);
