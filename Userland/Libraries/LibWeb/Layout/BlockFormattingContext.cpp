@@ -125,9 +125,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         // sufficient space. They may even make the border box of said element narrower than defined by section 10.3.3.
         // CSS2 does not define when a UA may put said element next to the float or by how much said element may
         // become narrower.
-        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
-        auto space = space_used_by_floats(box_in_root_rect.y());
-        auto remaining_width = available_space.width.to_px() - space.left - space.right;
+        auto intrusion = intrusion_by_floats_into_box(box, 0);
+        auto remaining_width = available_space.width.to_px() - intrusion.left - intrusion.right;
         remaining_available_space.width = AvailableSize::make_definite(remaining_width);
     }
 
@@ -994,7 +993,13 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y.value())) {
-            space_used_by_floats.left = floating_box.offset_from_edge
+            CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
+            for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
+                auto const& containing_block_state = m_state.get(*containing_block);
+                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_left());
+            }
+            space_used_by_floats.left = offset_from_containing_block_chain_margins_between_here_and_root
+                + floating_box.offset_from_edge
                 + floating_box_state.content_width()
                 + floating_box_state.margin_box_right();
             break;
@@ -1007,13 +1012,38 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y.value())) {
-            space_used_by_floats.right = floating_box.offset_from_edge
+            CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
+            for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
+                auto const& containing_block_state = m_state.get(*containing_block);
+                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_right());
+            }
+            space_used_by_floats.right = offset_from_containing_block_chain_margins_between_here_and_root
+                + floating_box.offset_from_edge
                 + floating_box_state.margin_box_left();
             break;
         }
     }
 
     return space_used_by_floats;
+}
+
+FormattingContext::SpaceUsedByFloats BlockFormattingContext::intrusion_by_floats_into_box(Box const& box, CSSPixels y_in_box) const
+{
+    // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+    CSSPixels y_in_root = box_in_root_rect.y() + y_in_box;
+    auto space_used_by_floats_in_root = space_used_by_floats(y_in_root);
+
+    auto left_intrusion = max(CSSPixels(0), space_used_by_floats_in_root.left - box_in_root_rect.x());
+
+    CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
+    for (auto const* containing_block = static_cast<Box const*>(&box); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
+        auto const& containing_block_state = m_state.get(*containing_block);
+        offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_right());
+    }
+    auto right_intrusion = max(CSSPixels(0), space_used_by_floats_in_root.right - offset_from_containing_block_chain_margins_between_here_and_root);
+
+    return { left_intrusion, right_intrusion };
 }
 
 CSSPixels BlockFormattingContext::greatest_child_width(Box const& box) const

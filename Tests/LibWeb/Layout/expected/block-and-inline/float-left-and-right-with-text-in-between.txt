@@ -1,0 +1,62 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x600 [BFC] children: not-inline
+    BlockContainer <body> at (252,10) content-size 538x398.257812 children: inline
+      line 0 width: 228.339843, height: 21.835937, bottom: 21.835937, baseline: 16.914062
+        frag 0 from TextNode start: 1, length: 21, rect: [554,10 228.339843x21.835937]
+          "Lorem ipsum dolor sit"
+      line 1 width: 183.769531, height: 22.671875, bottom: 44.507812, baseline: 16.914062
+        frag 0 from TextNode start: 23, length: 17, rect: [554,31 183.769531x21.835937]
+          "amet, consectetur"
+      line 2 width: 140.546875, height: 22.507812, bottom: 66.179687, baseline: 16.914062
+        frag 0 from TextNode start: 41, length: 16, rect: [554,53 140.546875x21.835937]
+          "adipiscing elit."
+      line 3 width: 145, height: 22.34375, bottom: 87.851562, baseline: 16.914062
+        frag 0 from TextNode start: 58, length: 13, rect: [554,75 145x21.835937]
+          "Suspendisse a"
+      line 4 width: 196.699218, height: 22.179687, bottom: 109.523437, baseline: 16.914062
+        frag 0 from TextNode start: 72, length: 19, rect: [554,97 196.699218x21.835937]
+          "placerat mauris, ut"
+      line 5 width: 234.6875, height: 22.015625, bottom: 131.195312, baseline: 16.914062
+        frag 0 from TextNode start: 92, length: 22, rect: [554,119 234.6875x21.835937]
+          "elementum mi. Morbi ut"
+      line 6 width: 201.523437, height: 21.851562, bottom: 152.867187, baseline: 16.914062
+        frag 0 from TextNode start: 115, length: 20, rect: [554,141 201.523437x21.835937]
+          "vehicula ipsum, eget"
+      line 7 width: 232.539062, height: 22.6875, bottom: 175.539062, baseline: 16.914062
+        frag 0 from TextNode start: 136, length: 23, rect: [554,162 232.539062x21.835937]
+          "placerat augue. Integer"
+      line 8 width: 202.96875, height: 22.523437, bottom: 197.210937, baseline: 16.914062
+        frag 0 from TextNode start: 160, length: 20, rect: [554,184 202.96875x21.835937]
+          "rutrum nisi eget dui"
+      line 9 width: 0, height: 0, bottom: 0, baseline: 0
+      line 10 width: 208.828125, height: 22.359375, bottom: 223.882812, baseline: 16.914062
+        frag 0 from TextNode start: 181, length: 19, rect: [252,211 208.828125x21.835937]
+          "dictum, eu accumsan"
+      line 11 width: 180.195312, height: 22.195312, bottom: 245.554687, baseline: 16.914062
+        frag 0 from TextNode start: 201, length: 18, rect: [252,233 180.195312x21.835937]
+          "enim tristique. Ut"
+      line 12 width: 195.273437, height: 22.03125, bottom: 267.226562, baseline: 16.914062
+        frag 0 from TextNode start: 220, length: 19, rect: [252,255 195.273437x21.835937]
+          "lobortis lorem eget"
+      line 13 width: 222.910156, height: 21.867187, bottom: 288.898437, baseline: 16.914062
+        frag 0 from TextNode start: 240, length: 22, rect: [252,277 222.910156x21.835937]
+          "est vulputate egestas."
+      line 14 width: 223.125, height: 22.703125, bottom: 311.570312, baseline: 16.914062
+        frag 0 from TextNode start: 263, length: 23, rect: [252,298 223.125x21.835937]
+          "Integer laoreet lacinia"
+      line 15 width: 222.617187, height: 22.539062, bottom: 333.242187, baseline: 16.914062
+        frag 0 from TextNode start: 287, length: 22, rect: [252,320 222.617187x21.835937]
+          "ante sodales lobortis."
+      line 16 width: 178.300781, height: 22.375, bottom: 354.914062, baseline: 16.914062
+        frag 0 from TextNode start: 310, length: 17, rect: [252,342 178.300781x21.835937]
+          "Donec a tincidunt"
+      line 17 width: 231.074218, height: 22.210937, bottom: 376.585937, baseline: 16.914062
+        frag 0 from TextNode start: 328, length: 22, rect: [252,364 231.074218x21.835937]
+          "ante. Phasellus a arcu"
+      line 18 width: 70.546875, height: 22.046875, bottom: 398.257812, baseline: 16.914062
+        frag 0 from TextNode start: 351, length: 7, rect: [252,386 70.546875x21.835937]
+          "tortor."
+      BlockContainer <div.left> at (253,11) content-size 300x200 floating [BFC] children: not-inline
+      TextNode <#text>
+      BlockContainer <div.right> at (489,213) content-size 300x200 floating [BFC] children: not-inline
+      TextNode <#text>
