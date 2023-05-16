@@ -20,9 +20,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView path;
     Optional<size_t> head_count;
     bool is_zero_terminated = false;
+    bool allow_repeats = false;
 
     args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No);
     args_parser.add_option(head_count, "Output at most \"count\" lines", "head-count", 'n', "count");
+    args_parser.add_option(allow_repeats, "Pick lines at random rather than shuffling. The program will continue indefinitely if no `-n` option is specified", "repeat", 'r');
     args_parser.add_option(is_zero_terminated, "Split input on \\0, not newline", "zero-terminated", 'z');
 
     args_parser.parse(arguments);
@@ -30,14 +32,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     ByteBuffer buffer = TRY(file->read_until_eof());
 
-    u8 input_delimiter = is_zero_terminated ? '\0' : '\n';
+    u8 delimiter = is_zero_terminated ? '\0' : '\n';
     Vector<Bytes> lines;
 
     auto bytes = buffer.span();
     size_t line_start = 0;
     size_t line_length = 0;
     for (size_t i = 0; i < bytes.size(); ++i) {
-        if (bytes[i] == input_delimiter) {
+        if (bytes[i] == delimiter) {
             lines.append(bytes.slice(line_start, line_length));
             line_start = i + 1;
             line_length = 0;
@@ -52,12 +54,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (lines.is_empty())
         return 0;
 
-    AK::shuffle(lines);
-
-    Array<u8, 1> output_delimiter = { '\n' };
-    for (size_t i = 0; i < min(head_count.value_or(lines.size()), lines.size()); ++i) {
-        TRY(Core::System::write(STDOUT_FILENO, lines.at(i)));
-        TRY(Core::System::write(STDOUT_FILENO, output_delimiter));
+    Array<u8, 1> delimiter_bytes { delimiter };
+    if (allow_repeats) {
+        for (size_t line_count = 0; !head_count.has_value() || line_count < head_count.value(); ++line_count) {
+            size_t i = get_random_uniform(lines.size());
+            out(lines.at(i));
+            out(delimiter_bytes);
+        }
+    } else {
+        shuffle(lines);
+        for (size_t i = 0; i < min(head_count.value_or(lines.size()), lines.size()); ++i) {
+            out(lines.at(i));
+            out(delimiter_bytes);
+        }
     }
 
     return 0;
