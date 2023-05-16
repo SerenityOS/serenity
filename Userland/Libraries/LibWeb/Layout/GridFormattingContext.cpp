@@ -895,6 +895,9 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixe
         // increase reaches its limit
         CSSPixels increase_per_track = extra_space / spanned_tracks.size();
         for (auto& track : spanned_tracks) {
+            if (track.frozen)
+                continue;
+
             if (increase_per_track >= track.growth_limit) {
                 track.frozen = true;
                 track.item_incurred_increase = track.growth_limit;
