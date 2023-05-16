@@ -58,15 +58,13 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(Vector<StringView> const& args)
         if (str == ""sv) {
             continue;
         }
-
-        auto pair = str.split_view('=');
-        VERIFY(pair.size() == 2 || pair.size() == 1);
-
-        if (pair.size() == 1) {
-            m_params.set(pair[0], ""sv);
-        } else {
-            m_params.set(pair[0], pair[1]);
-        }
+        // Some boot loaders may include complex key-value pairs where the value is a composite entry,
+        // we handle this by only checking for the first equals sign in each command line parameter.
+        auto key = str.find_first_split_view('=');
+        if (key.length() == str.length())
+            m_params.set(key, ""sv);
+        else
+            m_params.set(key, str.substring_view(key.length() + 1));
     }
 }
 
