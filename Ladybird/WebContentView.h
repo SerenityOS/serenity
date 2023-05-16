@@ -113,6 +113,9 @@ public:
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
 
+    Gfx::ShareableBitmap take_screenshot() const;
+    Gfx::ShareableBitmap take_document_screenshot();
+
     enum class PaletteMode {
         Default,
         Dark,
