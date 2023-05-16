@@ -736,6 +736,14 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_custom_command(
+        TARGET Kernel POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel8.img
+    )
+endif()
+
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
