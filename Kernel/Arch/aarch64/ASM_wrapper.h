@@ -125,6 +125,25 @@ inline u64 read_rndrrs()
     return value;
 }
 
+inline FlatPtr get_cache_line_size()
+{
+    FlatPtr ctr_el0;
+    asm volatile("mrs %[value], ctr_el0"
+                 : [value] "=r"(ctr_el0));
+    auto log2_size = (ctr_el0 >> 16) & 0xF;
+    return 1 << log2_size;
+}
+
+inline void flush_data_cache(FlatPtr start, size_t size)
+{
+    auto const cache_size = get_cache_line_size();
+    for (FlatPtr addr = align_down_to(start, cache_size); addr < start + size; addr += cache_size)
+        asm volatile("dc civac, %[addr]" ::[addr] "r"(addr)
+                     : "memory");
+    asm volatile("dsb sy" ::
+                     : "memory");
+}
+
 }
 
 namespace Kernel {

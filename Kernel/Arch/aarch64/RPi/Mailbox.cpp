@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 
@@ -90,6 +91,10 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
 
     // The mailbox message is 32-bit based, so this assumes that message is in the first 4 GiB.
     u32 request = static_cast<u32>(reinterpret_cast<FlatPtr>(queue) & ~0xF) | (channel & 0xF);
+
+    // The queue buffer might point to normal cached memory, so flush any writes that are in cache and not visible to VideoCore.
+    Aarch64::Asm::flush_data_cache((FlatPtr)queue, queue_size);
+
     mmio.write(MBOX_WRITE_DATA, request);
 
     for (;;) {
