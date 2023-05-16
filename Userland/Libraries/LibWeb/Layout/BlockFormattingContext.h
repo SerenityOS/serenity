@@ -40,6 +40,7 @@ public:
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
     SpaceUsedByFloats space_used_by_floats(CSSPixels y) const;
+    SpaceUsedByFloats intrusion_by_floats_into_box(Box const&, CSSPixels y_in_box) const;
 
     virtual CSSPixels greatest_child_width(Box const&) const override;
 

@@ -167,10 +167,6 @@ void LineBuilder::update_last_line()
     CSSPixels x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
     CSSPixels x_offset = max(x_offset_top, x_offset_bottom);
 
-    // If the IFC's containing block has left-side margin, it has already been shifted to the right by that amount.
-    // We subtract the margin-left here to ensure that the left-side "space used by floats" doesn't get applied twice.
-    x_offset = max(CSSPixels(0), x_offset - m_containing_block_state.margin_left);
-
     CSSPixels excess_horizontal_space = m_available_width_for_current_line - line_box.width();
 
     switch (text_align) {

@@ -44,21 +44,20 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
     auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
-    return space.left;
+    if (box_in_root_rect.x() >= space.left) {
+        // The left edge of the containing block is to the right of the rightmost left-side float.
+        // We start placing inline content at the left edge of the containing block.
+        return 0;
+    }
+    // The left edge of the containing block is to the left of the rightmost left-side float.
+    // We adjust the inline content insertion point by the overlap between the containing block and the float.
+    return space.left - box_in_root_rect.x();
 }
 
 CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
 {
-    // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto& root_block = parent().root();
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state);
-    CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space = parent().space_used_by_floats(y_in_root);
-
-    space.left = space.left;
-    space.right = min(m_available_space->width.to_px() - space.right, m_available_space->width.to_px());
-
-    return space.right - space.left;
+    auto intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
+    return m_available_space->width.to_px() - (intrusions.left + intrusions.right);
 }
 
 CSSPixels InlineFormattingContext::automatic_content_width() const
@@ -330,15 +329,22 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
-    CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space_top = parent().space_used_by_floats(y_in_root);
-    auto space_bottom = parent().space_used_by_floats(y_in_root + containing_block().line_height() - 1);
 
-    [[maybe_unused]] auto top_left_edge = space_top.left;
-    [[maybe_unused]] auto top_right_edge = m_available_space->width.to_px() - space_top.right;
-    [[maybe_unused]] auto bottom_left_edge = space_bottom.left;
-    [[maybe_unused]] auto bottom_right_edge = m_available_space->width.to_px() - space_bottom.right;
+    auto top_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
+    auto bottom_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y + containing_block().line_height() - 1);
+
+    auto left_edge = [](auto& space) -> CSSPixels {
+        return space.left;
+    };
+
+    auto right_edge = [this](auto& space) -> CSSPixels {
+        return m_available_space->width.to_px() - space.right;
+    };
+
+    auto top_left_edge = left_edge(top_intrusions);
+    auto top_right_edge = right_edge(top_intrusions);
+    auto bottom_left_edge = left_edge(bottom_intrusions);
+    auto bottom_right_edge = right_edge(bottom_intrusions);
 
     if (top_left_edge > bottom_right_edge)
         return false;
