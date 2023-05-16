@@ -42,7 +42,10 @@ private:
     RefPtr<GUI::Window> m_preview_window;
     RefPtr<GUI::Widget> m_preview_window_widget;
     GUI::Widget* m_preview;
+
     GUI::ActionGroup m_views_group;
+    RefPtr<GUI::Action> m_view_frame_action;
+    RefPtr<GUI::Action> m_view_window_action;
 
     GUI::Icon m_icon;
     DeprecatedString m_file_path;
