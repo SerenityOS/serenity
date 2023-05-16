@@ -728,6 +728,11 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
             }
         }
 
+        if (grid_items_of_track.size() == 0) {
+            ++index;
+            continue;
+        }
+
         if (!track.min_track_sizing_function.is_intrinsic_track_sizing() && !track.max_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
