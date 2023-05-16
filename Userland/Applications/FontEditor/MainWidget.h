@@ -29,7 +29,7 @@ public:
 
     virtual ~MainWidget() override = default;
 
-    void show_error(Error, StringView action, StringView basename = {});
+    void show_error(Error, StringView action, StringView filename = {});
     void reset();
 
     ErrorOr<void> initialize(StringView path, RefPtr<Gfx::BitmapFont>&&);
