@@ -190,3 +190,66 @@ with your SerenityOS directory) with content of the clangd section in the
 
 > **Note**: You can add a `Remove` part, where you can remove unwanted flags
 such as those that aren't supported by the current version of clang.
+
+# Option 2: LSP Config + LSP Zero (Using Lazy.nvim)
+
+The plugin manager used in this example configuration is [lazy.nvim](https://github.com/folke/lazy.nvim). The REAME.md and 
+[documentation](https://github.com/folke/lazy.nvim/blob/main/doc/lazy.nvim.txt) detail how to set everything up. 
+
+By far the simplest method to set up `clangd` is to use [lsp-zero](https://github.com/VonHeikemen/lsp-zero.nvim). It comes with an
+[example configuration](https://github.com/VonHeikemen/lsp-zero.nvim/blob/v2.x/doc/md/guides/lazy-loading-with-lazy-nvim.md?plain=1) 
+that's easily extensible.
+
+To install `clangd`, you need only run
+
+```
+:LspInstall clangd
+```
+
+This could also be done within `Mason`, (run `:Mason`) by navigating to the `LSP` tab, hovering over `clangd` and pressing `I`. Use `g?` 
+within `Mason` to learn how to update or install packages.
+
+Additionally, you could just have `clangd` added to your path. 
+
+To configure `clangd`, you pass arguments to `require("lspconfig").clangd.setup`. This could be placed 
+[here](https://github.com/VonHeikemen/lsp-zero.nvim/blob/10c0486d4ad189c5141dfc3ba36e4e9fc5bb8396/doc/md/guides/lazy-loading-with-lazy-nvim.md?plain=1#L71) 
+before the call to `lsp.setup()`
+
+```lua
+require("lspconfig").clangd.setup({
+    on_new_config = function(config)
+        config.cmd = {
+            "clangd",
+            "--background-index",
+            "\"--query-driver=/path/to/serenity/Toolchain/Local/**/*\"",
+            "--header-insertion=never",
+        }
+    end,
+})
+```
+
+Ideally, you do not want to apply the `query-driver` argument globally and only want this argument for certain projects. To achieve this, **Neovim 0.9.0** and onwards
+supports secure `exrc`. To enable it, have 
+
+```lua
+vim.o.exrc = true
+```
+
+somewhere within your Neovim configuration.
+
+Within `serenity`, create a file called `.nvim.lua` within the project root and add
+
+```lua
+-- File: .nvim.ua
+require("lspconfig").clangd.setup({
+    on_new_config = function(config)
+        config.cmd = {
+            "clangd",
+            "--background-index",
+            "\"--query-driver=/home/Jared/Projects/CPP/serenity/Toolchain/Local/**/*\"",
+            "--header-insertion=never",
+        }
+    end,
+})
+```
+Read more about `exrc` with `:h exrc`.
