@@ -33,6 +33,7 @@ static int max_ms;
 static DeprecatedString host;
 static int payload_size = -1;
 static bool quiet = false;
+static u64 interval_in_microseconds = 1'000'000;
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 static constexpr int max_optional_header_size_in_bytes = 40;
@@ -67,6 +68,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Wait `interval` seconds between sending each packet. Fractional seconds are allowed.",
+        .short_name = 'i',
+        .value_name = "interval",
+        .accept_value = [](StringView interval_in_seconds_string) {
+            if (interval_in_seconds_string.is_empty())
+                return false;
+
+            auto interval_in_seconds = interval_in_seconds_string.to_double();
+            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0)
+                return false;
+
+            interval_in_microseconds = static_cast<u64>(interval_in_seconds.value() * 1'000'000);
+            return true;
+        },
+    });
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
     args_parser.parse(arguments);
@@ -216,6 +234,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         }
 
-        sleep(1);
+        usleep(interval_in_microseconds);
     }
 }
