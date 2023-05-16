@@ -158,9 +158,11 @@ ErrorOr<void> MainWidget::create_actions()
         auto response = FileSystemAccessClient::Client::the().save_file(window(), lexical_path.title(), lexical_path.extension());
         if (response.is_error())
             return;
-
-        if (auto result = save_file(response.value().filename(), response.value().release_stream()); result.is_error())
-            show_error(result.release_error(), "Saving"sv, response.value().filename());
+        auto file = response.release_value();
+        if (auto result = save_file(file.filename(), file.release_stream()); result.is_error())
+            show_error(result.release_error(), "Saving"sv, file.filename());
+        else
+            GUI::Application::the()->set_most_recently_open_file(file.filename());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([this](auto&) {
@@ -736,6 +738,16 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
     TRY(file_menu->try_add_separator());
+    TRY(file_menu->add_recent_files_list([this](auto& action) {
+        if (!request_close())
+            return;
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text());
+        if (response.is_error())
+            return;
+        auto file = response.release_value();
+        if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
+            show_error(result.release_error(), "Opening"sv, file.filename());
+    }));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
@@ -807,6 +819,8 @@ ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> f
     auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
     auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
     TRY(initialize(path, move(unmasked_font)));
+    if (!path.is_empty())
+        GUI::Application::the()->set_most_recently_open_file(TRY(String::from_utf8(path)));
     return {};
 }
 

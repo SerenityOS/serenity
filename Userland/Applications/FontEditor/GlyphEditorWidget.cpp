@@ -19,6 +19,7 @@ void GlyphEditorWidget::initialize(Gfx::BitmapFont* mutable_font)
     if (m_font == mutable_font)
         return;
     m_font = mutable_font;
+    update();
 }
 
 void GlyphEditorWidget::set_glyph(int glyph)
