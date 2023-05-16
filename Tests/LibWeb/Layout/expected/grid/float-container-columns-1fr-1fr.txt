@@ -1,13 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x0 children: not-inline
-      Box <div.container> at (8,8) content-size 186.53125x34.9375 floating [GFC] children: not-inline
+      Box <div.container> at (8,8) content-size 203.28125x34.9375 floating [GFC] children: not-inline
         BlockContainer <div.item> at (8,8) content-size 101.640625x17.46875 [BFC] children: inline
           line 0 width: 79.25, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 9, rect: [8,8 79.25x17.46875]
               "some-text"
           TextNode <#text>
-        BlockContainer <div.item> at (109.640625,8) content-size 84.890625x17.46875 [BFC] children: inline
+        BlockContainer <div.item> at (109.640625,8) content-size 101.640625x17.46875 [BFC] children: inline
           line 0 width: 78.03125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 9, rect: [109.640625,8 78.03125x17.46875]
               "goes-here"
@@ -17,7 +17,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 12, rect: [8,25.46875 101.640625x17.46875]
               "another-text"
           TextNode <#text>
-        BlockContainer <div.item> at (109.640625,25.46875) content-size 84.890625x17.46875 [BFC] children: inline
+        BlockContainer <div.item> at (109.640625,25.46875) content-size 101.640625x17.46875 [BFC] children: inline
           line 0 width: 84.890625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 10, rect: [109.640625,25.46875 84.890625x17.46875]
               "goes-there"
