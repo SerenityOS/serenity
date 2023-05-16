@@ -63,4 +63,9 @@ void PCIIRQHandler::disable_irq()
         device.disable_interrupt(interrupt_number());
 }
 
+bool PCIIRQHandler::handle_interrupt(RegisterState const& regs)
+{
+    return handle_irq(regs);
+}
+
 }

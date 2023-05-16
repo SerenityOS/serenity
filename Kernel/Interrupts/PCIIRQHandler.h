@@ -18,7 +18,7 @@ class PCIIRQHandler : public GenericInterruptHandler {
 public:
     virtual ~PCIIRQHandler() = default;
 
-    virtual bool handle_interrupt(RegisterState const& regs) override { return handle_irq(regs); }
+    virtual bool handle_interrupt(RegisterState const& regs) override;
     virtual bool handle_irq(RegisterState const&) = 0;
 
     void enable_irq();
