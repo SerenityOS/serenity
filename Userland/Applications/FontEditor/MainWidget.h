@@ -59,6 +59,7 @@ private:
     void restore_state();
     void did_modify_font();
 
+    void update_action_text();
     void update_statusbar();
     void update_preview();
     void update_title();
@@ -72,8 +73,8 @@ private:
     void paste_glyphs();
     void delete_selected_glyphs();
 
-    void push_undo();
-    void reset_selection_and_push_undo();
+    void push_undo(StringView action_text);
+    void reset_selection();
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;

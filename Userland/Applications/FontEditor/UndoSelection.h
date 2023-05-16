@@ -74,9 +74,10 @@ private:
 
 class SelectionUndoCommand : public GUI::Command {
 public:
-    SelectionUndoCommand(UndoSelection& selection, NonnullRefPtr<UndoSelection> undo_state)
+    SelectionUndoCommand(UndoSelection& selection, NonnullRefPtr<UndoSelection> undo_state, String action_text)
         : m_undo_state(undo_state)
         , m_undo_selection(selection)
+        , m_action_text(move(action_text))
     {
     }
     virtual void undo() override
@@ -96,9 +97,11 @@ public:
         else
             warnln("Restoring state failed");
     }
+    virtual DeprecatedString action_text() const override { return m_action_text.to_deprecated_string(); }
 
 private:
     NonnullRefPtr<UndoSelection> m_undo_state;
     RefPtr<UndoSelection> m_redo_state;
     UndoSelection& m_undo_selection;
+    String m_action_text;
 };

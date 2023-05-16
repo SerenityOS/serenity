@@ -84,8 +84,6 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
     if (mode() == Move && is_glyph_empty())
         return;
     m_is_clicking_valid_cell = true;
-    if (on_undo_event)
-        on_undo_event();
     if (mode() == Paint) {
         draw_at_mouse(event);
     } else {
@@ -146,6 +144,8 @@ void GlyphEditorWidget::draw_at_mouse(GUI::MouseEvent const& event)
         return;
     if (bitmap.bit_at(x, y) == set)
         return;
+    if (on_undo_event && event.type() == GUI::MouseEvent::MouseDown)
+        on_undo_event("Paint Glyph"sv);
     bitmap.set_bit_at(x, y, set);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
@@ -154,6 +154,9 @@ void GlyphEditorWidget::draw_at_mouse(GUI::MouseEvent const& event)
 
 void GlyphEditorWidget::move_at_mouse(GUI::MouseEvent const& event)
 {
+    if (on_undo_event && event.type() == GUI::MouseEvent::MouseDown)
+        on_undo_event("Move Glyph"sv);
+
     int x_delta = ((event.x() - 1) / m_scale) - m_scaled_offset_x;
     int y_delta = ((event.y() - 1) / m_scale) - m_scaled_offset_y;
     auto bitmap = m_font->raw_glyph(m_glyph).glyph_bitmap();
@@ -190,12 +193,13 @@ static Vector<Vector<u8>> glyph_as_matrix(Gfx::GlyphBitmap const& bitmap)
 
 void GlyphEditorWidget::rotate_90(Gfx::RotationDirection direction)
 {
+    auto clockwise = direction == Gfx::RotationDirection::Clockwise;
+    auto action_text = clockwise ? "Rotate Glyph Clockwise"sv : "Rotate Glyph Counterclockwise"sv;
     if (on_undo_event)
-        on_undo_event();
+        on_undo_event(action_text);
 
     auto bitmap = m_font->raw_glyph(m_glyph).glyph_bitmap();
     auto matrix = glyph_as_matrix(bitmap);
-    auto clockwise = direction == Gfx::RotationDirection::Clockwise;
 
     for (int y = 0; y < bitmap.height(); y++) {
         for (int x = 0; x < bitmap.width(); x++) {
@@ -216,12 +220,13 @@ void GlyphEditorWidget::rotate_90(Gfx::RotationDirection direction)
 
 void GlyphEditorWidget::flip(Gfx::Orientation orientation)
 {
+    auto vertical = orientation == Gfx::Orientation::Vertical;
+    auto action_text = vertical ? "Flip Glyph Vertically"sv : "Flip Glyph Horizontally"sv;
     if (on_undo_event)
-        on_undo_event();
+        on_undo_event(action_text);
 
     auto bitmap = m_font->raw_glyph(m_glyph).glyph_bitmap();
     auto matrix = glyph_as_matrix(bitmap);
-    auto vertical = orientation == Gfx::Orientation::Vertical;
 
     for (int y = 0; y < bitmap.height(); y++) {
         for (int x = 0; x < bitmap.width(); x++) {
