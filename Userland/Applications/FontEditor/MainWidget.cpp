@@ -450,11 +450,30 @@ ErrorOr<void> MainWidget::create_undo_stack()
     m_undo_stack->on_state_change = [this] {
         m_undo_action->set_enabled(m_undo_stack->can_undo());
         m_redo_action->set_enabled(m_undo_stack->can_redo());
+        update_action_text();
         if (m_undo_stack->is_current_modified())
             did_modify_font();
     };
 
     return {};
+}
+
+void MainWidget::update_action_text()
+{
+    auto text_or_error = [](auto prefix, auto suffix) -> ErrorOr<String> {
+        StringBuilder builder;
+        TRY(builder.try_append(prefix));
+        if (suffix.has_value()) {
+            TRY(builder.try_append(' '));
+            TRY(builder.try_append(suffix.value()));
+        }
+        return builder.to_string();
+    };
+
+    if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text()); !maybe_text.is_error())
+        m_undo_action->set_text(maybe_text.release_value().to_deprecated_string());
+    if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text()); !maybe_text.is_error())
+        m_redo_action->set_text(maybe_text.release_value().to_deprecated_string());
 }
 
 ErrorOr<void> MainWidget::create_widgets()
@@ -474,8 +493,9 @@ ErrorOr<void> MainWidget::create_widgets()
         did_modify_font();
     };
 
-    m_glyph_editor_widget->on_undo_event = [this] {
-        reset_selection_and_push_undo();
+    m_glyph_editor_widget->on_undo_event = [this](auto action_text) {
+        reset_selection();
+        push_undo(action_text);
     };
 
     m_glyph_editor_width_spinbox = find_descendant_of_type_named<GUI::SpinBox>("glyph_editor_width_spinbox");
@@ -530,7 +550,8 @@ ErrorOr<void> MainWidget::create_widgets()
     };
 
     m_glyph_editor_width_spinbox->on_change = [this](int value) {
-        reset_selection_and_push_undo();
+        reset_selection();
+        push_undo("Resize Glyph"sv);
         m_font->set_glyph_width(m_glyph_map_widget->active_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
@@ -540,7 +561,8 @@ ErrorOr<void> MainWidget::create_widgets()
     };
 
     m_glyph_editor_present_checkbox->on_checked = [this](bool checked) {
-        reset_selection_and_push_undo();
+        reset_selection();
+        push_undo("Resize Glyph"sv);
         m_font->set_glyph_width(m_glyph_map_widget->active_glyph(), checked ? m_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
@@ -788,29 +810,31 @@ ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> f
     return {};
 }
 
-void MainWidget::push_undo()
+void MainWidget::push_undo(StringView action_text)
 {
     auto maybe_state = m_undo_selection->save_state();
     if (maybe_state.is_error())
         return show_error(maybe_state.release_error(), "Saving undo state failed"sv);
-    auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(maybe_state.value()));
+    auto maybe_text = String::from_utf8(action_text);
+    if (maybe_text.is_error())
+        return show_error(maybe_text.release_error(), "Creating action text failed"sv);
+    auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(maybe_state.value()), move(maybe_text.value()));
     if (maybe_command.is_error())
         return show_error(maybe_command.release_error(), "Making undo command failed"sv);
     if (auto maybe_push = m_undo_stack->try_push(move(maybe_command.value())); maybe_push.is_error())
         show_error(maybe_push.release_error(), "Pushing undo stack failed"sv);
 }
 
-void MainWidget::reset_selection_and_push_undo()
+void MainWidget::reset_selection()
 {
     auto selection = m_glyph_map_widget->selection().normalized();
-    if (selection.size() != 1) {
-        auto start = m_glyph_map_widget->active_glyph();
-        m_undo_selection->set_start(start);
-        m_undo_selection->set_size(1);
-        m_glyph_map_widget->set_selection(start, 1);
-        m_glyph_map_widget->update();
-    }
-    push_undo();
+    if (selection.size() == 1)
+        return;
+    auto start = m_glyph_map_widget->active_glyph();
+    m_undo_selection->set_start(start);
+    m_undo_selection->set_size(1);
+    m_glyph_map_widget->set_selection(start, 1);
+    m_glyph_map_widget->update();
 }
 
 void MainWidget::restore_state()
@@ -1023,7 +1047,8 @@ void MainWidget::paste_glyphs()
     auto selection = m_glyph_map_widget->selection().normalized();
     auto range_bound_glyph_count = min(glyph_count, 1 + m_range.last - selection.start());
     m_undo_selection->set_size(range_bound_glyph_count);
-    push_undo();
+    auto action_text = range_bound_glyph_count == 1 ? "Paste Glyph"sv : "Paste Glyphs"sv;
+    push_undo(action_text);
 
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
@@ -1055,9 +1080,10 @@ void MainWidget::paste_glyphs()
 
 void MainWidget::delete_selected_glyphs()
 {
-    push_undo();
-
     auto selection = m_glyph_map_widget->selection().normalized();
+    auto action_text = selection.size() == 1 ? "Delete Glyph"sv : "Delete Glyphs"sv;
+    push_undo(action_text);
+
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_font->glyph_height();
     auto* rows = m_font->rows() + selection.start() * bytes_per_glyph;
     auto* widths = m_font->widths() + selection.start();
