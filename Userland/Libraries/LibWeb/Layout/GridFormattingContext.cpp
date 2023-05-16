@@ -1055,16 +1055,15 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     // the available space.
 
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
-    auto find_the_size_of_an_fr = [&]() -> CSSPixels {
+    auto find_the_size_of_an_fr = [&](Vector<TemporaryTrack&> tracks, CSSPixels space_to_fill) -> CSSPixels {
         // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
 
-        VERIFY(available_size.is_definite());
-
         // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
-        auto leftover_space = available_size.to_px();
-        for (auto& track : tracks_and_gaps) {
+        auto leftover_space = space_to_fill;
+        for (auto& track : tracks) {
             if (!track.max_track_sizing_function.is_flexible_length()) {
                 leftover_space -= track.base_size;
             }
@@ -1073,9 +1072,9 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
         // 2. Let flex factor sum be the sum of the flex factors of the flexible tracks.
         //    If this value is less than 1, set it to 1 instead.
         auto flex_factor_sum = 0;
-        for (auto& track : tracks_and_gaps) {
+        for (auto& track : tracks) {
             if (track.max_track_sizing_function.is_flexible_length())
-                flex_factor_sum++;
+                flex_factor_sum += track.max_track_sizing_function.flexible_length();
         }
         if (flex_factor_sum < 1)
             flex_factor_sum = 1;
@@ -1101,10 +1100,43 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
         } else if (free_space.is_definite()) {
             // The used flex fraction is the result of finding the size of an fr using all of the grid tracks and a space
             // to fill of the available grid space.
-            return find_the_size_of_an_fr();
+            return find_the_size_of_an_fr(tracks_and_gaps, available_size.to_px());
         } else {
-            // FIXME
-            return CSSPixels(0);
+            // Otherwise, if the free space is an indefinite length:
+            // The used flex fraction is the maximum of:
+            CSSPixels result = 0;
+            // For each flexible track, if the flexible track’s flex factor is greater than one, the result of dividing
+            // the track’s base size by its flex factor; otherwise, the track’s base size.
+            for (auto& track : tracks) {
+                if (track.max_track_sizing_function.is_flexible_length()) {
+                    if (track.max_track_sizing_function.flexible_length() > 1) {
+                        result = max(result, track.base_size / track.max_track_sizing_function.flexible_length());
+                    } else {
+                        result = max(result, track.base_size);
+                    }
+                }
+            }
+            // For each grid item that crosses a flexible track, the result of finding the size of an fr using all the
+            // grid tracks that the item crosses and a space to fill of the item’s max-content contribution.
+            for (auto& item : m_grid_items) {
+                Vector<TemporaryTrack&> spanned_tracks;
+                bool crosses_flexible_track = false;
+                for (size_t span = 0; span < item.span(dimension); span++) {
+                    // FIXME: This check should not be need if grid item positioning works correct
+                    if (item.raw_position(dimension) + span >= tracks.size())
+                        break;
+
+                    auto& track = tracks[item.raw_position(dimension) + span];
+                    spanned_tracks.append(track);
+                    if (track.max_track_sizing_function.is_flexible_length())
+                        crosses_flexible_track = true;
+                }
+
+                if (crosses_flexible_track)
+                    result = max(result, find_the_size_of_an_fr(spanned_tracks, calculate_max_content_size(item, dimension)));
+            }
+
+            return result;
         }
     }();
 
