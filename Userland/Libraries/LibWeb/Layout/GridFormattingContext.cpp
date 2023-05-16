@@ -996,7 +996,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
             if (track.min_track_sizing_function.is_flexible_length())
                 spanned_flexible_tracks.append(track);
         }
-        auto item_minimum_contribution = calculate_limited_min_content_contribution(item, dimension);
+        auto item_minimum_contribution = automatic_minimum_size(item, dimension);
         distribute_extra_space_across_spanned_tracks(item_minimum_contribution, spanned_flexible_tracks);
 
         for (auto& track : spanned_tracks) {
