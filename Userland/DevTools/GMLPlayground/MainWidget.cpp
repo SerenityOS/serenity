@@ -230,7 +230,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_views_group.set_exclusive(true);
     m_views_group.set_unchecking_allowed(false);
 
-    auto view_frame_action = GUI::Action::create_checkable("&Frame", [&](auto&) {
+    m_view_frame_action = GUI::Action::create_checkable("&Frame", [&](auto&) {
         dbgln("View switched to frame");
         m_preview = m_preview_frame_widget;
         m_editor->on_change();
@@ -238,11 +238,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_preview_frame_widget->set_preferred_width(m_splitter->width() / 2);
         m_preview_frame_widget->set_visible(true);
     });
-    view_menu->add_action(view_frame_action);
-    m_views_group.add_action(view_frame_action);
-    view_frame_action->set_checked(true);
+    view_menu->add_action(*m_view_frame_action);
+    m_views_group.add_action(*m_view_frame_action);
+    m_view_frame_action->set_checked(true);
 
-    auto view_window_action = GUI::Action::create_checkable("&Window", [&](auto&) {
+    m_view_window_action = GUI::Action::create_checkable("&Window", [&](auto&) {
         dbgln("View switched to window");
         m_preview = m_preview_window_widget;
         m_editor->on_change();
@@ -250,11 +250,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_preview_window->show();
         m_preview_frame_widget->set_visible(false);
     });
-    view_menu->add_action(view_window_action);
-    m_views_group.add_action(view_window_action);
+    view_menu->add_action(*m_view_window_action);
+    m_views_group.add_action(*m_view_window_action);
 
     m_preview_window->on_close = [&] {
-        view_frame_action->activate();
+        m_view_frame_action->activate();
     };
 
     auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
