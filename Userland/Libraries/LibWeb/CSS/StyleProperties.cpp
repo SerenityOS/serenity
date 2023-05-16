@@ -294,6 +294,9 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     if (value->has_length())
         return { { CSS::FlexBasis::LengthPercentage, value->to_length() } };
 
+    if (value->is_calculated())
+        return { { CSS::FlexBasis::LengthPercentage, CSS::LengthPercentage { value->as_calculated() } } };
+
     return {};
 }
 
