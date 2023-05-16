@@ -108,7 +108,12 @@ constexpr T ceil(T num)
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
 #else
-    return __builtin_ceil(num);
+    if constexpr (IsSame<T, long double>)
+        return __builtin_ceill(num);
+    if constexpr (IsSame<T, double>)
+        return __builtin_ceil(num);
+    if constexpr (IsSame<T, float>)
+        return __builtin_ceilf(num);
 #endif
 }
 
@@ -126,7 +131,12 @@ constexpr T floor(T num)
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
 #else
-    return __builtin_floor(num);
+    if constexpr (IsSame<T, long double>)
+        return __builtin_floorl(num);
+    if constexpr (IsSame<T, double>)
+        return __builtin_floor(num);
+    if constexpr (IsSame<T, float>)
+        return __builtin_floorf(num);
 #endif
 }
 
@@ -389,6 +399,7 @@ constexpr T fmod(T x, T y)
     return __builtin_fmod(x, y);
 #endif
 }
+
 template<FloatingPoint T>
 constexpr T remainder(T x, T y)
 {
