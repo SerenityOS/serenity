@@ -14,10 +14,10 @@ GridSize::GridSize(LengthPercentage length_percentage)
     : m_type(Type::LengthPercentage)
     , m_length_percentage(length_percentage) {};
 
-GridSize::GridSize(float flexible_length)
+GridSize::GridSize(float flex_factor)
     : m_type(Type::FlexibleLength)
     , m_length_percentage { Length::make_px(0) }
-    , m_flexible_length(flexible_length)
+    , m_flex_factor(flex_factor)
 {
 }
 
@@ -60,7 +60,7 @@ ErrorOr<String> GridSize::to_string() const
     case Type::LengthPercentage:
         return m_length_percentage.to_string();
     case Type::FlexibleLength:
-        return String::formatted("{}fr", m_flexible_length);
+        return String::formatted("{}fr", m_flex_factor);
     case Type::MaxContent:
         return "max-content"_string;
     case Type::MinContent:

@@ -1074,7 +1074,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
         auto flex_factor_sum = 0;
         for (auto& track : tracks) {
             if (track.max_track_sizing_function.is_flexible_length())
-                flex_factor_sum += track.max_track_sizing_function.flexible_length();
+                flex_factor_sum += track.max_track_sizing_function.flex_factor();
         }
         if (flex_factor_sum < 1)
             flex_factor_sum = 1;
@@ -1109,8 +1109,8 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
             // the track’s base size by its flex factor; otherwise, the track’s base size.
             for (auto& track : tracks) {
                 if (track.max_track_sizing_function.is_flexible_length()) {
-                    if (track.max_track_sizing_function.flexible_length() > 1) {
-                        result = max(result, track.base_size / track.max_track_sizing_function.flexible_length());
+                    if (track.max_track_sizing_function.flex_factor() > 1) {
+                        result = max(result, track.base_size / track.max_track_sizing_function.flex_factor());
                     } else {
                         result = max(result, track.base_size);
                     }
@@ -1143,8 +1143,8 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
     // the track’s base size, set its base size to that product.
     for (auto& track : tracks_and_gaps) {
-        if (track.max_track_sizing_function.flexible_length() * flex_fraction > track.base_size) {
-            track.base_size = track.max_track_sizing_function.flexible_length() * flex_fraction;
+        if (track.max_track_sizing_function.flex_factor() * flex_fraction > track.base_size) {
+            track.base_size = track.max_track_sizing_function.flex_factor() * flex_fraction;
         }
     }
 }
