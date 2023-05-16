@@ -637,6 +637,18 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
 }
 
+Gfx::ShareableBitmap WebContentView::take_screenshot() const
+{
+    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
+        return bitmap->to_shareable_bitmap();
+    return {};
+}
+
+Gfx::ShareableBitmap WebContentView::take_document_screenshot()
+{
+    return client().take_document_screenshot();
+}
+
 void WebContentView::handle_web_content_process_crash()
 {
     dbgln("WebContent process crashed!");
