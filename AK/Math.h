@@ -81,6 +81,18 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
         return res;                           \
     }
 
+template<FloatingPoint T>
+constexpr T fabs(T x)
+{
+    // Both GCC and Clang inline fabs by default, so this is just a cmath like wrapper
+    if constexpr (IsSame<T, long double>)
+        return __builtin_fabsl(x);
+    if constexpr (IsSame<T, double>)
+        return __builtin_fabs(x);
+    if constexpr (IsSame<T, float>)
+        return __builtin_fabsf(x);
+}
+
 namespace Rounding {
 template<FloatingPoint T>
 constexpr T ceil(T num)
@@ -492,23 +504,6 @@ constexpr T cbrt(T x)
     r = (2.0l / 3.0l) * r + (1.0l / 3.0l) * x / (r * r);
 
     return r;
-}
-
-template<FloatingPoint T>
-constexpr T fabs(T x)
-{
-    if (is_constant_evaluated())
-        return x < 0 ? -x : x;
-#if ARCH(X86_64)
-    asm(
-        "fabs"
-        : "+t"(x));
-    return x;
-#elif ARCH(AARCH64)
-    AARCH64_INSTRUCTION(fabs, x);
-#else
-    return __builtin_fabs(x);
-#endif
 }
 
 namespace Trigonometry {
