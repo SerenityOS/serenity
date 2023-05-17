@@ -149,7 +149,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     inspect_menu->addAction(js_console_action);
     QObject::connect(js_console_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
-            m_current_tab->view().show_js_console();
+            m_current_tab->show_console_window();
         }
     });
 
@@ -159,7 +159,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     inspect_menu->addAction(inspector_action);
     QObject::connect(inspector_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
-            m_current_tab->view().show_inspector();
+            m_current_tab->show_inspector_window();
         }
     });
 
@@ -333,7 +333,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     m_inspect_dom_node_action = make<QAction>("&Inspect Element", this);
     connect(m_inspect_dom_node_action, &QAction::triggered, this, [this] {
         if (m_current_tab)
-            m_current_tab->view().show_inspector(WebContentView::InspectorTarget::HoveredElement);
+            m_current_tab->show_inspector_window(Tab::InspectorTarget::HoveredElement);
     });
     m_go_back_action = make<QAction>("Go Back");
     connect(m_go_back_action, &QAction::triggered, this, [this] {
@@ -580,7 +580,7 @@ void BrowserWindow::select_all()
     if (!m_current_tab)
         return;
 
-    if (auto* console = m_current_tab->view().console(); console && console->isActiveWindow())
+    if (auto* console = m_current_tab->console(); console && console->isActiveWindow())
         console->view().select_all();
     else
         m_current_tab->view().select_all();
@@ -601,7 +601,7 @@ void BrowserWindow::copy_selected_text()
 
     DeprecatedString text;
 
-    if (auto* console = m_current_tab->view().console(); console && console->isActiveWindow())
+    if (auto* console = m_current_tab->console(); console && console->isActiveWindow())
         text = console->view().selected_text();
     else
         text = m_current_tab->view().selected_text();

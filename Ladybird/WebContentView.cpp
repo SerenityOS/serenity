@@ -6,9 +6,7 @@
  */
 
 #include "WebContentView.h"
-#include "ConsoleWidget.h"
 #include "HelperProcess.h"
-#include "InspectorWidget.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
@@ -32,7 +30,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/SystemTheme.h>
-#include <LibJS/Runtime/ConsoleObject.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -79,10 +76,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     create_client(enable_callgrind_profiling);
 }
 
-WebContentView::~WebContentView()
-{
-    close_sub_widgets();
-}
+WebContentView::~WebContentView() = default;
 
 unsigned get_button_from_qt_event(QMouseEvent const& event)
 {
@@ -463,76 +457,6 @@ void WebContentView::update_viewport_rect()
     request_repaint();
 }
 
-void WebContentView::ensure_js_console_widget()
-{
-    if (!m_console_widget) {
-        m_console_widget = new Ladybird::ConsoleWidget;
-        m_console_widget->setWindowTitle("JS Console");
-        m_console_widget->resize(640, 480);
-        m_console_widget->on_js_input = [this](auto js_source) {
-            client().async_js_console_input(js_source);
-        };
-        m_console_widget->on_request_messages = [this](i32 start_index) {
-            client().async_js_console_request_messages(start_index);
-        };
-    }
-}
-
-void WebContentView::show_js_console()
-{
-    ensure_js_console_widget();
-    m_console_widget->show();
-}
-
-void WebContentView::ensure_inspector_widget()
-{
-    if (m_inspector_widget)
-        return;
-    m_inspector_widget = new Ladybird::InspectorWidget;
-    m_inspector_widget->setWindowTitle("Inspector");
-    m_inspector_widget->resize(640, 480);
-    m_inspector_widget->on_close = [this] {
-        clear_inspected_dom_node();
-    };
-
-    m_inspector_widget->on_dom_node_inspected = [&](auto id, auto pseudo_element) {
-        return inspect_dom_node(id, pseudo_element);
-    };
-}
-
-void WebContentView::close_sub_widgets()
-{
-    auto close_widget_window = [](auto* widget) {
-        if (widget)
-            widget->close();
-    };
-    close_widget_window(m_console_widget);
-    close_widget_window(m_inspector_widget);
-}
-
-bool WebContentView::is_inspector_open() const
-{
-    return m_inspector_widget && m_inspector_widget->isVisible();
-}
-
-void WebContentView::show_inspector(InspectorTarget inspector_target)
-{
-    bool inspector_previously_loaded = m_inspector_widget;
-    ensure_inspector_widget();
-    if (!inspector_previously_loaded || !m_inspector_widget->dom_loaded()) {
-        inspect_dom_tree();
-        inspect_accessibility_tree();
-    }
-    m_inspector_widget->show();
-
-    if (inspector_target == InspectorTarget::HoveredElement) {
-        auto hovered_node = get_hovered_node_id();
-        m_inspector_widget->set_selection({ hovered_node });
-    } else {
-        m_inspector_widget->select_default_node();
-    }
-}
-
 void WebContentView::update_zoom()
 {
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
@@ -787,17 +711,11 @@ void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK
 {
     m_url = url;
     emit load_started(url, is_redirect);
-    if (m_inspector_widget)
-        m_inspector_widget->clear_dom_json();
 }
 
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
 {
     m_url = url;
-    if (is_inspector_open()) {
-        inspect_dom_tree();
-        inspect_accessibility_tree();
-    }
     if (on_load_finish)
         on_load_finish(url);
 }
@@ -903,8 +821,6 @@ void WebContentView::notify_server_did_get_dom_tree(DeprecatedString const& dom_
 {
     if (on_get_dom_tree)
         on_get_dom_tree(dom_tree);
-    if (m_inspector_widget)
-        m_inspector_widget->set_dom_json(dom_tree);
 }
 
 void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
@@ -915,14 +831,14 @@ void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, Depr
 
 void WebContentView::notify_server_did_output_js_console_message(i32 message_index)
 {
-    if (m_console_widget)
-        m_console_widget->notify_about_new_console_message(message_index);
+    if (on_js_console_new_message)
+        on_js_console_new_message(message_index);
 }
 
 void WebContentView::notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
-    if (m_console_widget)
-        m_console_widget->handle_console_messages(start_index, message_types, messages);
+    if (on_get_js_console_messages)
+        on_get_js_console_messages(start_index, message_types, messages);
 }
 
 void WebContentView::notify_server_did_change_favicon(Gfx::Bitmap const& bitmap)
@@ -1076,10 +992,10 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     (void)event_was_accepted;
 }
 
-void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_json)
+void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
 {
-    if (m_inspector_widget)
-        m_inspector_widget->set_accessibility_json(accessibility_json);
+    if (on_get_accessibility_tree)
+        on_get_accessibility_tree(accessibility_tree);
 }
 
 ErrorOr<String> WebContentView::dump_layout_tree()

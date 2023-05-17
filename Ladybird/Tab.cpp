@@ -7,6 +7,8 @@
 
 #include "Tab.h"
 #include "BrowserWindow.h"
+#include "ConsoleWidget.h"
+#include "InspectorWidget.h"
 #include "Settings.h"
 #include "Utilities.h"
 #include <Browser/History.h>
@@ -142,7 +144,21 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
         m_window->go_back_action().setEnabled(m_history.can_go_back());
         m_window->go_forward_action().setEnabled(m_history.can_go_forward());
+
+        if (m_inspector_widget)
+            m_inspector_widget->clear_dom_json();
+
+        if (m_console_widget)
+            m_console_widget->reset();
     });
+
+    view().on_load_finish = [this](auto&) {
+        if (m_inspector_widget != nullptr && m_inspector_widget->isVisible()) {
+            view().inspect_dom_tree();
+            view().inspect_accessibility_tree();
+        }
+    };
+
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
     QObject::connect(m_view, &WebContentView::title_changed, this, &Tab::page_title_changed);
     QObject::connect(m_view, &WebContentView::favicon_changed, this, &Tab::page_favicon_changed);
@@ -183,6 +199,26 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
     });
+
+    view().on_get_dom_tree = [this](auto& dom_tree) {
+        if (m_inspector_widget)
+            m_inspector_widget->set_dom_json(dom_tree);
+    };
+
+    view().on_get_accessibility_tree = [this](auto& accessibility_tree) {
+        if (m_inspector_widget)
+            m_inspector_widget->set_accessibility_json(accessibility_tree);
+    };
+
+    view().on_js_console_new_message = [this](auto message_index) {
+        if (m_console_widget)
+            m_console_widget->notify_about_new_console_message(message_index);
+    };
+
+    view().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
+        if (m_console_widget)
+            m_console_widget->handle_console_messages(start_index, message_types, messages);
+    };
 
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
@@ -378,6 +414,11 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     };
 }
 
+Tab::~Tab()
+{
+    close_sub_widgets();
+}
+
 void Tab::update_reset_zoom_button()
 {
     auto zoom_level = view().zoom_level();
@@ -505,4 +546,64 @@ void Tab::rerender_toolbar_icons()
     m_window->go_back_action().setIcon(render_svg_icon_with_theme_colors("back", palette()));
     m_window->go_forward_action().setIcon(render_svg_icon_with_theme_colors("forward", palette()));
     m_window->reload_action().setIcon(render_svg_icon_with_theme_colors("reload", palette()));
+}
+
+void Tab::show_inspector_window(InspectorTarget inspector_target)
+{
+    bool inspector_previously_loaded = m_inspector_widget != nullptr;
+
+    if (!m_inspector_widget) {
+        m_inspector_widget = new Ladybird::InspectorWidget;
+        m_inspector_widget->setWindowTitle("Inspector");
+        m_inspector_widget->resize(640, 480);
+        m_inspector_widget->on_close = [this] {
+            view().clear_inspected_dom_node();
+        };
+
+        m_inspector_widget->on_dom_node_inspected = [&](auto id, auto pseudo_element) {
+            return view().inspect_dom_node(id, pseudo_element);
+        };
+    }
+
+    if (!inspector_previously_loaded || !m_inspector_widget->dom_loaded()) {
+        view().inspect_dom_tree();
+        view().inspect_accessibility_tree();
+    }
+
+    m_inspector_widget->show();
+
+    if (inspector_target == InspectorTarget::HoveredElement) {
+        auto hovered_node = view().get_hovered_node_id();
+        m_inspector_widget->set_selection({ hovered_node });
+    } else {
+        m_inspector_widget->select_default_node();
+    }
+}
+
+void Tab::show_console_window()
+{
+    if (!m_console_widget) {
+        m_console_widget = new Ladybird::ConsoleWidget;
+        m_console_widget->setWindowTitle("JS Console");
+        m_console_widget->resize(640, 480);
+        m_console_widget->on_js_input = [this](auto js_source) {
+            view().js_console_input(js_source);
+        };
+        m_console_widget->on_request_messages = [this](i32 start_index) {
+            view().js_console_request_messages(start_index);
+        };
+    }
+
+    m_console_widget->show();
+}
+
+void Tab::close_sub_widgets()
+{
+    auto close_widget_window = [](auto* widget) {
+        if (widget)
+            widget->close();
+    };
+
+    close_widget_window(m_console_widget);
+    close_widget_window(m_inspector_widget);
 }

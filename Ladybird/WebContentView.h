@@ -26,11 +26,6 @@
 class QTextEdit;
 class QLineEdit;
 
-namespace Ladybird {
-class ConsoleWidget;
-class InspectorWidget;
-}
-
 namespace WebView {
 class WebContentClient;
 }
@@ -66,6 +61,7 @@ public:
     Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
     Function<void(DeprecatedString const&)> on_get_dom_tree;
     Function<void(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)> on_get_dom_node_properties;
+    Function<void(DeprecatedString const&)> on_get_accessibility_tree;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_get_js_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
@@ -90,16 +86,6 @@ public:
     virtual void focusInEvent(QFocusEvent*) override;
     virtual void focusOutEvent(QFocusEvent*) override;
     virtual bool event(QEvent*) override;
-
-    void show_js_console();
-
-    enum class InspectorTarget {
-        Document,
-        HoveredElement
-    };
-    void show_inspector(InspectorTarget = InspectorTarget::Document);
-
-    Ladybird::ConsoleWidget* console() { return m_console_widget; };
 
     ErrorOr<String> dump_layout_tree();
 
@@ -200,19 +186,10 @@ private:
 
     void update_viewport_rect();
 
-    void ensure_js_console_widget();
-    void ensure_inspector_widget();
-
-    bool is_inspector_open() const;
-    void close_sub_widgets();
-
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
     QPointer<QDialog> m_dialog;
-
-    Ladybird::ConsoleWidget* m_console_widget { nullptr };
-    Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 
     Gfx::IntRect m_viewport_rect;
 

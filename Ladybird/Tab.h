@@ -19,10 +19,16 @@
 
 class BrowserWindow;
 
+namespace Ladybird {
+class ConsoleWidget;
+class InspectorWidget;
+}
+
 class Tab final : public QWidget {
     Q_OBJECT
 public:
     Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
+    virtual ~Tab() override;
 
     WebContentView& view() { return *m_view; }
 
@@ -35,6 +41,15 @@ public:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
     void update_reset_zoom_button();
+
+    enum class InspectorTarget {
+        Document,
+        HoveredElement
+    };
+    void show_inspector_window(InspectorTarget = InspectorTarget::Document);
+    void show_console_window();
+
+    Ladybird::ConsoleWidget* console() { return m_console_widget; };
 
 public slots:
     void focus_location_editor();
@@ -59,6 +74,8 @@ private:
     void open_link(URL const&);
     void open_link_in_new_tab(URL const&);
     void copy_link_url(URL const&);
+
+    void close_sub_widgets();
 
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
@@ -91,4 +108,7 @@ private:
     int tab_index();
 
     bool m_is_history_navigation { false };
+
+    Ladybird::ConsoleWidget* m_console_widget { nullptr };
+    Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 };

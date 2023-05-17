@@ -135,6 +135,16 @@ void ViewImplementation::run_javascript(StringView js_source)
     client().async_run_javascript(js_source);
 }
 
+void ViewImplementation::js_console_input(DeprecatedString const& js_source)
+{
+    client().async_js_console_input(js_source);
+}
+
+void ViewImplementation::js_console_request_messages(i32 start_index)
+{
+    client().async_js_console_request_messages(start_index);
+}
+
 void ViewImplementation::toggle_video_play_state()
 {
     client().async_toggle_video_play_state();

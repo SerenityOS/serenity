@@ -69,6 +69,8 @@ public:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
     void run_javascript(StringView);
+    void js_console_input(DeprecatedString const& js_source);
+    void js_console_request_messages(i32 start_index);
 
     void toggle_video_play_state();
     void toggle_video_loop_state();

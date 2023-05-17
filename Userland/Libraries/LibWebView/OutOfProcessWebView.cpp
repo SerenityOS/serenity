@@ -517,16 +517,6 @@ void OutOfProcessWebView::did_scroll()
     request_repaint();
 }
 
-void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
-{
-    client().async_js_console_input(js_source);
-}
-
-void OutOfProcessWebView::js_console_request_messages(i32 start_index)
-{
-    client().async_js_console_request_messages(start_index);
-}
-
 DeprecatedString OutOfProcessWebView::dump_layout_tree()
 {
     return client().dump_layout_tree();
