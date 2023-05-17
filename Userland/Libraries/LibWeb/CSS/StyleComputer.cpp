@@ -668,16 +668,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
+static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element, FlyString const& custom_property_name)
 {
+    if (pseudo_element.has_value()) {
+        if (auto it = element.custom_properties(pseudo_element).find(custom_property_name.to_string().to_deprecated_string()); it != element.custom_properties(pseudo_element).end())
+            return it->value.value;
+    }
+
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
-        if (auto it = current_element->custom_properties().find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties().end())
+        if (auto it = current_element->custom_properties({}).find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties({}).end())
             return it->value.value;
     }
     return nullptr;
 }
 
-bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
+bool StyleComputer::expand_variables(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -705,7 +710,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
             auto const& source_function = value.function();
             Vector<Parser::ComponentValue> function_values;
             Parser::TokenStream source_function_contents { source_function.values() };
-            if (!expand_variables(element, property_name, dependencies, source_function_contents, function_values))
+            if (!expand_variables(element, pseudo_element, property_name, dependencies, source_function_contents, function_values))
                 return false;
             NonnullRefPtr<Parser::Function> function = Parser::Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
             dest.empend(function);
@@ -735,10 +740,10 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
         if (parent->has_cycles())
             return false;
 
-        if (auto custom_property_value = get_custom_property(element, FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors())) {
+        if (auto custom_property_value = get_custom_property(element, pseudo_element, FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors())) {
             VERIFY(custom_property_value->is_unresolved());
             Parser::TokenStream custom_property_tokens { custom_property_value->as_unresolved().values() };
-            if (!expand_variables(element, custom_property_name, dependencies, custom_property_tokens, dest))
+            if (!expand_variables(element, pseudo_element, custom_property_name, dependencies, custom_property_tokens, dest))
                 return false;
             continue;
         }
@@ -750,7 +755,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
             if (!comma_token.is(Parser::Token::Type::Comma))
                 return false;
             var_contents.skip_whitespace();
-            if (!expand_variables(element, property_name, dependencies, var_contents, dest))
+            if (!expand_variables(element, pseudo_element, property_name, dependencies, var_contents, dest))
                 return false;
         }
     }
@@ -850,7 +855,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
 {
     // Unresolved always contains a var() or attr(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
@@ -860,7 +865,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     Vector<Parser::ComponentValue> values_with_variables_expanded;
 
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
-    if (!expand_variables(element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
+    if (!expand_variables(element, pseudo_element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
         return {};
 
     Parser::TokenStream unresolved_values_with_variables_expanded { values_with_variables_expanded };
@@ -882,7 +887,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 continue;
             auto property_value = property.value;
             if (property.value->is_unresolved()) {
-                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
                     property_value = resolved.release_nonnull();
             }
             if (!property_value->is_unresolved())
@@ -897,7 +902,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     continue;
                 auto property_value = property.value;
                 if (property.value->is_unresolved()) {
-                    if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
                         property_value = resolved.release_nonnull();
                 }
                 if (!property_value->is_unresolved())
@@ -907,13 +912,16 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, Vector<MatchingRule> const& matching_rules)
 {
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
         needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
-    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
-        needed_capacity += inline_style->custom_properties().size();
+
+    if (!pseudo_element.has_value()) {
+        if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
+            needed_capacity += inline_style->custom_properties().size();
+    }
 
     HashMap<DeprecatedFlyString, StyleProperty> custom_properties;
     TRY(custom_properties.try_ensure_capacity(needed_capacity));
@@ -923,12 +931,14 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<Mat
             custom_properties.set(it.key, it.value);
     }
 
-    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style())) {
-        for (auto const& it : inline_style->custom_properties())
-            custom_properties.set(it.key, it.value);
+    if (!pseudo_element.has_value()) {
+        if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style())) {
+            for (auto const& it : inline_style->custom_properties())
+                custom_properties.set(it.key, it.value);
+        }
     }
 
-    element.set_custom_properties(move(custom_properties));
+    element.set_custom_properties(pseudo_element, move(custom_properties));
 
     return {};
 }
@@ -953,9 +963,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     }
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
-    // FIXME: Look into how custom properties should interact with pseudo elements and support that properly.
-    if (!pseudo_element.has_value())
-        TRY(cascade_custom_properties(element, matching_rule_set.author_rules));
+    TRY(cascade_custom_properties(element, pseudo_element, matching_rule_set.author_rules));
 
     // Then we apply the declarations from the matched rules in cascade order:
 

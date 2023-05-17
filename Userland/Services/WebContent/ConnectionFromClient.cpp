@@ -455,14 +455,14 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             return builder.to_deprecated_string();
         };
 
-        auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> DeprecatedString {
+        auto serialize_custom_properties_json = [](Web::DOM::Element const& element, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) -> DeprecatedString {
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             HashTable<DeprecatedString> seen_properties;
 
             auto const* element_to_check = &element;
             while (element_to_check) {
-                for (auto const& property : element_to_check->custom_properties()) {
+                for (auto const& property : element_to_check->custom_properties(pseudo_element)) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
                         MUST(serializer.add(property.key, property.value.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()));
@@ -519,14 +519,14 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             auto pseudo_element_style = MUST(page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element));
             DeprecatedString computed_values = serialize_json(pseudo_element_style);
             DeprecatedString resolved_values = "{}";
-            DeprecatedString custom_properties_json = "{}";
+            DeprecatedString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
             DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
             return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json };
         }
 
         DeprecatedString computed_values = serialize_json(*element.computed_css_values());
         DeprecatedString resolved_values_json = serialize_json(element.resolved_css_values());
-        DeprecatedString custom_properties_json = serialize_custom_properties_json(element);
+        DeprecatedString custom_properties_json = serialize_custom_properties_json(element, {});
         DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
         return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json };
     }

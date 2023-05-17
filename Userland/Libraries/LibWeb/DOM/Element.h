@@ -158,8 +158,8 @@ public:
     ShadowRoot const* shadow_root_internal() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
-    void set_custom_properties(HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
-    HashMap<DeprecatedFlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    void set_custom_properties(Optional<CSS::Selector::PseudoElement>, HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties);
+    [[nodiscard]] HashMap<DeprecatedFlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement>) const;
 
     void queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
@@ -318,6 +318,7 @@ private:
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<DeprecatedFlyString, CSS::StyleProperty> m_custom_properties;
+    Array<HashMap<DeprecatedFlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_custom_properties;
 
     Vector<FlyString> m_classes;
 
