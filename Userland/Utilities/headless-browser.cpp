@@ -158,6 +158,8 @@ private:
     void create_client(WebView::EnableCallgrindProfiling) override { }
 
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
+    virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }
+    virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override { return content_position; }
 
 private:
     Gfx::IntRect m_viewport_rect;

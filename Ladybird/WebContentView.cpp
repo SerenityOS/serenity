@@ -274,7 +274,7 @@ void WebContentView::mouseMoveEvent(QMouseEvent* event)
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-    client().async_mouse_move(to_content(position), 0, buttons, modifiers);
+    client().async_mouse_move(to_content_position(position), 0, buttons, modifiers);
 }
 
 void WebContentView::mousePressEvent(QMouseEvent* event)
@@ -289,7 +289,7 @@ void WebContentView::mousePressEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_down(to_content(position), button, buttons, modifiers);
+    client().async_mouse_down(to_content_position(position), button, buttons, modifiers);
 }
 
 void WebContentView::mouseReleaseEvent(QMouseEvent* event)
@@ -311,7 +311,7 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_mouse_up(to_content(position), button, buttons, modifiers);
+    client().async_mouse_up(to_content_position(position), button, buttons, modifiers);
 }
 
 void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
@@ -326,7 +326,7 @@ void WebContentView::mouseDoubleClickEvent(QMouseEvent* event)
     }
     auto modifiers = get_modifiers_from_qt_mouse_event(*event);
     auto buttons = get_buttons_from_qt_event(*event);
-    client().async_doubleclick(to_content(position), button, buttons, modifiers);
+    client().async_doubleclick(to_content_position(position), button, buttons, modifiers);
 }
 
 void WebContentView::dragEnterEvent(QDragEnterEvent* event)
@@ -393,16 +393,6 @@ void WebContentView::focusInEvent(QFocusEvent*)
 void WebContentView::focusOutEvent(QFocusEvent*)
 {
     client().async_set_has_focus(false);
-}
-
-Gfx::IntPoint WebContentView::to_content(Gfx::IntPoint viewport_position) const
-{
-    return viewport_position.translated(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()));
-}
-
-Gfx::IntPoint WebContentView::to_widget(Gfx::IntPoint content_position) const
-{
-    return content_position.translated(-(max(0, horizontalScrollBar()->value())), -(max(0, verticalScrollBar()->value())));
 }
 
 void WebContentView::paintEvent(QPaintEvent*)
@@ -757,7 +747,7 @@ void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContent
 
 void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint content_position, DeprecatedString const& tooltip)
 {
-    auto widget_position = to_widget(content_position);
+    auto widget_position = to_widget_position(content_position);
     QToolTip::showText(
         mapToGlobal(QPoint(widget_position.x(), widget_position.y())),
         qstring_from_ak_deprecated_string(tooltip),
@@ -830,25 +820,25 @@ void WebContentView::notify_server_did_request_refresh(Badge<WebContentClient>)
 void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
 {
     if (on_context_menu_request)
-        on_context_menu_request(to_widget(content_position));
+        on_context_menu_request(to_widget_position(content_position));
 }
 
 void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned)
 {
     if (on_link_context_menu_request)
-        on_link_context_menu_request(url, to_widget(content_position));
+        on_link_context_menu_request(url, to_widget_position(content_position));
 }
 
 void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (on_image_context_menu_request)
-        on_image_context_menu_request(url, to_widget(content_position), bitmap);
+        on_image_context_menu_request(url, to_widget_position(content_position), bitmap);
 }
 
 void WebContentView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
 {
     if (on_video_context_menu_request)
-        on_video_context_menu_request(url, to_widget(content_position), is_playing, has_user_agent_controls, is_looping);
+        on_video_context_menu_request(url, to_widget_position(content_position), is_playing, has_user_agent_controls, is_looping);
 }
 
 void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
@@ -1044,6 +1034,16 @@ void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, Dep
 Gfx::IntRect WebContentView::viewport_rect() const
 {
     return m_viewport_rect;
+}
+
+Gfx::IntPoint WebContentView::to_content_position(Gfx::IntPoint widget_position) const
+{
+    return widget_position.translated(max(0, horizontalScrollBar()->value()), max(0, verticalScrollBar()->value()));
+}
+
+Gfx::IntPoint WebContentView::to_widget_position(Gfx::IntPoint content_position) const
+{
+    return content_position.translated(-(max(0, horizontalScrollBar()->value())), -(max(0, verticalScrollBar()->value())));
 }
 
 bool WebContentView::event(QEvent* event)

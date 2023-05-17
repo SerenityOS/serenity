@@ -107,9 +107,6 @@ public:
     void set_window_size(Gfx::IntSize);
     void set_window_position(Gfx::IntPoint);
 
-    Gfx::IntPoint to_content(Gfx::IntPoint) const;
-    Gfx::IntPoint to_widget(Gfx::IntPoint) const;
-
     enum class PaletteMode {
         Default,
         Dark,
@@ -198,6 +195,8 @@ private:
     virtual void create_client(WebView::EnableCallgrindProfiling = WebView::EnableCallgrindProfiling::No) override;
     virtual void update_zoom() override;
     virtual Gfx::IntRect viewport_rect() const override;
+    virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
+    virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     void update_viewport_rect();
 

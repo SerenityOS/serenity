@@ -179,6 +179,8 @@ private:
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual Gfx::IntRect viewport_rect() const override;
+    virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
+    virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
     void enqueue_input_event(InputEvent const&);

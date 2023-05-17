@@ -136,6 +136,8 @@ public:
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 
     virtual Gfx::IntRect viewport_rect() const = 0;
+    virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;
+    virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const = 0;
 
 protected:
     static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
