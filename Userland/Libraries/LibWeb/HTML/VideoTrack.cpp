@@ -83,6 +83,7 @@ JS::ThrowCompletionOr<void> VideoTrack::initialize(JS::Realm& realm)
 
 void VideoTrack::visit_edges(Cell::Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_media_element);
     visitor.visit(m_video_track_list);
 }
