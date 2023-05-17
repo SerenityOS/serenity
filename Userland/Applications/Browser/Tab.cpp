@@ -336,8 +336,10 @@ Tab::Tab(BrowserWindow& window)
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_link_context_menu_request = [this](auto& url, auto screen_position) {
+    view().on_link_context_menu_request = [this](auto& url, auto widget_position) {
         m_link_context_menu_url = url;
+
+        auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
 
@@ -363,9 +365,11 @@ Tab::Tab(BrowserWindow& window)
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_image_context_menu_request = [this](auto& image_url, auto screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+    view().on_image_context_menu_request = [this](auto& image_url, auto widget_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
+
+        auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_image_context_menu->popup(screen_position);
     };
 
@@ -401,7 +405,7 @@ Tab::Tab(BrowserWindow& window)
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto& video_url, auto screen_position, bool is_playing, bool has_user_agent_controls, bool is_looping) {
+    view().on_video_context_menu_request = [this](auto& video_url, auto widget_position, bool is_playing, bool has_user_agent_controls, bool is_looping) {
         m_video_context_menu_url = video_url;
 
         if (is_playing) {
@@ -415,6 +419,7 @@ Tab::Tab(BrowserWindow& window)
         m_video_context_menu_controls_action->set_checked(has_user_agent_controls);
         m_video_context_menu_loop_action->set_checked(is_looping);
 
+        auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_video_context_menu->popup(screen_position);
     };
 
@@ -507,14 +512,12 @@ Tab::Tab(BrowserWindow& window)
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     view().on_link_hover = [this](auto& url) {
-        if (url.is_valid())
-            update_status(url.to_deprecated_string());
-        else
-            update_status();
+        update_status(url.to_deprecated_string());
     };
 
-    view().on_url_drop = [this](auto& url) {
-        load(url);
+    view().on_link_unhover = [this]() {
+        view().set_override_cursor(Gfx::StandardCursor::None);
+        update_status();
     };
 
     view().on_back_button = [this] {
@@ -588,7 +591,9 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
     m_page_context_menu->add_action(window.inspect_dom_node_action());
-    view().on_context_menu_request = [&](auto screen_position) {
+
+    view().on_context_menu_request = [&](auto widget_position) {
+        auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_page_context_menu->popup(screen_position);
     };
 }

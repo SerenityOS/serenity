@@ -126,10 +126,12 @@ void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
     enqueue_input_event(event);
 
-    if (event.button() == GUI::MouseButton::Backward && on_back_button) {
-        on_back_button();
-    } else if (event.button() == GUI::MouseButton::Forward && on_forward_button) {
-        on_forward_button();
+    if (event.button() == GUI::MouseButton::Backward) {
+        if (on_back_button)
+            on_back_button();
+    } else if (event.button() == GUI::MouseButton::Forward) {
+        if (on_forward_button)
+            on_forward_button();
     }
 }
 
@@ -198,12 +200,6 @@ void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx:
     set_content_size(content_size);
 }
 
-void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const& title)
-{
-    if (on_title_change)
-        on_title_change(title);
-}
-
 void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
 {
     horizontal_scrollbar().increase_slider_by(x_delta);
@@ -229,87 +225,6 @@ void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentC
 void OutOfProcessWebView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
 {
     GUI::Application::the()->hide_tooltip();
-}
-
-void OutOfProcessWebView::notify_server_did_hover_link(Badge<WebContentClient>, const AK::URL& url)
-{
-    if (on_link_hover)
-        on_link_hover(url);
-}
-
-void OutOfProcessWebView::notify_server_did_unhover_link(Badge<WebContentClient>)
-{
-    set_override_cursor(Gfx::StandardCursor::None);
-    if (on_link_hover)
-        on_link_hover({});
-}
-
-void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const AK::URL& url, DeprecatedString const& target, unsigned int modifiers)
-{
-    if (on_link_click)
-        on_link_click(url, target, modifiers);
-}
-
-void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL& url, DeprecatedString const& target, unsigned int modifiers)
-{
-    if (on_link_middle_click)
-        on_link_middle_click(url, target, modifiers);
-}
-
-void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL& url, bool is_redirect)
-{
-    m_url = url;
-    if (on_load_start)
-        on_load_start(url, is_redirect);
-}
-
-void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL& url)
-{
-    m_url = url;
-    if (on_load_finish)
-        on_load_finish(url);
-}
-
-void OutOfProcessWebView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
-{
-    if (on_navigate_back)
-        on_navigate_back();
-}
-
-void OutOfProcessWebView::notify_server_did_request_navigate_forward(Badge<WebContentClient>)
-{
-    if (on_navigate_forward)
-        on_navigate_forward();
-}
-
-void OutOfProcessWebView::notify_server_did_request_refresh(Badge<WebContentClient>)
-{
-    if (on_refresh)
-        on_refresh();
-}
-
-void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
-{
-    if (on_context_menu_request)
-        on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
-}
-
-void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned)
-{
-    if (on_link_context_menu_request)
-        on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
-}
-
-void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
-{
-    if (on_image_context_menu_request)
-        on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
-}
-
-void OutOfProcessWebView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, const AK::URL& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
-{
-    if (on_video_context_menu_request)
-        on_video_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), is_playing, has_user_agent_controls, is_looping);
 }
 
 void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
@@ -365,141 +280,6 @@ void OutOfProcessWebView::notify_server_did_request_dismiss_dialog(Badge<WebCont
 {
     if (m_dialog)
         m_dialog->done(GUI::Dialog::ExecResult::Cancel);
-}
-
-void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source)
-{
-    if (on_get_source)
-        on_get_source(url, source);
-}
-
-void OutOfProcessWebView::notify_server_did_get_dom_tree(DeprecatedString const& dom_tree)
-{
-    if (on_get_dom_tree)
-        on_get_dom_tree(dom_tree);
-}
-
-void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
-{
-    if (on_get_dom_node_properties)
-        on_get_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing);
-}
-
-void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 message_index)
-{
-    if (on_js_console_new_message)
-        on_js_console_new_message(message_index);
-}
-
-void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
-{
-    if (on_get_js_console_messages)
-        on_get_js_console_messages(start_index, message_types, messages);
-}
-
-void OutOfProcessWebView::notify_server_did_change_favicon(Gfx::Bitmap const& favicon)
-{
-    if (on_favicon_change)
-        on_favicon_change(favicon);
-}
-
-Vector<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const& url)
-{
-    if (on_get_all_cookies)
-        return on_get_all_cookies(url);
-    return {};
-}
-
-Optional<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& name)
-{
-    if (on_get_named_cookie)
-        return on_get_named_cookie(url, name);
-    return {};
-}
-
-DeprecatedString OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
-{
-    if (on_get_cookie)
-        return on_get_cookie(url, source);
-    return {};
-}
-
-void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
-{
-    if (on_set_cookie)
-        on_set_cookie(url, cookie, source);
-}
-
-void OutOfProcessWebView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
-{
-    if (on_update_cookie)
-        on_update_cookie(cookie);
-}
-
-String OutOfProcessWebView::notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab)
-{
-    if (on_new_tab)
-        return on_new_tab(activate_tab);
-    return {};
-}
-
-void OutOfProcessWebView::notify_server_did_request_activate_tab(Badge<WebContentClient>)
-{
-    if (on_activate_tab)
-        on_activate_tab();
-}
-
-void OutOfProcessWebView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
-{
-    if (on_close)
-        on_close();
-}
-
-void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_waiting)
-{
-    if (on_resource_status_change)
-        on_resource_status_change(count_waiting);
-}
-
-void OutOfProcessWebView::notify_server_did_request_restore_window()
-{
-    if (on_restore_window)
-        on_restore_window();
-}
-
-Gfx::IntPoint OutOfProcessWebView::notify_server_did_request_reposition_window(Gfx::IntPoint position)
-{
-    if (on_reposition_window)
-        return on_reposition_window(position);
-    return {};
-}
-
-Gfx::IntSize OutOfProcessWebView::notify_server_did_request_resize_window(Gfx::IntSize size)
-{
-    if (on_resize_window)
-        return on_resize_window(size);
-    return {};
-}
-
-Gfx::IntRect OutOfProcessWebView::notify_server_did_request_maximize_window()
-{
-    if (on_maximize_window)
-        return on_maximize_window();
-    return {};
-}
-
-Gfx::IntRect OutOfProcessWebView::notify_server_did_request_minimize_window()
-{
-    if (on_minimize_window)
-        return on_minimize_window();
-    return {};
-}
-
-Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
-{
-    if (on_fullscreen_window)
-        return on_fullscreen_window();
-    return {};
 }
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
@@ -719,12 +499,6 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
     }
 
     process_next_input_event();
-}
-
-void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
-{
-    if (on_get_accessibility_tree)
-        on_get_accessibility_tree(accessibility_tree);
 }
 
 void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
