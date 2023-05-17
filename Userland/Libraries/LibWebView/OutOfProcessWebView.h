@@ -34,9 +34,6 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    void js_console_input(DeprecatedString const& js_source);
-    void js_console_request_messages(i32 start_index);
-
     DeprecatedString dump_layout_tree();
 
     OrderedHashMap<DeprecatedString, DeprecatedString> get_local_storage_entries();
