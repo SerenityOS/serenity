@@ -160,6 +160,32 @@ private:
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
+    template<typename Callback>
+    void for_each_spanned_track_by_item(GridItem const& item, GridDimension const dimension, Callback callback)
+    {
+        auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+        for (size_t span = 0; span < item.span(dimension); span++) {
+            if (item.raw_position(dimension) + span >= tracks.size())
+                break;
+
+            auto& track = tracks[item.raw_position(dimension) + span];
+            callback(track);
+        }
+    }
+
+    template<typename Callback>
+    void for_each_spanned_track_by_item(GridItem const& item, GridDimension const dimension, Callback callback) const
+    {
+        auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+        for (size_t span = 0; span < item.span(dimension); span++) {
+            if (item.raw_position(dimension) + span >= tracks.size())
+                break;
+
+            auto const& track = tracks[item.raw_position(dimension) + span];
+            callback(track);
+        }
+    }
+
     Vector<TemporaryTrack> m_row_gap_tracks;
     Vector<TemporaryTrack> m_column_gap_tracks;
 
