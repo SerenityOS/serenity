@@ -4145,11 +4145,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<Comp
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(Vector<ComponentValue> const& component_values)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, Vector<ComponentValue> const& component_values)
 {
     return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> ErrorOr<RefPtr<StyleValue>> {
-        auto& token = tokens.next_token();
-        if (auto value = TRY(parse_css_value(token)); value && property_accepts_value(m_context.current_property_id(), *value))
+        if (auto value = TRY(parse_css_value_for_property(property_id, tokens)))
             return value;
         tokens.reconsume_current_input_token();
         return nullptr;
@@ -6960,7 +6959,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BackgroundClip:
     case PropertyID::BackgroundImage:
     case PropertyID::BackgroundOrigin:
-        if (auto parsed_value = FIXME_TRY(parse_simple_comma_separated_value_list(component_values)))
+        if (auto parsed_value = FIXME_TRY(parse_simple_comma_separated_value_list(property_id, component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPosition:
@@ -7122,26 +7121,30 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         break;
     }
 
+    // If there's only 1 ComponentValue, we can only produce a single StyleValue.
     if (component_values.size() == 1) {
-        if (auto parsed_value = FIXME_TRY(parse_css_value(component_values.first()))) {
-            if (property_accepts_value(property_id, *parsed_value))
-                return parsed_value.release_nonnull();
-        }
+        auto stream = TokenStream { component_values };
+        if (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream)))
+            return parsed_value.release_nonnull();
+
         return ParseError::SyntaxError;
     }
 
-    // We have multiple values, so treat them as a StyleValueList.
-    if (property_maximum_value_count(property_id) > 1) {
-        StyleValueVector parsed_values;
-        for (auto& component_value : component_values) {
-            auto parsed_value = FIXME_TRY(parse_css_value(component_value));
-            if (!parsed_value || !property_accepts_value(property_id, *parsed_value))
-                return ParseError::SyntaxError;
-            parsed_values.append(parsed_value.release_nonnull());
-        }
-        if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-            return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
+    // Multiple ComponentValues will usually produce multiple StyleValues, so make a StyleValueList.
+    StyleValueVector parsed_values;
+    auto stream = TokenStream { component_values };
+    while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
+        FIXME_TRY(parsed_values.try_append(parsed_value.release_nonnull()));
+        if (!stream.has_next_token())
+            break;
     }
+
+    // Some types (such as <ratio>) can be made from multiple ComponentValues, so if we only made 1 StyleValue, return it directly.
+    if (parsed_values.size() == 1)
+        return *parsed_values.take_first();
+
+    if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
+        return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
 
     return ParseError::SyntaxError;
 #undef FIXME_TRY

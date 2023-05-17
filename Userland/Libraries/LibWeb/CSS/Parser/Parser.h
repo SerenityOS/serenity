@@ -299,7 +299,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_image_value(ComponentValue const&);
     template<typename ParseFunction>
     ErrorOr<RefPtr<StyleValue>> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
-    ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
 
     ErrorOr<RefPtr<StyleValue>> parse_filter_value_list_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_background_value(Vector<ComponentValue> const&);
