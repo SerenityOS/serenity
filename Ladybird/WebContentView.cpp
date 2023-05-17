@@ -16,7 +16,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <Browser/CookieJar.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -292,9 +291,11 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     auto button = get_button_from_qt_event(*event);
 
     if (event->button() & Qt::MouseButton::BackButton) {
-        emit back_mouse_button();
+        if (on_back_button)
+            on_back_button();
     } else if (event->button() & Qt::MouseButton::ForwardButton) {
-        emit forward_mouse_button();
+        if (on_forward_button)
+            on_forward_button();
     }
 
     if (button == 0) {
@@ -640,11 +641,6 @@ void WebContentView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntS
     horizontalScrollBar()->setPageStep(m_viewport_rect.width());
 }
 
-void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const& title)
-{
-    emit title_changed(qstring_from_ak_deprecated_string(title));
-}
-
 void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
 {
     horizontalScrollBar()->setValue(max(0, horizontalScrollBar()->value() + x_delta));
@@ -681,82 +677,6 @@ void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient
 void WebContentView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
 {
     QToolTip::hideText();
-}
-
-void WebContentView::notify_server_did_hover_link(Badge<WebContentClient>, AK::URL const& url)
-{
-    emit link_hovered(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
-}
-
-void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
-{
-    emit link_unhovered();
-}
-
-void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
-{
-    if (on_link_click) {
-        on_link_click(url, target, modifiers);
-    }
-}
-
-void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
-{
-    if (on_link_middle_click) {
-        on_link_middle_click(url, target, modifiers);
-    }
-}
-
-void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK::URL const& url, bool is_redirect)
-{
-    m_url = url;
-    emit load_started(url, is_redirect);
-}
-
-void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
-{
-    m_url = url;
-    if (on_load_finish)
-        on_load_finish(url);
-}
-
-void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
-{
-    emit navigate_back();
-}
-
-void WebContentView::notify_server_did_request_navigate_forward(Badge<WebContentClient>)
-{
-    emit navigate_forward();
-}
-
-void WebContentView::notify_server_did_request_refresh(Badge<WebContentClient>)
-{
-    emit refresh();
-}
-
-void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position)
-{
-    if (on_context_menu_request)
-        on_context_menu_request(to_widget_position(content_position));
-}
-
-void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned)
-{
-    if (on_link_context_menu_request)
-        on_link_context_menu_request(url, to_widget_position(content_position));
-}
-
-void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
-{
-    if (on_image_context_menu_request)
-        on_image_context_menu_request(url, to_widget_position(content_position), bitmap);
-}
-
-void WebContentView::notify_server_did_request_video_context_menu(Badge<WebContentClient>, Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
-{
-    if (on_video_context_menu_request)
-        on_video_context_menu_request(url, to_widget_position(content_position), is_playing, has_user_agent_controls, is_looping);
 }
 
 void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
@@ -812,132 +732,6 @@ void WebContentView::notify_server_did_request_dismiss_dialog(Badge<WebContentCl
         m_dialog->reject();
 }
 
-void WebContentView::notify_server_did_get_source(AK::URL const& url, DeprecatedString const& source)
-{
-    emit got_source(url, qstring_from_ak_deprecated_string(source));
-}
-
-void WebContentView::notify_server_did_get_dom_tree(DeprecatedString const& dom_tree)
-{
-    if (on_get_dom_tree)
-        on_get_dom_tree(dom_tree);
-}
-
-void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
-{
-    if (on_get_dom_node_properties)
-        on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
-}
-
-void WebContentView::notify_server_did_output_js_console_message(i32 message_index)
-{
-    if (on_js_console_new_message)
-        on_js_console_new_message(message_index);
-}
-
-void WebContentView::notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
-{
-    if (on_get_js_console_messages)
-        on_get_js_console_messages(start_index, message_types, messages);
-}
-
-void WebContentView::notify_server_did_change_favicon(Gfx::Bitmap const& bitmap)
-{
-    auto qimage = QImage(bitmap.scanline_u8(0), bitmap.width(), bitmap.height(), QImage::Format_ARGB32);
-    if (qimage.isNull())
-        return;
-    auto qpixmap = QPixmap::fromImage(qimage);
-    if (qpixmap.isNull())
-        return;
-    emit favicon_changed(QIcon(qpixmap));
-}
-
-Vector<Web::Cookie::Cookie> WebContentView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const& url)
-{
-    if (on_get_all_cookies)
-        return on_get_all_cookies(url);
-    return {};
-}
-
-Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& name)
-{
-    if (on_get_named_cookie)
-        return on_get_named_cookie(url, name);
-    return {};
-}
-
-DeprecatedString WebContentView::notify_server_did_request_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Source source)
-{
-    if (on_get_cookie)
-        return on_get_cookie(url, source);
-    return {};
-}
-
-void WebContentView::notify_server_did_set_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
-{
-    if (on_set_cookie)
-        on_set_cookie(url, cookie, source);
-}
-
-void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
-{
-    if (on_update_cookie)
-        on_update_cookie(cookie);
-}
-
-void WebContentView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
-{
-    emit close();
-}
-
-String WebContentView::notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab)
-{
-    if (on_new_tab)
-        return on_new_tab(activate_tab);
-    return {};
-}
-
-void WebContentView::notify_server_did_request_activate_tab(Badge<WebContentClient>)
-{
-    emit activate_tab();
-}
-
-void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)
-{
-    // FIXME
-    (void)count_waiting;
-}
-
-void WebContentView::notify_server_did_request_restore_window()
-{
-    emit restore_window();
-}
-
-Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::IntPoint position)
-{
-    return emit reposition_window(position);
-}
-
-Gfx::IntSize WebContentView::notify_server_did_request_resize_window(Gfx::IntSize size)
-{
-    return emit resize_window(size);
-}
-
-Gfx::IntRect WebContentView::notify_server_did_request_maximize_window()
-{
-    return emit maximize_window();
-}
-
-Gfx::IntRect WebContentView::notify_server_did_request_minimize_window()
-{
-    return emit minimize_window();
-}
-
-Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
-{
-    return emit fullscreen_window();
-}
-
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
     auto file = Core::File::open(path, Core::File::OpenMode::Read);
@@ -990,12 +784,6 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     // FIXME: Currently Ladybird handles the keyboard shortcuts before passing the event to web content, so
     //        we don't need to do anything here. But we'll need to once we start asking web content first.
     (void)event_was_accepted;
-}
-
-void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
-{
-    if (on_get_accessibility_tree)
-        on_get_accessibility_tree(accessibility_tree);
 }
 
 ErrorOr<String> WebContentView::dump_layout_tree()

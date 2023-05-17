@@ -37,6 +37,9 @@ public:
         HistoryNavigation,
     };
     void navigate(QString, LoadType = LoadType::Normal);
+    void back();
+    void forward();
+    void reload();
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
@@ -54,11 +57,6 @@ public:
 public slots:
     void focus_location_editor();
     void location_edit_return_pressed();
-    void page_title_changed(QString);
-    void page_favicon_changed(QIcon);
-    void back();
-    void forward();
-    void reload();
 
 signals:
     void title_changed(int id, QString);

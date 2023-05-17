@@ -79,8 +79,6 @@ public:
         return String::from_deprecated_string(client().dump_layout_tree());
     }
 
-    Function<void(const URL&)> on_load_finish;
-
 private:
     HeadlessWebContentView() = default;
 
@@ -89,59 +87,17 @@ private:
     void notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
     void notify_server_did_change_selection(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor) override { }
-    void notify_server_did_change_title(Badge<WebView::WebContentClient>, DeprecatedString const&) override { }
     void notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32) override { }
     void notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }
     void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
     void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override { }
     void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_hover_link(Badge<WebView::WebContentClient>, const URL&) override { }
-    void notify_server_did_unhover_link(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_click_link(Badge<WebView::WebContentClient>, const URL&, DeprecatedString const&, unsigned) override { }
-    void notify_server_did_middle_click_link(Badge<WebView::WebContentClient>, const URL&, DeprecatedString const&, unsigned) override { }
-    void notify_server_did_start_loading(Badge<WebView::WebContentClient>, const URL&, bool) override { }
-
-    void notify_server_did_finish_loading(Badge<WebView::WebContentClient>, const URL& url) override
-    {
-        if (on_load_finish)
-            on_load_finish(url);
-    }
-
-    void notify_server_did_request_navigate_back(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_request_navigate_forward(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_request_refresh(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_request_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }
-    void notify_server_did_request_link_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned) override { }
-    void notify_server_did_request_image_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override { }
-    void notify_server_did_request_video_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned, bool, bool, bool) override { }
     void notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const&, String const&) override { }
     void notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_get_source(const URL&, DeprecatedString const&) override { }
-    void notify_server_did_get_dom_tree(DeprecatedString const&) override { }
-    void notify_server_did_get_dom_node_properties(i32, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override { }
-    void notify_server_did_get_accessibility_tree(DeprecatedString const&) override { }
-    void notify_server_did_output_js_console_message(i32) override { }
-    void notify_server_did_get_js_console_messages(i32, Vector<DeprecatedString> const&, Vector<DeprecatedString> const&) override { }
-    void notify_server_did_change_favicon(Gfx::Bitmap const&) override { }
-    Vector<Web::Cookie::Cookie> notify_server_did_request_all_cookies(Badge<WebView::WebContentClient>, URL const&) override { return {}; }
-    Optional<Web::Cookie::Cookie> notify_server_did_request_named_cookie(Badge<WebView::WebContentClient>, URL const&, DeprecatedString const&) override { return {}; }
-    DeprecatedString notify_server_did_request_cookie(Badge<WebView::WebContentClient>, const URL&, Web::Cookie::Source) override { return {}; }
-    void notify_server_did_set_cookie(Badge<WebView::WebContentClient>, const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override { }
-    void notify_server_did_update_cookie(Badge<WebView::WebContentClient>, Web::Cookie::Cookie const&) override { }
-    String notify_server_did_request_new_tab(Badge<WebView::WebContentClient>, Web::HTML::ActivateTab) override { return {}; }
-    void notify_server_did_request_activate_tab(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_close_browsing_context(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_update_resource_count(i32) override { }
-    void notify_server_did_request_restore_window() override { }
-    Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) override { return {}; }
-    Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize) override { return {}; }
-    Gfx::IntRect notify_server_did_request_maximize_window() override { return {}; }
-    Gfx::IntRect notify_server_did_request_minimize_window() override { return {}; }
-    Gfx::IntRect notify_server_did_request_fullscreen_window() override { return {}; }
 
     void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id) override
     {

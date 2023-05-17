@@ -97,36 +97,33 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         update_reset_zoom_button();
     });
 
-    QObject::connect(m_view, &WebContentView::link_unhovered, [this] {
-        m_hover_label->hide();
-    });
-
-    QObject::connect(m_view, &WebContentView::activate_tab, [this] {
+    view().on_activate_tab = [this] {
         m_window->activate_tab(tab_index());
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::close, [this] {
+    view().on_close = [this] {
         m_window->close_tab(tab_index());
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::link_hovered, [this](QString const& title) {
-        m_hover_label->setText(title);
+    view().on_link_hover = [this](auto const& url) {
+        m_hover_label->setText(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
         update_hover_label();
         m_hover_label->show();
-    });
-    QObject::connect(m_view, &WebContentView::link_unhovered, [this] {
+    };
+
+    view().on_link_unhover = [this]() {
         m_hover_label->hide();
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::back_mouse_button, [this] {
+    view().on_back_button = [this] {
         back();
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::forward_mouse_button, [this] {
+    view().on_forward_button = [this] {
         forward();
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url, bool is_redirect) {
+    view().on_load_start = [this](const URL& url, bool is_redirect) {
         // If we are loading due to a redirect, we replace the current history entry
         // with the loaded URL
         if (is_redirect) {
@@ -150,7 +147,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
         if (m_console_widget)
             m_console_widget->reset();
-    });
+    };
 
     view().on_load_finish = [this](auto&) {
         if (m_inspector_widget != nullptr && m_inspector_widget->isVisible()) {
@@ -160,45 +157,76 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
-    QObject::connect(m_view, &WebContentView::title_changed, this, &Tab::page_title_changed);
-    QObject::connect(m_view, &WebContentView::favicon_changed, this, &Tab::page_favicon_changed);
+
+    view().on_title_change = [this](auto const& title) {
+        m_title = qstring_from_ak_deprecated_string(title);
+        m_history.update_title(title);
+
+        emit title_changed(tab_index(), m_title);
+    };
+
+    view().on_favicon_change = [this](auto const& bitmap) {
+        auto qimage = QImage(bitmap.scanline_u8(0), bitmap.width(), bitmap.height(), QImage::Format_ARGB32);
+        if (qimage.isNull())
+            return;
+        auto qpixmap = QPixmap::fromImage(qimage);
+        if (qpixmap.isNull())
+            return;
+        emit favicon_changed(tab_index(), QIcon(qpixmap));
+    };
+
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
-    QObject::connect(m_view, &WebContentView::got_source, this, [this](AK::URL, QString const& source) {
+    view().on_get_source = [this](auto const& url, auto const& source) {
         auto* text_edit = new QPlainTextEdit(this);
         text_edit->setWindowFlags(Qt::Window);
         text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
         text_edit->resize(800, 600);
-        text_edit->setPlainText(source);
+        text_edit->setWindowTitle(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
+        text_edit->setPlainText(qstring_from_ak_deprecated_string(source));
         text_edit->show();
-    });
+    };
 
-    QObject::connect(m_view, &WebContentView::navigate_back, this, &Tab::back);
-    QObject::connect(m_view, &WebContentView::navigate_forward, this, &Tab::forward);
-    QObject::connect(m_view, &WebContentView::refresh, this, &Tab::reload);
-    QObject::connect(m_view, &WebContentView::restore_window, this, [this]() {
+    view().on_navigate_back = [this]() {
+        back();
+    };
+
+    view().on_navigate_forward = [this]() {
+        forward();
+    };
+
+    view().on_refresh = [this]() {
+        reload();
+    };
+
+    view().on_restore_window = [this]() {
         m_window->showNormal();
-    });
-    QObject::connect(m_view, &WebContentView::reposition_window, this, [this](auto const& position) {
+    };
+
+    view().on_reposition_window = [this](auto const& position) {
         m_window->move(position.x(), position.y());
         return Gfx::IntPoint { m_window->x(), m_window->y() };
-    });
-    QObject::connect(m_view, &WebContentView::resize_window, this, [this](auto const& size) {
+    };
+
+    view().on_resize_window = [this](auto const& size) {
         m_window->resize(size.width(), size.height());
         return Gfx::IntSize { m_window->width(), m_window->height() };
-    });
-    QObject::connect(m_view, &WebContentView::maximize_window, this, [this]() {
+    };
+
+    view().on_maximize_window = [this]() {
         m_window->showMaximized();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
-    });
-    QObject::connect(m_view, &WebContentView::minimize_window, this, [this]() {
+    };
+
+    view().on_minimize_window = [this]() {
         m_window->showMinimized();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
-    });
-    QObject::connect(m_view, &WebContentView::fullscreen_window, this, [this]() {
+    };
+
+    view().on_fullscreen_window = [this]() {
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
-    });
+    };
 
     view().on_get_dom_tree = [this](auto& dom_tree) {
         if (m_inspector_widget)
@@ -490,18 +518,6 @@ void Tab::copy_link_url(URL const& url)
 void Tab::location_edit_return_pressed()
 {
     navigate(m_location_edit->text());
-}
-
-void Tab::page_title_changed(QString title)
-{
-    m_title = title;
-    m_history.update_title(ak_deprecated_string_from_qstring(m_title));
-    emit title_changed(tab_index(), std::move(title));
-}
-
-void Tab::page_favicon_changed(QIcon icon)
-{
-    emit favicon_changed(tab_index(), std::move(icon));
 }
 
 int Tab::tab_index()
