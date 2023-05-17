@@ -190,7 +190,7 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     asm volatile(
         "mov sp, %[new_sp] \n"
 
-        "sub sp, sp, 24 \n"
+        "sub sp, sp, 32 \n"
         "str %[from_to_thread], [sp, #0] \n"
         "str %[from_to_thread], [sp, #8] \n"
         "br %[new_ip] \n"
@@ -215,7 +215,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 
     // clang-format off
     asm volatile(
-        "sub sp, sp, #248 \n"
+        "sub sp, sp, #256 \n"
         "stp x0, x1,     [sp, #(0 * 0)] \n"
         "stp x2, x3,     [sp, #(2 * 8)] \n"
         "stp x4, x5,     [sp, #(4 * 8)] \n"
@@ -240,7 +240,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "ldr x0, %[to_sp] \n"
         "mov sp, x0 \n"
 
-        "sub sp, sp, 24 \n"
+        "sub sp, sp, 32 \n"
         "ldr x0, %[from_thread] \n"
         "ldr x1, %[to_thread] \n"
         "ldr x2, %[to_ip] \n"
@@ -253,7 +253,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "br x0 \n"
 
         "1: \n"
-        "add sp, sp, 24 \n"
+        "add sp, sp, 32 \n"
 
         "ldp x0, x1,     [sp, #(0 * 0)] \n"
         "ldp x2, x3,     [sp, #(2 * 8)] \n"
@@ -272,13 +272,13 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "ldp x28, x29,   [sp, #(28 * 8)] \n"
         "ldr x30,        [sp, #(30 * 8)] \n"
 
-        "sub sp, sp, 24 \n"
+        "sub sp, sp, 32 \n"
         "ldr x0, [sp, #0] \n"
         "ldr x1, [sp, #8] \n"
         "str x0, %[from_thread] \n"
         "str x1, %[to_thread] \n"
 
-        "add sp, sp, #272 \n"
+        "add sp, sp, #288 \n"
         :
         [from_ip] "=m"(from_thread->regs().elr_el1),
         [from_sp] "=m"(from_thread->regs().sp_el0),
@@ -474,7 +474,7 @@ NAKED void thread_context_first_enter(void)
     asm(
         "ldr x0, [sp, #0] \n"
         "ldr x1, [sp, #8] \n"
-        "add sp, sp, 24 \n"
+        "add sp, sp, 32 \n"
         "bl context_first_init \n"
         "b restore_context_and_eret \n");
 }
@@ -491,7 +491,7 @@ NAKED void do_assume_context(Thread*, u32)
         "mov sp, x0 \n"  // move stack pointer to what Processor::init_context set up for us
         "mov x0, x19 \n" // to_thread
         "mov x1, x19 \n" // from_thread
-        "sub sp, sp, 24 \n"
+        "sub sp, sp, 32 \n"
         "stp x19, x19, [sp] \n"                  // to_thread, from_thread (for thread_context_first_enter)
         "ldr lr, =thread_context_first_enter \n" // should be same as regs.elr_el1
         "b enter_thread_context \n");
