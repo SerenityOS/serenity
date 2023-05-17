@@ -236,7 +236,7 @@ vim.o.exrc = true
 
 somewhere within your Neovim configuration.
 
-Then, created a file under `/path/to/serenity/` named `.nvim.lua` (replace `/path/to/serenity/`) and within it, have
+Then, create a file under `/path/to/serenity/` named `.nvim.lua` (replace `/path/to/serenity/`) and within it, have
 
 ```lua
 -- File: .nvim.lua
