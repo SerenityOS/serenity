@@ -81,7 +81,7 @@ CatDog::State CatDog::special_application_states() const
         return State::Artist;
 
     auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
-        return process.name.equals_ignoring_ascii_case("inspector"sv) || process.name.equals_ignoring_ascii_case("systemmonitor"sv) || process.name.equals_ignoring_ascii_case("profiler"sv);
+        return process.name.equals_ignoring_ascii_case("systemmonitor"sv) || process.name.equals_ignoring_ascii_case("profiler"sv);
     });
     if (maybe_inspector_program.has_value())
         return State::Inspector;
