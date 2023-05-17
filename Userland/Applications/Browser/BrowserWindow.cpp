@@ -14,10 +14,8 @@
 #include "CookieJar.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
-#include <AK/LexicalPath.h>
 #include <Applications/Browser/BrowserWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -32,7 +30,6 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Dump.h>
@@ -258,22 +255,6 @@ void BrowserWindow::build_menus()
         },
         this);
     m_inspect_dom_node_action->set_status_tip("Open inspector for this element");
-
-    m_take_visible_screenshot_action = GUI::Action::create(
-        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
-            if (auto result = take_screenshot(ScreenshotType::Visible); result.is_error())
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("{}", result.error()));
-        },
-        this);
-    m_take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
-
-    m_take_full_screenshot_action = GUI::Action::create(
-        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
-            if (auto result = take_screenshot(ScreenshotType::Full); result.is_error())
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("{}", result.error()));
-        },
-        this);
-    m_take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
 
     auto& inspect_menu = add_menu("&Inspect"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(*m_view_source_action);
@@ -655,10 +636,6 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
         return active_tab().view().get_session_storage_entries();
     };
 
-    new_tab.on_take_screenshot = [this]() {
-        return active_tab().view().take_screenshot();
-    };
-
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
@@ -774,36 +751,6 @@ void BrowserWindow::event(Core::Event& event)
     }
 
     Window::event(event);
-}
-
-ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
-{
-    if (!active_tab().on_take_screenshot)
-        return {};
-
-    Gfx::ShareableBitmap bitmap;
-
-    switch (type) {
-    case ScreenshotType::Visible:
-        bitmap = active_tab().on_take_screenshot();
-        break;
-    case ScreenshotType::Full:
-        bitmap = active_tab().view().take_document_screenshot();
-        break;
-    }
-
-    if (!bitmap.is_valid())
-        return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
-
-    LexicalPath path { Core::StandardPaths::downloads_directory() };
-    path = path.append(Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv));
-
-    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
-
-    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
-    TRY(screenshot_file->write_until_depleted(encoded));
-
-    return {};
 }
 
 void BrowserWindow::update_displayed_zoom_level()

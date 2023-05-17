@@ -41,8 +41,6 @@ public:
     GUI::Action& view_source_action() { return *m_view_source_action; }
     GUI::Action& inspect_dom_tree_action() { return *m_inspect_dom_tree_action; }
     GUI::Action& inspect_dom_node_action() { return *m_inspect_dom_node_action; }
-    GUI::Action& take_visible_screenshot_action() { return *m_take_visible_screenshot_action; }
-    GUI::Action& take_full_screenshot_action() { return *m_take_full_screenshot_action; }
 
     void content_filters_changed();
     void autoplay_allowlist_changed();
@@ -65,12 +63,6 @@ private:
 
     void update_displayed_zoom_level();
 
-    enum class ScreenshotType {
-        Visible,
-        Full,
-    };
-    ErrorOr<void> take_screenshot(ScreenshotType);
-
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
     RefPtr<GUI::Action> m_go_home_action;
@@ -80,8 +72,6 @@ private:
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
     RefPtr<GUI::Action> m_inspect_dom_node_action;
-    RefPtr<GUI::Action> m_take_visible_screenshot_action;
-    RefPtr<GUI::Action> m_take_full_screenshot_action;
 
     RefPtr<GUI::Menu> m_zoom_menu;
 

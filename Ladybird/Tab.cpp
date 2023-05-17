@@ -9,12 +9,8 @@
 #include "BrowserWindow.h"
 #include "Settings.h"
 #include "Utilities.h"
-#include <AK/LexicalPath.h>
 #include <Browser/History.h>
-#include <LibCore/DateTime.h>
-#include <LibCore/StandardPaths.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
-#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QFont>
@@ -191,7 +187,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
-        if (auto result = take_screenshot(ScreenshotType::Visible); result.is_error()) {
+        if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
             auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
             QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
         }
@@ -200,7 +196,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     auto* take_full_screenshot_action = new QAction("Take &Full Screenshot", this);
     take_full_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(take_full_screenshot_action, &QAction::triggered, this, [this]() {
-        if (auto result = take_screenshot(ScreenshotType::Full); result.is_error()) {
+        if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
             auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
             QMessageBox::warning(this, "Ladybird", qstring_from_ak_string(error));
         }
@@ -448,33 +444,6 @@ void Tab::copy_link_url(URL const& url)
 {
     auto* clipboard = QGuiApplication::clipboard();
     clipboard->setText(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
-}
-
-ErrorOr<void> Tab::take_screenshot(ScreenshotType type)
-{
-    Gfx::ShareableBitmap bitmap;
-
-    switch (type) {
-    case ScreenshotType::Visible:
-        bitmap = view().take_screenshot();
-        break;
-    case ScreenshotType::Full:
-        bitmap = view().take_document_screenshot();
-        break;
-    }
-
-    if (!bitmap.is_valid())
-        return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
-
-    LexicalPath path { Core::StandardPaths::downloads_directory() };
-    path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
-
-    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
-
-    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
-    TRY(screenshot_file->write_until_depleted(encoded));
-
-    return {};
 }
 
 void Tab::location_edit_return_pressed()

@@ -74,6 +74,12 @@ public:
     void toggle_video_loop_state();
     void toggle_video_controls_state();
 
+    enum class ScreenshotType {
+        Visible,
+        Full,
+    };
+    ErrorOr<void> take_screenshot(ScreenshotType);
+
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
@@ -156,6 +162,8 @@ protected:
 #if !defined(AK_OS_SERENITY)
     ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No);
 #endif
+
+    void handle_web_content_process_crash();
 
     struct SharedBitmap {
         i32 id { -1 };
