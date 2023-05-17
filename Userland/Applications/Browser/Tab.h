@@ -136,6 +136,8 @@ private:
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 
+    RefPtr<GUI::Dialog> m_dialog;
+
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
     URL m_link_context_menu_url;

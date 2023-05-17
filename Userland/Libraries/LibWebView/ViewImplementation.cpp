@@ -152,6 +152,21 @@ void ViewImplementation::js_console_request_messages(i32 start_index)
     client().async_js_console_request_messages(start_index);
 }
 
+void ViewImplementation::alert_closed()
+{
+    client().async_alert_closed();
+}
+
+void ViewImplementation::confirm_closed(bool accepted)
+{
+    client().async_confirm_closed(accepted);
+}
+
+void ViewImplementation::prompt_closed(Optional<String> response)
+{
+    client().async_prompt_closed(move(response));
+}
+
 void ViewImplementation::toggle_media_play_state()
 {
     client().async_toggle_media_play_state();

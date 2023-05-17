@@ -59,19 +59,6 @@ public:
     Function<void(DeprecatedString const&)> on_tooltip_entered;
     Function<void()> on_tooltip_left;
 
-    Function<void(String const&)> on_alert;
-    void alert_closed();
-
-    Function<void(String const&)> on_confirm;
-    void confirm_closed(bool);
-
-    Function<void(String const&, String const&)> on_prompt;
-    Function<void(String const&)> on_prompt_text_changed;
-    void prompt_closed(Optional<String>);
-
-    Function<void()> on_dialog_accepted;
-    Function<void()> on_dialog_dismissed;
-
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
 
@@ -85,12 +72,6 @@ private:
     virtual void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override;
-    virtual void notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const& message, String const& default_) override;
-    virtual void notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>) override;
-    virtual void notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>) override;
     virtual void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 

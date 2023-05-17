@@ -416,7 +416,7 @@ struct HideCursor {
         [NSMenu popUpContextMenu:self.video_context_menu withEvent:event forView:self];
     };
 
-    m_web_view_bridge->on_alert = [self](auto const& message) {
+    m_web_view_bridge->on_request_alert = [self](auto const& message) {
         auto* ns_message = Ladybird::string_to_ns_string(message);
 
         self.dialog = [[NSAlert alloc] init];
@@ -429,7 +429,7 @@ struct HideCursor {
                             }];
     };
 
-    m_web_view_bridge->on_confirm = [self](auto const& message) {
+    m_web_view_bridge->on_request_confirm = [self](auto const& message) {
         auto* ns_message = Ladybird::string_to_ns_string(message);
 
         self.dialog = [[NSAlert alloc] init];
@@ -444,7 +444,7 @@ struct HideCursor {
                             }];
     };
 
-    m_web_view_bridge->on_prompt = [self](auto const& message, auto const& default_) {
+    m_web_view_bridge->on_request_prompt = [self](auto const& message, auto const& default_) {
         auto* ns_message = Ladybird::string_to_ns_string(message);
         auto* ns_default = Ladybird::string_to_ns_string(default_);
 
@@ -472,7 +472,7 @@ struct HideCursor {
                             }];
     };
 
-    m_web_view_bridge->on_prompt_text_changed = [self](auto const& message) {
+    m_web_view_bridge->on_request_set_prompt_text = [self](auto const& message) {
         if (self.dialog == nil || [self.dialog accessoryView] == nil) {
             return;
         }
@@ -483,7 +483,7 @@ struct HideCursor {
         [input setStringValue:ns_message];
     };
 
-    m_web_view_bridge->on_dialog_accepted = [self]() {
+    m_web_view_bridge->on_request_accept_dialog = [self]() {
         if (self.dialog == nil) {
             return;
         }
@@ -492,7 +492,7 @@ struct HideCursor {
                      returnCode:NSModalResponseOK];
     };
 
-    m_web_view_bridge->on_dialog_dismissed = [self]() {
+    m_web_view_bridge->on_request_dismiss_dialog = [self]() {
         if (self.dialog == nil) {
             return;
         }

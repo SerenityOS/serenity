@@ -37,9 +37,7 @@
 #include <QCursor>
 #include <QGuiApplication>
 #include <QIcon>
-#include <QInputDialog>
 #include <QLineEdit>
-#include <QMessageBox>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPaintEvent>
@@ -725,59 +723,6 @@ void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient
 void WebContentView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
 {
     QToolTip::hideText();
-}
-
-void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
-{
-    m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_ak_string(message), QMessageBox::StandardButton::Ok, this);
-    m_dialog->exec();
-
-    client().async_alert_closed();
-    m_dialog = nullptr;
-}
-
-void WebContentView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
-{
-    m_dialog = new QMessageBox(QMessageBox::Icon::Question, "Ladybird", qstring_from_ak_string(message), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel, this);
-    auto result = m_dialog->exec();
-
-    client().async_confirm_closed(result == QMessageBox::StandardButton::Ok || result == QDialog::Accepted);
-    m_dialog = nullptr;
-}
-
-void WebContentView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
-{
-    m_dialog = new QInputDialog(this);
-    auto& dialog = static_cast<QInputDialog&>(*m_dialog);
-
-    dialog.setWindowTitle("Ladybird");
-    dialog.setLabelText(qstring_from_ak_string(message));
-    dialog.setTextValue(qstring_from_ak_string(default_));
-
-    if (dialog.exec() == QDialog::Accepted)
-        client().async_prompt_closed(ak_string_from_qstring(dialog.textValue()).release_value_but_fixme_should_propagate_errors());
-    else
-        client().async_prompt_closed({});
-
-    m_dialog = nullptr;
-}
-
-void WebContentView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
-{
-    if (m_dialog && is<QInputDialog>(*m_dialog))
-        static_cast<QInputDialog&>(*m_dialog).setTextValue(qstring_from_ak_string(message));
-}
-
-void WebContentView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)
-{
-    if (m_dialog)
-        m_dialog->accept();
-}
-
-void WebContentView::notify_server_did_request_dismiss_dialog(Badge<WebContentClient>)
-{
-    if (m_dialog)
-        m_dialog->reject();
 }
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
