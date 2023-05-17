@@ -53,9 +53,6 @@ public:
 
     void set_system_visibility_state(bool visible);
 
-    Gfx::ShareableBitmap take_screenshot() const;
-    Gfx::ShareableBitmap take_document_screenshot();
-
     // This is a hint that tells OOPWV that the content will scale to the viewport size.
     // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
     void set_content_scales_to_viewport(bool);
@@ -182,8 +179,6 @@ private:
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual Gfx::IntRect viewport_rect() const override;
-
-    void handle_web_content_process_crash();
 
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
     void enqueue_input_event(InputEvent const&);

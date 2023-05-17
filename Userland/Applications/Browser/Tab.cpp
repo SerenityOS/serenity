@@ -554,6 +554,26 @@ Tab::Tab(BrowserWindow& window)
         on_tab_close_other_request(*this);
     }));
 
+    auto take_visible_screenshot_action = GUI::Action::create(
+        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+            if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
+                auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
+                GUI::MessageBox::show_error(&this->window(), error);
+            }
+        },
+        this);
+    take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
+
+    auto take_full_screenshot_action = GUI::Action::create(
+        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+            if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
+                auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
+                GUI::MessageBox::show_error(&this->window(), error);
+            }
+        },
+        this);
+    take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
+
     m_page_context_menu = GUI::Menu::construct();
     m_page_context_menu->add_action(window.go_back_action());
     m_page_context_menu->add_action(window.go_forward_action());
@@ -562,8 +582,8 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.copy_selection_action());
     m_page_context_menu->add_action(window.select_all_action());
     m_page_context_menu->add_separator();
-    m_page_context_menu->add_action(window.take_visible_screenshot_action());
-    m_page_context_menu->add_action(window.take_full_screenshot_action());
+    m_page_context_menu->add_action(move(take_visible_screenshot_action));
+    m_page_context_menu->add_action(move(take_full_screenshot_action));
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());

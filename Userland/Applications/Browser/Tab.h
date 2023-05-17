@@ -77,7 +77,6 @@ public:
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<DeprecatedString, DeprecatedString>()> on_get_local_storage_entries;
     Function<OrderedHashMap<DeprecatedString, DeprecatedString>()> on_get_session_storage_entries;
-    Function<Gfx::ShareableBitmap()> on_take_screenshot;
 
     void enable_webdriver_mode();
 

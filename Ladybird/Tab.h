@@ -60,12 +60,6 @@ private:
     void open_link_in_new_tab(URL const&);
     void copy_link_url(URL const&);
 
-    enum class ScreenshotType {
-        Visible,
-        Full,
-    };
-    ErrorOr<void> take_screenshot(ScreenshotType);
-
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };

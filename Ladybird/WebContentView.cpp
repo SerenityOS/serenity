@@ -637,43 +637,6 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
 }
 
-Gfx::ShareableBitmap WebContentView::take_screenshot() const
-{
-    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
-        return bitmap->to_shareable_bitmap();
-    return {};
-}
-
-Gfx::ShareableBitmap WebContentView::take_document_screenshot()
-{
-    return client().take_document_screenshot();
-}
-
-void WebContentView::handle_web_content_process_crash()
-{
-    dbgln("WebContent process crashed!");
-    create_client();
-    VERIFY(m_client_state.client);
-
-    // Don't keep a stale backup bitmap around.
-    m_backup_bitmap = nullptr;
-
-    handle_resize();
-    StringBuilder builder;
-    builder.append("<html><head><title>Crashed: "sv);
-    builder.append(escape_html_entities(m_url.to_deprecated_string()));
-    builder.append("</title></head><body>"sv);
-    builder.append("<h1>Web page crashed"sv);
-    if (!m_url.host().is_empty()) {
-        builder.appendff(" on {}", escape_html_entities(m_url.host()));
-    }
-    builder.append("</h1>"sv);
-    auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
-    builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
-    builder.append("</body></html>"sv);
-    load_html(builder.to_deprecated_string(), m_url);
-}
-
 void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
     if (m_client_state.back_bitmap.id == bitmap_id) {

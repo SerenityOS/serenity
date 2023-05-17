@@ -113,9 +113,6 @@ public:
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
 
-    Gfx::ShareableBitmap take_screenshot() const;
-    Gfx::ShareableBitmap take_document_screenshot();
-
     enum class PaletteMode {
         Default,
         Dark,
@@ -222,8 +219,6 @@ private:
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 
     Gfx::IntRect m_viewport_rect;
-
-    void handle_web_content_process_crash();
 
     StringView m_webdriver_content_ipc_path;
 };

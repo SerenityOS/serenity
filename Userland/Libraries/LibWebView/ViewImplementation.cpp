@@ -5,7 +5,11 @@
  */
 
 #include <AK/Error.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
+#include <LibCore/DateTime.h>
+#include <LibCore/StandardPaths.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
@@ -284,6 +288,60 @@ void ViewImplementation::request_repaint()
     }
     m_client_state.back_bitmap.pending_paints++;
     client().async_paint(viewport_rect(), m_client_state.back_bitmap.id);
+}
+
+void ViewImplementation::handle_web_content_process_crash()
+{
+    dbgln("WebContent process crashed!");
+
+    create_client();
+    VERIFY(m_client_state.client);
+
+    // Don't keep a stale backup bitmap around.
+    m_backup_bitmap = nullptr;
+
+    handle_resize();
+    StringBuilder builder;
+    builder.append("<html><head><title>Crashed: "sv);
+    builder.append(escape_html_entities(m_url.to_deprecated_string()));
+    builder.append("</title></head><body>"sv);
+    builder.append("<h1>Web page crashed"sv);
+    if (!m_url.host().is_empty()) {
+        builder.appendff(" on {}", escape_html_entities(m_url.host()));
+    }
+    builder.append("</h1>"sv);
+    auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
+    builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
+    builder.append("</body></html>"sv);
+    load_html(builder.to_deprecated_string(), m_url);
+}
+
+ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
+{
+    Gfx::ShareableBitmap bitmap;
+
+    switch (type) {
+    case ScreenshotType::Visible:
+        if (auto* visible_bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
+            bitmap = visible_bitmap->to_shareable_bitmap();
+        break;
+    case ScreenshotType::Full:
+        bitmap = client().take_document_screenshot();
+        break;
+    }
+
+    if (!bitmap.is_valid())
+        return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
+
+    LexicalPath path { Core::StandardPaths::downloads_directory() };
+    path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
+
+    auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
+
+    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
+    TRY(screenshot_file->write_until_depleted(encoded));
+
+    return {};
 }
 
 }
