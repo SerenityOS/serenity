@@ -4167,6 +4167,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     StyleValueVector background_origins;
     RefPtr<StyleValue> background_color;
 
+    auto initial_background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+    auto initial_background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+    auto initial_background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+    auto initial_background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+    auto initial_background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+    auto initial_background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+    auto initial_background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
+    auto initial_background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+
     // Per-layer values
     RefPtr<StyleValue> background_image;
     RefPtr<StyleValue> background_position;
@@ -4190,15 +4199,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     };
 
     auto complete_background_layer = [&]() -> ErrorOr<void> {
-        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage))));
-        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition))));
-        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize))));
-        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat))));
-        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment))));
+        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : initial_background_image));
+        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : initial_background_position));
+        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : initial_background_size));
+        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : initial_background_repeat));
+        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : initial_background_attachment));
 
         if (!background_origin && !background_clip) {
-            background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
-            background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+            background_origin = initial_background_origin;
+            background_clip = initial_background_clip;
         } else if (!background_clip) {
             background_clip = background_origin;
         }
@@ -4312,7 +4321,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         TRY(complete_background_layer());
 
         if (!background_color)
-            background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+            background_color = initial_background_color;
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
             TRY(StyleValueList::create(move(background_images), StyleValueList::Separator::Comma)),
@@ -4325,21 +4334,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     }
 
     if (!background_color)
-        background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+        background_color = initial_background_color;
     if (!background_image)
-        background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+        background_image = initial_background_image;
     if (!background_position)
-        background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+        background_position = initial_background_position;
     if (!background_size)
-        background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+        background_size = initial_background_size;
     if (!background_repeat)
-        background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+        background_repeat = initial_background_repeat;
     if (!background_attachment)
-        background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+        background_attachment = initial_background_attachment;
 
     if (!background_origin && !background_clip) {
-        background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
-        background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+        background_origin = initial_background_origin;
+        background_clip = initial_background_clip;
     } else if (!background_clip) {
         background_clip = background_origin;
     }
