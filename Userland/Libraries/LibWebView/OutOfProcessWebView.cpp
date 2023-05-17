@@ -90,6 +90,16 @@ Gfx::IntRect OutOfProcessWebView::viewport_rect() const
     return visible_content_rect();
 }
 
+Gfx::IntPoint OutOfProcessWebView::to_content_position(Gfx::IntPoint widget_position) const
+{
+    return GUI::AbstractScrollableWidget::to_content_position(widget_position);
+}
+
+Gfx::IntPoint OutOfProcessWebView::to_widget_position(Gfx::IntPoint content_position) const
+{
+    return GUI::AbstractScrollableWidget::to_widget_position(content_position);
+}
+
 void OutOfProcessWebView::update_zoom()
 {
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
