@@ -28,6 +28,7 @@ run-local.sh
 sync-local.sh
 .vim/
 .exrc
+.nvim.lua
 
 Userland/Libraries/LibWasm/Tests/Fixtures/SpecTests
 Userland/Libraries/LibWasm/Tests/Spec
