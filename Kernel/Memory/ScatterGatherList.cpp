@@ -8,11 +8,11 @@
 
 namespace Kernel::Memory {
 
-ErrorOr<LockRefPtr<ScatterGatherList>> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size)
+ErrorOr<LockRefPtr<ScatterGatherList>> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size, StringView region_name)
 {
     auto vm_object = TRY(AnonymousVMObject::try_create_with_physical_pages(allocated_pages));
     auto size = TRY(page_round_up((request.block_count() * device_block_size)));
-    auto region = TRY(MM.allocate_kernel_region_with_vmobject(vm_object, size, "AHCI Scattered DMA"sv, Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes));
+    auto region = TRY(MM.allocate_kernel_region_with_vmobject(vm_object, size, region_name, Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes));
 
     return adopt_lock_ref_if_nonnull(new (nothrow) ScatterGatherList(vm_object, move(region)));
 }
