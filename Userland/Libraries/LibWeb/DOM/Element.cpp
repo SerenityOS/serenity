@@ -1708,4 +1708,20 @@ void Element::set_computed_css_values(RefPtr<CSS::StyleProperties> style)
     m_computed_css_values = move(style);
 }
 
+void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element, HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties)
+{
+    if (!pseudo_element.has_value()) {
+        m_custom_properties = move(custom_properties);
+        return;
+    }
+    m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())] = move(custom_properties);
+}
+
+HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properties(Optional<CSS::Selector::PseudoElement> pseudo_element) const
+{
+    if (!pseudo_element.has_value())
+        return m_custom_properties;
+    return m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())];
+}
+
 }
