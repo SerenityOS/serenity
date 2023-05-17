@@ -714,16 +714,10 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
             if (dimension == GridDimension::Column) {
                 if (grid_item.gap_adjusted_column(grid_container()) == index && grid_item.raw_column_span() == 1) {
                     grid_items_of_track.append(grid_item);
-
-                    track.border_left = max(track.border_left, grid_item.box().computed_values().border_left().width);
-                    track.border_right = max(track.border_right, grid_item.box().computed_values().border_right().width);
                 }
             } else {
                 if (grid_item.gap_adjusted_row(grid_container()) == index && grid_item.raw_row_span() == 1) {
                     grid_items_of_track.append(grid_item);
-
-                    track.border_top = max(track.border_top, grid_item.box().computed_values().border_top().width);
-                    track.border_bottom = max(track.border_bottom, grid_item.box().computed_values().border_bottom().width);
                 }
             }
         }
@@ -1362,7 +1356,7 @@ void GridFormattingContext::determine_grid_container_height()
 {
     CSSPixels total_y = 0;
     for (auto& grid_row : m_grid_rows_and_gaps)
-        total_y += grid_row.full_vertical_size();
+        total_y += grid_row.base_size;
     m_automatic_content_height = total_y;
 }
 
@@ -1397,33 +1391,35 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         for (int i = 0; i < column_end; i++)
             x_end += m_grid_columns_and_gaps[i].base_size;
         for (int i = 0; i < row_start; i++)
-            y_start += m_grid_rows_and_gaps[i].full_vertical_size();
+            y_start += m_grid_rows_and_gaps[i].base_size;
         for (int i = 0; i < row_end; i++) {
-            if (i >= row_start)
-                y_end += m_grid_rows_and_gaps[i].base_size;
-            else
-                y_end += m_grid_rows_and_gaps[i].full_vertical_size();
+            y_end += m_grid_rows_and_gaps[i].base_size;
         }
 
         // A grid item containing block is created by the grid area to which it belongs.
-        auto containing_block_width = max(CSSPixels(0), x_end - x_start - m_grid_columns_and_gaps[column_start].border_left - m_grid_columns_and_gaps[column_start].border_right);
+        auto containing_block_width = max(CSSPixels(0), x_end - x_start);
         auto containing_block_height = y_end - y_start;
 
         auto computed_width = child_box.computed_values().width();
         auto computed_height = child_box.computed_values().height();
 
-        auto used_width = computed_width.is_auto() ? containing_block_width : computed_width.to_px(grid_container(), containing_block_width);
-        auto used_height = computed_height.is_auto() ? containing_block_height : computed_height.to_px(grid_container(), containing_block_height);
+        auto border_left = child_box.computed_values().border_left().width;
+        auto border_right = child_box.computed_values().border_right().width;
+        auto border_top = child_box.computed_values().border_top().width;
+        auto border_bottom = child_box.computed_values().border_bottom().width;
+
+        child_box_state.border_left = border_left;
+        child_box_state.border_right = border_right;
+        child_box_state.border_top = border_top;
+        child_box_state.border_bottom = border_bottom;
+
+        auto used_width = computed_width.is_auto() ? (containing_block_width - child_box_state.border_left - child_box_state.border_right) : computed_width.to_px(grid_container(), containing_block_width);
+        auto used_height = computed_height.is_auto() ? (containing_block_height - child_box_state.border_top - child_box_state.border_bottom) : computed_height.to_px(grid_container(), containing_block_height);
 
         child_box_state.set_content_width(used_width);
         child_box_state.set_content_height(used_height);
 
-        child_box_state.offset = { x_start + m_grid_columns_and_gaps[column_start].border_left, y_start + m_grid_rows_and_gaps[row_start].border_top };
-
-        child_box_state.border_left = child_box.computed_values().border_left().width;
-        child_box_state.border_right = child_box.computed_values().border_right().width;
-        child_box_state.border_top = child_box.computed_values().border_top().width;
-        child_box_state.border_bottom = child_box.computed_values().border_bottom().width;
+        child_box_state.offset = { x_start + border_left, y_start + border_top };
 
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
         if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
@@ -1461,7 +1457,7 @@ void GridFormattingContext::determine_intrinsic_size_of_grid_container(Available
     if (available_space.height.is_intrinsic_sizing_constraint()) {
         CSSPixels grid_container_height = 0;
         for (auto& track : m_grid_rows) {
-            grid_container_height += track.full_vertical_size();
+            grid_container_height += track.base_size;
         }
         m_state.get_mutable(grid_container()).set_content_height(grid_container_height);
     }
@@ -1469,7 +1465,7 @@ void GridFormattingContext::determine_intrinsic_size_of_grid_container(Available
     if (available_space.width.is_intrinsic_sizing_constraint()) {
         CSSPixels grid_container_width = 0;
         for (auto& track : m_grid_columns) {
-            grid_container_width += track.full_horizontal_size();
+            grid_container_width += track.base_size;
         }
         m_state.get_mutable(grid_container()).set_content_width(grid_container_width);
     }
@@ -1673,12 +1669,12 @@ CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem con
     }();
 
     if (should_treat_preferred_size_as_auto) {
-        return calculate_min_content_size(item, dimension);
+        return item.add_border_box_sizes(calculate_min_content_size(item, dimension), dimension);
     }
 
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return preferred_size.to_px(grid_container(), containing_block_size);
+    return item.add_border_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension);
 }
 
 CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -1692,12 +1688,12 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
     }();
 
     if (should_treat_preferred_size_as_auto) {
-        return calculate_max_content_size(item, dimension);
+        return item.add_border_box_sizes(calculate_max_content_size(item, dimension), dimension);
     }
 
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return preferred_size.to_px(grid_container(), containing_block_size);
+    return item.add_border_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension);
 }
 
 CSSPixels GridFormattingContext::calculate_limited_min_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -1782,7 +1778,7 @@ CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, Gr
     // FIXME: Check all tracks spanned by an item
     auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto();
     if (item_spans_auto_tracks && !item.box().is_scroll_container()) {
-        return content_based_minimum_size(item, dimension);
+        return item.add_border_box_sizes(content_based_minimum_size(item, dimension), dimension);
     }
 
     // Otherwise, the automatic minimum size is zero, as usual.
@@ -1810,7 +1806,7 @@ CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& 
         if (minimum_size.is_auto())
             return automatic_minimum_size(item, dimension);
         auto containing_block_size = containing_block_size_for_item(item, dimension);
-        return minimum_size.to_px(grid_container(), containing_block_size);
+        return item.add_border_box_sizes(minimum_size.to_px(grid_container(), containing_block_size), dimension);
     }
 
     return calculate_min_content_contribution(item, dimension);
