@@ -473,18 +473,6 @@ void WebContentView::update_viewport_rect()
     request_repaint();
 }
 
-void WebContentView::did_output_js_console_message(i32 message_index)
-{
-    if (m_console_widget)
-        m_console_widget->notify_about_new_console_message(message_index);
-}
-
-void WebContentView::did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages)
-{
-    if (m_console_widget)
-        m_console_widget->handle_console_messages(start_index, message_types, messages);
-}
-
 void WebContentView::ensure_js_console_widget()
 {
     if (!m_console_widget) {
