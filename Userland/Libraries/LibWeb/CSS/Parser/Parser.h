@@ -280,6 +280,12 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_radial_gradient_function(ComponentValue const&);
 
     ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_css_value_for_property(PropertyID, TokenStream<ComponentValue>&);
+    struct PropertyAndValue {
+        PropertyID property;
+        RefPtr<StyleValue> style_value;
+    };
+    ErrorOr<PropertyAndValue> parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_css_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);

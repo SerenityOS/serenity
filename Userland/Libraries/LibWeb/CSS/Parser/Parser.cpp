@@ -7147,6 +7147,171 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 #undef FIXME_TRY
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)
+{
+    auto result = parse_css_value_for_properties({ &property_id, 1 }, tokens);
+    if (result.is_error())
+        return result.release_error();
+    return result.value().style_value;
+}
+
+ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
+{
+    auto any_property_accepts_type = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_type(property, value_type))
+                return property;
+        }
+        return {};
+    };
+    auto any_property_accepts_identifier = [](ReadonlySpan<PropertyID> property_ids, ValueID identifier) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_identifier(property, identifier))
+                return property;
+        }
+        return {};
+    };
+
+    auto& peek_token = tokens.peek_token();
+
+    if (peek_token.is(Token::Type::Ident)) {
+        // NOTE: We do not try to parse "CSS-wide keywords" here. https://www.w3.org/TR/css-values-4/#common-keywords
+        //       These are only valid on their own, and so should be parsed directly in `parse_css_value()`.
+        auto ident = value_id_from_string(peek_token.token().ident());
+        if (ident.has_value()) {
+            if (auto property = any_property_accepts_identifier(property_ids, ident.value()); property.has_value()) {
+                (void)tokens.next_token();
+                return PropertyAndValue { *property, TRY(IdentifierStyleValue::create(ident.value())) };
+            }
+        }
+
+        // FIXME: Custom idents. https://www.w3.org/TR/css-values-4/#identifier-value
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Color); property.has_value()) {
+        if (auto maybe_color = TRY(parse_color_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_color };
+        }
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Image); property.has_value()) {
+        if (auto maybe_image = TRY(parse_image_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_image };
+        }
+    }
+
+    auto property_accepting_integer = any_property_accepts_type(property_ids, ValueType::Integer);
+    auto property_accepting_number = any_property_accepts_type(property_ids, ValueType::Number);
+    bool property_accepts_numeric = property_accepting_integer.has_value() || property_accepting_number.has_value();
+
+    if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
+        auto numeric = TRY(parse_numeric_value(peek_token));
+        (void)tokens.next_token();
+        if (numeric->as_numeric().has_integer() && property_accepting_integer.has_value())
+            return PropertyAndValue { *property_accepting_integer, numeric };
+        return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), numeric };
+    }
+
+    if (peek_token.is(Token::Type::Percentage)) {
+        if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value()) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, TRY(PercentageStyleValue::create(Percentage(peek_token.token().percentage()))) };
+        }
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Rect); property.has_value()) {
+        if (auto maybe_rect = TRY(parse_rect_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_rect };
+        }
+    }
+
+    if (peek_token.is(Token::Type::String)) {
+        if (auto property = any_property_accepts_type(property_ids, ValueType::String); property.has_value())
+            return PropertyAndValue { *property, TRY(StringStyleValue::create(TRY(String::from_utf8(tokens.next_token().token().string())))) };
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
+        if (auto url = TRY(parse_url_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, url };
+        }
+    }
+
+    bool property_accepts_dimension = any_property_accepts_type(property_ids, ValueType::Angle).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Length).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Percentage).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Resolution).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Time).has_value();
+
+    if (property_accepts_dimension) {
+        if (auto maybe_dimension = parse_dimension(peek_token); maybe_dimension.has_value()) {
+            (void)tokens.next_token();
+            auto dimension = maybe_dimension.release_value();
+            if (dimension.is_angle()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, TRY(AngleStyleValue::create(dimension.angle())) };
+            }
+            if (dimension.is_frequency()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(dimension.frequency())) };
+            }
+            if (dimension.is_length()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, TRY(LengthStyleValue::create(dimension.length())) };
+            }
+            if (dimension.is_resolution()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value())
+                    return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(dimension.resolution())) };
+            }
+            if (dimension.is_time()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
+                    return PropertyAndValue { *property, TRY(TimeStyleValue::create(dimension.time())) };
+            }
+        }
+    }
+
+    // In order to not end up parsing `calc()` and other math expressions multiple times,
+    // we parse it once, and then see if its resolved type matches what the property accepts.
+    if (peek_token.is_function() && (property_accepts_dimension || property_accepts_numeric)) {
+        if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
+            (void)tokens.next_token();
+            auto& calculated = maybe_dynamic->as_calculated();
+            switch (calculated.resolved_type()) {
+            case CalculatedStyleValue::ResolvedType::Angle:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Frequency:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Integer:
+            case CalculatedStyleValue::ResolvedType::Number:
+                if (property_accepts_numeric)
+                    return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Length:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Percentage:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Time:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            }
+        }
+    }
+
+    return PropertyAndValue { property_ids.first(), nullptr };
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value(ComponentValue const& component_value)
 {
     if (auto builtin = TRY(parse_builtin_value(component_value)))
