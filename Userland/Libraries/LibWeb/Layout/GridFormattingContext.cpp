@@ -927,11 +927,9 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
             continue;
 
         Vector<TemporaryTrack&> spanned_tracks;
-        auto item_start_track_index = item.raw_position(dimension);
-        for (size_t span = 0; span < item_span; span++) {
-            auto& track = tracks[item_start_track_index + span];
+        for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
             spanned_tracks.append(track);
-        }
+        });
 
         auto item_spans_tracks_with_flexible_sizing_function = any_of(spanned_tracks, [](auto& track) {
             return track.min_track_sizing_function.is_flexible_length() || track.max_track_sizing_function.is_flexible_length();
@@ -967,15 +965,9 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     for (auto& item : m_grid_items) {
         Vector<TemporaryTrack&> spanned_tracks;
-        auto item_start_track_index = item.raw_position(dimension);
-        size_t span = 0;
-        // FIXME: out of bounds check should not be needed here and currently present only
-        //        because there is some placement bug for tracks with repeat()
-        while (span < item.span(dimension) && item_start_track_index + span < tracks.size()) {
-            auto& track = tracks[item_start_track_index + span];
+        for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
             spanned_tracks.append(track);
-            span++;
-        }
+        });
 
         auto item_spans_tracks_with_flexible_sizing_function = any_of(spanned_tracks, [](auto& track) {
             return track.min_track_sizing_function.is_flexible_length() || track.max_track_sizing_function.is_flexible_length();
@@ -1120,16 +1112,11 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
             for (auto& item : m_grid_items) {
                 Vector<TemporaryTrack&> spanned_tracks;
                 bool crosses_flexible_track = false;
-                for (size_t span = 0; span < item.span(dimension); span++) {
-                    // FIXME: This check should not be need if grid item positioning works correct
-                    if (item.raw_position(dimension) + span >= tracks.size())
-                        break;
-
-                    auto& track = tracks[item.raw_position(dimension) + span];
+                for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
                     spanned_tracks.append(track);
                     if (track.max_track_sizing_function.is_flexible_length())
                         crosses_flexible_track = true;
-                }
+                });
 
                 if (crosses_flexible_track)
                     result = max(result, find_the_size_of_an_fr(spanned_tracks, calculate_max_content_size(item, dimension)));
@@ -1651,33 +1638,21 @@ AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem cons
 {
     CSSPixels column_width = 0;
     bool has_columns_with_definite_base_size = false;
-    for (size_t span = 0; span < item.raw_column_span(); span++) {
-        // FIXME: This check should not be need if grid item positioning works correct
-        if (item.raw_column() + span >= m_grid_columns.size())
-            break;
-
-        auto& track = m_grid_columns[item.raw_column() + span];
+    for_each_spanned_track_by_item(item, GridDimension::Column, [&](TemporaryTrack const& track) {
         column_width += track.base_size;
-
         if (track.has_definite_base_size)
             has_columns_with_definite_base_size = true;
-    }
+    });
 
     AvailableSize available_width = has_columns_with_definite_base_size ? AvailableSize::make_definite(column_width) : AvailableSize::make_indefinite();
 
     CSSPixels column_height = 0;
     bool has_rows_with_definite_base_size = false;
-    for (size_t span = 0; span < item.raw_row_span(); span++) {
-        // FIXME: This check should not be need if grid item positioning works correct
-        if (item.raw_row() + span >= m_grid_rows.size())
-            break;
-
-        auto& track = m_grid_rows[item.raw_row() + span];
+    for_each_spanned_track_by_item(item, GridDimension::Row, [&](TemporaryTrack const& track) {
         column_height += track.base_size;
-
         if (track.has_definite_base_size)
             has_rows_with_definite_base_size = true;
-    }
+    });
 
     AvailableSize available_height = has_rows_with_definite_base_size ? AvailableSize::make_definite(column_height) : AvailableSize::make_indefinite();
 
