@@ -25,9 +25,9 @@ public:
     size_t scatters_count() const { return m_vm_object->physical_pages().size(); }
 
 private:
-    ScatterGatherList(NonnullLockRefPtr<AnonymousVMObject>, AsyncBlockDeviceRequest&, size_t device_block_size);
+    ScatterGatherList(NonnullLockRefPtr<AnonymousVMObject>, NonnullOwnPtr<Region> dma_region);
     NonnullLockRefPtr<AnonymousVMObject> m_vm_object;
-    OwnPtr<Region> m_dma_region;
+    NonnullOwnPtr<Region> m_dma_region;
 };
 
 }
