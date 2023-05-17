@@ -1649,11 +1649,37 @@ CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& 
 
 AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem const& item) const
 {
-    auto const& column_track = m_grid_columns[item.raw_column()];
-    AvailableSize available_width = column_track.has_definite_base_size ? AvailableSize::make_definite(column_track.base_size) : AvailableSize::make_indefinite();
+    CSSPixels column_width = 0;
+    bool has_columns_with_definite_base_size = false;
+    for (size_t span = 0; span < item.raw_column_span(); span++) {
+        // FIXME: This check should not be need if grid item positioning works correct
+        if (item.raw_column() + span >= m_grid_columns.size())
+            break;
 
-    auto const& row_track = m_grid_rows[item.raw_row()];
-    AvailableSize available_height = row_track.has_definite_base_size ? AvailableSize::make_definite(row_track.base_size) : AvailableSize::make_indefinite();
+        auto& track = m_grid_columns[item.raw_column() + span];
+        column_width += track.base_size;
+
+        if (track.has_definite_base_size)
+            has_columns_with_definite_base_size = true;
+    }
+
+    AvailableSize available_width = has_columns_with_definite_base_size ? AvailableSize::make_definite(column_width) : AvailableSize::make_indefinite();
+
+    CSSPixels column_height = 0;
+    bool has_rows_with_definite_base_size = false;
+    for (size_t span = 0; span < item.raw_row_span(); span++) {
+        // FIXME: This check should not be need if grid item positioning works correct
+        if (item.raw_row() + span >= m_grid_rows.size())
+            break;
+
+        auto& track = m_grid_rows[item.raw_row() + span];
+        column_height += track.base_size;
+
+        if (track.has_definite_base_size)
+            has_rows_with_definite_base_size = true;
+    }
+
+    AvailableSize available_height = has_rows_with_definite_base_size ? AvailableSize::make_definite(column_height) : AvailableSize::make_indefinite();
 
     return AvailableSpace(available_width, available_height);
 }
