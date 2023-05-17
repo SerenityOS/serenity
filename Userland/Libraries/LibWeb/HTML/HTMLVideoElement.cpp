@@ -109,7 +109,8 @@ void HTMLVideoElement::set_video_track(JS::GCPtr<HTML::VideoTrack> video_track)
 void HTMLVideoElement::set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame, double position)
 {
     m_current_frame = { move(frame), position };
-    layout_node()->set_needs_display();
+    if (layout_node())
+        layout_node()->set_needs_display();
 }
 
 void HTMLVideoElement::on_playing()
