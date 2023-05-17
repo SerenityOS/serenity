@@ -71,9 +71,7 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
         count = length - offset;
 
     // 4. Queue a mutation record of "characterData" for node with null, null, node’s data, « », « », null, and null.
-    auto added_node_list = TRY(StaticNodeList::create(realm(), {}));
-    auto removed_node_list = TRY(StaticNodeList::create(realm(), {}));
-    queue_mutation_record(MutationType::characterData, {}, {}, m_data, added_node_list, removed_node_list, nullptr, nullptr);
+    queue_mutation_record(MutationType::characterData, {}, {}, m_data, {}, {}, nullptr, nullptr);
 
     // 5. Insert data into node’s data after offset code units.
     // 6. Let delete offset be offset + data’s length.

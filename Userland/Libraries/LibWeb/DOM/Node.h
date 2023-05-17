@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -242,7 +242,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
+    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
     template<typename Callback>
@@ -671,7 +671,7 @@ protected:
     ErrorOr<String> name_or_description(NameOrDescription, Document const&, HashTable<i32>&) const;
 
 private:
-    void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_tree_mutation_record(Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     void insert_before_impl(JS::NonnullGCPtr<Node>, JS::GCPtr<Node> child);
     void append_child_impl(JS::NonnullGCPtr<Node>);

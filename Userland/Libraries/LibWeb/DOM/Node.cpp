@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
@@ -405,9 +405,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
         // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
-        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
-        auto removed_node_list = StaticNodeList::create(realm(), nodes).release_value_but_fixme_should_propagate_errors();
-        node->queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
+        node->queue_tree_mutation_record({}, nodes, nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -480,9 +478,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
     if (!suppress_observers) {
-        auto added_node_list = StaticNodeList::create(realm(), move(nodes)).release_value_but_fixme_should_propagate_errors();
-        auto removed_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
-        queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), child.ptr());
+        queue_tree_mutation_record(move(nodes), {}, previous_sibling.ptr(), child.ptr());
     }
 
     // 9. Run the children changed steps for parent.
@@ -650,11 +646,7 @@ void Node::remove(bool suppress_observers)
 
     // 20. If suppress observers flag is unset, then queue a tree mutation record for parent with « », « node », oldPreviousSibling, and oldNextSibling.
     if (!suppress_observers) {
-        Vector<JS::Handle<Node>> removed_nodes;
-        removed_nodes.append(JS::make_handle(*this));
-        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
-        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
-        parent->queue_tree_mutation_record(added_node_list, removed_node_list, old_previous_sibling.ptr(), old_next_sibling.ptr());
+        parent->queue_tree_mutation_record({}, { *this }, old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -749,9 +741,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    auto added_node_list = TRY(StaticNodeList::create(realm(), move(nodes)));
-    auto removed_node_list = TRY(StaticNodeList::create(realm(), move(removed_nodes)));
-    queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), reference_child.ptr());
+    queue_tree_mutation_record(move(nodes), move(removed_nodes), previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
@@ -1220,9 +1210,7 @@ void Node::replace_all(JS::GCPtr<Node> node)
 
     // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
     if (!added_nodes.is_empty() || !removed_nodes.is_empty()) {
-        auto added_node_list = StaticNodeList::create(realm(), move(added_nodes)).release_value_but_fixme_should_propagate_errors();
-        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
-        queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
+        queue_tree_mutation_record(move(added_nodes), move(removed_nodes), nullptr, nullptr);
     }
 }
 
@@ -1430,7 +1418,7 @@ Painting::PaintableBox const* Node::paintable_box() const
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const
+void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.
@@ -1479,11 +1467,18 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
         }
     }
 
+    // OPTIMIZATION: If there are no interested observers, bail without doing any more work.
+    if (interested_observers.is_empty())
+        return;
+
+    auto added_nodes_list = StaticNodeList::create(realm(), move(added_nodes)).release_value_but_fixme_should_propagate_errors();
+    auto removed_nodes_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+
     // 4. For each observer → mappedOldValue of interestedObservers:
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value).release_value_but_fixme_should_propagate_errors();
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value).release_value_but_fixme_should_propagate_errors();
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));
@@ -1494,10 +1489,10 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
 }
 
 // https://dom.spec.whatwg.org/#queue-a-tree-mutation-record
-void Node::queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_tree_mutation_record(Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling)
 {
     // 1. Assert: either addedNodes or removedNodes is not empty.
-    VERIFY(added_nodes->length() > 0 || removed_nodes->length() > 0);
+    VERIFY(added_nodes.size() > 0 || removed_nodes.size() > 0);
 
     // 2. Queue a mutation record of "childList" for target with null, null, null, addedNodes, removedNodes, previousSibling, and nextSibling.
     queue_mutation_record(MutationType::childList, {}, {}, {}, move(added_nodes), move(removed_nodes), previous_sibling, next_sibling);
