@@ -209,7 +209,7 @@ To install `clangd`, you need only run
 This could also be done within `Mason` (run `:Mason`) by navigating to the `LSP` tab, hovering over `clangd`, and pressing `I`. Use `g?` 
 within `Mason` to learn how to update or install packages. Additionally, you could have `clangd` added to your path.
 
-To configure `clangd`, you pass arguments to `require("lspconfig").clangd.setup`. This is placed placed 
+To configure `clangd`, you pass arguments to `require("lspconfig").clangd.setup`. This is placed 
 [here](https://github.com/VonHeikemen/lsp-zero.nvim/blob/10c0486d4ad189c5141dfc3ba36e4e9fc5bb8396/doc/md/guides/lazy-loading-with-lazy-nvim.md?plain=1#L71) 
 before the call to `lsp.setup()`. 
 
