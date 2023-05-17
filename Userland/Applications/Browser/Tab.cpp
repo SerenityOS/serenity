@@ -28,6 +28,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/Dialog.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
@@ -506,6 +508,61 @@ Tab::Tab(BrowserWindow& window)
     view().on_update_cookie = [this](auto& cookie) {
         if (on_update_cookie)
             on_update_cookie(cookie);
+    };
+
+    view().on_request_alert = [this](String const& message) {
+        auto& window = this->window();
+
+        m_dialog = GUI::MessageBox::create(&window, message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK).release_value_but_fixme_should_propagate_errors();
+        m_dialog->set_icon(window.icon());
+        m_dialog->exec();
+
+        view().alert_closed();
+        m_dialog = nullptr;
+    };
+
+    view().on_request_confirm = [this](String const& message) {
+        auto& window = this->window();
+
+        m_dialog = GUI::MessageBox::create(&window, message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel).release_value_but_fixme_should_propagate_errors();
+        m_dialog->set_icon(window.icon());
+
+        view().confirm_closed(m_dialog->exec() == GUI::Dialog::ExecResult::OK);
+        m_dialog = nullptr;
+    };
+
+    view().on_request_prompt = [this](String const& message, String const& default_) {
+        auto& window = this->window();
+
+        String mutable_value = default_;
+        m_dialog = GUI::InputBox::create(&window, mutable_value, message, "Prompt"sv, GUI::InputType::Text).release_value_but_fixme_should_propagate_errors();
+        m_dialog->set_icon(window.icon());
+
+        if (m_dialog->exec() == GUI::InputBox::ExecResult::OK) {
+            auto const& dialog = static_cast<GUI::InputBox const&>(*m_dialog);
+            auto response = dialog.text_value();
+
+            view().prompt_closed(move(response));
+        } else {
+            view().prompt_closed({});
+        }
+
+        m_dialog = nullptr;
+    };
+
+    view().on_request_set_prompt_text = [this](String const& message) {
+        if (m_dialog && is<GUI::InputBox>(*m_dialog))
+            static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
+    };
+
+    view().on_request_accept_dialog = [this]() {
+        if (m_dialog)
+            m_dialog->done(GUI::Dialog::ExecResult::OK);
+    };
+
+    view().on_request_dismiss_dialog = [this]() {
+        if (m_dialog)
+            m_dialog->done(GUI::Dialog::ExecResult::Cancel);
     };
 
     view().on_get_source = [this](auto& url, auto& source) {

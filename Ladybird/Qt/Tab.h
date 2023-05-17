@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QPointer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QWidget>
@@ -111,6 +112,8 @@ private:
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
     OwnPtr<QMenu> m_console_context_menu;
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
+
+    QPointer<QDialog> m_dialog;
 };
 
 }

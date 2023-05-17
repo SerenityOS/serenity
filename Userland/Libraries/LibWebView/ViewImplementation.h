@@ -75,6 +75,10 @@ public:
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 
+    void alert_closed();
+    void confirm_closed(bool accepted);
+    void prompt_closed(Optional<String> response);
+
     void toggle_media_play_state();
     void toggle_media_mute_state();
     void toggle_media_loop_state();
@@ -104,6 +108,12 @@ public:
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
+    Function<void(String const& message)> on_request_alert;
+    Function<void(String const& message)> on_request_confirm;
+    Function<void(String const& message, String const& default_)> on_request_prompt;
+    Function<void(String const& message)> on_request_set_prompt_text;
+    Function<void()> on_request_accept_dialog;
+    Function<void()> on_request_dismiss_dialog;
     Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
     Function<void(DeprecatedString const&)> on_get_dom_tree;
     Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)> on_get_dom_node_properties;
@@ -133,12 +143,6 @@ public:
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) = 0;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) = 0;
-    virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) = 0;
-    virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) = 0;
-    virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) = 0;
-    virtual void notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message) = 0;
-    virtual void notify_server_did_request_accept_dialog(Badge<WebContentClient>) = 0;
-    virtual void notify_server_did_request_dismiss_dialog(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 

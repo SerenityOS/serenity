@@ -10,9 +10,6 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/Dialog.h>
-#include <LibGUI/InputBox.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
@@ -232,61 +229,6 @@ void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentC
 void OutOfProcessWebView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
 {
     GUI::Application::the()->hide_tooltip();
-}
-
-void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
-{
-    m_dialog = GUI::MessageBox::create(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK).release_value_but_fixme_should_propagate_errors();
-    m_dialog->set_icon(window()->icon());
-    m_dialog->exec();
-
-    client().async_alert_closed();
-    m_dialog = nullptr;
-}
-
-void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
-{
-    m_dialog = GUI::MessageBox::create(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel).release_value_but_fixme_should_propagate_errors();
-    m_dialog->set_icon(window()->icon());
-
-    client().async_confirm_closed(m_dialog->exec() == GUI::Dialog::ExecResult::OK);
-    m_dialog = nullptr;
-}
-
-void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
-{
-    String mutable_value = default_;
-    m_dialog = GUI::InputBox::create(window(), mutable_value, message, "Prompt"sv, GUI::InputType::Text).release_value_but_fixme_should_propagate_errors();
-    m_dialog->set_icon(window()->icon());
-
-    if (m_dialog->exec() == GUI::InputBox::ExecResult::OK) {
-        auto const& dialog = static_cast<GUI::InputBox const&>(*m_dialog);
-        auto response = dialog.text_value();
-
-        client().async_prompt_closed(move(response));
-    } else {
-        client().async_prompt_closed({});
-    }
-
-    m_dialog = nullptr;
-}
-
-void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
-{
-    if (m_dialog && is<GUI::InputBox>(*m_dialog))
-        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
-}
-
-void OutOfProcessWebView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)
-{
-    if (m_dialog)
-        m_dialog->done(GUI::Dialog::ExecResult::OK);
-}
-
-void OutOfProcessWebView::notify_server_did_request_dismiss_dialog(Badge<WebContentClient>)
-{
-    if (m_dialog)
-        m_dialog->done(GUI::Dialog::ExecResult::Cancel);
 }
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)

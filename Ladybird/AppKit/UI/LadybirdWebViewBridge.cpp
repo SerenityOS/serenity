@@ -197,58 +197,6 @@ void WebViewBridge::notify_server_did_leave_tooltip_area(Badge<WebView::WebConte
     if (on_tooltip_left)
         on_tooltip_left();
 }
-
-void WebViewBridge::notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const& message)
-{
-    if (on_alert)
-        on_alert(message);
-}
-
-void WebViewBridge::alert_closed()
-{
-    client().async_alert_closed();
-}
-
-void WebViewBridge::notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const& message)
-{
-    if (on_confirm)
-        on_confirm(message);
-}
-
-void WebViewBridge::confirm_closed(bool accepted)
-{
-    client().async_confirm_closed(accepted);
-}
-
-void WebViewBridge::notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const& message, String const& default_)
-{
-    if (on_prompt)
-        on_prompt(message, default_);
-}
-
-void WebViewBridge::prompt_closed(Optional<String> response)
-{
-    client().async_prompt_closed(move(response));
-}
-
-void WebViewBridge::notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const& message)
-{
-    if (on_prompt_text_changed)
-        on_prompt_text_changed(message);
-}
-
-void WebViewBridge::notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>)
-{
-    if (on_dialog_accepted)
-        on_dialog_accepted();
-}
-
-void WebViewBridge::notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>)
-{
-    if (on_dialog_dismissed)
-        on_dialog_dismissed();
-}
-
 void WebViewBridge::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
     auto file = Core::File::open(path, Core::File::OpenMode::Read);

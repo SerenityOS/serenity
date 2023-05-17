@@ -112,12 +112,6 @@ private:
     void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
     void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override { }
     void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const&) override { }
-    void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const&) override { }
-    void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const&, String const&) override { }
-    void notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const&) override { }
-    void notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>) override { }
-    void notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>) override { }
 
     void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id) override
     {

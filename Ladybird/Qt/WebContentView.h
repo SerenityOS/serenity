@@ -22,7 +22,6 @@
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/ViewImplementation.h>
 #include <QAbstractScrollArea>
-#include <QPointer>
 #include <QUrl>
 
 class QTextEdit;
@@ -87,12 +86,6 @@ public:
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) override;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) override;
-    virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) override;
-    virtual void notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message) override;
-    virtual void notify_server_did_request_accept_dialog(Badge<WebContentClient>) override;
-    virtual void notify_server_did_request_dismiss_dialog(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
@@ -112,8 +105,6 @@ private:
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
     UseLagomNetworking m_use_lagom_networking {};
-
-    QPointer<QDialog> m_dialog;
 
     Gfx::IntRect m_viewport_rect;
 

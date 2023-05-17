@@ -220,32 +220,38 @@ void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<Depre
 
 void WebContentClient::did_request_alert(String const& message)
 {
-    m_view.notify_server_did_request_alert({}, message);
+    if (m_view.on_request_alert)
+        m_view.on_request_alert(message);
 }
 
 void WebContentClient::did_request_confirm(String const& message)
 {
-    m_view.notify_server_did_request_confirm({}, message);
+    if (m_view.on_request_confirm)
+        m_view.on_request_confirm(message);
 }
 
 void WebContentClient::did_request_prompt(String const& message, String const& default_)
 {
-    m_view.notify_server_did_request_prompt({}, message, default_);
+    if (m_view.on_request_prompt)
+        m_view.on_request_prompt(message, default_);
 }
 
 void WebContentClient::did_request_set_prompt_text(String const& message)
 {
-    m_view.notify_server_did_request_set_prompt_text({}, message);
+    if (m_view.on_request_set_prompt_text)
+        m_view.on_request_set_prompt_text(message);
 }
 
 void WebContentClient::did_request_accept_dialog()
 {
-    m_view.notify_server_did_request_accept_dialog({});
+    if (m_view.on_request_accept_dialog)
+        m_view.on_request_accept_dialog();
 }
 
 void WebContentClient::did_request_dismiss_dialog()
 {
-    m_view.notify_server_did_request_dismiss_dialog({});
+    if (m_view.on_request_dismiss_dialog)
+        m_view.on_request_dismiss_dialog();
 }
 
 void WebContentClient::did_change_favicon(Gfx::ShareableBitmap const& favicon)

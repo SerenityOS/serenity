@@ -22,6 +22,7 @@
 #include <QFontMetrics>
 #include <QGuiApplication>
 #include <QImage>
+#include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
@@ -163,6 +164,53 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         if (qpixmap.isNull())
             return;
         emit favicon_changed(tab_index(), QIcon(qpixmap));
+    };
+
+    view().on_request_alert = [this](auto const& message) {
+        m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_ak_string(message), QMessageBox::StandardButton::Ok, &view());
+        m_dialog->exec();
+
+        view().alert_closed();
+        m_dialog = nullptr;
+    };
+
+    view().on_request_confirm = [this](auto const& message) {
+        m_dialog = new QMessageBox(QMessageBox::Icon::Question, "Ladybird", qstring_from_ak_string(message), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel, &view());
+        auto result = m_dialog->exec();
+
+        view().confirm_closed(result == QMessageBox::StandardButton::Ok || result == QDialog::Accepted);
+        m_dialog = nullptr;
+    };
+
+    view().on_request_prompt = [this](auto const& message, auto const& default_) {
+        m_dialog = new QInputDialog(&view());
+        auto& dialog = static_cast<QInputDialog&>(*m_dialog);
+
+        dialog.setWindowTitle("Ladybird");
+        dialog.setLabelText(qstring_from_ak_string(message));
+        dialog.setTextValue(qstring_from_ak_string(default_));
+
+        if (dialog.exec() == QDialog::Accepted)
+            view().prompt_closed(ak_string_from_qstring(dialog.textValue()).release_value_but_fixme_should_propagate_errors());
+        else
+            view().prompt_closed({});
+
+        m_dialog = nullptr;
+    };
+
+    view().on_request_set_prompt_text = [this](auto const& message) {
+        if (m_dialog && is<QInputDialog>(*m_dialog))
+            static_cast<QInputDialog&>(*m_dialog).setTextValue(qstring_from_ak_string(message));
+    };
+
+    view().on_request_accept_dialog = [this]() {
+        if (m_dialog)
+            m_dialog->accept();
+    };
+
+    view().on_request_dismiss_dialog = [this]() {
+        if (m_dialog)
+            m_dialog->reject();
     };
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
