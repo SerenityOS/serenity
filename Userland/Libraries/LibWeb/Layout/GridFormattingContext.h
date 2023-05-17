@@ -43,6 +43,10 @@ public:
         , m_column(column)
         , m_column_span(column_span)
     {
+        m_border_top = box.computed_values().border_top().width;
+        m_border_right = box.computed_values().border_right().width;
+        m_border_bottom = box.computed_values().border_bottom().width;
+        m_border_left = box.computed_values().border_left().width;
     }
 
     Box const& box() const { return m_box; }
@@ -55,6 +59,15 @@ public:
     size_t raw_position(GridDimension const dimension) const
     {
         return dimension == GridDimension::Column ? m_column : m_row;
+    }
+
+    CSSPixels add_border_box_sizes(CSSPixels content_size, GridDimension dimension) const
+    {
+        if (dimension == GridDimension::Column) {
+            return m_border_left + content_size + m_border_right;
+        } else {
+            return m_border_top + content_size + m_border_bottom;
+        }
     }
 
     size_t raw_row() const { return m_row; }
@@ -72,6 +85,11 @@ private:
     size_t m_row_span { 1 };
     size_t m_column { 0 };
     size_t m_column_span { 1 };
+
+    CSSPixels m_border_top;
+    CSSPixels m_border_right;
+    CSSPixels m_border_bottom;
+    CSSPixels m_border_left;
 };
 
 class GridFormattingContext final : public FormattingContext {
@@ -102,21 +120,6 @@ private:
         CSSPixels item_incurred_increase { 0 };
         bool frozen { false };
         bool is_gap { false };
-
-        CSSPixels border_left { 0 };
-        CSSPixels border_right { 0 };
-        CSSPixels border_top { 0 };
-        CSSPixels border_bottom { 0 };
-
-        CSSPixels full_horizontal_size() const
-        {
-            return base_size + border_left + border_right;
-        }
-
-        CSSPixels full_vertical_size() const
-        {
-            return base_size + border_top + border_bottom;
-        }
 
         TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
             : min_track_sizing_function(min_track_sizing_function)
