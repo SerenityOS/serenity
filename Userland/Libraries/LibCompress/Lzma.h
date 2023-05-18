@@ -225,6 +225,7 @@ public:
 private:
     LzmaCompressor(MaybeOwned<Stream>, LzmaCompressorOptions, MaybeOwned<CircularBuffer>, FixedArray<Probability> literal_probabilities);
 
+    ErrorOr<void> shift_range_encoder();
     ErrorOr<void> normalize_range_encoder();
     ErrorOr<void> encode_direct_bit(u8 value);
     ErrorOr<void> encode_bit_with_probability(Probability&, u8 value);
@@ -253,7 +254,12 @@ private:
     // Range encoder state.
     u32 m_range_encoder_range { 0xFFFFFFFF };
     u64 m_range_encoder_code { 0 };
-    size_t m_range_encoder_code_used_bits { 32 };
+
+    // Since the range is only 32-bits, we can overflow at most +1 into the next byte beyond the usual 32-bit code.
+    // Therefore, it is sufficient to store the highest byte (which may still change due to that +1 overflow) and
+    // the length of the chain of 0xFF bytes that may end up propagating that change.
+    u8 m_range_encoder_cached_byte { 0x00 };
+    size_t m_range_encoder_ff_chain_length { 0 };
 };
 
 }
