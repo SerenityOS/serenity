@@ -185,12 +185,14 @@ struct BorderRadiusData {
 };
 
 // FIXME: Find a better place for this helper.
-inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
+inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value, Gfx::IntRect source, Gfx::IntRect target)
 {
     switch (css_value) {
     case CSS::ImageRendering::Auto:
     case CSS::ImageRendering::HighQuality:
     case CSS::ImageRendering::Smooth:
+        if (target.width() < source.width() || target.height() < source.height())
+            return Gfx::Painter::ScalingMode::BoxSampling;
         return Gfx::Painter::ScalingMode::BilinearBlend;
     case CSS::ImageRendering::CrispEdges:
         return Gfx::Painter::ScalingMode::NearestNeighbor;

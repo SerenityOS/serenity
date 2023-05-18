@@ -64,7 +64,8 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
         } else if (auto bitmap = layout_box().image_provider().current_image_bitmap()) {
             auto image_rect = context.rounded_device_rect(absolute_rect());
             ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
-            context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), bitmap->rect(), image_rect.to_type<int>());
+            context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.f, scaling_mode);
         }
     }
 }

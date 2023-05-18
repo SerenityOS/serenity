@@ -135,7 +135,8 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     }
 
     auto paint_frame = [&](auto const& frame) {
-        context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *frame, frame->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+        auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), frame->rect(), video_rect.to_type<int>());
+        context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *frame, frame->rect(), 1.f, scaling_mode);
     };
 
     auto paint_transparent_black = [&]() {
