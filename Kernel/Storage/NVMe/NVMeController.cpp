@@ -293,7 +293,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
         return maybe_error;
     }
     set_admin_queue_ready_flag();
-    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type));
+    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, qdepth, move(cq_dma_region), move(sq_dma_region), move(doorbell_regs), queue_type));
 
     dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
     return {};
@@ -353,7 +353,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
     auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + queue_doorbell_offset)));
     auto irq = TRY(allocate_irq(qid));
 
-    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type)));
+    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell_regs), queue_type)));
     dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }

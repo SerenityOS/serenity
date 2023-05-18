@@ -42,7 +42,7 @@ struct NVMeIO {
 class NVMeController;
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type);
+    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type);
     bool is_admin_queue() { return m_admin_queue; };
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);
@@ -56,7 +56,7 @@ protected:
     {
         m_db_regs->sq_tail = m_sq_tail;
     }
-    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
+    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
 
     [[nodiscard]] u32 get_request_cid()
     {
@@ -96,10 +96,8 @@ private:
     Atomic<u32> m_tag { 0 }; // used for the cid in a submission queue entry
     Spinlock<LockRank::Interrupts> m_sq_lock {};
     OwnPtr<Memory::Region> m_cq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> m_cq_dma_page;
     Span<NVMeSubmission> m_sqe_array;
     OwnPtr<Memory::Region> m_sq_dma_region;
-    Vector<NonnullRefPtr<Memory::PhysicalPage>> m_sq_dma_page;
     Span<NVMeCompletion> m_cqe_array;
     WaitQueue m_sync_wait_queue;
     Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
