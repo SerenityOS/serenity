@@ -146,9 +146,6 @@
       "center",
       "left",
       "right"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "background-position-y": {
@@ -163,9 +160,6 @@
       "center",
       "bottom",
       "top"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "background-repeat": {
@@ -563,9 +557,6 @@
     ],
     "valid-identifiers": [
       "auto"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "content": {
@@ -804,9 +795,6 @@
     "valid-identifiers": [
       "auto"
     ],
-    "quirks": [
-      "unitless-length"
-    ],
     "longhands": [
       "row-gap",
       "column-gap"
@@ -861,9 +849,6 @@
     ],
     "valid-identifiers": [
       "auto"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "grid-column-start": {
@@ -886,9 +871,6 @@
     "max-values": 2,
     "valid-identifiers": [
       "auto"
-    ],
-    "quirks": [
-      "unitless-length"
     ],
     "longhands": [
       "grid-row-gap",
@@ -928,9 +910,6 @@
     ],
     "valid-identifiers": [
       "auto"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "grid-row-start": {
@@ -1414,9 +1393,6 @@
     ],
     "valid-identifiers": [
       "auto"
-    ],
-    "quirks": [
-      "unitless-length"
     ]
   },
   "stroke": {
