@@ -43,10 +43,6 @@ public:
         , m_column(column)
         , m_column_span(column_span)
     {
-        m_border_top = box.computed_values().border_top().width;
-        m_border_right = box.computed_values().border_right().width;
-        m_border_bottom = box.computed_values().border_bottom().width;
-        m_border_left = box.computed_values().border_left().width;
     }
 
     Box const& box() const { return m_box; }
@@ -61,12 +57,13 @@ public:
         return dimension == GridDimension::Column ? m_column : m_row;
     }
 
-    CSSPixels add_border_box_sizes(CSSPixels content_size, GridDimension dimension) const
+    CSSPixels add_border_box_sizes(CSSPixels content_size, GridDimension dimension, LayoutState const& state) const
     {
+        auto& box_state = state.get(box());
         if (dimension == GridDimension::Column) {
-            return m_border_left + content_size + m_border_right;
+            return box_state.border_left + box_state.padding_left + content_size + box_state.padding_right + box_state.border_right;
         } else {
-            return m_border_top + content_size + m_border_bottom;
+            return box_state.border_top + box_state.padding_top + content_size + box_state.padding_bottom + box_state.border_bottom;
         }
     }
 
@@ -85,11 +82,6 @@ private:
     size_t m_row_span { 1 };
     size_t m_column { 0 };
     size_t m_column_span { 1 };
-
-    CSSPixels m_border_top;
-    CSSPixels m_border_right;
-    CSSPixels m_border_bottom;
-    CSSPixels m_border_left;
 };
 
 class GridFormattingContext final : public FormattingContext {
