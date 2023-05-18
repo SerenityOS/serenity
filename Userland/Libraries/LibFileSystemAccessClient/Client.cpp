@@ -26,7 +26,7 @@ Client& Client::the()
 Result Client::request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
+    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, Core::File::OpenMode::Read });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -51,7 +51,7 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
 Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::File::OpenMode mode)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
+    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, mode });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -76,7 +76,7 @@ Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& 
 Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::File::OpenMode requested_access, Optional<Vector<GUI::FileTypeFilter>> const& allowed_file_types)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
+    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, requested_access });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -96,7 +96,7 @@ Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& win
 Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access)
 {
     auto const id = get_new_id();
-    m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
+    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, requested_access });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -119,26 +119,39 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
     VERIFY(potential_data.has_value());
     auto& request_data = potential_data.value();
 
-    if (error != 0) {
-        // We don't want to show an error message for non-existent files since some applications may want
-        // to handle it as opening a new, named file.
-        if (error != ECANCELED && error != ENOENT)
-            GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: {}", *chosen_file, strerror(error)));
-        request_data.promise->resolve(Error::from_errno(error)).release_value_but_fixme_should_propagate_errors();
-        return;
+    auto action = "Requesting"sv;
+    if (has_flag(request_data.mode, Core::File::OpenMode::Read))
+        action = "Opening"sv;
+    else if (has_flag(request_data.mode, Core::File::OpenMode::Write))
+        action = "Saving"sv;
+
+    if (ipc_file.has_value()) {
+        if (FileSystem::is_device(ipc_file->fd()))
+            error = is_silencing_devices() ? ESUCCESS : EINVAL;
+        else if (FileSystem::is_directory(ipc_file->fd()))
+            error = is_silencing_directories() ? ESUCCESS : EISDIR;
     }
 
-    if (FileSystem::is_device(ipc_file->fd())) {
-        GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
-        request_data.promise->resolve(Error::from_string_literal("Cannot open device files")).release_value_but_fixme_should_propagate_errors();
-        return;
+    switch (error) {
+    case ESUCCESS:
+    case ECANCELED:
+        break;
+    case ENOENT:
+        if (is_silencing_nonexistent_entries())
+            break;
+        [[fallthrough]];
+    default:
+        auto maybe_message = ErrorOr<String>({});
+        if (error == ECONNRESET)
+            maybe_message = String::formatted("FileSystemAccessClient: {}", Error::from_errno(error));
+        else
+            maybe_message = String::formatted("{} \"{}\" failed: {}", action, *chosen_file, Error::from_errno(error));
+        if (!maybe_message.is_error())
+            (void)GUI::MessageBox::try_show_error(request_data.parent_window, maybe_message.release_value());
     }
 
-    if (FileSystem::is_directory(ipc_file->fd())) {
-        GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
-        request_data.promise->resolve(Error::from_errno(EISDIR)).release_value_but_fixme_should_propagate_errors();
-        return;
-    }
+    if (error != ESUCCESS)
+        return (void)request_data.promise->resolve(Error::from_errno(error));
 
     auto file_or_error = [&]() -> ErrorOr<File> {
         auto stream = TRY(Core::File::adopt_fd(ipc_file->take_fd(), Core::File::OpenMode::ReadWrite));
@@ -146,11 +159,13 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         return File({}, move(stream), filename);
     }();
     if (file_or_error.is_error()) {
-        request_data.promise->resolve(file_or_error.release_error()).release_value_but_fixme_should_propagate_errors();
-        return;
+        auto maybe_message = String::formatted("{} \"{}\" failed: {}", action, *chosen_file, file_or_error.error());
+        if (!maybe_message.is_error())
+            (void)GUI::MessageBox::try_show_error(request_data.parent_window, maybe_message.release_value());
+        return (void)request_data.promise->resolve(file_or_error.release_error());
     }
 
-    request_data.promise->resolve(file_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
+    (void)request_data.promise->resolve(file_or_error.release_value());
 }
 
 void Client::die()
