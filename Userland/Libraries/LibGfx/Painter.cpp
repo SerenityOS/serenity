@@ -1188,7 +1188,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     if (clipped_src_rect.is_empty())
         return;
 
-    if (scaling_mode == Painter::ScalingMode::NearestFractional) {
+    if constexpr (scaling_mode == Painter::ScalingMode::NearestFractional) {
         int hfactor = (dst_rect.width() + int_src_rect.width() - 1) / int_src_rect.width();
         int vfactor = (dst_rect.height() + int_src_rect.height() - 1) / int_src_rect.height();
         return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, hfactor, vfactor, get_pixel, opacity);
@@ -1208,26 +1208,26 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
         }
     }
 
-    bool has_opacity = opacity != 1.0f;
+    bool has_opacity = opacity != 1.f;
     i64 shift = (i64)1 << 32;
-    i64 fractional_mask = (shift - (u64)1);
+    i64 fractional_mask = shift - (u64)1;
     i64 bilinear_offset_x = (1ll << 31) * (src_rect.width() / dst_rect.width() - 1);
     i64 bilinear_offset_y = (1ll << 31) * (src_rect.height() / dst_rect.height() - 1);
-    i64 hscale = (src_rect.width() * shift) / dst_rect.width();
-    i64 vscale = (src_rect.height() * shift) / dst_rect.height();
+    i64 hscale = src_rect.width() * shift / dst_rect.width();
+    i64 vscale = src_rect.height() * shift / dst_rect.height();
     i64 src_left = src_rect.left() * shift;
     i64 src_top = src_rect.top() * shift;
     i64 clipped_src_bottom_shifted = (clipped_src_rect.y() + clipped_src_rect.height()) * shift;
     i64 clipped_src_right_shifted = (clipped_src_rect.x() + clipped_src_rect.width()) * shift;
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
-        auto* scanline = (Color*)target.scanline(y);
-        auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+        auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
+        auto desired_y = (y - dst_rect.y()) * vscale + src_top;
         if (desired_y < clipped_src_rect.top() || desired_y > clipped_src_bottom_shifted)
             continue;
 
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
-            auto desired_x = ((x - dst_rect.x()) * hscale + src_left);
+            auto desired_x = (x - dst_rect.x()) * hscale + src_left;
             if (desired_x < clipped_src_rect.left() || desired_x > clipped_src_right_shifted)
                 continue;
 
@@ -1262,8 +1262,8 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 float x_ratio = (desired_x & fractional_mask) / (float)shift;
                 float y_ratio = (desired_y & fractional_mask) / (float)shift;
 
-                float scaled_x_ratio = clamp(x_ratio * dst_rect.width() / (float)src_rect.width(), 0.0f, 1.0f);
-                float scaled_y_ratio = clamp(y_ratio * dst_rect.height() / (float)src_rect.height(), 0.0f, 1.0f);
+                float scaled_x_ratio = clamp(x_ratio * dst_rect.width() / (float)src_rect.width(), 0.f, 1.f);
+                float scaled_y_ratio = clamp(y_ratio * dst_rect.height() / (float)src_rect.height(), 0.f, 1.f);
 
                 auto top_left = get_pixel(source, scaled_x0, scaled_y0);
                 auto top_right = get_pixel(source, scaled_x1, scaled_y0);
@@ -1282,11 +1282,11 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
             if (has_opacity)
                 src_pixel.set_alpha(src_pixel.alpha() * opacity);
-            if constexpr (has_alpha_channel) {
+
+            if constexpr (has_alpha_channel)
                 scanline[x] = scanline[x].blend(src_pixel);
-            } else {
+            else
                 scanline[x] = src_pixel;
-            }
         }
     }
 }
