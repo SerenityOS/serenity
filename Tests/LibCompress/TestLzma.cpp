@@ -75,6 +75,26 @@ TEST_CASE(compress_decompress_roundtrip_with_unknown_size)
     EXPECT_EQ(uncompressed, result.span());
 }
 
+TEST_CASE(compress_long_overflow_chain)
+{
+    // Encoding 0xFF followed by the end-of-stream marker results in a chain of bytes that doesn't fit into 64 bits,
+    // which breaks naive implementations of "hold back the byte until it no longer changes".
+
+    Array<u8, 1> const uncompressed {
+        0xFF
+    };
+
+    auto stream = MUST(try_make<AllocatingMemoryStream>());
+    auto compressor = TRY_OR_FAIL(Compress::LzmaCompressor::create_container(MaybeOwned<Stream> { *stream }, {}));
+    TRY_OR_FAIL(compressor->write_until_depleted(uncompressed));
+    TRY_OR_FAIL(compressor->flush());
+
+    auto decompressor = TRY_OR_FAIL(Compress::LzmaDecompressor::create_from_container(MaybeOwned<Stream> { *stream }));
+    auto result = TRY_OR_FAIL(decompressor->read_until_eof());
+
+    EXPECT_EQ(uncompressed, result.span());
+}
+
 // The following tests are based on test files from the LZMA specification, which has been placed in the public domain.
 // LZMA Specification Draft (2015): https://www.7-zip.org/a/lzma-specification.7z
 
