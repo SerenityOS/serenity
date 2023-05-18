@@ -601,13 +601,17 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
     // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
     //    If performFetch was given, pass it along as well.
     // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [on_complete = move(on_complete)](auto result) {
+    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [&fetch_client_settings_object, on_complete = move(on_complete)](auto result) {
         // onFetchDescendantsComplete given result is the following algorithm:
         // 1. If result is null, then run onComplete given result, and abort these steps.
         if (!result) {
             on_complete(nullptr);
             return;
         }
+
+        // FIXME: This is an ad-hoc hack to make sure that there's an execution context on the VM stack in case linking throws an exception.
+        auto& vm = fetch_client_settings_object.vm();
+        vm.push_execution_context(fetch_client_settings_object.realm_execution_context());
 
         // FIXME: 2. Let parse error be the result of finding the first parse error given result.
 
@@ -627,6 +631,9 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
             // FIXME: 4. Otherwise, set result's error to rethrow to parse error.
             TODO();
         }
+
+        // FIXME: This undoes the ad-hoc hack above.
+        vm.pop_execution_context();
 
         // 5. Run onComplete given result.
         on_complete(result);
