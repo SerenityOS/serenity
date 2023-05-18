@@ -4719,31 +4719,35 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> co
     RefPtr<StyleValue> border_color;
     RefPtr<StyleValue> border_style;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
-            return nullptr;
+    auto remaining_longhands = Vector { PropertyID::BorderWidth, PropertyID::BorderColor, PropertyID::BorderStyle };
 
-        if (property_accepts_value(PropertyID::BorderWidth, *value)) {
-            if (border_width)
-                return nullptr;
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::BorderWidth: {
+            VERIFY(!border_width);
             border_width = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::BorderColor, *value)) {
-            if (border_color)
-                return nullptr;
+        case PropertyID::BorderColor: {
+            VERIFY(!border_color);
             border_color = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::BorderStyle, *value)) {
-            if (border_style)
-                return nullptr;
+        case PropertyID::BorderStyle: {
+            VERIFY(!border_style);
             border_style = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!border_width)
