@@ -906,7 +906,7 @@ void set_debug_enabled(bool value)
     is_debug_enabled = value;
 }
 
-void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
+void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 {
     if (!is_debug_enabled)
         return;
@@ -946,7 +946,8 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 #endif
 
     MUST(vformat(builder, fmtstr, params));
-    builder.append('\n');
+    if (newline)
+        builder.append('\n');
 
     auto const string = builder.string_view();
 
