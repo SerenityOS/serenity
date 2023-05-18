@@ -5370,34 +5370,37 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<Compone
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
+    auto tokens = TokenStream { component_values };
+
     if (component_values.size() == 1) {
         // One-value syntax: <flex-grow> | <flex-basis> | none
-        auto value = TRY(parse_css_value(component_values[0]));
-        if (!value)
+        auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
+        auto property_and_value = TRY(parse_css_value_for_properties(properties, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
 
-        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
+        auto& value = property_and_value.style_value;
+        switch (property_and_value.property) {
+        case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
             auto zero_percent = TRY(NumericStyleValue::create_integer(0));
             auto one = TRY(NumericStyleValue::create_integer(1));
             return FlexStyleValue::create(*value, one, zero_percent);
         }
-
-        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
+        case PropertyID::FlexBasis: {
             auto one = TRY(NumericStyleValue::create_integer(1));
             return FlexStyleValue::create(one, one, *value);
         }
-
-        if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
-            switch (value->to_identifier()) {
-            case ValueID::None: {
+        case PropertyID::Flex: {
+            if (value->is_identifier() && value->to_identifier() == ValueID::None) {
                 auto zero = TRY(NumericStyleValue::create_integer(0));
                 return FlexStyleValue::create(zero, zero, TRY(IdentifierStyleValue::create(ValueID::Auto)));
             }
-            default:
-                return value;
-            }
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
 
         return nullptr;
@@ -5407,43 +5410,36 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     RefPtr<StyleValue> flex_shrink;
     RefPtr<StyleValue> flex_basis;
 
-    for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = TRY(parse_css_value(component_values[i]));
-        if (!value)
+    // NOTE: FlexGrow has to be before FlexBasis. `0` is a valid FlexBasis, but only
+    //       if FlexGrow (along with optional FlexShrink) have already been specified.
+    auto remaining_longhands = Vector { PropertyID::FlexGrow, PropertyID::FlexBasis };
+
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
 
-        // Zero is a valid value for basis, but only if grow and shrink are already specified.
-        if (value->has_number() && value->to_number() == 0) {
-            if (flex_grow && flex_shrink && !flex_basis) {
-                flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
-                continue;
-            }
-        }
-
-        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
-            if (flex_grow)
-                return nullptr;
+        switch (property_and_value.property) {
+        case PropertyID::FlexGrow: {
+            VERIFY(!flex_grow);
             flex_grow = value.release_nonnull();
 
             // Flex-shrink may optionally follow directly after.
-            if (i + 1 < component_values.size()) {
-                auto second_value = TRY(parse_css_value(component_values[i + 1]));
-                if (second_value && property_accepts_value(PropertyID::FlexShrink, *second_value)) {
-                    flex_shrink = second_value.release_nonnull();
-                    i++;
-                }
-            }
+            auto maybe_flex_shrink = TRY(parse_css_value_for_property(PropertyID::FlexShrink, tokens));
+            if (maybe_flex_shrink)
+                flex_shrink = maybe_flex_shrink.release_nonnull();
             continue;
         }
-
-        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
-            if (flex_basis)
-                return nullptr;
+        case PropertyID::FlexBasis: {
+            VERIFY(!flex_basis);
             flex_basis = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!flex_grow)
