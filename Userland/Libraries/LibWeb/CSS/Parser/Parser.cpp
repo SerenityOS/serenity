@@ -4461,15 +4461,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         if (seen_items == 2)
             break;
 
-        auto const& token = tokens.peek_token();
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(PropertyID::BackgroundPosition, *maybe_value))
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
+        if (!maybe_value)
             break;
-        tokens.next_token();
         auto value = maybe_value.release_nonnull();
 
-        auto offset = style_value_to_length_percentage(value);
-        if (offset.has_value()) {
+        if (auto offset = style_value_to_length_percentage(value); offset.has_value()) {
             if (!horizontal.has_value()) {
                 horizontal = EdgeOffset { PositionEdge::Left, *offset, false, true };
             } else if (!vertical.has_value()) {
@@ -4481,15 +4478,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         }
 
         auto try_parse_offset = [&](bool& offset_provided) -> ErrorOr<LengthPercentage> {
+            auto transaction = tokens.begin_transaction();
             if (tokens.has_next_token()) {
-                auto& token = tokens.peek_token();
-                auto maybe_value = TRY(parse_css_value(token));
+                auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
                 if (!maybe_value)
                     return zero_offset;
                 auto offset = style_value_to_length_percentage(maybe_value.release_nonnull());
                 if (offset.has_value()) {
                     offset_provided = true;
-                    tokens.next_token();
+                    transaction.commit();
                     return *offset;
                 }
             }
@@ -4574,14 +4571,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
     if (!tokens.has_next_token())
         return nullptr;
 
-    auto parse_value = [&](auto& token) -> ErrorOr<RefPtr<StyleValue>> {
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(property, *maybe_value))
-            return nullptr;
-        return maybe_value.release_nonnull();
-    };
+    auto value = TRY(parse_css_value_for_property(property, tokens));
+    if (!value)
+        return nullptr;
 
-    auto value = TRY(parse_value(tokens.next_token()));
     if (value->is_identifier()) {
         auto identifier = value->to_identifier();
         if (identifier == ValueID::Center) {
@@ -4594,12 +4587,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
             return nullptr;
         }
         if (tokens.has_next_token()) {
-            value = TRY(parse_value(tokens.peek_token()));
+            value = TRY(parse_css_value_for_property(property, tokens));
             if (!value) {
                 transaction.commit();
                 return EdgeStyleValue::create(relative_edge, Length::make_px(0));
             }
-            tokens.next_token();
         }
     }
 
