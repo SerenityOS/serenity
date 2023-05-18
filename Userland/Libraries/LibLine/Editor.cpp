@@ -251,11 +251,13 @@ void Editor::add_to_history(DeprecatedString const& line)
 
 bool Editor::load_history(DeprecatedString const& path)
 {
-    auto history_file = Core::DeprecatedFile::construct(path);
-    if (!history_file->open(Core::OpenMode::ReadOnly))
+    auto history_file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
+    if (history_file_or_error.is_error())
         return false;
-    auto data = history_file->read_all();
-    auto hist = StringView { data.data(), data.size() };
+    auto data_or_error = history_file_or_error.value()->read_until_eof();
+    if (data_or_error.is_error())
+        return false;
+    auto hist = StringView { data_or_error.value() };
     for (auto& str : hist.split_view("\n\n"sv)) {
         auto it = str.find("::"sv).value_or(0);
         auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
