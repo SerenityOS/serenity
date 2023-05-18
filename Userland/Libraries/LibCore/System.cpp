@@ -13,7 +13,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
