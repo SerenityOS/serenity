@@ -17,11 +17,16 @@ ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& devi
     // Note: Allocate DMA region for RW operation. For now the requests don't exceed more than 4096 bytes (Storage device takes care of it)
     RefPtr<Memory::PhysicalPage> rw_dma_page;
     auto rw_dma_region = TRY(MM.allocate_dma_buffer_page("NVMe Queue Read/Write DMA"sv, Memory::Region::Access::ReadWrite, rw_dma_page));
+
+    if (rw_dma_page.is_null())
+        return ENOMEM;
+
     if (queue_type == QueueType::Polled) {
-        auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), *rw_dma_page, qid, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
+        auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), rw_dma_page.release_nonnull(), qid, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
         return queue;
     }
-    auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMeInterruptQueue(device, move(rw_dma_region), *rw_dma_page, qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
+
+    auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMeInterruptQueue(device, move(rw_dma_region), rw_dma_page.release_nonnull(), qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
     return queue;
 }
 
