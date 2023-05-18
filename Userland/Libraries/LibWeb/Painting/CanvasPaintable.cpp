@@ -41,7 +41,8 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
         if (layout_box().dom_node().bitmap()) {
             // FIXME: Remove this const_cast.
             const_cast<HTML::HTMLCanvasElement&>(layout_box().dom_node()).present();
-            context.painter().draw_scaled_bitmap(canvas_rect.to_type<int>(), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), layout_box().dom_node().bitmap()->rect(), canvas_rect.to_type<int>());
+            context.painter().draw_scaled_bitmap(canvas_rect.to_type<int>(), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, scaling_mode);
         }
     }
 }

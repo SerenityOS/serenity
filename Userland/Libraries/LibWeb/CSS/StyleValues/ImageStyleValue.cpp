@@ -102,8 +102,10 @@ Optional<CSSPixels> ImageStyleValue::natural_height() const
 
 void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
-    if (auto* b = bitmap(m_current_frame_index); b != nullptr)
-        context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
+    if (auto* b = bitmap(m_current_frame_index); b != nullptr) {
+        auto scaling_mode = to_gfx_scaling_mode(image_rendering, bitmap(0)->rect(), dest_rect.to_type<int>());
+        context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, bitmap(0)->rect(), 1.f, scaling_mode);
+    }
 }
 
 }
