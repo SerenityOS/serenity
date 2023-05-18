@@ -4628,9 +4628,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         }
     };
 
-    auto const& token = tokens.next_token();
-    auto maybe_x_value = TRY(parse_css_value(token));
-    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
+    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
@@ -4647,14 +4646,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         return nullptr;
 
     // See if we have a second value for Y
-    auto const& second_token = tokens.peek_token();
-    auto maybe_y_value = TRY(parse_css_value(second_token));
-    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
+    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    if (!maybe_y_value) {
         // We don't have a second value, so use x for both
         transaction.commit();
         return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value());
     }
-    tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
         return nullptr;
