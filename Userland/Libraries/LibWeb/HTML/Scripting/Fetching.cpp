@@ -619,9 +619,10 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
             // 2. Perform record.Link().
             auto linking_result = const_cast<JS::SourceTextModule&>(record).link(result->vm());
 
-            // TODO: If this throws an exception, set result's error to rethrow to that exception.
-            if (linking_result.is_error())
-                TODO();
+            // If this throws an exception, set result's error to rethrow to that exception.
+            if (linking_result.is_throw_completion()) {
+                result->set_error_to_rethrow(linking_result.release_error().value().value());
+            }
         } else {
             // FIXME: 4. Otherwise, set result's error to rethrow to parse error.
             TODO();
