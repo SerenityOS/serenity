@@ -4678,8 +4678,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return {};
     };
 
-    auto maybe_x_value = TRY(parse_css_value(tokens.next_token()));
-    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_x_value))
+    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
@@ -4688,8 +4688,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return x_value;
     }
 
-    auto maybe_y_value = TRY(parse_css_value(tokens.peek_token()));
-    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value)) {
+    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    if (!maybe_y_value) {
         auto y_value = LengthPercentage { Length::make_auto() };
         auto x_size = get_length_percentage(*x_value);
         if (!x_size.has_value())
@@ -4698,7 +4698,6 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         transaction.commit();
         return BackgroundSizeStyleValue::create(x_size.value(), y_value);
     }
-    tokens.next_token();
 
     auto y_value = maybe_y_value.release_nonnull();
     auto x_size = get_length_percentage(*x_value);
