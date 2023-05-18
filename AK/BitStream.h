@@ -109,7 +109,7 @@ public:
     }
 
     /// Whether we are (accidentally or intentionally) at a byte boundary right now.
-    ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
+    ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset % 8 == 0; }
 
 private:
     Optional<u8> m_current_byte;
