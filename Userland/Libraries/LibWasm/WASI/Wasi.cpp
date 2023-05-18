@@ -511,7 +511,7 @@ ErrorOr<Result<void>> Implementation::impl$fd_prestat_dir_name(Configuration& co
 
 ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& configuration, FD fd, LookupFlags flags, ConstPointer<u8> path, Size path_len)
 {
-    int dir_fd = AT_FDCWD;
+    auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
     if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
@@ -569,7 +569,7 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
 
 ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& configuration, FD fd, Pointer<u8> path, Size path_len)
 {
-    int dir_fd = AT_FDCWD;
+    auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
     if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
@@ -595,7 +595,7 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
 
 ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration, FD fd, LookupFlags lookup_flags, Pointer<u8> path, Size path_len, OFlags o_flags, Rights, Rights, FDFlags fd_flags)
 {
-    int dir_fd = AT_FDCWD;
+    auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
     if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
