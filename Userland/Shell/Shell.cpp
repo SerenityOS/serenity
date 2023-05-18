@@ -1077,18 +1077,26 @@ bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
     TemporaryChange interactive_change { m_is_interactive, false };
     TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = {}, .position = {} } };
 
-    auto file_result = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
-    if (file_result.is_error()) {
-        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
+    if (file_or_error.is_error()) {
+        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_or_error.error());
         if (explicitly_invoked)
             raise_error(ShellError::OpenFailure, error);
         else
             dbgln("open() failed for {}", error);
         return false;
     }
-    auto file = file_result.value();
-    auto data = file->read_all();
-    return run_command(data) == 0;
+    auto file = file_or_error.release_value();
+    auto data_or_error = file->read_until_eof();
+    if (data_or_error.is_error()) {
+        auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), data_or_error.error());
+        if (explicitly_invoked)
+            raise_error(ShellError::OpenFailure, error);
+        else
+            dbgln("reading after open() failed for {}", error);
+        return false;
+    }
+    return run_command(data_or_error.value()) == 0;
 }
 
 bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const

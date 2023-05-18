@@ -7,7 +7,6 @@
 #include "Shell.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -190,12 +189,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         skip_rc_files = true;
 
     if (!format.is_empty()) {
-        auto file = TRY(Core::DeprecatedFile::open(format, Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::File::open(format, Core::File::OpenMode::Read));
 
         initialize(posix_mode);
 
         ssize_t cursor = -1;
-        puts(shell->format(file->read_all(), cursor).characters());
+        puts(shell->format(TRY(file->read_until_eof()), cursor).characters());
         return 0;
     }
 
