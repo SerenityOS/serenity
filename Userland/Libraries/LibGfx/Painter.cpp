@@ -1180,6 +1180,59 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
     }
 }
 
+template<bool has_alpha_channel, typename GetPixel>
+ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
+{
+    float source_pixel_width = src_rect.width() / dst_rect.width();
+    float source_pixel_height = src_rect.height() / dst_rect.height();
+    float source_pixel_area = source_pixel_width * source_pixel_height;
+
+    for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
+        auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
+        for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
+            // Project the destination pixel in the source image
+            FloatRect source_box = {
+                src_rect.left() + (x - dst_rect.x()) * source_pixel_width,
+                src_rect.top() + (y - dst_rect.y()) * source_pixel_height,
+                source_pixel_width,
+                source_pixel_height,
+            };
+            IntRect enclosing_source_box = enclosing_int_rect(source_box).intersected(source.rect());
+
+            // Sum the contribution of all source pixels inside the projected pixel
+            float red_accumulator = 0.f;
+            float green_accumulator = 0.f;
+            float blue_accumulator = 0.f;
+            float total_area = 0.f;
+            for (int sy = enclosing_source_box.y(); sy <= enclosing_source_box.bottom(); ++sy) {
+                for (int sx = enclosing_source_box.x(); sx <= enclosing_source_box.right(); ++sx) {
+                    float area = source_box.intersected({ static_cast<float>(sx), static_cast<float>(sy), 1.f, 1.f }).size().area();
+
+                    auto pixel = get_pixel(source, sx, sy);
+                    area *= pixel.alpha() / 255.f;
+
+                    red_accumulator += pixel.red() * area;
+                    green_accumulator += pixel.green() * area;
+                    blue_accumulator += pixel.blue() * area;
+                    total_area += area;
+                }
+            }
+
+            Color src_pixel = {
+                round_to<u8>(min(red_accumulator / total_area, 255.f)),
+                round_to<u8>(min(green_accumulator / total_area, 255.f)),
+                round_to<u8>(min(blue_accumulator / total_area, 255.f)),
+                round_to<u8>(min(total_area * 255.f / source_pixel_area * opacity, 255.f)),
+            };
+
+            if constexpr (has_alpha_channel)
+                scanline[x] = scanline[x].blend(src_pixel);
+            else
+                scanline[x] = src_pixel;
+        }
+    }
+}
+
 template<bool has_alpha_channel, Painter::ScalingMode scaling_mode, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
@@ -1207,6 +1260,9 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
             return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, hfactor, vfactor, get_pixel, opacity);
         }
     }
+
+    if constexpr (scaling_mode == Painter::ScalingMode::BoxSampling)
+        return do_draw_box_sampled_scaled_bitmap<has_alpha_channel>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
 
     bool has_opacity = opacity != 1.f;
     i64 shift = (i64)1 << 32;
@@ -1306,6 +1362,9 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
         break;
     case Painter::ScalingMode::BilinearBlend:
         do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::BilinearBlend>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        break;
+    case Painter::ScalingMode::BoxSampling:
+        do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::BoxSampling>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
         break;
     case Painter::ScalingMode::None:
         do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::None>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
