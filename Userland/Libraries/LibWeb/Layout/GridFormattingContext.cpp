@@ -1347,6 +1347,24 @@ void GridFormattingContext::determine_grid_container_height()
     m_automatic_content_height = total_y;
 }
 
+void GridFormattingContext::resolve_grid_item_widths()
+{
+    for (auto& item : m_grid_items) {
+        CSSPixels containing_block_width = containing_block_size_for_item(item, GridDimension::Column);
+
+        auto border_left = item.box().computed_values().border_left().width;
+        auto border_right = item.box().computed_values().border_right().width;
+
+        auto& box_state = m_state.get_mutable(item.box());
+        box_state.border_left = border_left;
+        box_state.border_right = border_right;
+
+        auto const& computed_width = item.box().computed_values().width();
+        auto used_width = computed_width.is_auto() ? (containing_block_width - box_state.border_left - box_state.border_right) : computed_width.to_px(grid_container(), containing_block_width);
+        box_state.set_content_width(used_width);
+    }
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     place_grid_items(available_space);
@@ -1355,7 +1373,27 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     initialize_gap_tracks(available_space);
 
+    for (auto& item : m_grid_items) {
+        auto& box_state = m_state.get_mutable(item.box());
+        auto& computed_values = item.box().computed_values();
+
+        // NOTE: As the containing blocks of grid items are created by implicit grid areas that are not present in the
+        // layout tree, the initial value of has_definite_width/height computed by LayoutState::UsedValues::set_node
+        // will be incorrect for anything other (auto, percentage, calculated) than fixed lengths.
+        // Therefor, it becomes necessary to reset this value to indefinite.
+        // TODO: Handle this in LayoutState::UsedValues::set_node
+        if (!computed_values.width().is_length())
+            box_state.set_indefinite_content_width();
+        if (!computed_values.height().is_length())
+            box_state.set_indefinite_content_height();
+    }
+
     run_track_sizing(available_space, GridDimension::Column);
+
+    // Once the sizes of column tracks, which determine the widths of the grid areas forming the containing blocks
+    // for grid items, ara calculated, it becomes possible to determine the final widths of the grid items.
+    resolve_grid_item_widths();
+
     run_track_sizing(available_space, GridDimension::Row);
 
     determine_grid_container_height();
@@ -1384,11 +1422,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         }
 
         // A grid item containing block is created by the grid area to which it belongs.
-        auto containing_block_width = max(CSSPixels(0), x_end - x_start);
         auto containing_block_height = y_end - y_start;
 
-        auto computed_width = child_box.computed_values().width();
-        auto computed_height = child_box.computed_values().height();
+        auto const& computed_height = child_box.computed_values().height();
 
         auto border_left = child_box.computed_values().border_left().width;
         auto border_right = child_box.computed_values().border_right().width;
@@ -1400,10 +1436,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         child_box_state.border_top = border_top;
         child_box_state.border_bottom = border_bottom;
 
-        auto used_width = computed_width.is_auto() ? (containing_block_width - child_box_state.border_left - child_box_state.border_right) : computed_width.to_px(grid_container(), containing_block_width);
         auto used_height = computed_height.is_auto() ? (containing_block_height - child_box_state.border_top - child_box_state.border_bottom) : computed_height.to_px(grid_container(), containing_block_height);
 
-        child_box_state.set_content_width(used_width);
         child_box_state.set_content_height(used_height);
 
         child_box_state.offset = { x_start + border_left, y_start + border_top };
@@ -1629,33 +1663,18 @@ CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item
 
 CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& item, GridDimension const dimension) const
 {
-    auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-    auto const track_index = item.raw_position(dimension);
-    return tracks[track_index].base_size;
+    CSSPixels containing_block_size = 0;
+    for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack const& track) {
+        containing_block_size += track.base_size;
+    });
+    return containing_block_size;
 }
 
 AvailableSpace GridFormattingContext::get_available_space_for_item(GridItem const& item) const
 {
-    CSSPixels column_width = 0;
-    bool has_columns_with_definite_base_size = false;
-    for_each_spanned_track_by_item(item, GridDimension::Column, [&](TemporaryTrack const& track) {
-        column_width += track.base_size;
-        if (track.has_definite_base_size)
-            has_columns_with_definite_base_size = true;
-    });
-
-    AvailableSize available_width = has_columns_with_definite_base_size ? AvailableSize::make_definite(column_width) : AvailableSize::make_indefinite();
-
-    CSSPixels column_height = 0;
-    bool has_rows_with_definite_base_size = false;
-    for_each_spanned_track_by_item(item, GridDimension::Row, [&](TemporaryTrack const& track) {
-        column_height += track.base_size;
-        if (track.has_definite_base_size)
-            has_rows_with_definite_base_size = true;
-    });
-
-    AvailableSize available_height = has_rows_with_definite_base_size ? AvailableSize::make_definite(column_height) : AvailableSize::make_indefinite();
-
+    auto& item_box_state = m_state.get(item.box());
+    AvailableSize available_width = item_box_state.has_definite_width() ? AvailableSize::make_definite(item_box_state.content_width()) : AvailableSize::make_indefinite();
+    AvailableSize available_height = item_box_state.has_definite_height() ? AvailableSize::make_definite(item_box_state.content_height()) : AvailableSize::make_indefinite();
     return AvailableSpace(available_width, available_height);
 }
 

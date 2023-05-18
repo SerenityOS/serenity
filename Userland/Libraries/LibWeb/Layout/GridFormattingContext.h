@@ -199,6 +199,8 @@ private:
     void determine_grid_container_height();
     void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
 
+    void resolve_grid_item_widths();
+
     AvailableSize get_free_space(AvailableSpace const&, GridDimension const) const;
 
     int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
