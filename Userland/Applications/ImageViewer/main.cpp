@@ -261,6 +261,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
 
+    auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling", [&](auto&) {
+        widget->set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
+    });
+
     widget->on_image_change = [&](Gfx::Bitmap const* bitmap) {
         bool should_enable_image_actions = (bitmap != nullptr);
         bool should_enable_forward_actions = (widget->is_next_available() && should_enable_image_actions);
@@ -345,10 +349,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     scaling_mode_group->add_action(*nearest_neighbor_action);
     scaling_mode_group->add_action(*smooth_pixels_action);
     scaling_mode_group->add_action(*bilinear_action);
+    scaling_mode_group->add_action(*box_sampling_action);
 
     TRY(scaling_mode_menu->try_add_action(nearest_neighbor_action));
     TRY(scaling_mode_menu->try_add_action(smooth_pixels_action));
     TRY(scaling_mode_menu->try_add_action(bilinear_action));
+    TRY(scaling_mode_menu->try_add_action(box_sampling_action));
 
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(hide_show_toolbar_action));
