@@ -4155,6 +4155,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(Prop
     });
 }
 
+static void remove_property(Vector<PropertyID>& properties, PropertyID property_to_remove)
+{
+    properties.remove_first_matching([&](auto it) { return it == property_to_remove; });
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
     StyleValueVector background_images;
@@ -4185,6 +4190,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     RefPtr<StyleValue> background_origin;
 
     bool has_multiple_layers = false;
+    // BackgroundSize is always parsed as part of BackgroundPosition, so we don't include it here.
+    Vector<PropertyID> remaining_layer_properties {
+        PropertyID::BackgroundAttachment,
+        PropertyID::BackgroundClip,
+        PropertyID::BackgroundColor,
+        PropertyID::BackgroundImage,
+        PropertyID::BackgroundOrigin,
+        PropertyID::BackgroundPosition,
+        PropertyID::BackgroundRepeat,
+    };
 
     auto background_layer_is_valid = [&](bool allow_background_color) -> bool {
         if (allow_background_color) {
@@ -4221,44 +4236,50 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         background_clip = nullptr;
         background_origin = nullptr;
 
+        remaining_layer_properties.clear_with_capacity();
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundAttachment);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundClip);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundColor);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundImage);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundOrigin);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundPosition);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundRepeat);
+
         return {};
     };
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto const& part = tokens.next_token();
-
-        if (part.is(Token::Type::Comma)) {
+        if (tokens.peek_token().is(Token::Type::Comma)) {
             has_multiple_layers = true;
             if (!background_layer_is_valid(false))
                 return nullptr;
             TRY(complete_background_layer());
+            (void)tokens.next_token();
             continue;
         }
 
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+        auto value_and_property = TRY(parse_css_value_for_properties(remaining_layer_properties, tokens));
+        if (!value_and_property.style_value)
             return nullptr;
+        auto& value = value_and_property.style_value;
+        remove_property(remaining_layer_properties, value_and_property.property);
 
-        if (property_accepts_value(PropertyID::BackgroundAttachment, *value)) {
-            if (background_attachment)
-                return nullptr;
+        switch (value_and_property.property) {
+        case PropertyID::BackgroundAttachment:
+            VERIFY(!background_attachment);
             background_attachment = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundColor, *value)) {
-            if (background_color)
-                return nullptr;
+        case PropertyID::BackgroundColor:
+            VERIFY(!background_color);
             background_color = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundImage, *value)) {
-            if (background_image)
-                return nullptr;
+        case PropertyID::BackgroundImage:
+            VERIFY(!background_image);
             background_image = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundOrigin, *value)) {
+        case PropertyID::BackgroundClip:
+        case PropertyID::BackgroundOrigin: {
             // background-origin and background-clip accept the same values. From the spec:
             //   "If one <box> value is present then it sets both background-origin and background-clip to that value.
             //    If two values are present, then the first sets background-origin and the second background-clip."
@@ -4267,17 +4288,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             // If we only get one, we copy the value before creating the BackgroundStyleValue.
             if (!background_origin) {
                 background_origin = value.release_nonnull();
-                continue;
-            }
-            if (!background_clip) {
+            } else if (!background_clip) {
                 background_clip = value.release_nonnull();
-                continue;
+            } else {
+                VERIFY_NOT_REACHED();
             }
-            return nullptr;
+            continue;
         }
-        if (property_accepts_value(PropertyID::BackgroundPosition, *value)) {
-            if (background_position)
-                return nullptr;
+        case PropertyID::BackgroundPosition: {
+            VERIFY(!background_position);
             tokens.reconsume_current_input_token();
             if (auto maybe_background_position = TRY(parse_single_background_position_value(tokens))) {
                 background_position = maybe_background_position.release_nonnull();
@@ -4297,15 +4316,17 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             }
             return nullptr;
         }
-        if (property_accepts_value(PropertyID::BackgroundRepeat, *value)) {
-            if (background_repeat)
-                return nullptr;
+        case PropertyID::BackgroundRepeat: {
+            VERIFY(!background_repeat);
             tokens.reconsume_current_input_token();
             if (auto maybe_repeat = TRY(parse_single_background_repeat_value(tokens))) {
                 background_repeat = maybe_repeat.release_nonnull();
                 continue;
             }
             return nullptr;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
 
         return nullptr;
