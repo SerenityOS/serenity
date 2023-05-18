@@ -20,6 +20,14 @@
 
 namespace FileSystemAccessClient {
 
+enum ErrorFlag : u32 {
+    Devices = 1 << 0,
+    Directories = 1 << 1,
+    NoEntries = 1 << 2,
+
+    None = 0,
+};
+
 class Client;
 class File {
 public:
@@ -51,6 +59,13 @@ public:
     Result open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::File::OpenMode requested_access = Core::File::OpenMode::Read, Optional<Vector<GUI::FileTypeFilter>> const& = {});
     Result save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access = Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
 
+    void set_silence_errors(u32 flags) { m_silenced_errors = flags; }
+    u32 silenced_errors() const { return m_silenced_errors; }
+
+    bool is_silencing_devices() { return m_silenced_errors & ErrorFlag::Devices; }
+    bool is_silencing_directories() { return m_silenced_errors & ErrorFlag::Directories; }
+    bool is_silencing_nonexistent_entries() { return m_silenced_errors & ErrorFlag::NoEntries; }
+
     static Client& the();
 
 protected:
@@ -70,13 +85,15 @@ private:
     template<typename T>
     using PromiseType = RefPtr<Core::Promise<T>>;
 
-    struct PromiseAndWindow {
+    struct RequestData {
         PromiseType<Result> promise;
         GUI::Window* parent_window { nullptr };
+        Core::File::OpenMode mode { Core::File::OpenMode::NotOpen };
     };
 
-    HashMap<int, PromiseAndWindow> m_promises {};
+    HashMap<int, RequestData> m_promises {};
     int m_last_id { 0 };
+    u32 m_silenced_errors { ErrorFlag::None };
 };
 
 }
