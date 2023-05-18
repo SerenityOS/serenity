@@ -78,6 +78,8 @@ private:
         CSSPixels max_width { 0 };
     };
 
+    CSSPixels compute_row_content_height(Cell const& cell) const;
+
     Vector<Cell> m_cells;
     Vector<Column> m_columns;
     Vector<Row> m_rows;
