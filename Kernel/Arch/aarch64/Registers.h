@@ -626,12 +626,12 @@ struct alignas(u64) SCTLR_EL1 {
     int SA : 1;
     int SA0 : 1;
     int CP15BEN : 1;
-    int _reserved6 : 1 = 0;
+    int nAA : 1;
     int ITD : 1;
     int SED : 1;
     int UMA : 1;
-    int _reserved10 : 1 = 0;
-    int _reserved11 : 1 = 1;
+    int EnRCTX : 1;
+    int EOS : 1;
     int I : 1;
     int EnDB : 1;
     int DZE : 1;
@@ -640,9 +640,9 @@ struct alignas(u64) SCTLR_EL1 {
     int _reserved17 : 1 = 0;
     int nTWE : 1;
     int WXN : 1;
-    int _reserved20 : 1 = 1;
+    int TSCXT : 1;
     int IESB : 1;
-    int _reserved22 : 1 = 1;
+    int EIS : 1;
     int SPAN : 1;
     int E0E : 1;
     int EE : 1;
@@ -688,10 +688,17 @@ struct alignas(u64) SCTLR_EL1 {
     static constexpr SCTLR_EL1 reset_value()
     {
         SCTLR_EL1 system_control_register_el1 = {};
+        system_control_register_el1.SA = 1;
+        system_control_register_el1.SA0 = 1;
+        system_control_register_el1.ITD = 1;
+        system_control_register_el1.SED = 1;
+        system_control_register_el1.EOS = 1;
+        system_control_register_el1.TSCXT = 1;
+        system_control_register_el1.IESB = 1;
+        system_control_register_el1.EIS = 1;
+        system_control_register_el1.SPAN = 1;
         system_control_register_el1.LSMAOE = 1;
         system_control_register_el1.nTLSMD = 1;
-        system_control_register_el1.SPAN = 1;
-        system_control_register_el1.IESB = 1;
         return system_control_register_el1;
     }
 };
