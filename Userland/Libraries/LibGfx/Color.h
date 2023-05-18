@@ -331,6 +331,11 @@ public:
             alpha());
     }
 
+    constexpr Color with_opacity(float opacity) const
+    {
+        return with_alpha(alpha() * opacity);
+    }
+
     constexpr Color darkened(float amount = 0.5f) const
     {
         return Color(red() * amount, green() * amount, blue() * amount, alpha());
