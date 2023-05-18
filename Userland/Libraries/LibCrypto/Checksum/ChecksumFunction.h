@@ -10,9 +10,11 @@
 
 namespace Crypto::Checksum {
 
-template<typename ChecksumType>
+template<typename ChecksumT>
 class ChecksumFunction {
 public:
+    using ChecksumType = ChecksumT;
+
     virtual void update(ReadonlyBytes data) = 0;
     virtual ChecksumType digest() = 0;
 
