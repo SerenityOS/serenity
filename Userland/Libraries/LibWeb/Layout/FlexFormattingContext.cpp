@@ -555,9 +555,11 @@ CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem cons
                 flex_basis.length_percentage = main_size.length();
             } else if (main_size.is_percentage()) {
                 flex_basis.length_percentage = main_size.percentage();
+            } else if (main_size.is_calculated()) {
+                flex_basis.length_percentage = CSS::LengthPercentage { main_size.calculated() };
             } else {
                 // FIXME: Support other size values!
-                dbgln("FIXME: Unsupported main size for flex-basis!");
+                dbgln("FIXME: Unsupported main size for flex-basis: {}", main_size);
                 flex_basis.type = CSS::FlexBasis::Content;
             }
         }
