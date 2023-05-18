@@ -1288,19 +1288,13 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     i64 vscale = src_rect.height() * shift / dst_rect.height();
     i64 src_left = src_rect.left() * shift;
     i64 src_top = src_rect.top() * shift;
-    i64 clipped_src_bottom_shifted = (clipped_src_rect.y() + clipped_src_rect.height()) * shift;
-    i64 clipped_src_right_shifted = (clipped_src_rect.x() + clipped_src_rect.width()) * shift;
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
         auto desired_y = (y - dst_rect.y()) * vscale + src_top;
-        if (desired_y < clipped_src_rect.top() || desired_y > clipped_src_bottom_shifted)
-            continue;
 
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
             auto desired_x = (x - dst_rect.x()) * hscale + src_left;
-            if (desired_x < clipped_src_rect.left() || desired_x > clipped_src_right_shifted)
-                continue;
 
             Color src_pixel;
             if constexpr (scaling_mode == Painter::ScalingMode::BilinearBlend) {
