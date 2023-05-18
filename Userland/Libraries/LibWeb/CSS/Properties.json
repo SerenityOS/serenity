@@ -647,6 +647,9 @@
   "flex": {
     "inherited": false,
     "initial": "0 1 auto",
+    "valid-identifiers": [
+      "none"
+    ],
     "longhands": [
       "flex-grow",
       "flex-shrink",
