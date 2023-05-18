@@ -254,7 +254,7 @@ private:
 
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
-    RemoveTextCommand(TextDocument&, DeprecatedString const&, TextRange const&);
+    RemoveTextCommand(TextDocument&, DeprecatedString const&, TextRange const&, TextPosition const&);
     virtual ~RemoveTextCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
@@ -265,6 +265,7 @@ public:
 private:
     DeprecatedString m_text;
     TextRange m_range;
+    TextPosition m_original_cursor_position;
 };
 
 class InsertLineCommand : public TextDocumentUndoCommand {

@@ -1126,7 +1126,7 @@ void TextEditor::keydown_event(KeyEvent& event)
                 erase_count = grapheme_break_position - m_cursor.column();
             }
             TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
-            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
             return;
         }
         if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
@@ -1136,7 +1136,7 @@ void TextEditor::keydown_event(KeyEvent& event)
                 erase_count = document().first_word_break_after({ m_cursor.line() + 1, 0 }).column();
             }
             TextRange erased_range(m_cursor, { m_cursor.line() + 1, erase_count });
-            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.end());
             return;
         }
         return;
@@ -1172,14 +1172,14 @@ void TextEditor::keydown_event(KeyEvent& event)
             // Backspace within line
             TextRange erased_range({ m_cursor.line(), m_cursor.column() - erase_count }, m_cursor);
             auto erased_text = document().text_in_range(erased_range);
-            execute<RemoveTextCommand>(erased_text, erased_range);
+            execute<RemoveTextCommand>(erased_text, erased_range, erased_range.end());
             return;
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
             // Backspace at column 0; merge with previous line
             size_t previous_length = line(m_cursor.line() - 1).length();
             TextRange erased_range({ m_cursor.line() - 1, previous_length }, m_cursor);
-            execute<RemoveTextCommand>("\n", erased_range);
+            execute<RemoveTextCommand>("\n", erased_range, erased_range.end());
             return;
         }
         return;
@@ -1278,7 +1278,7 @@ void TextEditor::unindent_line()
 void TextEditor::delete_previous_word()
 {
     TextRange to_erase(document().first_word_before(m_cursor, true), m_cursor);
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, to_erase.end());
 }
 
 void TextEditor::delete_current_line()
@@ -1300,7 +1300,7 @@ void TextEditor::delete_current_line()
     }
 
     TextRange erased_range(start, end);
-    execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+    execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, m_cursor);
 }
 
 void TextEditor::delete_previous_char()
@@ -1317,14 +1317,14 @@ void TextEditor::delete_previous_char()
         to_erase.set_start({ m_cursor.line() - 1, prev_line_len });
     }
 
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, to_erase.end());
 }
 
 void TextEditor::delete_from_line_start_to_cursor()
 {
     TextPosition start(m_cursor.line(), current_line().first_non_whitespace_column());
     TextRange to_erase(start, m_cursor);
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, m_cursor);
 }
 
 void TextEditor::do_delete()
@@ -1338,13 +1338,13 @@ void TextEditor::do_delete()
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
         TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + 1 });
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
         return;
     }
     if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
         // Delete at end of line; merge with next line
         TextRange erased_range(m_cursor, { m_cursor.line() + 1, 0 });
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
         return;
     }
 }
@@ -1755,7 +1755,7 @@ void TextEditor::delete_selection()
     auto selection = normalized_selection();
     auto selected = selected_text();
     m_selection.clear();
-    execute<RemoveTextCommand>(selected, selection);
+    execute<RemoveTextCommand>(selected, selection, selection.end());
     did_update_selection();
     did_change();
     set_cursor(selection.start());
@@ -1765,7 +1765,7 @@ void TextEditor::delete_selection()
 void TextEditor::delete_text_range(TextRange range)
 {
     auto normalized_range = range.normalized();
-    execute<RemoveTextCommand>(document().text_in_range(normalized_range), normalized_range);
+    execute<RemoveTextCommand>(document().text_in_range(normalized_range), normalized_range, normalized_range.end());
     did_change();
     set_cursor(normalized_range.start());
     update();
@@ -1791,7 +1791,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         TextPosition start(original_cursor_position.line() - 1, 0);
         TextPosition end(original_cursor_position.line() - 1, clear_length);
         TextRange erased_range(start, end);
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.end());
         set_cursor(original_cursor_position);
     }
 }
