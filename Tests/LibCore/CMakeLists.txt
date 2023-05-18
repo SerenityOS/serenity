@@ -1,7 +1,6 @@
 set(TEST_SOURCES
     TestLibCoreArgsParser.cpp
     TestLibCoreFileWatcher.cpp
-    TestLibCoreIODevice.cpp
     TestLibCoreDeferredInvoke.cpp
     TestLibCoreStream.cpp
     TestLibCoreFilePermissionsMask.cpp
