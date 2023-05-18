@@ -42,7 +42,6 @@ public:
     int read(u8* buffer, int length);
 
     ByteBuffer read(size_t max_size);
-    ByteBuffer read_all();
     DeprecatedString read_line(size_t max_size = 16384);
 
     bool write(u8 const*, int size);

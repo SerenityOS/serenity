@@ -110,44 +110,6 @@ bool IODevice::can_read_line() const
     }
 }
 
-ByteBuffer IODevice::read_all()
-{
-    off_t file_size = 0;
-    struct stat st;
-    int rc = fstat(fd(), &st);
-    if (rc == 0)
-        file_size = st.st_size;
-
-    Vector<u8> data;
-    data.ensure_capacity(file_size);
-
-    if (!m_buffered_data.is_empty()) {
-        data.append(m_buffered_data.data(), m_buffered_data.size());
-        m_buffered_data.clear();
-    }
-
-    while (true) {
-        char read_buffer[4096];
-        int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
-        if (nread < 0) {
-            set_error(errno);
-            break;
-        }
-        if (nread == 0) {
-            set_eof(true);
-            break;
-        }
-        data.append((u8 const*)read_buffer, nread);
-    }
-
-    auto result = ByteBuffer::copy(data);
-    if (!result.is_error())
-        return result.release_value();
-
-    set_error(ENOMEM);
-    return {};
-}
-
 DeprecatedString IODevice::read_line(size_t max_size)
 {
     if (m_fd < 0)
