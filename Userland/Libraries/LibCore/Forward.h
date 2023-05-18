@@ -15,7 +15,6 @@ class ChildEvent;
 class ConfigFile;
 class CustomEvent;
 class DateTime;
-class DeprecatedFile;
 class DirIterator;
 class DeferredInvocationContext;
 class ElapsedTimer;
