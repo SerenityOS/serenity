@@ -59,14 +59,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto default_path = TRY(String::from_deprecated_string(Config::read_string("FontEditor"sv, "Defaults"sv, "Font"sv, {})));
     auto path_to_load = path.is_empty() ? default_path : path;
-    auto open_or_error = [&]() -> ErrorOr<void> {
-        if (path_to_load.is_empty())
-            return {};
-        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load));
-        return TRY(font_editor->open_file(path, file.release_stream()));
-    }();
-    if (open_or_error.is_error())
-        font_editor->show_error(open_or_error.release_error(), "Opening"sv, path_to_load);
+    if (!path_to_load.is_empty()) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load);
+        if (!response.is_error()) {
+            if (auto result = font_editor->open_file(path, response.value().release_stream()); result.is_error())
+                font_editor->show_error(result.release_error(), "Opening"sv, path_to_load);
+        }
+    }
 
     return app->exec();
 }

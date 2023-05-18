@@ -75,9 +75,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!image_file.is_empty()) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, image_file);
-        if (response.is_error())
-            return 1;
-        main_widget->open_image(response.release_value());
+        if (!response.is_error())
+            main_widget->open_image(response.release_value());
+        else
+            TRY(main_widget->create_default_image());
     } else {
         TRY(main_widget->create_default_image());
     }
