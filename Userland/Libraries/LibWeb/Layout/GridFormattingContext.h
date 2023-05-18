@@ -200,6 +200,7 @@ private:
     void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
 
     void resolve_grid_item_widths();
+    void resolve_grid_item_heights();
 
     AvailableSize get_free_space(AvailableSpace const&, GridDimension const) const;
 

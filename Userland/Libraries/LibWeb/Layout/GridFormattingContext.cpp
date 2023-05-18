@@ -1365,6 +1365,24 @@ void GridFormattingContext::resolve_grid_item_widths()
     }
 }
 
+void GridFormattingContext::resolve_grid_item_heights()
+{
+    for (auto& item : m_grid_items) {
+        CSSPixels containing_block_height = containing_block_size_for_item(item, GridDimension::Row);
+
+        auto border_top = item.box().computed_values().border_top().width;
+        auto border_bottom = item.box().computed_values().border_bottom().width;
+
+        auto& box_state = m_state.get_mutable(item.box());
+        box_state.border_top = border_top;
+        box_state.border_bottom = border_bottom;
+
+        auto const& computed_height = item.box().computed_values().height();
+        auto used_height = computed_height.is_auto() ? (containing_block_height - box_state.border_top - box_state.border_bottom) : computed_height.to_px(grid_container(), containing_block_height);
+        box_state.set_content_height(used_height);
+    }
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     place_grid_items(available_space);
@@ -1396,6 +1414,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     run_track_sizing(available_space, GridDimension::Row);
 
+    resolve_grid_item_heights();
+
     determine_grid_container_height();
 
     if (available_space.height.is_intrinsic_sizing_constraint() || available_space.width.is_intrinsic_sizing_constraint()) {
@@ -1421,26 +1441,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             y_end += m_grid_rows_and_gaps[i].base_size;
         }
 
-        // A grid item containing block is created by the grid area to which it belongs.
-        auto containing_block_height = y_end - y_start;
-
-        auto const& computed_height = child_box.computed_values().height();
-
-        auto border_left = child_box.computed_values().border_left().width;
-        auto border_right = child_box.computed_values().border_right().width;
-        auto border_top = child_box.computed_values().border_top().width;
-        auto border_bottom = child_box.computed_values().border_bottom().width;
-
-        child_box_state.border_left = border_left;
-        child_box_state.border_right = border_right;
-        child_box_state.border_top = border_top;
-        child_box_state.border_bottom = border_bottom;
-
-        auto used_height = computed_height.is_auto() ? (containing_block_height - child_box_state.border_top - child_box_state.border_bottom) : computed_height.to_px(grid_container(), containing_block_height);
-
-        child_box_state.set_content_height(used_height);
-
-        child_box_state.offset = { x_start + border_left, y_start + border_top };
+        child_box_state.offset = { x_start + child_box_state.border_left, y_start + child_box_state.border_top };
 
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
         if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
