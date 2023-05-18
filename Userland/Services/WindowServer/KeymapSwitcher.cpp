@@ -6,7 +6,6 @@
 
 #include <AK/JsonObject.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
 #include <WindowServer/KeymapSwitcher.h>
 #include <spawn.h>
@@ -90,11 +89,9 @@ void KeymapSwitcher::next_keymap()
 
 DeprecatedString KeymapSwitcher::get_current_keymap() const
 {
-    auto proc_keymap = Core::DeprecatedFile::construct("/sys/kernel/keymap");
-    if (!proc_keymap->open(Core::OpenMode::ReadOnly))
-        VERIFY_NOT_REACHED();
-
-    auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto proc_keymap = Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    auto proc_keymap_data = proc_keymap->read_until_eof().release_value_but_fixme_should_propagate_errors();
+    auto json = JsonValue::from_string(proc_keymap_data).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has_string("keymap"sv));
     return keymap_object.get_deprecated_string("keymap"sv).value();
