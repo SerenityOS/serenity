@@ -221,9 +221,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
             m_filename_textbox->select_all();
         }
     }
-    m_filename_textbox->on_return_pressed = [&] {
-        on_file_return();
-    };
 
     m_context_menu = GUI::Menu::construct();
 
@@ -254,6 +251,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         on_file_return();
     };
     ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
+    ok_button.set_default(true);
+
+    m_location_textbox->on_focus_change = [&ok_button](auto focused, auto) {
+        ok_button.set_default(!focused);
+    };
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel"_short_string);
