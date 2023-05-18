@@ -22,4 +22,4 @@ if (SERENITYOS)
 endif()
 
 serenity_lib(LibAudio audio)
-target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode)
+target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode LibCrypto)
