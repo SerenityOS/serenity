@@ -83,7 +83,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
             async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), path);
         }
     } else {
-        async_handle_prompt_end(request_id, -1, Optional<IPC::File> {}, path);
+        async_handle_prompt_end(request_id, EPERM, Optional<IPC::File> {}, path);
     }
 }
 
