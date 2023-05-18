@@ -5464,21 +5464,26 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue>
     RefPtr<StyleValue> flex_direction;
     RefPtr<StyleValue> flex_wrap;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+    auto remaining_longhands = Vector { PropertyID::FlexDirection, PropertyID::FlexWrap };
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
-        if (property_accepts_value(PropertyID::FlexDirection, *value)) {
-            if (flex_direction)
-                return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::FlexDirection:
+            VERIFY(!flex_direction);
             flex_direction = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::FlexWrap, *value)) {
-            if (flex_wrap)
-                return nullptr;
+        case PropertyID::FlexWrap:
+            VERIFY(!flex_wrap);
             flex_wrap = value.release_nonnull();
             continue;
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
