@@ -22,11 +22,11 @@ ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& devi
         return ENOMEM;
 
     if (queue_type == QueueType::Polled) {
-        auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), rw_dma_page.release_nonnull(), qid, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
+        auto queue = NVMePollQueue::try_create(move(rw_dma_region), rw_dma_page.release_nonnull(), qid, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs));
         return queue;
     }
 
-    auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMeInterruptQueue(device, move(rw_dma_region), rw_dma_page.release_nonnull(), qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
+    auto queue = NVMeInterruptQueue::try_create(device, move(rw_dma_region), rw_dma_page.release_nonnull(), qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs));
     return queue;
 }
 
