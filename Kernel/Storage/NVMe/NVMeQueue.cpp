@@ -12,28 +12,26 @@
 #include <Kernel/Storage/NVMe/NVMeQueue.h>
 
 namespace Kernel {
-ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type)
+ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type)
 {
     // Note: Allocate DMA region for RW operation. For now the requests don't exceed more than 4096 bytes (Storage device takes care of it)
     RefPtr<Memory::PhysicalPage> rw_dma_page;
     auto rw_dma_region = TRY(MM.allocate_dma_buffer_page("NVMe Queue Read/Write DMA"sv, Memory::Region::Access::ReadWrite, rw_dma_page));
     if (queue_type == QueueType::Polled) {
-        auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), *rw_dma_page, qid, q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
+        auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMePollQueue(move(rw_dma_region), *rw_dma_page, qid, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
         return queue;
     }
-    auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMeInterruptQueue(device, move(rw_dma_region), *rw_dma_page, qid, irq, q_depth, move(cq_dma_region), cq_dma_page, move(sq_dma_region), sq_dma_page, move(db_regs))));
+    auto queue = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) NVMeInterruptQueue(device, move(rw_dma_region), *rw_dma_page, qid, irq, q_depth, move(cq_dma_region), move(sq_dma_region), move(db_regs))));
     return queue;
 }
 
-UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs)
+UNMAP_AFTER_INIT NVMeQueue::NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs)
     : m_rw_dma_region(move(rw_dma_region))
     , m_qid(qid)
     , m_admin_queue(qid == 0)
     , m_qdepth(q_depth)
     , m_cq_dma_region(move(cq_dma_region))
-    , m_cq_dma_page(cq_dma_page)
     , m_sq_dma_region(move(sq_dma_region))
-    , m_sq_dma_page(sq_dma_page)
     , m_db_regs(move(db_regs))
     , m_rw_dma_page(rw_dma_page)
 
