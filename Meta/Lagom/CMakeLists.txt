@@ -479,6 +479,9 @@ if (BUILD_LAGOM)
         add_serenity_subdirectory(Userland/Services)
 
         # Lagom Utilities
+        add_executable(abench ../../Userland/Utilities/abench.cpp)
+        target_link_libraries(abench LibCore LibMain LibFileSystem LibAudio)
+
         if (NOT EMSCRIPTEN)
             add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
             target_link_libraries(adjtime LibCore LibMain)
