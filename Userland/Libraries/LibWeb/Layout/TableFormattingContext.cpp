@@ -457,7 +457,11 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
 
         cell.baseline = box_baseline(m_state, cell.box);
 
-        row.base_height = max(row.base_height, cell_state.border_box_height());
+        // Only cells spanning the current row exclusively are part of computing minimum height of a row,
+        // as described in https://www.w3.org/TR/css-tables-3/#computing-the-table-height
+        if (cell.row_span == 1) {
+            row.base_height = max(row.base_height, cell_state.border_box_height());
+        }
         row.baseline = max(row.baseline, cell.baseline);
     }
 
@@ -645,7 +649,7 @@ void TableFormattingContext::position_cell_boxes()
         auto& cell_state = m_state.get_mutable(cell.box);
         auto& row_state = m_state.get(m_rows[cell.row_index].box);
         CSSPixels const cell_border_box_height = cell_state.content_height() + cell_state.border_box_top() + cell_state.border_box_bottom();
-        CSSPixels const row_content_height = row_state.content_height();
+        CSSPixels const row_content_height = compute_row_content_height(cell);
         auto const& vertical_align = cell.box->computed_values().vertical_align();
         if (vertical_align.has<CSS::VerticalAlign>()) {
             switch (vertical_align.get<CSS::VerticalAlign>()) {
@@ -669,6 +673,33 @@ void TableFormattingContext::position_cell_boxes()
 
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset, cell_state.border_box_top());
     }
+}
+
+CSSPixels TableFormattingContext::compute_row_content_height(Cell const& cell) const
+{
+    auto& row_state = m_state.get(m_rows[cell.row_index].box);
+    if (cell.row_span == 1) {
+        return row_state.content_height();
+    }
+    // The height of a cell is the sum of all spanned rows, as described in
+    // https://www.w3.org/TR/css-tables-3/#bounding-box-assignment
+
+    // When the row span is greater than 1, the borders of inner rows within the span have to be
+    // included in the content height of the spanning cell. First top and final bottom borders are
+    // excluded to be consistent with the handling of row span 1 case above, which uses the content
+    // height (no top and bottom borders) of the row.
+    CSSPixels span_height = 0;
+    for (size_t i = 0; i < cell.row_span; ++i) {
+        auto const& row_state = m_state.get(m_rows[cell.row_index + i].box);
+        if (i == 0) {
+            span_height += row_state.content_height() + row_state.border_box_bottom();
+        } else if (i == cell.row_span - 1) {
+            span_height += row_state.border_box_top() + row_state.content_height();
+        } else {
+            span_height += row_state.border_box_height();
+        }
+    }
+    return span_height;
 }
 
 void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
