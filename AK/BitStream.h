@@ -138,17 +138,11 @@ protected:
         return bits == 0 ? 0 : max >> (digits - bits);
     }
 
-    ALWAYS_INLINE BufferType lsb_aligned_buffer() const
-    {
-        return m_bit_offset == bit_buffer_size ? 0 : m_bit_buffer >> m_bit_offset;
-    }
-
     ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_count % bits_per_byte == 0; }
 
     MaybeOwned<Stream> m_stream;
 
     BufferType m_bit_buffer { 0 };
-    u8 m_bit_offset { 0 };
     u8 m_bit_count { 0 };
 };
 
@@ -217,7 +211,7 @@ public:
         if (count > m_bit_count)
             TRY(refill_buffer_from_stream());
 
-        return lsb_aligned_buffer() & lsb_mask<T>(min(count, m_bit_count));
+        return m_bit_buffer & lsb_mask<T>(min(count, m_bit_count));
     }
 
     ALWAYS_INLINE void discard_previously_peeked_bits(u8 count)
@@ -226,7 +220,7 @@ public:
         if (count > m_bit_count)
             count = m_bit_count;
 
-        m_bit_offset += count;
+        m_bit_buffer >>= count;
         m_bit_count -= count;
     }
 
@@ -235,9 +229,6 @@ public:
     u8 align_to_byte_boundary()
     {
         u8 remaining_bits = 0;
-
-        m_bit_buffer = lsb_aligned_buffer();
-        m_bit_offset = 0;
 
         if (auto offset = m_bit_count % bits_per_byte; offset != 0) {
             remaining_bits = m_bit_buffer & lsb_mask<u8>(offset);
@@ -256,9 +247,8 @@ private:
         BufferType buffer = 0;
         auto bytes = TRY(m_stream->read_some({ &buffer, bytes_to_read }));
 
-        m_bit_buffer = (buffer << m_bit_count) | lsb_aligned_buffer();
+        m_bit_buffer |= (buffer << m_bit_count);
         m_bit_count += bytes.size() * bits_per_byte;
-        m_bit_offset = 0;
 
         return {};
     }
