@@ -284,6 +284,8 @@ ErrorOr<void> LzmaCompressor::normalize_range_encoder()
 
 ErrorOr<u8> LzmaDecompressor::decode_direct_bit()
 {
+    dbgln_if(LZMA_DEBUG, "Decoding direct bit {} with code = {:#x}, range = {:#x}", 1 - ((m_range_decoder_code - (m_range_decoder_range >> 1)) >> 31), m_range_decoder_code, m_range_decoder_range);
+
     m_range_decoder_range >>= 1;
     m_range_decoder_code -= m_range_decoder_range;
 
@@ -301,6 +303,8 @@ ErrorOr<u8> LzmaDecompressor::decode_direct_bit()
 
 ErrorOr<void> LzmaCompressor::encode_direct_bit(u8 value)
 {
+    dbgln_if(LZMA_DEBUG, "Encoding direct bit {} with code = {:#x}, range = {:#x}", value, m_range_encoder_code, m_range_encoder_range);
+
     m_range_encoder_range >>= 1;
 
     if (value != 0)
