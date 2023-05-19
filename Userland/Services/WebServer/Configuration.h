@@ -15,15 +15,15 @@ namespace WebServer {
 
 class Configuration {
 public:
-    Configuration(DeprecatedString document_root_path, Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> credentials = {});
+    Configuration(String document_root_path, Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> credentials = {});
 
-    DeprecatedString const& document_root_path() const { return m_document_root_path; }
+    String const& document_root_path() const { return m_document_root_path; }
     Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> const& credentials() const { return m_credentials; }
 
     static Configuration const& the();
 
 private:
-    DeprecatedString m_document_root_path;
+    String m_document_root_path;
     Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> m_credentials;
 };
 

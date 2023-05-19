@@ -11,7 +11,7 @@ namespace WebServer {
 
 static Configuration* s_configuration = nullptr;
 
-Configuration::Configuration(DeprecatedString document_root_path, Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> credentials)
+Configuration::Configuration(String document_root_path, Optional<HTTP::HttpRequest::BasicAuthenticationCredentials> credentials)
     : m_document_root_path(move(document_root_path))
     , m_credentials(move(credentials))
 {
