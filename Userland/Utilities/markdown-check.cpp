@@ -6,9 +6,9 @@
 
 /*
  * You may want to invoke the checker like this:
- * $ cd Build/lagom
- * $ ninja
- * $ find ../../AK ../../Base ../../Documentation/ ../../Kernel/ ../../Meta/ ../../Ports/ ../../Tests/ ../../Userland/ -type f -name '*.md' | xargs ./markdown-check ../../README.md
+ * $ ninja -C Build/lagom
+ * $ export SERENITY_SOURCE_DIR=/path/to/serenity
+ * $ find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.md' -print0 | xargs -0 Build/lagom/markdown-check README.md CONTRIBUTING.md
  */
 
 #include <AK/Format.h>
