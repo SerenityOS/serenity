@@ -158,12 +158,56 @@ ErrorOr<void> SpiceAgent::on_message_received()
         auto message = TRY(FileTransferStatusMessage::read_from_stream(stream));
         dbgln("File transfer {} has been cancelled: {}", message.id(), message.status());
 
+        m_file_transfer_operations.remove(message.id());
+
         break;
     }
 
+    // Received when the user drags a file onto the virtual machine.
     case Message::Type::FileTransferStart: {
         auto message = TRY(FileTransferStartMessage::read_from_stream(stream));
-        dbgln("File transfer request received: {}", TRY(message.debug_description()));
+        auto operation = TRY(FileTransferOperation::create(message));
+
+        // Tell the operation to start the file transfer.
+        TRY(operation->begin_transfer(*this));
+        m_file_transfer_operations.set(message.id(), operation);
+
+        break;
+    }
+
+    // Received when the server has data related to a file transfer for us.
+    case Message::Type::FileTransferData: {
+        auto message = TRY(FileTransferDataMessage::read_from_stream(stream));
+        auto optional_operation = m_file_transfer_operations.get(message.id());
+        if (!optional_operation.has_value()) {
+            return Error::from_string_literal("Attempt to supply data to a file transfer operation which doesn't exist!");
+        }
+
+        // Inform the operation that we have received new data.
+        auto* operation = optional_operation.release_value();
+        auto result = operation->on_data_received(message);
+        if (result.is_error()) {
+            // We can also discard of this transfer operation, since it will be cancelled by the server after our status message.
+            m_file_transfer_operations.remove(message.id());
+
+            // Inform the server that the operation has failed
+            auto status_message = FileTransferStatusMessage(message.id(), FileTransferStatus::Error);
+            TRY(this->send_message(status_message));
+
+            return result.release_error();
+        }
+
+        // The maximum amount of data that a FileTransferData message can hold is 65536.
+        // If it's less than 65536, this is the only (or last) message in relation to this transfer.
+        // Otherwise, we must wait for more data to be received.
+        auto transfer_is_complete = message.contents().size() < file_transfer_buffer_threshold;
+        if (!transfer_is_complete) {
+            return {};
+        }
+
+        // The transfer is now complete, let's write the data to the file!
+        TRY(operation->complete_transfer(*this));
+        m_file_transfer_operations.remove(message.id());
 
         break;
     }
