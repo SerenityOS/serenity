@@ -14,7 +14,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -144,13 +143,12 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
         real_path = index_html_path;
     }
 
-    auto file = Core::DeprecatedFile::construct(real_path.bytes_as_string_view());
-    if (!file->open(Core::OpenMode::ReadOnly)) {
+    if (!FileSystem::exists(real_path.bytes_as_string_view())) {
         TRY(send_error_response(404, request));
         return false;
     }
 
-    if (file->is_device()) {
+    if (FileSystem::is_device(real_path.bytes_as_string_view())) {
         TRY(send_error_response(403, request));
         return false;
     }

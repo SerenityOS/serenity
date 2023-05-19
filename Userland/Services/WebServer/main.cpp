@@ -8,7 +8,6 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
@@ -57,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto real_document_root_path = Core::DeprecatedFile::real_path_for(document_root_path);
+    auto real_document_root_path = TRY(FileSystem::real_path(document_root_path));
     if (!FileSystem::exists(real_document_root_path)) {
         warnln("Root path does not exist: '{}'", document_root_path);
         return 1;
@@ -69,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!username.is_empty() && !password.is_empty())
         credentials = HTTP::HttpRequest::BasicAuthenticationCredentials { username, password };
 
-    WebServer::Configuration configuration(real_document_root_path, credentials);
+    WebServer::Configuration configuration(real_document_root_path.to_deprecated_string(), credentials);
 
     Core::EventLoop loop;
 
