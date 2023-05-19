@@ -267,4 +267,25 @@ ErrorOr<String> FileTransferStatusMessage::debug_description()
     return builder.to_string();
 }
 
+ErrorOr<FileTransferDataMessage> FileTransferDataMessage::read_from_stream(AK::Stream& stream)
+{
+    auto id = TRY(stream.read_value<u32>());
+    auto size = TRY(stream.read_value<u64>());
+
+    auto contents = TRY(ByteBuffer::create_uninitialized(size));
+    TRY(stream.read_until_filled(contents));
+
+    return FileTransferDataMessage(id, contents);
+}
+
+ErrorOr<String> FileTransferDataMessage::debug_description()
+{
+    StringBuilder builder;
+    TRY(builder.try_append("FileTransferData { "sv));
+    TRY(builder.try_appendff("id = {}, ", id()));
+    TRY(builder.try_appendff("contents.size() = {}", contents().size()));
+    TRY(builder.try_append(" }"sv));
+    return builder.to_string();
+}
+
 }
