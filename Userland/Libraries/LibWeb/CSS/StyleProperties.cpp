@@ -236,34 +236,56 @@ Optional<int> StyleProperties::z_index() const
     return {};
 }
 
-float StyleProperties::opacity() const
+static float resolve_opacity_value(CSS::StyleValue const& value)
 {
-    auto value = property(CSS::PropertyID::Opacity);
-
     float unclamped_opacity = 1.0f;
 
-    if (value->has_number()) {
-        unclamped_opacity = value->to_number();
-    } else if (value->is_calculated()) {
-        auto& calculated = value->as_calculated();
+    if (value.has_number()) {
+        unclamped_opacity = value.to_number();
+    } else if (value.is_calculated()) {
+        auto& calculated = value.as_calculated();
         if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
-            auto maybe_percentage = value->as_calculated().resolve_percentage();
+            auto maybe_percentage = value.as_calculated().resolve_percentage();
             if (maybe_percentage.has_value())
                 unclamped_opacity = maybe_percentage->as_fraction();
             else
-                dbgln("Unable to resolve calc() as opacity (percentage): {}", value->to_string());
+                dbgln("Unable to resolve calc() as opacity (percentage): {}", value.to_string());
         } else {
-            auto maybe_number = const_cast<CalculatedStyleValue&>(value->as_calculated()).resolve_number();
+            auto maybe_number = const_cast<CalculatedStyleValue&>(value.as_calculated()).resolve_number();
             if (maybe_number.has_value())
                 unclamped_opacity = maybe_number.value();
             else
-                dbgln("Unable to resolve calc() as opacity (number): {}", value->to_string());
+                dbgln("Unable to resolve calc() as opacity (number): {}", value.to_string());
         }
-    } else if (value->is_percentage()) {
-        unclamped_opacity = value->as_percentage().percentage().as_fraction();
+    } else if (value.is_percentage()) {
+        unclamped_opacity = value.as_percentage().percentage().as_fraction();
     }
 
     return clamp(unclamped_opacity, 0.0f, 1.0f);
+}
+
+float StyleProperties::opacity() const
+{
+    auto value = property(CSS::PropertyID::Opacity);
+    return resolve_opacity_value(*value);
+}
+
+float StyleProperties::fill_opacity() const
+{
+    auto value = property(CSS::PropertyID::FillOpacity);
+    return resolve_opacity_value(*value);
+}
+
+float StyleProperties::stroke_opacity() const
+{
+    auto value = property(CSS::PropertyID::StrokeOpacity);
+    return resolve_opacity_value(*value);
+}
+
+float StyleProperties::stop_opacity() const
+{
+    auto value = property(CSS::PropertyID::StopOpacity);
+    return resolve_opacity_value(*value);
 }
 
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const

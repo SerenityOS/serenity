@@ -99,6 +99,9 @@ public:
     CSS::TransformOrigin transform_origin() const;
 
     Color stop_color() const;
+    float stop_opacity() const;
+    float fill_opacity() const;
+    float stroke_opacity() const;
 
     Gfx::Font const& computed_font() const
     {

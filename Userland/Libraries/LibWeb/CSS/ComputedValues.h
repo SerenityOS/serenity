@@ -62,6 +62,9 @@ public:
     static float flex_shrink() { return 1.0f; }
     static int order() { return 0; }
     static float opacity() { return 1.0f; }
+    static float fill_opacity() { return 1.0f; }
+    static float stroke_opacity() { return 1.0f; }
+    static float stop_opacity() { return 1.0f; }
     static CSS::Length border_radius() { return Length::make_px(0); }
     static Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() { return CSS::VerticalAlign::Baseline; }
     static CSS::LengthBox inset() { return { CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() }; }
@@ -284,8 +287,11 @@ public:
 
     Optional<SVGPaint> const& fill() const { return m_inherited.fill; }
     Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
+    float fill_opacity() const { return m_inherited.fill_opacity; }
+    float stroke_opacity() const { return m_inherited.stroke_opacity; }
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
     Color stop_color() const { return m_noninherited.stop_color; }
+    float stop_opacity() const { return m_noninherited.stop_opacity; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
@@ -321,6 +327,8 @@ protected:
 
         Optional<SVGPaint> fill;
         Optional<SVGPaint> stroke;
+        float fill_opacity { InitialValues::fill_opacity() };
+        float stroke_opacity { InitialValues::stroke_opacity() };
         Optional<LengthPercentage> stroke_width;
     } m_inherited;
 
@@ -388,6 +396,7 @@ protected:
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
         Vector<Vector<String>> grid_template_areas { InitialValues::grid_template_areas() };
         Gfx::Color stop_color { InitialValues::stop_color() };
+        float stop_opacity { InitialValues::stop_opacity() };
     } m_noninherited;
 };
 
@@ -475,8 +484,11 @@ public:
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
+    void set_fill_opacity(float value) { m_inherited.fill_opacity = value; }
+    void set_stroke_opacity(float value) { m_inherited.stroke_opacity = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
     void set_stop_color(Color value) { m_noninherited.stop_color = value; }
+    void set_stop_opacity(float value) { m_noninherited.stop_opacity = value; }
 };
 
 }

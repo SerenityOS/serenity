@@ -30,6 +30,8 @@ public:
     Gfx::Painter::WindingRule fill_rule() const;
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
+    Optional<float> fill_opacity() const;
+    Optional<float> stroke_opacity() const;
 
     float visible_stroke_width() const
     {
@@ -47,7 +49,6 @@ protected:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    Optional<float> m_fill_opacity = {};
     Gfx::AffineTransform m_transform = {};
 };
 
