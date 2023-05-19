@@ -629,6 +629,15 @@
       "none"
     ]
   },
+  "fill-opacity": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "1",
+    "valid-types": [
+      "number",
+      "percentage"
+    ]
+  },
   "flex": {
     "inherited": false,
     "initial": "0 1 auto",
@@ -1406,12 +1415,30 @@
       "none"
     ]
   },
+  "stroke-opacity": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "1",
+    "valid-types": [
+      "number",
+      "percentage"
+    ]
+  },
   "stop-color": {
     "affects-layout": false,
     "inherited": false,
     "initial": "black",
     "valid-types": [
       "color"
+    ]
+  },
+  "stop-opacity": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "1",
+    "valid-types": [
+      "number",
+      "percentage"
     ]
   },
   "stroke-width": {
