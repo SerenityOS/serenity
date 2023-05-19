@@ -23,6 +23,7 @@
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <math.h>
 
 namespace Web::HTML {
 
@@ -76,6 +77,7 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
         auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
         auto color_fill = drawing_state.fill_style.as_color();
         if (color_fill.has_value()) {
+            color_fill.value().set_alpha(drawing_state.global_alpha * 255);
             painter.fill_rect(rect, *color_fill);
         } else {
             // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support FillPath yet.
@@ -112,7 +114,9 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
         path.line_to(bottom_right);
         path.line_to(bottom_left);
         path.line_to(top_left);
-        painter.stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
+        auto color = drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style();
+        color.set_alpha(drawing_state.global_alpha * 255);
+        painter.stroke_path(path, color, drawing_state.line_width);
 
         return rect;
     });
@@ -169,7 +173,7 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
             // FIXME: Honor drawing_state().image_smoothing_quality
             scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
         }
-
+        // FIXME: Honor drawing_state().global_alpha
         painter.underlying_painter().draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, 1.0f, scaling_mode);
 
         // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
@@ -218,7 +222,9 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
         auto& base_painter = painter.underlying_painter();
         auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : base_painter.font().width(text), base_painter.font().pixel_size());
         auto transformed_rect = drawing_state.transform.map(text_rect);
-        base_painter.draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style());
+        auto color = drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style();
+        color.set_alpha(drawing_state.global_alpha * 255);
+        base_painter.draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, color);
         return transformed_rect;
     });
 }
@@ -589,6 +595,19 @@ Bindings::ImageSmoothingQuality CanvasRenderingContext2D::image_smoothing_qualit
 void CanvasRenderingContext2D::set_image_smoothing_quality(Bindings::ImageSmoothingQuality quality)
 {
     drawing_state().image_smoothing_quality = quality;
+}
+
+double CanvasRenderingContext2D::global_alpha() const
+{
+    return drawing_state().global_alpha;
+}
+
+void CanvasRenderingContext2D::set_global_alpha(double alpha)
+{
+    if (isnan(alpha) || alpha < 0.0 || alpha > 1.0) {
+        return;
+    }
+    drawing_state().global_alpha = alpha;
 }
 
 }

@@ -16,6 +16,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/HTML/Canvas/CanvasCompositing.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
@@ -51,6 +52,7 @@ class CanvasRenderingContext2D
     , public CanvasDrawImage
     , public CanvasImageData
     , public CanvasImageSmoothing
+    , public CanvasCompositing
     , public CanvasPathDrawingStyles<CanvasRenderingContext2D> {
 
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
@@ -92,6 +94,9 @@ public:
     virtual void set_image_smoothing_enabled(bool) override;
     virtual Bindings::ImageSmoothingQuality image_smoothing_quality() const override;
     virtual void set_image_smoothing_quality(Bindings::ImageSmoothingQuality) override;
+
+    virtual double global_alpha() const override;
+    virtual void set_global_alpha(double) override;
 
 private:
     explicit CanvasRenderingContext2D(JS::Realm&, HTMLCanvasElement&);
