@@ -161,6 +161,7 @@ private:
     Optional<Time> seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample = OptionalNone());
 
     Optional<FrameQueueItem> dequeue_one_frame();
+    void set_state_update_timer(int delay_ms);
 
     void decode_and_queue_one_sample();
 
@@ -179,7 +180,7 @@ private:
 
     VideoFrameQueue m_frame_queue;
 
-    RefPtr<Core::Timer> m_present_timer;
+    RefPtr<Core::Timer> m_state_update_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
     RefPtr<Threading::Thread> m_decode_thread;
@@ -216,7 +217,7 @@ private:
 
         virtual Time current_time() const;
 
-        virtual ErrorOr<void> on_timer_callback() { return {}; };
+        virtual ErrorOr<void> do_timed_state_update() { return {}; };
 
     protected:
         template<class T, class... Args>

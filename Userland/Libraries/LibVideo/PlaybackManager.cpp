@@ -56,7 +56,7 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
     auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
     auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder), move(frame_queue)));
 
-    playback_manager->m_present_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
+    playback_manager->m_state_update_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
 
     playback_manager->m_decode_thread = DECODER_TRY_ALLOC(Threading::Thread::try_create([&self = *playback_manager] {
         while (!self.m_stop_decoding.load())
@@ -176,7 +176,7 @@ void PlaybackManager::dispatch_state_change()
 
 void PlaybackManager::timer_callback()
 {
-    TRY_OR_FATAL_ERROR(m_playback_handler->on_timer_callback());
+    TRY_OR_FATAL_ERROR(m_playback_handler->do_timed_state_update());
 }
 
 void PlaybackManager::seek_to_timestamp(Time target_timestamp, SeekMode seek_mode)
@@ -202,6 +202,11 @@ Optional<FrameQueueItem> PlaybackManager::dequeue_one_frame()
         return {};
     }
     return result.release_value();
+}
+
+void PlaybackManager::set_state_update_timer(int delay_ms)
+{
+    m_state_update_timer->start(delay_ms);
 }
 
 void PlaybackManager::restart_playback()
@@ -404,7 +409,7 @@ private:
     ErrorOr<void> on_enter() override
     {
         m_last_present_in_real_time = Time::now_monotonic();
-        return on_timer_callback();
+        return do_timed_state_update();
     }
 
     StringView name() override { return "Playing"sv; }
@@ -427,13 +432,13 @@ private:
         return manager().m_last_present_in_media_time + (Time::now_monotonic() - m_last_present_in_real_time);
     }
 
-    ErrorOr<void> on_timer_callback() override
+    ErrorOr<void> do_timed_state_update() override
     {
         auto set_presentation_timer = [&]() {
             auto frame_time_ms = (manager().m_next_frame->timestamp() - current_time()).to_milliseconds();
             VERIFY(frame_time_ms <= NumericLimits<int>::max());
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
-            manager().m_present_timer->start(max(static_cast<int>(frame_time_ms), 0));
+            manager().set_state_update_timer(max(static_cast<int>(frame_time_ms), 0));
         };
 
         if (manager().m_next_frame.has_value() && current_time() < manager().m_next_frame->timestamp()) {
@@ -547,20 +552,20 @@ class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingS
 
     ErrorOr<void> on_enter() override
     {
-        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
+        manager().set_state_update_timer(buffering_or_seeking_decode_wait_time);
         return {};
     }
 
     StringView name() override { return "Buffering"sv; }
 
-    ErrorOr<void> on_timer_callback() override
+    ErrorOr<void> do_timed_state_update() override
     {
         auto buffer_is_full = manager().m_buffer_is_full.load();
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Buffering timer callback has been called. Buffer is {}.", buffer_is_full ? "full, exiting"sv : "not full, waiting"sv);
         if (buffer_is_full)
             return assume_next_state();
 
-        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
+        manager().set_state_update_timer(buffering_or_seeking_decode_wait_time);
         return {};
     }
 
@@ -644,7 +649,7 @@ private:
         }
 
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is empty while seeking, waiting for buffer to fill.");
-        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
+        manager().set_state_update_timer(buffering_or_seeking_decode_wait_time);
         return {};
     }
 
@@ -663,7 +668,7 @@ private:
     }
 
     // We won't need this override when threaded, the queue can pause us in on_enter().
-    ErrorOr<void> on_timer_callback() override
+    ErrorOr<void> do_timed_state_update() override
     {
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Seeking wait finished, attempting to dequeue until timestamp.");
         return skip_samples_until_timestamp();
