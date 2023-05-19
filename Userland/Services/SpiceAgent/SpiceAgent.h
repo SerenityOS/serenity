@@ -8,6 +8,7 @@
 #pragma once
 
 #include "ChunkHeader.h"
+#include "FileTransferOperation.h"
 #include "Message.h"
 #include "MessageHeader.h"
 #include <AK/MemoryStream.h>
@@ -21,6 +22,9 @@ namespace SpiceAgent {
 // The maximum amount of data that can be contained within a message's buffer.
 // If the buffer's length is equal to this, then the next data recieved will be more data from the same buffer.
 constexpr u32 message_buffer_threshold = 2048;
+
+// The maximum amount of data that can be received in one file transfer message
+constexpr u32 file_transfer_buffer_threshold = 65536;
 
 class SpiceAgent {
 public:
@@ -61,6 +65,7 @@ public:
 private:
     NonnullOwnPtr<Core::File> m_spice_device;
     Vector<Capability> m_capabilities;
+    HashMap<u32, NonnullRefPtr<FileTransferOperation>> m_file_transfer_operations;
 
     RefPtr<Core::Notifier> m_notifier;
 
