@@ -7,7 +7,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibFileSystem/FileSystem.h>
@@ -371,7 +370,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    test_root = Core::DeprecatedFile::real_path_for(test_root);
+    test_root = TRY(FileSystem::real_path(test_root)).to_deprecated_string();
 
     auto void_or_error = Core::System::chdir(test_root);
     if (void_or_error.is_error()) {
