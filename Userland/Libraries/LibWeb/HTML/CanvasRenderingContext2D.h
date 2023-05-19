@@ -16,6 +16,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/HTML/Canvas/CanvasCompositing.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
@@ -51,6 +52,7 @@ class CanvasRenderingContext2D
     , public CanvasDrawImage
     , public CanvasImageData
     , public CanvasImageSmoothing
+    , public CanvasCompositing
     , public CanvasPathDrawingStyles<CanvasRenderingContext2D> {
 
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
@@ -93,6 +95,9 @@ public:
     virtual Bindings::ImageSmoothingQuality image_smoothing_quality() const override;
     virtual void set_image_smoothing_quality(Bindings::ImageSmoothingQuality) override;
 
+    virtual float global_alpha() const override;
+    virtual void set_global_alpha(float) override;
+
 private:
     explicit CanvasRenderingContext2D(JS::Realm&, HTMLCanvasElement&);
 
@@ -133,9 +138,11 @@ private:
     HTMLCanvasElement& canvas_element();
     HTMLCanvasElement const& canvas_element() const;
 
+    Gfx::Path rect_path(float x, float y, float width, float height);
+
     void stroke_internal(Gfx::Path const&);
-    void fill_internal(Gfx::Path&, Gfx::Painter::WindingRule winding_rule);
-    void clip_internal(Gfx::Path&, Gfx::Painter::WindingRule winding_rule);
+    void fill_internal(Gfx::Path const&, Gfx::Painter::WindingRule);
+    void clip_internal(Gfx::Path&, Gfx::Painter::WindingRule);
 
     JS::NonnullGCPtr<HTMLCanvasElement> m_element;
     OwnPtr<Gfx::Painter> m_painter;

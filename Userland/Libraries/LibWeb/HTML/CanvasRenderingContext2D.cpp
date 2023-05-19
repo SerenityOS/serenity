@@ -69,19 +69,28 @@ JS::NonnullGCPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding
     return *m_element;
 }
 
+Gfx::Path CanvasRenderingContext2D::rect_path(float x, float y, float width, float height)
+{
+    auto& drawing_state = this->drawing_state();
+
+    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y));
+    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width, y));
+    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height));
+    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width, y + height));
+
+    Gfx::Path path;
+    path.move_to(top_left);
+    path.line_to(top_right);
+    path.line_to(bottom_right);
+    path.line_to(bottom_left);
+    path.line_to(top_left);
+
+    return path;
+}
+
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
-    draw_clipped([&](auto& painter) {
-        auto& drawing_state = this->drawing_state();
-        auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-        if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
-            painter.fill_rect(rect, *color);
-        } else {
-            // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support PaintStyle yet.
-            painter.underlying_painter().fill_rect(rect.to_rounded<int>(), *drawing_state.fill_style.to_gfx_paint_style());
-        }
-        return rect;
-    });
+    return fill_internal(rect_path(x, y, width, height), Gfx::Painter::WindingRule::EvenOdd);
 }
 
 void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
@@ -95,21 +104,7 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
-    auto& drawing_state = this->drawing_state();
-
-    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y));
-    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y));
-    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1));
-    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1));
-
-    Gfx::Path path;
-    path.move_to(top_left);
-    path.line_to(top_right);
-    path.line_to(bottom_right);
-    path.line_to(bottom_left);
-    path.line_to(top_left);
-
-    stroke_internal(path);
+    stroke_internal(rect_path(x, y, width, height));
 }
 
 // 4.12.5.1.14 Drawing images, https://html.spec.whatwg.org/multipage/canvas.html#drawing-images
@@ -164,7 +159,7 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
             scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
         }
 
-        painter.underlying_painter().draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, 1.0f, scaling_mode);
+        painter.underlying_painter().draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, drawing_state().global_alpha, scaling_mode);
 
         // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
         if (image_is_not_origin_clean(image))
@@ -212,7 +207,8 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
         auto& base_painter = painter.underlying_painter();
         auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : base_painter.font().width(text), base_painter.font().pixel_size());
         auto transformed_rect = drawing_state.transform.map(text_rect);
-        base_painter.draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style());
+        auto color = drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style();
+        base_painter.draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, color.with_opacity(drawing_state.global_alpha));
         return transformed_rect;
     });
 }
@@ -233,9 +229,9 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
-            painter.stroke_path(path, *color, drawing_state.line_width);
+            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), drawing_state.line_width);
         } else {
-            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width);
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width, drawing_state.global_alpha);
         }
         return path.bounding_box();
     });
@@ -262,17 +258,18 @@ static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
     return Gfx::Painter::WindingRule::Nonzero;
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, Gfx::Painter::WindingRule winding_rule)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path const& path, Gfx::Painter::WindingRule winding_rule)
 {
-    draw_clipped([=, this](auto& painter) mutable {
-        path.close_all_subpaths();
+    draw_clipped([&, this](auto& painter) mutable {
+        auto path_to_fill = path;
+        path_to_fill.close_all_subpaths();
         auto& drawing_state = this->drawing_state();
         if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
-            painter.fill_path(path, *color, winding_rule);
+            painter.fill_path(path_to_fill, color->with_opacity(drawing_state.global_alpha), winding_rule);
         } else {
-            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), 1.0f, winding_rule);
+            painter.fill_path(path_to_fill, drawing_state.fill_style.to_gfx_paint_style(), drawing_state.global_alpha, winding_rule);
         }
-        return path.bounding_box();
+        return path_to_fill.bounding_box();
     });
 }
 
@@ -589,6 +586,22 @@ Bindings::ImageSmoothingQuality CanvasRenderingContext2D::image_smoothing_qualit
 void CanvasRenderingContext2D::set_image_smoothing_quality(Bindings::ImageSmoothingQuality quality)
 {
     drawing_state().image_smoothing_quality = quality;
+}
+
+float CanvasRenderingContext2D::global_alpha() const
+{
+    return drawing_state().global_alpha;
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-globalalpha
+void CanvasRenderingContext2D::set_global_alpha(float alpha)
+{
+    // 1. If the given value is either infinite, NaN, or not in the range 0.0 to 1.0, then return.
+    if (!isfinite(alpha) || alpha < 0.0f || alpha > 1.0f) {
+        return;
+    }
+    // 2. Otherwise, set this's global alpha to the given value.
+    drawing_state().global_alpha = alpha;
 }
 
 }
