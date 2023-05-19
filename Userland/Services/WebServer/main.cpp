@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!username.is_empty() && !password.is_empty())
         credentials = HTTP::HttpRequest::BasicAuthenticationCredentials { username, password };
 
-    WebServer::Configuration configuration(real_document_root_path.to_deprecated_string(), credentials);
+    WebServer::Configuration configuration(real_document_root_path, credentials);
 
     Core::EventLoop loop;
 
