@@ -353,53 +353,29 @@ public:
         return right();
     }
 
-    // FIXME: for integral types of T, we assume that the right/bottom edges are offset by minus one.
-    //        Although there are cases where this makes sense, for consistency it would be best if we
-    //        can drop the `- 1` altogether and not specialize these methods.
     [[nodiscard]] ALWAYS_INLINE T left() const { return x(); }
-    [[nodiscard]] ALWAYS_INLINE T right() const
-    requires(IsIntegral<T>)
-    {
-        return x() + width() - 1;
-    }
-    [[nodiscard]] ALWAYS_INLINE T right() const
-    requires(!IsIntegral<T>)
-    {
-        return x() + width();
-    }
+    [[nodiscard]] ALWAYS_INLINE T right() const { return x() + width() - 1; }
     [[nodiscard]] ALWAYS_INLINE T top() const { return y(); }
-    [[nodiscard]] ALWAYS_INLINE T bottom() const
-    requires(IsIntegral<T>)
+    [[nodiscard]] ALWAYS_INLINE T bottom() const { return y() + height() - 1; }
+
+    ALWAYS_INLINE void set_left(T left)
     {
-        return y() + height() - 1;
-    }
-    [[nodiscard]] ALWAYS_INLINE T bottom() const
-    requires(!IsIntegral<T>)
-    {
-        return y() + height();
+        set_x(left);
     }
 
-    ALWAYS_INLINE void set_left(T left) { set_x(left); }
+    ALWAYS_INLINE void set_top(T top)
+    {
+        set_y(top);
+    }
+
     ALWAYS_INLINE void set_right(T right)
-    requires(IsIntegral<T>)
     {
         set_width(right - x() + 1);
     }
-    ALWAYS_INLINE void set_right(T right)
-    requires(!IsIntegral<T>)
-    {
-        set_width(right - x());
-    }
-    ALWAYS_INLINE void set_top(T top) { set_y(top); }
+
     ALWAYS_INLINE void set_bottom(T bottom)
-    requires(IsIntegral<T>)
     {
         set_height(bottom - y() + 1);
-    }
-    ALWAYS_INLINE void set_bottom(T bottom)
-    requires(!IsIntegral<T>)
-    {
-        set_height(bottom - y());
     }
 
     void set_right_without_resize(T new_right)
@@ -529,10 +505,10 @@ public:
             return;
         }
 
-        set_x(l);
-        set_y(t);
-        set_right(r);
-        set_bottom(b);
+        m_location.set_x(l);
+        m_location.set_y(t);
+        m_size.set_width((r - l) + 1);
+        m_size.set_height((b - t) + 1);
     }
 
     [[nodiscard]] static Rect<T> centered_on(Point<T> const& center, Size<T> const& size)
