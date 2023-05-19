@@ -297,27 +297,4 @@ bool IODevice::write(StringView v)
     return write((u8 const*)v.characters_without_null_termination(), v.length());
 }
 
-LineIterator::LineIterator(IODevice& device, bool is_end)
-    : m_device(device)
-    , m_is_end(is_end)
-{
-    if (!m_is_end) {
-        ++*this;
-    }
-}
-
-bool LineIterator::at_end() const
-{
-    return m_device->eof();
-}
-
-LineIterator& LineIterator::operator++()
-{
-    m_buffer = m_device->read_line();
-    return *this;
-}
-
-LineIterator LineRange::begin() { return m_device.line_begin(); }
-LineIterator LineRange::end() { return m_device.line_end(); }
-
 }
