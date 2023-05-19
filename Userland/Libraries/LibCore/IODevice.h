@@ -14,44 +14,6 @@
 
 namespace Core {
 
-class IODevice;
-
-// This is not necessarily a valid iterator in all contexts,
-// if we had concepts, this would be InputIterator, not Copyable, Movable.
-class LineIterator {
-    AK_MAKE_NONCOPYABLE(LineIterator);
-
-public:
-    explicit LineIterator(IODevice&, bool is_end = false);
-
-    bool operator==(LineIterator const& other) const { return &other == this || (at_end() && other.is_end()) || (other.at_end() && is_end()); }
-    bool is_end() const { return m_is_end; }
-    bool at_end() const;
-
-    LineIterator& operator++();
-
-    StringView operator*() const { return m_buffer; }
-
-private:
-    NonnullRefPtr<IODevice> m_device;
-    bool m_is_end { false };
-    DeprecatedString m_buffer;
-};
-
-class LineRange {
-public:
-    LineRange() = delete;
-    explicit LineRange(IODevice& device)
-        : m_device(device)
-    {
-    }
-    LineIterator begin();
-    LineIterator end();
-
-private:
-    IODevice& m_device;
-};
-
 enum class OpenMode : unsigned {
     NotOpen = 0,
     ReadOnly = 1,
@@ -100,13 +62,6 @@ public:
 
     virtual bool open(OpenMode) = 0;
     virtual bool close();
-
-    LineIterator line_begin() & { return LineIterator(*this); }
-    LineIterator line_end() { return LineIterator(*this, true); }
-    LineRange lines()
-    {
-        return LineRange(*this);
-    }
 
 protected:
     explicit IODevice(Object* parent = nullptr);
