@@ -9,23 +9,34 @@
 
 namespace Kernel {
 
-bool safe_memset(void* dest_ptr, int c, size_t n, void*&)
+bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
     // FIXME: Actually implement a safe memset.
-    memset(dest_ptr, c, n);
+    auto* dest = static_cast<u8*>(dest_ptr);
+    for (; n--;)
+        *dest++ = c;
+    fault_at = nullptr;
     return true;
 }
 
-ssize_t safe_strnlen(char const* str, unsigned long max_n, void*&)
+ssize_t safe_strnlen(char const* str, unsigned long max_n, void*& fault_at)
 {
     // FIXME: Actually implement a safe strnlen.
-    return strnlen(str, max_n);
+    size_t len = 0;
+    for (; len < max_n && *str; str++)
+        len++;
+    fault_at = nullptr;
+    return len;
 }
 
-bool safe_memcpy(void* dest_ptr, void const* src_ptr, unsigned long n, void*&)
+bool safe_memcpy(void* dest_ptr, void const* src_ptr, unsigned long n, void*& fault_at)
 {
     // FIXME: Actually implement a safe memcpy.
-    memcpy(dest_ptr, src_ptr, n);
+    auto* pd = static_cast<u8*>(dest_ptr);
+    auto const* ps = static_cast<u8 const*>(src_ptr);
+    for (; n--;)
+        *pd++ = *ps++;
+    fault_at = nullptr;
     return true;
 }
 
