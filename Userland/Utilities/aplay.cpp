@@ -35,8 +35,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
     args_parser.parse(arguments);
 
+    // Note: We must determine the absolute path *before* beginning to raise the veil.
+    auto absolute_path = TRY(FileSystem::absolute_path(path));
+
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
-    TRY(Core::System::unveil(TRY(FileSystem::absolute_path(path)), "r"sv));
+    TRY(Core::System::unveil(absolute_path, "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop loop;
