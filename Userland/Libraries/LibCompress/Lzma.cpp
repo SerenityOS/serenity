@@ -231,10 +231,7 @@ ErrorOr<void> LzmaDecompressor::append_input_stream(MaybeOwned<Stream> stream, O
 
 ErrorOr<void> LzmaDecompressor::normalize_range_decoder()
 {
-    // "The value of the "Range" variable before each bit decoding can not be smaller
-    //  than ((UInt32)1 << 24). The Normalize() function keeps the "Range" value in
-    //  described range."
-    constexpr u32 minimum_range_value = 1 << 24;
+    // "The Normalize() function keeps the "Range" value in described range."
 
     if (m_range_decoder_range >= minimum_range_value)
         return {};
@@ -290,8 +287,6 @@ ErrorOr<void> LzmaCompressor::normalize_range_encoder()
     // Logically, we should only ever build up an overflow that is smaller than or equal to 0x01.
     VERIFY((maximum_range_value >> 32) <= 0x01);
 
-    constexpr u32 minimum_range_value = 1 << 24;
-
     if (m_range_encoder_range >= minimum_range_value)
         return {};
 
@@ -341,9 +336,6 @@ ErrorOr<u8> LzmaDecompressor::decode_bit_with_probability(Probability& probabili
     //  information about estimated probability for symbol 0 and the Range Decoder
     //  updates that CProb variable after decoding."
 
-    // The significance of the shift width is not explained and appears to be a magic constant.
-    constexpr size_t probability_shift_width = 5;
-
     u32 bound = (m_range_decoder_range >> probability_bit_count) * probability;
 
     dbgln_if(LZMA_DEBUG, "Decoding bit {} with probability = {:#x}, bound = {:#x}, code = {:#x}, range = {:#x}", m_range_decoder_code < bound ? 0 : 1, probability, bound, m_range_decoder_code, m_range_decoder_range);
@@ -364,8 +356,6 @@ ErrorOr<u8> LzmaDecompressor::decode_bit_with_probability(Probability& probabili
 
 ErrorOr<void> LzmaCompressor::encode_bit_with_probability(Probability& probability, u8 value)
 {
-    constexpr size_t probability_shift_width = 5;
-
     u32 bound = (m_range_encoder_range >> probability_bit_count) * probability;
 
     dbgln_if(LZMA_DEBUG, "Encoding bit {} with probability = {:#x}, bound = {:#x}, code = {:#x}, range = {:#x}", value, probability, bound, m_range_encoder_code, m_range_encoder_range);
