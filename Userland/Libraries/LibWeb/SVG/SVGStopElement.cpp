@@ -31,10 +31,14 @@ void SVGStopElement::apply_presentational_hints(CSS::StyleProperties& style) con
 {
     CSS::Parser::ParsingContext parsing_context { document() };
     for_each_attribute([&](auto& name, auto& value) {
+        CSS::Parser::ParsingContext parsing_context { document() };
         if (name.equals_ignoring_ascii_case("stop-color"sv)) {
-            CSS::Parser::ParsingContext parsing_context { document() };
             if (auto stop_color = parse_css_value(parsing_context, value, CSS::PropertyID::StopColor).release_value_but_fixme_should_propagate_errors()) {
                 style.set_property(CSS::PropertyID::StopColor, stop_color.release_nonnull());
+            }
+        } else if (name.equals_ignoring_ascii_case("stop-opacity"sv)) {
+            if (auto stop_opacity = parse_css_value(parsing_context, value, CSS::PropertyID::StopOpacity).release_value_but_fixme_should_propagate_errors()) {
+                style.set_property(CSS::PropertyID::StopOpacity, stop_opacity.release_nonnull());
             }
         }
     });
@@ -45,6 +49,13 @@ Gfx::Color SVGStopElement::stop_color() const
     if (auto css_values = computed_css_values())
         return css_values->stop_color();
     return Color::Black;
+}
+
+float SVGStopElement::stop_opacity() const
+{
+    if (auto css_values = computed_css_values())
+        return css_values->stop_opacity();
+    return 1;
 }
 
 JS::NonnullGCPtr<SVGAnimatedNumber> SVGStopElement::offset() const

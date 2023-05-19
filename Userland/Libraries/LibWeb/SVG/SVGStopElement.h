@@ -27,6 +27,7 @@ public:
 
     NumberPercentage stop_offset() const { return m_offset.value_or(NumberPercentage::create_number(0)); }
     Gfx::Color stop_color() const;
+    float stop_opacity() const;
 
 private:
     SVGStopElement(DOM::Document&, DOM::QualifiedName);

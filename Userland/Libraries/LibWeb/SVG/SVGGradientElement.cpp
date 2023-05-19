@@ -74,7 +74,7 @@ void SVGGradientElement::add_color_stops(Gfx::SVGGradientPaintStyle& paint_style
         // stop's offset value. If a given gradient stop's offset value is not equal to or greater than all
         // previous offset values, then the offset value is adjusted to be equal to the largest of all previous
         // offset values.
-        paint_style.add_color_stop(stop_offset, stop.stop_color()).release_value_but_fixme_should_propagate_errors();
+        paint_style.add_color_stop(stop_offset, stop.stop_color().with_opacity(stop.stop_opacity())).release_value_but_fixme_should_propagate_errors();
     });
 }
 
