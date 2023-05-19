@@ -142,10 +142,10 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         }
 
         painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
-        painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.display_bitmap(), layer.display_bitmap().rect(), 1.f, Gfx::Painter::ScalingMode::BoxSampling);
+        painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.display_bitmap(), layer.display_bitmap().rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 
         if (is_masked)
-            painter.draw_scaled_bitmap(inner_mask_thumbnail_rect, *layer.mask_bitmap(), layer.mask_bitmap()->rect(), 1.f, Gfx::Painter::ScalingMode::BoxSampling);
+            painter.draw_scaled_bitmap(inner_mask_thumbnail_rect, *layer.mask_bitmap(), layer.mask_bitmap()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 
         Color border_color = layer.is_visible() ? palette().color(ColorRole::BaseText) : palette().color(ColorRole::DisabledText);
 
