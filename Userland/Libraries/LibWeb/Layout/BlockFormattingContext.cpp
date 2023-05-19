@@ -577,6 +577,9 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
+    if (box.is_replaced_box())
+        compute_height(box, available_space);
+
     if (independent_formatting_context) {
         // This box establishes a new formatting context. Pass control to it.
         independent_formatting_context->run(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));

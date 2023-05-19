@@ -398,6 +398,9 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(LayoutState co
     // then the used value of 'width' is undefined in CSS 2.2. However, it is suggested that, if the containing block's width does not itself
     // depend on the replaced element's width, then the used value of 'width' is calculated from the constraint equation used for block-level,
     // non-replaced elements in normal flow.
+    if (computed_height.is_auto() && computed_width.is_auto() && !box.has_intrinsic_width() && !box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio()) {
+        return calculate_stretch_fit_width(box, available_space.width, state);
+    }
 
     // Otherwise, if 'width' has a computed value of 'auto', and the element has an intrinsic width, then that intrinsic width is the used value of 'width'.
     if (computed_width.is_auto() && box.has_intrinsic_width())
@@ -483,7 +486,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(LayoutState c
     //
     //     (used width) / (intrinsic ratio)
     if (computed_height.is_auto() && box.has_intrinsic_aspect_ratio())
-        return compute_width_for_replaced_element(state, box, available_space) / box.intrinsic_aspect_ratio().value();
+        return state.get(box).content_width() / box.intrinsic_aspect_ratio().value();
 
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (computed_height.is_auto() && box.has_intrinsic_height())
@@ -1412,12 +1415,12 @@ CSSPixels FormattingContext::containing_block_height_for(Box const& box, LayoutS
 }
 
 // https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
-CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSize const& available_width) const
+CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSize const& available_width, LayoutState const& state)
 {
     // The size a box would take if its outer size filled the available space in the given axis;
     // in other words, the stretch fit into the available space, if that is definite.
     // Undefined if the available space is indefinite.
-    auto const& box_state = m_state.get(box);
+    auto const& box_state = state.get(box);
     return available_width.to_px()
         - box_state.margin_left
         - box_state.margin_right
@@ -1427,13 +1430,18 @@ CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, Availab
         - box_state.border_right;
 }
 
+CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSize const& available_width) const
+{
+    return calculate_stretch_fit_width(box, available_width, m_state);
+}
+
 // https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
-CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, AvailableSize const& available_height) const
+CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, AvailableSize const& available_height, LayoutState const& state)
 {
     // The size a box would take if its outer size filled the available space in the given axis;
     // in other words, the stretch fit into the available space, if that is definite.
     // Undefined if the available space is indefinite.
-    auto const& box_state = m_state.get(box);
+    auto const& box_state = state.get(box);
     return available_height.to_px()
         - box_state.margin_top
         - box_state.margin_bottom
@@ -1441,6 +1449,11 @@ CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, Availa
         - box_state.padding_bottom
         - box_state.border_top
         - box_state.border_bottom;
+}
+
+CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, AvailableSize const& available_height) const
+{
+    return calculate_stretch_fit_height(box, available_height, m_state);
 }
 
 bool FormattingContext::should_treat_width_as_auto(Box const& box, AvailableSpace const& available_space)
