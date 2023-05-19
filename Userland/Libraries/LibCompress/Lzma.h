@@ -70,6 +70,12 @@ protected:
     static constexpr Probability default_probability = (1 << probability_bit_count) / 2;
     static void initialize_to_default_probability(Span<Probability>);
 
+    // The significance of the shift width is not explained and appears to be a magic constant.
+    static constexpr size_t probability_shift_width = 5;
+
+    // "The value of the "Range" variable before each bit decoding can not be smaller than ((UInt32)1 << 24)."
+    static constexpr u32 minimum_range_value = 1 << 24;
+
     LzmaState(FixedArray<Probability> literal_probabilities);
 
     u64 m_total_processed_bytes { 0 };
