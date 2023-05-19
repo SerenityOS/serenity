@@ -15,7 +15,6 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -154,7 +153,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 static ErrorOr<URL> format_url(StringView url)
 {
     if (FileSystem::exists(url))
-        return URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(url));
+        return URL::create_with_file_scheme(TRY(FileSystem::real_path(url)).to_deprecated_string());
 
     URL formatted_url { url };
     if (!formatted_url.is_valid())
