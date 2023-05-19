@@ -242,6 +242,28 @@ private:
     FileTransferStatus m_status;
 };
 
+// Contains the file data sent from a file transfer request after it has been approved.
+class FileTransferDataMessage : public Message {
+public:
+    static ErrorOr<FileTransferDataMessage> read_from_stream(AK::Stream& stream);
+
+    ErrorOr<String> debug_description() override;
+
+    u32 id() const { return m_id; }
+    ByteBuffer const& contents() { return m_contents; }
+
+private:
+    FileTransferDataMessage(u32 id, ByteBuffer const& contents)
+        : Message(Type::FileTransferData)
+        , m_id(id)
+        , m_contents(contents)
+    {
+    }
+
+    u32 m_id { 0 };
+    ByteBuffer m_contents;
+};
+
 }
 
 namespace AK {
