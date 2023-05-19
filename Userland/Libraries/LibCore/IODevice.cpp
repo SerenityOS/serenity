@@ -110,11 +110,6 @@ bool IODevice::can_read_line() const
     }
 }
 
-bool IODevice::can_read() const
-{
-    return !m_buffered_data.is_empty() || can_read_from_fd();
-}
-
 ByteBuffer IODevice::read_all()
 {
     off_t file_size = 0;
@@ -262,16 +257,6 @@ bool IODevice::seek(i64 offset, SeekMode mode, off_t* pos)
     return true;
 }
 
-bool IODevice::truncate(off_t size)
-{
-    int rc = ftruncate(m_fd, size);
-    if (rc < 0) {
-        set_error(errno);
-        return false;
-    }
-    return true;
-}
-
 bool IODevice::write(u8 const* data, int size)
 {
     int rc = ::write(m_fd, data, size);
@@ -289,12 +274,6 @@ void IODevice::set_fd(int fd)
         return;
 
     m_fd = fd;
-    did_update_fd(fd);
-}
-
-bool IODevice::write(StringView v)
-{
-    return write((u8 const*)v.characters_without_null_termination(), v.length());
 }
 
 }

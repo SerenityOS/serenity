@@ -34,13 +34,10 @@ public:
 
     int fd() const { return m_fd; }
     OpenMode mode() const { return m_mode; }
-    bool is_open() const { return m_mode != OpenMode::NotOpen; }
     bool eof() const { return m_eof; }
 
     int error() const { return m_error; }
     char const* error_string() const;
-
-    bool has_error() const { return m_error != 0; }
 
     int read(u8* buffer, int length);
 
@@ -49,14 +46,8 @@ public:
     DeprecatedString read_line(size_t max_size = 16384);
 
     bool write(u8 const*, int size);
-    bool write(StringView);
-
-    bool truncate(off_t);
 
     bool can_read_line() const;
-
-    bool can_read() const;
-    bool can_read_only_from_buffer() const { return !m_buffered_data.is_empty() && !can_read_from_fd(); }
 
     bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
@@ -70,8 +61,6 @@ protected:
     void set_mode(OpenMode mode) { m_mode = mode; }
     void set_error(int error) const { m_error = error; }
     void set_eof(bool eof) const { m_eof = eof; }
-
-    virtual void did_update_fd(int) { }
 
 private:
     bool populate_read_buffer(size_t size = 1024) const;
