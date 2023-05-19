@@ -20,6 +20,14 @@ SECTIONS
     .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_MAPPING_BASE)
     {
         *(.text.first)
+
+        start_of_safemem_text = .;
+        KEEP(*(.text.safemem))
+        end_of_safemem_text = .;
+        start_of_safemem_atomic_text = .;
+        KEEP(*(.text.safemem.atomic))
+        end_of_safemem_atomic_text = .;
+
         *(.text*)
     } :text
 
