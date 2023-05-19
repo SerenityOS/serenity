@@ -967,7 +967,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
     if (!Value(this_object->date_value()).is_finite_number())
         return vm.throw_completion<RangeError>(ErrorType::InvalidTimeValue);
 
-    auto string = this_object->iso_date_string();
+    auto string = TRY_OR_THROW_OOM(vm, this_object->iso_date_string());
     return PrimitiveString::create(vm, move(string));
 }
 
