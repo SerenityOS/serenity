@@ -34,7 +34,7 @@ Date::Date(double date_value, Object& prototype)
 {
 }
 
-DeprecatedString Date::iso_date_string() const
+ErrorOr<String> Date::iso_date_string() const
 {
     int year = year_from_time(m_date_value);
 
@@ -59,7 +59,7 @@ DeprecatedString Date::iso_date_string() const
     builder.appendff("{:03}", ms_from_time(m_date_value));
     builder.append('Z');
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
