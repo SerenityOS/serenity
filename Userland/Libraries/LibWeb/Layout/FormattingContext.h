@@ -79,6 +79,9 @@ public:
     [[nodiscard]] CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
     [[nodiscard]] CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&) const;
 
+    [[nodiscard]] static CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&, LayoutState const&);
+    [[nodiscard]] static CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&, LayoutState const&);
+
     virtual bool can_determine_size_of_child() const { return false; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) { }
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) { }
