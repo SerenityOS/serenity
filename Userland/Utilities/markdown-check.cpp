@@ -19,7 +19,6 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
@@ -27,7 +26,7 @@
 #include <LibMarkdown/Visitor.h>
 #include <stdlib.h>
 
-static bool is_missing_file_acceptable(DeprecatedString const& filename)
+static bool is_missing_file_acceptable(String const& filename)
 {
     const StringView acceptable_missing_files[] = {
         // FIXME: Please write these manpages!
@@ -55,7 +54,7 @@ static bool is_missing_file_acceptable(DeprecatedString const& filename)
         "index.html"sv,
     };
     for (auto const& suffix : acceptable_missing_files) {
-        if (filename.ends_with(suffix))
+        if (filename.ends_with_bytes(suffix))
             return true;
     }
     return false;
@@ -249,7 +248,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     outln("Reading and parsing Markdown files ...");
-    HashMap<DeprecatedString, MarkdownLinkage> files;
+    HashMap<String, MarkdownLinkage> files;
     for (auto path : file_paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
@@ -274,7 +273,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(Core::DeprecatedFile::real_path_for(path), MarkdownLinkage::analyze(*document));
+        files.set(TRY(FileSystem::real_path(path)), MarkdownLinkage::analyze(*document));
     }
 
     outln("Checking links ...");
@@ -286,14 +285,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto file_lexical_path = LexicalPath(file_item.key);
+        auto file_lexical_path = LexicalPath(file_item.key.to_deprecated_string());
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {
-            DeprecatedString pointee_file;
+            String pointee_file;
             if (file_link.file_path.is_empty()) {
                 pointee_file = file_item.key;
             } else {
-                pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
+                pointee_file = TRY(String::from_deprecated_string(LexicalPath::absolute_path(file_dir, file_link.file_path)));
             }
             if (!FileSystem::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
