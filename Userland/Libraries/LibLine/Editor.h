@@ -475,6 +475,7 @@ private:
     size_t m_history_cursor { 0 };
     size_t m_history_capacity { 1024 };
     bool m_history_dirty { false };
+    static ErrorOr<Vector<HistoryEntry>> try_load_history(StringView path);
 
     enum class InputState {
         Free,
