@@ -8,7 +8,6 @@
 #include "../FileDB.h"
 #include "CppComprehensionEngine.h"
 #include <AK/LexicalPath.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibMain/Main.h>
 
 static bool s_some_test_failed = false;
