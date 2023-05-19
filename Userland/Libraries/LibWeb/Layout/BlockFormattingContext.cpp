@@ -552,13 +552,23 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         m_margin_state.reset();
     }
 
-    m_margin_state.add_margin(box_state.margin_top);
-    m_margin_state.update_block_waiting_for_final_y_position();
+    CSSPixels margin_top = 0;
+    auto independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
 
-    auto margin_top = m_margin_state.current_collapsed_margin();
-    if (m_margin_state.has_block_container_waiting_for_final_y_position()) {
-        // If first child margin top will collapse with margin-top of containing block then margin-top of child is 0
-        margin_top = 0;
+    if (independent_formatting_context) {
+        // Margins of elements that establish new formatting contexts do not collapse with their in-flow children
+        m_margin_state.reset();
+
+        margin_top = box_state.margin_top;
+    } else {
+        m_margin_state.add_margin(box_state.margin_top);
+        m_margin_state.update_block_waiting_for_final_y_position();
+
+        margin_top = m_margin_state.current_collapsed_margin();
+        if (m_margin_state.has_block_container_waiting_for_final_y_position()) {
+            // If first child margin top will collapse with margin-top of containing block then margin-top of child is 0
+            margin_top = 0;
+        }
     }
 
     place_block_level_element_in_normal_flow_vertically(box, y + margin_top);
@@ -567,36 +577,31 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
-    OwnPtr<FormattingContext> independent_formatting_context;
-    if (!box.is_replaced_box() && box.has_children()) {
-        independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
-        if (independent_formatting_context) {
-            // Margins of elements that establish new formatting contexts do not collapse with their in-flow children
-            m_margin_state.reset();
-
-            independent_formatting_context->run(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
+    if (independent_formatting_context) {
+        // This box establishes a new formatting context. Pass control to it.
+        independent_formatting_context->run(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
+    } else {
+        // This box participates in the current block container's flow.
+        if (box.children_are_inline()) {
+            layout_inline_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
         } else {
-            if (box.children_are_inline()) {
-                layout_inline_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
-            } else {
-                if (box_state.border_top > 0 || box_state.padding_top > 0) {
-                    // margin-top of block container can't collapse with it's children if it has non zero border or padding
-                    m_margin_state.reset();
-                } else if (!m_margin_state.has_block_container_waiting_for_final_y_position()) {
-                    // margin-top of block container can be updated during children layout hence it's final y position yet to be determined
-                    m_margin_state.register_block_container_y_position_update_callback([&](CSSPixels margin_top) {
-                        place_block_level_element_in_normal_flow_vertically(box, margin_top + y + box_state.border_box_top());
-                    });
-                }
-
-                layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
+            if (box_state.border_top > 0 || box_state.padding_top > 0) {
+                // margin-top of block container can't collapse with it's children if it has non zero border or padding
+                m_margin_state.reset();
+            } else if (!m_margin_state.has_block_container_waiting_for_final_y_position()) {
+                // margin-top of block container can be updated during children layout hence it's final y position yet to be determined
+                m_margin_state.register_block_container_y_position_update_callback([&](CSSPixels margin_top) {
+                    place_block_level_element_in_normal_flow_vertically(box, margin_top + y + box_state.border_box_top());
+                });
             }
+
+            layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
         }
     }
 
     compute_height(box, available_space);
 
-    if (!margins_collapse_through(box, m_state)) {
+    if (independent_formatting_context || !margins_collapse_through(box, m_state)) {
         if (!m_margin_state.box_last_in_flow_child_margin_bottom_collapsed) {
             m_margin_state.reset();
         }
