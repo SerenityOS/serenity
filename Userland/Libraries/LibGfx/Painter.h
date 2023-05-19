@@ -45,7 +45,6 @@ public:
         NearestNeighbor,
         SmoothPixels,
         BilinearBlend,
-        BoxSampling,
         None,
     };
 
