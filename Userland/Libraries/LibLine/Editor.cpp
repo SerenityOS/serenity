@@ -18,7 +18,6 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
@@ -249,26 +248,33 @@ void Editor::add_to_history(DeprecatedString const& line)
     m_history_dirty = true;
 }
 
-bool Editor::load_history(DeprecatedString const& path)
+ErrorOr<Vector<Editor::HistoryEntry>> Editor::try_load_history(StringView path)
 {
-    auto history_file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
-    if (history_file_or_error.is_error())
-        return false;
-    auto data_or_error = history_file_or_error.value()->read_until_eof();
-    if (data_or_error.is_error())
-        return false;
-    auto hist = StringView { data_or_error.value() };
+    auto history_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto data = TRY(history_file->read_until_eof());
+    auto hist = StringView { data };
+    Vector<HistoryEntry> history;
     for (auto& str : hist.split_view("\n\n"sv)) {
         auto it = str.find("::"sv).value_or(0);
         auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
         auto string = str.substring_view(it == 0 ? it : it + 2);
-        m_history.append({ string, time });
+        history.append({ string, time });
     }
-    return true;
+    return history;
 }
 
-template<typename It0, typename It1, typename OutputT, typename MapperT, typename LessThan>
-static void merge(It0&& begin0, It0 const& end0, It1&& begin1, It1 const& end1, OutputT& output, MapperT left_mapper, LessThan less_than)
+bool Editor::load_history(DeprecatedString const& path)
+{
+    auto history_or_error = try_load_history(path);
+    if (history_or_error.is_error())
+        return false;
+    auto maybe_error = m_history.try_extend(history_or_error.release_value());
+    auto okay = !maybe_error.is_error();
+    return okay;
+}
+
+template<typename It0, typename It1, typename OutputT, typename LessThan>
+static void merge(It0&& begin0, It0 const& end0, It1&& begin1, It1 const& end1, OutputT& output, LessThan less_than)
 {
     for (;;) {
         if (begin0 == end0 && begin1 == end1)
@@ -282,7 +288,7 @@ static void merge(It0&& begin0, It0 const& end0, It1&& begin1, It1 const& end1, 
             continue;
         }
 
-        auto&& left = left_mapper(*begin0);
+        auto&& left = *begin0;
         if (left.entry.is_whitespace()) {
             ++begin0;
             continue;
@@ -311,30 +317,32 @@ static void merge(It0&& begin0, It0 const& end0, It1&& begin1, It1 const& end1, 
 
 bool Editor::save_history(DeprecatedString const& path)
 {
+    // Note: Use a dummy entry to simplify merging.
     Vector<HistoryEntry> final_history { { "", 0 } };
     {
-        auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadWrite, 0600);
-        if (file_or_error.is_error())
+        auto history_or_error = try_load_history(path);
+        if (history_or_error.is_error())
             return false;
-        auto file = file_or_error.release_value();
+        Vector<HistoryEntry> old_history = history_or_error.release_value();
         merge(
-            file->line_begin(), file->line_end(), m_history.begin(), m_history.end(), final_history,
-            [](StringView str) {
-                auto it = str.find("::"sv).value_or(0);
-                auto time = str.substring_view(0, it).to_int<time_t>().value_or(0);
-                auto string = str.substring_view(it == 0 ? it : it + 2);
-                return HistoryEntry { string, time };
-            },
+            old_history.begin(), old_history.end(),
+            m_history.begin(), m_history.end(),
+            final_history,
             [](HistoryEntry const& left, HistoryEntry const& right) { return left.timestamp < right.timestamp; });
     }
 
-    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::WriteOnly, 0600);
+    auto file_or_error = Core::File::open(path, Core::File::OpenMode::Write, 0600);
     if (file_or_error.is_error())
         return false;
     auto file = file_or_error.release_value();
-    final_history.take_first();
-    for (auto const& entry : final_history)
-        file->write(DeprecatedString::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
+    // Skip the dummy entry:
+    for (auto iter = final_history.begin() + 1; iter != final_history.end(); ++iter) {
+        auto const& entry = *iter;
+        auto buffer = DeprecatedString::formatted("{}::{}\n\n", entry.timestamp, entry.entry);
+        auto maybe_error = file->write_until_depleted(buffer.bytes());
+        if (maybe_error.is_error())
+            return false;
+    }
 
     m_history_dirty = false;
     return true;
