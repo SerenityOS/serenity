@@ -5,7 +5,7 @@
  */
 
 #include <FileSystemAccessServer/ConnectionFromClient.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FilePicker.h>
@@ -52,10 +52,10 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
 
         auto pid = this->socket().peer_pid().release_value_but_fixme_should_propagate_errors();
         auto exe_link = LexicalPath("/proc").append(DeprecatedString::number(pid)).append("exe"sv).string();
-        auto exe_path = Core::DeprecatedFile::real_path_for(exe_link);
+        auto exe_path = FileSystem::real_path(exe_link).release_value_but_fixme_should_propagate_errors();
 
         if (prompt == ShouldPrompt::Yes) {
-            auto exe_name = LexicalPath::basename(exe_path);
+            auto exe_name = LexicalPath::basename(exe_path.to_deprecated_string());
             auto text = String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path).release_value_but_fixme_should_propagate_errors();
             auto result = GUI::MessageBox::try_show({}, window_server_client_id, parent_window_id, text, "File Permissions Requested"sv).release_value_but_fixme_should_propagate_errors();
             approved = result == GUI::MessageBox::ExecResult::Yes;
