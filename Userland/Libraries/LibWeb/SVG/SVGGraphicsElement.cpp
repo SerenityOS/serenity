@@ -51,11 +51,11 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::fill_paint_style(SVGPaintCo
     if (!fill.has_value() || !fill->is_url())
         return {};
     auto& url = fill->as_url();
-    auto maybe_gradient = document().get_element_by_id(url.fragment());
-    if (is<SVG::SVGGradientElement>(*maybe_gradient)) {
-        auto& gradient = verify_cast<SVG::SVGGradientElement>(*maybe_gradient);
-        return gradient.to_gfx_paint_style(paint_context);
-    }
+    auto gradient = document().get_element_by_id(url.fragment());
+    if (!gradient)
+        return {};
+    if (is<SVG::SVGGradientElement>(*gradient))
+        return static_cast<SVG::SVGGradientElement const&>(*gradient).to_gfx_paint_style(paint_context);
     return {};
 }
 
