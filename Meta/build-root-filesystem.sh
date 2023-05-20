@@ -193,6 +193,7 @@ chown -R 100:100 mnt/home/anon/Desktop
 echo "done"
 
 printf "installing shortcuts... "
+ln -sf /bin/PackageManager mnt/bin/pkg
 ln -sf Shell mnt/bin/sh
 ln -sf test mnt/bin/[
 ln -sf less mnt/bin/more
