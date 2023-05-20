@@ -680,6 +680,10 @@ void ChessWidget::flip_board()
 
 int ChessWidget::resign()
 {
+    // FIXME: Disable the resign checkbox if the game is finished
+    if (board().game_finished())
+        return -1;
+
     if (want_engine_move()) {
         GUI::MessageBox::show(window(), "You can only resign on your turn."sv, "Resign"sv, GUI::MessageBox::Type::Information);
         return -1;
