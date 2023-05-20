@@ -7,7 +7,6 @@
 
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
@@ -47,9 +46,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (access(target_account.home_directory().characters(), F_OK) == -1)
             return 0;
 
-        auto const real_path = Core::DeprecatedFile::real_path_for(target_account.home_directory());
+        auto const real_path = TRY(FileSystem::real_path(target_account.home_directory()));
 
-        if (real_path == "/") {
+        if (real_path == "/"sv) {
             warnln("home directory is /, not deleted!");
             return 12;
         }
