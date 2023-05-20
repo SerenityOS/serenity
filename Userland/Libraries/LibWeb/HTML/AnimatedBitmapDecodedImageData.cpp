@@ -23,7 +23,7 @@ AnimatedBitmapDecodedImageData::AnimatedBitmapDecodedImageData(Vector<Frame>&& f
 
 AnimatedBitmapDecodedImageData::~AnimatedBitmapDecodedImageData() = default;
 
-RefPtr<Gfx::Bitmap const> AnimatedBitmapDecodedImageData::bitmap(size_t frame_index) const
+RefPtr<Gfx::Bitmap const> AnimatedBitmapDecodedImageData::bitmap(size_t frame_index, Gfx::IntSize) const
 {
     if (frame_index >= m_frames.size())
         return nullptr;

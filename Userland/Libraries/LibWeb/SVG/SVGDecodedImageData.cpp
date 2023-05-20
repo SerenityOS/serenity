@@ -20,7 +20,7 @@ SVGDecodedImageData::SVGDecodedImageData()
 
 SVGDecodedImageData::~SVGDecodedImageData() = default;
 
-RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t) const
+RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize) const
 {
     return nullptr;
 }

@@ -132,10 +132,10 @@ Optional<float> HTMLImageElement::intrinsic_aspect_ratio() const
     return {};
 }
 
-RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap() const
+RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap(Gfx::IntSize size) const
 {
     if (auto data = m_current_request->image_data())
-        return data->bitmap(m_current_frame_index);
+        return data->bitmap(m_current_frame_index, size);
     return nullptr;
 }
 

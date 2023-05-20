@@ -20,7 +20,7 @@ public:
     static ErrorOr<NonnullRefPtr<AnimatedBitmapDecodedImageData>> create(Vector<Frame>&&, size_t loop_count, bool animated);
     virtual ~AnimatedBitmapDecodedImageData() override;
 
-    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index) const override;
+    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index, Gfx::IntSize = {}) const override;
     virtual int frame_duration(size_t frame_index) const override;
 
     virtual size_t frame_count() const override { return m_frames.size(); }
