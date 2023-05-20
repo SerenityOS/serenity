@@ -574,7 +574,7 @@ if (BUILD_LAGOM)
         target_link_libraries(wasm LibCore LibFileSystem LibWasm LibLine LibMain LibJS)
 
         add_executable(xml ../../Userland/Utilities/xml.cpp)
-        target_link_libraries(xml LibCore LibXML LibMain)
+        target_link_libraries(xml LibCore LibFileSystem LibMain LibXML)
 
         add_executable(xzcat ../../Userland/Utilities/xzcat.cpp)
         target_link_libraries(xzcat LibCompress LibCore LibMain)

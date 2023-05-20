@@ -9,8 +9,8 @@
 #include <AK/URL.h>
 #include <AK/URLParser.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibXML/DOM/Document.h>
 #include <LibXML/DOM/Node.h>
@@ -355,7 +355,7 @@ static void dump(XML::Document& document)
     dump(document.root());
 }
 
-static DeprecatedString s_path;
+static String s_path;
 static auto parse(StringView contents)
 {
     return XML::Parser {
@@ -363,7 +363,7 @@ static auto parse(StringView contents)
         {
             .preserve_comments = true,
             .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<DeprecatedString> {
-                auto base = URL::create_with_file_scheme(s_path);
+                auto base = URL::create_with_file_scheme(s_path.to_deprecated_string());
                 auto url = URLParser::parse(system_id.system_literal, base);
                 if (!url.is_valid())
                     return Error::from_string_literal("Invalid URL");
@@ -402,7 +402,7 @@ static void do_run_tests(XML::Document& document)
 
     dump_cases(root);
 
-    auto base_path = LexicalPath::dirname(s_path);
+    auto base_path = LexicalPath::dirname(s_path.to_deprecated_string());
 
     while (!suites.is_empty()) {
         auto& node = *suites.dequeue();
@@ -516,7 +516,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename, "File to read from", "file");
     parser.parse(arguments);
 
-    s_path = Core::DeprecatedFile::real_path_for(filename);
+    s_path = TRY(FileSystem::real_path(filename));
     auto file = TRY(Core::File::open(s_path, Core::File::OpenMode::Read));
     auto contents = TRY(file->read_until_eof());
 
