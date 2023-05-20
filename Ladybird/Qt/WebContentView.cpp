@@ -591,16 +591,6 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
 }
 
-void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] Gfx::IntRect const& content_rect)
-{
-    request_repaint();
-}
-
-void WebContentView::notify_server_did_change_selection(Badge<WebContentClient>)
-{
-    request_repaint();
-}
-
 void WebContentView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
 {
     switch (cursor) {

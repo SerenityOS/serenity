@@ -179,16 +179,6 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
     client().async_update_screen_rects(event.rects(), event.main_screen_index());
 }
 
-void OutOfProcessWebView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] Gfx::IntRect const& content_rect)
-{
-    request_repaint();
-}
-
-void OutOfProcessWebView::notify_server_did_change_selection(Badge<WebContentClient>)
-{
-    request_repaint();
-}
-
 void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
 {
     set_override_cursor(cursor);

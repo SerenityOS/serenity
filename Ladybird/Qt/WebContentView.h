@@ -77,8 +77,6 @@ public:
     void update_palette(PaletteMode = PaletteMode::Default);
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
-    virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;
-    virtual void notify_server_did_change_selection(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) override;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) override;
     virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) override;

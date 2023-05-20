@@ -103,8 +103,6 @@ private:
     HeadlessWebContentView() = default;
 
     void notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize) override { }
-    void notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
-    void notify_server_did_change_selection(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor) override { }
     void notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32) override { }
     void notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }

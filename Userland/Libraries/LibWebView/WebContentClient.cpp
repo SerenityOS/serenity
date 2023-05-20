@@ -67,13 +67,13 @@ void WebContentClient::did_invalidate_content_rect(Gfx::IntRect const& content_r
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidInvalidateContentRect! content_rect={}", content_rect);
 
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
-    m_view.notify_server_did_invalidate_content_rect({}, content_rect);
+    m_view.server_did_invalidate_content_rect({}, content_rect);
 }
 
 void WebContentClient::did_change_selection()
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeSelection!");
-    m_view.notify_server_did_change_selection({});
+    m_view.server_did_change_selection({});
 }
 
 void WebContentClient::did_request_cursor_change(i32 cursor_type)
