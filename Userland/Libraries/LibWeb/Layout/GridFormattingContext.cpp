@@ -847,7 +847,7 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     for (auto& item : m_grid_items)
         max_item_span = max(item.span(dimension), max_item_span);
     for (size_t span = 2; span <= max_item_span; span++) {
-        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(dimension, 2);
+        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, 2);
     }
 
     // 4. Increase sizes to accommodate spanning items crossing flexible tracks: Next, repeat the previous
@@ -862,17 +862,12 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
             track.growth_limit = track.base_size;
         }
     }
-
-    for (auto& track : tracks_and_gaps)
-        track.has_definite_base_size = true;
 }
 
-void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks)
+void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks)
 {
-    for (auto& track : spanned_tracks) {
-        track.planned_increase = 0;
+    for (auto& track : spanned_tracks)
         track.item_incurred_increase = 0;
-    }
 
     // 1. Find the space to distribute:
     CSSPixels spanned_tracks_sizes_sum = 0;
@@ -884,8 +879,10 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixe
     auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
 
     // 2. Distribute space up to limits:
-    while (extra_space > 0) {
-        auto all_frozen = all_of(spanned_tracks, [](auto const& track) { return track.frozen; });
+    // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
+    //        instead of epsilon.
+    while (extra_space > NumericLimits<float>().epsilon()) {
+        auto all_frozen = all_of(spanned_tracks, [](auto const& track) { return track.base_size_frozen; });
         if (all_frozen)
             break;
 
@@ -894,11 +891,11 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixe
         // increase reaches its limit
         CSSPixels increase_per_track = extra_space / spanned_tracks.size();
         for (auto& track : spanned_tracks) {
-            if (track.frozen)
+            if (track.base_size_frozen)
                 continue;
 
             if (increase_per_track >= track.growth_limit) {
-                track.frozen = true;
+                track.base_size_frozen = true;
                 track.item_incurred_increase = track.growth_limit;
                 extra_space -= track.growth_limit;
             } else {
@@ -918,8 +915,68 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks(CSSPixe
     }
 }
 
-void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(GridDimension const dimension, size_t span)
+void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks)
 {
+    for (auto& track : spanned_tracks)
+        track.item_incurred_increase = 0;
+
+    // 1. Find the space to distribute:
+    CSSPixels spanned_tracks_sizes_sum = 0;
+    for (auto& track : spanned_tracks) {
+        if (track.growth_limit != INFINITY) {
+            spanned_tracks_sizes_sum += track.growth_limit;
+        } else {
+            spanned_tracks_sizes_sum += track.base_size;
+        }
+    }
+
+    // Subtract the corresponding size of every spanned track from the item’s size contribution to find the item’s
+    // remaining size contribution.
+    auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
+
+    // 2. Distribute space up to limits:
+    // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
+    //        instead of epsilon.
+    while (extra_space > NumericLimits<float>().epsilon()) {
+        auto all_frozen = all_of(spanned_tracks, [](auto const& track) { return track.growth_limit_frozen; });
+        if (all_frozen)
+            break;
+
+        // Find the item-incurred increase for each spanned track with an affected size by: distributing the space
+        // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
+        // increase reaches its limit
+        CSSPixels increase_per_track = extra_space / spanned_tracks.size();
+        for (auto& track : spanned_tracks) {
+            if (track.growth_limit_frozen)
+                continue;
+
+            // For growth limits, the limit is infinity if it is marked as infinitely growable, and equal to the
+            // growth limit otherwise.
+            auto limit = track.infinitely_growable ? INFINITY : track.growth_limit;
+            if (increase_per_track >= limit) {
+                track.growth_limit_frozen = true;
+                track.item_incurred_increase = limit;
+                extra_space -= limit;
+            } else {
+                track.item_incurred_increase += increase_per_track;
+                extra_space -= increase_per_track;
+            }
+        }
+    }
+
+    // FIXME: 3. Distribute space beyond limits
+
+    // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase
+    //    set the track’s planned increase to that value.
+    for (auto& track : spanned_tracks) {
+        if (track.item_incurred_increase > track.planned_increase)
+            track.planned_increase = track.item_incurred_increase;
+    }
+}
+
+void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const& available_space, GridDimension const dimension, size_t span)
+{
+    auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     for (auto& item : m_grid_items) {
         auto const item_span = item.span(dimension);
@@ -944,11 +1001,51 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
             if (track.min_track_sizing_function.is_intrinsic_track_sizing())
                 intrinsic_minimum_spanned_tracks.append(track);
         }
-        auto item_minimum_contribution = calculate_minimum_contribution(item, dimension);
-        distribute_extra_space_across_spanned_tracks(item_minimum_contribution, intrinsic_minimum_spanned_tracks);
-
+        auto item_size_contribution = [&] {
+            // If the grid container is being sized under a min- or max-content constraint, use the items’ limited
+            // min-content contributions in place of their minimum contributions here.
+            if (available_size.is_intrinsic_sizing_constraint())
+                return calculate_limited_min_content_contribution(item, dimension);
+            return calculate_minimum_contribution(item, dimension);
+        }();
+        distribute_extra_space_across_spanned_tracks_base_size(item_size_contribution, intrinsic_minimum_spanned_tracks);
         for (auto& track : spanned_tracks) {
             track.base_size += track.planned_increase;
+            track.planned_increase = 0;
+        }
+
+        // 2. For content-based minimums: Next continue to increase the base size of tracks with a min track
+        //    sizing function of min-content or max-content by distributing extra space as needed to account for
+        //    these items' min-content contributions.
+        Vector<TemporaryTrack&> content_based_minimum_tracks;
+        for (auto& track : spanned_tracks) {
+            if (track.min_track_sizing_function.is_min_content() || track.min_track_sizing_function.is_max_content()) {
+                content_based_minimum_tracks.append(track);
+            }
+        }
+        auto item_min_content_contribution = calculate_min_content_contribution(item, dimension);
+        distribute_extra_space_across_spanned_tracks_base_size(item_min_content_contribution, content_based_minimum_tracks);
+        for (auto& track : spanned_tracks) {
+            track.base_size += track.planned_increase;
+            track.planned_increase = 0;
+        }
+
+        // 3. For max-content minimums: Next, if the grid container is being sized under a max-content constraint,
+        //    continue to increase the base size of tracks with a min track sizing function of auto or max-content by
+        //    distributing extra space as needed to account for these items' limited max-content contributions.
+        if (available_size.is_max_content()) {
+            Vector<TemporaryTrack&> max_content_minimum_tracks;
+            for (auto& track : spanned_tracks) {
+                if (track.min_track_sizing_function.is_auto() || track.min_track_sizing_function.is_max_content()) {
+                    max_content_minimum_tracks.append(track);
+                }
+            }
+            auto item_limited_max_content_contribution = calculate_limited_max_content_contribution(item, dimension);
+            distribute_extra_space_across_spanned_tracks_base_size(item_limited_max_content_contribution, max_content_minimum_tracks);
+            for (auto& track : spanned_tracks) {
+                track.base_size += track.planned_increase;
+                track.planned_increase = 0;
+            }
         }
 
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to
@@ -956,6 +1053,49 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         for (auto& track : tracks) {
             if (track.growth_limit < track.base_size)
                 track.growth_limit = track.base_size;
+        }
+
+        // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing
+        Vector<TemporaryTrack&> intrinsic_maximum_tracks;
+        for (auto& track : spanned_tracks) {
+            if (track.max_track_sizing_function.is_intrinsic_track_sizing()) {
+                intrinsic_maximum_tracks.append(track);
+            }
+        }
+        distribute_extra_space_across_spanned_tracks_growth_limit(item_min_content_contribution, intrinsic_maximum_tracks);
+        for (auto& track : spanned_tracks) {
+            if (track.growth_limit == INFINITY) {
+                // If the affected size is an infinite growth limit, set it to the track’s base size plus the planned increase.
+                track.growth_limit = track.base_size + track.planned_increase;
+                // Mark any tracks whose growth limit changed from infinite to finite in this step as infinitely growable
+                // for the next step.
+                track.infinitely_growable = true;
+            } else {
+                track.growth_limit += track.planned_increase;
+            }
+            track.planned_increase = 0;
+        }
+
+        // 6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track
+        //    sizing function of max-content by distributing extra space as needed to account for these items' max-
+        //    content contributions.
+        Vector<TemporaryTrack&> max_content_maximum_tracks;
+        for (auto& track : spanned_tracks) {
+            if (track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto()) {
+                max_content_maximum_tracks.append(track);
+            }
+        }
+
+        auto item_max_content_contribution = calculate_max_content_contribution(item, dimension);
+        distribute_extra_space_across_spanned_tracks_growth_limit(item_max_content_contribution, max_content_maximum_tracks);
+        for (auto& track : spanned_tracks) {
+            if (track.growth_limit == INFINITY) {
+                // If the affected size is an infinite growth limit, set it to the track’s base size plus the planned increase.
+                track.growth_limit = track.base_size + track.planned_increase;
+            } else {
+                track.growth_limit += track.planned_increase;
+            }
+            track.planned_increase = 0;
         }
     }
 }
@@ -983,7 +1123,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
                 spanned_flexible_tracks.append(track);
         }
         auto item_minimum_contribution = automatic_minimum_size(item, dimension);
-        distribute_extra_space_across_spanned_tracks(item_minimum_contribution, spanned_flexible_tracks);
+        distribute_extra_space_across_spanned_tracks_base_size(item_minimum_contribution, spanned_flexible_tracks);
 
         for (auto& track : spanned_tracks) {
             track.base_size += track.planned_increase;

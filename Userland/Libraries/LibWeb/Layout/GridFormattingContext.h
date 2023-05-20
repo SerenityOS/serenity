@@ -104,13 +104,18 @@ private:
     struct TemporaryTrack {
         CSS::GridSize min_track_sizing_function;
         CSS::GridSize max_track_sizing_function;
+
         CSSPixels base_size { 0 };
-        bool has_definite_base_size { false };
+        bool base_size_frozen { false };
+
         CSSPixels growth_limit { 0 };
+        bool growth_limit_frozen { false };
+        bool infinitely_growable { false };
+
         CSSPixels space_to_distribute { 0 };
         CSSPixels planned_increase { 0 };
         CSSPixels item_incurred_increase { 0 };
-        bool frozen { false };
+
         bool is_gap { false };
 
         TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
@@ -216,8 +221,9 @@ private:
 
     void initialize_track_sizes(AvailableSpace const&, GridDimension const);
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
-    void distribute_extra_space_across_spanned_tracks(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
-    void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(GridDimension const, size_t span);
+    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
+    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
+    void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const&, GridDimension const, size_t span);
     void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
     void maximize_tracks(AvailableSpace const&, GridDimension const);
     void expand_flexible_tracks(AvailableSpace const&, GridDimension const);
