@@ -11,8 +11,8 @@
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
@@ -43,11 +43,12 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
         return true;
     }
     MUST(Core::Directory::create(LexicalPath(zip_member.name.to_deprecated_string()).parent(), Core::Directory::CreateDirectories::Yes));
-    auto new_file = Core::DeprecatedFile::construct(zip_member.name.to_deprecated_string());
-    if (!new_file->open(Core::OpenMode::WriteOnly)) {
-        warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
+    auto new_file_or_error = Core::File::open(zip_member.name.to_deprecated_string(), Core::File::OpenMode::Write);
+    if (new_file_or_error.is_error()) {
+        warnln("Can't write file {}: {}", zip_member.name, new_file_or_error.release_error());
         return false;
     }
+    auto new_file = new_file_or_error.release_value();
 
     if (!quiet)
         outln(" extracting: {}", zip_member.name);
@@ -55,8 +56,8 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
     Crypto::Checksum::CRC32 checksum;
     switch (zip_member.compression_method) {
     case Archive::ZipCompressionMethod::Store: {
-        if (!new_file->write(zip_member.compressed_data.data(), zip_member.compressed_data.size())) {
-            warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
+        if (auto maybe_error = new_file->write_until_depleted(zip_member.compressed_data); maybe_error.is_error()) {
+            warnln("Can't write file contents in {}: {}", zip_member.name, maybe_error.release_error());
             return false;
         }
         checksum.update({ zip_member.compressed_data.data(), zip_member.compressed_data.size() });
@@ -72,11 +73,11 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
             warnln("Failed decompressing file {}", zip_member.name);
             return false;
         }
-        if (!new_file->write(decompressed_data.value().data(), decompressed_data.value().size())) {
-            warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
+        if (auto maybe_error = new_file->write_until_depleted(decompressed_data.value()); maybe_error.is_error()) {
+            warnln("Can't write file contents in {}: {}", zip_member.name, maybe_error.release_error());
             return false;
         }
-        checksum.update({ decompressed_data.value().data(), decompressed_data.value().size() });
+        checksum.update(decompressed_data.value());
         break;
     }
     default:
@@ -88,10 +89,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
         return false;
     }
 
-    if (!new_file->close()) {
-        warnln("Can't close file {}: {}", zip_member.name, new_file->error_string());
-        return false;
-    }
+    new_file->close();
 
     if (checksum.digest() != zip_member.crc32) {
         warnln("Failed decompressing file {}: CRC32 mismatch", zip_member.name);
