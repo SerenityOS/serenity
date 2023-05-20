@@ -52,6 +52,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
+        auto image_rect = context.rounded_device_rect(absolute_rect());
         if (layout_box().renders_as_alt_text()) {
             auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
@@ -61,8 +62,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             if (alt.is_empty())
                 alt = image_element.src();
             context.painter().draw_text(enclosing_rect, alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
-        } else if (auto bitmap = layout_box().image_provider().current_image_bitmap()) {
-            auto image_rect = context.rounded_device_rect(absolute_rect());
+        } else if (auto bitmap = layout_box().image_provider().current_image_bitmap(image_rect.size().to_type<int>())) {
             ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto scaling_mode = to_gfx_scaling_mode(computed_values().image_rendering(), bitmap->rect(), image_rect.to_type<int>());
             context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.f, scaling_mode);
