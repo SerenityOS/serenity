@@ -70,6 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto buffer = TRY(f->read_until_eof(PAGE_SIZE));
             auto line_count = StringView(buffer).count("\n"sv);
             auto bytes = buffer.bytes();
+            if (bytes.size() > 0 && bytes.last() != '\n')
+                line_count++;
+
             size_t line_index = 0;
             StringBuilder line;
 
@@ -81,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             for (size_t i = 0; i < bytes.size(); i++) {
                 auto ch = bytes.at(i);
                 line.append(ch);
-                if (ch == '\n') {
+                if (ch == '\n' || i == bytes.size() - 1) {
                     if (wanted_line_count > line_count || line_index >= line_count - wanted_line_count)
                         out("{}", line.to_deprecated_string());
                     line_index++;
