@@ -13,32 +13,22 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#img-req-data
-class DecodedImageData final : public RefCounted<DecodedImageData> {
+class DecodedImageData : public RefCounted<DecodedImageData> {
 public:
-    struct Frame {
-        RefPtr<Gfx::Bitmap const> bitmap;
-        int duration { 0 };
-    };
+    virtual ~DecodedImageData();
 
-    static ErrorOr<NonnullRefPtr<DecodedImageData>> create(Vector<Frame>&&, size_t loop_count, bool animated);
-    ~DecodedImageData();
+    virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index) const = 0;
+    virtual int frame_duration(size_t frame_index) const = 0;
 
-    RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index) const;
-    int frame_duration(size_t frame_index) const;
+    virtual size_t frame_count() const = 0;
+    virtual size_t loop_count() const = 0;
+    virtual bool is_animated() const = 0;
 
-    size_t frame_count() const { return m_frames.size(); }
-    size_t loop_count() const { return m_loop_count; }
-    bool is_animated() const { return m_animated; }
+    virtual Optional<int> natural_width() const = 0;
+    virtual Optional<int> natural_height() const = 0;
 
-    Optional<int> natural_width() const;
-    Optional<int> natural_height() const;
-
-private:
-    DecodedImageData(Vector<Frame>&&, size_t loop_count, bool animated);
-
-    Vector<Frame> m_frames;
-    size_t m_loop_count { 0 };
-    bool m_animated { false };
+protected:
+    DecodedImageData();
 };
 
 }

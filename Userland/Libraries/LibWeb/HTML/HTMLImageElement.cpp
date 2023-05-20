@@ -14,8 +14,8 @@
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Response.h>
+#include <LibWeb/HTML/AnimatedBitmapDecodedImageData.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
-#include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
@@ -530,15 +530,15 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageR
         return;
     }
 
-    Vector<DecodedImageData::Frame> frames;
+    Vector<AnimatedBitmapDecodedImageData::Frame> frames;
     for (auto& frame : result.value().frames) {
-        frames.append(DecodedImageData::Frame {
+        frames.append(AnimatedBitmapDecodedImageData::Frame {
             .bitmap = frame.bitmap,
             .duration = static_cast<int>(frame.duration),
         });
     }
 
-    auto image_data = DecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
+    auto image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
     image_request.set_image_data(image_data);
 
     ListOfAvailableImages::Key key;
