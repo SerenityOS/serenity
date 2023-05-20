@@ -48,6 +48,8 @@ public:
     String const& handle() const { return m_client_state.client_handle; }
 
     void server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size);
+    void server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect rect);
+    void server_did_change_selection(Badge<WebContentClient>);
 
     void load(AK::URL const&);
     void load_html(StringView, AK::URL const&);
@@ -138,8 +140,6 @@ public:
     Function<Gfx::IntRect()> on_fullscreen_window;
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
-    virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
-    virtual void notify_server_did_change_selection(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) = 0;
     virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) = 0;

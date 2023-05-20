@@ -70,6 +70,16 @@ void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id
     }
 }
 
+void ViewImplementation::server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect)
+{
+    request_repaint();
+}
+
+void ViewImplementation::server_did_change_selection(Badge<WebContentClient>)
+{
+    request_repaint();
+}
+
 void ViewImplementation::load(AK::URL const& url)
 {
     m_url = url;

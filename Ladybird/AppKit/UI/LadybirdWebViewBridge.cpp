@@ -112,16 +112,6 @@ void WebViewBridge::notify_server_did_layout(Badge<WebView::WebContentClient>, G
     }
 }
 
-void WebViewBridge::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const&)
-{
-    request_repaint();
-}
-
-void WebViewBridge::notify_server_did_change_selection(Badge<WebView::WebContentClient>)
-{
-    request_repaint();
-}
-
 void WebViewBridge::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor)
 {
     if (on_cursor_change)
