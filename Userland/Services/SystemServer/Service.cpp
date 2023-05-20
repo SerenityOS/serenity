@@ -200,8 +200,8 @@ ErrorOr<void> Service::spawn(int socket_fd)
 
         if (m_account.has_value() && m_account.value().uid() != getuid()) {
             auto& account = m_account.value();
-            if (account.login().is_error()) {
-                dbgln("Failed to drop privileges (GID={}, UID={})\n", account.gid(), account.uid());
+            if (auto error_or_void = account.login(); error_or_void.is_error()) {
+                dbgln("Failed to drop privileges (GID={}, UID={}), due to {}\n", account.gid(), account.uid(), error_or_void.error());
                 exit(1);
             }
             TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
