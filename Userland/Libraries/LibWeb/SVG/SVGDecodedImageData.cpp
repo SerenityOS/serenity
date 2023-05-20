@@ -6,7 +6,6 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/NavigationParams.h>
@@ -94,8 +93,6 @@ void SVGDecodedImageData::render(Gfx::IntSize size) const
     m_document->browsing_context()->set_viewport_rect({ 0, 0, size.width(), size.height() });
     m_document->update_layout();
 
-    dump_tree(*m_document->layout_node());
-
     Gfx::Painter painter(*m_bitmap);
     PaintContext context(painter, m_page_client->palette(), m_page_client->device_pixels_per_css_pixel());
 
@@ -117,17 +114,40 @@ RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size)
 
 Optional<CSSPixels> SVGDecodedImageData::intrinsic_width() const
 {
-    return 0;
+    // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
+    m_document->update_style();
+    auto const* root_element_style = m_root_element->computed_css_values();
+    VERIFY(root_element_style);
+    auto const& width_value = root_element_style->size_value(CSS::PropertyID::Width);
+    if (width_value.is_length() && width_value.length().is_absolute())
+        return width_value.length().absolute_length_to_px();
+    return {};
 }
 
 Optional<CSSPixels> SVGDecodedImageData::intrinsic_height() const
 {
-    return 0;
+    // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
+    m_document->update_style();
+    auto const* root_element_style = m_root_element->computed_css_values();
+    VERIFY(root_element_style);
+    auto const& height_value = root_element_style->size_value(CSS::PropertyID::Height);
+    if (height_value.is_length() && height_value.length().is_absolute())
+        return height_value.length().absolute_length_to_px();
+    return {};
 }
 
 Optional<float> SVGDecodedImageData::intrinsic_aspect_ratio() const
 {
-    return 1;
+    // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
+    auto width = intrinsic_width();
+    auto height = intrinsic_height();
+    if (width.has_value() && height.has_value())
+        return (width.value() / height.value()).value();
+
+    if (auto const& viewbox = m_root_element->view_box(); viewbox.has_value())
+        return viewbox->width / viewbox->height;
+
+    return {};
 }
 
 }
