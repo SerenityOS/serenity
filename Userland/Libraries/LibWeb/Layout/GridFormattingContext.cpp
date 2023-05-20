@@ -219,8 +219,6 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& c
 
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 
-    m_occupation_grid.maybe_add_row(row_start + 1);
-    m_occupation_grid.maybe_add_column(column_start + 1);
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 }
 
@@ -321,8 +319,6 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
 
     // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
-    m_occupation_grid.maybe_add_row(row_start + row_span);
-
     int column_start = 0;
     auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
@@ -330,7 +326,6 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
     // 3.3. If the largest column span among all the items without a definite column position is larger
     // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
     // that column span.
-    m_occupation_grid.maybe_add_column(column_span);
     bool found_available_column = false;
     for (size_t column_index = column_start; column_index < m_occupation_grid.column_count(); column_index++) {
         if (!m_occupation_grid.is_occupied(column_index, row_start)) {
@@ -341,7 +336,6 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
     }
     if (!found_available_column) {
         column_start = m_occupation_grid.column_count();
-        m_occupation_grid.maybe_add_column(column_start + column_span);
     }
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 
@@ -452,9 +446,6 @@ void GridFormattingContext::place_item_with_column_position(Box const& child_box
         auto_placement_cursor_y++;
     auto_placement_cursor_x = column_start;
 
-    m_occupation_grid.maybe_add_column(auto_placement_cursor_x + 1);
-    m_occupation_grid.maybe_add_row(auto_placement_cursor_y + 1);
-
     // 4.1.1.2. Increment the cursor's row position until a value is found where the grid item does not
     // overlap any occupied grid cells (creating new rows in the implicit grid as necessary).
     while (true) {
@@ -462,7 +453,6 @@ void GridFormattingContext::place_item_with_column_position(Box const& child_box
             break;
         }
         auto_placement_cursor_y++;
-        m_occupation_grid.maybe_add_row(auto_placement_cursor_y + row_span);
     }
     // 4.1.1.3. Set the item's row-start line to the cursor's row position, and set the item's row-end
     // line according to its span from that position.
@@ -488,7 +478,6 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
     // 3.3. If the largest column span among all the items without a definite column position is larger
     // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
     // that column span.
-    m_occupation_grid.maybe_add_column(column_span);
     auto row_start = 0;
     auto row_span = 1;
     if (child_box.computed_values().grid_row_start().is_span())
@@ -523,7 +512,6 @@ finish:
     // start-most column line in the implicit grid, and return to the previous step.
     if (!found_unoccupied_area) {
         row_start = m_occupation_grid.row_count();
-        m_occupation_grid.maybe_add_row(m_occupation_grid.row_count() + 1);
     }
 
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
@@ -1607,62 +1595,25 @@ int GridFormattingContext::get_line_index_by_line_name(String const& needle, CSS
     return -1;
 }
 
-OccupationGrid::OccupationGrid(size_t column_count, size_t row_count)
-{
-    Vector<bool> occupation_grid_row;
-    for (size_t column_index = 0; column_index < max(column_count, 1); column_index++)
-        occupation_grid_row.append(false);
-    for (size_t row_index = 0; row_index < max(row_count, 1); row_index++)
-        m_occupation_grid.append(occupation_grid_row);
-}
-
-OccupationGrid::OccupationGrid()
-{
-}
-
-void OccupationGrid::maybe_add_column(size_t needed_number_of_columns)
-{
-    if (needed_number_of_columns <= column_count())
-        return;
-    auto column_count_before_modification = column_count();
-    for (auto& occupation_grid_row : m_occupation_grid)
-        for (size_t idx = 0; idx < needed_number_of_columns - column_count_before_modification; idx++)
-            occupation_grid_row.append(false);
-}
-
-void OccupationGrid::maybe_add_row(size_t needed_number_of_rows)
-{
-    if (needed_number_of_rows <= row_count())
-        return;
-
-    Vector<bool> new_occupation_grid_row;
-    for (size_t idx = 0; idx < column_count(); idx++)
-        new_occupation_grid_row.append(false);
-
-    for (size_t idx = 0; idx < needed_number_of_rows - row_count(); idx++)
-        m_occupation_grid.append(new_occupation_grid_row);
-}
-
 void OccupationGrid::set_occupied(size_t column_start, size_t column_end, size_t row_start, size_t row_end)
 {
-    for (size_t row_index = 0; row_index < row_count(); row_index++) {
-        if (row_index >= row_start && row_index < row_end) {
-            for (size_t column_index = 0; column_index < column_count(); column_index++) {
-                if (column_index >= column_start && column_index < column_end)
-                    set_occupied(column_index, row_index);
-            }
+    for (size_t row = row_start; row < row_end; row++) {
+        for (size_t column = column_start; column < column_end; column++) {
+            set_occupied(column, row);
         }
     }
 }
 
 void OccupationGrid::set_occupied(size_t column_index, size_t row_index)
 {
-    m_occupation_grid[row_index][column_index] = true;
+    m_columns_count = max(m_columns_count, column_index + 1);
+    m_rows_count = max(m_rows_count, row_index + 1);
+    m_occupation_grid.try_set(GridPosition { .row = row_index, .column = column_index }).release_value_but_fixme_should_propagate_errors();
 }
 
-bool OccupationGrid::is_occupied(size_t column_index, size_t row_index)
+bool OccupationGrid::is_occupied(size_t column_index, size_t row_index) const
 {
-    return m_occupation_grid[row_index][column_index];
+    return m_occupation_grid.contains(GridPosition { row_index, column_index });
 }
 
 size_t GridItem::gap_adjusted_row(Box const& grid_box) const
@@ -1871,4 +1822,11 @@ CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& 
     return calculate_min_content_contribution(item, dimension);
 }
 
+}
+
+namespace AK {
+template<>
+struct Traits<Web::Layout::GridPosition> : public GenericTraits<Web::Layout::GridPosition> {
+    static unsigned hash(Web::Layout::GridPosition const& key) { return pair_int_hash(key.row, key.column); }
+};
 }
