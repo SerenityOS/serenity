@@ -4,14 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/AppFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Process.h>
 #include <LibGUI/Statusbar.h>
@@ -110,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto model = adopt_ref(*new SettingsAppsModel);
     icon_view->set_model(*model);
 
-    icon_view->on_activation = [&](GUI::ModelIndex const& index) {
+    auto activation_func = [&](GUI::ModelIndex const& index) {
         auto executable = model->data(index, GUI::ModelRole::Custom).as_string();
         auto requires_root = model->data(index, static_cast<GUI::ModelRole>(SettingsAppsModelCustomRole::RequiresRoot)).as_bool();
 
@@ -121,6 +125,44 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Process::spawn_or_show_error(window, "/bin/Escalator"sv, Array { executable });
         else
             GUI::Process::spawn_or_show_error(window, executable);
+    };
+
+    auto settings_item_context_menu = TRY(GUI::Menu::try_create(TRY("Directory View Directory"_string)));
+    auto settings_item_open_action
+        = GUI::Action::create(
+            "Open",
+            {},
+            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)),
+            [&](auto&) {
+                activation_func(icon_view->cursor_index());
+            });
+
+    auto settings_item_create_shortcut_action
+        = GUI::Action::create(
+            "Create Desktop &Shortcut",
+            {},
+            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"sv)),
+            [&](auto&) {
+                auto executable = model->data(icon_view->cursor_index(), GUI::ModelRole::Custom).as_string();
+                auto destination = DeprecatedString::formatted("{}/{} Settings", Core::StandardPaths::desktop_directory(), model->data(icon_view->cursor_index(), GUI::ModelRole::Display).as_string());
+                if (auto result = FileSystem::link_file(destination, executable); result.is_error()) {
+                    GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create settings item desktop shortcut:\n{}", result.error()), "Settings"sv,
+                        GUI::MessageBox::Type::Error);
+                }
+            });
+
+    TRY(settings_item_context_menu->try_add_action(settings_item_open_action));
+    TRY(settings_item_context_menu->try_add_action(settings_item_create_shortcut_action));
+
+    icon_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
+        (void)index;
+        if (icon_view->selection().is_empty())
+            return;
+        settings_item_context_menu->popup(event.screen_position());
+    };
+
+    icon_view->on_activation = [&](GUI::ModelIndex const& index) {
+        activation_func(index);
     };
 
     auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
