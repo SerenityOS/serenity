@@ -11,8 +11,8 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -174,12 +174,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool printed_hyperlink = false;
     if (isatty(STDOUT_FILENO)) {
-        auto full_path = Core::DeprecatedFile::real_path_for(output_path);
-        if (!full_path.is_null()) {
+        auto full_path_or_error = FileSystem::real_path(output_path);
+        if (!full_path_or_error.is_error()) {
             char hostname[HOST_NAME_MAX];
             VERIFY(gethostname(hostname, sizeof(hostname)) == 0);
 
-            auto url = URL::create_with_file_scheme(full_path, {}, hostname);
+            auto url = URL::create_with_file_scheme(full_path_or_error.value().to_deprecated_string(), {}, hostname);
             out("\033]8;;{}\033\\", url.serialize());
             printed_hyperlink = true;
         }
