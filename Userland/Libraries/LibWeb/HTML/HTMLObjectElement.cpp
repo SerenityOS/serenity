@@ -350,6 +350,27 @@ i32 HTMLObjectElement::default_tab_index_value() const
     return 0;
 }
 
+Optional<CSSPixels> HTMLObjectElement::intrinsic_width() const
+{
+    if (m_image_loader.has_value())
+        return m_image_loader->bitmap(0)->width();
+    return {};
+}
+
+Optional<CSSPixels> HTMLObjectElement::intrinsic_height() const
+{
+    if (m_image_loader.has_value())
+        return m_image_loader->bitmap(0)->height();
+    return {};
+}
+
+Optional<float> HTMLObjectElement::intrinsic_aspect_ratio() const
+{
+    if (m_image_loader.has_value())
+        return static_cast<float>(m_image_loader->bitmap(0)->width()) / static_cast<float>(m_image_loader->bitmap(0)->height());
+    return {};
+}
+
 RefPtr<Gfx::Bitmap const> HTMLObjectElement::current_image_bitmap() const
 {
     if (m_image_loader.has_value())

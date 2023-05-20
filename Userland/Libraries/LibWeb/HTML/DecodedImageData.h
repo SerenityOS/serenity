@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <LibGfx/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::HTML {
 
@@ -24,8 +25,9 @@ public:
     virtual size_t loop_count() const = 0;
     virtual bool is_animated() const = 0;
 
-    virtual Optional<int> natural_width() const = 0;
-    virtual Optional<int> natural_height() const = 0;
+    virtual Optional<CSSPixels> intrinsic_width() const = 0;
+    virtual Optional<CSSPixels> intrinsic_height() const = 0;
+    virtual Optional<float> intrinsic_aspect_ratio() const = 0;
 
 protected:
     DecodedImageData();
