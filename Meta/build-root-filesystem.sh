@@ -191,7 +191,7 @@ chmod 700 mnt/root
 chmod 700 mnt/home/anon
 chmod 700 mnt/home/nona
 chown -R 100:100 mnt/home/anon
-chown -R 200:200 mnt/home/nona
+chown -R 200:100 mnt/home/nona
 echo "done"
 
 printf "adding some desktop icons... "
