@@ -448,7 +448,7 @@ bool ChessWidget::want_engine_move()
 {
     if (!m_engine)
         return false;
-    if (board().turn() == side())
+    if (board().turn() == side() || board().game_finished())
         return false;
     return true;
 }
