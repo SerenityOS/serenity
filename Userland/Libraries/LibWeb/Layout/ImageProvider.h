@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Size.h>
 #include <LibWeb/PixelUnits.h>
 
 namespace Web::Layout {
@@ -18,7 +19,7 @@ public:
     virtual Optional<CSSPixels> intrinsic_height() const = 0;
     virtual Optional<float> intrinsic_aspect_ratio() const = 0;
 
-    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap() const = 0;
+    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap(Gfx::IntSize) const = 0;
     virtual void set_visible_in_viewport(bool) = 0;
 };
 

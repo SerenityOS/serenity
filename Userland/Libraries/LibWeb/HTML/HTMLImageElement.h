@@ -81,7 +81,7 @@ public:
     virtual Optional<CSSPixels> intrinsic_width() const override;
     virtual Optional<CSSPixels> intrinsic_height() const override;
     virtual Optional<float> intrinsic_aspect_ratio() const override;
-    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap() const override;
+    virtual RefPtr<Gfx::Bitmap const> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
 
 private:
