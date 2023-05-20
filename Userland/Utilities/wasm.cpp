@@ -7,9 +7,9 @@
 
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
@@ -387,11 +387,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     for (auto& string : wasi_preopened_mappings) {
                         auto split_index = string.find(':');
                         if (split_index.has_value()) {
-                            LexicalPath host_path { Core::DeprecatedFile::real_path_for(string.substring_view(0, *split_index)) };
+                            LexicalPath host_path { FileSystem::real_path(string.substring_view(0, *split_index)).release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
                             LexicalPath mapped_path { string.substring_view(*split_index + 1) };
                             paths.append({move(host_path), move(mapped_path)});
                         } else {
-                            LexicalPath host_path { Core::DeprecatedFile::real_path_for(string) };
+                            LexicalPath host_path { FileSystem::real_path(string).release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
                             LexicalPath mapped_path { string };
                             paths.append({move(host_path), move(mapped_path)});
                         }
