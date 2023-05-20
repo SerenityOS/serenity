@@ -5,7 +5,7 @@
  */
 
 #include "WebContentClient.h"
-#include "OutOfProcessWebView.h"
+#include "ViewImplementation.h"
 #include <AK/Debug.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
