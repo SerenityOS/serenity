@@ -47,6 +47,8 @@ public:
 
     String const& handle() const { return m_client_state.client_handle; }
 
+    void server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size);
+
     void load(AK::URL const&);
     void load_html(StringView, AK::URL const&);
     void load_empty_document();
@@ -90,6 +92,7 @@ public:
     };
     ErrorOr<void> take_screenshot(ScreenshotType);
 
+    Function<void()> on_ready_to_paint;
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
     Function<void()> on_activate_tab;
     Function<void()> on_close;
@@ -135,7 +138,6 @@ public:
     Function<Gfx::IntRect()> on_fullscreen_window;
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
-    virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) = 0;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_change_selection(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;

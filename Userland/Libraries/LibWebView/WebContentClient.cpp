@@ -25,7 +25,7 @@ void WebContentClient::die()
 
 void WebContentClient::did_paint(Gfx::IntRect const& rect, i32 bitmap_id)
 {
-    m_view.notify_server_did_paint({}, bitmap_id, rect.size());
+    m_view.server_did_paint({}, bitmap_id, rect.size());
 }
 
 void WebContentClient::did_start_loading(AK::URL const& url, bool is_redirect)
