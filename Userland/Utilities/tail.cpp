@@ -33,7 +33,7 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines)
         TRY(file.seek(pos - 1, SeekMode::SetPosition));
 
         auto ch = TRY(file.read_value<u8>());
-        if (ch == '\n' && (end - pos) > 1) {
+        if (ch == '\n' && (end - pos) > 0) {
             lines++;
             if (lines == wanted_lines)
                 break;
