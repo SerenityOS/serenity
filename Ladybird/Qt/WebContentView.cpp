@@ -75,6 +75,10 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     });
 
     create_client(enable_callgrind_profiling);
+
+    on_ready_to_paint = [this]() {
+        viewport()->update();
+    };
 }
 
 WebContentView::~WebContentView() = default;
@@ -585,24 +589,6 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
 
     if (!m_webdriver_content_ipc_path.is_empty())
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
-}
-
-void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
-{
-    if (m_client_state.back_bitmap.id == bitmap_id) {
-        m_client_state.has_usable_bitmap = true;
-        m_client_state.back_bitmap.pending_paints--;
-        m_client_state.back_bitmap.last_painted_size = size;
-        swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
-        // We don't need the backup bitmap anymore, so drop it.
-        m_backup_bitmap = nullptr;
-        viewport()->update();
-
-        if (m_client_state.got_repaint_requests_while_painting) {
-            m_client_state.got_repaint_requests_while_painting = false;
-            request_repaint();
-        }
-    }
 }
 
 void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] Gfx::IntRect const& content_rect)

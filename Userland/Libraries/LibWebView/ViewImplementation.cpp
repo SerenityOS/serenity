@@ -48,6 +48,28 @@ WebContentClient const& ViewImplementation::client() const
     return *m_client_state.client;
 }
 
+void ViewImplementation::server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
+{
+    if (m_client_state.back_bitmap.id != bitmap_id)
+        return;
+
+    m_client_state.has_usable_bitmap = true;
+    m_client_state.back_bitmap.pending_paints--;
+    m_client_state.back_bitmap.last_painted_size = size;
+    swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
+
+    // We don't need the backup bitmap anymore, so drop it.
+    m_backup_bitmap = nullptr;
+
+    if (on_ready_to_paint)
+        on_ready_to_paint();
+
+    if (m_client_state.got_repaint_requests_while_painting) {
+        m_client_state.got_repaint_requests_while_painting = false;
+        request_repaint();
+    }
+}
+
 void ViewImplementation::load(AK::URL const& url)
 {
     m_url = url;
