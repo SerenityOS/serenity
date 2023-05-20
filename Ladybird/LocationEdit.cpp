@@ -10,6 +10,7 @@
 #include <QCoreApplication>
 #include <QPalette>
 #include <QTextLayout>
+#include <QTimer>
 
 LocationEdit::LocationEdit(QWidget* parent)
     : QLineEdit(parent)
@@ -27,6 +28,7 @@ void LocationEdit::focusInEvent(QFocusEvent* event)
 {
     QLineEdit::focusInEvent(event);
     highlight_location();
+    QTimer::singleShot(0, this, &QLineEdit::selectAll);
 }
 
 void LocationEdit::focusOutEvent(QFocusEvent* event)
