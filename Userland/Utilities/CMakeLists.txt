@@ -171,3 +171,5 @@ foreach(name IN LISTS FUZZER_TARGETS)
     set_source_files_properties("${fuzz_source_file}" PROPERTIES COMPILE_OPTIONS "-Wno-missing-declarations")
     target_link_libraries(test-fuzz PRIVATE "${FUZZER_DEPENDENCIES_${name}}")
 endforeach()
+
+add_subdirectory(pkg)
