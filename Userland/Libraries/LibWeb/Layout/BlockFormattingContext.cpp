@@ -17,6 +17,7 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -794,10 +795,19 @@ void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSp
     auto& viewport = verify_cast<Layout::Viewport>(root());
     auto& viewport_state = m_state.get_mutable(viewport);
 
-    if (root().children_are_inline())
-        layout_inline_children(root(), layout_mode, available_space);
-    else
-        layout_block_level_children(root(), layout_mode, available_space);
+    // NOTE: If we are laying out a standalone SVG document, we give it some special treatment:
+    //       The root <svg> container gets the same size as the viewport,
+    //       and we call directly into the SVG layout code from here.
+    if (root().first_child() && root().first_child()->is_svg_svg_box()) {
+        auto const& svg_root = verify_cast<SVGSVGBox>(*root().first_child());
+        auto svg_formatting_context = create_independent_formatting_context_if_needed(m_state, svg_root);
+        svg_formatting_context->run(svg_root, layout_mode, available_space);
+    } else {
+        if (root().children_are_inline())
+            layout_inline_children(root(), layout_mode, available_space);
+        else
+            layout_block_level_children(root(), layout_mode, available_space);
+    }
 
     CSSPixels bottom_edge = 0;
     CSSPixels right_edge = 0;
