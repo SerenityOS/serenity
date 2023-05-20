@@ -500,6 +500,7 @@ set(SOURCES
     SVG/SVGAnimatedLength.cpp
     SVG/SVGAnimatedNumber.cpp
     SVG/SVGClipPathElement.cpp
+    SVG/SVGDecodedImageData.cpp
     SVG/SVGDefsElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
