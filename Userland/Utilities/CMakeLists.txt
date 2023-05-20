@@ -152,7 +152,7 @@ target_link_libraries(wasm PRIVATE LibFileSystem LibJS LibLine LibWasm)
 target_link_libraries(watch PRIVATE LibFileSystem)
 target_link_libraries(which PRIVATE LibFileSystem)
 target_link_libraries(wsctl PRIVATE LibGUI LibIPC)
-target_link_libraries(xml PRIVATE LibXML)
+target_link_libraries(xml PRIVATE LibFileSystem LibXML)
 target_link_libraries(xzcat PRIVATE LibCompress)
 target_link_libraries(zip PRIVATE LibArchive LibCompress LibCrypto LibFileSystem)
 
