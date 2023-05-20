@@ -37,14 +37,19 @@ int AnimatedBitmapDecodedImageData::frame_duration(size_t frame_index) const
     return m_frames[frame_index].duration;
 }
 
-Optional<int> AnimatedBitmapDecodedImageData::natural_width() const
+Optional<CSSPixels> AnimatedBitmapDecodedImageData::intrinsic_width() const
 {
     return m_frames.first().bitmap->width();
 }
 
-Optional<int> AnimatedBitmapDecodedImageData::natural_height() const
+Optional<CSSPixels> AnimatedBitmapDecodedImageData::intrinsic_height() const
 {
     return m_frames.first().bitmap->height();
+}
+
+Optional<float> AnimatedBitmapDecodedImageData::intrinsic_aspect_ratio() const
+{
+    return static_cast<float>(m_frames.first().bitmap->width()) / static_cast<float>(m_frames.first().bitmap->height());
 }
 
 }
