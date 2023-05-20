@@ -29,6 +29,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
+#include <LibWeb/SVG/SVGDecodedImageData.h>
 
 namespace Web::HTML {
 
@@ -545,21 +546,38 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageR
         m_load_event_delayer.clear();
     };
 
-    auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
-    if (!result.has_value()) {
-        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
-        return;
+    // FIXME: Look at the MIME type instead!
+    bool is_svg_image = url_string.basename().ends_with(".svg"sv);
+
+    RefPtr<DecodedImageData> image_data;
+
+    if (is_svg_image) {
+        VERIFY(document().page());
+        auto result = SVG::SVGDecodedImageData::create(*document().page(), url_string, data);
+        if (result.is_error()) {
+            dbgln("Failed to decode SVG image: {}", result.error());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+            return;
+        }
+
+        image_data = result.release_value();
+    } else {
+        auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
+        if (!result.has_value()) {
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+            return;
+        }
+
+        Vector<AnimatedBitmapDecodedImageData::Frame> frames;
+        for (auto& frame : result.value().frames) {
+            frames.append(AnimatedBitmapDecodedImageData::Frame {
+                .bitmap = frame.bitmap,
+                .duration = static_cast<int>(frame.duration),
+            });
+        }
+        image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
     }
 
-    Vector<AnimatedBitmapDecodedImageData::Frame> frames;
-    for (auto& frame : result.value().frames) {
-        frames.append(AnimatedBitmapDecodedImageData::Frame {
-            .bitmap = frame.bitmap,
-            .duration = static_cast<int>(frame.duration),
-        });
-    }
-
-    auto image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
     image_request.set_image_data(image_data);
 
     ListOfAvailableImages::Key key;
@@ -580,7 +598,7 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageR
     image_request.set_state(ImageRequest::State::CompletelyAvailable);
 
     // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
-    document().list_of_available_images().add(key, image_data, true).release_value_but_fixme_should_propagate_errors();
+    document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
 
     // 4. Fire an event named load at the img element.
     dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
