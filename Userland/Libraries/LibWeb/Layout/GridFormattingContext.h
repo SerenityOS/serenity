@@ -16,22 +16,30 @@ enum class GridDimension {
     Column
 };
 
+struct GridPosition {
+    size_t row;
+    size_t column;
+    inline bool operator==(GridPosition const&) const = default;
+};
+
 class OccupationGrid {
 public:
-    OccupationGrid(size_t column_count, size_t row_count);
-    OccupationGrid();
+    OccupationGrid(size_t columns_count, size_t rows_count)
+        : m_columns_count(columns_count)
+        , m_rows_count(rows_count) {};
+    OccupationGrid() {};
 
-    void maybe_add_column(size_t needed_number_of_columns);
-    void maybe_add_row(size_t needed_number_of_rows);
     void set_occupied(size_t column_start, size_t column_end, size_t row_start, size_t row_end);
     void set_occupied(size_t column_index, size_t row_index);
 
-    size_t column_count() { return m_occupation_grid[0].size(); }
-    size_t row_count() { return m_occupation_grid.size(); }
-    bool is_occupied(size_t column_index, size_t row_index);
+    size_t column_count() const { return m_columns_count; }
+    size_t row_count() const { return m_rows_count; }
+    bool is_occupied(size_t column_index, size_t row_index) const;
 
 private:
-    Vector<Vector<bool>> m_occupation_grid;
+    HashTable<GridPosition> m_occupation_grid;
+    size_t m_columns_count { 0 };
+    size_t m_rows_count { 0 };
 };
 
 class GridItem {
