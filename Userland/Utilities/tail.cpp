@@ -14,7 +14,7 @@
 
 static ErrorOr<void> tail_from_pos(Core::File& file, off_t startline)
 {
-    TRY(file.seek(startline + 1, SeekMode::SetPosition));
+    TRY(file.seek(startline, SeekMode::SetPosition));
     auto buffer = TRY(file.read_until_eof());
     out("{}", StringView { buffer });
     return {};
@@ -29,11 +29,9 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines)
     off_t end = pos;
     int lines = 0;
 
-    for (; pos >= 0; pos--) {
-        TRY(file.seek(pos, SeekMode::SetPosition));
+    for (; pos >= 1; pos--) {
+        TRY(file.seek(pos - 1, SeekMode::SetPosition));
 
-        if (file.is_eof())
-            break;
         auto ch = TRY(file.read_value<u8>());
         if (ch == '\n' && (end - pos) > 1) {
             lines++;
