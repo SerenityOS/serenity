@@ -27,8 +27,9 @@ public:
     virtual size_t loop_count() const override { return m_loop_count; }
     virtual bool is_animated() const override { return m_animated; }
 
-    virtual Optional<int> natural_width() const override;
-    virtual Optional<int> natural_height() const override;
+    virtual Optional<CSSPixels> intrinsic_width() const override;
+    virtual Optional<CSSPixels> intrinsic_height() const override;
+    virtual Optional<float> intrinsic_aspect_ratio() const override;
 
 private:
     AnimatedBitmapDecodedImageData(Vector<Frame>&&, size_t loop_count, bool animated);

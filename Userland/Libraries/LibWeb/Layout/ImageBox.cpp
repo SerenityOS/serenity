@@ -23,18 +23,9 @@ ImageBox::~ImageBox() = default;
 
 void ImageBox::prepare_for_replaced_layout()
 {
-    auto bitmap = m_image_provider.current_image_bitmap();
-
-    if (!bitmap) {
-        set_intrinsic_width(0);
-        set_intrinsic_height(0);
-    } else {
-        auto width = bitmap->width();
-        auto height = bitmap->height();
-        set_intrinsic_width(width);
-        set_intrinsic_height(height);
-        set_intrinsic_aspect_ratio(static_cast<float>(width) / static_cast<float>(height));
-    }
+    set_intrinsic_width(m_image_provider.intrinsic_width());
+    set_intrinsic_height(m_image_provider.intrinsic_height());
+    set_intrinsic_aspect_ratio(m_image_provider.intrinsic_aspect_ratio());
 
     if (renders_as_alt_text()) {
         auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());

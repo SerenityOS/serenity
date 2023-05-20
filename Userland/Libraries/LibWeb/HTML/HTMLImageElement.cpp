@@ -111,6 +111,27 @@ RefPtr<Gfx::Bitmap const> HTMLImageElement::bitmap() const
     return current_image_bitmap();
 }
 
+Optional<CSSPixels> HTMLImageElement::intrinsic_width() const
+{
+    if (auto image_data = m_current_request->image_data())
+        return image_data->intrinsic_width();
+    return {};
+}
+
+Optional<CSSPixels> HTMLImageElement::intrinsic_height() const
+{
+    if (auto image_data = m_current_request->image_data())
+        return image_data->intrinsic_height();
+    return {};
+}
+
+Optional<float> HTMLImageElement::intrinsic_aspect_ratio() const
+{
+    if (auto image_data = m_current_request->image_data())
+        return image_data->intrinsic_aspect_ratio();
+    return {};
+}
+
 RefPtr<Gfx::Bitmap const> HTMLImageElement::current_image_bitmap() const
 {
     if (auto data = m_current_request->image_data())
