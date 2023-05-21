@@ -275,7 +275,7 @@ ErrorOr<FileTransferDataMessage> FileTransferDataMessage::read_from_stream(AK::S
     auto contents = TRY(ByteBuffer::create_uninitialized(size));
     TRY(stream.read_until_filled(contents));
 
-    return FileTransferDataMessage(id, contents);
+    return FileTransferDataMessage(id, move(contents));
 }
 
 ErrorOr<String> FileTransferDataMessage::debug_description()

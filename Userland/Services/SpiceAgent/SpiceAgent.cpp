@@ -91,8 +91,8 @@ ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
         clipboard_data = TRY(Gfx::PNGWriter::encode(*bitmap));
     }
 
-    auto message = ClipboardMessage(data_type, clipboard_data);
-    TRY(this->send_message(message));
+    auto message = ClipboardMessage(data_type, move(clipboard_data));
+    TRY(this->send_message(move(message)));
 
     return {};
 }
