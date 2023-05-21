@@ -1179,20 +1179,6 @@ ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target,
     float source_pixel_area = source_pixel_width * source_pixel_height;
     FloatRect const pixel_box = { 0.f, 0.f, 1.f, 1.f };
 
-    // FIXME: FloatRect.right() and .bottom() subtract 1 since that is what IntRect does as well.
-    //        This is obviously wrong and causes issues with at least .intersect(). Probably the
-    //        best course of action is to fix Rect's behavior for .right() and .bottom(), and then
-    //        replace this with FloatRect.intersected(...).size().area().
-    auto float_rect_intersection_area_fixme = [](FloatRect const& a, FloatRect const& b) -> float {
-        float intersected_left = max(a.left(), b.left());
-        float intersected_right = min(a.left() + a.width(), b.left() + b.width());
-        float intersected_top = max(a.top(), b.top());
-        float intersected_bottom = min(a.top() + a.height(), b.top() + b.height());
-        if (intersected_left >= intersected_right || intersected_top >= intersected_bottom)
-            return 0.f;
-        return (intersected_right - intersected_left) * (intersected_bottom - intersected_top);
-    };
-
     for (int y = clipped_rect.top(); y < clipped_rect.bottom(); ++y) {
         auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
         for (int x = clipped_rect.left(); x < clipped_rect.right(); ++x) {
@@ -1212,7 +1198,7 @@ ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target,
             float total_area = 0.f;
             for (int sy = enclosing_source_box.y(); sy < enclosing_source_box.bottom(); ++sy) {
                 for (int sx = enclosing_source_box.x(); sx < enclosing_source_box.right(); ++sx) {
-                    float area = float_rect_intersection_area_fixme(source_box, pixel_box.translated(sx, sy));
+                    float area = source_box.intersected(pixel_box.translated(sx, sy)).size().area();
 
                     auto pixel = get_pixel(source, sx, sy);
                     area *= pixel.alpha() / 255.f;
