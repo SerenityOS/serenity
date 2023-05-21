@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/DOM/Document.h>
@@ -665,8 +666,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
     if (stroke_width->is_numeric())
         computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->to_number()));
-    else
+    else if (stroke_width->is_length())
         computed_values.set_stroke_width(stroke_width->to_length());
+    else if (stroke_width->is_percentage())
+        computed_values.set_stroke_width(CSS::LengthPercentage { stroke_width->as_percentage().percentage() });
 
     computed_values.set_fill_opacity(computed_style.fill_opacity());
     computed_values.set_stroke_opacity(computed_style.stroke_opacity());
