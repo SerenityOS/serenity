@@ -59,7 +59,7 @@
 #include <unistd.h>
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t);
-static void build_performance_tab(GUI::Widget&);
+static ErrorOr<void> build_performance_tab(GUI::Widget&);
 
 static RefPtr<GUI::Statusbar> statusbar;
 
@@ -274,9 +274,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
     StringView args_tab_view = args_tab;
 
-    auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-system-monitor"sv));
 
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("System Monitor");
     window->resize(560, 430);
 
@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
-    build_performance_tab(performance_widget);
+    TRY(build_performance_tab(performance_widget));
 
     auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TreeView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
@@ -329,8 +329,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             memory_stats_widget->refresh();
     };
     update_stats();
-    auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
-    refresh_timer.start();
+    auto refresh_timer = TRY(window->try_add<Core::Timer>(frequency * 1000, move(update_stats)));
+    refresh_timer->start();
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
@@ -425,47 +425,48 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         &process_table_view);
 
-    auto& file_menu = window->add_menu("&File"_short_string);
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto process_context_menu = GUI::Menu::construct();
-    process_context_menu->add_action(kill_action);
-    process_context_menu->add_action(stop_action);
-    process_context_menu->add_action(continue_action);
-    process_context_menu->add_separator();
-    process_context_menu->add_action(profile_action);
-    process_context_menu->add_action(debug_action);
-    process_context_menu->add_separator();
-    process_context_menu->add_action(process_properties_action);
+    auto process_context_menu = TRY(GUI::Menu::try_create());
+    TRY(process_context_menu->try_add_action(kill_action));
+    TRY(process_context_menu->try_add_action(stop_action));
+    TRY(process_context_menu->try_add_action(continue_action));
+    TRY(process_context_menu->try_add_separator());
+    TRY(process_context_menu->try_add_action(profile_action));
+    TRY(process_context_menu->try_add_action(debug_action));
+    TRY(process_context_menu->try_add_separator());
+    TRY(process_context_menu->try_add_action(process_properties_action));
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid())
             process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
-    auto& frequency_menu = window->add_menu(TRY("F&requency"_string));
+    auto frequency_menu = TRY(window->try_add_menu(TRY("F&requency"_string)));
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
-    auto make_frequency_action = [&](int seconds) {
+    auto make_frequency_action = [&](int seconds) -> ErrorOr<void> {
         auto action = GUI::Action::create_checkable(DeprecatedString::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
-            refresh_timer.restart(seconds * 1000);
+            refresh_timer->restart(seconds * 1000);
         });
         action->set_status_tip(DeprecatedString::formatted("Refresh every {} seconds", seconds));
         action->set_checked(frequency == seconds);
         frequency_action_group.add_action(*action);
-        frequency_menu.add_action(*action);
+        TRY(frequency_menu->try_add_action(*action));
+        return {};
     };
 
-    make_frequency_action(1);
-    make_frequency_action(3);
-    make_frequency_action(5);
+    TRY(make_frequency_action(1));
+    TRY(make_frequency_action(3));
+    TRY(make_frequency_action(5));
 
-    auto& help_menu = window->add_menu("&Help"_short_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window)));
 
     process_table_view.on_activation = [&](auto&) {
         if (process_properties_action->is_enabled())
@@ -520,11 +521,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 {
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->resize(480, 360);
     window->set_title(DeprecatedString::formatted("PID {} - System Monitor", pid));
 
-    auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);
+    auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-system-monitor"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
@@ -544,7 +545,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
         main_widget->find_descendant_of_type_named<GUI::ImageWidget>("process_icon")->set_bitmap(icon_data.as_icon().bitmap_for_size(32));
     }
 
-    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid).release_value_but_fixme_should_propagate_errors());
+    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(TRY(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid)));
 
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessStateWidget>("process_state")->set_pid(pid);
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessFileDescriptorMapWidget>("open_files")->set_pid(pid);
@@ -564,7 +565,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     return window;
 }
 
-void build_performance_tab(GUI::Widget& graphs_container)
+ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
 {
     auto& cpu_graph_group_box = *graphs_container.find_descendant_of_type_named<GUI::GroupBox>("cpu_graph");
 
@@ -574,24 +575,24 @@ void build_performance_tab(GUI::Widget& graphs_container)
 
     Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
-        auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
-        cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>(6);
-        cpu_graph_row.set_fixed_height(108);
+        auto cpu_graph_row = TRY(cpu_graph_group_box.try_add<GUI::Widget>());
+        TRY(cpu_graph_row->try_set_layout<GUI::HorizontalBoxLayout>(6));
+        cpu_graph_row->set_fixed_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
-            auto& cpu_graph = cpu_graph_row.add<SystemMonitor::GraphWidget>();
-            cpu_graph.set_max(100);
-            cpu_graph.set_value_format(0, {
-                                              .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                              .text_formatter = [](u64 value) {
-                                                  return DeprecatedString::formatted("Total: {}%", value);
-                                              },
-                                          });
-            cpu_graph.set_value_format(1, {
-                                              .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                              .text_formatter = [](u64 value) {
-                                                  return DeprecatedString::formatted("Kernel: {}%", value);
-                                              },
-                                          });
+            auto cpu_graph = TRY(cpu_graph_row->try_add<SystemMonitor::GraphWidget>());
+            cpu_graph->set_max(100);
+            cpu_graph->set_value_format(0, {
+                                               .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
+                                               .text_formatter = [](u64 value) {
+                                                   return DeprecatedString::formatted("Total: {}%", value);
+                                               },
+                                           });
+            cpu_graph->set_value_format(1, {
+                                               .graph_color_role = ColorRole::SyntaxPreprocessorValue,
+                                               .text_formatter = [](u64 value) {
+                                                   return DeprecatedString::formatted("Kernel: {}%", value);
+                                               },
+                                           });
             cpu_graphs.append(cpu_graph);
         }
     }
@@ -624,4 +625,5 @@ void build_performance_tab(GUI::Widget& graphs_container)
                                              return DeprecatedString::formatted("Kernel heap: {}", human_readable_size(bytes));
                                          },
                                      });
+    return {};
 }
