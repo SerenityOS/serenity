@@ -252,7 +252,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         gather_roots_from_execution_context_stack(saved_stack);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    roots.set(well_known_symbol_##snake_name());
+    roots.set(m_well_known_symbols.snake_name);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
