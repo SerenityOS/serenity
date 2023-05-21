@@ -349,19 +349,16 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
-    auto clip_overflow = [&] {
-        if (!m_clipping_overflow) {
-            context.painter().save();
-            context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
-            m_clipping_overflow = true;
-        }
-    };
+    if (!clip_rect.has_value())
+        return;
 
-    if (clip_rect.has_value()) {
-        clip_overflow();
+    if (!m_clipping_overflow) {
+        context.painter().save();
+        context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
+        m_clipping_overflow = true;
     }
 
-    if (overflow_y == CSS::Overflow::Hidden && overflow_x == CSS::Overflow::Hidden) {
+    if (!clip_rect->is_empty() && overflow_y == CSS::Overflow::Hidden && overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
             auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
@@ -369,7 +366,6 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
             }
-            clip_overflow();
             m_overflow_corner_radius_clipper = corner_clipper.release_value();
             m_overflow_corner_radius_clipper->sample_under_corners(context.painter());
         }
