@@ -1,0 +1,8 @@
+#import <WebAudio/BaseAudioContext.idl>
+
+// https://webaudio.github.io/web-audio-api/#AudioContext
+[Exposed=Window]
+interface AudioContext : BaseAudioContext {
+    // FIXME: Should be constructor (optional AudioContextOptions contextOptions = {});
+    constructor();
+};
