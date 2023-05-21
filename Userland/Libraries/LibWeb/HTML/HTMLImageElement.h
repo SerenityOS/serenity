@@ -93,7 +93,7 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    void handle_successful_fetch(AK::URL const&, ImageRequest&, ByteBuffer);
+    void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer);
     void handle_failed_fetch();
 
     void animate();

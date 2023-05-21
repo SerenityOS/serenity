@@ -499,8 +499,10 @@ after_step_6:
             // - If the resource type and data corresponds to a supported image format, as described below
             // - The next task that is queued by the networking task source while the image is being fetched must run the following steps:
             queue_an_element_task(HTML::Task::Source::Networking, [this, response, image_request, url_string] {
-                auto process_body = [image_request, url_string, this](ByteBuffer data) {
-                    handle_successful_fetch(url_string, image_request, move(data));
+                auto process_body = [response, image_request, url_string, this](ByteBuffer data) {
+                    auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+                    auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
+                    handle_successful_fetch(url_string, mime_type, image_request, move(data));
                 };
                 auto process_body_error = [this](auto) {
                     handle_failed_fetch();
@@ -537,7 +539,7 @@ after_step_6:
     return {};
 }
 
-void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageRequest& image_request, ByteBuffer data)
+void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ImageRequest& image_request, ByteBuffer data)
 {
     // AD-HOC: At this point, things gets very ad-hoc.
     // FIXME: Bring this closer to spec.
@@ -546,8 +548,7 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, ImageR
         m_load_event_delayer.clear();
     };
 
-    // FIXME: Look at the MIME type instead!
-    bool is_svg_image = url_string.basename().ends_with(".svg"sv);
+    bool is_svg_image = mime_type == "image/svg+xml"sv || url_string.basename().ends_with(".svg"sv);
 
     RefPtr<DecodedImageData> image_data;
 
