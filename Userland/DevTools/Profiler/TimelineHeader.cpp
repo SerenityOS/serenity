@@ -42,7 +42,7 @@ void TimelineHeader::paint_event(GUI::PaintEvent& event)
         painter.blit(icon_rect.location(), *m_icon, m_icon->rect());
 
     Gfx::IntRect text_rect {
-        icon_rect.right() + 6,
+        icon_rect.right() + 5,
         icon_rect.y(),
         width() - 32,
         32

@@ -204,9 +204,9 @@ template<>
 FloatRect AffineTransform::map(FloatRect const& rect) const
 {
     FloatPoint p1 = map(rect.top_left());
-    FloatPoint p2 = map(rect.top_right().translated(1, 0));
-    FloatPoint p3 = map(rect.bottom_right().translated(1, 1));
-    FloatPoint p4 = map(rect.bottom_left().translated(0, 1));
+    FloatPoint p2 = map(rect.top_right());
+    FloatPoint p3 = map(rect.bottom_right());
+    FloatPoint p4 = map(rect.bottom_left());
     float left = smallest_of(p1.x(), p2.x(), p3.x(), p4.x());
     float top = smallest_of(p1.y(), p2.y(), p3.y(), p4.y());
     float right = largest_of(p1.x(), p2.x(), p3.x(), p4.x());

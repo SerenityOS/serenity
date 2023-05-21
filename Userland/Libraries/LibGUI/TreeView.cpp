@@ -327,7 +327,7 @@ void TreeView::paint_event(PaintEvent& event)
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
                 icon_rect.center_vertically_within(rect);
                 Gfx::IntRect background_rect = {
-                    icon_rect.right() + 1 + icon_spacing(), rect.y(),
+                    icon_rect.right() + icon_spacing(), rect.y(),
                     min(rect.width(), column_width - indent_width) - icon_size() - icon_spacing(), rect.height()
                 };
                 Gfx::IntRect text_rect = background_rect.shrunken(text_padding() * 2, 0);

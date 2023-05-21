@@ -82,7 +82,7 @@ void Tray::paint_event(GUI::PaintEvent& event)
         icon_rect.center_vertically_within(rect);
 
         Gfx::IntRect text_rect {
-            icon_rect.right() + 5,
+            icon_rect.right() + 4,
             rect.y(),
             rect.width(),
             rect.height(),

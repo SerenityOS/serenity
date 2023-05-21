@@ -690,7 +690,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
 
             auto layer_rect = layer->relative_rect().to_type<float>();
             auto scaled_top_left = layer_rect.top_left().scaled(scale_x, scale_y).to_rounded<int>();
-            auto scaled_bottom_right = layer_rect.bottom_right().translated(1).scaled(scale_x, scale_y).to_rounded<int>();
+            auto scaled_bottom_right = layer_rect.bottom_right().scaled(scale_x, scale_y).to_rounded<int>();
             auto scaled_layer_rect = Gfx::IntRect::from_two_points(scaled_top_left, scaled_bottom_right);
             TRY(new_layer->scale(scaled_layer_rect, scaling_mode, Layer::NotifyClients::No));
 

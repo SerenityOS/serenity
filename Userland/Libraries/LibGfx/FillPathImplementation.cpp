@@ -68,7 +68,7 @@ ALWAYS_INLINE void Painter::draw_scanline_for_fill_path(int y, T x_start, T x_en
         if (paint_left_subpixel)
             set_physical_pixel(clipped.top_left(), get_color_with_alpha(0, left_subpixel_alpha), true);
         if (paint_right_subpixel)
-            set_physical_pixel(clipped.top_right(), get_color_with_alpha(scanline.width(), right_subpixel_alpha), true);
+            set_physical_pixel(clipped.top_right().moved_left(1), get_color_with_alpha(scanline.width(), right_subpixel_alpha), true);
         clipped.shrink(0, paint_right_subpixel, 0, paint_left_subpixel);
         if (clipped.is_empty())
             return;
@@ -82,9 +82,8 @@ ALWAYS_INLINE void Painter::draw_scanline_for_fill_path(int y, T x_start, T x_en
         }
     }
 
-    for (int x = clipped.x(); x <= clipped.right(); x++) {
+    for (int x = clipped.x(); x < clipped.right(); x++)
         set_physical_pixel({ x, clipped.y() }, get_color(x - scanline.x()), true);
-    }
 }
 
 [[maybe_unused]] inline void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
@@ -144,8 +143,8 @@ void Painter::fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Paint
     active_list.ensure_capacity(segments.size());
 
     // first, grab the segments for the very first scanline
-    GridCoordinateType first_y = path.bounding_box().bottom_right().y() + 1;
-    GridCoordinateType last_y = path.bounding_box().top_left().y() - 1;
+    GridCoordinateType first_y = path.bounding_box().bottom();
+    GridCoordinateType last_y = path.bounding_box().top() - 1;
     float scanline = first_y;
 
     size_t last_active_segment { 0 };

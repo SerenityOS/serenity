@@ -98,7 +98,7 @@ void LayerListWidget::get_gadget_rects(Gadget const& gadget, bool is_masked, Gfx
     inner_thumbnail_rect.center_within(outer_thumbnail_rect);
 
     if (is_masked) {
-        outer_mask_thumbnail_rect = { outer_thumbnail_rect.top_right().x() + 5, outer_thumbnail_rect.y(), outer_thumbnail_rect.width(), outer_thumbnail_rect.height() };
+        outer_mask_thumbnail_rect = { outer_thumbnail_rect.right() + 4, outer_thumbnail_rect.y(), outer_thumbnail_rect.width(), outer_thumbnail_rect.height() };
         inner_mask_thumbnail_rect = { 0, 0, thumbnail_size.width(), thumbnail_size.height() };
         inner_mask_thumbnail_rect.center_within(outer_mask_thumbnail_rect);
     } else {
@@ -106,7 +106,7 @@ void LayerListWidget::get_gadget_rects(Gadget const& gadget, bool is_masked, Gfx
         inner_mask_thumbnail_rect = inner_thumbnail_rect;
     }
 
-    text_rect = { outer_mask_thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
+    text_rect = { outer_mask_thumbnail_rect.right() + 9, outer_rect.y(), outer_rect.width(), outer_rect.height() };
     text_rect.intersect(outer_rect);
 }
 
@@ -279,7 +279,7 @@ void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
     VERIFY(gadget.is_moving);
 
     gadget.movement_delta.set_y(delta.y());
-    auto inner_rect_max_height = widget_inner_rect().height() - 2 + vertical_scrollbar().max();
+    auto inner_rect_max_height = widget_inner_rect().height() - 1 + vertical_scrollbar().max();
 
     if (delta.y() < 0 && gadget.rect.y() < -delta.y())
         gadget.movement_delta.set_y(-gadget.rect.y());
@@ -346,12 +346,12 @@ void LayerListWidget::automatic_scrolling_timer_did_fire()
     vertical_scrollbar().increase_slider_by(m_automatic_scroll_delta.y());
     gadget.movement_delta.set_y(gadget.movement_delta.y() + m_automatic_scroll_delta.y());
 
-    auto inner_rect_max_height = widget_inner_rect().height() - 2 + vertical_scrollbar().max();
+    auto inner_rect_max_height = widget_inner_rect().height() - 1 + vertical_scrollbar().max();
     auto gadget_absolute_position = gadget.rect.y() + gadget.movement_delta.y();
 
     if (gadget_absolute_position < 0)
         gadget.movement_delta.set_y(-gadget.rect.y());
-    else if (gadget_absolute_position + gadget.rect.height() >= inner_rect_max_height)
+    else if (gadget_absolute_position + gadget.rect.height() >= inner_rect_max_height - 1)
         gadget.movement_delta.set_y(inner_rect_max_height - gadget.rect.bottom());
     else
         relayout_gadgets();

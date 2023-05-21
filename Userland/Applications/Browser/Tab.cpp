@@ -144,7 +144,7 @@ Tab::Tab(BrowserWindow& window)
             i++;
             m_go_back_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
-        m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left());
+        m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left().moved_up(1));
     };
 
     auto& go_forward_button = toolbar.add_action(window.go_forward_action());
@@ -157,7 +157,7 @@ Tab::Tab(BrowserWindow& window)
             i++;
             m_go_forward_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
-        m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left());
+        m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left().moved_up(1));
     };
 
     auto& go_home_button = toolbar.add_action(window.go_home_action());

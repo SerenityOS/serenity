@@ -887,7 +887,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                     apply_window_tile(WindowTileType::Right);
             } else if (allow_tile && event_location_relative_to_screen.y() <= secondary_deadzone + desktop_relative_to_screen.top()) {
                 apply_window_tile(WindowTileType::Top);
-            } else if (allow_tile && event_location_relative_to_screen.y() >= desktop_relative_to_screen.bottom() - secondary_deadzone) {
+            } else if (allow_tile && event_location_relative_to_screen.y() >= desktop_relative_to_screen.bottom() - 1 - secondary_deadzone) {
                 apply_window_tile(WindowTileType::Bottom);
             } else if (!m_move_window->is_tiled()) {
                 apply_window_tile(WindowTileType::None);
@@ -971,12 +971,12 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
         constexpr auto hot_zone = 10;
         Gfx::IntRect tiling_rect = desktop_rect(cursor_screen).shrunken({ hot_zone, hot_zone });
         if ((m_resize_direction == ResizeDirection::Up || m_resize_direction == ResizeDirection::Down)
-            && (event.y() >= tiling_rect.bottom() || event.y() <= tiling_rect.top())) {
+            && (event.y() >= tiling_rect.bottom() - 1 || event.y() <= tiling_rect.top())) {
             m_resize_window->set_tiled(WindowTileType::VerticallyMaximized);
             return true;
         }
         if ((m_resize_direction == ResizeDirection::Left || m_resize_direction == ResizeDirection::Right)
-            && (event.x() >= tiling_rect.right() || event.x() <= tiling_rect.left())) {
+            && (event.x() > tiling_rect.right() || event.x() <= tiling_rect.left())) {
             m_resize_window->set_tiled(WindowTileType::HorizontallyMaximized);
             return true;
         }

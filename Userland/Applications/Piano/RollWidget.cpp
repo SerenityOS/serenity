@@ -93,6 +93,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
                 else
                     background_painter.fill_rect(rect, Color::White);
 
+                rect.shrink(0, 1, 1, 0);
                 background_painter.draw_line(rect.top_right(), rect.bottom_right(), Color::Black);
                 background_painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::Black);
             }

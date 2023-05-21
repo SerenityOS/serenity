@@ -22,8 +22,8 @@ void ClassicSkin::draw_tile_at(Gfx::Painter& painter, Gfx::IntRect const& rect)
 
     Gfx::IntRect left_side(rect.x(), rect.y(), 2, rect.height());
     Gfx::IntRect top_side(rect.x(), rect.y(), rect.width(), 2);
-    Gfx::IntRect right_side(rect.right() - 1, rect.y(), 2, rect.height());
-    Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
+    Gfx::IntRect right_side(rect.right() - 2, rect.y(), 2, rect.height());
+    Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 2, rect.width(), 2);
     auto top_left_color = m_skin_color.lightened(0.88);
     auto bottom_right_color = m_skin_color.darkened(0.55);
     painter.fill_rect(left_side, top_left_color);

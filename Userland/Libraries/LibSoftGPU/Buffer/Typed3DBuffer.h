@@ -41,10 +41,10 @@ public:
 
     void fill(T value, int x1, int x2, int y1, int y2, int z1, int z2)
     {
-        for (auto z = z1; z <= z2; ++z) {
-            for (auto y = y1; y <= y2; ++y) {
+        for (auto z = z1; z < z2; ++z) {
+            for (auto y = y1; y < y2; ++y) {
                 auto* xline = buffer_pointer(0, y, z);
-                for (auto x = x1; x <= x2; ++x)
+                for (auto x = x1; x < x2; ++x)
                     xline[x] = value;
             }
         }

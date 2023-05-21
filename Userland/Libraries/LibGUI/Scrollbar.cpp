@@ -179,21 +179,21 @@ void Scrollbar::paint_event(PaintEvent& event)
         Gfx::IntRect rect_to_fill = rect();
         if (orientation() == Orientation::Vertical) {
             if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
-                rect_to_fill.set_top(decrement_button_rect().bottom());
-                rect_to_fill.set_bottom(scrubber_rect().top());
+                rect_to_fill.set_top(decrement_button_rect().bottom() - 1);
+                rect_to_fill.set_bottom(scrubber_rect().top() + 1);
             } else {
                 VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
-                rect_to_fill.set_top(scrubber_rect().bottom());
-                rect_to_fill.set_bottom(increment_button_rect().top());
+                rect_to_fill.set_top(scrubber_rect().bottom() - 1);
+                rect_to_fill.set_bottom(increment_button_rect().top() + 1);
             }
         } else {
             if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
-                rect_to_fill.set_left(decrement_button_rect().right());
-                rect_to_fill.set_right(scrubber_rect().left());
+                rect_to_fill.set_left(decrement_button_rect().right() - 1);
+                rect_to_fill.set_right(scrubber_rect().left() + 1);
             } else {
                 VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
-                rect_to_fill.set_left(scrubber_rect().right());
-                rect_to_fill.set_right(increment_button_rect().left());
+                rect_to_fill.set_left(scrubber_rect().right() - 1);
+                rect_to_fill.set_right(increment_button_rect().left() + 1);
             }
         }
         painter.fill_rect_with_dither_pattern(rect_to_fill, palette().button(), palette().button().lightened(0.77f));

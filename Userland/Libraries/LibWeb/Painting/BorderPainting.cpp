@@ -85,13 +85,13 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
     auto points_for_edge = [](BorderEdge edge, DevicePixelRect const& rect) -> Points {
         switch (edge) {
         case BorderEdge::Top:
-            return { rect.top_left(), rect.top_right() };
+            return { rect.top_left(), rect.top_right().moved_left(1) };
         case BorderEdge::Right:
-            return { rect.top_right(), rect.bottom_right() };
+            return { rect.top_right().moved_left(1), rect.bottom_right().translated(-1) };
         case BorderEdge::Bottom:
-            return { rect.bottom_left(), rect.bottom_right() };
+            return { rect.bottom_left().moved_up(1), rect.bottom_right().translated(-1) };
         default: // Edge::Left
-            return { rect.top_left(), rect.bottom_left() };
+            return { rect.top_left(), rect.bottom_left().moved_up(1) };
         }
     };
 
@@ -365,13 +365,13 @@ void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect,
         blit_corner(border_rect.top_left().to_type<int>(), top_left.as_rect(), pick_corner_color(borders_data.top, borders_data.left));
 
     if (top_right)
-        blit_corner(border_rect.top_right().to_type<int>().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width().value() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
+        blit_corner(border_rect.top_right().to_type<int>().translated(-top_right.horizontal_radius, 0), top_right.as_rect().translated(corner_mask_rect.width().value() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
 
     if (bottom_right)
-        blit_corner(border_rect.bottom_right().to_type<int>().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width().value() - bottom_right.horizontal_radius, corner_mask_rect.height().value() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
+        blit_corner(border_rect.bottom_right().to_type<int>().translated(-bottom_right.horizontal_radius, -bottom_right.vertical_radius), bottom_right.as_rect().translated(corner_mask_rect.width().value() - bottom_right.horizontal_radius, corner_mask_rect.height().value() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
 
     if (bottom_left)
-        blit_corner(border_rect.bottom_left().to_type<int>().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height().value() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
+        blit_corner(border_rect.bottom_left().to_type<int>().translated(0, -bottom_left.vertical_radius), bottom_left.as_rect().translated(0, corner_mask_rect.height().value() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
 }
 
 }

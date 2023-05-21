@@ -40,7 +40,7 @@ void GitFilesView::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (event.x() < action_icon_rect(0).x() || event.x() > action_icon_rect(0).top_right().x()) {
+    if (event.x() < action_icon_rect(0).x() || event.x() >= action_icon_rect(0).right()) {
         ListView::mousedown_event(event);
         return;
     }

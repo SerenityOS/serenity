@@ -114,7 +114,7 @@ void PasswordBox::paint_event(PaintEvent& event)
         painter.fill_ellipse(dot_indicator_rect, icon_color);
 
         Gfx::IntPoint arc_start_point { dot_indicator_rect.x() - dot_indicator_padding / 2, dot_indicator_rect.y() + dot_indicator_padding / 2 };
-        Gfx::IntPoint arc_end_point = { dot_indicator_rect.top_right().x() + dot_indicator_padding / 2, dot_indicator_rect.top_right().y() + dot_indicator_padding / 2 };
+        Gfx::IntPoint arc_end_point = { dot_indicator_rect.right() - 1 + dot_indicator_padding / 2, dot_indicator_rect.top() + dot_indicator_padding / 2 };
         Gfx::IntPoint arc_center_point = { dot_indicator_rect.center().x(), dot_indicator_rect.top() - dot_indicator_padding };
         painter.draw_quadratic_bezier_curve(arc_center_point, arc_start_point, arc_end_point, icon_color, 1);
     }

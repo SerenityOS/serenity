@@ -354,7 +354,7 @@ void Widget::handle_keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Menu) {
-        ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
+        ContextMenuEvent c_event(window_relative_rect().bottom_right().translated(-1), screen_relative_rect().bottom_right().translated(-1));
         dispatch_event(c_event);
         return;
     }

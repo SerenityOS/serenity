@@ -570,9 +570,9 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, BrickGame::
     rect.inflate(-1, -1, -1, -1);
     painter.draw_rect(rect, outside_color);
     painter.set_pixel(rect.top_left(), m_back_color);
-    painter.set_pixel(rect.bottom_left(), m_back_color);
-    painter.set_pixel(rect.top_right(), m_back_color);
-    painter.set_pixel(rect.bottom_right(), m_back_color);
+    painter.set_pixel(rect.bottom_left().moved_up(1), m_back_color);
+    painter.set_pixel(rect.top_right().moved_left(1), m_back_color);
+    painter.set_pixel(rect.bottom_right().translated(-1), m_back_color);
     rect.inflate(-2, -2);
     painter.draw_rect(rect, outside_color);
     rect.inflate(-2, -2);

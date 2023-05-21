@@ -167,11 +167,11 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
                 continue;
 
             auto& rect = m_line_data[i]->visual_rect;
-            if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
+            if (rect.contains_vertically(position.y())) {
                 line_index = i;
                 break;
             }
-            if (position.y() > rect.bottom())
+            if (position.y() >= rect.bottom())
                 line_index = last_visible_line_index;
         }
         line_index = max((size_t)0, min(line_index, last_visible_line_index));
@@ -473,7 +473,7 @@ Gfx::IntRect TextEditor::gutter_indicator_rect(size_t line_number, int indicator
     auto gutter_rect = gutter_content_rect(line_number);
     auto indicator_size = gutter_rect.height();
     return Gfx::IntRect {
-        gutter_rect.right() - static_cast<int>(lroundf(indicator_size * (indicator_position + 1.5f))),
+        gutter_rect.right() - 1 - static_cast<int>(lroundf(indicator_size * (indicator_position + 1.5f))),
         gutter_rect.top(),
         indicator_size,
         indicator_size
@@ -538,7 +538,7 @@ void TextEditor::paint_event(PaintEvent& event)
         }
         if (attributes.underline_style.has_value()) {
             auto bottom_left = [&]() {
-                auto point = rect.bottom_left().translated(0, 1);
+                auto point = rect.bottom_left();
 
                 if constexpr (IsSame<RemoveCVReference<decltype(rect)>, Gfx::IntRect>)
                     return point;
@@ -547,7 +547,7 @@ void TextEditor::paint_event(PaintEvent& event)
             };
 
             auto bottom_right = [&]() {
-                auto point = rect.bottom_right().translated(0, 1);
+                auto point = rect.bottom_right().translated(-1, 0);
 
                 if constexpr (IsSame<RemoveCVReference<decltype(rect)>, Gfx::IntRect>)
                     return point;
@@ -584,13 +584,13 @@ void TextEditor::paint_event(PaintEvent& event)
         auto gutter_rect = gutter_rect_in_inner_coordinates();
         painter.fill_rect(gutter_rect, palette().gutter());
         if (!m_ruler_visible)
-            painter.draw_line(gutter_rect.top_right(), gutter_rect.bottom_right(), palette().gutter_border());
+            painter.draw_line(gutter_rect.top_right().translated(-1, 0), gutter_rect.bottom_right().translated(-1), palette().gutter_border());
     }
 
     if (m_ruler_visible) {
         auto ruler_rect = ruler_rect_in_inner_coordinates().inflated(0, folding_indicator_width(), 0, 0);
         painter.fill_rect(ruler_rect, palette().ruler());
-        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
+        painter.draw_line(ruler_rect.top_right().translated(-1, 0), ruler_rect.bottom_right().translated(-1), palette().ruler_border());
 
         // Paint +/- buttons for folding regions
         for (auto const& folding_region : document().folding_regions()) {
@@ -606,7 +606,7 @@ void TextEditor::paint_event(PaintEvent& event)
     }
 
     size_t first_visible_line = text_position_at(event.rect().top_left()).line();
-    size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
+    size_t last_visible_line = text_position_at(event.rect().bottom_right().translated(-1)).line();
 
     auto selection = normalized_selection();
     bool has_selection = selection.is_valid();
@@ -855,7 +855,7 @@ void TextEditor::paint_event(PaintEvent& event)
 
                     int selection_right = selection_ends_on_current_visual_line
                         ? content_x_for_position({ line_index, (size_t)selection_end_column_within_line })
-                        : visual_line_rect.right() + 1;
+                        : visual_line_rect.right();
 
                     Gfx::IntRect selection_rect {
                         selection_left,
@@ -1842,7 +1842,7 @@ void TextEditor::try_show_autocomplete(UserRequestedAutocomplete user_requested_
 {
     force_update_autocomplete([&, user_requested_autocomplete = move(user_requested_autocomplete)] {
         if (user_requested_autocomplete == Yes || m_autocomplete_box->has_suggestions()) {
-            auto position = content_rect_for_position(cursor()).translated(0, -visible_content_rect().y()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
+            auto position = content_rect_for_position(cursor()).translated(0, -visible_content_rect().y()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(9, 4));
             m_autocomplete_box->show(position);
         }
     });
