@@ -71,11 +71,13 @@ private:
     Vector<Symbolication::Symbol> m_symbols;
 };
 
-ThreadStackWidget::ThreadStackWidget()
+ErrorOr<NonnullRefPtr<ThreadStackWidget>> ThreadStackWidget::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>(4);
-    m_stack_table = add<GUI::TableView>();
-    m_stack_table->set_model(adopt_ref(*new ThreadStackModel()));
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThreadStackWidget()));
+    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    widget->m_stack_table = TRY(widget->try_add<GUI::TableView>());
+    widget->m_stack_table->set_model(TRY(try_make_ref_counted<ThreadStackModel>()));
+    return widget;
 }
 
 void ThreadStackWidget::show_event(GUI::ShowEvent&)

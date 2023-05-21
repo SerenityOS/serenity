@@ -12,15 +12,17 @@
 namespace SystemMonitor {
 
 class ProcessFileDescriptorMapWidget final : public GUI::Widget {
-    C_OBJECT(ProcessFileDescriptorMapWidget);
+    C_OBJECT_ABSTRACT(ProcessFileDescriptorMapWidget)
 
 public:
     virtual ~ProcessFileDescriptorMapWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<ProcessFileDescriptorMapWidget>> try_create();
+
     void set_pid(pid_t);
 
 private:
-    ProcessFileDescriptorMapWidget();
+    ProcessFileDescriptorMapWidget() = default;
 
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::JsonArrayModel> m_model;

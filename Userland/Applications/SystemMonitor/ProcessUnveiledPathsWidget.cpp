@@ -16,17 +16,19 @@ REGISTER_WIDGET(SystemMonitor, ProcessUnveiledPathsWidget)
 
 namespace SystemMonitor {
 
-ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
+ErrorOr<NonnullRefPtr<ProcessUnveiledPathsWidget>> ProcessUnveiledPathsWidget::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>(4);
-    m_table_view = add<GUI::TableView>();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessUnveiledPathsWidget()));
+    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
-    pid_unveil_fields.empend("path", "Path"_short_string, Gfx::TextAlignment::CenterLeft);
-    pid_unveil_fields.empend("permissions", "Permissions"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft);
+    TRY(pid_unveil_fields.try_empend("path", "Path"_short_string, Gfx::TextAlignment::CenterLeft));
+    TRY(pid_unveil_fields.try_empend("permissions", TRY("Permissions"_string), Gfx::TextAlignment::CenterLeft));
 
-    m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
-    m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_model)));
+    widget->m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
+    widget->m_table_view->set_model(TRY(GUI::SortingProxyModel::create(*widget->m_model)));
+    return widget;
 }
 
 void ProcessUnveiledPathsWidget::set_pid(pid_t pid)

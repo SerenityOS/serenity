@@ -12,15 +12,18 @@
 namespace SystemMonitor {
 
 class ProcessStateWidget final : public GUI::Widget {
-    C_OBJECT(ProcessStateWidget);
+    C_OBJECT_ABSTRACT(ProcessStateWidget);
 
 public:
     virtual ~ProcessStateWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<ProcessStateWidget>> try_create();
+
     void set_pid(pid_t);
 
 private:
-    ProcessStateWidget();
+    ProcessStateWidget() = default;
+
     RefPtr<GUI::TableView> m_table_view;
 };
 
