@@ -144,26 +144,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (list_files) {
-        outln("   Date      Time     Name");
-        outln("---------- --------   ----");
+        outln("  Length     Date      Time     Name");
+        outln("--------- ---------- --------   ----");
         u16 members_count = 0;
+        u64 total_size = 0;
         TRY(zip_file->for_each_member([&](auto zip_member) {
             members_count++;
 
-            AK::Time time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
-            auto date_str_or_error = Core::DateTime::from_timestamp(time.to_seconds()).to_string();
-            if (date_str_or_error.is_error())
+            auto time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
+            auto time_str_or_error = Core::DateTime::from_timestamp(time.to_seconds()).to_string();
+            if (time_str_or_error.is_error())
                 return IterationDecision::Break;
 
-            auto date_str = date_str_or_error.release_value();
+            auto time_str = time_str_or_error.release_value();
 
-            outln("{}   {}", date_str, zip_member.name);
+            total_size += zip_member.uncompressed_size;
+
+            outln("{:>9} {}   {}", zip_member.uncompressed_size, time_str, zip_member.name);
 
             return IterationDecision::Continue;
         }));
-
-        outln("                      -------");
-        outln("                      {} files", members_count);
+        outln("---------                       ----");
+        outln("{:>9}                       {} files", total_size, members_count);
         return 0;
     }
 
