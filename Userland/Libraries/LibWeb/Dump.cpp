@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -22,15 +22,19 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
+#include <LibWeb/HTML/ImageRequest.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/TextPaintable.h>
+#include <LibWeb/SVG/SVGDecodedImageData.h>
 #include <stdio.h>
 
 namespace Web {
@@ -68,6 +72,19 @@ void dump_tree(StringBuilder& builder, DOM::Node const& node)
     if (is<DOM::Element>(node)) {
         if (auto* shadow_root = static_cast<DOM::Element const&>(node).shadow_root_internal()) {
             dump_tree(builder, *shadow_root);
+        }
+    }
+    if (is<HTML::HTMLImageElement>(node)) {
+        if (auto image_data = static_cast<HTML::HTMLImageElement const&>(node).current_request().image_data()) {
+            if (is<SVG::SVGDecodedImageData>(*image_data)) {
+                ++indent;
+                for (int i = 0; i < indent; ++i)
+                    builder.append("  "sv);
+                builder.append("(SVG-as-image isolated context)\n"sv);
+                auto& svg_data = verify_cast<SVG::SVGDecodedImageData>(*image_data);
+                dump_tree(builder, svg_data.svg_document());
+                --indent;
+            }
         }
     }
     if (is<DOM::ParentNode>(node)) {
@@ -262,6 +279,23 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
 
         builder.append("\n"sv);
+    }
+
+    if (layout_node.dom_node() && is<HTML::HTMLImageElement>(*layout_node.dom_node())) {
+        if (auto image_data = static_cast<HTML::HTMLImageElement const&>(*layout_node.dom_node()).current_request().image_data()) {
+            if (is<SVG::SVGDecodedImageData>(*image_data)) {
+                auto& svg_data = verify_cast<SVG::SVGDecodedImageData>(*image_data);
+                if (svg_data.svg_document().layout_node()) {
+                    ++indent;
+                    for (size_t i = 0; i < indent; ++i)
+                        builder.append("  "sv);
+                    builder.append("(SVG-as-image isolated context)\n"sv);
+
+                    dump_tree(builder, *svg_data.svg_document().layout_node(), show_box_model, show_specified_style, interactive);
+                    --indent;
+                }
+            }
+        }
     }
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
