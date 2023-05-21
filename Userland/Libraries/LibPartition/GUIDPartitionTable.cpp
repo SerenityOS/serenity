@@ -7,10 +7,6 @@
 #include <AK/Debug.h>
 #include <LibPartition/GUIDPartitionTable.h>
 
-#ifndef KERNEL
-#    include <LibCore/DeprecatedFile.h>
-#endif
-
 namespace Partition {
 
 #define GPT_SIGNATURE2 0x54524150
@@ -48,30 +44,19 @@ struct [[gnu::packed]] GUIDPartitionHeader {
     u32 crc32_entries_array;
 };
 
-#ifdef KERNEL
-ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(Kernel::StorageDevice& device)
+ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(PartitionableDevice device)
 {
-    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)));
-#else
-ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file)
-{
-    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(move(device_file))));
-#endif
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(move(device))));
     if (!table->is_valid())
         return Error::from_errno(EINVAL);
     return table;
 }
 
-#ifdef KERNEL
-GUIDPartitionTable::GUIDPartitionTable(Kernel::StorageDevice& device)
-    : MBRPartitionTable(device)
-#else
-GUIDPartitionTable::GUIDPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
-    : MBRPartitionTable(move(device_file))
-#endif
+GUIDPartitionTable::GUIDPartitionTable(PartitionableDevice device)
+    : MBRPartitionTable(move(device))
 {
     // FIXME: Handle OOM failure here.
-    m_cached_header = ByteBuffer::create_zeroed(m_block_size).release_value_but_fixme_should_propagate_errors();
+    m_cached_header = ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors();
     VERIFY(partitions_count() == 0);
     if (!initialize())
         m_valid = false;
@@ -86,17 +71,11 @@ bool GUIDPartitionTable::initialize()
 {
     VERIFY(m_cached_header.data() != nullptr);
 
-    auto first_gpt_block = (m_block_size == 512) ? 1 : 0;
+    auto first_gpt_block = (block_size() == 512) ? 1 : 0;
 
-#ifdef KERNEL
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_header.data());
-    if (!m_device->read_block(first_gpt_block, buffer))
+    auto maybe_error = m_device.read_block(first_gpt_block, m_cached_header.bytes());
+    if (maybe_error.is_error())
         return false;
-#else
-    m_device_file->seek(first_gpt_block * m_block_size);
-    if (m_device_file->read(m_cached_header.data(), m_cached_header.size()) != (int)m_block_size)
-        return false;
-#endif
 
     dbgln_if(GPT_DEBUG, "GUIDPartitionTable: signature - {:#08x} {:#08x}", header().sig[1], header().sig[0]);
 
@@ -105,28 +84,19 @@ bool GUIDPartitionTable::initialize()
         return false;
     }
 
-    auto entries_buffer_result = ByteBuffer::create_zeroed(m_block_size);
+    auto entries_buffer_result = ByteBuffer::create_zeroed(block_size());
     if (entries_buffer_result.is_error()) {
         dbgln("GUIDPartitionTable: not enough memory for entries buffer");
         return false;
     }
     auto entries_buffer = entries_buffer_result.release_value();
-#ifdef KERNEL
-    auto raw_entries_buffer = UserOrKernelBuffer::for_kernel_buffer(entries_buffer.data());
-#endif
-    size_t raw_byte_index = header().partition_array_start_lba * m_block_size;
+    size_t raw_byte_index = header().partition_array_start_lba * block_size();
     for (size_t entry_index = 0; entry_index < header().entries_count; entry_index++) {
-
-#ifdef KERNEL
-        if (!m_device->read_block((raw_byte_index / m_block_size), raw_entries_buffer))
+        maybe_error = m_device.read_block(raw_byte_index / block_size(), entries_buffer.bytes());
+        if (maybe_error.is_error())
             return false;
-#else
-        m_device_file->seek(raw_byte_index);
-        if (m_device_file->read(entries_buffer.data(), entries_buffer.size()) != (int)m_block_size)
-            return false;
-#endif
         auto* entries = (GPTPartitionEntry const*)entries_buffer.data();
-        auto& entry = entries[entry_index % (m_block_size / (size_t)header().partition_entry_size)];
+        auto& entry = entries[entry_index % (block_size() / header().partition_entry_size)];
         Array<u8, 16> partition_type {};
         partition_type.span().overwrite(0, entry.partition_guid, partition_type.size());
 

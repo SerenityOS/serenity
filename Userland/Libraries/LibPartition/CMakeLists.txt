@@ -3,6 +3,7 @@ set(SOURCES
     EBRPartitionTable.cpp
     GUIDPartitionTable.cpp
     MBRPartitionTable.cpp
+    PartitionableDevice.cpp
     PartitionTable.cpp
 )
 

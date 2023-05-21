@@ -545,6 +545,7 @@ set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/EBRPartitionTable.cpp
     ../Userland/Libraries/LibPartition/GUIDPartitionTable.cpp
     ../Userland/Libraries/LibPartition/MBRPartitionTable.cpp
+    ../Userland/Libraries/LibPartition/PartitionableDevice.cpp
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
 

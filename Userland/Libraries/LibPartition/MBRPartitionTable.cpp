@@ -7,10 +7,6 @@
 #include <AK/Debug.h>
 #include <LibPartition/MBRPartitionTable.h>
 
-#ifndef KERNEL
-#    include <LibCore/DeprecatedFile.h>
-#endif
-
 namespace Partition {
 
 #define MBR_SIGNATURE 0xaa55
@@ -18,15 +14,9 @@ namespace Partition {
 #define EBR_CHS_CONTAINER 0x05
 #define EBR_LBA_CONTAINER 0x0F
 
-#ifdef KERNEL
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device)
+ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(PartitionableDevice device)
 {
-    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device)));
-#else
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file)
-{
-    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device_file))));
-#endif
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device))));
     if (table->contains_ebr())
         return Error::from_errno(ENOTSUP);
     if (table->is_protective_mbr())
@@ -36,15 +26,9 @@ ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(N
     return table;
 }
 
-#ifdef KERNEL
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(PartitionableDevice device, u32 start_lba)
 {
-    auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device, start_lba)).release_value_but_fixme_should_propagate_errors();
-#else
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file, u32 start_lba)
-{
-    auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device_file), start_lba)).release_value_but_fixme_should_propagate_errors();
-#endif
+    auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device), start_lba)).release_value_but_fixme_should_propagate_errors();
     if (!table->is_valid())
         return {};
     return table;
@@ -52,28 +36,17 @@ OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Cor
 
 bool MBRPartitionTable::read_boot_record()
 {
-#ifdef KERNEL
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_header.data());
-    if (!m_device->read_block(m_start_lba, buffer))
+    if (block_size() != 512)
         return false;
-#else
-    m_device_file->seek(m_start_lba * m_block_size);
-    if (m_device_file->read(m_cached_header.data(), m_cached_header.size()) != 512)
-        return false;
-#endif
-    m_header_valid = true;
+    auto maybe_error = m_device.read_block(m_start_lba, m_cached_header.bytes());
+    m_header_valid = !maybe_error.is_error();
     return m_header_valid;
 }
 
-#ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device, u32 start_lba)
-    : PartitionTable(device)
-#else
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file, u32 start_lba)
-    : PartitionTable(move(device_file))
-#endif
+MBRPartitionTable::MBRPartitionTable(PartitionableDevice device, u32 start_lba)
+    : PartitionTable(move(device))
     , m_start_lba(start_lba)
-    , m_cached_header(ByteBuffer::create_zeroed(m_block_size).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
+    , m_cached_header(ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
 {
     if (!read_boot_record() || !initialize())
         return;
@@ -91,15 +64,10 @@ MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_
     m_valid = true;
 }
 
-#ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device)
-    : PartitionTable(device)
-#else
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
-    : PartitionTable(move(device_file))
-#endif
+MBRPartitionTable::MBRPartitionTable(PartitionableDevice device)
+    : PartitionTable(move(device))
     , m_start_lba(0)
-    , m_cached_header(ByteBuffer::create_zeroed(m_block_size).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
+    , m_cached_header(ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
 {
     if (!read_boot_record() || contains_ebr() || is_protective_mbr() || !initialize())
         return;

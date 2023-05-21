@@ -8,12 +8,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <LibPartition/DiskPartitionMetadata.h>
-
-#ifdef KERNEL
-#    include <Kernel/Devices/Storage/StorageDevice.h>
-#else
-#    include <LibCore/Forward.h>
-#endif
+#include <LibPartition/PartitionableDevice.h>
 
 namespace Partition {
 
@@ -25,19 +20,13 @@ public:
     virtual bool is_valid() const = 0;
 
     Vector<DiskPartitionMetadata> partitions() const { return m_partitions; }
-    size_t block_size() const { return m_block_size; }
+    size_t block_size() const { return m_device.block_size(); }
 
 protected:
-#ifdef KERNEL
-    explicit PartitionTable(Kernel::StorageDevice&);
-    NonnullRefPtr<Kernel::StorageDevice> m_device;
-#else
-    explicit PartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
-    NonnullRefPtr<Core::DeprecatedFile> m_device_file;
-#endif
+    explicit PartitionTable(PartitionableDevice&&);
+    PartitionableDevice m_device;
 
     Vector<DiskPartitionMetadata> m_partitions;
-    size_t m_block_size;
 };
 
 }

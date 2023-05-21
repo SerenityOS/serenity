@@ -15,13 +15,8 @@ class GUIDPartitionTable final : public MBRPartitionTable {
 public:
     virtual ~GUIDPartitionTable() = default;
 
-#ifdef KERNEL
-    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice&);
-    explicit GUIDPartitionTable(Kernel::StorageDevice&);
-#else
-    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>);
-    explicit GUIDPartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
-#endif
+    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(PartitionableDevice);
+    explicit GUIDPartitionTable(PartitionableDevice);
 
     virtual bool is_valid() const override
     {
