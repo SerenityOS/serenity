@@ -15,6 +15,7 @@
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <QClipboard>
 #include <QCoreApplication>
+#include <QCursor>
 #include <QFont>
 #include <QFontMetrics>
 #include <QGuiApplication>
@@ -280,8 +281,8 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_page_context_menu->addAction(&m_window->view_source_action());
     m_page_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_context_menu_request = [this](auto widget_position) {
-        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+    view().on_context_menu_request = [this](Gfx::IntPoint) {
+        auto screen_position = QCursor::pos();
         m_page_context_menu->exec(screen_position);
     };
 
@@ -311,10 +312,10 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_link_context_menu->addSeparator();
     m_link_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_link_context_menu_request = [this](auto const& url, auto widget_position) {
+    view().on_link_context_menu_request = [this](auto const& url, Gfx::IntPoint) {
         m_link_context_menu_url = url;
 
-        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = QCursor::pos();
         m_link_context_menu->exec(screen_position);
     };
 
@@ -364,11 +365,11 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_image_context_menu->addSeparator();
     m_image_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_image_context_menu_request = [this](auto& image_url, auto widget_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+    view().on_image_context_menu_request = [this](auto& image_url, Gfx::IntPoint, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
 
-        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = QCursor::pos();
         m_image_context_menu->exec(screen_position);
     };
 
@@ -423,7 +424,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto const& video_url, auto widget_position, bool is_playing, bool has_user_agent_controls, bool is_looping) {
+    view().on_video_context_menu_request = [this](auto const& video_url, Gfx::IntPoint, bool is_playing, bool has_user_agent_controls, bool is_looping) {
         m_video_context_menu_url = video_url;
 
         if (is_playing) {
@@ -437,7 +438,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_video_context_menu_controls_action->setChecked(has_user_agent_controls);
         m_video_context_menu_loop_action->setChecked(is_looping);
 
-        auto screen_position = view().mapToGlobal(QPoint { widget_position.x(), widget_position.y() });
+        auto screen_position = QCursor::pos();
         m_video_context_menu->exec(screen_position);
     };
 }
