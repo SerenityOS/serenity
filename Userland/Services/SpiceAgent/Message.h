@@ -172,12 +172,18 @@ private:
 // Used to send the clipboard's contents to the client/server.
 class ClipboardMessage : public Message {
 public:
-    ClipboardMessage(ClipboardDataType data_type, ByteBuffer const& contents)
+    ClipboardMessage(ClipboardDataType data_type, ByteBuffer contents)
         : Message(Type::Clipboard)
         , m_data_type(data_type)
-        , m_contents(contents)
+        , m_contents(move(contents))
     {
     }
+
+    ClipboardMessage(ClipboardMessage const&) = delete;
+    ClipboardMessage& operator=(ClipboardMessage const&) = delete;
+
+    ClipboardMessage(ClipboardMessage&&) = default;
+    ClipboardMessage& operator=(ClipboardMessage&&) = default;
 
     static ErrorOr<ClipboardMessage> read_from_stream(AK::Stream& stream);
 
@@ -247,16 +253,22 @@ class FileTransferDataMessage : public Message {
 public:
     static ErrorOr<FileTransferDataMessage> read_from_stream(AK::Stream& stream);
 
+    FileTransferDataMessage(FileTransferDataMessage const&) = delete;
+    FileTransferDataMessage& operator=(FileTransferDataMessage const&) = delete;
+
+    FileTransferDataMessage(FileTransferDataMessage&&) = default;
+    FileTransferDataMessage& operator=(FileTransferDataMessage&&) = default;
+
     ErrorOr<String> debug_description() override;
 
     u32 id() const { return m_id; }
     ByteBuffer const& contents() { return m_contents; }
 
 private:
-    FileTransferDataMessage(u32 id, ByteBuffer const& contents)
+    FileTransferDataMessage(u32 id, ByteBuffer contents)
         : Message(Type::FileTransferData)
         , m_id(id)
-        , m_contents(contents)
+        , m_contents(move(contents))
     {
     }
 
