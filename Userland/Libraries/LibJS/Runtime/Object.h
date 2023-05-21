@@ -187,6 +187,8 @@ public:
     template<typename T>
     bool fast_is() const = delete;
 
+    void set_prototype(Object*);
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -197,8 +199,6 @@ protected:
     Object(Realm&, Object* prototype);
     Object(ConstructWithPrototypeTag, Object& prototype);
     explicit Object(Shape&);
-
-    void set_prototype(Object*);
 
     // [[Extensible]]
     bool m_is_extensible { true };

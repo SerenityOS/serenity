@@ -2504,6 +2504,8 @@ static void generate_prototype_or_global_mixin_definitions(IDL::Interface const&
     generator.set("namespaced_name", interface.namespaced_name);
     generator.set("class_name", class_name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
+    generator.set("parent_name", interface.parent_name);
+    generator.set("prototype_base_class", interface.prototype_base_class);
 
     if (interface.pair_iterator_types.has_value()) {
         generator.set("iterator_name", DeprecatedString::formatted("{}Iterator", interface.name));
@@ -2515,6 +2517,7 @@ static void generate_prototype_or_global_mixin_definitions(IDL::Interface const&
 #define define_direct_property (object.define_direct_property)
 #define define_native_accessor (object.define_native_accessor)
 #define define_native_function (object.define_native_function)
+#define set_prototype (object.set_prototype)
 
 JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm, JS::Object& object)
 {
@@ -2534,6 +2537,20 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
 
 )~~~");
+
+    if (interface.prototype_base_class == "ObjectPrototype") {
+        generator.append(R"~~~(
+
+    set_prototype(realm.intrinsics().object_prototype());
+
+)~~~");
+    } else {
+        generator.append(R"~~~(
+
+    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
+
+)~~~");
+    }
 
     if (interface.has_unscopable_member) {
         generator.append(R"~~~(
@@ -3710,7 +3727,7 @@ namespace Web::Bindings {
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
-    : Object(ConstructWithPrototypeTag::Tag, ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"))
+    : Object(realm, nullptr)
 )~~~");
     } else {
         generator.append(R"~~~(
@@ -3781,7 +3798,9 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
     SourceGenerator generator { builder };
 
     generator.set("name", DeprecatedString::formatted("{}Iterator", interface.name));
+    generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", DeprecatedString::formatted("{}IteratorPrototype", interface.name));
+    generator.set("prototype_base_class", interface.prototype_base_class);
     generator.set("fully_qualified_name", DeprecatedString::formatted("{}Iterator", interface.fully_qualified_name));
     generator.set("possible_include_path", DeprecatedString::formatted("{}Iterator", interface.name.replace("::"sv, "/"sv, ReplaceMode::All)));
 
@@ -3795,6 +3814,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 
 #if __has_include(<LibWeb/@possible_include_path@.h>)
 #    include <LibWeb/@possible_include_path@.h>
@@ -3841,6 +3861,24 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
+
+)~~~");
+
+    if (interface.prototype_base_class == "ObjectPrototype") {
+        generator.append(R"~~~(
+
+    set_prototype(realm.intrinsics().object_prototype());
+
+)~~~");
+    } else {
+        generator.append(R"~~~(
+
+    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
+
+)~~~");
+    }
+
+    generator.append(R"~~~(
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
