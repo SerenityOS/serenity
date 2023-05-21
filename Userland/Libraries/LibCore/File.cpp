@@ -182,4 +182,13 @@ ErrorOr<void> File::truncate(size_t length)
     return System::ftruncate(m_fd, length);
 }
 
+ErrorOr<void> File::set_blocking(bool enabled)
+{
+    // NOTE: This works fine on Serenity, but some systems out there don't support changing the blocking state of certain POSIX objects (message queues, pipes, etc) after their creation.
+    // Therefore, this method shouldn't be used in Lagom.
+    // https://github.com/SerenityOS/serenity/pull/18965#discussion_r1207951840
+    int value = enabled ? 0 : 1;
+    return System::ioctl(fd(), FIONBIO, &value);
+}
+
 }
