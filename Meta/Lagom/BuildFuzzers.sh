@@ -14,7 +14,7 @@ die() {
 
 pick_clang() {
     local BEST_VERSION=0
-    for CLANG_CANDIDATE in clang clang-13 clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang ; do
+    for CLANG_CANDIDATE in clang clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang ; do
         if ! command -v $CLANG_CANDIDATE >/dev/null 2>&1; then
             continue
         fi
@@ -33,8 +33,8 @@ pick_clang() {
             BEST_CLANG_CANDIDATE="$CLANG_CANDIDATE"
         fi
     done
-    if [ "$BEST_VERSION" -lt 13 ]; then
-        die "Please make sure that Clang version 13 or higher is installed."
+    if [ "$BEST_VERSION" -lt 14 ]; then
+        die "Please make sure that Clang version 14 or higher is installed."
     fi
 }
 

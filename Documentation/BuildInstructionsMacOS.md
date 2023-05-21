@@ -27,7 +27,7 @@ brew install genext2fs
 brew install x86_64-elf-gdb
 ```
 
-If you have Xcode version 13 or older, also install a newer host compiler from homebrew. Xcode 14 is known to work.
+If you have Xcode version 14.2 or older, also install a newer host compiler from homebrew. Xcode 14.3 is known to work.
 
 ```console
 brew install llvm@15
