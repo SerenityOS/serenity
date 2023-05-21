@@ -11,9 +11,9 @@ sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
-#### GCC 12 or Clang 13
+#### GCC 12 or Clang 14
 
-A host compiler that supports C++20 features is required for building host tools, the newer the better. Tested versions include gcc-12 and clang-13.
+A host compiler that supports C++20 features is required for building host tools, the newer the better. Tested versions include gcc-12 and clang-14.
 
 On Ubuntu gcc-12 is available in the repositories of 22.04 (Jammy) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source.

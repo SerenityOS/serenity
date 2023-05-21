@@ -61,7 +61,7 @@ To build with LLVM's libFuzzer, invoke the ``BuildFuzzers.sh`` script with no ar
 ./Build/lagom-fuzzers/FuzzSomething # The full list can be found in Fuzzers/CMakeLists.txt
 ```
 
-(Note that we require clang >= 13, see the pick_clang() function in the script for the paths that are searched)
+(Note that we require clang >= 14, see the pick_clang() function in the script for the paths that are searched)
 
 To build fuzzers without any kind of default instrumentation, pass the ``--standalone`` flag to ``BuildFuzzers.sh``:
 

@@ -152,10 +152,12 @@ is_supported_compiler() {
     MAJOR_VERSION="${VERSION%%.*}"
     if $COMPILER --version 2>&1 | grep "Apple clang" >/dev/null; then
         # Apple Clang version check
-        [ "$MAJOR_VERSION" -ge 14 ] && return 0
+        BUILD_VERSION=$(echo | $COMPILER -dM -E - | grep __apple_build_version__ | cut -d ' ' -f3)
+        # Xcode 14.3, based on upstream LLVM 15
+        [ "$BUILD_VERSION" -ge 14030022 ] && return 0
     elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
         # Clang version check
-        [ "$MAJOR_VERSION" -ge 13 ] && return 0
+        [ "$MAJOR_VERSION" -ge 14 ] && return 0
     else
         # GCC version check
         [ "$MAJOR_VERSION" -ge 12 ] && return 0
@@ -189,7 +191,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-13 clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang
+    find_newest_compiler clang clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/clang/clang++}"
@@ -203,7 +205,11 @@ pick_host_compiler() {
         return
     fi
 
-    die "Please make sure that GCC version 12, Clang version 13, or higher is installed."
+    if [ "$(uname -s)" = "Darwin" ]; then
+        die "Please make sure that Xcode 14.3, Homebrew Clang 14, or higher is installed."
+    else
+        die "Please make sure that GCC version 12, Clang version 14, or higher is installed."
+    fi
 }
 
 cmd_with_target() {
