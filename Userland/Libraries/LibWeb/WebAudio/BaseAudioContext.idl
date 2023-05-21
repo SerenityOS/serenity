@@ -1,0 +1,6 @@
+#import <DOM/EventTarget.idl>
+
+// https://webaudio.github.io/web-audio-api/#BaseAudioContext
+[Exposed=Window]
+interface BaseAudioContext : EventTarget {
+};

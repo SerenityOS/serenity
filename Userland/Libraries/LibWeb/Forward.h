@@ -577,6 +577,11 @@ class Module;
 class Table;
 }
 
+namespace Web::WebAudio {
+class AudioContext;
+class BaseAudioContext;
+}
+
 namespace Web::WebGL {
 class WebGLContextEvent;
 class WebGLRenderingContext;
