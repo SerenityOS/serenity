@@ -11,6 +11,7 @@
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -143,20 +144,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (list_files) {
-        outln("Name");
-        outln("----");
-
+        outln("   Date      Time     Name");
+        outln("---------- --------   ----");
         u16 members_count = 0;
         TRY(zip_file->for_each_member([&](auto zip_member) {
             members_count++;
 
-            outln("{}", zip_member.name);
+            AK::Time time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
+            auto date_str_or_error = Core::DateTime::from_timestamp(time.to_seconds()).to_string();
+            if (date_str_or_error.is_error())
+                return IterationDecision::Break;
+
+            auto date_str = date_str_or_error.release_value();
+
+            outln("{}   {}", date_str, zip_member.name);
 
             return IterationDecision::Continue;
         }));
 
-        outln("----");
-        outln("{} files", members_count);
+        outln("                      -------");
+        outln("                      {} files", members_count);
         return 0;
     }
 
