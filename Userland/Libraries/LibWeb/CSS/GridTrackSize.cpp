@@ -189,7 +189,7 @@ ErrorOr<String> GridTrackSizeList::to_string() const
     };
 
     for (size_t i = 0; i < m_track_list.size(); ++i) {
-        if (m_line_names[i].size() > 0) {
+        if (m_line_names.size() > 0 && m_line_names[i].size() > 0) {
             print_line_names(i);
             builder.append(" "sv);
         }
@@ -197,7 +197,7 @@ ErrorOr<String> GridTrackSizeList::to_string() const
         if (i < m_track_list.size() - 1)
             builder.append(" "sv);
     }
-    if (m_line_names[m_track_list.size()].size() > 0) {
+    if (m_line_names.size() > 0 && m_line_names[m_track_list.size()].size() > 0) {
         builder.append(" "sv);
         print_line_names(m_track_list.size());
     }
