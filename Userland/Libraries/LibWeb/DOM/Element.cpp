@@ -1119,16 +1119,70 @@ void Element::set_scroll_top(double y)
     box->set_scroll_offset(scroll_offset);
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollwidth
 int Element::scroll_width() const
 {
-    dbgln("FIXME: Implement Element::scroll_width() (called on element: {})", debug_description());
-    return 0;
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
+    //    or zero if there is no viewport.
+    auto viewport_width = document.browsing_context()->viewport_rect().width().value();
+    auto viewport_scroll_width = document.browsing_context()->size().width().value();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area width, viewport width).
+    if (document.document_element() == this && !document.in_quirks_mode())
+        return max(viewport_scroll_width, viewport_width);
+
+    // 5. If the element is the body element, document is in quirks mode and the element is not potentially scrollable,
+    //    return max(viewport scrolling area width, viewport width).
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return max(viewport_scroll_width, viewport_width);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!paintable_box())
+        return 0;
+
+    // 7. Return the width of the element’s scrolling area.
+    return paintable_box()->border_box_width().value();
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollheight
 int Element::scroll_height() const
 {
-    dbgln("FIXME: Implement Element::scroll_height() (called on element: {})", debug_description());
-    return 0;
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
+    //    or zero if there is no viewport.
+    auto viewport_height = document.browsing_context()->viewport_rect().height().value();
+    auto viewport_scroll_height = document.browsing_context()->size().height().value();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area height, viewport height).
+    if (document.document_element() == this && !document.in_quirks_mode())
+        return max(viewport_scroll_height, viewport_height);
+
+    // 5. If the element is the body element, document is in quirks mode and the element is not potentially scrollable,
+    //    return max(viewport scrolling area height, viewport height).
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return max(viewport_scroll_height, viewport_height);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!paintable_box())
+        return 0;
+
+    // 7. Return the height of the element’s scrolling area.
+    return paintable_box()->border_box_height().value();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
