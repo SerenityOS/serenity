@@ -358,7 +358,7 @@ CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_ro
         // NOTE: Floating box coordinates are relative to their own containing block,
         //       which may or may not be the BFC root.
         auto margin_box = margin_box_rect_in_ancestor_coordinate_space(*floating_box, root, m_state);
-        CSSPixels floating_box_bottom_margin_edge = margin_box.bottom() + 1;
+        CSSPixels floating_box_bottom_margin_edge = margin_box.bottom();
         if (!bottom.has_value() || floating_box_bottom_margin_edge > bottom.value())
             bottom = floating_box_bottom_margin_edge;
     }

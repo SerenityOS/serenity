@@ -75,7 +75,7 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
             if (score_index != (int)player.scores.size() - 1) {
                 painter.draw_line(
                     { text_rect.left() + text_rect.width() / 2 - score_text_width / 2 - 3, text_rect.top() + font.pixel_size_rounded_up() / 2 },
-                    { text_rect.right() - text_rect.width() / 2 + score_text_width / 2 + 3, text_rect.top() + font.pixel_size_rounded_up() / 2 },
+                    { text_rect.right() - text_rect.width() / 2 + score_text_width / 2 + 2, text_rect.top() + font.pixel_size_rounded_up() / 2 },
                     text_color);
             }
             painter.draw_text(text_rect,

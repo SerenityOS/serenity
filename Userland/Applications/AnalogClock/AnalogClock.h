@@ -43,7 +43,7 @@ protected:
     void paint_event(GUI::PaintEvent&) override;
     void draw_face(GUI::Painter&);
     void draw_mirrored_graduations(GUI::Painter&, Gfx::IntRect&, int x, int y, int rect_center_offset);
-    void draw_graduations(GUI::Painter&, Gfx::IntRect&, int x, int y);
+    void draw_graduations(GUI::Painter&, Gfx::IntRect, int x, int y);
     void draw_hand(GUI::Painter&, double angle, double length, Gfx::Color hand_color);
     void draw_seconds_hand(GUI::Painter&, double angle);
     void update_title_date();

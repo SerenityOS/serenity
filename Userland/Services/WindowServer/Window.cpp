@@ -512,7 +512,7 @@ void Window::event(Core::Event& event)
 void Window::handle_keydown_event(KeyEvent const& event)
 {
     if (event.modifiers() == Mod_Alt && event.key() == Key_Space && type() == WindowType::Normal && !is_frameless()) {
-        auto position = frame().titlebar_rect().bottom_left().translated(frame().rect().location());
+        auto position = frame().titlebar_rect().bottom_left().moved_up(1).translated(frame().rect().location());
         popup_window_menu(position, WindowMenuDefaultAction::Close);
         return;
     }

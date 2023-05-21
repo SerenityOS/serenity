@@ -133,9 +133,8 @@ Gfx::Bitmap& Layer::get_scratch_edited_bitmap()
 
 RefPtr<Gfx::Bitmap> Layer::copy_bitmap(Selection const& selection) const
 {
-    if (selection.is_empty()) {
+    if (selection.is_empty())
         return {};
-    }
     auto selection_rect = selection.bounding_rect();
 
     auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
@@ -144,9 +143,8 @@ RefPtr<Gfx::Bitmap> Layer::copy_bitmap(Selection const& selection) const
     auto result = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     VERIFY(result->has_alpha_channel());
 
-    for (int y = selection_rect.top(); y <= selection_rect.bottom(); y++) {
-        for (int x = selection_rect.left(); x <= selection_rect.right(); x++) {
-
+    for (int y = selection_rect.top(); y < selection_rect.bottom(); y++) {
+        for (int x = selection_rect.left(); x < selection_rect.right(); x++) {
             Gfx::IntPoint image_point { x, y };
             auto layer_point = image_point - m_location;
             auto result_point = image_point - selection_rect.top_left();
@@ -180,9 +178,8 @@ void Layer::erase_selection(Selection const& selection)
         for (int x = translated_to_layer_space.left(); x < translated_to_layer_space.left() + translated_to_layer_space.width(); ++x) {
 
             // Selection is still in pre-translated coordinates, account for this by adding the layer's relative location
-            if (content_bitmap().rect().contains(x, y) && selection.is_selected(x + location().x(), y + location().y())) {
+            if (content_bitmap().rect().contains(x, y) && selection.is_selected(x + location().x(), y + location().y()))
                 content_bitmap().set_pixel(x, y, Color::Transparent);
-            }
         }
     }
 

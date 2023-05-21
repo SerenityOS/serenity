@@ -222,7 +222,7 @@ void Button::set_menu(RefPtr<GUI::Menu> menu)
 void Button::mousedown_event(MouseEvent& event)
 {
     if (m_menu) {
-        m_menu->popup(screen_relative_rect().bottom_left(), {}, rect());
+        m_menu->popup(screen_relative_rect().bottom_left().moved_up(1), {}, rect());
         update();
         return;
     }

@@ -47,16 +47,15 @@ void OpacitySlider::paint_event(PaintEvent& event)
     constexpr int notch_size = 3;
     if (orientation() == Gfx::Orientation::Horizontal) {
         int notch_y_top = inner_rect.top() + notch_size;
-        int notch_y_bottom = inner_rect.bottom() - notch_size;
+        int notch_y_bottom = inner_rect.bottom() - 1 - notch_size;
         int notch_x = inner_rect.left() + ((float)value() / (float)max() * (float)inner_rect.width());
 
         // Top notch
         painter.set_pixel(notch_x, notch_y_top, palette().threed_shadow2());
         for (int i = notch_size; i >= 0; --i) {
             painter.set_pixel(notch_x - (i + 1), notch_y_top - i - 1, palette().threed_highlight());
-            for (int j = 0; j < i * 2; ++j) {
+            for (int j = 0; j < i * 2; ++j)
                 painter.set_pixel(notch_x - (i + 1) + j + 1, notch_y_top - i - 1, palette().button());
-            }
             painter.set_pixel(notch_x + (i + 0), notch_y_top - i - 1, palette().threed_shadow1());
             painter.set_pixel(notch_x + (i + 1), notch_y_top - i - 1, palette().threed_shadow2());
         }
@@ -65,9 +64,8 @@ void OpacitySlider::paint_event(PaintEvent& event)
         painter.set_pixel(notch_x, notch_y_bottom, palette().threed_shadow2());
         for (int i = 0; i < notch_size; ++i) {
             painter.set_pixel(notch_x - (i + 1), notch_y_bottom + i + 1, palette().threed_highlight());
-            for (int j = 0; j < i * 2; ++j) {
+            for (int j = 0; j < i * 2; ++j)
                 painter.set_pixel(notch_x - (i + 1) + j + 1, notch_y_bottom + i + 1, palette().button());
-            }
             painter.set_pixel(notch_x + (i + 0), notch_y_bottom + i + 1, palette().threed_shadow1());
             painter.set_pixel(notch_x + (i + 1), notch_y_bottom + i + 1, palette().threed_shadow2());
         }
@@ -83,16 +81,15 @@ void OpacitySlider::paint_event(PaintEvent& event)
             painter.draw_line({ notch_x - 1, notch_y_top }, { notch_x - 1, notch_y_bottom }, Color(h, h, h, 255));
     } else {
         int notch_x_left = inner_rect.left() + notch_size;
-        int notch_x_right = inner_rect.right() - notch_size;
+        int notch_x_right = inner_rect.right() - 1 - notch_size;
         int notch_y = inner_rect.top() + ((float)value() / (float)max() * (float)inner_rect.height());
 
         // Left notch
         painter.set_pixel(notch_x_left, notch_y, palette().threed_shadow2());
         for (int i = notch_size; i >= 0; --i) {
             painter.set_pixel(notch_x_left - i - 1, notch_y - (i + 1), palette().threed_highlight());
-            for (int j = 0; j < i * 2; ++j) {
+            for (int j = 0; j < i * 2; ++j)
                 painter.set_pixel(notch_x_left - i - 1, notch_y - (i + 1) + j + 1, palette().button());
-            }
             painter.set_pixel(notch_x_left - i - 1, notch_y + (i + 0), palette().threed_shadow1());
             painter.set_pixel(notch_x_left - i - 1, notch_y + (i + 1), palette().threed_shadow2());
         }
@@ -101,9 +98,8 @@ void OpacitySlider::paint_event(PaintEvent& event)
         painter.set_pixel(notch_x_right, notch_y, palette().threed_shadow2());
         for (int i = 0; i < notch_size; ++i) {
             painter.set_pixel(notch_x_right + i + 1, notch_y - (i + 1), palette().threed_highlight());
-            for (int j = 0; j < i * 2; ++j) {
+            for (int j = 0; j < i * 2; ++j)
                 painter.set_pixel(notch_x_right + i + 1, notch_y - (i + 1) + j + 1, palette().button());
-            }
             painter.set_pixel(notch_x_right + i + 1, notch_y + (i + 0), palette().threed_shadow1());
             painter.set_pixel(notch_x_right + i + 1, notch_y + (i + 1), palette().threed_shadow2());
         }

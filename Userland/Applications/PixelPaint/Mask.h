@@ -61,10 +61,9 @@ public:
     template<typename Func>
     void for_each_pixel(Func func) const
     {
-        for (int x = m_bounding_rect.left(); x <= m_bounding_rect.right(); x++) {
-            for (int y = m_bounding_rect.top(); y <= m_bounding_rect.bottom(); y++) {
+        for (int x = m_bounding_rect.left(); x < m_bounding_rect.right(); x++) {
+            for (int y = m_bounding_rect.top(); y < m_bounding_rect.bottom(); y++)
                 func(x, y);
-            }
         }
     }
 

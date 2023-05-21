@@ -657,11 +657,10 @@ void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContent
     if (m_viewport_rect.contains(rect))
         return;
 
-    if (rect.top() < m_viewport_rect.top()) {
+    if (rect.top() < m_viewport_rect.top())
         verticalScrollBar()->setValue(rect.top());
-    } else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom()) {
-        verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height() + 1);
-    }
+    else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom())
+        verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height());
 }
 
 void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint content_position, DeprecatedString const& tooltip)

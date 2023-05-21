@@ -167,7 +167,7 @@ private:
         auto rect_for_square = [&](Chess::Square const& square) {
             return Gfx::IntRect {
                 frame_inner_rect().left() + square.file * square_size,
-                frame_inner_rect().bottom() + 1 - (square.rank + 1) * square_size,
+                frame_inner_rect().bottom() - (square.rank + 1) * square_size,
                 square_size,
                 square_size
             };

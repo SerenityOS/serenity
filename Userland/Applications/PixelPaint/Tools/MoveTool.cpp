@@ -78,19 +78,19 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
         switch (m_resize_anchor_location.value()) {
         case ResizeAnchorLocation::TopLeft:
             scaling_origin = rect_being_moved.top_left();
-            opposite_corner = rect_being_moved.bottom_right().translated(1, 1);
+            opposite_corner = rect_being_moved.bottom_right();
             break;
         case ResizeAnchorLocation::BottomRight:
-            scaling_origin = rect_being_moved.bottom_right().translated(1, 1);
+            scaling_origin = rect_being_moved.bottom_right();
             opposite_corner = rect_being_moved.top_left();
             break;
         case ResizeAnchorLocation::BottomLeft:
-            scaling_origin = rect_being_moved.bottom_left().translated(0, 1);
-            opposite_corner = rect_being_moved.top_right().translated(1, 0);
+            scaling_origin = rect_being_moved.bottom_left();
+            opposite_corner = rect_being_moved.top_right();
             break;
         case ResizeAnchorLocation::TopRight:
-            scaling_origin = rect_being_moved.top_right().translated(1, 0);
-            opposite_corner = rect_being_moved.bottom_left().translated(0, 1);
+            scaling_origin = rect_being_moved.top_right();
+            opposite_corner = rect_being_moved.bottom_left();
             break;
         }
         scaling_origin.translate_by(delta);
@@ -233,9 +233,9 @@ Array<Gfx::IntRect, 4> MoveTool::resize_anchor_rects(Gfx::IntRect layer_rect_in_
 {
     return Array {
         resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_left(), resize_anchor_size),
-        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_right().translated(1, 0), resize_anchor_size),
-        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_left().translated(0, 1), resize_anchor_size),
-        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_right().translated(1), resize_anchor_size)
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_right(), resize_anchor_size),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_left(), resize_anchor_size),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_right(), resize_anchor_size)
     };
 }
 
@@ -265,11 +265,11 @@ Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_curso
 
     if (cursor_within_resize_anchor_rect(layer_rect.top_left()))
         return ResizeAnchorLocation::TopLeft;
-    if (cursor_within_resize_anchor_rect(layer_rect.top_right().translated(1, 0)))
+    if (cursor_within_resize_anchor_rect(layer_rect.top_right()))
         return ResizeAnchorLocation::TopRight;
-    if (cursor_within_resize_anchor_rect(layer_rect.bottom_left().translated(0, 1)))
+    if (cursor_within_resize_anchor_rect(layer_rect.bottom_left()))
         return ResizeAnchorLocation::BottomLeft;
-    if (cursor_within_resize_anchor_rect(layer_rect.bottom_right().translated(1)))
+    if (cursor_within_resize_anchor_rect(layer_rect.bottom_right()))
         return ResizeAnchorLocation::BottomRight;
     return {};
 }

@@ -329,7 +329,6 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-
     auto top_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
     auto bottom_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y + containing_block().line_height() - 1);
 

@@ -683,11 +683,11 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
     if (top_left)
         fill_corner(top_left_corner, bounding_rect.top_left(), top_left);
     if (top_right)
-        fill_corner(top_right_corner, bounding_rect.top_right(), top_right);
+        fill_corner(top_right_corner, bounding_rect.top_right().moved_left(1), top_right);
     if (bottom_left)
-        fill_corner(bottom_left_corner, bounding_rect.bottom_left(), bottom_left);
+        fill_corner(bottom_left_corner, bounding_rect.bottom_left().moved_up(1), bottom_left);
     if (bottom_right)
-        fill_corner(bottom_right_corner, bounding_rect.bottom_right(), bottom_right);
+        fill_corner(bottom_right_corner, bounding_rect.bottom_right().translated(-1), bottom_right);
 }
 
 void AntiAliasingPainter::stroke_segment_intersection(FloatPoint current_line_a, FloatPoint current_line_b, FloatLine const& previous_line, Color color, float thickness)

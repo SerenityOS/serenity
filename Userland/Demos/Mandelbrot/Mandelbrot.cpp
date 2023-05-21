@@ -48,9 +48,9 @@ public:
     {
         set_view(
             rect.left() * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
-            rect.right() * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
+            (rect.right() - 1) * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
             rect.top() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start,
-            rect.bottom() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
+            (rect.bottom() - 1) * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
         correct_aspect();
         calculate();
     }
@@ -146,8 +146,8 @@ public:
         if (rect.is_empty())
             return;
 
-        for (int py = rect.top(); py <= rect.bottom(); py++)
-            for (int px = rect.left(); px <= rect.right(); px++)
+        for (int py = rect.top(); py < rect.bottom(); py++)
+            for (int px = rect.left(); px < rect.right(); px++)
                 calculate_pixel(px, py, max_iterations);
     }
 

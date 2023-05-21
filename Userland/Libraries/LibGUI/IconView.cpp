@@ -431,7 +431,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font con
     int unwrapped_text_width = font.width_rounded_up(item_data.text);
     int available_width = item_rect.width() - 6;
 
-    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.pixel_size_rounded_up() };
+    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6, 0, font.pixel_size_rounded_up() };
     item_data.wrapped_text_lines.clear();
 
     if ((unwrapped_text_width > available_width) && (item_data.selected || m_hovered_index == item_data.index || cursor_index() == item_data.index || m_always_wrap_item_labels)) {
@@ -789,7 +789,7 @@ inline IterationDecision IconView::for_each_item_intersecting_rect(Gfx::IntRect 
     int begin_row, begin_column;
     column_row_from_content_position(rect.top_left(), begin_row, begin_column);
     int end_row, end_column;
-    column_row_from_content_position(rect.bottom_right(), end_row, end_column);
+    column_row_from_content_position(rect.bottom_right().translated(-1), end_row, end_column);
 
     int items_per_flow_axis_step;
     int item_index;

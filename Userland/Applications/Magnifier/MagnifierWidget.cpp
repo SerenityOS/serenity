@@ -117,11 +117,11 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
         int end_y = bitmap_rect.bottom();
         int end_x = bitmap_rect.right();
 
-        for (int current_y = start_y; current_y <= end_y; current_y += m_scale_factor)
-            painter.draw_line({ start_x, current_y }, { end_x, current_y }, m_grid_color);
+        for (int current_y = start_y; current_y < end_y; current_y += m_scale_factor)
+            painter.draw_line({ start_x, current_y }, { end_x - 1, current_y }, m_grid_color);
 
-        for (int current_x = start_y; current_x <= end_x; current_x += m_scale_factor)
-            painter.draw_line({ current_x, start_y }, { current_x, end_y }, m_grid_color);
+        for (int current_x = start_y; current_x < end_x; current_x += m_scale_factor)
+            painter.draw_line({ current_x, start_y }, { current_x, end_y - 1 }, m_grid_color);
     }
 }
 

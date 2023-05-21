@@ -33,7 +33,7 @@ TEST_CASE(test_painter_scaling_uses_premultiplied_alpha)
         EXPECT(center_pixel.alpha() < 255);
         EXPECT_EQ(center_pixel.with_alpha(0), Color(Color::White).with_alpha(0));
 
-        auto bottom_right_pixel = scaled_bitmap->get_pixel(scaled_bitmap->rect().bottom_right());
+        auto bottom_right_pixel = scaled_bitmap->get_pixel(scaled_bitmap->rect().bottom_right().translated(-1));
         EXPECT_EQ(bottom_right_pixel, Color::Transparent);
     };
 
@@ -61,6 +61,6 @@ TEST_CASE(test_bitmap_scaling_uses_premultiplied_alpha)
     EXPECT(center_pixel.alpha() < 255);
     EXPECT_EQ(center_pixel.with_alpha(0), Color(Color::White).with_alpha(0));
 
-    auto bottom_right_pixel = scaled_bitmap->get_pixel(scaled_bitmap->rect().bottom_right());
+    auto bottom_right_pixel = scaled_bitmap->get_pixel(scaled_bitmap->rect().bottom_right().translated(-1));
     EXPECT_EQ(bottom_right_pixel, Color::Transparent);
 }

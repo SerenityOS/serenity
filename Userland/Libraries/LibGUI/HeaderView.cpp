@@ -81,8 +81,8 @@ HeaderView::VisibleSectionRange HeaderView::visible_section_range() const
     auto section_count = this->section_count();
     auto is_horizontal = m_orientation == Orientation::Horizontal;
     auto rect = m_table_view.visible_content_rect();
-    auto start = is_horizontal ? rect.top_left().x() : rect.top_left().y();
-    auto end = is_horizontal ? (rect.top_left().x() + m_table_view.content_width()) : rect.bottom_left().y();
+    auto start = is_horizontal ? rect.left() : rect.top();
+    auto end = is_horizontal ? (rect.left() + m_table_view.content_width()) : rect.bottom() - 1;
     auto offset = 0;
     VisibleSectionRange range;
     for (; range.end < section_count; ++range.end) {
@@ -113,7 +113,7 @@ Gfx::IntRect HeaderView::section_resize_grabbable_rect(int section) const
     if (m_orientation == Gfx::Orientation::Vertical)
         return {};
     auto rect = section_rect(section);
-    return { rect.right() - 1, rect.top(), 4, rect.height() };
+    return { rect.right() - 2, rect.top(), 4, rect.height() };
 }
 
 int HeaderView::section_count() const
@@ -250,8 +250,8 @@ void HeaderView::mouseup_event(MouseEvent& event)
 
 void HeaderView::paint_horizontal(Painter& painter)
 {
-    painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_highlight());
-    painter.draw_line({ 0, rect().bottom() }, { rect().right(), rect().bottom() }, palette().threed_shadow1());
+    painter.draw_line({ 0, 0 }, { rect().right() - 1, 0 }, palette().threed_highlight());
+    painter.draw_line({ 0, rect().bottom() - 1 }, { rect().right() - 1, rect().bottom() - 1 }, palette().threed_shadow1());
     auto range = visible_section_range();
     int x_offset = range.start_offset;
     for (int section = range.start; section < range.end; ++section) {
@@ -283,7 +283,7 @@ void HeaderView::paint_horizontal(Painter& painter)
         x_offset += section_width + m_table_view.horizontal_padding() * 2;
     }
 
-    if (x_offset < rect().right()) {
+    if (x_offset < rect().right() - 1) {
         Gfx::IntRect cell_rect(x_offset, 0, width() - x_offset, height());
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, false, false);
     }
@@ -291,8 +291,8 @@ void HeaderView::paint_horizontal(Painter& painter)
 
 void HeaderView::paint_vertical(Painter& painter)
 {
-    painter.draw_line(rect().top_left(), rect().bottom_left(), palette().threed_highlight());
-    painter.draw_line(rect().top_right(), rect().bottom_right(), palette().threed_shadow1());
+    painter.draw_line(rect().top_left(), rect().bottom_left().moved_up(1), palette().threed_highlight());
+    painter.draw_line(rect().top_right().moved_left(1), rect().bottom_right().translated(-1), palette().threed_shadow1());
     auto range = visible_section_range();
     int y_offset = range.start_offset;
     for (int section = range.start; section < range.end; ++section) {
@@ -312,7 +312,7 @@ void HeaderView::paint_vertical(Painter& painter)
         y_offset += section_size;
     }
 
-    if (y_offset < rect().bottom()) {
+    if (y_offset < rect().bottom() - 1) {
         Gfx::IntRect cell_rect(0, y_offset, width(), height() - y_offset);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, false, false);
     }

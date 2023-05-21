@@ -172,15 +172,15 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         auto event_image_rect = enclosing_int_rect(frame_to_content_rect(event.rect())).inflated(1, 1);
         auto image_rect = m_image->rect().inflated(1, 1).intersected(event_image_rect);
 
-        for (auto i = image_rect.left(); i < image_rect.right(); i++) {
+        for (auto i = image_rect.left(); i < image_rect.right() - 1; i++) {
             auto start_point = content_to_frame_position({ i, image_rect.top() }).to_type<int>();
-            auto end_point = content_to_frame_position({ i, image_rect.bottom() }).to_type<int>();
+            auto end_point = content_to_frame_position({ i, image_rect.bottom() - 1 }).to_type<int>();
             painter.draw_line(start_point, end_point, Color::LightGray);
         }
 
-        for (auto i = image_rect.top(); i < image_rect.bottom(); i++) {
+        for (auto i = image_rect.top(); i < image_rect.bottom() - 1; i++) {
             auto start_point = content_to_frame_position({ image_rect.left(), i }).to_type<int>();
-            auto end_point = content_to_frame_position({ image_rect.right(), i }).to_type<int>();
+            auto end_point = content_to_frame_position({ image_rect.right() - 1, i }).to_type<int>();
             painter.draw_line(start_point, end_point, Color::LightGray);
         }
     }
@@ -822,19 +822,19 @@ void ImageEditor::paint_selection(Gfx::Painter& painter)
 void ImageEditor::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& rect) const
 {
     // Top line
-    for (int x = rect.left(); x <= rect.right(); ++x)
+    for (int x = rect.left(); x < rect.right(); ++x)
         draw_marching_ants_pixel(painter, x, rect.top());
 
     // Right line
-    for (int y = rect.top() + 1; y <= rect.bottom(); ++y)
-        draw_marching_ants_pixel(painter, rect.right(), y);
+    for (int y = rect.top() + 1; y < rect.bottom(); ++y)
+        draw_marching_ants_pixel(painter, rect.right() - 1, y);
 
     // Bottom line
-    for (int x = rect.right() - 1; x >= rect.left(); --x)
-        draw_marching_ants_pixel(painter, x, rect.bottom());
+    for (int x = rect.right() - 2; x >= rect.left(); --x)
+        draw_marching_ants_pixel(painter, x, rect.bottom() - 1);
 
     // Left line
-    for (int y = rect.bottom() - 1; y > rect.top(); --y)
+    for (int y = rect.bottom() - 2; y > rect.top(); --y)
         draw_marching_ants_pixel(painter, rect.left(), y);
 }
 
@@ -849,18 +849,17 @@ void ImageEditor::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) co
     rect.inflate(step * 2, step * 2); // prevent borders from having visible ants if the selection extends beyond it
 
     // Scan the image horizontally to find vertical borders
-    for (int y = rect.top(); y <= rect.bottom(); y += step) {
-
+    for (int y = rect.top(); y < rect.bottom(); y += step) {
         bool previous_selected = false;
-        for (int x = rect.left(); x <= rect.right(); x += step) {
+        for (int x = rect.left(); x < rect.right(); x += step) {
             bool this_selected = mask.get(x, y) > 0;
 
             if (this_selected != previous_selected) {
                 Gfx::IntRect image_pixel { x, y, 1, 1 };
                 auto pixel = content_to_frame_rect(image_pixel).to_type<int>();
-                auto end = max(pixel.top(), pixel.bottom()); // for when the zoom is < 100%
+                auto end = max(pixel.top() + 1, pixel.bottom()); // for when the zoom is < 100%
 
-                for (int pixel_y = pixel.top(); pixel_y <= end; pixel_y++) {
+                for (int pixel_y = pixel.top(); pixel_y < end; pixel_y++) {
                     draw_marching_ants_pixel(painter, pixel.left(), pixel_y);
                 }
             }
@@ -870,20 +869,19 @@ void ImageEditor::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) co
     }
 
     // Scan the image vertically to find horizontal borders
-    for (int x = rect.left(); x <= rect.right(); x += step) {
+    for (int x = rect.left(); x < rect.right(); x += step) {
 
         bool previous_selected = false;
-        for (int y = rect.top(); y <= rect.bottom(); y += step) {
+        for (int y = rect.top(); y < rect.bottom(); y += step) {
             bool this_selected = mask.get(x, y) > 0;
 
             if (this_selected != previous_selected) {
                 Gfx::IntRect image_pixel { x, y, 1, 1 };
                 auto pixel = content_to_frame_rect(image_pixel).to_type<int>();
-                auto end = max(pixel.left(), pixel.right()); // for when the zoom is < 100%
+                auto end = max(pixel.left() + 1, pixel.right()); // for when the zoom is < 100%
 
-                for (int pixel_x = pixel.left(); pixel_x <= end; pixel_x++) {
+                for (int pixel_x = pixel.left(); pixel_x < end; pixel_x++)
                     draw_marching_ants_pixel(painter, pixel_x, pixel.top());
-                }
             }
 
             previous_selected = this_selected;

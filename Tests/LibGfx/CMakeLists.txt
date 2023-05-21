@@ -5,6 +5,7 @@ set(TEST_SOURCES
     TestFontHandling.cpp
     TestICCProfile.cpp
     TestImageDecoder.cpp
+    TestRect.cpp
     TestScalingFunctions.cpp
 )
 

@@ -64,7 +64,7 @@ void CheckBox::paint_event(PaintEvent& event)
     auto box_rect = this->box_rect();
     auto text_rect = rect();
     if (m_checkbox_position == CheckBoxPosition::Left)
-        text_rect.set_left(box_rect.right() + 1 + gap_between_box_and_rect());
+        text_rect.set_left(box_rect.right() + gap_between_box_and_rect());
     text_rect.set_width(font().width_rounded_up(text()));
     text_rect.set_top(height() / 2 - font().pixel_size_rounded_up() / 2);
     text_rect.set_height(font().pixel_size_rounded_up());
