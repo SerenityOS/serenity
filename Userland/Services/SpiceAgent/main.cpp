@@ -35,7 +35,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto agent = TRY(SpiceAgent::SpiceAgent::create(SPICE_DEVICE));
-    TRY(agent->start());
 
+    agent->on_disconnected_from_spice_server = [&]() {
+        app->quit();
+    };
+
+    TRY(agent->start());
     return app->exec();
 }

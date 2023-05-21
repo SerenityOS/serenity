@@ -217,6 +217,12 @@ ErrorOr<void> SpiceAgent::on_message_received()
         dbgln_if(SPICE_AGENT_DEBUG, "Ignored message: {}", header);
         break;
 
+    case Message::Type::Disconnected:
+        dbgln_if(SPICE_AGENT_DEBUG, "Spice server disconnected");
+        if (on_disconnected_from_spice_server)
+            on_disconnected_from_spice_server();
+        break;
+
     default:
         dbgln("Unknown message received: {}", header);
         break;
