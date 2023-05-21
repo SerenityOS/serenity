@@ -88,8 +88,8 @@ class UnavailableProcessWidget final : public GUI::Frame {
 public:
     virtual ~UnavailableProcessWidget() override = default;
 
-    DeprecatedString const& text() const { return m_text; }
-    void set_text(DeprecatedString text)
+    String const& text() const { return m_text; }
+    void set_text(String text)
     {
         m_text = move(text);
         update();
@@ -98,7 +98,7 @@ public:
 private:
     UnavailableProcessWidget()
     {
-        REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
+        REGISTER_STRING_PROPERTY("text", text, set_text);
     }
 
     virtual void paint_event(GUI::PaintEvent& event) override
@@ -111,7 +111,7 @@ private:
         painter.draw_text(frame_inner_rect(), text(), Gfx::TextAlignment::Center, palette().window_text(), Gfx::TextElision::Right);
     }
 
-    DeprecatedString m_text;
+    String m_text;
 };
 
 class StorageTabWidget final : public GUI::LazyWidget {
@@ -555,7 +555,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 
     auto& widget_stack = *main_widget->find_descendant_of_type_named<GUI::StackWidget>("widget_stack");
     auto& unavailable_process_widget = *widget_stack.find_descendant_of_type_named<SystemMonitor::UnavailableProcessWidget>("unavailable_process");
-    unavailable_process_widget.set_text(DeprecatedString::formatted("Unable to access PID {}", pid));
+    unavailable_process_widget.set_text(TRY(String::formatted("Unable to access PID {}", pid)));
 
     if (can_access_pid(pid))
         widget_stack.set_active_widget(widget_stack.find_descendant_of_type_named<GUI::TabWidget>("available_process"));
