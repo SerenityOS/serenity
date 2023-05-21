@@ -3114,6 +3114,7 @@ using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
+using namespace Web::WebAudio;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3330,6 +3331,7 @@ using namespace Web::UserTiming;
 using namespace Web::URL;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
+using namespace Web::WebAudio;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3713,6 +3715,7 @@ using namespace Web::UserTiming;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
+using namespace Web::WebAudio;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3843,6 +3846,7 @@ using namespace Web::XHR;
 using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::UserTiming;
+using namespace Web::WebAudio;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3994,6 +3998,7 @@ using namespace Web::SVG;
 using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::UserTiming;
+using namespace Web::WebAudio;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
 using namespace Web::WebGL;

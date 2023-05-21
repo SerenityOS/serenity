@@ -540,6 +540,8 @@ set(SOURCES
     WebAssembly/Module.cpp
     WebAssembly/Table.cpp
     WebAssembly/WebAssembly.cpp
+    WebAudio/AudioContext.cpp
+    WebAudio/BaseAudioContext.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
     WebDriver/Contexts.cpp
