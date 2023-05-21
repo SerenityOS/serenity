@@ -758,6 +758,18 @@ Optional<CSS::FontVariant> StyleProperties::font_variant() const
     return value_id_to_font_variant(value->to_identifier());
 }
 
+CSS::GridTrackSizeList StyleProperties::grid_auto_columns() const
+{
+    auto value = property(CSS::PropertyID::GridAutoColumns);
+    return value->as_grid_track_size_list().grid_track_size_list();
+}
+
+CSS::GridTrackSizeList StyleProperties::grid_auto_rows() const
+{
+    auto value = property(CSS::PropertyID::GridAutoRows);
+    return value->as_grid_track_size_list().grid_track_size_list();
+}
+
 CSS::GridTrackSizeList StyleProperties::grid_template_columns() const
 {
     auto value = property(CSS::PropertyID::GridTemplateColumns);

@@ -6486,6 +6486,24 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list(Vector<ComponentV
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> const& component_values)
+{
+    // https://www.w3.org/TR/css-grid-2/#auto-tracks
+    // <track-size>+
+    Vector<CSS::ExplicitGridTrack> track_list;
+    TokenStream tokens { component_values };
+    while (tokens.has_next_token()) {
+        auto token = tokens.next_token();
+        auto track_sizing_function = parse_track_sizing_function(token);
+        if (!track_sizing_function.has_value())
+            return GridTrackSizeListStyleValue::make_auto();
+        // FIXME: Handle multiple repeat values (should combine them here, or remove
+        // any other ones if the first one is auto-fill, etc.)
+        track_list.append(track_sizing_function.value());
+    }
+    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, {}));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
 {
     // https://www.w3.org/TR/css-grid-2/#line-placement
@@ -6960,6 +6978,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateRows:
         if (auto parsed_value = FIXME_TRY(parse_grid_track_size_list(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridAutoColumns:
+        if (auto parsed_value = FIXME_TRY(parse_grid_auto_track_sizes(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridAutoRows:
+        if (auto parsed_value = FIXME_TRY(parse_grid_auto_track_sizes(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
