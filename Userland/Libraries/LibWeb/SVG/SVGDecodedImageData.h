@@ -27,6 +27,8 @@ public:
     virtual size_t loop_count() const override { return 0; }
     virtual bool is_animated() const override { return false; }
 
+    DOM::Document const& svg_document() const { return *m_document; }
+
 private:
     class SVGPageClient;
     SVGDecodedImageData(NonnullOwnPtr<Page>, NonnullOwnPtr<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
