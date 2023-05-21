@@ -104,10 +104,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView zip_file_path;
     bool quiet { false };
+    bool list_files { false };
     StringView output_directory_path;
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(list_files, "Only list files in the archive", "list", 'l');
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
     args_parser.add_positional_argument(zip_file_path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
@@ -138,6 +140,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!output_directory_path.is_null()) {
         TRY(Core::Directory::create(output_directory_path, Core::Directory::CreateDirectories::Yes));
         TRY(Core::System::chdir(output_directory_path));
+    }
+
+    if (list_files) {
+        outln("Name");
+        outln("----");
+
+        u16 members_count = 0;
+        TRY(zip_file->for_each_member([&](auto zip_member) {
+            members_count++;
+
+            outln("{}", zip_member.name);
+
+            return IterationDecision::Continue;
+        }));
+
+        outln("----");
+        outln("{} files", members_count);
+        return 0;
     }
 
     Vector<Archive::ZipMember> zip_directories;
