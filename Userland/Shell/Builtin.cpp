@@ -1253,7 +1253,7 @@ ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
     auto kill_path_or_error = FileSystem::resolve_executable_from_environment("kill"sv);
-    if (!kill_path_or_error.is_error()) {
+    if (kill_path_or_error.is_error()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
