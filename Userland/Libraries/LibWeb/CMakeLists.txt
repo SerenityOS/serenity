@@ -5,6 +5,7 @@ set(SOURCES
     ARIA/ARIAMixin.cpp
     ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
+    ARIA/RoleType.cpp
     ARIA/StateAndProperties.cpp
     Bindings/AudioConstructor.cpp
     Bindings/HostDefined.cpp
@@ -593,9 +594,19 @@ set(SOURCES
     XML/XMLDocumentBuilder.cpp
 )
 
+invoke_generator(
+        "AriaRoles.cpp"
+        Lagom::GenerateAriaRoles
+        "${CMAKE_CURRENT_SOURCE_DIR}/ARIA/AriaRoles.json"
+        "ARIA/AriaRoles.h"
+        "ARIA/AriaRoles.cpp"
+        arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/ARIA/AriaRoles.json"
+)
+
 generate_css_implementation()
 
 set(GENERATED_SOURCES
+    ARIA/AriaRoles.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Enums.cpp
     CSS/MediaFeatureID.cpp
