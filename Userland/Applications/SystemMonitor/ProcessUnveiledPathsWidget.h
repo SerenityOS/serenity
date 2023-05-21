@@ -12,15 +12,17 @@
 namespace SystemMonitor {
 
 class ProcessUnveiledPathsWidget final : public GUI::Widget {
-    C_OBJECT(ProcessUnveiledPathsWidget);
+    C_OBJECT_ABSTRACT(ProcessUnveiledPathsWidget);
 
 public:
     virtual ~ProcessUnveiledPathsWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<ProcessUnveiledPathsWidget>> try_create();
+
     void set_pid(pid_t);
 
 private:
-    ProcessUnveiledPathsWidget();
+    ProcessUnveiledPathsWidget() = default;
 
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::JsonArrayModel> m_model;

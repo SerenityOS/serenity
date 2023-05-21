@@ -49,19 +49,21 @@ public:
     }
 };
 
-ProcessMemoryMapWidget::ProcessMemoryMapWidget()
+ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>(4);
-    m_table_view = add<GUI::TableView>();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessMemoryMapWidget()));
+    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
+
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
-    pid_vm_fields.empend(
+    TRY(pid_vm_fields.try_empend(
         "Address"_short_string, Gfx::TextAlignment::CenterLeft,
         [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
-        [](auto& object) { return object.get_u64("address"sv).value_or(0); });
-    pid_vm_fields.empend("size", "Size"_short_string, Gfx::TextAlignment::CenterRight);
-    pid_vm_fields.empend("amount_resident", "Resident"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
-    pid_vm_fields.empend("amount_dirty", "Dirty"_short_string, Gfx::TextAlignment::CenterRight);
-    pid_vm_fields.empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
+        [](auto& object) { return object.get_u64("address"sv).value_or(0); }));
+    TRY(pid_vm_fields.try_empend("size", "Size"_short_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("amount_resident", TRY("Resident"_string), Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("amount_dirty", "Dirty"_short_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
         if (object.get_bool("readable"sv).value_or(false))
             builder.append('R');
@@ -76,20 +78,20 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
         if (object.get_bool("stack"sv).value_or(false))
             builder.append('T');
         return builder.to_deprecated_string();
-    });
-    pid_vm_fields.empend("VMObject type"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    }));
+    TRY(pid_vm_fields.try_empend(TRY("VMObject type"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
         auto type = object.get_deprecated_string("vmobject"sv).value_or({});
         if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;
-    });
-    pid_vm_fields.empend("Purgeable"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    }));
+    TRY(pid_vm_fields.try_empend(TRY("Purgeable"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (object.get_bool("volatile"sv).value_or(false))
             return "Volatile";
         return "Non-volatile";
-    });
-    pid_vm_fields.empend(
-        "Page map"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft,
+    }));
+    TRY(pid_vm_fields.try_empend(
+        TRY("Page map"_string), Gfx::TextAlignment::CenterLeft,
         [](auto&) {
             return GUI::Variant();
         },
@@ -99,17 +101,19 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
         [](JsonObject const& object) {
             auto pagemap = object.get_deprecated_string("pagemap"sv).value_or({});
             return pagemap;
-        });
-    pid_vm_fields.empend("cow_pages", "# CoW"_short_string, Gfx::TextAlignment::CenterRight);
-    pid_vm_fields.empend("name", "Name"_short_string, Gfx::TextAlignment::CenterLeft);
-    m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
-    m_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_json_model)));
+        }));
+    TRY(pid_vm_fields.try_empend("cow_pages", "# CoW"_short_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("name", "Name"_short_string, Gfx::TextAlignment::CenterLeft));
+    widget->m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
+    widget->m_table_view->set_model(TRY(GUI::SortingProxyModel::create(*widget->m_json_model)));
 
-    m_table_view->set_column_painting_delegate(7, make<PagemapPaintingDelegate>());
+    widget->m_table_view->set_column_painting_delegate(7, TRY(try_make<PagemapPaintingDelegate>()));
 
-    m_table_view->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
-    m_timer = add<Core::Timer>(1000, [this] { refresh(); });
-    m_timer->start();
+    widget->m_table_view->set_key_column_and_sort_order(0, GUI::SortOrder::Ascending);
+    widget->m_timer = TRY(widget->try_add<Core::Timer>(1000, [widget] { widget->refresh(); }));
+    widget->m_timer->start();
+
+    return widget;
 }
 
 void ProcessMemoryMapWidget::set_pid(pid_t pid)

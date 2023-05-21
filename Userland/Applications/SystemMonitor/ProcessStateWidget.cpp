@@ -93,13 +93,15 @@ private:
     pid_t m_pid { -1 };
 };
 
-ProcessStateWidget::ProcessStateWidget()
+ErrorOr<NonnullRefPtr<ProcessStateWidget>> ProcessStateWidget::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>(4);
-    m_table_view = add<GUI::TableView>();
-    m_table_view->set_model(adopt_ref(*new ProcessStateModel(ProcessModel::the(), 0)));
-    m_table_view->column_header().set_visible(false);
-    m_table_view->column_header().set_section_size(0, 90);
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessStateWidget()));
+    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
+    widget->m_table_view->set_model(TRY(try_make_ref_counted<ProcessStateModel>(ProcessModel::the(), 0)));
+    widget->m_table_view->column_header().set_visible(false);
+    widget->m_table_view->column_header().set_section_size(0, 90);
+    return widget;
 }
 
 void ProcessStateWidget::set_pid(pid_t pid)
