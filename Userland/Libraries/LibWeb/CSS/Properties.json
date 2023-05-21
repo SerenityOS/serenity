@@ -958,6 +958,30 @@
       "string"
     ]
   },
+  "grid-auto-columns": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ]
+  },
+  "grid-auto-rows": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ]
+  },
   "grid-template-columns": {
     "inherited": false,
     "initial": "auto",

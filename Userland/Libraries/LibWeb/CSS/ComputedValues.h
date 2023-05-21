@@ -251,6 +251,8 @@ public:
     CSS::Size const& min_height() const { return m_noninherited.min_height; }
     CSS::Size const& max_height() const { return m_noninherited.max_height; }
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
+    CSS::GridTrackSizeList const& grid_auto_columns() const { return m_noninherited.grid_auto_columns; }
+    CSS::GridTrackSizeList const& grid_auto_rows() const { return m_noninherited.grid_auto_rows; }
     CSS::GridTrackSizeList const& grid_template_columns() const { return m_noninherited.grid_template_columns; }
     CSS::GridTrackSizeList const& grid_template_rows() const { return m_noninherited.grid_template_rows; }
     CSS::GridTrackPlacement const& grid_column_end() const { return m_noninherited.grid_column_end; }
@@ -385,6 +387,8 @@ protected:
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
         CSS::ContentData content;
         Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align { InitialValues::vertical_align() };
+        CSS::GridTrackSizeList grid_auto_columns;
+        CSS::GridTrackSizeList grid_auto_rows;
         CSS::GridTrackSizeList grid_template_columns;
         CSS::GridTrackSizeList grid_template_rows;
         CSS::GridTrackPlacement grid_column_end { InitialValues::grid_column_end() };
@@ -471,6 +475,8 @@ public:
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
     void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = move(value); }
     void set_visibility(CSS::Visibility value) { m_inherited.visibility = value; }
+    void set_grid_auto_columns(CSS::GridTrackSizeList value) { m_noninherited.grid_auto_columns = move(value); }
+    void set_grid_auto_rows(CSS::GridTrackSizeList value) { m_noninherited.grid_auto_rows = move(value); }
     void set_grid_template_columns(CSS::GridTrackSizeList value) { m_noninherited.grid_template_columns = move(value); }
     void set_grid_template_rows(CSS::GridTrackSizeList value) { m_noninherited.grid_template_rows = move(value); }
     void set_grid_column_end(CSS::GridTrackPlacement value) { m_noninherited.grid_column_end = value; }
