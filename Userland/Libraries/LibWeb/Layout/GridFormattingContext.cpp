@@ -553,13 +553,33 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpac
 
 void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(AvailableSpace const& available_space)
 {
-    initialize_grid_tracks_from_definition(available_space, grid_container().computed_values().grid_template_columns().track_list(), m_grid_columns);
-    initialize_grid_tracks_from_definition(available_space, grid_container().computed_values().grid_template_rows().track_list(), m_grid_rows);
+    auto const& grid_computed_values = grid_container().computed_values();
+    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_columns().track_list(), m_grid_columns);
+    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_rows().track_list(), m_grid_rows);
 
-    for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++)
-        m_grid_columns.append(TemporaryTrack());
-    for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++)
-        m_grid_rows.append(TemporaryTrack());
+    auto const& grid_auto_columns = grid_computed_values.grid_auto_columns().track_list();
+    size_t implicit_column_index = 0;
+    for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++) {
+        if (grid_auto_columns.size() > 0) {
+            auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
+            m_grid_columns.append(TemporaryTrack(size.grid_size()));
+        } else {
+            m_grid_columns.append(TemporaryTrack());
+        }
+        implicit_column_index++;
+    }
+
+    auto const& grid_auto_rows = grid_computed_values.grid_auto_rows().track_list();
+    size_t implicit_row_index = 0;
+    for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++) {
+        if (grid_auto_rows.size() > 0) {
+            auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
+            m_grid_rows.append(TemporaryTrack(size.grid_size()));
+        } else {
+            m_grid_rows.append(TemporaryTrack());
+        }
+        implicit_row_index++;
+    }
 }
 
 void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& available_space)
