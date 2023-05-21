@@ -38,17 +38,10 @@ public:
 public:
     ~MBRPartitionTable();
 
-#ifdef KERNEL
-    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(Kernel::StorageDevice&);
-    static OwnPtr<MBRPartitionTable> try_to_initialize(Kernel::StorageDevice&, u32 start_lba);
-    explicit MBRPartitionTable(Kernel::StorageDevice&);
-    MBRPartitionTable(Kernel::StorageDevice&, u32 start_lba);
-#else
-    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>);
-    static OwnPtr<MBRPartitionTable> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>, u32 start_lba);
-    explicit MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
-    MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile>, u32 start_lba);
-#endif
+    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(PartitionableDevice);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(PartitionableDevice, u32 start_lba);
+    explicit MBRPartitionTable(PartitionableDevice);
+    MBRPartitionTable(PartitionableDevice, u32 start_lba);
 
     bool is_protective_mbr() const;
     bool contains_ebr() const;

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/File.h>
 #include <LibGUI/Model.h>
 #include <LibPartition/PartitionTable.h>
 
@@ -36,6 +37,7 @@ private:
     PartitionModel() = default;
 
     OwnPtr<Partition::PartitionTable> m_partition_table;
+    OwnPtr<Core::File> m_backing_file;
 };
 
 }
