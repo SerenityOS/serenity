@@ -265,7 +265,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return result.release_error();
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
-    TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+    // HackStudio doesn't exist in the minimal build configuration.
+    if (auto result = Core::System::unveil("/bin/HackStudio", "rx"); result.is_error() && result.error().code() != ENOENT)
+        return result.release_error();
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
