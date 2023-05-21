@@ -62,6 +62,8 @@ public:
         return {};
     }
 
+    Function<void()> on_disconnected_from_spice_server;
+
 private:
     NonnullOwnPtr<Core::File> m_spice_device;
     Vector<Capability> m_capabilities;
