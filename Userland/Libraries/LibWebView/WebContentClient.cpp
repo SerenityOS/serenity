@@ -194,10 +194,10 @@ void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
         m_view.on_get_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
+void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)
 {
     if (m_view.on_get_dom_node_properties)
-        m_view.on_get_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing);
+        m_view.on_get_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing, aria_properties_state);
 }
 
 void WebContentClient::did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
