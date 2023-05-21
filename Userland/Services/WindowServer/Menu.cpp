@@ -129,7 +129,7 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint position)
     auto calculate_window_rect = [&]() -> Gfx::IntRect {
         int window_height_available = screen.height() - frame_thickness() * 2;
         int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
-        int content_height = m_items.is_empty() ? 0 : (m_items.last()->rect().bottom() + 1) + frame_thickness();
+        int content_height = m_items.is_empty() ? 0 : m_items.last()->rect().bottom() + frame_thickness();
         int window_height = min(max_window_height, content_height);
         if (window_height < content_height) {
             m_scrollable = true;
@@ -284,7 +284,7 @@ void Menu::draw(MenuItem const& item, bool is_drawing_all)
         painter.set_font(previous_font);
         if (item.is_submenu()) {
             Gfx::IntRect submenu_arrow_rect {
-                item.rect().right() - static_cast<int>(s_submenu_arrow_bitmap.width()) - 2,
+                item.rect().right() - static_cast<int>(s_submenu_arrow_bitmap.width()) - 3,
                 0,
                 s_submenu_arrow_bitmap.width(),
                 s_submenu_arrow_bitmap.height()
@@ -313,7 +313,7 @@ void Menu::update_for_new_hovered_item(bool make_input)
         if (hovered_item->is_submenu()) {
             VERIFY(menu_window());
             MenuManager::the().close_everyone_not_in_lineage(*hovered_item->submenu());
-            hovered_item->submenu()->do_popup(hovered_item->rect().top_right().translated(menu_window()->rect().location()), make_input, true);
+            hovered_item->submenu()->do_popup(hovered_item->rect().top_right().translated(-1, 0).translated(menu_window()->rect().location()), make_input, true);
         } else {
             MenuManager::the().close_everyone_not_in_lineage(*this);
             VERIFY(menu_window());
@@ -620,10 +620,10 @@ void Menu::open_button_menu(Gfx::IntPoint position, Gfx::IntRect const& button_r
     auto& window = ensure_menu_window(position);
     Gfx::IntPoint adjusted_pos = position;
 
-    if (window.rect().right() > screen.width())
-        adjusted_pos = adjusted_pos.translated(-(window.rect().right() - screen.width()) - 1, 0);
+    if (window.rect().right() - 1 > screen.width())
+        adjusted_pos = adjusted_pos.translated(-(window.rect().right() - screen.width()), 0);
 
-    if (window.rect().bottom() > screen.height())
+    if (window.rect().bottom() - 1 > screen.height())
         adjusted_pos = adjusted_pos.translated(0, -window.rect().height() - button_rect.height() + 1);
 
     window.set_rect(adjusted_pos.x(), adjusted_pos.y(), window.rect().width(), window.rect().height());
@@ -651,7 +651,7 @@ void Menu::do_popup(Gfx::IntPoint position, bool make_input, bool as_submenu)
     constexpr auto margin = 10;
     Gfx::IntPoint adjusted_pos = m_unadjusted_position = position;
 
-    if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
+    if (adjusted_pos.x() + window.width() >= screen.rect().right() - margin) {
         // Vertically translate the window by its full width, i.e. flip it at its vertical axis.
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
         // If the window is a submenu, translate to the opposite side of its immediate ancestor
@@ -664,7 +664,7 @@ void Menu::do_popup(Gfx::IntPoint position, bool make_input, bool as_submenu)
         // underneath the cursor and can be closed by another click at the same position.
         adjusted_pos.set_x(adjusted_pos.x() + 1);
     }
-    if (adjusted_pos.y() + window.height() > screen.rect().bottom() - margin) {
+    if (adjusted_pos.y() + window.height() >= screen.rect().bottom() - margin) {
         // Vertically translate the window by its full height, i.e. flip it at its horizontal axis.
         auto offset = window.height();
         // ...but if it's a submenu, go back by one menu item height to keep the menu aligned with

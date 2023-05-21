@@ -115,7 +115,7 @@ PaletteWidget::PaletteWidget()
     m_primary_color_widget->set_fill_with_background_color(true);
 
     m_color_container = add<GUI::Widget>();
-    m_color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 33);
+    m_color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 1, 2, 500, 33);
     m_color_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 1);
 
     auto& top_color_container = m_color_container->add<GUI::Widget>();

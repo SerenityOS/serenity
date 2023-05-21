@@ -234,11 +234,10 @@ void paint_box_shadow(PaintContext& context, CSSPixelRect const& content_rect, B
         auto top_start = inner_bounding_rect.top() - blurred_edge_thickness;
         auto bottom_start = inner_bounding_rect.top() + inner_bounding_rect.height() + (blurred_edge_thickness - horizontal_edge_width);
 
-        // Note: The +1s in a few of the following translations are due to the -1s Gfx::Rect::right() and Gfx::Rect::bottom().
         auto top_left_corner_blit_pos = inner_bounding_rect.top_left().translated(-blurred_edge_thickness, -blurred_edge_thickness);
-        auto top_right_corner_blit_pos = inner_bounding_rect.top_right().translated(-top_right_corner_size.width() + 1 + double_radius, -blurred_edge_thickness);
-        auto bottom_left_corner_blit_pos = inner_bounding_rect.bottom_left().translated(-blurred_edge_thickness, -bottom_left_corner_size.height() + 1 + double_radius);
-        auto bottom_right_corner_blit_pos = inner_bounding_rect.bottom_right().translated(-bottom_right_corner_size.width() + 1 + double_radius, -bottom_right_corner_size.height() + 1 + double_radius);
+        auto top_right_corner_blit_pos = inner_bounding_rect.top_right().translated(-top_right_corner_size.width() + double_radius, -blurred_edge_thickness);
+        auto bottom_left_corner_blit_pos = inner_bounding_rect.bottom_left().translated(-blurred_edge_thickness, -bottom_left_corner_size.height() + double_radius);
+        auto bottom_right_corner_blit_pos = inner_bounding_rect.bottom_right().translated(-bottom_right_corner_size.width() + double_radius, -bottom_right_corner_size.height() + double_radius);
 
         auto paint_shadow = [&](DevicePixelRect clip_rect) {
             Gfx::PainterStateSaver save { painter };
@@ -253,15 +252,15 @@ void paint_box_shadow(PaintContext& context, CSSPixelRect const& content_rect, B
             painter.blit(bottom_right_corner_blit_pos.to_type<int>(), shadow_bitmap, bottom_right_corner_rect.to_type<int>());
 
             // Horizontal edges
-            for (auto x = inner_bounding_rect.left() + (bottom_left_corner_size.width() - double_radius); x <= inner_bounding_rect.right() - (bottom_right_corner_size.width() - double_radius); ++x)
+            for (auto x = inner_bounding_rect.left() + (bottom_left_corner_size.width() - double_radius); x < inner_bounding_rect.right() - (bottom_right_corner_size.width() - double_radius); ++x)
                 painter.blit({ x, bottom_start }, shadow_bitmap, bottom_edge_rect.to_type<int>());
-            for (auto x = inner_bounding_rect.left() + (top_left_corner_size.width() - double_radius); x <= inner_bounding_rect.right() - (top_right_corner_size.width() - double_radius); ++x)
+            for (auto x = inner_bounding_rect.left() + (top_left_corner_size.width() - double_radius); x < inner_bounding_rect.right() - (top_right_corner_size.width() - double_radius); ++x)
                 painter.blit({ x, top_start }, shadow_bitmap, top_edge_rect.to_type<int>());
 
             // Vertical edges
-            for (auto y = inner_bounding_rect.top() + (top_right_corner_size.height() - double_radius); y <= inner_bounding_rect.bottom() - (bottom_right_corner_size.height() - double_radius); ++y)
+            for (auto y = inner_bounding_rect.top() + (top_right_corner_size.height() - double_radius); y < inner_bounding_rect.bottom() - (bottom_right_corner_size.height() - double_radius); ++y)
                 painter.blit({ right_start, y }, shadow_bitmap, right_edge_rect.to_type<int>());
-            for (auto y = inner_bounding_rect.top() + (top_left_corner_size.height() - double_radius); y <= inner_bounding_rect.bottom() - (bottom_left_corner_size.height() - double_radius); ++y)
+            for (auto y = inner_bounding_rect.top() + (top_left_corner_size.height() - double_radius); y < inner_bounding_rect.bottom() - (bottom_left_corner_size.height() - double_radius); ++y)
                 painter.blit({ left_start, y }, shadow_bitmap, left_edge_rect.to_type<int>());
         };
 
@@ -300,13 +299,13 @@ void paint_box_shadow(PaintContext& context, CSSPixelRect const& content_rect, B
         paint_shadow({ 0, 0, really_large_number, device_content_rect.top() });
 
         // Everything below content_rect, including sides
-        paint_shadow({ 0, device_content_rect.bottom() + 1, really_large_number, really_large_number });
+        paint_shadow({ 0, device_content_rect.bottom(), really_large_number, really_large_number });
 
         // Everything directly to the left of content_rect
         paint_shadow({ 0, device_content_rect.top(), device_content_rect.left(), device_content_rect.height() });
 
         // Everything directly to the right of content_rect
-        paint_shadow({ device_content_rect.right() + 1, device_content_rect.top(), really_large_number, device_content_rect.height() });
+        paint_shadow({ device_content_rect.right(), device_content_rect.top(), really_large_number, device_content_rect.height() });
 
         if (top_left_corner) {
             // Inside the top left corner (the part outside the border radius)
@@ -316,19 +315,19 @@ void paint_box_shadow(PaintContext& context, CSSPixelRect const& content_rect, B
 
         if (top_right_corner) {
             // Inside the top right corner (the part outside the border radius)
-            auto top_right = top_right_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.top_right().translated(-top_right_corner.horizontal_radius + 1, 0));
+            auto top_right = top_right_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.top_right().translated(-top_right_corner.horizontal_radius, 0));
             paint_shadow(top_right);
         }
 
         if (bottom_right_corner) {
             // Inside the bottom right corner (the part outside the border radius)
-            auto bottom_right = bottom_right_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.bottom_right().translated(-bottom_right_corner.horizontal_radius + 1, -bottom_right_corner.vertical_radius + 1));
+            auto bottom_right = bottom_right_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.bottom_right().translated(-bottom_right_corner.horizontal_radius, -bottom_right_corner.vertical_radius));
             paint_shadow(bottom_right);
         }
 
         if (bottom_left_corner) {
             // Inside the bottom left corner (the part outside the border radius)
-            auto bottom_left = bottom_left_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.bottom_left().translated(0, -bottom_left_corner.vertical_radius + 1));
+            auto bottom_left = bottom_left_corner.as_rect().to_type<DevicePixels>().translated(device_content_rect.bottom_left().translated(0, -bottom_left_corner.vertical_radius));
             paint_shadow(bottom_left);
         }
     }

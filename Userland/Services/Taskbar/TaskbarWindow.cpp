@@ -142,7 +142,7 @@ void TaskbarWindow::toggle_show_desktop()
 void TaskbarWindow::on_screen_rects_change(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
 {
     auto const& rect = rects[main_screen_index];
-    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
+    Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height(), rect.width(), taskbar_height() };
     set_rect(new_rect);
     update_applet_area();
 }

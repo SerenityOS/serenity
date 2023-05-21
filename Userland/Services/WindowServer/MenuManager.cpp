@@ -98,7 +98,7 @@ void MenuManager::event(Core::Event& event)
                     else {
                         auto* target_menu = previous_menu(m_current_menu);
                         if (target_menu) {
-                            target_menu->ensure_menu_window(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
+                            target_menu->ensure_menu_window(target_menu->rect_in_window_menubar().bottom_left().moved_up(1).translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
                             open_menu(*target_menu);
                             wm.window_with_active_menu()->invalidate_menubar();
                         }
@@ -115,7 +115,7 @@ void MenuManager::event(Core::Event& event)
                 else if (m_open_menu_stack.size() <= 1 && wm.window_with_active_menu()) {
                     auto* target_menu = next_menu(m_current_menu);
                     if (target_menu) {
-                        target_menu->ensure_menu_window(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
+                        target_menu->ensure_menu_window(target_menu->rect_in_window_menubar().bottom_left().moved_up(1).translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
                         open_menu(*target_menu);
                         wm.window_with_active_menu()->invalidate_menubar();
                         close_everyone_not_in_lineage(*target_menu);

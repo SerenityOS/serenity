@@ -363,14 +363,14 @@ void Field::paint_event(GUI::PaintEvent& event)
     auto inner_rect = frame_inner_rect();
     painter.add_clip_rect(inner_rect);
 
-    for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
+    for (int y = inner_rect.top() - 1; y < inner_rect.bottom(); y += square_size()) {
         Gfx::IntPoint a { inner_rect.left(), y };
-        Gfx::IntPoint b { inner_rect.right(), y };
+        Gfx::IntPoint b { inner_rect.right() - 1, y };
         painter.draw_line(a, b, palette().threed_shadow1());
     }
-    for (int x = frame_inner_rect().left() - 1; x <= frame_inner_rect().right(); x += square_size()) {
+    for (int x = frame_inner_rect().left() - 1; x < frame_inner_rect().right(); x += square_size()) {
         Gfx::IntPoint a { x, inner_rect.top() };
-        Gfx::IntPoint b { x, inner_rect.bottom() };
+        Gfx::IntPoint b { x, inner_rect.bottom() - 1 };
         painter.draw_line(a, b, palette().threed_shadow1());
     }
 }

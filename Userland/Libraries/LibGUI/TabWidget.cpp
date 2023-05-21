@@ -253,7 +253,7 @@ void TabWidget::paint_event(PaintEvent& event)
         icon_rect.translate_by(4, (button_rect.height() / 2) - (icon_rect.height() / 2));
 
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
-        text_rect.set_x(icon_rect.right() + 1 + 4);
+        text_rect.set_x(icon_rect.right() + 4);
         text_rect.intersect(button_rect);
     };
 
@@ -288,12 +288,12 @@ void TabWidget::paint_event(PaintEvent& event)
 
             Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
             if (!m_tabs[i].modified) {
-                painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
-                painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+                painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right().translated(-1), palette().button_text());
+                painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().moved_up(1), palette().button_text());
             } else {
-                painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-1, -1), palette().button_text());
-                painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().translated(1, -1), palette().button_text());
-                painter.draw_line(icon_rect.bottom_left().moved_down(1), icon_rect.bottom_right().moved_down(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
+                painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-2), palette().button_text());
+                painter.draw_line(icon_rect.top_right().moved_left(2), icon_rect.bottom_left().translated(1, -2), palette().button_text());
+                painter.draw_line(icon_rect.bottom_left(), icon_rect.bottom_right().moved_left(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
             }
         }
     }
@@ -329,12 +329,12 @@ void TabWidget::paint_event(PaintEvent& event)
         }
 
         if (m_tab_position == TabPosition::Top) {
-            painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
+            painter.draw_line(button_rect.bottom_left().moved_right(1), button_rect.bottom_right().translated(-2, 0), palette().button());
         } else if (m_tab_position == TabPosition::Bottom) {
             painter.set_pixel(button_rect.top_left().translated(0, -1), palette().threed_highlight());
-            painter.set_pixel(button_rect.top_right().translated(-1, -1), palette().threed_shadow1());
-            painter.draw_line(button_rect.top_left().translated(1, -1), button_rect.top_right().translated(-2, -1), palette().button());
-            painter.draw_line(button_rect.top_left().translated(1, -2), button_rect.top_right().translated(-2, -2), palette().button());
+            painter.set_pixel(button_rect.top_right().translated(-2, -1), palette().threed_shadow1());
+            painter.draw_line(button_rect.top_left().translated(1, -1), button_rect.top_right().translated(-3, -1), palette().button());
+            painter.draw_line(button_rect.top_left().translated(1, -2), button_rect.top_right().translated(-3, -2), palette().button());
         }
         break;
     }
@@ -362,12 +362,12 @@ void TabWidget::paint_event(PaintEvent& event)
 
         Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
         if (!m_tabs[i].modified) {
-            painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
-            painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
+            painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right().translated(-1), palette().button_text());
+            painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().moved_up(1), palette().button_text());
         } else {
-            painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-1, -1), palette().button_text());
-            painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().translated(1, -1), palette().button_text());
-            painter.draw_line(icon_rect.bottom_left().moved_down(1), icon_rect.bottom_right().moved_down(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
+            painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-2, -2), palette().button_text());
+            painter.draw_line(icon_rect.top_right().moved_left(2), icon_rect.bottom_left().moved_right(1), palette().button_text());
+            painter.draw_line(icon_rect.bottom_left(), icon_rect.bottom_right().moved_left(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
         }
     }
 }
@@ -444,7 +444,7 @@ Gfx::IntRect TabWidget::close_button_rect(size_t index) const
     auto rect = button_rect(index);
     Gfx::IntRect close_button_rect { 0, 0, 12, 12 };
 
-    close_button_rect.translate_by(rect.right(), rect.top());
+    close_button_rect.translate_by(rect.right() - 1, rect.top());
     close_button_rect.translate_by(-(close_button_rect.width() + 4), (rect.height() / 2) - (close_button_rect.height() / 2));
 
     return close_button_rect;
@@ -459,9 +459,8 @@ int TabWidget::TabData::width(Gfx::Font const& font) const
     //       text and the focus rect has an odd number of pixels, and this
     //       causes the text (and subsequently the focus rect) to not be aligned
     //       to the center perfectly.
-    if (width % 2 == 0) {
+    if (width % 2 == 0)
         width++;
-    }
 
     return width;
 }

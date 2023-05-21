@@ -106,7 +106,7 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
     int window_button_width = m_preview_palette.window_title_button_width();
     int window_button_height = m_preview_palette.window_title_button_height();
     auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette);
-    int pos = titlebar_text_rect.right() + 1;
+    int pos = titlebar_text_rect.right();
 
     Array possible_buttons {
         Button { {}, m_close_bitmap.is_null() ? m_default_close_bitmap : m_close_bitmap },

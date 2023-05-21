@@ -560,18 +560,14 @@ static void for_each_pixel_around_rect_clockwise(RectType const& rect, Callback 
 {
     if (rect.is_empty())
         return;
-    for (auto x = rect.left(); x <= rect.right(); ++x) {
+    for (auto x = rect.left(); x < rect.right(); ++x)
         callback(x, rect.top());
-    }
-    for (auto y = rect.top() + 1; y <= rect.bottom(); ++y) {
-        callback(rect.right(), y);
-    }
-    for (auto x = rect.right() - 1; x >= rect.left(); --x) {
-        callback(x, rect.bottom());
-    }
-    for (auto y = rect.bottom() - 1; y > rect.top(); --y) {
+    for (auto y = rect.top() + 1; y < rect.bottom(); ++y)
+        callback(rect.right() - 1, y);
+    for (auto x = rect.right() - 2; x >= rect.left(); --x)
+        callback(x, rect.bottom() - 1);
+    for (auto y = rect.bottom() - 2; y > rect.top(); --y)
         callback(rect.left(), y);
-    }
 }
 
 void Painter::draw_focus_rect(IntRect const& rect, Color color)
@@ -596,17 +592,17 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
         return;
 
     int min_y = clipped_rect.top();
-    int max_y = clipped_rect.bottom();
+    int max_y = clipped_rect.bottom() - 1;
     int scale = this->scale();
 
-    if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
+    if (rect.top() >= clipped_rect.top() && rect.top() < clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
         for (int i = 0; i < scale; ++i)
             fill_physical_scanline_with_draw_op(rect.top() * scale + i, start_x * scale, width * scale, color);
         ++min_y;
     }
-    if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
+    if (rect.bottom() > clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
         for (int i = 0; i < scale; ++i)
@@ -624,7 +620,7 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
             for (int i = 0; i < scale; ++i)
                 set_physical_pixel_with_draw_op(bits[rect.left() * scale + i], color);
             for (int i = 0; i < scale; ++i)
-                set_physical_pixel_with_draw_op(bits[rect.right() * scale + i], color);
+                set_physical_pixel_with_draw_op(bits[(rect.right() - 1) * scale + i], color);
         }
     } else {
         for (int y = min_y * scale; y <= max_y * scale; ++y) {
@@ -634,7 +630,7 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
                     set_physical_pixel_with_draw_op(bits[rect.left() * scale + i], color);
             if (draw_right_side)
                 for (int i = 0; i < scale; ++i)
-                    set_physical_pixel_with_draw_op(bits[rect.right() * scale + i], color);
+                    set_physical_pixel_with_draw_op(bits[(rect.right() - 1) * scale + i], color);
         }
     }
 }
@@ -672,8 +668,8 @@ void Painter::draw_bitmap(IntPoint p, CharacterBitmap const& bitmap, Color color
     char const* bitmap_row = &bitmap.bits()[first_row * bitmap.width() + first_column];
     size_t const bitmap_skip = bitmap.width();
 
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int j = 0; j <= (last_column - first_column); ++j) {
+    for (int row = first_row; row < last_row; ++row) {
+        for (int j = 0; j < (last_column - first_column); ++j) {
             char fc = bitmap_row[j];
             if (fc == '#')
                 dst[j] = color.value();
@@ -700,16 +696,16 @@ void Painter::draw_bitmap(IntPoint p, GlyphBitmap const& bitmap, Color color)
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     if (scale == 1) {
-        for (int row = first_row; row <= last_row; ++row) {
-            for (int j = 0; j <= (last_column - first_column); ++j) {
+        for (int row = first_row; row < last_row; ++row) {
+            for (int j = 0; j < (last_column - first_column); ++j) {
                 if (bitmap.bit_at(j + first_column, row))
                     dst[j] = color_for_format(dst_format, dst[j]).blend(color).value();
             }
             dst += dst_skip;
         }
     } else {
-        for (int row = first_row; row <= last_row; ++row) {
-            for (int j = 0; j <= (last_column - first_column); ++j) {
+        for (int row = first_row; row < last_row; ++row) {
+            for (int j = 0; j < (last_column - first_column); ++j) {
                 if (bitmap.bit_at((j + first_column), row)) {
                     for (int iy = 0; iy < scale; ++iy)
                         for (int ix = 0; ix < scale; ++ix) {
@@ -753,7 +749,7 @@ void Painter::draw_triangle(IntPoint a, IntPoint b, IntPoint c, Color color)
 
     // return if top is below clip rect or bottom is above clip rect
     auto clip = clip_rect();
-    if (p0.y() >= clip.bottom())
+    if (p0.y() >= clip.bottom() - 1)
         return;
     if (p2.y() < clip.top())
         return;
@@ -801,7 +797,7 @@ void Painter::draw_triangle(IntPoint a, IntPoint b, IntPoint c, Color color)
 
     int rgba = color.value();
 
-    for (int y = max(p0.y(), clip.top()); y <= min(p2.y(), clip.bottom()); y++) {
+    for (int y = max(p0.y(), clip.top()); y < min(p2.y() + 1, clip.bottom()); y++) {
         Optional<int>
             x0 = l0.intersection_on_x(y),
             x1 = l1.intersection_on_x(y),
@@ -827,9 +823,8 @@ void Painter::draw_triangle(IntPoint a, IntPoint b, IntPoint c, Color color)
         int left_bound = result_a, right_bound = result_b;
 
         ARGB32* scanline = m_target->scanline(y);
-        for (int x = max(left_bound, clip.left()); x <= min(right_bound, clip.right()); x++) {
+        for (int x = max(left_bound, clip.left()); x <= min(right_bound, clip.right() - 1); x++)
             scanline[x] = rgba;
-        }
     }
 }
 
@@ -920,8 +915,8 @@ void Painter::blit_with_opacity(IntPoint position, Gfx::Bitmap const& source, In
         .dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x(),
         .src_pitch = source.pitch() / sizeof(ARGB32),
         .dst_pitch = m_target->pitch() / sizeof(ARGB32),
-        .row_count = last_row - first_row + 1,
-        .column_count = last_column - first_column + 1,
+        .row_count = last_row - first_row,
+        .column_count = last_column - first_column,
         .opacity = opacity,
         .src_format = source.format(),
     };
@@ -968,8 +963,8 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
         ARGB32 const* src = source.scanline(safe_src_rect.top() + first_row) + safe_src_rect.left() + first_column;
         size_t const src_skip = source.pitch() / sizeof(ARGB32);
 
-        for (int row = first_row; row <= last_row; ++row) {
-            for (int x = 0; x <= (last_column - first_column); ++x) {
+        for (int row = first_row; row < last_row; ++row) {
+            for (int x = 0; x < (last_column - first_column); ++x) {
                 u8 alpha = color_for_format(src_format, src[x]).alpha();
                 if (alpha == 0xff) {
                     auto color = filter(Color::from_argb(src[x]));
@@ -986,9 +981,9 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
             src += src_skip;
         }
     } else {
-        for (int row = first_row; row <= last_row; ++row) {
+        for (int row = first_row; row < last_row; ++row) {
             ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
-            for (int x = 0; x <= (last_column - first_column); ++x) {
+            for (int x = 0; x < (last_column - first_column); ++x) {
                 u8 alpha = color_for_format(src_format, src[x / s]).alpha();
                 if (alpha == 0xff) {
                     auto color = filter(color_for_format(src_format, src[x / s]));
@@ -1033,9 +1028,9 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
     clipped_rect *= scale;
     dst_rect *= scale;
 
-    int const first_row = (clipped_rect.top() - dst_rect.top());
-    int const last_row = (clipped_rect.bottom() - dst_rect.top());
-    int const first_column = (clipped_rect.left() - dst_rect.left());
+    int const first_row = clipped_rect.top() - dst_rect.top();
+    int const last_row = clipped_rect.bottom() - dst_rect.top();
+    int const first_column = clipped_rect.left() - dst_rect.left();
     ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
@@ -1043,20 +1038,18 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
         int s = scale / source.scale();
         if (s == 1) {
             int x_start = first_column + a_dst_rect.left() * scale;
-            for (int row = first_row; row <= last_row; ++row) {
+            for (int row = first_row; row < last_row; ++row) {
                 ARGB32 const* sl = source.scanline((row + a_dst_rect.top() * scale) % source.physical_height());
-                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x)
                     dst[x - x_start] = sl[x % source.physical_width()];
-                }
                 dst += dst_skip;
             }
         } else {
             int x_start = first_column + a_dst_rect.left() * scale;
-            for (int row = first_row; row <= last_row; ++row) {
+            for (int row = first_row; row < last_row; ++row) {
                 ARGB32 const* sl = source.scanline(((row + a_dst_rect.top() * scale) / s) % source.physical_height());
-                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x)
                     dst[x - x_start] = sl[(x / s) % source.physical_width()];
-                }
                 dst += dst_skip;
             }
         }
@@ -1114,7 +1107,7 @@ void Painter::blit(IntPoint position, Gfx::Bitmap const& source, IntRect const& 
     if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         ARGB32 const* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         size_t const src_skip = source.pitch() / sizeof(ARGB32);
-        for (int row = first_row; row <= last_row; ++row) {
+        for (int row = first_row; row < last_row; ++row) {
             memcpy(dst, src, sizeof(ARGB32) * clipped_rect.width());
             dst += dst_skip;
             src += src_skip;
@@ -1125,7 +1118,7 @@ void Painter::blit(IntPoint position, Gfx::Bitmap const& source, IntRect const& 
     if (source.format() == BitmapFormat::RGBA8888) {
         u32 const* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         size_t const src_skip = source.pitch() / sizeof(u32);
-        for (int row = first_row; row <= last_row; ++row) {
+        for (int row = first_row; row < last_row; ++row) {
             for (int i = 0; i < clipped_rect.width(); ++i) {
                 u32 rgba = src[i];
                 u32 bgra = (rgba & 0xff00ff00)
@@ -1200,9 +1193,9 @@ ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target,
         return (intersected_right - intersected_left) * (intersected_bottom - intersected_top);
     };
 
-    for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
+    for (int y = clipped_rect.top(); y < clipped_rect.bottom(); ++y) {
         auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
-        for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
+        for (int x = clipped_rect.left(); x < clipped_rect.right(); ++x) {
             // Project the destination pixel in the source image
             FloatRect const source_box = {
                 src_rect.left() + (x - dst_rect.x()) * source_pixel_width,
@@ -1217,8 +1210,8 @@ ALWAYS_INLINE static void do_draw_box_sampled_scaled_bitmap(Gfx::Bitmap& target,
             float green_accumulator = 0.f;
             float blue_accumulator = 0.f;
             float total_area = 0.f;
-            for (int sy = enclosing_source_box.y(); sy <= enclosing_source_box.bottom(); ++sy) {
-                for (int sx = enclosing_source_box.x(); sx <= enclosing_source_box.right(); ++sx) {
+            for (int sy = enclosing_source_box.y(); sy < enclosing_source_box.bottom(); ++sy) {
+                for (int sx = enclosing_source_box.x(); sx < enclosing_source_box.right(); ++sx) {
                     float area = float_rect_intersection_area_fixme(source_box, pixel_box.translated(sx, sy));
 
                     auto pixel = get_pixel(source, sx, sy);
@@ -1281,11 +1274,11 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     i64 src_left = src_rect.left() * shift;
     i64 src_top = src_rect.top() * shift;
 
-    for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
+    for (int y = clipped_rect.top(); y < clipped_rect.bottom(); ++y) {
         auto* scanline = reinterpret_cast<Color*>(target.scanline(y));
         auto desired_y = (y - dst_rect.y()) * vscale + src_top;
 
-        for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
+        for (int x = clipped_rect.left(); x < clipped_rect.right(); ++x) {
             auto desired_x = (x - dst_rect.x()) * hscale + src_left;
 
             Color src_pixel;
@@ -1293,10 +1286,10 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 auto shifted_x = desired_x + bilinear_offset_x;
                 auto shifted_y = desired_y + bilinear_offset_y;
 
-                auto scaled_x0 = clamp(shifted_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_x1 = clamp((shifted_x >> 32) + 1, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_y0 = clamp(shifted_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
-                auto scaled_y1 = clamp((shifted_y >> 32) + 1, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_x0 = clamp(shifted_x >> 32, clipped_src_rect.left(), clipped_src_rect.right() - 1);
+                auto scaled_x1 = clamp((shifted_x >> 32) + 1, clipped_src_rect.left(), clipped_src_rect.right() - 1);
+                auto scaled_y0 = clamp(shifted_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom() - 1);
+                auto scaled_y1 = clamp((shifted_y >> 32) + 1, clipped_src_rect.top(), clipped_src_rect.bottom() - 1);
 
                 float x_ratio = (shifted_x & fractional_mask) / static_cast<float>(shift);
                 float y_ratio = (shifted_y & fractional_mask) / static_cast<float>(shift);
@@ -1311,10 +1304,10 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
                 src_pixel = top.mixed_with(bottom, y_ratio);
             } else if constexpr (scaling_mode == Painter::ScalingMode::SmoothPixels) {
-                auto scaled_x1 = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_x0 = clamp(scaled_x1 - 1, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_y1 = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
-                auto scaled_y0 = clamp(scaled_y1 - 1, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_x1 = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right() - 1);
+                auto scaled_x0 = clamp(scaled_x1 - 1, clipped_src_rect.left(), clipped_src_rect.right() - 1);
+                auto scaled_y1 = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom() - 1);
+                auto scaled_y0 = clamp(scaled_y1 - 1, clipped_src_rect.top(), clipped_src_rect.bottom() - 1);
 
                 float x_ratio = (desired_x & fractional_mask) / (float)shift;
                 float y_ratio = (desired_y & fractional_mask) / (float)shift;
@@ -1332,8 +1325,8 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
                 src_pixel = top.mixed_with(bottom, scaled_y_ratio);
             } else {
-                auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
-                auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right() - 1);
+                auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom() - 1);
                 src_pixel = get_pixel(source, scaled_x, scaled_y);
             }
 
@@ -1556,7 +1549,7 @@ void draw_text_line(FloatRect const& a_rect, Utf8View const& text, Font const& f
     case TextAlignment::TopRight:
     case TextAlignment::CenterRight:
     case TextAlignment::BottomRight:
-        rect.set_x(rect.right() - font.width(text));
+        rect.set_x(rect.right() - 1 - font.width(text));
         break;
     case TextAlignment::TopCenter:
     case TextAlignment::BottomCenter:
@@ -2043,16 +2036,16 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         int const x = point1.x();
-        if (x < clip_rect.left() || x > clip_rect.right())
+        if (x < clip_rect.left() || x >= clip_rect.right())
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
-        if (point1.y() > clip_rect.bottom())
+        if (point1.y() >= clip_rect.bottom())
             return;
         if (point2.y() < clip_rect.top())
             return;
         int min_y = max(point1.y(), clip_rect.top());
-        int max_y = min(point2.y(), clip_rect.bottom());
+        int max_y = min(point2.y(), clip_rect.bottom() - 1);
         if (style == LineStyle::Dotted) {
             for (int y = min_y; y <= max_y; y += thickness * 2)
                 draw_physical_pixel({ x, y }, color, thickness);
@@ -2078,16 +2071,16 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
         int const y = point1.y();
-        if (y < clip_rect.top() || y > clip_rect.bottom())
+        if (y < clip_rect.top() || y >= clip_rect.bottom())
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);
-        if (point1.x() > clip_rect.right())
+        if (point1.x() >= clip_rect.right())
             return;
         if (point2.x() < clip_rect.left())
             return;
         int min_x = max(point1.x(), clip_rect.left());
-        int max_x = min(point2.x(), clip_rect.right());
+        int max_x = min(point2.x(), clip_rect.right() - 1);
         if (style == LineStyle::Dotted) {
             for (int x = min_x; x <= max_x; x += thickness * 2)
                 draw_physical_pixel({ x, y }, color, thickness);
@@ -2490,19 +2483,17 @@ void Painter::blit_tiled(IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Int
 {
     auto tile_width = rect.width();
     auto tile_height = rect.height();
-    auto dst_right = dst_rect.right();
-    auto dst_bottom = dst_rect.bottom();
+    auto dst_right = dst_rect.right() - 1;
+    auto dst_bottom = dst_rect.bottom() - 1;
     for (int tile_y = dst_rect.top(); tile_y < dst_bottom; tile_y += tile_height) {
         for (int tile_x = dst_rect.left(); tile_x < dst_right; tile_x += tile_width) {
             IntRect tile_src_rect = rect;
             auto tile_x_overflow = tile_x + tile_width - dst_right;
-            if (tile_x_overflow > 0) {
+            if (tile_x_overflow > 0)
                 tile_src_rect.set_width(tile_width - tile_x_overflow);
-            }
             auto tile_y_overflow = tile_y + tile_height - dst_bottom;
-            if (tile_y_overflow > 0) {
+            if (tile_y_overflow > 0)
                 tile_src_rect.set_height(tile_height - tile_y_overflow);
-            }
             blit(IntPoint(tile_x, tile_y), bitmap, tile_src_rect);
         }
     }
@@ -2545,7 +2536,7 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
         float width = 0;
         for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
             if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
-                int y = text_rect.bottom() + 1;
+                int y = text_rect.bottom();
                 int x1 = text_rect.left() + width;
                 int x2 = x1 + font.glyph_or_emoji_width(it);
                 draw_line({ x1, y }, { x2, y }, color);

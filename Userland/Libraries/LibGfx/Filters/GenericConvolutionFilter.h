@@ -110,7 +110,7 @@ public:
                 FloatVector3 value(0, 0, 0);
                 for (auto k = 0l; k < (ssize_t)N; ++k) {
                     auto ki = i + k - offset;
-                    if (ki < source_rect.x() || ki > source_rect.right()) {
+                    if (ki < source_rect.x() || ki >= source_rect.right()) {
                         if (parameters.should_wrap())
                             ki = (ki + source.size().width()) % source.size().width(); // TODO: fix up using source_rect
                         else
@@ -119,7 +119,7 @@ public:
 
                     for (auto l = 0l; l < (ssize_t)N; ++l) {
                         auto lj = j + l - offset;
-                        if (lj < source_rect.y() || lj > source_rect.bottom()) {
+                        if (lj < source_rect.y() || lj >= source_rect.bottom()) {
                             if (parameters.should_wrap())
                                 lj = (lj + source.size().height()) % source.size().height(); // TODO: fix up using source_rect
                             else

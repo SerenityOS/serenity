@@ -29,12 +29,12 @@ void SeparatorWidget::paint_event(PaintEvent& event)
 
     if (m_orientation == Gfx::Orientation::Vertical) {
         painter.translate(rect().center().x() - 1, 0);
-        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, palette().threed_shadow1());
-        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, palette().threed_highlight());
+        painter.draw_line({ 0, 0 }, { 0, rect().bottom() - 1 }, palette().threed_shadow1());
+        painter.draw_line({ 1, 0 }, { 1, rect().bottom() - 1 }, palette().threed_highlight());
     } else {
         painter.translate(0, rect().center().y() - 1);
-        painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_shadow1());
-        painter.draw_line({ 0, 1 }, { rect().right(), 1 }, palette().threed_highlight());
+        painter.draw_line({ 0, 0 }, { rect().right() - 1, 0 }, palette().threed_shadow1());
+        painter.draw_line({ 0, 1 }, { rect().right() - 1, 1 }, palette().threed_highlight());
     }
 }
 

@@ -43,7 +43,7 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(PaintContex
             .top_right = top_right,
             .bottom_right = bottom_right,
             .bottom_left = bottom_left },
-        .page_locations = { .top_left = border_rect.top_left(), .top_right = border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0), .bottom_right = border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), .bottom_left = border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1) },
+        .page_locations = { .top_left = border_rect.top_left(), .top_right = border_rect.top_right().translated(-top_right.horizontal_radius, 0), .bottom_right = border_rect.bottom_right().translated(-bottom_right.horizontal_radius, -bottom_right.vertical_radius), .bottom_left = border_rect.bottom_left().translated(0, -bottom_left.vertical_radius) },
         .bitmap_locations = { .top_left = { 0, 0 }, .top_right = { corners_bitmap_size.width() - top_right.horizontal_radius, 0 }, .bottom_right = { corners_bitmap_size.width() - bottom_right.horizontal_radius, corners_bitmap_size.height() - bottom_right.vertical_radius }, .bottom_left = { 0, corners_bitmap_size.height() - bottom_left.vertical_radius } },
         .corner_bitmap_size = corners_bitmap_size
     };

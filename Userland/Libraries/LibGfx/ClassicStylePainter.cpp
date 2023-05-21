@@ -280,12 +280,12 @@ void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Pal
         VERIFY_NOT_REACHED();
     }
 
-    painter.draw_line(rect.top_left(), rect.top_right(), top_left_color);
-    painter.draw_line(rect.bottom_left(), rect.bottom_right(), bottom_right_color);
+    painter.draw_line(rect.top_left(), rect.top_right().moved_left(1), top_left_color);
+    painter.draw_line(rect.bottom_left().moved_up(1), rect.bottom_right().translated(-1), bottom_right_color);
 
     if ((style != FrameStyle::SunkenPanel && style != FrameStyle::RaisedPanel) || !skip_vertical_lines) {
-        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), top_left_color);
-        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), bottom_right_color);
+        painter.draw_line(rect.top_left().moved_down(1), rect.bottom_left().moved_up(2), top_left_color);
+        painter.draw_line(rect.top_right().moved_left(1), rect.bottom_right().translated(-1, -2), bottom_right_color);
     }
 
     if (style == FrameStyle::RaisedContainer || style == FrameStyle::SunkenContainer) {
@@ -302,19 +302,19 @@ void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Pal
             bottom_right_color = light_shade;
         }
         IntRect inner_container_frame_rect = rect.shrunken(2, 2);
-        painter.draw_line(inner_container_frame_rect.top_left(), inner_container_frame_rect.top_right(), top_left_color);
-        painter.draw_line(inner_container_frame_rect.bottom_left(), inner_container_frame_rect.bottom_right(), bottom_right_color);
-        painter.draw_line(inner_container_frame_rect.top_left().translated(0, 1), inner_container_frame_rect.bottom_left().translated(0, -1), top_left_color);
-        painter.draw_line(inner_container_frame_rect.top_right(), inner_container_frame_rect.bottom_right().translated(0, -1), bottom_right_color);
+        painter.draw_line(inner_container_frame_rect.top_left(), inner_container_frame_rect.top_right().moved_left(1), top_left_color);
+        painter.draw_line(inner_container_frame_rect.bottom_left().moved_up(1), inner_container_frame_rect.bottom_right().translated(-1), bottom_right_color);
+        painter.draw_line(inner_container_frame_rect.top_left().moved_down(1), inner_container_frame_rect.bottom_left().moved_up(2), top_left_color);
+        painter.draw_line(inner_container_frame_rect.top_right().moved_left(1), inner_container_frame_rect.bottom_right().translated(-1, -2), bottom_right_color);
     }
 
     if (style == FrameStyle::RaisedBox || style == FrameStyle::SunkenBox) {
         swap(top_left_color, bottom_right_color);
         IntRect inner_rect = rect.shrunken(2, 2);
-        painter.draw_line(inner_rect.top_left(), inner_rect.top_right(), top_left_color);
-        painter.draw_line(inner_rect.bottom_left(), inner_rect.bottom_right(), bottom_right_color);
-        painter.draw_line(inner_rect.top_left().translated(0, 1), inner_rect.bottom_left().translated(0, -1), top_left_color);
-        painter.draw_line(inner_rect.top_right(), inner_rect.bottom_right().translated(0, -1), bottom_right_color);
+        painter.draw_line(inner_rect.top_left(), inner_rect.top_right().moved_left(1), top_left_color);
+        painter.draw_line(inner_rect.bottom_left().moved_up(1), inner_rect.bottom_right().translated(-1), bottom_right_color);
+        painter.draw_line(inner_rect.top_left().moved_down(1), inner_rect.bottom_left().moved_up(2), top_left_color);
+        painter.draw_line(inner_rect.top_right().moved_left(1), inner_rect.bottom_right().translated(-1, -2), bottom_right_color);
     }
 }
 
@@ -342,22 +342,22 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& re
                                          rect.height() - border_thickness },
         base_color, border_thickness);
 
-    painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left(), base_color);
-    painter.draw_line(rect.top_left().translated(1, 1), rect.top_right().translated(-1, 1), light_shade);
-    painter.draw_line(rect.top_left().translated(1, 1), rect.bottom_left().translated(1, -1), light_shade);
-    painter.draw_line(rect.top_left().translated(2, 2), rect.top_right().translated(-2, 2), base_color);
-    painter.draw_line(rect.top_left().translated(2, 2), rect.bottom_left().translated(2, -2), base_color);
-    painter.draw_line(rect.top_left().translated(3, 3), rect.top_right().translated(-3, 3), base_color);
-    painter.draw_line(rect.top_left().translated(3, 3), rect.bottom_left().translated(3, -3), base_color);
+    painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), base_color);
+    painter.draw_line(rect.top_left().translated(1, 1), rect.top_right().translated(-2, 1), light_shade);
+    painter.draw_line(rect.top_left().translated(1, 1), rect.bottom_left().translated(1, -2), light_shade);
+    painter.draw_line(rect.top_left().translated(2, 2), rect.top_right().translated(-3, 2), base_color);
+    painter.draw_line(rect.top_left().translated(2, 2), rect.bottom_left().translated(2, -3), base_color);
+    painter.draw_line(rect.top_left().translated(3, 3), rect.top_right().translated(-4, 3), base_color);
+    painter.draw_line(rect.top_left().translated(3, 3), rect.bottom_left().translated(3, -4), base_color);
 
-    painter.draw_line(rect.top_right(), rect.bottom_right(), dark_shade);
-    painter.draw_line(rect.top_right().translated(-1, 1), rect.bottom_right().translated(-1, -1), mid_shade);
-    painter.draw_line(rect.top_right().translated(-2, 2), rect.bottom_right().translated(-2, -2), base_color);
-    painter.draw_line(rect.top_right().translated(-3, 3), rect.bottom_right().translated(-3, -3), base_color);
-    painter.draw_line(rect.bottom_left(), rect.bottom_right(), dark_shade);
-    painter.draw_line(rect.bottom_left().translated(1, -1), rect.bottom_right().translated(-1, -1), mid_shade);
-    painter.draw_line(rect.bottom_left().translated(2, -2), rect.bottom_right().translated(-2, -2), base_color);
-    painter.draw_line(rect.bottom_left().translated(3, -3), rect.bottom_right().translated(-3, -3), base_color);
+    painter.draw_line(rect.top_right().translated(-1, 0), rect.bottom_right().translated(-1, -1), dark_shade);
+    painter.draw_line(rect.top_right().translated(-2, 1), rect.bottom_right().translated(-2, -2), mid_shade);
+    painter.draw_line(rect.top_right().translated(-3, 2), rect.bottom_right().translated(-3, -3), base_color);
+    painter.draw_line(rect.top_right().translated(-4, 3), rect.bottom_right().translated(-4, -4), base_color);
+    painter.draw_line(rect.bottom_left().translated(0, -1), rect.bottom_right().translated(-1, -1), dark_shade);
+    painter.draw_line(rect.bottom_left().translated(1, -2), rect.bottom_right().translated(-2, -2), mid_shade);
+    painter.draw_line(rect.bottom_left().translated(2, -3), rect.bottom_right().translated(-3, -3), base_color);
+    painter.draw_line(rect.bottom_left().translated(3, -4), rect.bottom_right().translated(-4, -4), base_color);
 }
 
 void ClassicStylePainter::paint_progressbar(Painter& painter, IntRect const& rect, Palette const& palette, int min, int max, int value, StringView text, Orientation orientation)
@@ -624,7 +624,7 @@ void ClassicStylePainter::paint_simple_rect_shadow(Painter& painter, IntRect con
     auto half_width = containing_horizontal_rect.width() / 2;
     int corner_piece_width = min(containing_horizontal_rect.width() / 2, base_size * 2);
     int left_corners_right = containing_horizontal_rect.left() + corner_piece_width;
-    int right_corners_left = max(containing_horizontal_rect.right() - corner_piece_width + 1, left_corners_right + 1);
+    int right_corners_left = max(containing_horizontal_rect.right() - corner_piece_width, left_corners_right + 1);
     auto paint_horizontal = [&](int y, int src_row) {
         if (half_width <= 0)
             return;
@@ -639,7 +639,7 @@ void ClassicStylePainter::paint_simple_rect_shadow(Painter& painter, IntRect con
     };
 
     paint_horizontal(containing_rect.top(), 0);
-    paint_horizontal(containing_rect.bottom() - base_size + 1, 1);
+    paint_horizontal(containing_rect.bottom() - base_size, 1);
 
     int corner_piece_height = min(half_height, base_size);
     int top_corners_bottom = base_size + corner_piece_height;
@@ -658,7 +658,7 @@ void ClassicStylePainter::paint_simple_rect_shadow(Painter& painter, IntRect con
     paint_vertical(containing_rect.left(), 0, horizontal_shift, 0);
     if (shadow_includes_frame)
         horizontal_shift = 0; // TODO: fix off-by-one on rectangles barely wide enough
-    paint_vertical(containing_rect.right() - base_size + 1, 1, 0, horizontal_shift);
+    paint_vertical(containing_rect.right() - base_size, 1, 0, horizontal_shift);
 
     if (fill_content) {
         // Fill the enclosed rectangle with the RGBA color of the right-bottom pixel of the TL tile

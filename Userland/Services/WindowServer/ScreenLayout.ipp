@@ -358,7 +358,7 @@ bool ScreenLayout::try_auto_add_display_connector(DeprecatedString const& device
     for (auto& screen : screens) {
         auto screen_rect = screen.virtual_rect();
         Gfx::IntRect new_screen_rect {
-            screen_rect.right() + 1,
+            screen_rect.right(),
             screen_rect.top(),
             (int)mode_setting.horizontal_active,
             (int)mode_setting.vertical_active

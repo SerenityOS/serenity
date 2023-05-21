@@ -105,7 +105,7 @@ void AbstractScrollableWidget::custom_layout()
     {
         int vertical_scrollbar_width = m_vertical_scrollbar->effective_min_size().width().as_int();
         m_vertical_scrollbar->set_relative_rect(
-            inner_rect.right() + 1 - vertical_scrollbar_width,
+            inner_rect.right() - vertical_scrollbar_width,
             inner_rect.top() + height_wanted_by_banner_widget,
             vertical_scrollbar_width,
             inner_rect.height() - height_wanted_by_horizontal_scrollbar - height_wanted_by_banner_widget);
@@ -115,14 +115,14 @@ void AbstractScrollableWidget::custom_layout()
         int horizontal_scrollbar_height = m_horizontal_scrollbar->effective_min_size().height().as_int();
         m_horizontal_scrollbar->set_relative_rect(
             inner_rect.left(),
-            inner_rect.bottom() + 1 - horizontal_scrollbar_height,
+            inner_rect.bottom() - horizontal_scrollbar_height,
             inner_rect.width() - width_wanted_by_vertical_scrollbar,
             horizontal_scrollbar_height);
     }
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
-        Gfx::IntRect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
+        Gfx::IntRect corner_rect { m_horizontal_scrollbar->relative_rect().right(), m_vertical_scrollbar->relative_rect().bottom(), width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
         m_corner_widget->set_relative_rect(corner_rect);
     }
 }
@@ -273,18 +273,16 @@ void AbstractScrollableWidget::scroll_into_view(Gfx::IntRect const& rect, bool s
         return;
 
     if (scroll_vertically) {
-        if (rect.top() < visible_content_rect.top()) {
+        if (rect.top() < visible_content_rect.top())
             m_vertical_scrollbar->set_value(rect.top());
-        } else if (rect.top() > visible_content_rect.top() && rect.bottom() > visible_content_rect.bottom()) {
-            m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height() + 1);
-        }
+        else if (rect.top() > visible_content_rect.top() && rect.bottom() > visible_content_rect.bottom())
+            m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
     }
     if (scroll_horizontally) {
-        if (rect.left() < visible_content_rect.left()) {
+        if (rect.left() < visible_content_rect.left())
             m_horizontal_scrollbar->set_value(rect.left());
-        } else if (rect.left() > visible_content_rect.left() && rect.right() > visible_content_rect.right()) {
-            m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width() + 1);
-        }
+        else if (rect.left() > visible_content_rect.left() && rect.right() > visible_content_rect.right())
+            m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
     }
 }
 

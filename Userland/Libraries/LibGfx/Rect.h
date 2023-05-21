@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Orientation.h>
@@ -18,12 +19,6 @@
 #include <math.h>
 
 namespace Gfx {
-
-template<typename T>
-T abst(T value)
-{
-    return value < 0 ? -value : value;
-}
 
 template<typename T>
 class Rect {
@@ -291,17 +286,17 @@ public:
 
     [[nodiscard]] bool contains_vertically(T y) const
     {
-        return y >= top() && y <= bottom();
+        return y >= top() && y < bottom();
     }
 
     [[nodiscard]] bool contains_horizontally(T x) const
     {
-        return x >= left() && x <= right();
+        return x >= left() && x < right();
     }
 
     [[nodiscard]] bool contains(T x, T y) const
     {
-        return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
+        return contains_horizontally(x) && contains_vertically(y);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool contains(Point<T> const& point) const
@@ -354,29 +349,14 @@ public:
     }
 
     [[nodiscard]] ALWAYS_INLINE T left() const { return x(); }
-    [[nodiscard]] ALWAYS_INLINE T right() const { return x() + width() - 1; }
+    [[nodiscard]] ALWAYS_INLINE T right() const { return x() + width(); }
     [[nodiscard]] ALWAYS_INLINE T top() const { return y(); }
-    [[nodiscard]] ALWAYS_INLINE T bottom() const { return y() + height() - 1; }
+    [[nodiscard]] ALWAYS_INLINE T bottom() const { return y() + height(); }
 
-    ALWAYS_INLINE void set_left(T left)
-    {
-        set_x(left);
-    }
-
-    ALWAYS_INLINE void set_top(T top)
-    {
-        set_y(top);
-    }
-
-    ALWAYS_INLINE void set_right(T right)
-    {
-        set_width(right - x() + 1);
-    }
-
-    ALWAYS_INLINE void set_bottom(T bottom)
-    {
-        set_height(bottom - y() + 1);
-    }
+    ALWAYS_INLINE void set_left(T left) { set_x(left); }
+    ALWAYS_INLINE void set_top(T top) { set_y(top); }
+    ALWAYS_INLINE void set_right(T right) { set_width(right - x()); }
+    ALWAYS_INLINE void set_bottom(T bottom) { set_height(bottom - y()); }
 
     void set_right_without_resize(T new_right)
     {
@@ -392,20 +372,20 @@ public:
 
     [[nodiscard]] bool intersects_vertically(Rect<T> const& other) const
     {
-        return top() <= other.bottom() && other.top() <= bottom();
+        return top() < other.bottom() && other.top() < bottom();
     }
 
     [[nodiscard]] bool intersects_horizontally(Rect<T> const& other) const
     {
-        return left() <= other.right() && other.left() <= right();
+        return left() < other.right() && other.left() < right();
     }
 
     [[nodiscard]] bool intersects(Rect<T> const& other) const
     {
-        return left() <= other.right()
-            && other.left() <= right()
-            && top() <= other.bottom()
-            && other.top() <= bottom();
+        return left() < other.right()
+            && other.left() < right()
+            && top() < other.bottom()
+            && other.top() < bottom();
     }
 
     template<typename Container>
@@ -445,25 +425,25 @@ public:
             x(),
             y(),
             width(),
-            hammer.y() - y()
+            hammer.y() - y(),
         };
         Rect<T> bottom_shard {
             x(),
-            hammer.y() + hammer.height(),
+            hammer.bottom(),
             width(),
-            (y() + height()) - (hammer.y() + hammer.height())
+            bottom() - hammer.bottom(),
         };
         Rect<T> left_shard {
             x(),
             max(hammer.y(), y()),
             hammer.x() - x(),
-            min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
+            min(hammer.bottom(), bottom()) - max(hammer.y(), y()),
         };
         Rect<T> right_shard {
-            hammer.x() + hammer.width(),
+            hammer.right(),
             max(hammer.y(), y()),
             right() - hammer.right(),
-            min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
+            min(hammer.bottom(), bottom()) - max(hammer.y(), y()),
         };
         if (!top_shard.is_empty())
             pieces.unchecked_append(top_shard);
@@ -505,10 +485,10 @@ public:
             return;
         }
 
-        m_location.set_x(l);
-        m_location.set_y(t);
-        m_size.set_width((r - l) + 1);
-        m_size.set_height((b - t) + 1);
+        set_x(l);
+        set_y(t);
+        set_right(r);
+        set_bottom(b);
     }
 
     [[nodiscard]] static Rect<T> centered_on(Point<T> const& center, Size<T> const& size)
@@ -518,7 +498,7 @@ public:
 
     [[nodiscard]] static Rect<T> from_two_points(Point<T> const& a, Point<T> const& b)
     {
-        return { min(a.x(), b.x()), min(a.y(), b.y()), abst(a.x() - b.x()), abst(a.y() - b.y()) };
+        return { min(a.x(), b.x()), min(a.y(), b.y()), AK::abs(a.x() - b.x()), AK::abs(a.y() - b.y()) };
     }
 
     [[nodiscard]] static Rect<T> intersection(Rect<T> const& a, Rect<T> const& b)
@@ -541,18 +521,18 @@ public:
         if (auto point = line.intersected({ top_left(), top_right() }); point.has_value())
             points.append({ point.value().x(), y() });
         if (auto point = line.intersected({ bottom_left(), bottom_right() }); point.has_value()) {
-            points.append({ point.value().x(), bottom() });
+            points.append({ point.value().x(), bottom() - 1 });
             if (points.size() == 2)
                 return points;
         }
         if (height() > 2) {
-            if (auto point = line.intersected({ { x(), y() + 1 }, { x(), bottom() - 1 } }); point.has_value()) {
+            if (auto point = line.intersected({ { x(), y() + 1 }, { x(), bottom() - 2 } }); point.has_value()) {
                 points.append({ x(), point.value().y() });
                 if (points.size() == 2)
                     return points;
             }
-            if (auto point = line.intersected({ { right(), y() + 1 }, { right(), bottom() - 1 } }); point.has_value())
-                points.append({ right(), point.value().y() });
+            if (auto point = line.intersected({ { right() - 1, y() + 1 }, { right() - 1, bottom() - 2 } }); point.has_value())
+                points.append({ right() - 1, point.value().y() });
         }
         return points;
     }
@@ -560,11 +540,11 @@ public:
     template<typename U = T>
     [[nodiscard]] Gfx::Rect<U> interpolated_to(Gfx::Rect<T> const& to, float factor) const
     {
-        VERIFY(factor >= 0.0f);
-        VERIFY(factor <= 1.0f);
-        if (factor == 0.0f)
+        VERIFY(factor >= 0.f);
+        VERIFY(factor <= 1.f);
+        if (factor == 0.f)
             return *this;
-        if (factor == 1.0f)
+        if (factor == 1.f)
             return to;
         if (this == &to)
             return *this;
@@ -572,7 +552,7 @@ public:
         auto interpolated_top = round_to<U>(mix<float>(y(), to.y(), factor));
         auto interpolated_right = round_to<U>(mix<float>(right(), to.right(), factor));
         auto interpolated_bottom = round_to<U>(mix<float>(bottom(), to.bottom(), factor));
-        return { interpolated_left, interpolated_top, interpolated_right - interpolated_left + 1, interpolated_bottom - interpolated_top + 1 };
+        return { interpolated_left, interpolated_top, interpolated_right - interpolated_left, interpolated_bottom - interpolated_top };
     }
 
     [[nodiscard]] float center_point_distance_to(Rect<T> const& other) const
@@ -596,7 +576,7 @@ public:
     {
         auto points = closest_outside_center_points(other);
         if (points.is_empty())
-            return 0.0;
+            return 0.f;
         return Line { points[0], points[0] }.length();
     }
 
@@ -679,8 +659,8 @@ public:
         check_distance({ top_left(), top_right() });
         check_distance({ bottom_left(), bottom_right() });
         if (height() > 2) {
-            check_distance({ { x(), y() + 1 }, { x(), bottom() - 1 } });
-            check_distance({ { right(), y() + 1 }, { right(), bottom() - 1 } });
+            check_distance({ { x(), y() + 1 }, { x(), bottom() - 2 } });
+            check_distance({ { right() - 1, y() + 1 }, { right() - 1, bottom() - 2 } });
         }
         VERIFY(closest_point.has_value());
         VERIFY(side(closest_point.value()) != Side::None);
@@ -699,23 +679,23 @@ public:
                 if (part.x() < other_rect.x()) {
                     if (part.y() < other_rect.y())
                         m_top_left = true;
-                    if ((part.y() >= other_rect.y() && part.y() < other_rect.bottom()) || (part.y() <= other_rect.bottom() && part.bottom() > other_rect.y()))
+                    if ((part.y() >= other_rect.y() && part.y() < other_rect.bottom() - 1) || (part.y() < other_rect.bottom() && part.bottom() - 1 > other_rect.y()))
                         m_left = true;
-                    if (part.y() >= other_rect.bottom() || part.bottom() > other_rect.y())
+                    if (part.y() >= other_rect.bottom() - 1 || part.bottom() - 1 > other_rect.y())
                         m_bottom_left = true;
                 }
-                if (part.x() >= other_rect.x() || part.right() > other_rect.x()) {
+                if (part.x() >= other_rect.x() || part.right() - 1 > other_rect.x()) {
                     if (part.y() < other_rect.y())
                         m_top = true;
-                    if (part.y() >= other_rect.bottom() || part.bottom() > other_rect.bottom())
+                    if (part.y() >= other_rect.bottom() - 1 || part.bottom() > other_rect.bottom())
                         m_bottom = true;
                 }
-                if (part.x() >= other_rect.right() || part.right() > other_rect.right()) {
+                if (part.x() >= other_rect.right() - 1 || part.right() > other_rect.right()) {
                     if (part.y() < other_rect.y())
                         m_top_right = true;
-                    if ((part.y() >= other_rect.y() && part.y() < other_rect.bottom()) || (part.y() <= other_rect.bottom() && part.bottom() > other_rect.y()))
+                    if ((part.y() >= other_rect.y() && part.y() < other_rect.bottom() - 1) || (part.y() < other_rect.bottom() && part.bottom() - 1 > other_rect.y()))
                         m_right = true;
-                    if (part.y() >= other_rect.bottom() || part.bottom() > other_rect.y())
+                    if (part.y() >= other_rect.bottom() - 1 || part.bottom() - 1 > other_rect.y())
                         m_bottom_right = true;
                 }
             }
@@ -763,9 +743,9 @@ public:
     {
         if (is_empty())
             return Side::None;
-        if (point.y() == y() || point.y() == bottom())
-            return (point.x() >= x() && point.x() <= right()) ? (point.y() == y() ? Side::Top : Side::Bottom) : Side::None;
-        if (point.x() == x() || point.x() == right())
+        if (point.y() == y() || point.y() == bottom() - 1)
+            return (point.x() >= x() && point.x() < right()) ? (point.y() == y() ? Side::Top : Side::Bottom) : Side::None;
+        if (point.x() == x() || point.x() == right() - 1)
             return (point.y() > y() && point.y() < bottom()) ? (point.x() == x() ? Side::Left : Side::Right) : Side::None;
         return Side::None;
     }
@@ -778,7 +758,7 @@ public:
         case Side::Left:
             // Return the area in other that is to the left of this rect
             if (other.x() < x()) {
-                if (other.right() >= x())
+                if (other.right() > x())
                     return { other.location(), { x() - other.x(), other.height() } };
                 else
                     return other;
@@ -787,7 +767,7 @@ public:
         case Side::Top:
             // Return the area in other that is above this rect
             if (other.y() < y()) {
-                if (other.bottom() >= y())
+                if (other.bottom() > y())
                     return { other.location(), { other.width(), y() - other.y() } };
                 else
                     return other;
@@ -795,18 +775,18 @@ public:
             break;
         case Side::Right:
             // Return the area in other that is to the right of this rect
-            if (other.right() >= x()) {
-                if (other.x() <= right())
-                    return { { right() + 1, other.y() }, { other.width() - (right() - other.x()), other.height() } };
+            if (other.right() > x()) {
+                if (other.x() < right())
+                    return { { right(), other.y() }, { other.width() - (right() - 1 - other.x()), other.height() } };
                 else
                     return other;
             }
             break;
         case Side::Bottom:
             // Return the area in other that is below this rect
-            if (other.bottom() >= y()) {
-                if (other.y() <= bottom())
-                    return { { other.x(), bottom() + 1 }, { other.width(), other.height() - (bottom() - other.y()) } };
+            if (other.bottom() > y()) {
+                if (other.y() < bottom())
+                    return { { other.x(), bottom() }, { other.width(), other.height() - (bottom() - 1 - other.y()) } };
                 else
                     return other;
             }
@@ -878,10 +858,10 @@ public:
             return false;
         if (intersects(other))
             return false;
-        if (other.x() + other.width() == x() || other.x() == x() + width())
-            return max(top(), other.top()) <= min(bottom(), other.bottom());
-        if (other.y() + other.height() == y() || other.y() == y() + height())
-            return max(left(), other.left()) <= min(right(), other.right());
+        if (other.right() == x() || other.x() == right())
+            return max(top(), other.top()) < min(bottom(), other.bottom());
+        if (other.bottom() == y() || other.y() == bottom())
+            return max(left(), other.left()) < min(right(), other.right());
         return false;
     }
 
@@ -923,7 +903,7 @@ public:
             set_location(other.location());
             return;
         case TextAlignment::TopRight:
-            set_x(other.x() + other.width() - width());
+            set_x(other.right() - width());
             set_y(other.y());
             return;
         case TextAlignment::CenterLeft:
@@ -931,20 +911,20 @@ public:
             center_vertically_within(other);
             return;
         case TextAlignment::CenterRight:
-            set_x(other.x() + other.width() - width());
+            set_x(other.right() - width());
             center_vertically_within(other);
             return;
         case TextAlignment::BottomCenter:
             center_horizontally_within(other);
-            set_y(other.y() + other.height() - height());
+            set_y(other.bottom() - height());
             return;
         case TextAlignment::BottomLeft:
             set_x(other.x());
-            set_y(other.y() + other.height() - height());
+            set_y(other.bottom() - height());
             return;
         case TextAlignment::BottomRight:
-            set_x(other.x() + other.width() - width());
-            set_y(other.y() + other.height() - height());
+            set_x(other.right() - width());
+            set_y(other.bottom() - height());
             return;
         }
     }
@@ -1036,8 +1016,8 @@ using FloatRect = Rect<float>;
 {
     int x1 = floorf(float_rect.x());
     int y1 = floorf(float_rect.y());
-    int x2 = ceilf(float_rect.x() + float_rect.width());
-    int y2 = ceilf(float_rect.y() + float_rect.height());
+    int x2 = ceilf(float_rect.right());
+    int y2 = ceilf(float_rect.bottom());
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 

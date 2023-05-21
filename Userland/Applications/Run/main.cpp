@@ -17,7 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
     auto window = TRY(RunWindow::try_create());
 
-    window->move_to(16, GUI::Desktop::the().rect().bottom() - GUI::Desktop::the().taskbar_height() - 16 - window->height());
+    constexpr int margin = 16;
+    window->move_to(margin, GUI::Desktop::the().rect().bottom() - 1 - GUI::Desktop::the().taskbar_height() - margin - window->height());
     window->show();
 
     return app->exec();

@@ -84,7 +84,7 @@ void ValueSlider::paint_event(PaintEvent& event)
         painter.fill_rect_with_gradient(m_orientation, bar_rect(), palette().inactive_window_border1(), palette().inactive_window_border2());
 
     auto unfilled_rect = bar_rect();
-    unfilled_rect.set_left(knob_rect().right());
+    unfilled_rect.set_left(knob_rect().right() - 1);
     painter.fill_rect(unfilled_rect, palette().base());
 
     Gfx::StylePainter::paint_frame(painter, bar_rect(), palette(), Gfx::FrameStyle::SunkenContainer);
@@ -143,7 +143,7 @@ int ValueSlider::value_at(Gfx::IntPoint position) const
     float leftmost_knob_center = (float)bar_rect().left() + (float)knob_thickness / 2;
     if (position.x() < leftmost_knob_center)
         return min();
-    float rightmost_knob_center = (float)bar_rect().right() - (float)knob_thickness / 2;
+    float rightmost_knob_center = (float)(bar_rect().right() - 1) - (float)knob_thickness / 2;
     if (position.x() > rightmost_knob_center)
         return max();
     float relative_offset = (float)(position.x() - leftmost_knob_center) / (rightmost_knob_center - leftmost_knob_center);

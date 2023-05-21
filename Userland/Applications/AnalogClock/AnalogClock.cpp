@@ -11,13 +11,13 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 
-void AnalogClock::draw_graduations(GUI::Painter& painter, Gfx::IntRect& rect, int x, int y)
+void AnalogClock::draw_graduations(GUI::Painter& painter, Gfx::IntRect rect, int x, int y)
 {
-    rect.set_x(x);
-    rect.set_y(y);
+    rect.set_location({ x, y });
 
     painter.fill_rect(rect, palette().active_window_border2());
 
+    rect.shrink(0, 1, 1, 0);
     painter.draw_line(rect.top_left(), rect.top_right(), palette().threed_highlight());
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), palette().active_window_border1().darkened(0.7f));
     painter.draw_line(rect.bottom_right(), rect.top_right(), palette().active_window_border1().darkened(0.7f));
