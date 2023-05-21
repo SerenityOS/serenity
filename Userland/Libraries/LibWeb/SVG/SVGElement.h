@@ -25,7 +25,7 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::NonnullGCPtr<HTML::DOMStringMap> m_dataset;
+    JS::GCPtr<HTML::DOMStringMap> m_dataset;
 };
 
 }
