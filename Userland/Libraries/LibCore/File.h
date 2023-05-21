@@ -68,6 +68,13 @@ public:
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(size_t length) override;
 
+    // Sets the blocking mode of the file. If blocking mode is disabled, reads
+    // will fail with EAGAIN when there's no data available to read, and writes
+    // will fail with EAGAIN when the data cannot be written without blocking
+    // (due to the send buffer being full, for example).
+    // See also Socket::set_blocking.
+    ErrorOr<void> set_blocking(bool enabled);
+
     template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
     int leak_fd(Badge<VIP>)
     {
