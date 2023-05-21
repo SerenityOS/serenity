@@ -118,6 +118,7 @@ ErrorOr<ViewImplementation::DOMNodeProperties> ViewImplementation::inspect_dom_n
         .resolved_style_json = TRY(String::from_deprecated_string(response.take_resolved_style())),
         .custom_properties_json = TRY(String::from_deprecated_string(response.take_custom_properties())),
         .node_box_sizing_json = TRY(String::from_deprecated_string(response.take_node_box_sizing())),
+        .aria_properties_state_json = TRY(String::from_deprecated_string(response.take_aria_properties_state())),
     };
 }
 

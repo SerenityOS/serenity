@@ -1,5 +1,6 @@
 set(SOURCES
     AccessibilityTreeModel.cpp
+    AriaPropertiesStateModel.cpp
     DOMTreeModel.cpp
     OutOfProcessWebView.cpp
     RequestServerAdapter.cpp

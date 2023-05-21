@@ -519,8 +519,8 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    view().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
-        m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing);
+    view().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing, auto& aria_properties_state) {
+        m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing, aria_properties_state);
     };
 
     view().on_get_accessibility_tree = [this](auto& accessibility_tree) {
@@ -821,7 +821,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     if (!m_dom_inspector_widget) {
         auto window = GUI::Window::construct(&this->window());
         window->set_window_mode(GUI::WindowMode::Modeless);
-        window->resize(300, 500);
+        window->resize(325, 500);
         window->set_title("Inspector");
         window->set_icon(g_icon_bag.inspector_object);
         window->on_close = [&]() {

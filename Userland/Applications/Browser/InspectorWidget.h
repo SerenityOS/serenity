@@ -44,7 +44,7 @@ public:
     void set_web_view(NonnullRefPtr<WebView::OutOfProcessWebView> web_view) { m_web_view = web_view; }
     void set_dom_json(StringView);
     void clear_dom_json();
-    void set_dom_node_properties_json(Selection, StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json, StringView node_box_sizing_json);
+    void set_dom_node_properties_json(Selection, StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json, StringView node_box_sizing_json, StringView aria_properties_state_json);
     void set_accessibility_json(StringView);
 
     void set_selection(Selection);
@@ -56,6 +56,7 @@ private:
     void set_selection(GUI::ModelIndex);
     void load_style_json(StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json);
     void update_node_box_model(StringView node_box_sizing_json);
+    void update_aria_properties_state_model(StringView aria_properties_state_json);
     void clear_style_json();
     void clear_node_box_model();
 
@@ -66,6 +67,7 @@ private:
     RefPtr<GUI::TableView> m_computed_style_table_view;
     RefPtr<GUI::TableView> m_resolved_style_table_view;
     RefPtr<GUI::TableView> m_custom_properties_table_view;
+    RefPtr<GUI::TableView> m_aria_properties_state_view;
     RefPtr<ElementSizePreviewWidget> m_element_size_view;
 
     Web::Layout::BoxModelMetrics m_node_box_sizing;

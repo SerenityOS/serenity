@@ -17,6 +17,7 @@
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibWeb/ARIA/RoleType.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -452,7 +453,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
     // Note: Nodes without layout (aka non-visible nodes, don't have style computed)
     if (!node || !node->layout_node()) {
-        return { false, "", "", "", "" };
+        return { false, "", "", "", "", "" };
     }
 
     node->document().set_inspected_node(node, pseudo_element);
@@ -460,7 +461,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
         if (!element.computed_css_values())
-            return { false, "", "", "", "" };
+            return { false, "", "", "", "", "" };
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> DeprecatedString {
             StringBuilder builder;
@@ -527,10 +528,25 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             return builder.to_deprecated_string();
         };
 
+        auto serialize_aria_properties_state_json = [](Web::DOM::Element const& element) -> DeprecatedString {
+            auto role_name = element.role_or_default();
+            if (!role_name.has_value()) {
+                return "";
+            }
+            auto aria_data = MUST(Web::ARIA::AriaData::build_data(element));
+            auto role = MUST(Web::ARIA::RoleType::build_role_object(role_name.value(), element.is_focusable(), *aria_data));
+
+            StringBuilder builder;
+            auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
+            MUST(role->serialize_as_json(serializer));
+            MUST(serializer.finish());
+            return builder.to_deprecated_string();
+        };
+
         if (pseudo_element.has_value()) {
             auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
             if (!pseudo_element_node)
-                return { false, "", "", "", "" };
+                return { false, "", "", "", "", "" };
 
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
             //        in a format we can use. So, we run the StyleComputer again to get the specified
@@ -540,17 +556,18 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             DeprecatedString resolved_values = "{}";
             DeprecatedString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
             DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
-            return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json };
+            return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json, "" };
         }
 
         DeprecatedString computed_values = serialize_json(*element.computed_css_values());
         DeprecatedString resolved_values_json = serialize_json(element.resolved_css_values());
         DeprecatedString custom_properties_json = serialize_custom_properties_json(element, {});
         DeprecatedString node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
-        return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json };
+        DeprecatedString aria_properties_state_json = serialize_aria_properties_state_json(element);
+        return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json, aria_properties_state_json };
     }
 
-    return { false, "", "", "", "" };
+    return { false, "", "", "", "", "" };
 }
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_hovered_node_id()
