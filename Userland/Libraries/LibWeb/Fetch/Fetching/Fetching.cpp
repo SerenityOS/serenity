@@ -492,7 +492,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 }
 
                 // 3. Let processBody given bytes be these steps:
-                Infrastructure::Body::ProcessBodyCallback process_body = [&realm, &request, &response, &fetch_params, process_body_error = move(process_body_error)](ByteBuffer bytes) {
+                Infrastructure::Body::ProcessBodyCallback process_body = [&realm, request, response, &fetch_params, process_body_error = move(process_body_error)](ByteBuffer bytes) {
                     // 1. If bytes do not match request’s integrity metadata, then run processBodyError and abort these steps.
                     if (!TRY_OR_IGNORE(SRI::do_bytes_match_metadata_list(bytes, request->integrity_metadata()))) {
                         process_body_error({});
