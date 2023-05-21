@@ -143,7 +143,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
 
         auto& promise_capability = *promise_capability_handle;
         auto& request_object = *request_object_handle;
-        auto& response_object = *response_object_handle;
+        JS::GCPtr<Response> response_object = response_object_handle.ptr();
 
         // 1. Set locallyAborted to true.
         locally_aborted->set_value(true);
