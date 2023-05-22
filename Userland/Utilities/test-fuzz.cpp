@@ -10,27 +10,70 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
+// TODO: Look into generating this from the authoritative list of fuzzing targets in fuzzer.cmake.
 #define ENUMERATE_TARGETS(T) \
+    T(ASN1)                  \
     T(BMPLoader)             \
+    T(Brotli)                \
+    T(CSSParser)             \
+    T(CyrillicDecoder)       \
+    T(DeflateCompression)    \
+    T(DeflateDecompression)  \
     T(ELF)                   \
+    T(FlacLoader)            \
     T(Gemini)                \
     T(GIFLoader)             \
+    T(GzipCompression)       \
+    T(GzipDecompression)     \
+    T(HebrewDecoder)         \
     T(HttpRequest)           \
+    T(ICCProfile)            \
     T(ICOLoader)             \
+    T(IMAPParser)            \
     T(JPEGLoader)            \
     T(Js)                    \
+    T(Latin1Decoder)         \
+    T(Latin2Decoder)         \
+    T(LzmaDecompression)     \
+    T(LzmaRoundtrip)         \
     T(Markdown)              \
+    T(MatroskaReader)        \
+    T(MD5)                   \
+    T(MP3Loader)             \
     T(PBMLoader)             \
+    T(PDF)                   \
+    T(PEM)                   \
     T(PGMLoader)             \
     T(PNGLoader)             \
+    T(Poly1305)              \
     T(PPMLoader)             \
+    T(QOALoader)             \
     T(QOILoader)             \
-    T(TGALoader)             \
+    T(QuotedPrintableParser) \
     T(RegexECMA262)          \
+    T(RegexPosixBasic)       \
     T(RegexPosixExtended)    \
+    T(RSAKeyParsing)         \
+    T(SHA1)                  \
+    T(SHA256)                \
+    T(SHA384)                \
+    T(SHA512)                \
     T(Shell)                 \
+    T(ShellPosix)            \
+    T(SQLParser)             \
+    T(Tar)                   \
+    T(TGALoader)             \
     T(TTF)                   \
-    T(URL)
+    T(URL)                   \
+    T(UTF16BEDecoder)        \
+    T(VP9Decoder)            \
+    T(WasmParser)            \
+    T(WAVLoader)             \
+    T(WebPLoader)            \
+    T(WOFF)                  \
+    T(XML)                   \
+    T(Zip)                   \
+    T(ZlibDecompression)
 
 #undef __ENUMERATE_TARGET
 #define __ENUMERATE_TARGET(x) extern "C" int Test##x(uint8_t const*, size_t);

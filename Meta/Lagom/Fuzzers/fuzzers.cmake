@@ -62,7 +62,7 @@ set(FUZZER_TARGETS
     ZlibDecompression
 )
 
-if (ENABLE_LAGOM_LIBWEB)
+if (TARGET LibWeb)
     list(APPEND FUZZER_TARGETS CSSParser)
 endif()
 
