@@ -5,7 +5,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Cursor Speed"
+        title: "Cursor speed"
         fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -53,7 +53,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Scroll Wheel"
+        title: "Scroll wheel"
         fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -114,7 +114,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Double-click Speed"
+        title: "Double-click speed"
         fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -163,7 +163,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Button Configuration"
+        title: "Button configuration"
         fixed_height: 68
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]

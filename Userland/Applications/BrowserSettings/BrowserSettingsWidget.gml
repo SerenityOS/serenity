@@ -49,7 +49,7 @@
                     }
 
                     @GUI::Label {
-                        text: "New Tab:"
+                        text: "New tab:"
                         text_alignment: "CenterLeft"
                         fixed_width: 45
                     }

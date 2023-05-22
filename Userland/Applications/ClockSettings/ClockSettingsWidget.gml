@@ -6,7 +6,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Time Format"
+        title: "Time format"
         shrink_to_fit: false
         fixed_height: 240
         layout: @GUI::VerticalBoxLayout {

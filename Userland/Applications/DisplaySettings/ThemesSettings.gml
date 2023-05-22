@@ -8,7 +8,7 @@
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }
-        title: "Window Theme"
+        title: "Window theme"
         fixed_height: 294
 
         @GUI::Frame {
@@ -39,7 +39,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Color Scheme"
+        title: "Color scheme"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 14]
@@ -60,7 +60,7 @@
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }
-        title: "Cursor Theme"
+        title: "Cursor theme"
         shrink_to_fit: true
 
         @GUI::Button {

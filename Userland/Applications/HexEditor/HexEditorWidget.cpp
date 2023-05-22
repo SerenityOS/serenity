@@ -98,9 +98,9 @@ HexEditorWidget::HexEditorWidget()
         m_editor->update();
     };
 
-    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_new_action = GUI::Action::create("New...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String value;
-        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter a size:"sv, "New File"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto file_size = AK::StringUtils::convert_to_uint(value);
             if (!file_size.has_value()) {
                 GUI::MessageBox::show(window(), "Invalid file size entered."sv, "Error"sv, GUI::MessageBox::Type::Error);
@@ -166,7 +166,7 @@ HexEditorWidget::HexEditorWidget()
     });
     m_redo_action->set_enabled(false);
 
-    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_find_action = GUI::Action::create("&Find...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
         bool find_all = false;
         if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecResult::OK) {
@@ -176,11 +176,11 @@ HexEditorWidget::HexEditorWidget()
                 m_search_results->update();
 
                 if (matches.is_empty()) {
-                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
-                GUI::MessageBox::show(window(), DeprecatedString::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), DeprecatedString::formatted("{} matches", matches.size()), GUI::MessageBox::Type::Warning);
+                GUI::MessageBox::show(window(), DeprecatedString::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), DeprecatedString::formatted("{} Matches", matches.size()), GUI::MessageBox::Type::Warning);
                 set_search_results_visible(true);
             } else {
                 bool same_buffers = false;
@@ -192,7 +192,7 @@ HexEditorWidget::HexEditorWidget()
                 auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
 
                 if (!result.has_value()) {
-                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+                    GUI::MessageBox::show(window(), DeprecatedString::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
                     return;
                 }
 
@@ -203,7 +203,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_goto_offset_action = GUI::Action::create("&Go to Offset...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         int new_offset;
         auto result = GoToOffsetDialog::show(
             window(),
@@ -443,13 +443,13 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(*m_find_action));
     TRY(edit_menu->try_add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"sv)), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
-            GUI::MessageBox::show(&window, "Nothing to search for"sv, "Not found"sv, GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "Nothing to search for"sv, "Not Found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
         if (!result.has_value()) {
-            GUI::MessageBox::show(&window, DeprecatedString::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found"sv, GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, DeprecatedString::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not Found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
@@ -463,7 +463,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
         m_search_results->update();
 
         if (matches.is_empty()) {
-            GUI::MessageBox::show(&window, "No strings found in this file"sv, "Not found"sv, GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "No strings found in this file"sv, "Not Found"sv, GUI::MessageBox::Type::Warning);
             return;
         }
 

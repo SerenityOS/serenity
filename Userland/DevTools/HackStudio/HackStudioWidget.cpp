@@ -522,7 +522,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
     auto icon_no_shadow = TRY(Gfx::Bitmap::load_from_file(icon));
     return GUI::Action::create(label, icon_no_shadow, [this, extension](const GUI::Action&) {
         String filename;
-        if (GUI::InputBox::show(window(), filename, "Enter name of new file:"sv, "Add new file to project"sv) != GUI::InputBox::ExecResult::OK)
+        if (GUI::InputBox::show(window(), filename, "Enter a name:"sv, "New File"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
         if (!extension.is_empty() && !AK::StringUtils::ends_with(filename, DeprecatedString::formatted(".{}", extension), CaseSensitivity::CaseSensitive)) {
@@ -564,7 +564,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv));
     return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](const GUI::Action&) {
         String directory_name;
-        if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:"sv, "Add new folder to project"sv) != GUI::InputBox::ExecResult::OK)
+        if (GUI::InputBox::show(window(), directory_name, "Enter a name:"sv, "New Directory"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
         auto path_to_selected = selected_file_paths();
@@ -658,14 +658,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
         DeprecatedString message;
         if (files.size() == 1) {
             LexicalPath file(files[0]);
-            message = DeprecatedString::formatted("Really remove {} from disk?", file.basename());
+            message = DeprecatedString::formatted("Really remove \"{}\" from disk?", file.basename());
         } else {
-            message = DeprecatedString::formatted("Really remove {} files from disk?", files.size());
+            message = DeprecatedString::formatted("Really remove \"{}\" files from disk?", files.size());
         }
 
         auto result = GUI::MessageBox::show(window(),
             message,
-            "Confirm deletion"sv,
+            "Confirm Deletion"sv,
             GUI::MessageBox::Type::Warning,
             GUI::MessageBox::InputType::OKCancel);
         if (result == GUI::MessageBox::ExecResult::Cancel)
@@ -676,7 +676,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             if (lstat(file.characters(), &st) < 0) {
                 GUI::MessageBox::show(window(),
                     DeprecatedString::formatted("lstat ({}) failed: {}", file, strerror(errno)),
-                    "Removal failed"sv,
+                    "Removal Failed"sv,
                     GUI::MessageBox::Type::Error);
                 break;
             }
@@ -686,13 +686,13 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
-                        DeprecatedString::formatted("Removing directory {} from the project failed: {}", file, error),
-                        "Removal failed"sv,
+                        DeprecatedString::formatted("Removing directory \"{}\" from the project failed: {}", file, error),
+                        "Removal Failed"sv,
                         GUI::MessageBox::Type::Error);
                 } else {
                     GUI::MessageBox::show(window(),
-                        DeprecatedString::formatted("Removing file {} from the project failed: {}", file, error),
-                        "Removal failed"sv,
+                        DeprecatedString::formatted("Removing file \"{}\" from the project failed: {}", file, error),
+                        "Removal Failed"sv,
                         GUI::MessageBox::Type::Error);
                 }
             }
@@ -873,7 +873,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, icon, [this](auto&) {
-        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", m_project->root_path(), true);
+        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open Project", m_project->root_path(), true);
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
@@ -1147,7 +1147,7 @@ void HackStudioWidget::build()
 {
     auto result = m_project_builder->build(active_file());
     if (result.is_error()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Build failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Build Failed"sv, GUI::MessageBox::Type::Error);
         m_build_action->set_enabled(true);
         m_stop_action->set_enabled(false);
     } else {
@@ -1159,7 +1159,7 @@ void HackStudioWidget::run()
 {
     auto result = m_project_builder->run(active_file());
     if (result.is_error()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Run failed"sv, GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("{}", result.error()), "Run Failed"sv, GUI::MessageBox::Type::Error);
         m_run_action->set_enabled(true);
         m_stop_action->set_enabled(false);
     } else {
@@ -1337,7 +1337,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
         first_time = false;
     };
 
-    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>(TRY("Find in files"_string));
+    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>(TRY("Find"_string));
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_short_string);
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_short_string, false);
     auto debug_info_widget = TRY(DebugInfoWidget::create());
@@ -1393,7 +1393,7 @@ void HackStudioWidget::update_recent_projects_submenu()
     auto recent_projects = read_recent_projects();
 
     if (recent_projects.size() <= 1) {
-        auto empty_action = GUI::Action::create("Empty...", [](auto&) {});
+        auto empty_action = GUI::Action::create("(No recently open files)", [](auto&) {});
         empty_action->set_enabled(false);
         m_recent_projects_submenu->add_action(empty_action);
         return;
@@ -1542,7 +1542,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     }
 
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv));
-    m_editor_font_action = GUI::Action::create("Editor &Font...", icon,
+    m_editor_font_action = GUI::Action::create("Change &Font...", icon,
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, m_editor_font, false);
             if (picker->exec() == GUI::Dialog::ExecResult::OK) {
@@ -1663,7 +1663,7 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(Deprec
     if (!any_document_is_dirty())
         return ContinueDecision::Yes;
 
-    auto result = GUI::MessageBox::show(window(), prompt, "Unsaved changes"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    auto result = GUI::MessageBox::show(window(), prompt, "Unsaved Changes"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
     if (result == GUI::MessageBox::ExecResult::Cancel)
         return ContinueDecision::No;

@@ -130,9 +130,9 @@ ErrorOr<void> EffectsSettingsWidget::load_settings()
     m_system_effects = { effects, geometry, tile_window };
 
     static constexpr Array geometry_list = {
-        "On Move and Resize"sv,
-        "On Move only"sv,
-        "On Resize only"sv,
+        "On move and resize"sv,
+        "On move only"sv,
+        "On resize only"sv,
         "Never"sv
     };
     for (size_t i = 0; i < geometry_list.size(); ++i)

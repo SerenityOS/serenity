@@ -137,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto msgbox_result = GUI::MessageBox::show(window,
                 DeprecatedString::formatted("Are you sure you want to delete {}?", path),
-                "Confirm deletion"sv,
+                "Confirm Deletion"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
 
@@ -148,7 +148,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (unlinked_or_error.is_error()) {
                 GUI::MessageBox::show(window,
                     DeprecatedString::formatted("unlink({}) failed: {}", path, unlinked_or_error.error()),
-                    "Delete failed"sv,
+                    "Delete Failed"sv,
                     GUI::MessageBox::Type::Error);
 
                 return;
@@ -238,10 +238,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
-    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show &Toolbar", { Mod_Ctrl, Key_T },
-        [&](auto&) {
-            toolbar_container->set_visible(!toolbar_container->is_visible());
+    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", { Mod_Ctrl, Key_T },
+        [&](auto& action) {
+            toolbar_container->set_visible(action.is_checked());
         });
+    hide_show_toolbar_action->set_checked(true);
 
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         if (widget->bitmap())

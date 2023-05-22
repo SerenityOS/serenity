@@ -101,7 +101,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.on_click = [this](auto) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Select wallpaper"sv, "/res/wallpapers"sv, Core::File::OpenMode::Read, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Select Wallpaper"sv, "/res/wallpapers"sv, Core::File::OpenMode::Read, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
         if (response.is_error())
             return;
         m_wallpaper_view->selection().clear();
@@ -123,7 +123,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
 
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
-    m_color_input->set_color_picker_title("Select color for desktop");
+    m_color_input->set_color_picker_title("Select Desktop Color");
     bool first_color_change = true;
     m_color_input->on_change = [this, first_color_change]() mutable {
         m_monitor_widget->set_background_color(m_color_input->color());

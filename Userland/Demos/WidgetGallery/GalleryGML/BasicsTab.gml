@@ -113,7 +113,7 @@
 
                 @GUI::Button {
                     name: "enabled_coolbar_button"
-                    text: "Coolbar button"
+                    text: "Coolbar Button"
                     button_style: "Coolbar"
                 }
 
@@ -190,7 +190,7 @@
 
                 @GUI::Button {
                     name: "icon_button"
-                    text: "Icon button"
+                    text: "Icon Button"
                 }
 
                 @GUI::Button {
@@ -265,7 +265,7 @@
 
                     @GUI::ColorInput {
                         name: "font_colorinput"
-                        placeholder: "Color dialog"
+                        placeholder: "Color Picker"
                     }
 
                     @GUI::ColorInput {
@@ -278,17 +278,17 @@
 
                 @GUI::Button {
                     name: "font_button"
-                    text: "Font picker dialog..."
+                    text: "Font Picker"
                 }
 
                 @GUI::Button {
                     name: "file_button"
-                    text: "File picker dialog..."
+                    text: "File Picker"
                 }
 
                 @GUI::Button {
                     name: "input_button"
-                    text: "Input dialog..."
+                    text: "Input Box"
                 }
 
                 @GUI::Layout::Spacer {}
@@ -322,7 +322,7 @@
 
                 @GUI::Button {
                     name: "msgbox_button"
-                    text: "Message box dialog..."
+                    text: "Message Box"
                 }
             }
         }

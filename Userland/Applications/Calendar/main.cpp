@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (default_view == "Year")
         view_year_action->set_checked(true);
 
-    auto open_settings_action = GUI::Action::create("&Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
+    auto open_settings_action = GUI::Action::create("Calendar &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
         GUI::Process::spawn_or_show_error(window, "/bin/CalendarSettings"sv);
     });
 

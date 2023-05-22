@@ -40,18 +40,18 @@
 
                 @GUI::Button {
                     name: "activate_keymap_button"
-                    text: "Activate keymap"
+                    text: "Activate Keymap"
                     enabled: false
                 }
 
                 @GUI::Button {
                     name: "add_keymap_button"
-                    text: "Add keymap"
+                    text: "Add Keymap..."
                 }
 
                 @GUI::Button {
                     name: "remove_keymap_button"
-                    text: "Remove keymap"
+                    text: "Remove Keymap"
                     enabled: false
                 }
             }
@@ -59,7 +59,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Test Input"
+        title: "Test input"
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

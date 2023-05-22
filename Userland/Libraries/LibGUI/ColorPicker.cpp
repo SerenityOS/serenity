@@ -407,7 +407,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
 
-    m_selector_button = vertical_container.add<GUI::Button>("Select on screen"_string.release_value_but_fixme_should_propagate_errors());
+    m_selector_button = vertical_container.add<GUI::Button>("Select on Screen"_string.release_value_but_fixme_should_propagate_errors());
     m_selector_button->on_click = [this](auto) {
         auto selector = ColorSelectOverlay::construct();
         auto original_color = m_color;

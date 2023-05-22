@@ -368,17 +368,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!should_confirm_close)
             return GUI::MessageBox::ExecResult::OK;
         Optional<DeprecatedString> close_message;
+        auto title = "Running Process"sv;
         if (tty_has_foreground_process()) {
-            close_message = "There is still a process running in this terminal. Closing the terminal will kill it.";
+            close_message = "Close Terminal and kill its foreground process?";
         } else {
             auto child_process_count = shell_child_process_count();
-            if (child_process_count > 1)
-                close_message = DeprecatedString::formatted("There are {} background processes running in this terminal. Closing the terminal may kill them.", child_process_count);
-            else if (child_process_count == 1)
-                close_message = "There is a background process running in this terminal. Closing the terminal may kill it.";
+            if (child_process_count > 1) {
+                title = "Running Processes"sv;
+                close_message = DeprecatedString::formatted("Close Terminal and kill its {} background processes?", child_process_count);
+            } else if (child_process_count == 1) {
+                close_message = "Close Terminal and kill its background process?";
+            }
         }
         if (close_message.has_value())
-            return GUI::MessageBox::show(window, *close_message, "Close this terminal?"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+            return GUI::MessageBox::show(window, *close_message, title, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
         return GUI::MessageBox::ExecResult::OK;
     };
 

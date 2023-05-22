@@ -84,7 +84,7 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* pa
         TRY(builder.try_appendff("\nLast saved {} ago.", readable_time));
     }
 
-    auto box = TRY(MessageBox::create(parent_window, builder.string_view(), "Unsaved changes"sv, Type::Warning, InputType::YesNoCancel));
+    auto box = TRY(MessageBox::create(parent_window, builder.string_view(), "Unsaved Changes"sv, Type::Warning, InputType::YesNoCancel));
     if (parent_window)
         box->set_icon(parent_window->icon());
 

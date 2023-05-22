@@ -18,7 +18,7 @@ EditGuideDialog::EditGuideDialog(GUI::Window* parent_window, DeprecatedString co
     , m_offset(offset)
     , m_orientation(orientation)
 {
-    set_title("Create new Guide");
+    set_title("Create New Guide");
     set_icon(parent_window->icon());
     resize(200, 130);
     set_resizable(false);

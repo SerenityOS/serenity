@@ -51,7 +51,7 @@
             preferred_height: 30
 
             @GUI::Label {
-                text: "IP Address:"
+                text: "IP address:"
                 fixed_width: 100
                 text_alignment: "CenterLeft"
             }

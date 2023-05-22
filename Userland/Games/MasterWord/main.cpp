@@ -75,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Word Length...", [&](auto&) {
         auto word_length = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
-        auto result = GUI::InputBox::show_numeric(window, word_length, shortest_word, longest_word, "Word length"sv);
+        auto result = GUI::InputBox::show_numeric(window, word_length, shortest_word, longest_word, "Word Length"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             Config::write_i32("MasterWord"sv, ""sv, "word_length"sv, word_length);
             game.set_word_length(word_length);
@@ -83,14 +83,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Number of Guesses...", [&](auto&) {
         auto max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 5);
-        auto result = GUI::InputBox::show_numeric(window, max_guesses, 1, 20, "Number of guesses"sv);
+        auto result = GUI::InputBox::show_numeric(window, max_guesses, 1, 20, "Number of Guesses"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             Config::write_i32("MasterWord"sv, ""sv, "max_guesses"sv, max_guesses);
             game.set_max_guesses(max_guesses);
         }
     })));
 
-    auto toggle_check_guesses = GUI::Action::create_checkable("Check &Guesses in dictionary", [&](auto& action) {
+    auto toggle_check_guesses = GUI::Action::create_checkable("Check &Guesses in Dictionary", [&](auto& action) {
         auto checked = action.is_checked();
         game.set_check_guesses_in_dictionary(checked);
         Config::write_bool("MasterWord"sv, ""sv, "check_guesses_in_dictionary"sv, checked);

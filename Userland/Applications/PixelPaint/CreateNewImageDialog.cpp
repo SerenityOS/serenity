@@ -23,7 +23,7 @@ namespace PixelPaint {
 CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     : Dialog(parent_window)
 {
-    set_title("Create new image");
+    set_title("Create New Image");
     set_icon(parent_window->icon());
     resize(200, 220);
 

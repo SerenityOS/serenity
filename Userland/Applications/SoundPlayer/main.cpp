@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window, "Open sound file...");
+        Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window);
         if (path.has_value()) {
             player->play_file_path(path.value());
         }

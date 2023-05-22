@@ -10,7 +10,7 @@
         }
 
         @GUI::Label {
-            text: "Board rows"
+            text: "Board rows:"
             text_alignment: "CenterLeft"
         }
 
@@ -27,7 +27,7 @@
         }
 
         @GUI::Label {
-            text: "Board columns"
+            text: "Board columns:"
             text_alignment: "CenterLeft"
         }
 
