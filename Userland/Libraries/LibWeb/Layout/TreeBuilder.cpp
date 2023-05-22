@@ -526,6 +526,7 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
         parent.remove_child(*child);
         wrapper->append_child(*child);
     }
+    wrapper->set_children_are_inline(parent.children_are_inline());
     if (nearest_sibling)
         parent.insert_before(*wrapper, *nearest_sibling);
     else
