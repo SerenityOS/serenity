@@ -252,7 +252,7 @@ int getsignalbyname(char const* name)
     VERIFY(name);
     StringView name_sv { name, strlen(name) };
     for (size_t i = 0; i < NSIG; ++i) {
-        StringView signal_name { sys_signame[i], sizeof(sys_signame[i]) - 1 };
+        StringView signal_name { sys_signame[i], strlen(sys_signame[i]) };
         if (signal_name == name_sv || (name_sv.starts_with("SIG"sv) && signal_name == name_sv.substring_view(3)))
             return i;
     }
