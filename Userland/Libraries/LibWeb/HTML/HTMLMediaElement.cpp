@@ -452,6 +452,7 @@ public:
         Base::visit_edges(visitor);
         visitor.visit(m_media_element);
         visitor.visit(m_candidate);
+        visitor.visit(m_previously_failed_candidate);
     }
 
     WebIDL::ExceptionOr<void> process_candidate()
@@ -497,6 +498,15 @@ public:
             failed_with_elements().release_value_but_fixme_should_propagate_errors();
         }));
 
+        return {};
+    }
+
+    WebIDL::ExceptionOr<void> process_next_candidate()
+    {
+        if (!m_previously_failed_candidate)
+            return {};
+
+        TRY(wait_for_next_candidate(*m_previously_failed_candidate));
         return {};
     }
 
@@ -573,15 +583,14 @@ private:
 
     WebIDL::ExceptionOr<void> wait_for_next_candidate(JS::NonnullGCPtr<DOM::Node> previous_candidate)
     {
-        // FIXME: We implement the "waiting" by constantly queueing a microtask to check if the previous candidate now
-        //        has a sibling. It might be nicer for the DOM tree to just tell us when the sibling becomes available.
+        // NOTE: If there isn't another candidate to check, we implement the "waiting" step by returning until the media
+        //       element's children have changed.
         if (previous_candidate->next_sibling() == nullptr) {
-            queue_a_microtask(&m_media_element->document(), [this, previous_candidate]() {
-                wait_for_next_candidate(previous_candidate).release_value_but_fixme_should_propagate_errors();
-            });
-
+            m_previously_failed_candidate = previous_candidate;
             return {};
         }
+
+        m_previously_failed_candidate = nullptr;
 
         // FIXME: 22. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm until
         //            the algorithm says the synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
@@ -601,7 +610,14 @@ private:
 
     JS::NonnullGCPtr<HTMLMediaElement> m_media_element;
     JS::NonnullGCPtr<HTMLSourceElement> m_candidate;
+    JS::GCPtr<DOM::Node> m_previously_failed_candidate;
 };
+
+void HTMLMediaElement::children_changed()
+{
+    if (m_source_element_selector)
+        m_source_element_selector->process_next_candidate().release_value_but_fixme_should_propagate_errors();
+}
 
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
