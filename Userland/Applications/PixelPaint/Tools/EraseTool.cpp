@@ -34,6 +34,7 @@ void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint 
         int radius = size() / 2;
         Gfx::IntRect rect { point.x() - radius, point.y() - radius, size(), size() };
         GUI::Painter painter(bitmap);
+        // FIXME: Currently this mode does not respect the editing mask if present.
         painter.clear_rect(rect, color);
     } else {
         for (int y = point.y() - size(); y < point.y() + size(); y++) {
@@ -47,7 +48,7 @@ void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint 
                 auto old_color = bitmap.get_pixel(x, y);
                 auto falloff = get_falloff(distance);
                 auto new_color = old_color.interpolate(color, falloff);
-                bitmap.set_pixel(x, y, new_color);
+                set_pixel_with_possible_mask(x, y, new_color, bitmap);
             }
         }
     }
