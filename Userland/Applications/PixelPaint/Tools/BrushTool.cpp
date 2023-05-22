@@ -99,7 +99,7 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint 
             auto falloff = get_falloff(distance) * flow_scale;
             auto pixel_color = color;
             pixel_color.set_alpha(AK::min(falloff * 255, 255));
-            bitmap.set_pixel(x, y, bitmap.get_pixel(x, y).blend(pixel_color));
+            set_pixel_with_possible_mask(x, y, bitmap.get_pixel(x, y).blend(pixel_color), bitmap);
         }
     }
 }
