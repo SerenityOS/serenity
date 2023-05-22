@@ -1,12 +1,12 @@
 {
-    "name": "Ubuntu",
+    "name": "SerenityOS",
     "image": "mcr.microsoft.com/devcontainers/base:jammy",
 
     // Features to add to the dev container. More info: https://containers.dev/implementors/features.
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers-contrib/features/pre-commit:1": {},
-        "./serenity": {
+        "./features/serenity": {
             "llvm_version": 15,
             "enable_ladybird": true,
             "enable_serenity": true
