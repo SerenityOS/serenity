@@ -29,8 +29,9 @@ This is a list of useful tips and tricks to help you make the most out of Sereni
 
 ### [Assistant](help://man/1/Applications/Assistant)
 * Assistant can help you to quickly find files and launch applications. Open it with `Super+Space`.
-* Enter a URL to open it in the web browser.
-* Do quick calculations by typing the equal sign (=) followed by a mathematical expression, e.g. `=22*101`. Press Return to copy the result.
+* Enter a URL to open it in the web browser, e.g. `serenityos.org`.
+* Perform quick calculations by typing the equal sign (=) followed by a mathematical expression, e.g. `=22*101`. Press Return to copy the result.
+* Run commands in the terminal by prefixing them with a dollar sign ($), e.g. `$ uname -a`.
 
 ### [Browser](help://man/1/Applications/Browser)
 * Browser has built-in content filtering, which can be used for ad blocking. Update the filters in `~/.config/BrowserContentFiltering.txt`.
