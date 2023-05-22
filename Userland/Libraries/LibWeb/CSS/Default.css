@@ -30,7 +30,7 @@ input, textarea {
     border: 1px solid -libweb-palette-threed-shadow1;
     min-width: 80px;
     min-height: 16px;
-    width: 120px;
+    width: 20ch;
     cursor: text;
     overflow: hidden;
 }
