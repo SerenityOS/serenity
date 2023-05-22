@@ -1,0 +1,21 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x616 [BFC] children: not-inline
+    BlockContainer <(anonymous)> at (0,0) content-size 800x0 children: inline
+      TextNode <#text>
+    BlockContainer <body> at (8,8) content-size 784x600 children: not-inline
+      BlockContainer <(anonymous)> at (8,8) content-size 784x0 children: inline
+        TextNode <#text>
+      TableWrapper <(anonymous)> at (8,8) content-size 784x600 [BFC] children: not-inline
+        TableBox <div.aligncenter.block-image> at (8,8) content-size 1200x600 [TFC] children: inline
+          TableRowBox <(anonymous)> at (8,8) content-size 1200x600 children: inline
+            TableCellBox <(anonymous)> at (8,8) content-size 1200x600 [BFC] children: inline
+              line 0 width: 1200, height: 600, bottom: 600, baseline: 600
+                frag 0 from ImageBox start: 0, length: 0, rect: [8,8 1200x600]
+              TextNode <#text>
+              InlineNode <a>
+                TextNode <#text>
+                ImageBox <img> at (8,8) content-size 1200x600 children: not-inline
+                TextNode <#text>
+              TextNode <#text>
+      BlockContainer <(anonymous)> at (8,608) content-size 784x0 children: inline
+        TextNode <#text>
