@@ -98,7 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     })));
 
-    auto change_snake_color = GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+    auto change_snake_color = GUI::Action::create("&Change Snake Color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         auto was_paused = game.is_paused();
         if (!was_paused)
             game.pause();

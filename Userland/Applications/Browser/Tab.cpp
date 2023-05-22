@@ -850,7 +850,7 @@ void Tab::show_storage_inspector()
     if (!m_storage_widget) {
         auto storage_window = GUI::Window::construct(&window());
         storage_window->resize(500, 300);
-        storage_window->set_title("Storage inspector");
+        storage_window->set_title("Storage Inspector");
         storage_window->set_icon(g_icon_bag.cookie);
         m_storage_widget = storage_window->set_main_widget<StorageWidget>().release_value_but_fixme_should_propagate_errors();
         m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {

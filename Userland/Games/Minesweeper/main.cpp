@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(game_menu->try_add_separator());
 
-    auto chord_toggler_action = GUI::Action::create_checkable("Single-click chording", [&](auto& action) {
+    auto chord_toggler_action = GUI::Action::create_checkable("&Single-click Chording", [&](auto& action) {
         field->set_single_chording(action.is_checked());
     });
     chord_toggler_action->set_checked(field->is_single_chording());
@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     difficulty_actions.add_action(action);
 
     TRY(difficulty_menu->try_add_separator());
-    action = GUI::Action::create_checkable("&Custom game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+    action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, Key_C }, [&](auto&) {
         CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);

@@ -42,7 +42,7 @@ private:
     void set_color_internal(Color, AllowCallback, bool change_text);
 
     Color m_color;
-    DeprecatedString m_color_picker_title { "Select color" };
+    DeprecatedString m_color_picker_title { "Color Picker" };
     bool m_color_has_alpha_channel { true };
     bool m_may_be_color_rect_click { false };
 };

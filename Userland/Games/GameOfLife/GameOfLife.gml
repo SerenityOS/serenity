@@ -34,7 +34,7 @@
             @GUI::VerticalSeparator {}
 
             @GUI::Label {
-                text: "Update Speed: "
+                text: "Speed: "
                 autosize: true
             }
 

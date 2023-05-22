@@ -68,7 +68,7 @@ Editor::Editor()
     create_tokens_info_timer();
 
     set_document(CodeDocument::create());
-    m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
+    m_move_execution_to_line_action = GUI::Action::create("Set Execution Point to Cursor Line", [this](auto&) {
         VERIFY(is_program_running());
         auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
         if (success) {

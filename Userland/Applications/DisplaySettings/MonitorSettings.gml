@@ -35,7 +35,7 @@
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }
-        title: "Screen Settings"
+        title: "Screen settings"
 
         @GUI::Widget {
             preferred_height: "fit"

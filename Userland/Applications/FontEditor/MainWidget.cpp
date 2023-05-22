@@ -265,7 +265,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
     m_highlight_modifications_action->set_checked(highlight_modifications);
-    m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs. (Green = New, Blue = Modified, Red = Deleted)");
+    m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs");
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
     m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
@@ -278,7 +278,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
         String input;
-        auto result = GUI::InputBox::try_show(window(), input, {}, "Go to glyph"sv, GUI::InputType::NonemptyText, "Hexadecimal"sv);
+        auto result = GUI::InputBox::try_show(window(), input, {}, "Go to Glyph"sv, GUI::InputType::NonemptyText, "Hexadecimal"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())

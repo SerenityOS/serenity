@@ -6,7 +6,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Time Zone Settings"
+        title: "Time zone settings"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 14
@@ -23,7 +23,7 @@
             }
 
             @GUI::Label {
-                text: "Time Zone:"
+                text: "Time zone:"
                 fixed_width: 80
                 name: "time_zone_label"
                 text_alignment: "CenterLeft"

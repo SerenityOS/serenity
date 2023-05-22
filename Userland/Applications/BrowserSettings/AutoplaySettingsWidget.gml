@@ -10,7 +10,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Autoplay Allowlist"
+        title: "Autoplay allowlist"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }
@@ -28,7 +28,7 @@
             @GUI::Button {
                 name: "add_website_button"
                 fixed_width: 100
-                text: "Add website..."
+                text: "Add Website..."
             }
         }
     }

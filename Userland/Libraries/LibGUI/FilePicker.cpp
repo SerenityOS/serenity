@@ -104,7 +104,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     case Mode::Save:
-        set_title("Save as");
+        set_title("Save As");
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     }
@@ -170,7 +170,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
 
     auto open_parent_directory_action = Action::create(
-        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "Open Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             set_path(DeprecatedString::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -184,13 +184,13 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
-            if (InputBox::show(this, value, "Enter name:"sv, "New directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
+            if (InputBox::show(this, value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
                 auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
                 if (rc < 0) {
-                    MessageBox::show(this, DeprecatedString::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error"sv, MessageBox::Type::Error);
+                    (void)MessageBox::try_show_error(this, DeprecatedString::formatted("Making new directory \"{}\" failed: {}", new_dir_path, Error::from_errno(errno)));
                 } else {
                     m_model->invalidate();
                 }
@@ -228,7 +228,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_context_menu->add_separator();
 
     auto show_dotfiles = GUI::Action::create_checkable(
-        "Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+        "Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
             m_model->set_should_show_dotfiles(action.is_checked());
             m_model->invalidate();
         },
@@ -296,7 +296,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     m_model->on_directory_change_error = [&](int, char const* error_string) {
-        m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string).release_value_but_fixme_should_propagate_errors());
+        m_error_label->set_text(String::formatted("Opening \"{}\" failed: {}", m_model->root_path(), error_string).release_value_but_fixme_should_propagate_errors());
         m_view->set_active_widget(m_error_label);
 
         m_view->view_as_icons_action().set_enabled(false);
@@ -347,12 +347,15 @@ void FilePicker::on_file_return()
     bool file_exists = FileSystem::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
-        MessageBox::show(this, DeprecatedString::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);
+        (void)MessageBox::try_show_error(this, DeprecatedString::formatted("Opening \"{}\" failed: {}", m_filename_textbox->text(), Error::from_errno(ENOENT)));
         return;
     }
 
     if (file_exists && m_mode == Mode::Save) {
-        auto result = MessageBox::show(this, "File already exists. Overwrite?"sv, "Existing File"sv, MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
+        auto text = String::formatted("Are you sure you want to overwrite \"{}\"?", m_filename_textbox->text());
+        if (text.is_error())
+            return;
+        auto result = MessageBox::show(this, text.release_value(), "Confirm Overwrite"sv, MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecResult::Cancel)
             return;
     }
@@ -364,7 +367,7 @@ void FilePicker::on_file_return()
 void FilePicker::set_path(DeprecatedString const& path)
 {
     if (access(path.characters(), R_OK | X_OK) == -1) {
-        GUI::MessageBox::show(this, DeprecatedString::formatted("Could not open '{}':\n{}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        (void)GUI::MessageBox::try_show_error(this, DeprecatedString::formatted("Opening \"{}\" failed: {}", path, Error::from_errno(errno)));
         auto& common_locations_tray = *find_descendant_of_type_named<GUI::Tray>("common_locations_tray");
         for (auto& location_button : m_common_location_buttons)
             common_locations_tray.set_item_checked(location_button.tray_item_index, m_model->root_path() == location_button.path);

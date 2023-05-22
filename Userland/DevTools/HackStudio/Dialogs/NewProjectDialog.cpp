@@ -47,7 +47,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     resize(500, 385);
     center_on_screen();
     set_resizable(false);
-    set_title("New project");
+    set_title("New Project");
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->load_from_gml(new_project_dialog_gml).release_value_but_fixme_should_propagate_errors();
@@ -189,13 +189,13 @@ void NewProjectDialog::do_create_project()
 
     auto create_in = m_create_in_input->text();
     if (!FileSystem::exists(create_in) || !FileSystem::is_directory(create_in)) {
-        auto result = GUI::MessageBox::show(this, DeprecatedString::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+        auto result = GUI::MessageBox::show(this, DeprecatedString::formatted("The directory \"{}\" does not exist yet, would you like to create it?", create_in), "New Project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (result != GUI::MessageBox::ExecResult::Yes)
             return;
 
         auto created = Core::Directory::create(maybe_project_full_path.value(), Core::Directory::CreateDirectories::Yes);
         if (created.is_error()) {
-            GUI::MessageBox::show_error(this, DeprecatedString::formatted("Could not create directory {}", create_in));
+            GUI::MessageBox::show_error(this, DeprecatedString::formatted("Could not create directory \"{}\"", create_in));
             return;
         }
     }
