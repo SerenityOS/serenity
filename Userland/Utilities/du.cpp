@@ -37,7 +37,7 @@ struct DuOption {
 };
 
 static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& files, DuOption& du_option);
-static ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
+static u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_args(arguments, files, du_option));
 
     for (auto const& file : files)
-        TRY(print_space_usage(file, du_option, 0));
+        print_space_usage(file, du_option, 0);
 
     return 0;
 }
@@ -134,29 +134,35 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     return {};
 }
 
-ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
+u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, size_t current_depth, bool inside_dir)
 {
     u64 size = 0;
-    struct stat path_stat = TRY(Core::System::lstat(path));
+    auto path_stat_or_error = Core::System::lstat(path);
+    if (path_stat_or_error.is_error()) {
+        warnln("du: cannot stat '{}': {}", path, path_stat_or_error.release_error());
+        return 0;
+    }
+
+    auto path_stat = path_stat_or_error.release_value();
     bool const is_directory = S_ISDIR(path_stat.st_mode);
     if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
             auto error = di.error();
             warnln("du: cannot read directory '{}': {}", path, error);
-            return error;
+            return 0;
         }
 
         while (di.has_next()) {
             auto const child_path = di.next_full_path();
-            size += TRY(print_space_usage(child_path, du_option, current_depth + 1, true));
+            size += print_space_usage(child_path, du_option, current_depth + 1, true);
         }
     }
 
     auto const basename = LexicalPath::basename(path);
     for (auto const& pattern : du_option.excluded_patterns) {
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
-            return { 0 };
+            return 0;
     }
 
     if (!du_option.apparent_size) {
@@ -201,5 +207,5 @@ ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_
         outln("\t{}\t{}", formatted_time, path);
     }
 
-    return { size };
+    return size;
 }
