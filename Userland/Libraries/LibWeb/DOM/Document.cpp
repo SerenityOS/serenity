@@ -908,13 +908,13 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-[[nodiscard]] static bool update_style_recursively(DOM::Node& node)
+[[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(DOM::Node& node)
 {
     bool const needs_full_style_update = node.document().needs_full_style_update();
-    bool needs_relayout = false;
+    Element::RequiredInvalidationAfterStyleChange invalidation;
 
     if (is<Element>(node)) {
-        needs_relayout |= static_cast<Element&>(node).recompute_style() == Element::NeedsRelayout::Yes;
+        invalidation |= static_cast<Element&>(node).recompute_style();
     }
     node.set_needs_style_update(false);
 
@@ -922,18 +922,18 @@ void Document::update_layout()
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root_internal()) {
                 if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
-                    needs_relayout |= update_style_recursively(*shadow_root);
+                    invalidation |= update_style_recursively(*shadow_root);
             }
         }
         node.for_each_child([&](auto& child) {
             if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update())
-                needs_relayout |= update_style_recursively(child);
+                invalidation |= update_style_recursively(child);
             return IterationDecision::Continue;
         });
     }
 
     node.set_child_needs_style_update(false);
-    return needs_relayout;
+    return invalidation;
 }
 
 void Document::update_style()
@@ -948,8 +948,16 @@ void Document::update_style()
         return;
 
     evaluate_media_rules();
-    if (update_style_recursively(*this))
+
+    auto invalidation = update_style_recursively(*this);
+    if (invalidation.rebuild_layout_tree) {
         invalidate_layout();
+    } else {
+        if (invalidation.relayout)
+            set_needs_layout();
+        if (invalidation.rebuild_stacking_context_tree)
+            invalidate_stacking_context_tree();
+    }
     m_needs_full_style_update = false;
     m_style_update_timer->stop();
 }
