@@ -241,7 +241,7 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
         if (alpha_data.size() < pixel_count)
             return Error::from_string_literal("WebPImageDecoderPlugin: uncompressed ALPH data too small");
         for (size_t i = 0; i < pixel_count; ++i)
-            bitmap.begin()[i] |= alpha_data[i] << 24;
+            bitmap.begin()[i] = alpha_data[i] << 24 | (bitmap.begin()[i] & 0xffffff);
         return {};
     }
 
@@ -256,7 +256,7 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
         return Error::from_string_literal("WebPImageDecoderPlugin: decompressed ALPH dimensions don't match VP8 dimensions");
 
     for (size_t i = 0; i < pixel_count; ++i)
-        bitmap.begin()[i] |= (lossless_bitmap->begin()[i] & 0xff00) << 16;
+        bitmap.begin()[i] = (lossless_bitmap->begin()[i] & 0xff00) << 16 | (bitmap.begin()[i] & 0xffffff);
 
     return {};
 }
