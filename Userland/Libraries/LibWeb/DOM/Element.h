@@ -123,11 +123,25 @@ public:
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
     virtual void did_remove_attribute(DeprecatedFlyString const&);
 
-    enum class NeedsRelayout {
-        No = 0,
-        Yes = 1,
+    struct [[nodiscard]] RequiredInvalidationAfterStyleChange {
+        bool repaint { false };
+        bool rebuild_stacking_context_tree { false };
+        bool relayout { false };
+        bool rebuild_layout_tree { false };
+
+        void operator|=(RequiredInvalidationAfterStyleChange const& other)
+        {
+            repaint |= other.repaint;
+            rebuild_stacking_context_tree |= other.rebuild_stacking_context_tree;
+            relayout |= other.relayout;
+            rebuild_layout_tree |= other.rebuild_layout_tree;
+        }
+
+        [[nodiscard]] bool is_none() const { return !repaint && !rebuild_stacking_context_tree && !relayout && !rebuild_layout_tree; }
+        static RequiredInvalidationAfterStyleChange full() { return { true, true, true, true }; }
     };
-    NeedsRelayout recompute_style();
+
+    RequiredInvalidationAfterStyleChange recompute_style();
 
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;

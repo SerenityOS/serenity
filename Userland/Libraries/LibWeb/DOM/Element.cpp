@@ -395,52 +395,48 @@ void Element::did_remove_attribute(DeprecatedFlyString const& name)
     }
 }
 
-enum class RequiredInvalidation {
-    None,
-    RepaintOnly,
-    RebuildStackingContextTree,
-    Relayout,
-};
-
-static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
+static Element::RequiredInvalidationAfterStyleChange compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
+    Element::RequiredInvalidationAfterStyleChange invalidation;
+
     if (&old_style.computed_font() != &new_style.computed_font())
-        return RequiredInvalidation::Relayout;
-    bool requires_repaint = false;
-    bool requires_stacking_context_tree_rebuild = false;
+        invalidation.relayout = true;
+
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
         auto const& new_value = new_style.properties()[i];
         if (!old_value && !new_value)
             continue;
-        if (!old_value || !new_value)
-            return RequiredInvalidation::Relayout;
-        if (*old_value == *new_value)
+
+        bool const property_value_changed = (!old_value || !new_value) || *old_value != *new_value;
+        if (!property_value_changed)
             continue;
+
+        // NOTE: If the computed CSS display property changes, we have to rebuild the entire layout tree.
+        //       In the future, we should figure out ways to rebuild a smaller part of the tree.
+        if (property_id == CSS::PropertyID::Display) {
+            return Element::RequiredInvalidationAfterStyleChange::full();
+        }
 
         // OPTIMIZATION: Special handling for CSS `visibility`:
         if (property_id == CSS::PropertyID::Visibility) {
             // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
-            if ((old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value->to_identifier() == CSS::ValueID::Collapse))
-                return RequiredInvalidation::Relayout;
+            if ((old_value && old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value && new_value->to_identifier() == CSS::ValueID::Collapse))
+                invalidation.relayout = true;
             // Of course, we still have to repaint on any visibility change.
-            requires_repaint = true;
+            invalidation.repaint = true;
         } else if (CSS::property_affects_layout(property_id)) {
-            return RequiredInvalidation::Relayout;
+            invalidation.relayout = true;
         }
         if (CSS::property_affects_stacking_context(property_id))
-            requires_stacking_context_tree_rebuild = true;
-        requires_repaint = true;
+            invalidation.rebuild_stacking_context_tree = true;
+        invalidation.repaint = true;
     }
-    if (requires_stacking_context_tree_rebuild)
-        return RequiredInvalidation::RebuildStackingContextTree;
-    if (requires_repaint)
-        return RequiredInvalidation::RepaintOnly;
-    return RequiredInvalidation::None;
+    return invalidation;
 }
 
-Element::NeedsRelayout Element::recompute_style()
+Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
@@ -448,30 +444,25 @@ Element::NeedsRelayout Element::recompute_style()
     // FIXME propagate errors
     auto new_computed_css_values = MUST(document().style_computer().compute_style(*this));
 
-    auto required_invalidation = RequiredInvalidation::Relayout;
-
+    RequiredInvalidationAfterStyleChange invalidation;
     if (m_computed_css_values)
-        required_invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
+        invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
+    else
+        invalidation = RequiredInvalidationAfterStyleChange::full();
 
-    if (required_invalidation == RequiredInvalidation::None)
-        return NeedsRelayout::No;
+    if (invalidation.is_none())
+        return invalidation;
 
     m_computed_css_values = move(new_computed_css_values);
 
-    if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
+    if (!invalidation.rebuild_layout_tree && layout_node()) {
+        // If we're keeping the layout tree, we can just apply the new style to the existing layout tree.
         layout_node()->apply_style(*m_computed_css_values);
-        layout_node()->set_needs_display();
-        return NeedsRelayout::No;
+        if (invalidation.repaint)
+            layout_node()->set_needs_display();
     }
 
-    if (required_invalidation == RequiredInvalidation::RebuildStackingContextTree && layout_node()) {
-        layout_node()->apply_style(*m_computed_css_values);
-        document().invalidate_stacking_context_tree();
-        layout_node()->set_needs_display();
-        return NeedsRelayout::No;
-    }
-
-    return NeedsRelayout::Yes;
+    return invalidation;
 }
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
