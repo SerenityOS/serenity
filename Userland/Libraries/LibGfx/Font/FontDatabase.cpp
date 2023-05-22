@@ -129,7 +129,7 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
         auto current_directory = path_queue.dequeue();
         Core::DirIterator dir_iterator(current_directory, Core::DirIterator::SkipParentAndBaseDir);
         if (dir_iterator.has_error()) {
-            dbgln("FontDatabase::load_all_fonts_from_path: {}", dir_iterator.error());
+            dbgln("FontDatabase::load_all_fonts_from_path('{}'): {}", root, dir_iterator.error());
             continue;
         }
         while (dir_iterator.has_next()) {
