@@ -180,7 +180,7 @@ ErrorOr<void> MainWidget::setup()
         }
     });
 
-    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run Script", { Mod_Alt, Key_F9 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         read_next_sql_statement_of_editor();

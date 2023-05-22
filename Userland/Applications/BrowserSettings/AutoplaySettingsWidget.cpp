@@ -54,7 +54,7 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
     widget->m_add_website_button->on_click = [widget](unsigned) {
         String text;
 
-        if (GUI::InputBox::show(widget->window(), text, "Website:"sv, "Add website to autoplay allowlist"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
+        if (GUI::InputBox::show(widget->window(), text, "Enter a website:"sv, "Add Autoplay Entry"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
             widget->m_allowlist_model->add_domain(move(text));
             widget->set_modified(true);
         }

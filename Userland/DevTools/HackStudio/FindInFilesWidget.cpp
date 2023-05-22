@@ -122,8 +122,8 @@ FindInFilesWidget::FindInFilesWidget()
 
     m_textbox = top_container.add<GUI::TextBox>();
 
-    m_button = top_container.add<GUI::Button>("Find in files"_string.release_value_but_fixme_should_propagate_errors());
-    m_button->set_fixed_width(100);
+    m_button = top_container.add<GUI::Button>("Find"_string.release_value_but_fixme_should_propagate_errors());
+    m_button->set_fixed_width(50);
 
     m_result_view = add<GUI::TableView>();
 

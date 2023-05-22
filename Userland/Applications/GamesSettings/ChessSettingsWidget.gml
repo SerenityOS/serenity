@@ -23,7 +23,7 @@
             }
 
             @GUI::Label {
-                text: "Piece Set:"
+                text: "Piece set:"
                 text_alignment: "CenterLeft"
             }
 
@@ -39,7 +39,7 @@
             }
 
             @GUI::Label {
-                text: "Board Theme:"
+                text: "Board theme:"
                 text_alignment: "CenterLeft"
             }
 

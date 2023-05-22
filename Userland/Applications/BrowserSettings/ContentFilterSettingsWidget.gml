@@ -10,7 +10,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Domain List"
+        title: "Domain list"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }
@@ -28,7 +28,7 @@
             @GUI::Button {
                 name: "add_new_domain_button"
                 fixed_width: 100
-                text: "Add domain..."
+                text: "Add Domain..."
             }
         }
     }

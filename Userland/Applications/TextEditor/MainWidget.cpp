@@ -473,7 +473,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(view_menu->try_add_separator());
 
-    TRY(view_menu->try_add_action(GUI::Action::create("Editor &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
+    TRY(view_menu->try_add_action(GUI::Action::create("Change &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, &m_editor->font(), false);
             if (picker->exec() == GUI::Dialog::ExecResult::OK) {

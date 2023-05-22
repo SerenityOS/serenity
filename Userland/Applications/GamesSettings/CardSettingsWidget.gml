@@ -11,7 +11,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Background Color"
+        title: "Background color"
         max_height: "shrink"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
@@ -24,7 +24,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Card Back"
+        title: "Card back"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }

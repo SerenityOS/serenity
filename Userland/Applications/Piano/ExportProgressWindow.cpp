@@ -25,7 +25,7 @@ ErrorOr<void> ExportProgressWindow::initialize_fallibles()
 
     set_resizable(false);
     set_closeable(false);
-    set_title("Rendering audio");
+    set_title("Rendering Audio");
     set_icon(GUI::Icon::default_icon("app-piano"sv).bitmap_for_size(16));
 
     m_progress_bar = *main_widget->find_descendant_of_type_named<GUI::HorizontalProgressbar>("progress_bar");

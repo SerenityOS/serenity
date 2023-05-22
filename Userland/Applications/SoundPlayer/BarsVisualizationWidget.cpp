@@ -92,12 +92,12 @@ BarsVisualizationWidget::BarsVisualizationWidget()
     , m_logarithmic_spectrum(true)
 {
     m_context_menu = GUI::Menu::construct();
-    auto frequency_energy_action = GUI::Action::create_checkable("Adjust frequency energy (for aesthetics)", [&](GUI::Action& action) {
+    auto frequency_energy_action = GUI::Action::create_checkable("Adjust Frequency Energy", [&](GUI::Action& action) {
         m_adjust_frequencies = action.is_checked();
     });
     frequency_energy_action->set_checked(true);
     m_context_menu->add_action(frequency_energy_action);
-    auto logarithmic_spectrum_action = GUI::Action::create_checkable("Scale spectrum logarithmically", [&](GUI::Action& action) {
+    auto logarithmic_spectrum_action = GUI::Action::create_checkable("Scale Spectrum Logarithmically", [&](GUI::Action& action) {
         m_logarithmic_spectrum = action.is_checked();
     });
     logarithmic_spectrum_action->set_checked(true);

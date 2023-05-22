@@ -73,7 +73,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
         if (!window->is_modified())
             return Window::CloseRequestDecision::Close;
 
-        auto result = MessageBox::show(window, "Apply these settings before closing?"sv, "Unsaved changes"sv, MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
+        auto result = MessageBox::show(window, "Apply these settings before closing?"sv, "Unsaved Changes"sv, MessageBox::Type::Warning, MessageBox::InputType::YesNoCancel);
         switch (result) {
         case MessageBox::ExecResult::Yes:
             window->apply_settings();

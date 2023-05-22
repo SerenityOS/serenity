@@ -13,7 +13,7 @@
         fixed_height: 22
 
         @GUI::Label {
-            text: "Value to find"
+            text: "Value to find:"
             fixed_width: 80
             text_alignment: "CenterLeft"
         }

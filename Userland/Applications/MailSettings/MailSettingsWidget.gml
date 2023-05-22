@@ -5,7 +5,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Server Settings"
+        title: "Server settings"
         fixed_height: 170
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -39,7 +39,7 @@
             }
 
             @GUI::Label {
-                text: "Server Address:"
+                text: "Server address:"
                 fixed_width: 80
                 name: "server_label"
                 text_alignment: "CenterLeft"
@@ -60,7 +60,7 @@
             }
 
             @GUI::Label {
-                text: "Server Port:"
+                text: "Server port:"
                 fixed_width: 80
                 name: "port_label"
                 text_alignment: "CenterLeft"
@@ -88,7 +88,7 @@
     }
 
     @GUI::GroupBox {
-        title: "User Settings"
+        title: "User settings"
         fixed_height: 110
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -123,7 +123,7 @@
 
             @GUI::Label {
                 autosize: true
-                text: "Email Address:"
+                text: "Email address:"
                 fixed_width: 80
                 text_alignment: "CenterLeft"
             }

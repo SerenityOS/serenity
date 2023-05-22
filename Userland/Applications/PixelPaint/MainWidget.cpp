@@ -224,7 +224,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(m_export_submenu->try_add_action(
         GUI::Action::create(
-            "As &BMP", [&](auto&) {
+            "As &BMP...", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "bmp");
@@ -238,7 +238,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(m_export_submenu->try_add_action(
         GUI::Action::create(
-            "As &PNG", [&](auto&) {
+            "As &PNG...", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
@@ -253,7 +253,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(m_export_submenu->try_add_action(
         GUI::Action::create(
-            "As &QOI", [&](auto&) {
+            "As &QOI...", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "qoi");
@@ -454,7 +454,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->set_secondary_color(Color::White);
         })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
-        "&Load Color Palette", g_icon_bag.load_color_palette, [&](auto&) {
+        "&Load Color Palette...", g_icon_bag.load_color_palette, [&](auto&) {
             auto response = FileSystemAccessClient::Client::the().open_file(&window, "Load Color Palette");
             if (response.is_error())
                 return;
@@ -468,7 +468,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             m_palette_widget->display_color_list(result.value());
         })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
-        "Sa&ve Color Palette", g_icon_bag.save_color_palette, [&](auto&) {
+        "Sa&ve Color Palette...", g_icon_bag.save_color_palette, [&](auto&) {
             auto response = FileSystemAccessClient::Client::the().save_file(&window, "untitled", "palette");
             if (response.is_error())
                 return;
@@ -501,7 +501,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_add_guide_action = GUI::Action::create(
-        "&Add Guide", g_icon_bag.add_guide, [&](auto&) {
+        "&Add Guide...", g_icon_bag.add_guide, [&](auto&) {
             auto dialog = PixelPaint::EditGuideDialog::construct(&window);
             if (dialog->exec() != GUI::Dialog::ExecResult::OK)
                 return;

@@ -289,7 +289,7 @@ void BrowserWindow::build_menus()
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
             String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv)).release_value_but_fixme_should_propagate_errors();
-            if (GUI::InputBox::show(this, homepage_url, "Enter URL"sv, "Change homepage URL"sv) == GUI::InputBox::ExecResult::OK) {
+            if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
                     Browser::g_home_url = homepage_url.to_deprecated_string();
@@ -326,7 +326,7 @@ void BrowserWindow::build_menus()
             m_color_scheme_actions.add_action(action);
         };
 
-        add_color_scheme_action("Follow system theme", Web::CSS::PreferredColorScheme::Auto);
+        add_color_scheme_action("Follow System Theme", Web::CSS::PreferredColorScheme::Auto);
         add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
         add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
     }

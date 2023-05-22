@@ -11,7 +11,7 @@
 
         @GUI::Button {
             name: "wizard_button"
-            text: "Start wizard"
+            text: "Start Wizard"
         }
 
         @GUI::HorizontalSeparator {}

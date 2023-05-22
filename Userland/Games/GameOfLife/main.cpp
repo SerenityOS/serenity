@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_t board_rows = 35;
 
     window->set_double_buffering_enabled(false);
-    window->set_title("Game Of Life");
+    window->set_title("Game of Life");
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(main_widget->load_from_gml(game_of_life_gml));
@@ -143,7 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/GameOfLife.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Game Of Life", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Game of Life", app_icon, window)));
 
     board_widget->on_running_state_change = [&]() {
         if (board_widget->is_running()) {

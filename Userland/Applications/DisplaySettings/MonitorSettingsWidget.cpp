@@ -251,7 +251,7 @@ void MonitorSettingsWidget::apply_settings()
             auto seconds_until_revert = 10;
 
             auto box_text = [this, &seconds_until_revert]() -> ErrorOr<String> {
-                auto output = String::formatted("Do you want to keep the new settings? They will be reverted after {} {}.",
+                auto output = String::formatted("Do you want to keep the new screen layout?\nReverting in {} {}.",
                     seconds_until_revert, seconds_until_revert == 1 ? "second" : "seconds");
                 if (output.is_error()) {
                     GUI::MessageBox::show_error(window(), "Unable to apply changes"sv);
@@ -265,7 +265,7 @@ void MonitorSettingsWidget::apply_settings()
                 return;
             auto current_box_text = current_box_text_or_error.release_value();
 
-            auto box = GUI::MessageBox::create(window(), current_box_text, "Apply new screen layout"sv,
+            auto box = GUI::MessageBox::create(window(), current_box_text, "Confirm Settings"sv,
                 GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo)
                            .release_value_but_fixme_should_propagate_errors();
             box->set_icon(window()->icon());

@@ -10,7 +10,7 @@
         }
 
         @GUI::Label {
-            text: "Board size"
+            text: "Board size:"
             text_alignment: "CenterLeft"
         }
 
@@ -27,7 +27,7 @@
         }
 
         @GUI::Label {
-            text: "Target tile"
+            text: "Target tile:"
             text_alignment: "CenterLeft"
         }
 
