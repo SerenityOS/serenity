@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2023, Tim Schumacher <timschumi@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,86 +36,6 @@
 #define __ENUMERATE_TARGET(x) extern "C" int Test##x(uint8_t const*, size_t);
 ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #undef __ENUMERATE_TARGET
-
-#define LLVMFuzzerTestOneInput TestBMPLoader
-#include <Meta/Lagom/Fuzzers/FuzzBMPLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestELF
-#include <Meta/Lagom/Fuzzers/FuzzELF.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestGemini
-#include <Meta/Lagom/Fuzzers/FuzzGemini.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestGIFLoader
-#include <Meta/Lagom/Fuzzers/FuzzGIFLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestHttpRequest
-#include <Meta/Lagom/Fuzzers/FuzzHttpRequest.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestICOLoader
-#include <Meta/Lagom/Fuzzers/FuzzICOLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestJPEGLoader
-#include <Meta/Lagom/Fuzzers/FuzzJPEGLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestJs
-#include <Meta/Lagom/Fuzzers/FuzzJs.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestMarkdown
-#include <Meta/Lagom/Fuzzers/FuzzMarkdown.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestPBMLoader
-#include <Meta/Lagom/Fuzzers/FuzzPBMLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestPGMLoader
-#include <Meta/Lagom/Fuzzers/FuzzPGMLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestPNGLoader
-#include <Meta/Lagom/Fuzzers/FuzzPNGLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestPPMLoader
-#include <Meta/Lagom/Fuzzers/FuzzPPMLoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestQOILoader
-#include <Meta/Lagom/Fuzzers/FuzzQOILoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestTGALoader
-#include <Meta/Lagom/Fuzzers/FuzzTGALoader.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestRegexECMA262
-#include <Meta/Lagom/Fuzzers/FuzzRegexECMA262.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestRegexPosixExtended
-#include <Meta/Lagom/Fuzzers/FuzzRegexPosixExtended.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestShell
-#include <Meta/Lagom/Fuzzers/FuzzShell.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestTTF
-#include <Meta/Lagom/Fuzzers/FuzzTTF.cpp>
-#undef LLVMFuzzerTestOneInput
-
-#define LLVMFuzzerTestOneInput TestURL
-#include <Meta/Lagom/Fuzzers/FuzzURL.cpp>
-#undef LLVMFuzzerTestOneInput
 
 static auto parse_target_name(StringView name)
 {
