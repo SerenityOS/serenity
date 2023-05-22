@@ -643,6 +643,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 
     computed_values.set_content(computed_style.content());
+    computed_values.set_grid_auto_columns(computed_style.grid_auto_columns());
+    computed_values.set_grid_auto_rows(computed_style.grid_auto_rows());
     computed_values.set_grid_template_columns(computed_style.grid_template_columns());
     computed_values.set_grid_template_rows(computed_style.grid_template_rows());
     computed_values.set_grid_column_end(computed_style.grid_column_end());
