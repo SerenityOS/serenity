@@ -1,0 +1,6 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x106 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x90 children: not-inline
+      BlockContainer <div.upper> at (8,8) content-size 784x20 children: not-inline
+      BlockContainer <div.bfc> at (8,78) content-size 784x20 [BFC] children: not-inline
+        BlockContainer <div.inner> at (8,78) content-size 20x20 children: not-inline
