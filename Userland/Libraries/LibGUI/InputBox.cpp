@@ -128,46 +128,34 @@ void InputBox::on_done(ExecResult result)
 ErrorOr<void> InputBox::build()
 {
     auto main_widget = TRY(set_main_widget<Widget>());
-    TRY(main_widget->try_set_layout<VerticalBoxLayout>(4, 6));
+    TRY(main_widget->try_set_layout<VerticalBoxLayout>(6, 6));
     main_widget->set_fill_with_background_color(true);
 
-    auto top_container = TRY(main_widget->try_add<Widget>());
-    TRY(top_container->try_set_layout<HorizontalBoxLayout>(0, 8));
-
-    if (m_icon) {
-        auto image_widget = TRY(top_container->try_add<ImageWidget>());
-        image_widget->set_bitmap(m_icon);
-    }
-
-    auto input_container = TRY(top_container->try_add<Widget>());
-    auto orientation = m_icon ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal;
-    TRY(input_container->try_set_layout<BoxLayout>(orientation));
-    TRY(input_container->add_spacer());
-
     if (!m_prompt.is_empty()) {
-        m_label_container = TRY(input_container->try_add<Widget>());
-        TRY(m_label_container->try_set_layout<HorizontalBoxLayout>());
-        m_prompt_label = TRY(m_label_container->try_add<Label>());
+        auto prompt_container = TRY(main_widget->try_add<Widget>());
+        TRY(prompt_container->try_set_layout<HorizontalBoxLayout>(0, 8));
+        if (m_icon) {
+            auto image_widget = TRY(prompt_container->try_add<ImageWidget>());
+            image_widget->set_bitmap(m_icon);
+        }
+        m_prompt_label = TRY(prompt_container->try_add<Label>());
         m_prompt_label->set_autosize(true);
         m_prompt_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
-        m_prompt_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        m_prompt_label->set_text(move(m_prompt));
+        m_prompt_label->set_text(m_prompt);
     }
 
     switch (m_input_type) {
     case InputType::Text:
     case InputType::NonemptyText:
-        m_text_editor = TRY(input_container->try_add<TextBox>());
+        m_text_editor = TRY(main_widget->try_add<TextBox>());
         break;
     case InputType::Password:
-        m_text_editor = TRY(input_container->try_add<PasswordBox>());
+        m_text_editor = TRY(main_widget->try_add<PasswordBox>());
         break;
     case InputType::Numeric:
-        m_spinbox = TRY(input_container->try_add<SpinBox>());
+        m_spinbox = TRY(main_widget->try_add<SpinBox>());
         break;
     }
-
-    TRY(input_container->add_spacer());
 
     auto button_container = TRY(main_widget->try_add<Widget>());
     TRY(button_container->try_set_layout<HorizontalBoxLayout>(0, 6));
@@ -184,17 +172,15 @@ ErrorOr<void> InputBox::build()
     m_cancel_button = TRY(button_container->try_add<DialogButton>("Cancel"_short_string));
     m_cancel_button->on_click = [this](auto) { done(ExecResult::Cancel); };
 
-    auto resize_editor = [this, button_container] {
-        auto width = button_container->effective_min_size().width().as_int();
-        if (m_text_editor)
-            m_text_editor->set_min_width(width);
-        if (m_spinbox)
-            m_spinbox->set_min_width(width);
-        if (!m_icon && m_label_container)
-            m_label_container->set_fixed_width(m_prompt_label->max_width());
+    auto guarantee_width = [this, button_container] {
+        if (m_prompt.is_empty())
+            return;
+        auto width = button_container->calculated_min_size().value().width().as_int();
+        auto constexpr golden_ratio = 1.618;
+        button_container->set_min_width(width * golden_ratio);
     };
-    resize_editor();
-    on_font_change = [resize_editor] { resize_editor(); };
+    guarantee_width();
+    on_font_change = [guarantee_width] { guarantee_width(); };
 
     if (m_text_editor) {
         m_text_editor->set_text(m_text_value);
