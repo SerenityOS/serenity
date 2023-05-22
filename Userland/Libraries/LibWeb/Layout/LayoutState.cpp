@@ -145,23 +145,25 @@ CSSPixels box_baseline(LayoutState const& state, Box const& box)
 CSSPixelRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    rect.set_x(rect.x() - box_state.margin_box_left());
-    rect.set_width(rect.width() + box_state.margin_box_left() + box_state.margin_box_right());
-    rect.set_y(rect.y() - box_state.margin_box_top());
-    rect.set_height(rect.height() + box_state.margin_box_top() + box_state.margin_box_bottom());
-    return rect;
+    return {
+        box_state.offset.translated(-box_state.margin_box_left(), -box_state.margin_box_top()),
+        {
+            box_state.margin_box_left() + box_state.content_width() + box_state.margin_box_right(),
+            box_state.margin_box_top() + box_state.content_height() + box_state.margin_box_bottom(),
+        },
+    };
 }
 
 CSSPixelRect border_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    rect.set_x(rect.x() - box_state.border_box_left());
-    rect.set_width(rect.width() + box_state.border_box_left() + box_state.border_box_right());
-    rect.set_y(rect.y() - box_state.border_box_top());
-    rect.set_height(rect.height() + box_state.border_box_top() + box_state.border_box_bottom());
-    return rect;
+    return {
+        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
+        {
+            box_state.border_box_left() + box_state.content_width() + box_state.border_box_right(),
+            box_state.border_box_top() + box_state.content_height() + box_state.border_box_bottom(),
+        },
+    };
 }
 
 CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
