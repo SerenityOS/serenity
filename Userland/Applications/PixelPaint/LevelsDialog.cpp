@@ -71,16 +71,10 @@ LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
 
 void LevelsDialog::revert_possible_changes()
 {
-    // FIXME: Find a faster way to revert all the changes that we have done.
     if (m_did_change && m_reference_bitmap) {
-        for (int x = 0; x < m_reference_bitmap->width(); x++) {
-            for (int y = 0; y < m_reference_bitmap->height(); y++) {
-                m_editor->active_layer()->content_bitmap().set_pixel(x, y, m_reference_bitmap->get_pixel(x, y));
-            }
-        }
+        MUST(m_editor->active_layer()->set_bitmaps(m_reference_bitmap.release_nonnull(), m_editor->active_layer()->mask_bitmap()));
         m_editor->layers_did_change();
     }
-
     cleanup_resources();
 }
 
