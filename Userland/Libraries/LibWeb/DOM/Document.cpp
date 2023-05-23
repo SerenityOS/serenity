@@ -859,13 +859,11 @@ void Document::update_layout()
     auto viewport_rect = browsing_context()->viewport_rect();
 
     if (!m_layout_root) {
-        m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
         m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
     }
 
     Layout::LayoutState layout_state;
-    layout_state.used_values_per_layout_node.resize(layout_node_count());
 
     {
         Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);

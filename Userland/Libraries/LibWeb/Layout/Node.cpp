@@ -32,8 +32,6 @@ Node::Node(DOM::Document& document, DOM::Node* node)
     , m_browsing_context(*document.browsing_context())
     , m_anonymous(node == nullptr)
 {
-    m_serial_id = document.next_layout_node_serial_id({});
-
     if (node)
         node->set_layout_node({}, *this);
 }
