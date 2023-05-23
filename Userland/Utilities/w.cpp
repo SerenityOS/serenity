@@ -7,6 +7,7 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/String.h>
 #include <AK/Time.h>
 #include <LibCore/Account.h>
 #include <LibCore/DateTime.h>
@@ -39,41 +40,42 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto now = Time::now_realtime().to_seconds();
 
     outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
-    json.as_object().for_each_member([&](auto& tty, auto& value) {
+    TRY(json.as_object().try_for_each_member([&](auto& tty, auto& value) -> ErrorOr<void> {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get_u32("uid"sv).value_or(0);
         [[maybe_unused]] auto pid = entry.get_i32("pid"sv).value_or(0);
 
         auto login_time = Core::DateTime::from_timestamp(entry.get_integer<time_t>("login_at"sv).value_or(0));
-        auto login_at = login_time.to_deprecated_string("%b%d %H:%M:%S"sv);
+        auto login_at = TRY(login_time.to_string("%b%d %H:%M:%S"sv));
 
         auto maybe_account = Core::Account::from_uid(uid, Core::Account::Read::PasswdOnly);
-        DeprecatedString username;
+        String username;
         if (!maybe_account.is_error())
-            username = maybe_account.release_value().username();
+            username = TRY(String::from_deprecated_string(maybe_account.release_value().username()));
         else
-            username = DeprecatedString::number(uid);
+            username = TRY(String::formatted("{}", uid));
 
         StringBuilder builder;
-        DeprecatedString idle_string = "n/a";
+        String idle_string = "n/a"_short_string;
         auto maybe_stat = Core::System::stat(tty);
         if (!maybe_stat.is_error()) {
             auto stat = maybe_stat.release_value();
             auto idle_time = now - stat.st_mtime;
             if (idle_time >= 0) {
                 builder.appendff("{}s", idle_time);
-                idle_string = builder.to_deprecated_string();
+                idle_string = TRY(builder.to_string());
             }
         }
 
-        DeprecatedString what = "n/a";
+        String what = "n/a"_short_string;
 
         for (auto& process : process_statistics.processes) {
             if (process.tty == tty && process.pid == process.pgid)
-                what = process.name;
+                what = TRY(String::from_deprecated_string(process.name));
         }
 
         outln("{:10} {:12} {:16} {:6} {}", username, tty, login_at, idle_string, what);
-    });
+        return {};
+    }));
     return 0;
 }
