@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (FileSystem::exists(raw_url))
             url = URL::create_with_file_scheme(TRY(FileSystem::real_path(raw_url)).to_deprecated_string());
         else if (!url.is_valid())
-            url = DeprecatedString::formatted("http://{}", raw_url);
+            url = DeprecatedString::formatted("https://{}", raw_url);
         return url;
     };
 
