@@ -15,6 +15,23 @@
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <sys/sysmacros.h>
+
+static ErrorOr<String> tty_stat_to_pseudo_name(struct stat const& tty_stat)
+{
+    int tty_device_major = major(tty_stat.st_rdev);
+    int tty_device_minor = minor(tty_stat.st_rdev);
+
+    if (tty_device_major == 201) {
+        return String::formatted("pts:{}", tty_device_minor);
+    }
+
+    if (tty_device_major == 4) {
+        return String::formatted("tty:{}", tty_device_minor);
+    }
+
+    return Error::from_string_literal("Unknown TTY device type");
+}
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
@@ -57,6 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         StringBuilder builder;
         String idle_string = "n/a"_short_string;
+        String what = "n/a"_short_string;
         auto maybe_stat = Core::System::stat(tty);
         if (!maybe_stat.is_error()) {
             auto stat = maybe_stat.release_value();
@@ -65,13 +83,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 builder.appendff("{}s", idle_time);
                 idle_string = TRY(builder.to_string());
             }
-        }
 
-        String what = "n/a"_short_string;
-
-        for (auto& process : process_statistics.processes) {
-            if (process.tty == tty && process.pid == process.pgid)
-                what = TRY(String::from_deprecated_string(process.name));
+            auto tty_pseudo_name = TRY(tty_stat_to_pseudo_name(stat));
+            for (auto& process : process_statistics.processes) {
+                if (tty_pseudo_name == process.tty.view() && process.pid == process.pgid) {
+                    what = TRY(String::from_deprecated_string(process.name));
+                    break;
+                }
+            }
         }
 
         outln("{:10} {:12} {:16} {:6} {}", username, tty, login_at, idle_string, what);
