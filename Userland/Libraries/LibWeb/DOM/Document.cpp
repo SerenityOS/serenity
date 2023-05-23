@@ -1054,7 +1054,7 @@ void Document::set_hovered_node(Node* node)
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString const& name)
 {
-    return HTMLCollection::create(*this, [name](Element const& element) {
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
         return element.name() == name;
     }).release_value_but_fixme_should_propagate_errors();
 }
@@ -1065,7 +1065,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
     for (auto& name : class_names.view().split_view(' ')) {
         list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
-    return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
         for (auto& name : list_of_class_names) {
             if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
                 return false;
@@ -1078,7 +1078,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
     if (!m_applets)
-        m_applets = HTMLCollection::create(*this, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
+        m_applets = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
     return *m_applets;
 }
 
@@ -1086,7 +1086,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::applets()
 JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
     if (!m_anchors) {
-        m_anchors = HTMLCollection::create(*this, [](Element const& element) {
+        m_anchors = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1097,7 +1097,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 JS::NonnullGCPtr<HTMLCollection> Document::images()
 {
     if (!m_images) {
-        m_images = HTMLCollection::create(*this, [](Element const& element) {
+        m_images = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLImageElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1108,7 +1108,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::images()
 JS::NonnullGCPtr<HTMLCollection> Document::embeds()
 {
     if (!m_embeds) {
-        m_embeds = HTMLCollection::create(*this, [](Element const& element) {
+        m_embeds = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLEmbedElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1125,7 +1125,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::plugins()
 JS::NonnullGCPtr<HTMLCollection> Document::links()
 {
     if (!m_links) {
-        m_links = HTMLCollection::create(*this, [](Element const& element) {
+        m_links = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1136,7 +1136,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::links()
 JS::NonnullGCPtr<HTMLCollection> Document::forms()
 {
     if (!m_forms) {
-        m_forms = HTMLCollection::create(*this, [](Element const& element) {
+        m_forms = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLFormElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1147,7 +1147,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::forms()
 JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 {
     if (!m_scripts) {
-        m_scripts = HTMLCollection::create(*this, [](Element const& element) {
+        m_scripts = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLScriptElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1158,7 +1158,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 JS::NonnullGCPtr<HTMLCollection> Document::all()
 {
     if (!m_all) {
-        m_all = HTMLCollection::create(*this, [](Element const&) {
+        m_all = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
             return true;
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -2092,7 +2092,7 @@ void Document::check_favicon_after_loading_link_resource()
     if (!head_element)
         return;
 
-    auto favicon_link_elements = HTMLCollection::create(*head_element, [](Element const& element) {
+    auto favicon_link_elements = HTMLCollection::create(*head_element, HTMLCollection::Scope::Descendants, [](Element const& element) {
         if (!is<HTML::HTMLLinkElement>(element))
             return false;
 

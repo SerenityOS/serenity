@@ -264,7 +264,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
     // The tBodies attribute must return an HTMLCollection rooted at the table node,
     // whose filter matches only tbody elements that are children of the table element.
     if (!m_t_bodies) {
-        m_t_bodies = DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
+        m_t_bodies = DOM::HTMLCollection::create(*this, DOM::HTMLCollection::Scope::Children, [](DOM::Element const& element) {
             return element.local_name() == TagNames::tbody;
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -307,7 +307,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
     // How do you sort HTMLCollection?
 
     if (!m_rows) {
-        m_rows = DOM::HTMLCollection::create(*this, [table_node](DOM::Element const& element) {
+        m_rows = DOM::HTMLCollection::create(*this, DOM::HTMLCollection::Scope::Descendants, [table_node](DOM::Element const& element) {
             // Only match TR elements which are:
             // * children of the table element
             // * children of the thead, tbody, or tfoot elements that are themselves children of the table element

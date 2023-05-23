@@ -13,15 +13,16 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> HTMLCollection::create(ParentNode& root, Function<bool(Element const&)> filter)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> HTMLCollection::create(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
 {
-    return MUST_OR_THROW_OOM(root.heap().allocate<HTMLCollection>(root.realm(), root, move(filter)));
+    return MUST_OR_THROW_OOM(root.heap().allocate<HTMLCollection>(root.realm(), root, scope, move(filter)));
 }
 
-HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter)
+HTMLCollection::HTMLCollection(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
     : LegacyPlatformObject(root.realm())
     , m_root(root)
     , m_filter(move(filter))
+    , m_scope(scope)
 {
 }
 
@@ -44,11 +45,19 @@ void HTMLCollection::visit_edges(Cell::Visitor& visitor)
 JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
 {
     JS::MarkedVector<Element*> elements(m_root->heap());
-    m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (m_filter(element))
-            elements.append(const_cast<Element*>(&element));
-        return IterationDecision::Continue;
-    });
+    if (m_scope == Scope::Descendants) {
+        m_root->for_each_in_subtree_of_type<Element>([&](auto& element) {
+            if (m_filter(element))
+                elements.append(const_cast<Element*>(&element));
+            return IterationDecision::Continue;
+        });
+    } else {
+        m_root->for_each_child_of_type<Element>([&](auto& element) {
+            if (m_filter(element))
+                elements.append(const_cast<Element*>(&element));
+            return IterationDecision::Continue;
+        });
+    }
     return elements;
 }
 

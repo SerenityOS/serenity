@@ -30,7 +30,11 @@ class HTMLCollection : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(HTMLCollection, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> create(ParentNode& root, Function<bool(Element const&)> filter);
+    enum class Scope {
+        Children,
+        Descendants,
+    };
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);
 
     virtual ~HTMLCollection() override;
 
@@ -46,7 +50,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 protected:
-    HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter);
+    HTMLCollection(ParentNode& root, Scope, Function<bool(Element const&)> filter);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
@@ -70,6 +74,8 @@ private:
 
     JS::NonnullGCPtr<ParentNode> m_root;
     Function<bool(Element const&)> m_filter;
+
+    Scope m_scope { Scope::Descendants };
 };
 
 }

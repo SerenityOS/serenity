@@ -244,7 +244,7 @@ static bool is_form_control(DOM::Element const& element)
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
 {
     if (!m_elements) {
-        m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
+        m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is_form_control(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
