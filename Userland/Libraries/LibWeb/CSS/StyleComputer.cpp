@@ -675,6 +675,26 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::MaxInlineSize || property_id == CSS::PropertyID::MinInlineSize) {
+        // FIXME: Use writing-mode to determine if we should set width or height.
+        bool is_horizontal = true;
+
+        if (is_horizontal) {
+            if (property_id == CSS::PropertyID::MaxInlineSize) {
+                style.set_property(CSS::PropertyID::MaxWidth, value);
+            } else {
+                style.set_property(CSS::PropertyID::MinWidth, value);
+            }
+        } else {
+            if (property_id == CSS::PropertyID::MaxInlineSize) {
+                style.set_property(CSS::PropertyID::MaxHeight, value);
+            } else {
+                style.set_property(CSS::PropertyID::MinHeight, value);
+            }
+        }
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 
