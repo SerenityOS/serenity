@@ -973,8 +973,22 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // FIXME: Normal user declarations
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
-    if (!pseudo_element.has_value())
+    if (!pseudo_element.has_value()) {
         element.apply_presentational_hints(style);
+
+        // SVG presentation attributes are parsed as CSS values, so we need to handle potential custom properties here.
+        if (element.is_svg_element()) {
+            // FIXME: This is not very efficient, we should only resolve the custom properties that are actually used.
+            for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+                auto property_id = (CSS::PropertyID)i;
+                auto& property = style.m_property_values[i];
+                if (property && property->is_unresolved()) {
+                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property->as_unresolved()))
+                        property = resolved.release_nonnull();
+                }
+            }
+        }
+    }
 
     // Normal author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
