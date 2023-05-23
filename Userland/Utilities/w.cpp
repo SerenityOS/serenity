@@ -45,9 +45,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    bool hide_header = false;
     StringView username_to_filter_by;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(hide_header, "Don't show the header", "no-header", 'h');
     args_parser.add_positional_argument(username_to_filter_by, "Only show information about the specified user", "user", Core::ArgsParser::Required::No);
     args_parser.parse(args);
 
@@ -63,7 +65,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto now = Time::now_realtime().to_seconds();
 
-    outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
+    if (!hide_header)
+        outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
+
     TRY(json.as_object().try_for_each_member([&](auto& tty, auto& value) -> ErrorOr<void> {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get_u32("uid"sv).value_or(0);
