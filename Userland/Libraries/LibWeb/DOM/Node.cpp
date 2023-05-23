@@ -968,8 +968,8 @@ u16 Node::compare_document_position(JS::GCPtr<Node> other)
     Node* node2 = this;
 
     // 3. Let attr1 and attr2 be null.
-    Attr* attr1;
-    Attr* attr2;
+    Attr* attr1 = nullptr;
+    Attr* attr2 = nullptr;
 
     // 4. If node1 is an attribute, then set attr1 to node1 and node1 to attr1’s element.
     if (is<Attr>(node1)) {
@@ -996,16 +996,50 @@ u16 Node::compare_document_position(JS::GCPtr<Node> other)
     if ((node1 == nullptr || node2 == nullptr) || (&node1->root() != &node2->root()))
         return DOCUMENT_POSITION_DISCONNECTED | DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | (node1 > node2 ? DOCUMENT_POSITION_PRECEDING : DOCUMENT_POSITION_FOLLOWING);
 
+    Vector<Node*> node1_ancestors;
+    for (auto* node = node1; node; node = node->parent())
+        node1_ancestors.append(node);
+
+    Vector<Node*> node2_ancestors;
+    for (auto* node = node2; node; node = node->parent())
+        node2_ancestors.append(node);
+
+    auto it_node1_ancestors = node1_ancestors.rbegin();
+    auto it_node2_ancestors = node2_ancestors.rbegin();
+    // Walk ancestor chains of both nodes starting from root
+    while (it_node1_ancestors != node1_ancestors.rend() && it_node2_ancestors != node2_ancestors.rend()) {
+        auto* ancestor1 = *it_node1_ancestors;
+        auto* ancestor2 = *it_node2_ancestors;
+
+        // If ancestors of nodes at the same level in the tree are different then preceding node is the one with lower sibling position
+        if (ancestor1 != ancestor2) {
+            auto* node = ancestor1;
+            while (node) {
+                if (node == ancestor2)
+                    return DOCUMENT_POSITION_PRECEDING;
+                node = node->next_sibling();
+            }
+            return DOCUMENT_POSITION_FOLLOWING;
+        }
+
+        it_node1_ancestors++;
+        it_node2_ancestors++;
+    }
+
+    // NOTE: If nodes in ancestors chains are the same but one chain is longer, then one node is ancestor of another.
+    //       The node with shorter ancestors chain is the ancestor.
+    //       The node with longer ancestors chain is the descendant.
+
     // 7. If node1 is an ancestor of node2 and attr1 is null, or node1 is node2 and attr2 is non-null, then return the result of adding DOCUMENT_POSITION_CONTAINS to DOCUMENT_POSITION_PRECEDING.
-    if ((node1->is_ancestor_of(*node2) && !attr1) || (node1 == node2 && attr2))
+    if ((node1_ancestors.size() < node2_ancestors.size() && !attr1) || (node1 == node2 && attr2))
         return DOCUMENT_POSITION_CONTAINS | DOCUMENT_POSITION_PRECEDING;
 
     // 8. If node1 is a descendant of node2 and attr2 is null, or node1 is node2 and attr1 is non-null, then return the result of adding DOCUMENT_POSITION_CONTAINED_BY to DOCUMENT_POSITION_FOLLOWING.
-    if ((node2->is_ancestor_of(*node1) && !attr2) || (node1 == node2 && attr1))
+    if ((node1_ancestors.size() > node2_ancestors.size() && !attr2) || (node1 == node2 && attr1))
         return DOCUMENT_POSITION_CONTAINED_BY | DOCUMENT_POSITION_FOLLOWING;
 
     // 9. If node1 is preceding node2, then return DOCUMENT_POSITION_PRECEDING.
-    if (node1->is_before(*node2))
+    if (node1_ancestors.size() < node2_ancestors.size())
         return DOCUMENT_POSITION_PRECEDING;
 
     // 10. Return DOCUMENT_POSITION_FOLLOWING.
