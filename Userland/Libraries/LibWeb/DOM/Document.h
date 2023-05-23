@@ -97,9 +97,6 @@ public:
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
-    size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
-    size_t layout_node_count() const { return m_next_layout_node_serial_id; }
-
     DeprecatedString cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(DeprecatedString const&, Cookie::Source = Cookie::Source::NonHttp);
 
@@ -492,8 +489,6 @@ private:
     void evaluate_media_rules();
 
     WebIDL::ExceptionOr<void> run_the_document_write_steps(DeprecatedString);
-
-    size_t m_next_layout_node_serial_id { 0 };
 
     OwnPtr<CSS::StyleComputer> m_style_computer;
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
