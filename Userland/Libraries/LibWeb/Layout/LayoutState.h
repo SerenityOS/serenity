@@ -29,12 +29,8 @@ struct LayoutState {
     {
     }
 
-    explicit LayoutState(LayoutState const* parent)
-        : m_parent(parent)
-        , m_root(find_root())
-    {
-        used_values_per_layout_node.resize(m_root.used_values_per_layout_node.size());
-    }
+    explicit LayoutState(LayoutState const* parent);
+    ~LayoutState();
 
     LayoutState const& find_root() const
     {
@@ -153,7 +149,7 @@ struct LayoutState {
     // NOTE: get() will not CoW the UsedValues.
     UsedValues const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    Vector<OwnPtr<UsedValues>> used_values_per_layout_node;
+    HashMap<Layout::Node const*, NonnullOwnPtr<UsedValues>> used_values_per_layout_node;
 
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
