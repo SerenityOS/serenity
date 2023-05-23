@@ -7591,6 +7591,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                 return {};
             }
             node = leaf_calculation.release_nonnull();
+            return {};
         }
 
         // 2. If leaf is a math function, replace leaf with the internal representation of that math function.
@@ -7604,6 +7605,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                     return {};
                 }
                 node = leaf_calculation.release_nonnull();
+                return {};
             } else {
                 // FIXME: Parse more math functions once we have them.
                 parsing_failed_for_child_node = true;
@@ -7611,6 +7613,10 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
             }
         }
 
+        // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.
+        //       So, the calc() is invalid.
+        dbgln_if(CSS_PARSER_DEBUG, "Leftover UnparsedCalculationNode in calc tree! That probably means the syntax is invalid, but maybe we just didn't implement `{}` yet.", component_value.to_debug_string());
+        parsing_failed_for_child_node = true;
         return {};
     }));
 
