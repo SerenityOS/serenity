@@ -1,24 +1,25 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Time.h>
+#include <LibCore/Account.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <time.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/var/run/utmp", "r"));
@@ -35,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto process_statistics = TRY(Core::ProcessStatisticsReader::get_all());
 
-    auto now = time(nullptr);
+    auto now = Time::now_realtime().to_seconds();
 
     outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
     json.as_object().for_each_member([&](auto& tty, auto& value) {
@@ -46,18 +47,19 @@ ErrorOr<int> serenity_main(Main::Arguments)
         auto login_time = Core::DateTime::from_timestamp(entry.get_integer<time_t>("login_at"sv).value_or(0));
         auto login_at = login_time.to_deprecated_string("%b%d %H:%M:%S"sv);
 
-        auto* pw = getpwuid(uid);
+        auto maybe_account = Core::Account::from_uid(uid, Core::Account::Read::PasswdOnly);
         DeprecatedString username;
-        if (pw)
-            username = pw->pw_name;
+        if (!maybe_account.is_error())
+            username = maybe_account.release_value().username();
         else
             username = DeprecatedString::number(uid);
 
         StringBuilder builder;
         DeprecatedString idle_string = "n/a";
-        struct stat st;
-        if (stat(tty.characters(), &st) == 0) {
-            auto idle_time = now - st.st_mtime;
+        auto maybe_stat = Core::System::stat(tty);
+        if (!maybe_stat.is_error()) {
+            auto stat = maybe_stat.release_value();
+            auto idle_time = now - stat.st_mtime;
             if (idle_time >= 0) {
                 builder.appendff("{}s", idle_time);
                 idle_string = builder.to_deprecated_string();
