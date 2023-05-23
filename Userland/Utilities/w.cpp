@@ -75,6 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         StringBuilder builder;
         String idle_string = "n/a"_short_string;
         String what = "n/a"_short_string;
+        StringView tty_display_name = tty;
         auto maybe_stat = Core::System::stat(tty);
         if (!maybe_stat.is_error()) {
             auto stat = maybe_stat.release_value();
@@ -85,6 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             }
 
             auto tty_pseudo_name = TRY(tty_stat_to_pseudo_name(stat));
+            tty_display_name = tty_pseudo_name;
             for (auto& process : process_statistics.processes) {
                 if (tty_pseudo_name == process.tty.view() && process.pid == process.pgid) {
                     what = TRY(String::from_deprecated_string(process.name));
@@ -93,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             }
         }
 
-        outln("{:10} {:12} {:16} {:6} {}", username, tty, login_at, idle_string, what);
+        outln("{:10} {:12} {:16} {:6} {}", username, tty_display_name, login_at, idle_string, what);
         return {};
     }));
     return 0;
