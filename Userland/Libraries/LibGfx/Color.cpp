@@ -64,8 +64,9 @@ static Optional<Color> parse_rgba_color(StringView string)
     auto b = parts[2].to_int().value_or(256);
 
     double alpha = 0;
-    char const* start = parts[3].characters_without_null_termination();
-    auto alpha_result = parse_first_floating_point(start, start + parts[3].length());
+    auto alpha_str = parts[3].trim_whitespace();
+    char const* start = alpha_str.characters_without_null_termination();
+    auto alpha_result = parse_first_floating_point(start, start + alpha_str.length());
     if (alpha_result.parsed_value())
         alpha = alpha_result.value;
 
