@@ -141,9 +141,9 @@ public:
     }
 
 private:
-    double const m_min_value;
-    double const m_max_value;
-    double const m_default_value;
+    ParameterFixedPoint const m_min_value;
+    ParameterFixedPoint const m_max_value;
+    ParameterFixedPoint const m_default_value;
     Logarithmic const m_logarithmic;
 };
 
