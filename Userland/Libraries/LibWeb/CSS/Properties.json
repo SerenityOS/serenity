@@ -1203,6 +1203,11 @@
       "unitless-length"
     ]
   },
+  "max-inline-size": {
+    "logical-alias-for": "max-width",
+    "__comment": "Also a logical alias for max-height",
+    "initial": "none"
+  },
   "max-width": {
     "inherited": false,
     "initial": "none",
@@ -1231,6 +1236,11 @@
     "quirks": [
       "unitless-length"
     ]
+  },
+  "min-inline-size": {
+    "logical-alias-for": "min-width",
+    "__comment": "Also a logical alias for min-height",
+    "initial": "0"
   },
   "min-width": {
     "inherited": false,
