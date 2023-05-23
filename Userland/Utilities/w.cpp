@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <LibCore/Account.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
@@ -33,7 +34,7 @@ static ErrorOr<String> tty_stat_to_pseudo_name(struct stat const& tty_stat)
     return Error::from_string_literal("Unknown TTY device type");
 }
 
-ErrorOr<int> serenity_main(Main::Arguments)
+ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/dev", "r"));
@@ -43,6 +44,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/var/run/utmp", "r"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    StringView username_to_filter_by;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(username_to_filter_by, "Only show information about the specified user", "user", Core::ArgsParser::Required::No);
+    args_parser.parse(args);
 
     auto file = TRY(Core::File::open("/var/run/utmp"sv, Core::File::OpenMode::Read));
     auto file_contents = TRY(file->read_until_eof());
@@ -71,6 +78,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
             username = TRY(String::from_deprecated_string(maybe_account.release_value().username()));
         else
             username = TRY(String::formatted("{}", uid));
+
+        if (!username_to_filter_by.is_empty() && username_to_filter_by != username)
+            return {};
 
         StringBuilder builder;
         String idle_string = "n/a"_short_string;
