@@ -35,6 +35,8 @@ public:
     void set_device_viewport_rect(DevicePixelRect const& rect) { m_device_viewport_rect = rect; }
     CSSPixelRect css_viewport_rect() const;
 
+    [[nodiscard]] bool would_be_fully_clipped_by_painter(DevicePixelRect) const;
+
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
 
