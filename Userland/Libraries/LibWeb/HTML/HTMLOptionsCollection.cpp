@@ -19,7 +19,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLOptionsCollection>> HTMLOptionsCollecti
 }
 
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
-    : DOM::HTMLCollection(root, move(filter))
+    : DOM::HTMLCollection(root, Scope::Descendants, move(filter))
 {
 }
 

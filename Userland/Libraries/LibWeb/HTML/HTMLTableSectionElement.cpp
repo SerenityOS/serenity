@@ -41,9 +41,8 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
     // The rows attribute must return an HTMLCollection rooted at this element,
     // whose filter matches only tr elements that are children of this element.
     if (!m_rows) {
-        m_rows = DOM::HTMLCollection::create(const_cast<HTMLTableSectionElement&>(*this), [this](Element const& element) {
-            return element.parent() == this
-                && is<HTMLTableRowElement>(element);
+        m_rows = DOM::HTMLCollection::create(const_cast<HTMLTableSectionElement&>(*this), DOM::HTMLCollection::Scope::Children, [](Element const& element) {
+            return is<HTMLTableRowElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_rows;
