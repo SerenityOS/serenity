@@ -68,7 +68,16 @@ ErrorOr<void> Heap::open()
         return open();
     }
 
-    dbgln_if(SQL_DEBUG, "Heap file {} opened; number of blocks = {}", name(), m_highest_block_written);
+    // Perform a heap scan to find all free blocks
+    // FIXME: this is very inefficient; store free blocks in a persistent heap structure
+    for (Block::Index index = 1; index <= m_highest_block_written; ++index) {
+        auto block_data = TRY(read_raw_block(index));
+        auto size_in_bytes = *reinterpret_cast<u32*>(block_data.data());
+        if (size_in_bytes == 0)
+            TRY(m_free_block_indices.try_append(index));
+    }
+
+    dbgln_if(SQL_DEBUG, "Heap file {} opened; number of blocks = {}; free blocks = {}", name(), m_highest_block_written, m_free_block_indices.size());
     return {};
 }
 
@@ -159,8 +168,8 @@ ErrorOr<ByteBuffer> Heap::read_raw_block(Block::Index index)
     VERIFY(m_file);
     VERIFY(index < m_next_block);
 
-    if (auto data = m_write_ahead_log.get(index); data.has_value())
-        return data.value();
+    if (auto wal_entry = m_write_ahead_log.get(index); wal_entry.has_value())
+        return wal_entry.value();
 
     TRY(m_file->seek(index * Block::SIZE, SeekMode::SetPosition));
     auto buffer = TRY(ByteBuffer::create_uninitialized(Block::SIZE));
@@ -211,6 +220,7 @@ ErrorOr<void> Heap::write_block(Block const& block)
 {
     VERIFY(block.index() < m_next_block);
     VERIFY(block.next_block() < m_next_block);
+    VERIFY(block.size_in_bytes() > 0);
     VERIFY(block.data().size() <= Block::DATA_SIZE);
 
     auto size_in_bytes = block.size_in_bytes();
