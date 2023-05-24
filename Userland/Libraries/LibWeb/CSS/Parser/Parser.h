@@ -315,7 +315,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_flex_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_flex_flow_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_font_value(Vector<ComponentValue> const&);
-    ErrorOr<RefPtr<StyleValue>> parse_font_family_value(Vector<ComponentValue> const&, size_t start_index = 0);
+    ErrorOr<RefPtr<StyleValue>> parse_font_family_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_list_style_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_overflow_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
