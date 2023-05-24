@@ -26,6 +26,16 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<HTML::DOMStringMap> m_dataset;
+
+private:
+    virtual bool is_svg_element() const final { return true; }
 };
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Node::fast_is<SVG::SVGElement>() const { return is_svg_element(); }
 
 }

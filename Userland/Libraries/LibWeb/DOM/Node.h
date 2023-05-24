@@ -73,6 +73,7 @@ public:
 
     virtual bool requires_svg_container() const { return false; }
     virtual bool is_svg_container() const { return false; }
+    virtual bool is_svg_element() const { return false; }
     virtual bool is_svg_svg_element() const { return false; }
 
     bool in_a_document_tree() const;
