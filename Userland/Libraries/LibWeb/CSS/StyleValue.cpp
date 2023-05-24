@@ -389,12 +389,7 @@ int StyleValue::to_font_weight() const
         }
     }
     if (has_integer()) {
-        int font_weight_integer = to_integer();
-        if (font_weight_integer <= Gfx::FontWeight::Regular)
-            return Gfx::FontWeight::Regular;
-        if (font_weight_integer <= Gfx::FontWeight::Bold)
-            return Gfx::FontWeight::Bold;
-        return Gfx::FontWeight::Black;
+        return to_integer();
     }
     if (is_calculated()) {
         auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();
