@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository == 'SerenityOS/serenity'
     runs-on: ubuntu-latest
     steps:
 
