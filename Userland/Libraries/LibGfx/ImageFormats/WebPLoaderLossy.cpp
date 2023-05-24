@@ -43,7 +43,11 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     if (!is_key_frame)
         return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk not a key frame");
 
-    // FIXME: !show_frame does not make sense in a webp file either, probably?
+    if (!show_frame)
+        return Error::from_string_literal("WebPImageDecoderPlugin: 'VP8 ' chunk has invalid visibility for webp image");
+
+    if (version > 3)
+        return Error::from_string_literal("WebPImageDecoderPlugin: unknown version number in 'VP8 ' chunk");
 
     u32 start_code = data[3] | (data[4] << 8) | (data[5] << 16);
     if (start_code != 0x2a019d) // https://www.rfc-editor.org/errata/eid7370
