@@ -194,6 +194,8 @@ UnixDateTime ISO9660Inode::parse_numerical_date_time(ISO::NumericalDateAndTime c
     i32 year_offset = date.years_since_1900 - 70;
 
     // FIXME: This ignores timezone information in date.
+    // FIXME: This calls `VERIFY(month >= 1 && month <= 12)` (but irritatingly allows days 0 and 255),
+    // which means we can crash the kernel by inserting a CD with an invalid recording month.
     return UnixDateTime::from_unix_time_parts(year_offset, date.month, date.day, date.hour, date.minute, date.second, 0);
 }
 
