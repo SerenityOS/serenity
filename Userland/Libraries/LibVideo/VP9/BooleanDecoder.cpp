@@ -62,11 +62,6 @@ ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
     return return_value;
 }
 
-size_t BooleanDecoder::bits_remaining() const
-{
-    return m_bits_left;
-}
-
 /* 9.2.3 */
 ErrorOr<void> BooleanDecoder::finish_decode()
 {
