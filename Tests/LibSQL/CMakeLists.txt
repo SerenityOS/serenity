@@ -3,6 +3,7 @@ set(TEST_SOURCES
     TestSqlDatabase.cpp
     TestSqlExpressionParser.cpp
     TestSqlHashIndex.cpp
+    TestSqlHeap.cpp
     TestSqlStatementExecution.cpp
     TestSqlStatementParser.cpp
     TestSqlValueAndTuple.cpp
