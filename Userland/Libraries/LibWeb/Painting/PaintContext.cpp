@@ -10,7 +10,7 @@
 
 namespace Web {
 
-PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, float device_pixels_per_css_pixel)
+PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, double device_pixels_per_css_pixel)
     : m_painter(painter)
     , m_palette(palette)
     , m_device_pixels_per_css_pixel(device_pixels_per_css_pixel)

@@ -15,7 +15,7 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/images.html#image-source
 struct ImageSource {
     struct PixelDensityDescriptorValue {
-        float value { 0 };
+        double value { 0 };
     };
 
     struct WidthDescriptorValue {
@@ -28,7 +28,7 @@ struct ImageSource {
 
 struct ImageSourceAndPixelDensity {
     ImageSource source;
-    float pixel_density { 1.0f };
+    double pixel_density { 1.0f };
 };
 
 // https://html.spec.whatwg.org/multipage/images.html#source-set

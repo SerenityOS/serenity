@@ -18,11 +18,11 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
             return rect.width() * [&] {
                 switch (preset) {
                 case HorizontalPreset::Left:
-                    return 0.0f;
+                    return 0.;
                 case HorizontalPreset::Center:
-                    return 0.5f;
+                    return 0.5;
                 case HorizontalPreset::Right:
-                    return 1.0f;
+                    return 1.;
                 default:
                     VERIFY_NOT_REACHED();
                 }
@@ -36,11 +36,11 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
             return rect.height() * [&] {
                 switch (preset) {
                 case VerticalPreset::Top:
-                    return 0.0f;
+                    return 0.;
                 case VerticalPreset::Center:
-                    return 0.5f;
+                    return 0.5;
                 case VerticalPreset::Bottom:
-                    return 1.0f;
+                    return 1.;
                 default:
                     VERIFY_NOT_REACHED();
                 }

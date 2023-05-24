@@ -35,7 +35,7 @@ Length::Length(int value, Type type)
     , m_value(value)
 {
 }
-Length::Length(float value, Type type)
+Length::Length(double value, Type type)
     : m_type(type)
     , m_value(value)
 {
@@ -59,7 +59,7 @@ Length Length::percentage_of(Percentage const& percentage) const
         return *this;
     }
 
-    return Length { percentage.as_fraction() * raw_value(), m_type };
+    return Length { static_cast<double>(percentage.as_fraction()) * raw_value(), m_type };
 }
 
 CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const

@@ -994,7 +994,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
     marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1).value());
 
     marker_state.set_content_offset({ -(marker_state.content_width() + default_marker_width),
-        max(CSSPixels(0.f), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2.f) });
+        max(CSSPixels(0), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2) });
 
     if (marker_state.content_height() > list_item_state.content_height())
         list_item_state.set_content_height(marker_state.content_height());

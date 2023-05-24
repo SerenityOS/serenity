@@ -223,7 +223,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     fragment_baseline += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    fragment_baseline += length_percentage->percentage().as_fraction() * line_height;
+                    fragment_baseline += static_cast<double>(length_percentage->percentage().as_fraction()) * line_height;
             }
 
             line_box_baseline = max(line_box_baseline, fragment_baseline);
@@ -277,7 +277,7 @@ void LineBuilder::update_last_line()
                     auto vertical_align_amount = length_percentage->length().to_px(fragment.layout_node());
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 } else if (length_percentage->is_percentage()) {
-                    auto vertical_align_amount = length_percentage->percentage().as_fraction() * m_context.containing_block().line_height();
+                    auto vertical_align_amount = static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 }
             }
@@ -305,7 +305,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     bottom_of_inline_box += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    bottom_of_inline_box += length_percentage->percentage().as_fraction() * m_context.containing_block().line_height();
+                    bottom_of_inline_box += static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
             }
         }
 

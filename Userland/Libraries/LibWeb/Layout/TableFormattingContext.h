@@ -56,7 +56,7 @@ private:
         CSSPixels min_width { 0 };
         CSSPixels max_width { 0 };
         CSSPixels used_width { 0 };
-        float percentage_width { 0 };
+        double percentage_width { 0 };
     };
 
     struct Row {

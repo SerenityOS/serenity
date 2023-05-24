@@ -12,10 +12,10 @@
 namespace Web::SVG {
 
 struct ViewBox {
-    float min_x { 0 };
-    float min_y { 0 };
-    float width { 0 };
-    float height { 0 };
+    double min_x { 0 };
+    double min_y { 0 };
+    double width { 0 };
+    double height { 0 };
 };
 
 Optional<ViewBox> try_parse_view_box(StringView);
