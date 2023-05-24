@@ -4997,22 +4997,25 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
     StyleValueVector alt_text_values;
     bool in_alt_text = false;
 
-    for (auto const& value : component_values) {
-        if (value.is(Token::Type::Delim) && value.token().delim() == '/') {
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto& next = tokens.peek_token();
+        if (next.is(Token::Type::Delim) && next.token().delim() == '/') {
             if (in_alt_text || content_values.is_empty())
                 return nullptr;
             in_alt_text = true;
+            (void)tokens.next_token();
             continue;
         }
-        auto style_value = TRY(parse_css_value(value));
-        if (style_value && property_accepts_value(PropertyID::Content, *style_value)) {
+
+        if (auto style_value = TRY(parse_css_value_for_property(PropertyID::Content, tokens))) {
             if (is_single_value_identifier(style_value->to_identifier()))
                 return nullptr;
 
             if (in_alt_text) {
-                alt_text_values.append(style_value.release_nonnull());
+                TRY(alt_text_values.try_append(style_value.release_nonnull()));
             } else {
-                content_values.append(style_value.release_nonnull());
+                TRY(content_values.try_append(style_value.release_nonnull()));
             }
             continue;
         }
