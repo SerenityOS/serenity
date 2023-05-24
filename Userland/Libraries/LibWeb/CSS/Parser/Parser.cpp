@@ -6005,23 +6005,24 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
     RefPtr<StyleValue> decoration_style;
     RefPtr<StyleValue> decoration_color;
 
+    auto remaining_longhands = Vector { PropertyID::TextDecorationColor, PropertyID::TextDecorationLine, PropertyID::TextDecorationStyle, PropertyID::TextDecorationThickness };
+
     auto tokens = TokenStream { component_values };
-
     while (tokens.has_next_token()) {
-        auto const& part = tokens.next_token();
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
 
-        if (property_accepts_value(PropertyID::TextDecorationColor, *value)) {
-            if (decoration_color)
-                return nullptr;
+        switch (property_and_value.property) {
+        case PropertyID::TextDecorationColor: {
+            VERIFY(!decoration_color);
             decoration_color = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationLine, *value)) {
-            if (decoration_line)
-                return nullptr;
+        case PropertyID::TextDecorationLine: {
+            VERIFY(!decoration_line);
             tokens.reconsume_current_input_token();
             auto parsed_decoration_line = TRY(parse_text_decoration_line_value(tokens));
             if (!parsed_decoration_line)
@@ -6029,20 +6030,19 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
             decoration_line = parsed_decoration_line.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationThickness, *value)) {
-            if (decoration_thickness)
-                return nullptr;
+        case PropertyID::TextDecorationThickness: {
+            VERIFY(!decoration_thickness);
             decoration_thickness = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationStyle, *value)) {
-            if (decoration_style)
-                return nullptr;
+        case PropertyID::TextDecorationStyle: {
+            VERIFY(!decoration_style);
             decoration_style = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!decoration_line)
