@@ -6265,9 +6265,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     };
 
+    auto tokens = TokenStream { component_values };
     switch (component_values.size()) {
     case 1: {
-        auto single_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[0]))));
+        auto single_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
         if (!single_value.has_value())
             return nullptr;
         // If only one value is specified, the second value is assumed to be center.
@@ -6282,8 +6283,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         VERIFY_NOT_REACHED();
     }
     case 2: {
-        auto first_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[0]))));
-        auto second_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[1]))));
+        auto first_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
+        auto second_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
         if (!first_value.has_value() || !second_value.has_value())
             return nullptr;
 
