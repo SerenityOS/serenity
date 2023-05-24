@@ -53,8 +53,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    // This uses ImageDecoder instead of Bitmap::load_from_file() to have more control
-    // over selecting a frame, access color profile data, and so on in the future.
     auto frame = TRY(decoder->frame(frame_index)).image;
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
