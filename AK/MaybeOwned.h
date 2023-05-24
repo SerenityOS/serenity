@@ -18,7 +18,7 @@ class MaybeOwned {
 public:
     template<DerivedFrom<T> U>
     MaybeOwned(NonnullOwnPtr<U> handle)
-        : m_handle(adopt_own<T>(*handle.leak_ptr()))
+        : m_handle(static_cast<NonnullOwnPtr<T>&&>(move(handle)))
     {
     }
 
