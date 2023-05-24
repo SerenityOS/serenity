@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
@@ -303,6 +303,9 @@ public:
     virtual float to_number() const { return 0; }
     virtual float to_integer() const { return 0; }
     virtual ErrorOr<String> to_string() const = 0;
+
+    [[nodiscard]] int to_font_weight() const;
+    [[nodiscard]] int to_font_slope() const;
 
     virtual bool equals(StyleValue const& other) const = 0;
 
