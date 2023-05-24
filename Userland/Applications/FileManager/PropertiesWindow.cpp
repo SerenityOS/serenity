@@ -302,7 +302,7 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
                         return Error::from_errno(ECANCELED);
 
                     struct stat st = {};
-                    if (fstatat(directory.fd(), entry.name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                    if (fstatat(directory.fd(), entry.name.to_deprecated_string().characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
                         perror("fstatat");
                         return IterationDecision::Continue;
                     }

@@ -105,7 +105,7 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
             queue_entry.node->m_children = make<Vector<TreeNode>>();
 
             auto iteration_result = Core::Directory::for_each_entry(builder.string_view(), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto&) -> ErrorOr<IterationDecision> {
-                TRY(queue_entry.node->m_children->try_append(TreeNode(entry.name)));
+                TRY(queue_entry.node->m_children->try_append(TreeNode(entry.name.to_deprecated_string())));
                 return IterationDecision::Continue;
             });
             if (iteration_result.is_error())

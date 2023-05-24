@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/Error.h>
+#include <AK/String.h>
 
 struct dirent;
 
@@ -26,9 +27,9 @@ struct DirectoryEntry {
     };
     Type type;
     // FIXME: Once we have a special Path string class, use that.
-    DeprecatedString name;
+    String name;
 
-    static DirectoryEntry from_dirent(dirent const&);
+    static ErrorOr<DirectoryEntry> from_dirent(dirent const&);
 };
 
 }

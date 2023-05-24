@@ -201,7 +201,7 @@ void FileProvider::build_filesystem_cache()
                 // FIXME: Propagate errors.
                 (void)Core::Directory::for_each_entry(base_directory, Core::DirIterator::SkipDots, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
                     struct stat st = {};
-                    if (fstatat(directory.fd(), entry.name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                    if (fstatat(directory.fd(), entry.name.to_deprecated_string().characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
                         perror("fstatat");
                         return IterationDecision::Continue;
                     }

@@ -36,11 +36,12 @@ static DirectoryEntry::Type directory_entry_type_from_posix(unsigned char dt_con
     VERIFY_NOT_REACHED();
 }
 
-DirectoryEntry DirectoryEntry::from_dirent(dirent const& de)
+ErrorOr<DirectoryEntry> DirectoryEntry::from_dirent(dirent const& de)
 {
+    auto name = TRY(String::from_deprecated_string(de.d_name));
     return DirectoryEntry {
         .type = directory_entry_type_from_posix(de.d_type),
-        .name = de.d_name,
+        .name = name,
     };
 };
 

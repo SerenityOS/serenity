@@ -56,7 +56,14 @@ bool DirIterator::advance_next()
             return false;
         }
 
-        m_next = DirectoryEntry::from_dirent(*de);
+        auto maybe_next = DirectoryEntry::from_dirent(*de);
+        if (maybe_next.is_error()) {
+            m_error = maybe_next.release_error();
+            m_next.clear();
+            return false;
+        }
+
+        m_next = maybe_next.release_value();
 
         if (m_next->name.is_empty())
             return false;
@@ -93,7 +100,7 @@ DeprecatedString DirIterator::next_path()
 {
     auto entry = next();
     if (entry.has_value())
-        return entry->name;
+        return entry->name.to_deprecated_string();
     return "";
 }
 

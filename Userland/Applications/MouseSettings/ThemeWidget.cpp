@@ -90,7 +90,7 @@ void ThemeModel::invalidate()
     // FIXME: Propagate errors.
     (void)Core::Directory::for_each_entry("/res/cursor-themes"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
         if (access(DeprecatedString::formatted("/res/cursor-themes/{}/Config.ini", entry.name).characters(), R_OK) == 0)
-            m_themes.append(entry.name);
+            m_themes.append(entry.name.to_deprecated_string());
         return IterationDecision::Continue;
     });
 

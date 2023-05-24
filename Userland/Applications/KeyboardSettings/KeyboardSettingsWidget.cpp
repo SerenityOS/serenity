@@ -61,7 +61,7 @@ private:
         set_icon(parent_window->icon());
 
         auto iterator_result = Core::Directory::for_each_entry("/res/keymaps/"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
-            auto basename = entry.name.replace(".json"sv, ""sv, ReplaceMode::FirstOnly);
+            auto basename = TRY(entry.name.replace(".json"sv, ""sv, ReplaceMode::FirstOnly)).to_deprecated_string();
             if (selected_keymaps.find(basename).is_end())
                 m_character_map_files.append(basename);
             return IterationDecision::Continue;
