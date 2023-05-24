@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
@@ -32,6 +33,7 @@ public:
     ResultOr<void> open();
     bool is_open() const { return m_open; }
     ErrorOr<void> commit();
+    ErrorOr<size_t> file_size_in_bytes() const { return m_heap->file_size_in_bytes(); }
 
     ResultOr<void> add_schema(SchemaDef const&);
     static Key get_schema_key(DeprecatedString const&);
