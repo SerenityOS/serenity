@@ -608,3 +608,41 @@ TEST_CASE(from_milliseconds)
     EXPECT_DURATION(Duration::from_milliseconds(9223372036854775807), 9223372036854775, 807'000'000);
     EXPECT_DURATION(Duration::from_milliseconds((i64)-0x8000'0000'0000'0000), -9223372036854776, 192'000'000);
 }
+
+TEST_CASE(from_unix_time_parts_overflow)
+{
+    // Negative overflow
+    // I can't easily verify that these values are perfectly exact and correct, but they're close enough.
+    // Also, for these "years" the most important thing is to avoid crashing (i.e. signed overflow UB).
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(0, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -62167219200, 0);                    // Guess: -62167195440, off by 23760 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-1'000'000, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -31619119219200, 0);        // Guess: -31619119195440, off by the same 23760 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -67768100567971200, 0); // Guess: -67768100567916336, off by 54864 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 1, 0, 0, 0, 0, 0).offset_to_epoch(), -67768100568057600, 0); // Guess: -67768100568002736, off by the same 54864 seconds
+    // EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 0, 0, 0, 0, 0, 0).offset_to_epoch(), -67768100568006336, 0); // Guess: -67768100568006336
+    EXPECT_CRASH("Month 0 currently not allowed", [] {
+        (void)UnixDateTime::from_unix_time_parts(-2'147'483'648, 0, 0, 0, 0, 0, 0);
+        return Test::Crash::Failure::DidNotCrash;
+    });
+
+    // Positive overflow
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 0, 65535).offset_to_epoch(), 65, 535'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 255, 0).offset_to_epoch(), 255, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 255, 0, 0).offset_to_epoch(), 15300, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 255, 0, 0, 0).offset_to_epoch(), 918000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 255, 0, 0, 0, 0).offset_to_epoch(), 21945600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 12, 1, 0, 0, 0, 0).offset_to_epoch(), 28857600, 0);
+    // EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 255, 1, 0, 0, 0, 0).offset_to_epoch(), 670585230, 0);
+    EXPECT_CRASH("Month 255 currently crashes", [] {
+        (void)UnixDateTime::from_unix_time_parts(1970, 255, 1, 0, 0, 0, 0);
+        return Test::Crash::Failure::DidNotCrash;
+    });
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1'000'000, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 31494784780800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 67767976201996800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 12, 255, 0, 0, 0, 0).offset_to_epoch(), 67767976252800000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 12, 255, 255, 255, 255, 65535).offset_to_epoch(), 67767976253733620, 535'000'000);
+    // EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 255, 255, 255, 255, 255, 65535).offset_to_epoch(), ????, 535'000'000);
+    EXPECT_CRASH("Month 255 currently crashes", [] {
+        (void)UnixDateTime::from_unix_time_parts(2'147'483'647, 255, 255, 255, 255, 255, 65535);
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}
