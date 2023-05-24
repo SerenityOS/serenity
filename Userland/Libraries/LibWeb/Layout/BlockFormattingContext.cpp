@@ -874,9 +874,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             // We're looking for the innermost preceding float that intersects vertically with `box`.
             for (auto& preceding_float : side_data.current_boxes.in_reverse()) {
                 auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float.box, root(), m_state);
-                // FIXME: the line below is for compatibility with a fixed `Gfx::FloatRect` bug where `.bottom()` was subtracted by one;
-                //        replace with !rect.contains_vertically() and update the test cases accordingly.
-                if (y_in_root < preceding_float_rect.top() || y_in_root > preceding_float_rect.bottom() - 1.f)
+                if (!preceding_float_rect.contains_vertically(y_in_root))
                     continue;
                 // We found a preceding float that intersects vertically with the current float.
                 // Now we need to find out if there's enough inline-axis space to stack them next to each other.
@@ -1009,9 +1007,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
-        // FIXME: the line below is for compatibility with a fixed `Gfx::FloatRect` bug where `.bottom()` was subtracted by one;
-        //        replace with rect.contains_vertically() and update the test cases accordingly.
-        if (y.value() >= rect.top() && y.value() <= rect.bottom() - 1.f) {
+        if (rect.contains_vertically(y.value())) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
@@ -1030,9 +1026,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
-        // FIXME: the line below is for compatibility with a fixed `Gfx::FloatRect` bug where `.bottom()` was subtracted by one;
-        //        replace with rect.contains_vertically() and update the test cases accordingly.
-        if (y.value() >= rect.top() && y.value() <= rect.bottom() - 1.f) {
+        if (rect.contains_vertically(y.value())) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
