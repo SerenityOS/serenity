@@ -154,11 +154,8 @@ ErrorOr<void> Heap::write_storage(Block::Index index, ReadonlyBytes data)
     }
 
     // Free remaining blocks in existing chain, if any
-    while (existing_next_block_index > 0) {
-        auto existing_block = TRY(read_block(existing_next_block_index));
-        existing_next_block_index = existing_block.next_block();
-        TRY(free_block(existing_block));
-    }
+    if (existing_next_block_index > 0)
+        TRY(free_storage(existing_next_block_index));
 
     return {};
 }
@@ -233,6 +230,19 @@ ErrorOr<void> Heap::write_block(Block const& block)
     block.data().bytes().copy_to(heap_data.bytes().slice(Block::HEADER_SIZE));
 
     return write_raw_block_to_wal(block.index(), move(heap_data));
+}
+
+ErrorOr<void> Heap::free_storage(Block::Index index)
+{
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, index);
+    VERIFY(index > 0);
+
+    while (index > 0) {
+        auto block = TRY(read_block(index));
+        TRY(free_block(block));
+        index = block.next_block();
+    }
+    return {};
 }
 
 ErrorOr<void> Heap::free_block(Block const& block)
