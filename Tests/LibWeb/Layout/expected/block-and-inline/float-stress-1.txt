@@ -5,65 +5,63 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       BlockContainer <div.outer> at (9,9) content-size 300x250 children: inline
         line 0 width: 239.15625, height: 16, bottom: 16, baseline: 12.796875
-          frag 0 from TextNode start: 1, length: 24, rect: [60,9 212x16]
+          frag 0 from TextNode start: 1, length: 24, rect: [61,9 212x16]
             "foo bar baz foo bar baz "
-          frag 1 from TextNode start: 1, length: 3, rect: [272,9 27.15625x16]
+          frag 1 from TextNode start: 1, length: 3, rect: [273,9 27.15625x16]
             "foo"
         line 1 width: 27.640625, height: 16, bottom: 32, baseline: 12.796875
-          frag 0 from TextNode start: 5, length: 3, rect: [262,25 27.640625x16]
+          frag 0 from TextNode start: 5, length: 3, rect: [263,25 27.640625x16]
             "bar"
         line 2 width: 27.203125, height: 16, bottom: 48, baseline: 12.796875
-          frag 0 from TextNode start: 9, length: 3, rect: [262,41 27.203125x16]
+          frag 0 from TextNode start: 9, length: 3, rect: [263,41 27.203125x16]
             "baz"
         line 3 width: 27.15625, height: 16, bottom: 64, baseline: 12.796875
-          frag 0 from TextNode start: 13, length: 3, rect: [262,57 27.15625x16]
+          frag 0 from TextNode start: 13, length: 3, rect: [263,57 27.15625x16]
             "foo"
         line 4 width: 0, height: 0, bottom: 0, baseline: 0
-        line 5 width: 98, height: 16, bottom: 84, baseline: 12.796875
-          frag 0 from TextNode start: 17, length: 11, rect: [9,77 98x16]
-            "bar baz foo"
-        line 6 width: 98, height: 16, bottom: 100, baseline: 12.796875
-          frag 0 from TextNode start: 29, length: 11, rect: [9,93 98x16]
-            "bar baz foo"
-        line 7 width: 98, height: 16, bottom: 116, baseline: 12.796875
-          frag 0 from TextNode start: 41, length: 8, rect: [9,109 70.84375x16]
-            "bar baz "
-          frag 1 from TextNode start: 1, length: 3, rect: [80,109 27.15625x16]
-            "foo"
-        line 8 width: 62.84375, height: 16, bottom: 132, baseline: 12.796875
-          frag 0 from TextNode start: 5, length: 7, rect: [9,125 62.84375x16]
+        line 5 width: 62.84375, height: 16, bottom: 84, baseline: 12.796875
+          frag 0 from TextNode start: 17, length: 7, rect: [9,77 62.84375x16]
             "bar baz"
-        line 9 width: 62.796875, height: 16, bottom: 148, baseline: 12.796875
-          frag 0 from TextNode start: 13, length: 7, rect: [9,141 62.796875x16]
+        line 6 width: 62.796875, height: 16, bottom: 100, baseline: 12.796875
+          frag 0 from TextNode start: 25, length: 7, rect: [9,93 62.796875x16]
             "foo bar"
-        line 10 width: 274.359375, height: 16, bottom: 164, baseline: 12.796875
-          frag 0 from TextNode start: 21, length: 31, rect: [9,157 274.359375x16]
-            "baz foo bar baz foo bar baz foo"
-        line 11 width: 239.640625, height: 16, bottom: 180, baseline: 12.796875
-          frag 0 from TextNode start: 53, length: 20, rect: [60,173 176.84375x16]
-            "bar baz foo bar baz "
-          frag 1 from TextNode start: 1, length: 7, rect: [237,173 62.796875x16]
-            "foo bar"
-        line 12 width: 204, height: 16, bottom: 196, baseline: 12.796875
-          frag 0 from TextNode start: 9, length: 16, rect: [60,189 141.203125x16]
+        line 7 width: 62.359375, height: 16, bottom: 116, baseline: 12.796875
+          frag 0 from TextNode start: 33, length: 7, rect: [9,109 62.359375x16]
+            "baz foo"
+        line 8 width: 62.84375, height: 16, bottom: 132, baseline: 12.796875
+          frag 0 from TextNode start: 41, length: 7, rect: [9,125 62.84375x16]
+            "bar baz"
+        line 9 width: 239.15625, height: 16, bottom: 148, baseline: 12.796875
+          frag 0 from TextNode start: 1, length: 27, rect: [9,141 239.15625x16]
+            "foo bar baz foo bar baz foo"
+        line 10 width: 239.640625, height: 16, bottom: 164, baseline: 12.796875
+          frag 0 from TextNode start: 29, length: 27, rect: [9,157 239.640625x16]
+            "bar baz foo bar baz foo bar"
+        line 11 width: 239.203125, height: 16, bottom: 180, baseline: 12.796875
+          frag 0 from TextNode start: 57, length: 16, rect: [61,173 141.203125x16]
             "baz foo bar baz "
-          frag 1 from TextNode start: 1, length: 7, rect: [201,189 62.796875x16]
-            "foo bar"
+          frag 1 from TextNode start: 1, length: 11, rect: [202,173 98x16]
+            "foo bar baz"
+        line 12 width: 204, height: 16, bottom: 196, baseline: 12.796875
+          frag 0 from TextNode start: 13, length: 12, rect: [61,189 106x16]
+            "foo bar baz "
+          frag 1 from TextNode start: 1, length: 11, rect: [167,189 98x16]
+            "foo bar baz"
         line 13 width: 204, height: 16, bottom: 212, baseline: 12.796875
-          frag 0 from TextNode start: 9, length: 23, rect: [60,205 204x16]
-            "baz foo bar baz foo bar"
-        line 14 width: 239.203125, height: 16, bottom: 228, baseline: 12.796875
-          frag 0 from TextNode start: 33, length: 27, rect: [60,221 239.203125x16]
-            "baz foo bar baz foo bar baz"
-        line 15 width: 274.796875, height: 16, bottom: 244, baseline: 12.796875
-          frag 0 from TextNode start: 61, length: 31, rect: [9,237 274.796875x16]
+          frag 0 from TextNode start: 13, length: 23, rect: [61,205 204x16]
+            "foo bar baz foo bar baz"
+        line 14 width: 239.15625, height: 16, bottom: 228, baseline: 12.796875
+          frag 0 from TextNode start: 37, length: 27, rect: [61,221 239.15625x16]
+            "foo bar baz foo bar baz foo"
+        line 15 width: 274.84375, height: 16, bottom: 244, baseline: 12.796875
+          frag 0 from TextNode start: 65, length: 31, rect: [9,237 274.84375x16]
+            "bar baz foo bar baz foo bar baz"
+        line 16 width: 274.796875, height: 16, bottom: 260, baseline: 12.796875
+          frag 0 from TextNode start: 97, length: 31, rect: [9,253 274.796875x16]
             "foo bar baz foo bar baz foo bar"
-        line 16 width: 274.359375, height: 16, bottom: 260, baseline: 12.796875
-          frag 0 from TextNode start: 93, length: 31, rect: [9,253 274.359375x16]
-            "baz foo bar baz foo bar baz foo"
-        line 17 width: 168.84375, height: 16, bottom: 276, baseline: 12.796875
-          frag 0 from TextNode start: 125, length: 19, rect: [9,269 168.84375x16]
-            "bar baz foo bar baz"
+        line 17 width: 133.203125, height: 16, bottom: 276, baseline: 12.796875
+          frag 0 from TextNode start: 129, length: 15, rect: [9,269 133.203125x16]
+            "baz foo bar baz"
         TextNode <#text>
         BlockContainer <div.lefty> at (10,10) content-size 50x50 floating [BFC] children: not-inline
         TextNode <#text>
@@ -71,7 +69,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         BlockContainer <div.two> at (108,78) content-size 200x50 floating [BFC] children: not-inline
         TextNode <#text>
-        BlockContainer <div.righty> at (76,126) content-size 30x30 floating [BFC] children: not-inline
+        BlockContainer <div.righty> at (278,142) content-size 30x30 floating [BFC] children: not-inline
         TextNode <#text>
         BlockContainer <div.lefty.shwifty> at (10,174) content-size 50x50 floating [BFC] children: not-inline
         TextNode <#text>
