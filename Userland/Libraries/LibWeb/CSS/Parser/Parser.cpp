@@ -6062,32 +6062,23 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
     StyleValueVector style_values;
 
     while (tokens.has_next_token()) {
-        auto const& token = tokens.next_token();
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(PropertyID::TextDecorationLine, *maybe_value)) {
-            tokens.reconsume_current_input_token();
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::TextDecorationLine, tokens));
+        if (!maybe_value)
             break;
-        }
         auto value = maybe_value.release_nonnull();
 
         if (auto maybe_line = value_id_to_text_decoration_line(value->to_identifier()); maybe_line.has_value()) {
-            auto line = maybe_line.release_value();
-            if (line == TextDecorationLine::None) {
-                if (!style_values.is_empty()) {
-                    tokens.reconsume_current_input_token();
+            if (maybe_line == TextDecorationLine::None) {
+                if (!style_values.is_empty())
                     break;
-                }
                 return value;
             }
-            if (style_values.contains_slow(value)) {
-                tokens.reconsume_current_input_token();
+            if (style_values.contains_slow(value))
                 break;
-            }
-            style_values.append(move(value));
+            TRY(style_values.try_append(move(value)));
             continue;
         }
 
-        tokens.reconsume_current_input_token();
         break;
     }
 
