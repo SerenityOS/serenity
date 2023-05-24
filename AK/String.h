@@ -115,6 +115,7 @@ public:
     [[nodiscard]] bool starts_with_bytes(StringView) const;
 
     [[nodiscard]] bool ends_with(u32 code_point) const;
+    [[nodiscard]] bool ends_with(StringView, AK::CaseSensitivity = AK::CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool ends_with_bytes(StringView) const;
 
     // Creates a substring with a deep copy of the specified data window.

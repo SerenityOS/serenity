@@ -520,6 +520,11 @@ bool String::ends_with(u32 code_point) const
     return last_code_point == code_point;
 }
 
+bool String::ends_with(StringView str, AK::CaseSensitivity case_sensitivity) const
+{
+    return AK::StringUtils::ends_with(*this, str, case_sensitivity);
+}
+
 bool String::ends_with_bytes(StringView bytes) const
 {
     return bytes_as_string_view().ends_with(bytes);
