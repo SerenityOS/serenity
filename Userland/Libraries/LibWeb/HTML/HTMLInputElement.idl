@@ -37,6 +37,8 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions, Reflect] attribute boolean multiple;
     [CEReactions, Reflect=readonly] attribute boolean readOnly;
     [CEReactions, Reflect] attribute boolean required;
+    // FIXME: Uncomment Reflect when reflect supports number attributes
+    [CEReactions/*, Reflect*/] attribute unsigned long size;
 
     [CEReactions, Reflect] attribute DOMString align;
     [CEReactions, Reflect=usemap] attribute DOMString useMap;

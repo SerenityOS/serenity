@@ -6,8 +6,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumericLimits.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
@@ -63,6 +65,32 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_placeholder_text_node);
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
     visitor.visit(m_selected_files);
+}
+
+void HTMLInputElement::apply_presentational_hints(CSS::StyleProperties& style) const
+{
+    if (should_apply_size_attribute()) {
+        auto style_value = CSS::LengthStyleValue::create(CSS::Length::make_ch(size())).release_value_but_fixme_should_propagate_errors();
+        style.set_property(CSS::PropertyID::Width, style_value);
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-size-3
+bool HTMLInputElement::should_apply_size_attribute() const
+{
+    switch (m_type) {
+        using enum TypeAttributeState;
+    case Text:
+    case Search:
+    case URL:
+    case Telephone:
+    case Email:
+    case Password:
+        return true;
+
+    default:
+        return false;
+    }
 }
 
 JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -305,6 +333,36 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#the-size-attribute
+unsigned HTMLInputElement::size() const
+{
+    auto size_attr = get_attribute(HTML::AttributeNames::size);
+    if (auto converted = size_attr.to_uint(); converted.has_value())
+        return converted.value();
+
+    // ...or, the default value for size which is 20
+    return 20;
+}
+
+// https://html.spec.whatwg.org/#limited-to-only-non-negative-numbers-greater-than-zero
+WebIDL::ExceptionOr<void> HTMLInputElement::set_size(unsigned size)
+{
+    // 1. If the reflected IDL attribute is limited to only positive numbers and the given value is 0, then throw an "IndexSizeError" DOMException.
+    if (size == 0) {
+        return WebIDL::IndexSizeError::create(realm(), "Size must have a value that is a valid non-negative integer greater than zero");
+    }
+    if (size > AK::NumericLimits<int32_t>::max()) {
+        // These steps make sure that if the value of size is above 2147483647 (32-bit signed max), it is set to the default value for the attribute
+        // 4. Let newValue be minimum
+        // 5. If the reflected IDL attribute has a default value, then set newValue to defaultValue.
+        // 6. If the given value is in the range minimum to 2147483647, inclusive, then set newValue to it.
+        size = 20;
+    }
+
+    // 7. Run this's set the content attribute with newValue converted to the shortest possible string representing the number as a valid non-negative integer.
+    return set_attribute(HTML::AttributeNames::size, DeprecatedString::number(size));
+}
+
 DeprecatedString HTMLInputElement::value() const
 {
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
@@ -505,6 +563,9 @@ void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
             m_placeholder_text_node->set_data(value);
+    } else if (name == HTML::AttributeNames::size && value.matches("0"sv)) {
+        // Ensure the size attribute isn't allowed to have a value of 0
+        remove_attribute(HTML::AttributeNames::size);
     }
 }
 

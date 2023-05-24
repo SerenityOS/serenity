@@ -66,6 +66,9 @@ public:
     DeprecatedString value() const;
     WebIDL::ExceptionOr<void> set_value(DeprecatedString);
 
+    unsigned size() const;
+    WebIDL::ExceptionOr<void> set_size(unsigned);
+
     Optional<DeprecatedString> placeholder_value() const;
 
     bool checked() const { return m_checked; }
@@ -147,6 +150,9 @@ private:
 
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
+
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+    bool should_apply_size_attribute() const;
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

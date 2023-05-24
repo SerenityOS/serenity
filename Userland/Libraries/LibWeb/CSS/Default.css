@@ -28,7 +28,6 @@ label {
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input, textarea {
     border: 1px solid -libweb-palette-threed-shadow1;
-    min-width: 80px;
     min-height: 16px;
     width: 120px;
     cursor: text;
@@ -39,6 +38,8 @@ textarea {
     padding: 2px;
     display: inline-block;
     overflow: scroll;
+    /* FIXME: This is temporary until textarea supports the cols attribute */
+    min-width: 80px;
 }
 
 input[type=submit], input[type=button], input[type=reset], input[type=checkbox], input[type=radio] {
