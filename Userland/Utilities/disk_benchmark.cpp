@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 usleep(100);
             }
             auto average = average_result(results);
-            outln("Finished: runs={} time={}ms write_bps={} read_bps={}", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
+            outln("Finished: runs={} time={}ms write_bps={} read_bps={}", results.size(), timer.elapsed_milliseconds(), average.write_bps, average.read_bps);
 
             sleep(1);
         }
@@ -129,7 +129,7 @@ ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size, ByteB
         total_written += nwritten;
     }
 
-    result.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
+    result.write_bps = (u64)(timer.elapsed_milliseconds() ? (file_size / timer.elapsed_milliseconds()) : file_size) * 1000;
 
     TRY(Core::System::lseek(fd, 0, SEEK_SET));
 
@@ -140,6 +140,6 @@ ErrorOr<Result> benchmark(DeprecatedString const& filename, int file_size, ByteB
         total_read += nread;
     }
 
-    result.read_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
+    result.read_bps = (u64)(timer.elapsed_milliseconds() ? (file_size / timer.elapsed_milliseconds()) : file_size) * 1000;
     return result;
 }
