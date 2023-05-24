@@ -112,6 +112,12 @@ public:
     Box const* containing_block() const;
     Box* containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->containing_block()); }
 
+    // Closest non-anonymous ancestor box, to be used when resolving percentage values.
+    // Anonymous block boxes are ignored when resolving percentage values that would refer to it:
+    // the closest non-anonymous ancestor box is used instead.
+    // https://www.w3.org/TR/CSS22/visuren.html#anonymous-block-level
+    Box const* non_anyonymous_containing_block() const;
+
     bool establishes_stacking_context() const;
 
     bool can_contain_boxes_with_position_absolute() const;
