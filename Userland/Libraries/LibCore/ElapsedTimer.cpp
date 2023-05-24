@@ -29,7 +29,7 @@ void ElapsedTimer::reset()
     m_origin_time = {};
 }
 
-i64 ElapsedTimer::elapsed() const
+i64 ElapsedTimer::elapsed_milliseconds() const
 {
     return elapsed_time().to_milliseconds();
 }
