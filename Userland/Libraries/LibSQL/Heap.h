@@ -116,6 +116,7 @@ public:
 
     ErrorOr<ByteBuffer> read_storage(Block::Index);
     ErrorOr<void> write_storage(Block::Index, ReadonlyBytes);
+    ErrorOr<void> free_storage(Block::Index);
 
     ErrorOr<void> flush();
 
