@@ -47,6 +47,15 @@ private:
     bool m_marked { false };
 };
 
+struct FontFaceKey {
+    FlyString family_name;
+    int weight { 0 };
+    int slope { 0 };
+
+    [[nodiscard]] u32 hash() const { return pair_int_hash(family_name.hash(), pair_int_hash(weight, slope)); }
+    [[nodiscard]] bool operator==(FontFaceKey const&) const = default;
+};
+
 class StyleComputer {
 public:
     explicit StyleComputer(DOM::Document&);
@@ -132,7 +141,7 @@ private:
     OwnPtr<RuleCache> m_user_agent_rule_cache;
 
     class FontLoader;
-    HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
+    HashMap<FontFaceKey, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
 
     Length::FontMetrics m_default_font_metrics;
     Length::FontMetrics m_root_element_font_metrics;
