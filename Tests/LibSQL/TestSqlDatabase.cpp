@@ -206,3 +206,32 @@ TEST_CASE(insert_100_into_table)
 {
     insert_and_verify(100);
 }
+
+TEST_CASE(reuse_row_storage)
+{
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto db = SQL::Database::construct("/tmp/test.db");
+    MUST(db->open());
+    (void)setup_table(db);
+    auto table = MUST(db->get_table("TestSchema", "TestTable"));
+
+    // Insert row
+    SQL::Row row(*table);
+    row["TextColumn"] = "text value";
+    row["IntColumn"] = 12345;
+    TRY_OR_FAIL(db->insert(row));
+    TRY_OR_FAIL(db->commit());
+    auto original_size_in_bytes = MUST(db->file_size_in_bytes());
+
+    // Remove row
+    TRY_OR_FAIL(db->remove(row));
+    TRY_OR_FAIL(db->commit());
+    auto size_in_bytes_after_removal = MUST(db->file_size_in_bytes());
+    EXPECT(size_in_bytes_after_removal <= original_size_in_bytes);
+
+    // Insert same row again
+    TRY_OR_FAIL(db->insert(row));
+    TRY_OR_FAIL(db->commit());
+    auto size_in_bytes_after_reinsertion = MUST(db->file_size_in_bytes());
+    EXPECT(size_in_bytes_after_reinsertion <= original_size_in_bytes);
+}
