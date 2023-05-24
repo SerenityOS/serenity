@@ -59,6 +59,16 @@
 #include <LibWeb/Platform/FontPlugin.h>
 #include <stdio.h>
 
+namespace AK {
+
+// traits for FontFaceKey
+template<>
+struct Traits<Web::CSS::FontFaceKey> : public GenericTraits<Web::CSS::FontFaceKey> {
+    static unsigned hash(Web::CSS::FontFaceKey const& key) { return pair_int_hash(key.family_name.hash(), pair_int_hash(key.weight, key.slope)); }
+};
+
+}
+
 namespace Web::CSS {
 
 StyleComputer::StyleComputer(DOM::Document& document)
@@ -1263,7 +1273,13 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
-        if (auto it = m_loaded_fonts.find(family); it != m_loaded_fonts.end()) {
+        FontFaceKey key {
+            .family_name = family,
+            .weight = weight,
+            .slope = slope,
+        };
+
+        if (auto it = m_loaded_fonts.find(key); it != m_loaded_fonts.end()) {
             auto& loader = *it->value;
             if (auto found_font = loader.font_with_point_size(font_size_in_pt))
                 return found_font;
@@ -1700,7 +1716,12 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         auto const& font_face = static_cast<CSSFontFaceRule const&>(*rule).font_face();
         if (font_face.sources().is_empty())
             continue;
-        if (m_loaded_fonts.contains(font_face.font_family()))
+        FontFaceKey key {
+            .family_name = font_face.font_family(),
+            .weight = font_face.weight().value_or(0),
+            .slope = font_face.slope().value_or(0),
+        };
+        if (m_loaded_fonts.contains(key))
             continue;
 
         Vector<AK::URL> urls;
@@ -1713,7 +1734,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
             continue;
 
         auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(urls));
-        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(key, move(loader));
     }
 }
 
