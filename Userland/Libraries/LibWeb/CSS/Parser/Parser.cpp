@@ -5529,64 +5529,71 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
     // So, we have to handle that separately.
     int normal_count = 0;
 
-    for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = TRY(parse_css_value(component_values[i]));
-        if (!value)
-            return nullptr;
+    auto tokens = TokenStream { component_values };
+    auto remaining_longhands = Vector { PropertyID::FontSize, PropertyID::FontStretch, PropertyID::FontStyle, PropertyID::FontVariant, PropertyID::FontWeight };
 
-        if (value->to_identifier() == ValueID::Normal) {
+    while (tokens.has_next_token()) {
+        auto& peek_token = tokens.peek_token();
+        if (peek_token.is(Token::Type::Ident) && value_id_from_string(peek_token.token().ident()) == ValueID::Normal) {
             normal_count++;
+            (void)tokens.next_token();
             continue;
         }
-        // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
-        if (property_accepts_value(PropertyID::FontStyle, *value)) {
-            if (font_style)
-                return nullptr;
-            font_style = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontWeight, *value)) {
-            if (font_weight)
-                return nullptr;
-            font_weight = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontVariant, *value)) {
-            if (font_variant)
-                return nullptr;
-            font_variant = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontSize, *value)) {
-            if (font_size)
-                return nullptr;
+
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::FontSize: {
+            VERIFY(!font_size);
             font_size = value.release_nonnull();
 
             // Consume `/ line-height` if present
-            if (i + 2 < component_values.size()) {
-                auto const& maybe_solidus = component_values[i + 1];
-                if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
-                    auto maybe_line_height = TRY(parse_css_value(component_values[i + 2]));
-                    if (!(maybe_line_height && property_accepts_value(PropertyID::LineHeight, *maybe_line_height)))
-                        return nullptr;
-                    line_height = maybe_line_height.release_nonnull();
-                    i += 2;
-                }
+            auto maybe_solidus = tokens.peek_token();
+            if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
+                (void)tokens.next_token();
+                auto maybe_line_height = TRY(parse_css_value_for_property(PropertyID::LineHeight, tokens));
+                if (!maybe_line_height)
+                    return nullptr;
+                line_height = maybe_line_height.release_nonnull();
             }
 
             // Consume font-families
-            auto maybe_font_families = TRY(parse_font_family_value(component_values, i + 1));
-            if (!maybe_font_families)
+            auto maybe_font_families = TRY(parse_font_family_value(tokens));
+            // font-family comes last, so we must not have any tokens left over.
+            if (!maybe_font_families || tokens.has_next_token())
                 return nullptr;
             font_families = maybe_font_families.release_nonnull();
-            break;
+            continue;
         }
-        if (property_accepts_value(PropertyID::FontStretch, *value)) {
-            if (font_stretch)
-                return nullptr;
+        case PropertyID::FontStretch: {
+            VERIFY(!font_stretch);
             font_stretch = value.release_nonnull();
             continue;
         }
+        case PropertyID::FontStyle: {
+            // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
+            VERIFY(!font_style);
+            font_style = value.release_nonnull();
+            continue;
+        }
+        case PropertyID::FontVariant: {
+            VERIFY(!font_variant);
+            font_variant = value.release_nonnull();
+            continue;
+        }
+        case PropertyID::FontWeight: {
+            VERIFY(!font_weight);
+            font_weight = value.release_nonnull();
+            continue;
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
         return nullptr;
     }
 
@@ -5612,15 +5619,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
     return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<ComponentValue>& tokens)
 {
-    auto is_comma_or_eof = [&](size_t i) -> bool {
-        if (i < component_values.size()) {
-            auto const& maybe_comma = component_values[i];
-            if (!maybe_comma.is(Token::Type::Comma))
-                return false;
-        }
-        return true;
+    auto next_is_comma_or_eof = [&]() -> bool {
+        return !tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma);
     };
 
     // Note: Font-family names can either be a quoted string, or a keyword, or a series of custom-idents.
@@ -5629,54 +5631,59 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(Vector<ComponentValu
     //     font-family: "my cool font!", serif;
     StyleValueVector font_families;
     Vector<DeprecatedString> current_name_parts;
-    for (size_t i = start_index; i < component_values.size(); ++i) {
-        auto const& part = component_values[i];
+    while (tokens.has_next_token()) {
+        auto const& peek = tokens.peek_token();
 
-        if (part.is(Token::Type::String)) {
+        if (peek.is(Token::Type::String)) {
             // `font-family: my cool "font";` is invalid.
             if (!current_name_parts.is_empty())
                 return nullptr;
-            if (!is_comma_or_eof(i + 1))
+            (void)tokens.next_token(); // String
+            if (!next_is_comma_or_eof())
                 return nullptr;
-            font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(part.token().string())))));
-            i++;
+            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::from_utf8(peek.token().string()))))));
+            (void)tokens.next_token(); // Comma
             continue;
         }
-        if (part.is(Token::Type::Ident)) {
+
+        if (peek.is(Token::Type::Ident)) {
             // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
-            auto maybe_ident = TRY(parse_css_value(part));
-            if (maybe_ident) {
-                // CSS-wide keywords are not allowed
-                if (maybe_ident->is_builtin())
+
+            // CSS-wide keywords are not allowed
+            if (auto builtin = TRY(parse_builtin_value(peek)))
+                return nullptr;
+
+            auto maybe_ident = value_id_from_string(peek.token().ident());
+            // Can't have a generic-font-name as a token in an unquoted font name.
+            if (maybe_ident.has_value() && is_generic_font_family(maybe_ident.value())) {
+                if (!current_name_parts.is_empty())
                     return nullptr;
-                if (is_generic_font_family(maybe_ident->to_identifier())) {
-                    // Can't have a generic-font-name as a token in an unquoted font name.
-                    if (!current_name_parts.is_empty())
-                        return nullptr;
-                    if (!is_comma_or_eof(i + 1))
-                        return nullptr;
-                    font_families.append(maybe_ident.release_nonnull());
-                    i++;
-                    continue;
-                }
+                (void)tokens.next_token(); // Ident
+                if (!next_is_comma_or_eof())
+                    return nullptr;
+                TRY(font_families.try_append(TRY(IdentifierStyleValue::create(maybe_ident.value()))));
+                (void)tokens.next_token(); // Comma
+                continue;
             }
-            current_name_parts.append(part.token().ident());
+            TRY(current_name_parts.try_append(tokens.next_token().token().ident()));
             continue;
         }
-        if (part.is(Token::Type::Comma)) {
+
+        if (peek.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(DeprecatedString::join(' ', current_name_parts))))));
+            (void)tokens.next_token(); // Comma
+            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
             current_name_parts.clear();
             // Can't have a trailing comma
-            if (i + 1 == component_values.size())
+            if (!tokens.has_next_token())
                 return nullptr;
             continue;
         }
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(DeprecatedString::join(' ', current_name_parts))))));
+        TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
         current_name_parts.clear();
     }
 
@@ -7036,10 +7043,12 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = FIXME_TRY(parse_font_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::FontFamily:
-        if (auto parsed_value = FIXME_TRY(parse_font_family_value(component_values)))
+    case PropertyID::FontFamily: {
+        auto tokens_without_whitespace = TokenStream { component_values };
+        if (auto parsed_value = FIXME_TRY(parse_font_family_value(tokens_without_whitespace)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    }
     case PropertyID::GridColumn:
         if (auto parsed_value = FIXME_TRY(parse_grid_track_placement_shorthand_value(component_values)))
             return parsed_value.release_nonnull();
