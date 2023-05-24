@@ -1171,39 +1171,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    int weight = Gfx::FontWeight::Regular;
-    if (font_weight->is_identifier()) {
-        switch (static_cast<IdentifierStyleValue const&>(*font_weight).id()) {
-        case CSS::ValueID::Normal:
-            weight = Gfx::FontWeight::Regular;
-            break;
-        case CSS::ValueID::Bold:
-            weight = Gfx::FontWeight::Bold;
-            break;
-        case CSS::ValueID::Lighter:
-            // FIXME: This should be relative to the parent.
-            weight = Gfx::FontWeight::Regular;
-            break;
-        case CSS::ValueID::Bolder:
-            // FIXME: This should be relative to the parent.
-            weight = Gfx::FontWeight::Bold;
-            break;
-        default:
-            break;
-        }
-    } else if (font_weight->has_integer()) {
-        int font_weight_integer = font_weight->to_integer();
-        if (font_weight_integer <= Gfx::FontWeight::Regular)
-            weight = Gfx::FontWeight::Regular;
-        else if (font_weight_integer <= Gfx::FontWeight::Bold)
-            weight = Gfx::FontWeight::Bold;
-        else
-            weight = Gfx::FontWeight::Black;
-    } else if (font_weight->is_calculated()) {
-        auto maybe_weight = const_cast<CalculatedStyleValue&>(font_weight->as_calculated()).resolve_integer();
-        if (maybe_weight.has_value())
-            weight = maybe_weight.value();
-    }
+    auto weight = font_weight->to_font_weight();
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
@@ -1282,21 +1250,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    int slope = Gfx::name_to_slope("Normal"sv);
-    // FIXME: Implement oblique <angle>
-    if (font_style->is_identifier()) {
-        switch (static_cast<IdentifierStyleValue const&>(*font_style).id()) {
-        case CSS::ValueID::Italic:
-            slope = Gfx::name_to_slope("Italic"sv);
-            break;
-        case CSS::ValueID::Oblique:
-            slope = Gfx::name_to_slope("Oblique"sv);
-            break;
-        case CSS::ValueID::Normal:
-        default:
-            break;
-        }
-    }
+    auto slope = font_style->to_font_slope();
 
     // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
