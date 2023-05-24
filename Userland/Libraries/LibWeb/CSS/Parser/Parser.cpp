@@ -5604,6 +5604,8 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
     Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
+    Optional<int> weight;
+    Optional<int> slope;
 
     for (auto& declaration_or_at_rule : declarations_and_at_rules) {
         if (declaration_or_at_rule.is_at_rule()) {
@@ -5612,6 +5614,20 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         }
 
         auto const& declaration = declaration_or_at_rule.declaration();
+        if (declaration.name().equals_ignoring_ascii_case("font-weight"sv)) {
+            TokenStream token_stream { declaration.values() };
+            if (auto value = parse_css_value(CSS::PropertyID::FontWeight, token_stream); !value.is_error()) {
+                weight = value.value()->to_font_weight();
+            }
+            continue;
+        }
+        if (declaration.name().equals_ignoring_ascii_case("font-style"sv)) {
+            TokenStream token_stream { declaration.values() };
+            if (auto value = parse_css_value(CSS::PropertyID::FontStyle, token_stream); !value.is_error()) {
+                slope = value.value()->to_font_slope();
+            }
+            continue;
+        }
         if (declaration.name().equals_ignoring_ascii_case("font-family"sv)) {
             // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
             //        Ideally they could share code.
@@ -5698,7 +5714,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
+    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
