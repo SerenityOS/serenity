@@ -232,7 +232,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     auto count = transformation.values.size();
     auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
-            [this, reference_length](CSS::LengthPercentage const& value) {
+            [this, reference_length](CSS::LengthPercentage const& value) -> float {
                 if (reference_length.has_value()) {
                     return value.resolved(m_box, reference_length.value()).to_px(m_box).value();
                 }
@@ -430,7 +430,7 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
     auto reference_box = paintable_box().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.to_px(m_box, reference_box.width());
     auto y = reference_box.top() + style_value.y.to_px(m_box, reference_box.height());
-    return { x, y };
+    return { static_cast<float>(x.value()), static_cast<float>(y.value()) };
 }
 
 template<typename U, typename Callback>

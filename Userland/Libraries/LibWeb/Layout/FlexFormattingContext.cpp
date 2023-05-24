@@ -577,7 +577,7 @@ CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem cons
     return flex_basis;
 }
 
-CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, float aspect_ratio) const
+CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const
 {
     if (is_row_layout())
         return cross_size * aspect_ratio;
@@ -717,7 +717,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
     auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : automatic_minimum_size(item);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
-    item.hypothetical_main_size = max(CSSPixels(0.0f), css_clamp(item.flex_base_size, clamp_min, clamp_max));
+    item.hypothetical_main_size = max(CSSPixels(0), css_clamp(item.flex_base_size, clamp_min, clamp_max));
 
     // NOTE: At this point, we set the hypothetical main size as the flex item's *temporary* main size.
     //       The size may change again when we resolve flexible lengths, but this is necessary in order for
@@ -1006,7 +1006,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                 for (auto& item : line.items) {
                     if (item.frozen)
                         continue;
-                    float ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
+                    double ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
                     // Set the item’s target main size to its flex base size plus a fraction of the remaining free space proportional to the ratio.
                     item.target_main_size = item.flex_base_size + (line.remaining_free_space * ratio);
                 }
@@ -1024,7 +1024,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                     if (item.frozen)
                         continue;
                     // Find the ratio of the item’s scaled flex shrink factor to the sum of the scaled flex shrink factors of all unfrozen items on the line.
-                    float ratio = 1.0f;
+                    double ratio = 1.0;
                     if (sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line != 0)
                         ratio = item.scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line;
 
@@ -1207,7 +1207,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
         }
 
         // 3. The used cross-size of the flex line is the largest of the numbers found in the previous two steps and zero.
-        flex_line.cross_size = max(CSSPixels(0.0f), largest_hypothetical_cross_size);
+        flex_line.cross_size = max(CSSPixels(0), largest_hypothetical_cross_size);
     }
 
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
@@ -1276,7 +1276,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         used_main_space += main_gap() * (flex_line.items.size() - 1);
 
         if (flex_line.remaining_free_space > 0) {
-            CSSPixels size_per_auto_margin = flex_line.remaining_free_space / (float)auto_margins;
+            CSSPixels size_per_auto_margin = flex_line.remaining_free_space / static_cast<double>(auto_margins);
             for (auto& item : flex_line.items) {
                 if (item.margins.main_before_is_auto)
                     set_main_axis_first_margin(item, size_per_auto_margin);
@@ -1317,7 +1317,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 }
                 break;
             case CSS::JustifyContent::Center:
-                initial_offset = (inner_main_size(flex_container()) - used_main_space) / 2.0f;
+                initial_offset = (inner_main_size(flex_container()) - used_main_space) / 2.0;
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container()) - initial_offset;
                 }
@@ -1327,7 +1327,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 break;
             case CSS::JustifyContent::SpaceAround:
                 space_between_items = flex_line.remaining_free_space / number_of_items;
-                initial_offset = space_between_items / 2.0f;
+                initial_offset = space_between_items / 2.0;
                 break;
             }
         }
@@ -1443,7 +1443,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
     // FIXME: Take better care of margins
     for (auto& flex_line : m_flex_lines) {
         for (auto& item : flex_line.items) {
-            CSSPixels half_line_size = flex_line.cross_size / 2.0f;
+            CSSPixels half_line_size = flex_line.cross_size / 2.0;
             switch (alignment_for_item(item.box)) {
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
@@ -1456,7 +1456,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 item.cross_offset = half_line_size - item.cross_size.value() - item.margins.cross_after - item.borders.cross_after - item.padding.cross_after;
                 break;
             case CSS::AlignItems::Center:
-                item.cross_offset = -(item.cross_size.value() / 2.0f);
+                item.cross_offset = -(item.cross_size.value() / 2.0);
                 break;
             default:
                 break;
@@ -1511,7 +1511,7 @@ void FlexFormattingContext::align_all_flex_lines()
     if (is_single_line()) {
         // For single-line flex containers, we only need to center the line along the cross axis.
         auto& flex_line = m_flex_lines[0];
-        CSSPixels center_of_line = cross_size_of_flex_container / 2.0f;
+        CSSPixels center_of_line = cross_size_of_flex_container / 2.0;
         for (auto& item : flex_line.items) {
             item.cross_offset += center_of_line;
         }
@@ -1711,9 +1711,9 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
             //    and the chosen flex fraction, then clamp that result by the max main size floored by the min main size.
             CSSPixels sum = 0;
             for (auto& item : flex_line.items) {
-                float product = 0;
+                double product = 0;
                 if (item.desired_flex_fraction > 0)
-                    product = flex_line.chosen_flex_fraction * item.box->computed_values().flex_grow();
+                    product = flex_line.chosen_flex_fraction * static_cast<double>(item.box->computed_values().flex_grow());
                 else if (item.desired_flex_fraction < 0)
                     product = flex_line.chosen_flex_fraction * item.scaled_flex_shrink_factor;
                 auto result = item.flex_base_size + product;
@@ -2036,8 +2036,8 @@ void FlexFormattingContext::resolve_cross_axis_auto_margins()
             if (outer_cross_size < line.cross_size) {
                 CSSPixels remainder = line.cross_size - outer_cross_size;
                 if (item.margins.cross_before_is_auto && item.margins.cross_after_is_auto) {
-                    item.margins.cross_before = remainder / 2.0f;
-                    item.margins.cross_after = remainder / 2.0f;
+                    item.margins.cross_before = remainder / 2.0;
+                    item.margins.cross_after = remainder / 2.0;
                 } else if (item.margins.cross_before_is_auto) {
                     item.margins.cross_before = remainder;
                 } else {
@@ -2110,13 +2110,13 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
     case CSS::AlignItems::Center:
-        cross_offset = -(inner_cross_size(box) / 2.0f);
+        cross_offset = -(inner_cross_size(box) / 2.0);
         break;
     default:
         break;
     }
 
-    cross_offset += inner_cross_size(flex_container()) / 2.0f;
+    cross_offset += inner_cross_size(flex_container()) / 2.0;
 
     // The main-axis edges of the static-position rectangle are where the margin edges of the child
     // would be positioned if it were the sole flex item in the flex container,
@@ -2161,7 +2161,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         break;
     case CSS::JustifyContent::Center:
     case CSS::JustifyContent::SpaceAround:
-        main_offset = inner_main_size(flex_container()) / 2.0f - inner_main_size(box) / 2.0f;
+        main_offset = inner_main_size(flex_container()) / 2.0 - inner_main_size(box) / 2.0;
         break;
     }
 
@@ -2185,9 +2185,9 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     return static_position_offset + diff;
 }
 
-float FlexFormattingContext::FlexLine::sum_of_flex_factor_of_unfrozen_items() const
+double FlexFormattingContext::FlexLine::sum_of_flex_factor_of_unfrozen_items() const
 {
-    float sum = 0;
+    double sum = 0;
     for (auto const& item : items) {
         if (!item.frozen)
             sum += item.flex_factor.value();
@@ -2195,9 +2195,9 @@ float FlexFormattingContext::FlexLine::sum_of_flex_factor_of_unfrozen_items() co
     return sum;
 }
 
-float FlexFormattingContext::FlexLine::sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const
+double FlexFormattingContext::FlexLine::sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const
 {
-    float sum = 0;
+    double sum = 0;
     for (auto const& item : items) {
         if (!item.frozen)
             sum += item.scaled_flex_shrink_factor;

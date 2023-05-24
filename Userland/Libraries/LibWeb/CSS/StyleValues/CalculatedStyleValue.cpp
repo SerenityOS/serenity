@@ -536,7 +536,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         },
         [&](Length const& length) {
             VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value());
+            m_value = Length::make_px(length.to_px(*layout_node) * static_cast<double>(other.m_value.get<Number>().value()));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
@@ -569,7 +569,7 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         },
         [&](Length const& length) {
             VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) / denominator);
+            m_value = Length::make_px(length.to_px(*layout_node) / static_cast<double>(denominator));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() / denominator);

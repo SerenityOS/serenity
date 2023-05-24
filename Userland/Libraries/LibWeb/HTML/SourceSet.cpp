@@ -338,7 +338,7 @@ SourceSet SourceSet::create(DOM::Document const& document, String default_source
         bool contains_image_source_with_width_descriptor = false;
         for (auto& source : source_set.m_sources) {
             if (source.descriptor.has<ImageSource::PixelDensityDescriptorValue>()) {
-                if (source.descriptor.get<ImageSource::PixelDensityDescriptorValue>().value == 1.0f)
+                if (source.descriptor.get<ImageSource::PixelDensityDescriptorValue>().value == 1.0)
                     contains_image_source_with_pixel_density_descriptor_value_of_1 = true;
             }
             if (source.descriptor.has<ImageSource::WidthDescriptorValue>())

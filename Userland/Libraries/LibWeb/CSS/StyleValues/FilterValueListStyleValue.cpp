@@ -30,7 +30,7 @@ Filter::DropShadow::Resolved Filter::DropShadow::resolved(Layout::Node const& no
     return Resolved {
         offset_x.to_px(node).value(),
         offset_y.to_px(node).value(),
-        radius.has_value() ? radius->to_px(node).value() : 0.0f,
+        radius.has_value() ? radius->to_px(node).value() : 0.0,
         color.has_value() ? *color : node.computed_values().color()
     };
 }

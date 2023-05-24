@@ -111,11 +111,11 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
 LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
     auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
-    auto gradient_length_px = Gfx::calculate_gradient_length(gradient_size, gradient_angle);
+    auto gradient_length_px = Gfx::calculate_gradient_length(gradient_size.to_type<double>().to_type<float>(), gradient_angle);
 
     auto resolved_color_stops = resolve_color_stop_positions(
         linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.to_px(node, gradient_length_px).value() / gradient_length_px;
+            return length_percentage.to_px(node, gradient_length_px).value() / static_cast<double>(gradient_length_px);
         },
         linear_gradient.is_repeating());
 

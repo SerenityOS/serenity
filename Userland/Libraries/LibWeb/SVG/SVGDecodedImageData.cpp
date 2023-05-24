@@ -34,7 +34,7 @@ public:
     virtual bool is_connection_open() const override { return false; }
     virtual Gfx::Palette palette() const override { return m_host_page.client().palette(); }
     virtual DevicePixelRect screen_rect() const override { return {}; }
-    virtual float device_pixels_per_css_pixel() const override { return m_host_page.client().device_pixels_per_css_pixel(); }
+    virtual double device_pixels_per_css_pixel() const override { return m_host_page.client().device_pixels_per_css_pixel(); }
     virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) override { }

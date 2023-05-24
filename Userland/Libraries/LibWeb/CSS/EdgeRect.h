@@ -19,7 +19,7 @@ struct EdgeRect {
     Length right_edge;
     Length bottom_edge;
     Length left_edge;
-    Gfx::FloatRect resolved(Layout::Node const&, Gfx::FloatRect) const;
+    Gfx::FloatRect resolved(Layout::Node const&, Gfx::Rect<double>) const;
     bool operator==(EdgeRect const&) const = default;
 };
 

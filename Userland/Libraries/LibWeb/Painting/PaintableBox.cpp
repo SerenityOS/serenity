@@ -155,7 +155,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         if (should_clip_rect) {
             context.painter().save();
             auto border_box = absolute_border_box_rect();
-            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<float>()).to_type<CSSPixels>()).to_type<int>());
+            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<double>()).to_type<CSSPixels>()).to_type<int>());
         }
         paint_backdrop_filter(context);
         paint_background(context);
@@ -434,7 +434,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
     CSSPixels css_line_thickness = [&] {
         CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em));
         if (computed_thickness.is_auto())
-            return max(glyph_height * 0.1f, 1.f);
+            return max(glyph_height * 0.1, 1.);
 
         return computed_thickness.to_px(text_node);
     }();
