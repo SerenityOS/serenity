@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("failed.");
         return 1;
     }
-    outln("done in {}ms", timer.elapsed());
+    outln("done in {}ms", timer.elapsed_milliseconds());
 
     auto pages = count / PAGE_SIZE;
     auto step = pages / 10;
@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         ptr[i * PAGE_SIZE] = 1;
 
         if (i != 0 && (i % step) == 0) {
-            auto ms = timer2.elapsed();
+            auto ms = timer2.elapsed_milliseconds();
             if (ms == 0)
                 ms = 1;
 
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             timer2.start();
         }
     }
-    outln("done in {}ms", timer.elapsed());
+    outln("done in {}ms", timer.elapsed_milliseconds());
 
     outln("sleeping for ten seconds...");
     for (int i = 0; i < 10; i++) {
@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("freeing memory...");
     timer.start();
     free(ptr);
-    outln("done in {}ms", timer.elapsed());
+    outln("done in {}ms", timer.elapsed_milliseconds());
 
     return 0;
 }
