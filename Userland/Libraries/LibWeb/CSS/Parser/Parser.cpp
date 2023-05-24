@@ -7332,39 +7332,6 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     return PropertyAndValue { property_ids.first(), nullptr };
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value(ComponentValue const& component_value)
-{
-    if (auto builtin = TRY(parse_builtin_value(component_value)))
-        return builtin;
-
-    if (auto dynamic = TRY(parse_dynamic_value(component_value)))
-        return dynamic;
-
-    // We parse colors before numbers, to catch hashless hex colors.
-    if (auto color = TRY(parse_color_value(component_value)))
-        return color;
-
-    if (auto dimension = TRY(parse_dimension_value(component_value)))
-        return dimension;
-
-    if (auto numeric = TRY(parse_numeric_value(component_value)))
-        return numeric;
-
-    if (auto identifier = TRY(parse_identifier_value(component_value)))
-        return identifier;
-
-    if (auto string = TRY(parse_string_value(component_value)))
-        return string;
-
-    if (auto image = TRY(parse_image_value(component_value)))
-        return image;
-
-    if (auto rect = TRY(parse_rect_value(component_value)))
-        return rect;
-
-    return nullptr;
-}
-
 Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values)
 {
     auto transaction = values.begin_transaction();
