@@ -5910,33 +5910,40 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
     RefPtr<StyleValue> list_type;
     int found_nones = 0;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
-            return nullptr;
+    Vector<PropertyID> remaining_longhands { PropertyID::ListStyleImage, PropertyID::ListStylePosition, PropertyID::ListStyleType };
 
-        if (value->to_identifier() == ValueID::None) {
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        if (auto peek = tokens.peek_token(); peek.is(Token::Type::Ident) && peek.token().ident().equals_ignoring_ascii_case("none"sv)) {
+            (void)tokens.next_token();
             found_nones++;
             continue;
         }
 
-        if (property_accepts_value(PropertyID::ListStylePosition, *value)) {
-            if (list_position)
-                return nullptr;
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::ListStylePosition: {
+            VERIFY(!list_position);
             list_position = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::ListStyleImage, *value)) {
-            if (list_image)
-                return nullptr;
+        case PropertyID::ListStyleImage: {
+            VERIFY(!list_image);
             list_image = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::ListStyleType, *value)) {
-            if (list_type)
-                return nullptr;
+        case PropertyID::ListStyleType: {
+            VERIFY(!list_type);
             list_type = value.release_nonnull();
             continue;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
