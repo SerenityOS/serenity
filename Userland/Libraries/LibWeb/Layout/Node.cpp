@@ -114,6 +114,17 @@ Box const* Node::containing_block() const
     return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 }
 
+Box const* Node::non_anyonymous_containing_block() const
+{
+    auto nearest_ancestor_box = containing_block();
+    VERIFY(nearest_ancestor_box);
+    while (nearest_ancestor_box->is_anonymous()) {
+        nearest_ancestor_box = nearest_ancestor_box->containing_block();
+        VERIFY(nearest_ancestor_box);
+    }
+    return nearest_ancestor_box;
+}
+
 // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
 bool Node::establishes_stacking_context() const
 {

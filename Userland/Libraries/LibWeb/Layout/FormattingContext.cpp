@@ -262,7 +262,7 @@ static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSS
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
-    auto const& containing_block = *box.containing_block();
+    auto const& containing_block = *box.non_anyonymous_containing_block();
     auto const& containing_block_state = state.get(containing_block);
     auto width_of_containing_block = containing_block_state.content_width();
     auto height_of_containing_block = containing_block_state.content_height();
@@ -509,7 +509,7 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(LayoutState con
     // 10.6.6 Floating replaced elements
     // 10.6.10 'inline-block' replaced elements in normal flow
 
-    auto height_of_containing_block = state.get(*box.containing_block()).content_height();
+    auto height_of_containing_block = state.get(*box.non_anyonymous_containing_block()).content_height();
     auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
     auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
@@ -1358,7 +1358,7 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
 
 CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const
 {
-    auto height_of_containing_block = m_state.get(*box.containing_block()).content_height();
+    auto height_of_containing_block = m_state.get(*box.non_anyonymous_containing_block()).content_height();
     auto height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(height_of_containing_block);
     if (height.is_auto()) {
         return height.resolved(box, height_of_containing_block_as_length_for_resolve);
