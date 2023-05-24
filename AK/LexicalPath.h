@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 // On Linux distros that use mlibc `basename` is defined as a macro that expands to `__mlibc_gnu_basename` or `__mlibc_gnu_basename_c`, so we undefine it.
@@ -19,6 +20,7 @@ namespace AK {
 
 class LexicalPath {
 public:
+    explicit LexicalPath(String);
     explicit LexicalPath(DeprecatedString);
 
     bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }

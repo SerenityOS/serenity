@@ -14,6 +14,11 @@ namespace AK {
 
 char s_single_dot = '.';
 
+LexicalPath::LexicalPath(String path)
+{
+    LexicalPath(path.to_deprecated_string());
+}
+
 LexicalPath::LexicalPath(DeprecatedString path)
     : m_string(canonicalized_path(move(path)))
 {
