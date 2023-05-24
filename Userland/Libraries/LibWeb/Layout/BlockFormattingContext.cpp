@@ -1011,7 +1011,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_left());
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_left();
             }
             space_used_by_floats.left = offset_from_containing_block_chain_margins_between_here_and_root
                 + floating_box.offset_from_edge
@@ -1030,7 +1030,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_right());
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_right();
             }
             space_used_by_floats.right = offset_from_containing_block_chain_margins_between_here_and_root
                 + floating_box.offset_from_edge
