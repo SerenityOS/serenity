@@ -6,7 +6,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/NonnullRefPtr.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Heap.h>
@@ -216,6 +215,8 @@ ErrorOr<void> Database::remove(Row& row)
 {
     auto& table = row.table();
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
+
+    TRY(m_heap->free_storage(row.block_index()));
 
     if (table.block_index() == row.block_index()) {
         auto table_key = table.key();
