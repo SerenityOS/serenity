@@ -71,6 +71,8 @@ public:
     virtual ~Heap() override;
 
     ErrorOr<void> open();
+    ErrorOr<size_t> file_size_in_bytes() const;
+
     bool has_block(Block::Index) const;
     [[nodiscard]] Block::Index request_new_block_index() { return m_next_block++; }
 

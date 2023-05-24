@@ -72,6 +72,12 @@ ErrorOr<void> Heap::open()
     return {};
 }
 
+ErrorOr<size_t> Heap::file_size_in_bytes() const
+{
+    TRY(m_file->seek(0, SeekMode::FromEndPosition));
+    return TRY(m_file->tell());
+}
+
 bool Heap::has_block(Block::Index index) const
 {
     return index <= m_highest_block_written || m_write_ahead_log.contains(index);
@@ -95,6 +101,7 @@ ErrorOr<ByteBuffer> Heap::read_storage(Block::Index index)
 ErrorOr<void> Heap::write_storage(Block::Index index, ReadonlyBytes data)
 {
     dbgln_if(SQL_DEBUG, "{}({}, {} bytes)", __FUNCTION__, index, data.size());
+    VERIFY(index > 0);
     VERIFY(data.size() > 0);
 
     // Split up the storage across multiple blocks if necessary, creating a chain
@@ -103,11 +110,24 @@ ErrorOr<void> Heap::write_storage(Block::Index index, ReadonlyBytes data)
     while (remaining_size > 0) {
         auto block_data_size = AK::min(remaining_size, Block::DATA_SIZE);
         remaining_size -= block_data_size;
-        auto next_block_index = (remaining_size > 0) ? request_new_block_index() : 0;
 
-        auto block_data = TRY(ByteBuffer::create_uninitialized(block_data_size));
+        ByteBuffer block_data;
+        Block::Index next_block_index = 0;
+        if (has_block(index)) {
+            auto existing_block = TRY(read_block(index));
+            block_data = existing_block.data();
+            TRY(block_data.try_resize(block_data_size));
+            next_block_index = existing_block.next_block();
+        } else {
+            block_data = TRY(ByteBuffer::create_uninitialized(block_data_size));
+        }
+
+        if (next_block_index == 0 && remaining_size > 0)
+            next_block_index = request_new_block_index();
+        else if (remaining_size == 0)
+            next_block_index = 0;
+
         block_data.bytes().overwrite(0, data.offset(offset_in_data), block_data_size);
-
         TRY(write_block({ index, block_data_size, next_block_index, move(block_data) }));
 
         index = next_block_index;
