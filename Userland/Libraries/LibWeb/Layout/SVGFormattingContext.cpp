@@ -35,7 +35,7 @@ CSSPixels SVGFormattingContext::automatic_content_height() const
 
 struct ViewBoxTransform {
     CSSPixelPoint offset;
-    float scale_factor;
+    double scale_factor;
 };
 
 // https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
@@ -156,7 +156,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             auto& path = dom_node.get_path();
             auto path_transform = dom_node.get_transform();
 
-            float viewbox_scale = 1;
+            double viewbox_scale = 1;
             auto& maybe_view_box = svg_svg_element.view_box();
             if (maybe_view_box.has_value()) {
                 // FIXME: This should allow just one of width or height to be specified.
@@ -172,13 +172,13 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 // The initial value for preserveAspectRatio is xMidYMid meet.
                 auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
                 auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
-                path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
+                path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<double>().to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
                 viewbox_scale = viewbox_transform.scale_factor;
             }
 
             // Stroke increases the path's size by stroke_width/2 per side.
             auto path_bounding_box = path_transform.map(path.bounding_box()).to_type<CSSPixels>();
-            CSSPixels stroke_width = geometry_box.dom_node().visible_stroke_width() * viewbox_scale;
+            CSSPixels stroke_width = static_cast<double>(geometry_box.dom_node().visible_stroke_width()) * viewbox_scale;
             path_bounding_box.inflate(stroke_width, stroke_width);
             geometry_box_state.set_content_offset(path_bounding_box.top_left());
             geometry_box_state.set_content_width(path_bounding_box.width());

@@ -33,14 +33,14 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelR
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     CSSPixels f = 1.0f;
-    auto width_reciprocal = 1.0f / rect.width().value();
-    auto height_reciprocal = 1.0f / rect.height().value();
+    auto width_reciprocal = 1.0 / rect.width().value();
+    auto height_reciprocal = 1.0 / rect.height().value();
     f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
     f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
 
-    f = 1.0f / f.value();
+    f = 1.0 / f.value();
 
     top_left_radius_px.horizontal_radius *= f;
     top_left_radius_px.vertical_radius *= f;
@@ -149,8 +149,8 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
     auto draw_border = [&](auto const& border, auto const& radius, auto const& opposite_border, auto const& opposite_radius, auto p1_step_translate, auto p2_step_translate) {
         auto [p1, p2] = points_for_edge(edge, rect);
-        auto p1_step = radius ? 0 : border.width / static_cast<float>(device_pixel_width.value());
-        auto p2_step = opposite_radius ? 0 : opposite_border.width / static_cast<float>(device_pixel_width.value());
+        auto p1_step = radius ? 0 : border.width / device_pixel_width.value();
+        auto p2_step = opposite_radius ? 0 : opposite_border.width / device_pixel_width.value();
         for (DevicePixels i = 0; i < device_pixel_width; ++i) {
             draw_horizontal_or_vertical_line(p1, p2);
             p1_step_translate(p1, p1_step);

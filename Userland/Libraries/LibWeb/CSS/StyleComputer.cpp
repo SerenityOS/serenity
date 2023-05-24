@@ -1264,7 +1264,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         Optional<Length> maybe_length;
         if (font_size->is_percentage()) {
             // Percentages refer to parent element's font size
-            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size());
+            maybe_length = Length::make_px(static_cast<double>(font_size->as_percentage().percentage().as_fraction()) * parent_font_size());
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->to_length();
@@ -1438,7 +1438,7 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
     auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
     if (line_height_value_slot && line_height_value_slot->is_percentage()) {
         line_height_value_slot = TRY(LengthStyleValue::create(
-            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction())));
+            Length::make_px(font_size * static_cast<double>(line_height_value_slot->as_percentage().percentage().as_fraction()))));
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);

@@ -378,7 +378,7 @@ VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<Eve
 
         if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
             auto x_offset = position.x() - cached_layout_boxes.timeline_rect->x();
-            auto x_percentage = static_cast<float>(x_offset) / static_cast<float>(cached_layout_boxes.timeline_rect->width());
+            auto x_percentage = static_cast<double>(x_offset) / static_cast<double>(cached_layout_boxes.timeline_rect->width());
 
             auto position = static_cast<double>(x_percentage) * video_element.duration();
             video_element.set_current_time(position);

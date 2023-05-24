@@ -48,7 +48,7 @@ constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value
 
 /// CSSPixels: A position or length in CSS "reference pixels", independent of zoom or screen DPI.
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(float, CSSPixels, Arithmetic, CastToUnderlying, Comparison, Increment);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(double, CSSPixels, Arithmetic, CastToUnderlying, Comparison, Increment);
 
 template<Arithmetic T>
 constexpr bool operator==(CSSPixels left, T right) { return left.value() == right; }

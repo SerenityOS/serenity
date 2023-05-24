@@ -30,8 +30,8 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
     auto& geometry_element = dom_node();
     auto transform = geometry_element.get_transform();
     auto* svg_box = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
-    float scaling = 1;
-    auto origin = viewbox_origin().to_type<float>();
+    double scaling = 1;
+    auto origin = viewbox_origin().to_type<double>().to_type<float>();
     Gfx::FloatPoint paint_offset = {};
     if (svg_box && svg_box->view_box().has_value()) {
         // Note: SVGFormattingContext has already done the scaling based on the viewbox,
@@ -45,9 +45,9 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
             return {};
         auto scaled_width = paintable_box()->content_width().value();
         auto scaled_height = paintable_box()->content_height().value();
-        scaling = min(scaled_width / original_bounding_box.width(), scaled_height / original_bounding_box.height());
+        scaling = min(scaled_width / static_cast<double>(original_bounding_box.width()), scaled_height / static_cast<double>(original_bounding_box.height()));
         auto scaled_bounding_box = original_bounding_box.scaled(scaling, scaling);
-        paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paintable_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
+        paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paintable_box()->absolute_rect().location()).to_type<double>().to_type<float>() - scaled_bounding_box.location();
     }
     return Gfx::AffineTransform {}.translate(paint_offset).scale(scaling, scaling).translate(-origin).multiply(transform);
 }

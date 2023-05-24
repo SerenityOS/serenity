@@ -146,12 +146,12 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         },
         [&](CircleSize const& circle_size) {
             auto radius = circle_size.radius.to_px(node);
-            return Gfx::FloatSize { radius, radius };
+            return Gfx::FloatSize { radius.value(), radius.value() };
         },
         [&](EllipseSize const& ellipse_size) {
             auto radius_a = ellipse_size.radius_a.resolved(node, CSS::Length::make_px(size.width())).to_px(node);
             auto radius_b = ellipse_size.radius_b.resolved(node, CSS::Length::make_px(size.height())).to_px(node);
-            return Gfx::FloatSize { radius_a, radius_b };
+            return Gfx::FloatSize { radius_a.value(), radius_b.value() };
         });
 
     // Handle degenerate cases
@@ -187,8 +187,8 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
 void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_properties.position.resolved(node, gradient_box).to_type<float>();
-    auto gradient_size = resolve_size(node, center, gradient_box.to_type<float>());
+    auto center = m_properties.position.resolved(node, gradient_box).to_type<double>().to_type<float>();
+    auto gradient_size = resolve_size(node, center, gradient_box.to_type<double>().to_type<float>());
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
     m_resolved = ResolvedData {

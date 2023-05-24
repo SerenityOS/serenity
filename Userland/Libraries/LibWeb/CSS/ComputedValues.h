@@ -135,7 +135,7 @@ struct BorderData {
 public:
     Color color { Color::Transparent };
     CSS::LineStyle line_style { CSS::LineStyle::None };
-    float width { 0 };
+    double width { 0 };
 };
 
 using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, float>;

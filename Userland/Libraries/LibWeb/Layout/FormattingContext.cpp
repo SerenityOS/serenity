@@ -391,7 +391,7 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(LayoutState co
     //     (used height) * (intrinsic ratio)
     if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_intrinsic_width() && box.has_intrinsic_height() && box.has_intrinsic_aspect_ratio())
         || (computed_width.is_auto() && !computed_height.is_auto() && box.has_intrinsic_aspect_ratio())) {
-        return compute_height_for_replaced_element(state, box, available_space) * box.intrinsic_aspect_ratio().value();
+        return compute_height_for_replaced_element(state, box, available_space) * static_cast<double>(box.intrinsic_aspect_ratio().value());
     }
 
     // If 'height' and 'width' both have computed values of 'auto' and the element has an intrinsic ratio but no intrinsic height or width,
@@ -486,7 +486,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(LayoutState c
     //
     //     (used width) / (intrinsic ratio)
     if (computed_height.is_auto() && box.has_intrinsic_aspect_ratio())
-        return state.get(box).content_width() / box.intrinsic_aspect_ratio().value();
+        return state.get(box).content_width() / static_cast<double>(box.intrinsic_aspect_ratio().value());
 
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (computed_height.is_auto() && box.has_intrinsic_height())
@@ -1280,7 +1280,7 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
 CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
     if (box.has_intrinsic_aspect_ratio() && available_width.is_definite())
-        return available_width.to_px() / *box.intrinsic_aspect_ratio();
+        return available_width.to_px() / static_cast<double>(*box.intrinsic_aspect_ratio());
 
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();

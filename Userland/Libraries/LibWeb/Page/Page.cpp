@@ -105,12 +105,11 @@ CSSPixelRect Page::device_to_css_rect(DevicePixelRect rect) const
 DevicePixelRect Page::enclosing_device_rect(CSSPixelRect rect) const
 {
     auto scale = client().device_pixels_per_css_pixel();
-    return {
-        floorf(rect.x().value() * scale),
-        floorf(rect.y().value() * scale),
-        ceilf(rect.width().value() * scale),
-        ceilf(rect.height().value() * scale)
-    };
+    return DevicePixelRect(
+        floor(rect.x().value() * scale),
+        floor(rect.y().value() * scale),
+        ceil(rect.width().value() * scale),
+        ceil(rect.height().value() * scale));
 }
 
 DevicePixelRect Page::rounded_device_rect(CSSPixelRect rect) const

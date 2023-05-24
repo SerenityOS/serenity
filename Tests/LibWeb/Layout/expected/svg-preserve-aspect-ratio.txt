@@ -100,6 +100,6 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       TextNode <#text>
       SVGSVGBox <svg> at (249,201) content-size 160x60 [SVG] children: inline
         TextNode <#text>
-        SVGGeometryBox <circle> at (299,201) content-size 60x60 children: not-inline
+        SVGGeometryBox <circle> at (299,200.999998) content-size 60x60.000003 children: not-inline
         TextNode <#text>
       TextNode <#text>

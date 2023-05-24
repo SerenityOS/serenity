@@ -12,7 +12,7 @@
 namespace Web::CSS {
 
 // https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
-Gfx::FloatRect EdgeRect::resolved(Layout::Node const& layout_node, Gfx::FloatRect border_box) const
+Gfx::FloatRect EdgeRect::resolved(Layout::Node const& layout_node, Gfx::Rect<double> border_box) const
 {
     // In CSS 2.1, the only valid <shape> value is: rect(<top>, <right>, <bottom>, <left>) where
     // <top> and <bottom> specify offsets from the top border edge of the box, and <right>, and
