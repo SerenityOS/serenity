@@ -5979,28 +5979,20 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
 {
+    auto tokens = TokenStream { component_values };
     if (component_values.size() == 1) {
-        auto maybe_value = TRY(parse_css_value(component_values.first()));
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::Overflow, tokens));
         if (!maybe_value)
             return nullptr;
-        auto value = maybe_value.release_nonnull();
-        if (property_accepts_value(PropertyID::Overflow, *value))
-            return OverflowStyleValue::create(value, value);
-        return nullptr;
+        return OverflowStyleValue::create(*maybe_value, *maybe_value);
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = TRY(parse_css_value(component_values[0]));
-        auto maybe_y_value = TRY(parse_css_value(component_values[1]));
-
+        auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::OverflowX, tokens));
+        auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::OverflowY, tokens));
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
-        auto x_value = maybe_x_value.release_nonnull();
-        auto y_value = maybe_y_value.release_nonnull();
-        if (!property_accepts_value(PropertyID::OverflowX, x_value) || !property_accepts_value(PropertyID::OverflowY, y_value)) {
-            return nullptr;
-        }
-        return OverflowStyleValue::create(x_value, y_value);
+        return OverflowStyleValue::create(maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull());
     }
 
     return nullptr;
