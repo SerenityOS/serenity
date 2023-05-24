@@ -23,8 +23,14 @@ public:
     void start();
     void reset();
 
-    i64 elapsed() const; // milliseconds
+    i64 elapsed_milliseconds() const;
     Time elapsed_time() const;
+
+    // FIXME: Move callers to elapsed_milliseconds(), remove this.
+    i64 elapsed() const // milliseconds
+    {
+        return elapsed_milliseconds();
+    }
 
     Time const& origin_time() const { return m_origin_time; }
 
