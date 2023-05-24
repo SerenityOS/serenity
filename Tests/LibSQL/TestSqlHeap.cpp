@@ -167,3 +167,27 @@ TEST_CASE(heap_reuse_freed_blocks_after_reopening_file)
         EXPECT(heap_size_after_second_storage <= original_heap_size);
     }
 }
+
+TEST_CASE(heap_free_storage)
+{
+    ScopeGuard guard([]() { MUST(Core::System::unlink(db_path)); });
+    auto heap = create_heap();
+    auto storage_block_id = heap->request_new_block_index();
+
+    // Write large storage spanning multiple blocks
+    StringBuilder builder;
+    MUST(builder.try_append_repeated('x', SQL::Block::DATA_SIZE * 4));
+    auto long_string = builder.string_view();
+    TRY_OR_FAIL(heap->write_storage(storage_block_id, long_string.bytes()));
+    MUST(heap->flush());
+    auto heap_size = MUST(heap->file_size_in_bytes());
+
+    // Free the storage
+    TRY_OR_FAIL(heap->free_storage(storage_block_id));
+
+    // Again, write some large storage spanning multiple blocks
+    TRY_OR_FAIL(heap->write_storage(storage_block_id, long_string.bytes()));
+    MUST(heap->flush());
+    auto new_heap_size = MUST(heap->file_size_in_bytes());
+    EXPECT(new_heap_size <= heap_size);
+}
