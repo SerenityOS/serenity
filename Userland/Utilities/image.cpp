@@ -24,6 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView out_path;
     args_parser.add_option(out_path, "Path to output image file", "output", 'o', "FILE");
 
+    bool no_output = false;
+    args_parser.add_option(no_output, "Do not write output (only useful for benchmarking image decoding)", "no-output", {});
+
     int frame_index = 0;
     args_parser.add_option(frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
 
@@ -41,8 +44,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    if (out_path.is_empty()) {
-        warnln("-o is required");
+    if (out_path.is_empty() ^ no_output) {
+        warnln("exactly one of -o or --no-output is required");
         return 1;
     }
 
@@ -80,6 +83,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (strip_color_profile)
         icc_data.clear();
+
+    if (no_output)
+        return 0;
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
