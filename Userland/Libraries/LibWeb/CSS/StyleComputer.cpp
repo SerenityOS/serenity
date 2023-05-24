@@ -1304,8 +1304,9 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
+    float const font_size_in_pt = font_size_in_px * 0.75f;
+
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
-        float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
         if (auto it = m_loaded_fonts.find(family); it != m_loaded_fonts.end()) {
@@ -1380,6 +1381,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     if (!found_font) {
         found_font = StyleProperties::font_fallback(monospace, bold);
+        if (found_font) {
+            if (auto scaled_fallback_font = found_font->with_size(font_size_in_pt))
+                found_font = scaled_fallback_font;
+        }
     }
 
     FontCache::the().set(font_selector, *found_font);
