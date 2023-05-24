@@ -123,11 +123,11 @@ void Thread::detach()
     auto expected = Threading::ThreadState::Running;
     // This code might race with the other thread exiting.
     if (!m_state.compare_exchange_strong(expected, Threading::ThreadState::Detached)) {
-        // Always report a precise error before crashing. These kinds of bugs are hard to reproduce.
         if (expected == Threading::ThreadState::Exited)
-            dbgln("Thread logic bug: {} is being detached after having exited!", this);
-        else
-            dbgln("Thread logic bug: trying to detach {} which is not in the Started state, but state {}!", this, expected);
+            return;
+
+        // Always report a precise error before crashing. These kinds of bugs are hard to reproduce.
+        dbgln("Thread logic bug: trying to detach {} in state {}, which is neither Started nor Exited", this, expected);
         VERIFY_NOT_REACHED();
     }
 
