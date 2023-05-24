@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
 
@@ -39,6 +40,7 @@ public:
         , m_next_block(next_block)
         , m_data(move(data))
     {
+        VERIFY(index > 0);
     }
 
     Index index() const { return m_index; }
@@ -73,8 +75,8 @@ public:
     ErrorOr<void> open();
     ErrorOr<size_t> file_size_in_bytes() const;
 
-    bool has_block(Block::Index) const;
-    [[nodiscard]] Block::Index request_new_block_index() { return m_next_block++; }
+    [[nodiscard]] bool has_block(Block::Index) const;
+    [[nodiscard]] Block::Index request_new_block_index();
 
     Block::Index schemas_root() const { return m_schemas_root; }
 
@@ -126,6 +128,8 @@ private:
 
     ErrorOr<Block> read_block(Block::Index);
     ErrorOr<void> write_block(Block const&);
+    ErrorOr<void> free_block(Block const&);
+
     ErrorOr<void> read_zero_block();
     ErrorOr<void> initialize_zero_block();
     ErrorOr<void> update_zero_block();
@@ -139,6 +143,7 @@ private:
     u32 m_version { VERSION };
     Array<u32, 16> m_user_values { 0 };
     HashMap<Block::Index, ByteBuffer> m_write_ahead_log;
+    Vector<Block::Index> m_free_block_indices;
 };
 
 }
