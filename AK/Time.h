@@ -381,20 +381,20 @@ public:
     // Note that the returned time is probably not equivalent to the same timestamp in UTC time, since UNIX time does not observe leap seconds.
     [[nodiscard]] constexpr static UnixDateTime from_unix_time_parts(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
     {
-        constexpr auto milliseconds_per_day = 86'400'000;
-        constexpr auto milliseconds_per_hour = 3'600'000;
-        constexpr auto milliseconds_per_minute = 60'000;
-        constexpr auto milliseconds_per_second = 1'000;
+        constexpr auto seconds_per_day = 86'400;
+        constexpr auto seconds_per_hour = 3'600;
+        constexpr auto seconds_per_minute = 60;
 
         i64 days = days_since_epoch(year, month, day);
-        i64 milliseconds_since_epoch = days * milliseconds_per_day;
+        // With year=2'147'483'648, we can end up with days=569'603'931'504.
+        // Expressing that in milliseconds would require more than 64 bits,
+        // so we must choose seconds here, and not milliseconds.
+        i64 seconds_since_epoch = days * seconds_per_day;
 
-        milliseconds_since_epoch += hour * milliseconds_per_hour;
-        milliseconds_since_epoch += minute * milliseconds_per_minute;
-        milliseconds_since_epoch += second * milliseconds_per_second;
-        milliseconds_since_epoch += millisecond;
-
-        return from_milliseconds_since_epoch(milliseconds_since_epoch);
+        seconds_since_epoch += hour * seconds_per_hour;
+        seconds_since_epoch += minute * seconds_per_minute;
+        seconds_since_epoch += second;
+        return from_seconds_since_epoch(seconds_since_epoch) + Duration::from_milliseconds(millisecond);
     }
 
     [[nodiscard]] constexpr static UnixDateTime from_seconds_since_epoch(i64 seconds)
