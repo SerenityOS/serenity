@@ -52,6 +52,11 @@ Length Length::make_px(CSSPixels value)
     return Length(value.value(), Type::Px);
 }
 
+Length Length::make_ch(unsigned value)
+{
+    return Length(static_cast<int>(value), Type::Ch);
+}
+
 Length Length::percentage_of(Percentage const& percentage) const
 {
     if (is_auto()) {

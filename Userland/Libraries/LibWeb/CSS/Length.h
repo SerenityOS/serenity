@@ -88,6 +88,7 @@ public:
 
     static Length make_auto();
     static Length make_px(CSSPixels value);
+    static Length make_ch(unsigned value);
     Length percentage_of(Percentage const&) const;
 
     bool is_auto() const { return m_type == Type::Auto; }
