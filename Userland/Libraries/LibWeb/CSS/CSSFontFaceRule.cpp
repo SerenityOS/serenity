@@ -1,10 +1,11 @@
 /*
  * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/FontStyleMapping.h>
 #include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
@@ -102,15 +103,39 @@ DeprecatedString CSSFontFaceRule::serialized() const
     // followed by the result of performing serialize a <'font-stretch'>,
     // followed by the string ";", i.e., SEMICOLON (U+003B).
 
-    // FIXME: 10. If rule’s associated font-weight descriptor is present, a single SPACE (U+0020),
-    // followed by the string "font-weight:", followed by a single SPACE (U+0020),
-    // followed by the result of performing serialize a <'font-weight'>,
-    // followed by the string ";", i.e., SEMICOLON (U+003B).
+    // 10. If rule’s associated font-weight descriptor is present, a single SPACE (U+0020),
+    //     followed by the string "font-weight:", followed by a single SPACE (U+0020),
+    //     followed by the result of performing serialize a <'font-weight'>,
+    //     followed by the string ";", i.e., SEMICOLON (U+003B).
+    if (m_font_face.weight().has_value()) {
+        auto weight = m_font_face.weight().value();
+        builder.append(" font-weight: "sv);
+        if (weight == 400)
+            builder.append("normal"sv);
+        else if (weight == 700)
+            builder.append("bold"sv);
+        else
+            builder.appendff("{}", weight);
+        builder.append(";"sv);
+    }
 
-    // FIXME: 11. If rule’s associated font-style descriptor is present, a single SPACE (U+0020),
-    // followed by the string "font-style:", followed by a single SPACE (U+0020),
-    // followed by the result of performing serialize a <'font-style'>,
-    // followed by the string ";", i.e., SEMICOLON (U+003B).
+    // 11. If rule’s associated font-style descriptor is present, a single SPACE (U+0020),
+    //     followed by the string "font-style:", followed by a single SPACE (U+0020),
+    //     followed by the result of performing serialize a <'font-style'>,
+    //     followed by the string ";", i.e., SEMICOLON (U+003B).
+    if (m_font_face.slope().has_value()) {
+        auto slope = m_font_face.slope().value();
+        builder.append(" font-style: "sv);
+        if (slope == Gfx::name_to_slope("Normal"sv))
+            builder.append("normal"sv);
+        else if (slope == Gfx::name_to_slope("Italic"sv))
+            builder.append("italic"sv);
+        else {
+            dbgln("FIXME: CSSFontFaceRule::serialized() does not support slope {}", slope);
+            builder.append("italic"sv);
+        }
+        builder.append(";"sv);
+    }
 
     // 12. A single SPACE (U+0020), followed by the string "}", i.e., RIGHT CURLY BRACKET (U+007D).
     builder.append(" }"sv);
