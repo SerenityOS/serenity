@@ -33,6 +33,8 @@ private:
 
     ErrorOr<void> determine_account(int fd);
 
+    ErrorOr<void> change_privileges();
+
     /// SocketDescriptor describes the details of a single socket that was
     /// requested by a service.
     struct SocketDescriptor {
@@ -74,6 +76,7 @@ private:
 
     // The resolved user account to run this service as.
     Optional<Core::Account> m_account;
+    bool m_must_login { false };
 
     // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };
