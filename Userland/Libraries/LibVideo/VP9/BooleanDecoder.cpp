@@ -12,7 +12,7 @@
 namespace Video::VP9 {
 
 /* 9.2.1 */
-ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t bytes)
+ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
 {
     VERIFY(bit_stream->is_aligned_to_byte_boundary());
     auto value = TRY(bit_stream->read_value<u8>());
