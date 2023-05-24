@@ -127,3 +127,43 @@ TEST_CASE(heap_reuse_freed_blocks_after_storage_trim)
     auto heap_size_after_second_storage = MUST(heap->file_size_in_bytes());
     EXPECT(heap_size_after_second_storage <= original_heap_size);
 }
+
+TEST_CASE(heap_reuse_freed_blocks_after_reopening_file)
+{
+    ScopeGuard guard([]() { MUST(Core::System::unlink(db_path)); });
+
+    size_t original_heap_size = 0;
+    StringBuilder builder;
+    MUST(builder.try_append_repeated('x', SQL::Block::DATA_SIZE * 4));
+    auto long_string = builder.string_view();
+
+    {
+        auto heap = create_heap();
+
+        // First, write storage spanning 4 blocks
+        auto first_index = heap->request_new_block_index();
+        TRY_OR_FAIL(heap->write_storage(first_index, long_string.bytes()));
+        MUST(heap->flush());
+        original_heap_size = MUST(heap->file_size_in_bytes());
+
+        // Then, overwrite the first storage and reduce it to 2 blocks
+        builder.clear();
+        MUST(builder.try_append_repeated('x', SQL::Block::DATA_SIZE * 2));
+        long_string = builder.string_view();
+        TRY_OR_FAIL(heap->write_storage(first_index, long_string.bytes()));
+        MUST(heap->flush());
+        auto heap_size_after_reduction = MUST(heap->file_size_in_bytes());
+        EXPECT(heap_size_after_reduction <= original_heap_size);
+    }
+
+    // Reopen the database file; we expect the heap to support reading back free blocks somehow.
+    // Add the second storage spanning 2 blocks - heap should not have grown compared to the original storage.
+    {
+        auto heap = create_heap();
+        auto second_index = heap->request_new_block_index();
+        TRY_OR_FAIL(heap->write_storage(second_index, long_string.bytes()));
+        MUST(heap->flush());
+        auto heap_size_after_second_storage = MUST(heap->file_size_in_bytes());
+        EXPECT(heap_size_after_second_storage <= original_heap_size);
+    }
+}
