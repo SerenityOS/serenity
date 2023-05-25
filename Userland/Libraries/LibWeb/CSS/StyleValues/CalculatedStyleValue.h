@@ -23,6 +23,7 @@ class CalculationNode;
 class CalculatedStyleValue : public StyleValue {
 public:
     enum class ResolvedType {
+        Invalid,
         Angle,
         Frequency,
         Integer,
@@ -693,6 +694,27 @@ private:
     RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_x;
     NonnullOwnPtr<CalculationNode> m_y;
+};
+
+class ResolvedUnitlessFunction {
+public:
+    ResolvedUnitlessFunction() = default;
+    ResolvedUnitlessFunction(CalculatedStyleValue::ResolvedType type, double value)
+        : m_type(type)
+        , m_value(value)
+    {
+    }
+
+    bool is(CalculatedStyleValue::ResolvedType other_type) const { return m_type == other_type; }
+
+    double value_if_type_or(CalculatedStyleValue::ResolvedType other_type, AK::Function<double()> otherwise) const
+    {
+        return is(other_type) ? m_value : otherwise();
+    }
+
+private:
+    CalculatedStyleValue::ResolvedType m_type { CalculatedStyleValue::ResolvedType::Invalid };
+    double m_value { 0 };
 };
 
 }

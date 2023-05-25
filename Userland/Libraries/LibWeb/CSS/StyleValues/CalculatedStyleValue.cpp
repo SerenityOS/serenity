@@ -60,6 +60,8 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
         return { Percentage(value) };
     case CalculatedStyleValue::ResolvedType::Time:
         return { Time::make_seconds(value) };
+    case CalculatedStyleValue::ResolvedType::Invalid:
+        VERIFY_NOT_REACHED();
     }
 
     VERIFY_NOT_REACHED();

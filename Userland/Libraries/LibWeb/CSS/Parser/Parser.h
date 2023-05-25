@@ -392,6 +392,7 @@ private:
     };
 
     PropertiesAndCustomProperties extract_properties(Vector<DeclarationOrAtRule> const&);
+    ResolvedUnitlessFunction resolve_unitless_function_to_value(ComponentValue value);
 
     ParsingContext m_context;
 

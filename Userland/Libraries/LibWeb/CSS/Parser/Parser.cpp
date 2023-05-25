@@ -3413,6 +3413,8 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
 
     [[maybe_unused]] auto to_string = [](CalculatedStyleValue::ResolvedType type) {
         switch (type) {
+        case CalculatedStyleValue::ResolvedType::Invalid:
+            return "Invalid"sv;
         case CalculatedStyleValue::ResolvedType::Angle:
             return "Angle"sv;
         case CalculatedStyleValue::ResolvedType::Frequency:
@@ -4606,6 +4608,55 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_identifier_value(ComponentValue const&
     }
 
     return nullptr;
+}
+
+ResolvedUnitlessFunction Parser::resolve_unitless_function_to_value(ComponentValue value)
+{
+    auto resolve_function_to_style = [this](Function& func) -> ErrorOr<RefPtr<CalculatedStyleValue>> {
+        if (func.name().equals_ignoring_ascii_case("calc"sv)) {
+            auto maybe_value = parse_calculated_value(func.values());
+            if (maybe_value.is_error())
+                return Error::from_string_view("Failed to parse calculated value"sv);
+
+            return maybe_value.release_value();
+        }
+
+        return Error::from_string_view("Unhandled function type"sv);
+    };
+
+    if (!value.is_function()) {
+        return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
+    }
+
+    auto maybe_function = resolve_function_to_style(value.function());
+    if (maybe_function.is_error()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve function value: {}", maybe_function.error());
+        return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
+    }
+
+    auto function = maybe_function.release_value();
+    if (function->resolves_to_number()) {
+        auto maybe_number = function->resolve_number();
+        if (!maybe_number.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve number from function: {}", maybe_function.error());
+            return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
+        }
+
+        return { CalculatedStyleValue::ResolvedType::Number, maybe_number.release_value() };
+    }
+
+    if (function->resolves_to_percentage()) {
+        auto maybe_percentage = function->resolve_percentage();
+        if (!maybe_percentage.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve percentage from function: {}", maybe_function.error());
+            return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
+        }
+
+        auto percentage = maybe_percentage.release_value();
+        return { CalculatedStyleValue::ResolvedType::Percentage, percentage.value() };
+    }
+
+    return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
 }
 
 Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const& component_values)
@@ -8415,6 +8466,8 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
             (void)tokens.next_token();
             auto& calculated = maybe_dynamic->as_calculated();
             switch (calculated.resolved_type()) {
+            case CalculatedStyleValue::ResolvedType::Invalid:
+                VERIFY_NOT_REACHED();
             case CalculatedStyleValue::ResolvedType::Angle:
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
                     return PropertyAndValue { *property, calculated };
