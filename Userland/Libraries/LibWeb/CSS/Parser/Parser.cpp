@@ -41,6 +41,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
@@ -7205,7 +7206,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
             }
         }
 
-        // FIXME: Custom idents. https://www.w3.org/TR/css-values-4/#identifier-value
+        // Custom idents
+        if (auto property = any_property_accepts_type(property_ids, ValueType::CustomIdent); property.has_value()) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, TRY(CustomIdentStyleValue::create(TRY(FlyString::from_utf8(peek_token.token().ident())))) };
+        }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Color); property.has_value()) {

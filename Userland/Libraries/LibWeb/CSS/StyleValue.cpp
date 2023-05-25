@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
@@ -141,6 +142,12 @@ ContentStyleValue const& StyleValue::as_content() const
 {
     VERIFY(is_content());
     return static_cast<ContentStyleValue const&>(*this);
+}
+
+CustomIdentStyleValue const& StyleValue::as_custom_ident() const
+{
+    VERIFY(is_custom_ident());
+    return static_cast<CustomIdentStyleValue const&>(*this);
 }
 
 DisplayStyleValue const& StyleValue::as_display() const
