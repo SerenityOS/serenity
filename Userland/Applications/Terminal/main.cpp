@@ -10,7 +10,7 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
@@ -355,12 +355,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto shell_child_process_count = [&] {
-        Core::DirIterator iterator(DeprecatedString::formatted("/proc/{}/children", shell_pid), Core::DirIterator::Flags::SkipParentAndBaseDir);
         int background_process_count = 0;
-        while (iterator.has_next()) {
+        Core::Directory::for_each_entry(DeprecatedString::formatted("/proc/{}/children", shell_pid), Core::DirIterator::Flags::SkipParentAndBaseDir, [&](auto&, auto&) {
             ++background_process_count;
-            (void)iterator.next_path();
-        }
+            return IterationDecision::Continue;
+        }).release_value_but_fixme_should_propagate_errors();
         return background_process_count;
     };
 
