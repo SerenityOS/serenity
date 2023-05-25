@@ -4656,6 +4656,16 @@ ResolvedUnitlessFunction Parser::resolve_unitless_function_to_value(ComponentVal
         return { CalculatedStyleValue::ResolvedType::Percentage, percentage.value() };
     }
 
+    if (function->resolves_to_angle()) {
+        auto maybe_angle = function->resolve_angle();
+        if (!maybe_angle.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve angle from function: {}", maybe_function.error());
+            return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
+        }
+
+        return { CalculatedStyleValue::ResolvedType::Angle, maybe_angle.release_value().to_degrees() };
+    }
+
     return { CalculatedStyleValue::ResolvedType::Invalid, 0 };
 }
 
@@ -4777,38 +4787,44 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
         // https://www.w3.org/TR/css-color-4/#the-hsl-notation
 
         float a_val = 1.0f;
-        if (params[3].is(Token::Type::Number))
-            a_val = params[3].number_value();
-        else if (params[3].is(Token::Type::Percentage))
-            a_val = params[3].percentage() / 100.0f;
+        if (params[3].is(Token::Type::Number) || resolved_functions[3].is(CalculatedStyleValue::ResolvedType::Number)) {
+            a_val = resolved_functions[3].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[3].number_value(); });
+        } else if (params[3].is(Token::Type::Percentage) || resolved_functions[3].is(CalculatedStyleValue::ResolvedType::Percentage)) {
+            auto resolved_value = resolved_functions[3].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[3].percentage(); });
+            a_val = resolved_value / 100.0f;
+        }
 
-        if (params[0].is(Token::Type::Dimension)
-            && params[1].is(Token::Type::Percentage)
-            && params[2].is(Token::Type::Percentage)) {
+        if ((params[0].is(Token::Type::Dimension) || resolved_functions[0].is(CalculatedStyleValue::ResolvedType::Angle))
+            && (params[1].is(Token::Type::Percentage) || resolved_functions[1].is(CalculatedStyleValue::ResolvedType::Percentage))
+            && (params[2].is(Token::Type::Percentage) || resolved_functions[2].is(CalculatedStyleValue::ResolvedType::Percentage))) {
+            if (params[0].is(Token::Type::Dimension)) {
+                auto angle_type = Angle::unit_from_name(params[0].dimension_unit());
 
-            float numeric_value = params[0].dimension_value();
-            auto unit_string = params[0].dimension_unit();
-            auto angle_type = Angle::unit_from_name(unit_string);
+                if (!angle_type.has_value())
+                    return {};
+            }
 
-            if (!angle_type.has_value())
-                return {};
+            float h_val = resolved_functions[0].value_if_type_or(CalculatedStyleValue::ResolvedType::Angle, [params]() {
+                float numeric_value = params[0].dimension_value();
+                auto unit_string = params[0].dimension_unit();
+                auto angle_type = Angle::unit_from_name(unit_string);
 
-            auto angle = Angle { numeric_value, angle_type.release_value() };
+                auto angle = Angle { numeric_value, angle_type.release_value() };
+                return angle.to_degrees();
+            });
 
-            float h_val = fmodf(angle.to_degrees(), 360.0f);
-            float s_val = params[1].percentage() / 100.0f;
-            float l_val = params[2].percentage() / 100.0f;
+            float s_val = resolved_functions[1].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[1].percentage(); }) / 100.0f;
+            float l_val = resolved_functions[2].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[2].percentage(); }) / 100.0f;
 
             return Color::from_hsla(h_val, s_val, l_val, a_val);
         }
 
-        if (params[0].is(Token::Type::Number)
-            && params[1].is(Token::Type::Percentage)
-            && params[2].is(Token::Type::Percentage)) {
-
-            float h_val = fmodf(params[0].number_value(), 360.0f);
-            float s_val = params[1].percentage() / 100.0f;
-            float l_val = params[2].percentage() / 100.0f;
+        if ((params[0].is(Token::Type::Number) || resolved_functions[0].is(CalculatedStyleValue::ResolvedType::Number))
+            && (params[1].is(Token::Type::Percentage) || resolved_functions[1].is(CalculatedStyleValue::ResolvedType::Percentage))
+            && (params[2].is(Token::Type::Percentage) || resolved_functions[2].is(CalculatedStyleValue::ResolvedType::Percentage))) {
+            float h_val = resolved_functions[0].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[0].number_value(); });
+            float s_val = resolved_functions[1].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[1].percentage(); }) / 100.0f;
+            float l_val = resolved_functions[2].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[2].percentage(); }) / 100.0f;
 
             return Color::from_hsla(h_val, s_val, l_val, a_val);
         }
