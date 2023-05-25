@@ -38,6 +38,8 @@ public:
     virtual RecursionDecision walk(Visitor&) const override;
     static OwnPtr<Table> parse(LineIterator& lines);
 
+    Vector<Column> const& columns() const { return m_columns; }
+
 private:
     Vector<Column> m_columns;
     size_t m_total_width { 1 };
