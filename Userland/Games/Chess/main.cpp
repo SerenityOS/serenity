@@ -120,7 +120,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Exported PGN file to {}", result.value().filename());
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
-        GUI::Clipboard::the().set_data(widget->get_fen().bytes());
+        auto fen = widget->get_fen();
+        if (fen.is_error()) {
+            dbgln("Failed to get FEN: {}", fen.release_error());
+            return;
+        }
+        GUI::Clipboard::the().set_data(fen.value().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN."sv, "Copy FEN"sv, GUI::MessageBox::Type::Information);
     })));
     TRY(game_menu->try_add_separator());
