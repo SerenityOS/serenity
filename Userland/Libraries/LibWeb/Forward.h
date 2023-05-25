@@ -84,6 +84,7 @@ class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
 class CSSSupportsRule;
+class CustomIdentStyleValue;
 class Display;
 class DisplayStyleValue;
 class EdgeStyleValue;

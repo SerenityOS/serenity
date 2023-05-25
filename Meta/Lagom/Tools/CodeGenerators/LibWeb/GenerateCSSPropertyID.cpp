@@ -17,7 +17,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& f
 
 static bool type_name_is_enum(StringView type_name)
 {
-    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -118,6 +118,7 @@ ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm&, PropertyID
 enum class ValueType {
     Angle,
     Color,
+    CustomIdent,
     FilterValueList,
     Frequency,
     Image,
@@ -455,6 +456,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     property_generator.appendln("        case ValueType::Angle:");
                 } else if (type_name == "color") {
                     property_generator.appendln("        case ValueType::Color:");
+                } else if (type_name == "custom-ident") {
+                    property_generator.appendln("        case ValueType::CustomIdent:");
                 } else if (type_name == "frequency") {
                     property_generator.appendln("        case ValueType::Frequency:");
                 } else if (type_name == "image") {
