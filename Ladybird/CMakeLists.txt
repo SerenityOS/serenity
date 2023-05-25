@@ -170,4 +170,10 @@ if (BUILD_TESTING)
         COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Layout/layout_test.sh ${CMAKE_CURRENT_BINARY_DIR}
     )
     set_tests_properties(Layout PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+
+    add_test(
+        NAME LibWebText
+        COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Text/text_test.sh ${CMAKE_CURRENT_BINARY_DIR}
+    )
+set_tests_properties(LibWebText PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
