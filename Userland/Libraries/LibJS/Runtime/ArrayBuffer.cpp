@@ -50,6 +50,23 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_detach_key);
 }
 
+// 6.2.9.1 CreateByteDataBlock ( size ), https://tc39.es/ecma262/#sec-createbytedatablock
+static ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
+{
+    // 1. If size > 2^53 - 1, throw a RangeError exception.
+    if (size > MAX_ARRAY_LIKE_INDEX)
+        return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "array buffer");
+
+    // 2. Let db be a new Data Block value consisting of size bytes. If it is impossible to create such a Data Block, throw a RangeError exception.
+    // 3. Set all of the bytes of db to 0.
+    auto data_block = ByteBuffer::create_zeroed(size);
+    if (data_block.is_error())
+        return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, size);
+
+    // 4. Return db.
+    return data_block.release_value();
+}
+
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
@@ -57,12 +74,10 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& co
     auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
     // 2. Let block be ? CreateByteDataBlock(byteLength).
-    auto block = ByteBuffer::create_zeroed(byte_length);
-    if (block.is_error())
-        return vm.throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
+    auto block = TRY(create_byte_data_block(vm, byte_length));
 
     // 3. Set obj.[[ArrayBufferData]] to block.
-    obj->set_buffer(block.release_value());
+    obj->set_buffer(move(block));
 
     // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
