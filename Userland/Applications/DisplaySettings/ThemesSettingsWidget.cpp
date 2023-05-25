@@ -6,10 +6,9 @@
  */
 
 #include "ThemesSettingsWidget.h"
-#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <Applications/DisplaySettings/ThemesSettingsGML.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -73,11 +72,11 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     auto mouse_settings_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"sv));
 
     m_color_scheme_names.clear();
-    Core::DirIterator iterator("/res/color-schemes", Core::DirIterator::SkipParentAndBaseDir);
-    while (iterator.has_next()) {
-        auto path = iterator.next_path();
-        TRY(m_color_scheme_names.try_append(TRY(String::from_deprecated_string(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)))));
-    }
+    TRY(Core::Directory::for_each_entry("/res/color-schemes"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto&) -> ErrorOr<IterationDecision> {
+        LexicalPath path { entry.name };
+        TRY(m_color_scheme_names.try_append(TRY(String::from_utf8(path.title()))));
+        return IterationDecision::Continue;
+    }));
     quick_sort(m_color_scheme_names);
     auto& color_scheme_combo = *find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
     color_scheme_combo.set_only_allow_values_from_model(true);
