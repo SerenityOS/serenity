@@ -16,6 +16,7 @@
 #include <LibCore/Timer.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
+#include <LibIPC/TrafficDump.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -71,6 +72,7 @@ protected:
 
     NonnullOwnPtr<Core::LocalSocket> m_socket;
     OwnPtr<Core::LocalSocket> m_fd_passing_socket;
+    Optional<TrafficDump> m_traffic_dump;
 
     RefPtr<Core::Timer> m_responsiveness_timer;
 
@@ -137,6 +139,13 @@ protected:
                 break;
             index += sizeof(message_size);
             auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
+            if (m_traffic_dump.has_value()) {
+                auto maybe_error = m_traffic_dump->notify_incoming_message(remaining_bytes);
+                if (maybe_error.is_error()) {
+                    dbgln("WARNING: IPC traffic-dumping aborted due to error: {}", maybe_error.error());
+                    m_traffic_dump.clear();
+                }
+            }
 
             auto local_message = LocalEndpoint::decode_message(remaining_bytes, fd_passing_socket());
             if (!local_message.is_error()) {

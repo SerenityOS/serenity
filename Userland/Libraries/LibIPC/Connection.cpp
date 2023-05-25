@@ -25,6 +25,7 @@ struct CoreEventLoopDeferredInvoker final : public DeferredInvoker {
 ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
+    , m_traffic_dump(TrafficDump::create_if_requested(m_local_stub))
     , m_local_endpoint_magic(local_endpoint_magic)
     , m_deferred_invoker(make<CoreEventLoopDeferredInvoker>())
 {
@@ -55,6 +56,14 @@ ErrorOr<void> ConnectionBase::post_message(Message const& message)
 
 ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 {
+    if (m_traffic_dump.has_value()) {
+        auto maybe_error = m_traffic_dump->notify_outgoing_message(buffer);
+        if (maybe_error.is_error()) {
+            dbgln("WARNING: IPC traffic-dumping aborted due to error: {}", maybe_error.error());
+            m_traffic_dump.clear();
+        }
+    }
+
     // NOTE: If this connection is being shut down, but has not yet been destroyed,
     //       the socket will be closed. Don't try to send more messages.
     if (!m_socket->is_open())
