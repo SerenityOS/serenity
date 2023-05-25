@@ -486,7 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     return index.has_value() ? Value(*index) : Value(-1);
 }
 
-// 22.1.3.10 String.prototype.isWellFormed ( ), https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed
+// 22.1.3.10 String.prototype.isWellFormed ( ), https://tc39.es/ecma262/#sec-string.prototype.iswellformed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::is_well_formed)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -497,7 +497,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::is_well_formed)
     return is_string_well_formed_unicode(string.view());
 }
 
-// 22.1.3.10 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
+// 22.1.3.11 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -546,7 +546,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     return last_index.has_value() ? Value(*last_index) : Value(-1);
 }
 
-// 22.1.3.11 String.prototype.localeCompare ( that [ , reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.localecompare
+// 22.1.3.12 String.prototype.localeCompare ( that [ , reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.localecompare
 // 19.1.1 String.prototype.localeCompare ( that [ , locales [ , options ] ] ), https://tc39.es/ecma402/#sup-String.prototype.localeCompare
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
 {
@@ -568,7 +568,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
     return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), string.code_points(), that_value.code_points());
 }
 
-// 22.1.3.12 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match
+// 22.1.3.13 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -597,7 +597,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     return TRY(Value(rx).invoke(vm, vm.well_known_symbol_match(), PrimitiveString::create(vm, move(string))));
 }
 
-// 22.1.3.13 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
+// 22.1.3.14 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 {
     auto regexp = vm.argument(0);
@@ -644,7 +644,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
     return TRY(Value(rx).invoke(vm, vm.well_known_symbol_match_all(), PrimitiveString::create(vm, move(string))));
 }
 
-// 22.1.3.14 String.prototype.normalize ( [ form ] ), https://tc39.es/ecma262/#sec-string.prototype.normalize
+// 22.1.3.15 String.prototype.normalize ( [ form ] ), https://tc39.es/ecma262/#sec-string.prototype.normalize
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -679,7 +679,7 @@ enum class PadPlacement {
     End,
 };
 
-// 22.1.3.16.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
+// 22.1.3.17.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
 static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max_length, Value fill_string, PadPlacement placement)
 {
     // 1. Let S be ? ToString(O).
@@ -725,7 +725,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max
     return PrimitiveString::create(vm, move(formatted));
 }
 
-// 22.1.3.15 String.prototype.padEnd ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padend
+// 22.1.3.16 String.prototype.padEnd ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padend
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
     auto max_length = vm.argument(0);
@@ -738,7 +738,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
     return pad_string(vm, move(string), max_length, fill_string, PadPlacement::End);
 }
 
-// 22.1.3.16 String.prototype.padStart ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padstart
+// 22.1.3.17 String.prototype.padStart ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padstart
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
     auto max_length = vm.argument(0);
@@ -751,7 +751,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
     return pad_string(vm, move(string), max_length, fill_string, PadPlacement::Start);
 }
 
-// 22.1.3.17 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
+// 22.1.3.18 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -782,7 +782,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     return PrimitiveString::create(vm, TRY(builder.to_string()));
 }
 
-// 22.1.3.18 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
+// 22.1.3.19 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 {
     auto search_value = vm.argument(0);
@@ -861,7 +861,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     return PrimitiveString::create(vm, TRY(builder.to_string()));
 }
 
-// 22.1.3.19 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
+// 22.1.3.20 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 {
     auto search_value = vm.argument(0);
@@ -978,7 +978,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     return PrimitiveString::create(vm, TRY(result.to_string()));
 }
 
-// 22.1.3.20 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
+// 22.1.3.21 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
 {
     auto regexp = vm.argument(0);
@@ -1008,7 +1008,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     return TRY(Value(rx).invoke(vm, vm.well_known_symbol_search(), PrimitiveString::create(vm, move(string))));
 }
 
-// 22.1.3.21 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
+// 22.1.3.22 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
     auto start = vm.argument(0);
@@ -1057,7 +1057,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
-// 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
+// 22.1.3.23 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
     auto& realm = *vm.current_realm();
@@ -1159,7 +1159,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     return array;
 }
 
-// 22.1.3.23 String.prototype.startsWith ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.startswith
+// 22.1.3.24 String.prototype.startsWith ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.startswith
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
     auto search_string_value = vm.argument(0);
@@ -1214,7 +1214,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     return Value(substring_view == search_string.view());
 }
 
-// 22.1.3.24 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
+// 22.1.3.25 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -1309,7 +1309,7 @@ static ThrowCompletionOr<String> transform_case(VM& vm, String const& string, Va
     return new_code_points;
 }
 
-// 22.1.3.25 String.prototype.toLocaleLowerCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase
+// 22.1.3.26 String.prototype.toLocaleLowerCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase
 // 19.1.2 String.prototype.toLocaleLowerCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
 {
@@ -1323,7 +1323,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
     return PrimitiveString::create(vm, TRY(transform_case(vm, string, locales, TargetCase::Lower)));
 }
 
-// 22.1.3.26 String.prototype.toLocaleUpperCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase
+// 22.1.3.27 String.prototype.toLocaleUpperCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase
 // 19.1.3 String.prototype.toLocaleUpperCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocaleuppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 {
@@ -1337,7 +1337,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
     return PrimitiveString::create(vm, TRY(transform_case(vm, string, locales, TargetCase::Upper)));
 }
 
-// 22.1.3.27 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
+// 22.1.3.28 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -1353,14 +1353,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
     return PrimitiveString::create(vm, move(lowercase));
 }
 
-// 22.1.3.28 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
+// 22.1.3.29 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
     // 1. Return ? thisStringValue(this value).
     return TRY(this_string_value(vm, vm.this_value()));
 }
 
-// 22.1.3.29 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
+// 22.1.3.30 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
     // This method interprets a String value as a sequence of UTF-16 encoded code points, as described in 6.1.4.
@@ -1370,7 +1370,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     return PrimitiveString::create(vm, move(uppercase));
 }
 
-// 22.1.3.11 String.prototype.toWellFormed ( ), https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed
+// 22.1.3.31 String.prototype.toWellFormed ( ), https://tc39.es/ecma262/#sec-string.prototype.towellformed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
@@ -1410,7 +1410,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     return PrimitiveString::create(vm, TRY(result.to_string()));
 }
 
-// 22.1.3.30.1 TrimString ( string, where ), https://tc39.es/ecma262/#sec-trimstring
+// 22.1.3.32.1 TrimString ( string, where ), https://tc39.es/ecma262/#sec-trimstring
 ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
 {
     // 1. Let str be ? RequireObjectCoercible(string).
@@ -1430,7 +1430,7 @@ ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
     return TRY_OR_THROW_OOM(vm, String::from_utf8(trimmed_string));
 }
 
-// 22.1.3.30 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
+// 22.1.3.32 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
     // 1. Let S be the this value.
@@ -1438,7 +1438,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
     return PrimitiveString::create(vm, TRY(trim_string(vm, vm.this_value(), TrimMode::Both)));
 }
 
-// 22.1.3.31 String.prototype.trimEnd ( ), https://tc39.es/ecma262/#sec-string.prototype.trimend
+// 22.1.3.33 String.prototype.trimEnd ( ), https://tc39.es/ecma262/#sec-string.prototype.trimend
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
     // 1. Let S be the this value.
@@ -1446,7 +1446,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
     return PrimitiveString::create(vm, TRY(trim_string(vm, vm.this_value(), TrimMode::Right)));
 }
 
-// 22.1.3.32 String.prototype.trimStart ( ), https://tc39.es/ecma262/#sec-string.prototype.trimstart
+// 22.1.3.34 String.prototype.trimStart ( ), https://tc39.es/ecma262/#sec-string.prototype.trimstart
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
     // 1. Let S be the this value.
@@ -1454,13 +1454,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
     return PrimitiveString::create(vm, TRY(trim_string(vm, vm.this_value(), TrimMode::Left)));
 }
 
-// 22.1.3.33 String.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-string.prototype.valueof
+// 22.1.3.35 String.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-string.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::value_of)
 {
     return TRY(this_string_value(vm, vm.this_value()));
 }
 
-// 22.1.3.34 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
+// 22.1.3.36 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto& realm = *vm.current_realm();
