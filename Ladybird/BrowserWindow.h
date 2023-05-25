@@ -76,6 +76,7 @@ public slots:
     void close_current_tab();
     void open_next_tab();
     void open_previous_tab();
+    void open_file();
     void enable_auto_color_scheme();
     void enable_light_color_scheme();
     void enable_dark_color_scheme();

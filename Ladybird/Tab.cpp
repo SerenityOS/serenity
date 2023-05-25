@@ -16,6 +16,7 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QCursor>
+#include <QFileDialog>
 #include <QFont>
 #include <QFontMetrics>
 #include <QGuiApplication>
@@ -521,6 +522,13 @@ void Tab::copy_link_url(URL const& url)
 void Tab::location_edit_return_pressed()
 {
     navigate(m_location_edit->text());
+}
+
+void Tab::open_file()
+{
+    auto filename = QFileDialog::getOpenFileName(this, "Open file", QDir::homePath(), "All Files (*.*)");
+    if (!filename.isNull())
+        navigate("file://" + filename);
 }
 
 int Tab::tab_index()

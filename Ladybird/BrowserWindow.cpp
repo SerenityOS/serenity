@@ -65,6 +65,11 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
+    auto* open_file_action = new QAction("&Open File...", this);
+    open_file_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-folder-open.png").arg(s_serenity_resource_root.characters())));
+    open_file_action->setShortcut(QKeySequence(QKeySequence::StandardKey::Open));
+    menu->addAction(open_file_action);
+
     menu->addSeparator();
 
     auto* quit_action = new QAction("&Quit", this);
@@ -349,6 +354,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
         new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
     });
+    QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
     });
@@ -502,6 +508,11 @@ void BrowserWindow::close_tab(int index)
     m_tabs.remove_first_matching([&](auto& entry) {
         return entry == tab;
     });
+}
+
+void BrowserWindow::open_file()
+{
+    m_current_tab->open_file();
 }
 
 void BrowserWindow::close_current_tab()
