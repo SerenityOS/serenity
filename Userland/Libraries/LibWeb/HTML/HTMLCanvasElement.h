@@ -30,8 +30,8 @@ public:
     unsigned width() const;
     unsigned height() const;
 
-    void set_width(unsigned);
-    void set_height(unsigned);
+    WebIDL::ExceptionOr<void> set_width(unsigned);
+    WebIDL::ExceptionOr<void> set_height(unsigned);
 
     DeprecatedString to_data_url(DeprecatedString const& type, Optional<double> quality) const;
 

@@ -20,10 +20,10 @@ public:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     double value() const;
-    void set_value(double);
+    WebIDL::ExceptionOr<void> set_value(double);
 
     double max() const;
-    void set_max(double value);
+    WebIDL::ExceptionOr<void> set_max(double value);
 
     double position() const;
 

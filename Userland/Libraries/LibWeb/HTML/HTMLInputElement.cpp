@@ -554,9 +554,9 @@ DeprecatedString HTMLInputElement::type() const
     VERIFY_NOT_REACHED();
 }
 
-void HTMLInputElement::set_type(DeprecatedString const& type)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_type(DeprecatedString const& type)
 {
-    MUST(set_attribute(HTML::AttributeNames::type, type));
+    return set_attribute(HTML::AttributeNames::type, type);
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-simple-colour

@@ -38,9 +38,9 @@ DeprecatedString HTMLAreaElement::hyperlink_element_utils_href() const
     return attribute(HTML::AttributeNames::href);
 }
 
-void HTMLAreaElement::set_hyperlink_element_utils_href(DeprecatedString href)
+WebIDL::ExceptionOr<void> HTMLAreaElement::set_hyperlink_element_utils_href(DeprecatedString href)
 {
-    MUST(set_attribute(HTML::AttributeNames::href, move(href)));
+    return set_attribute(HTML::AttributeNames::href, move(href));
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex

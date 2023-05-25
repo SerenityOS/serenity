@@ -36,7 +36,7 @@ public:
 
     DeprecatedString type() const;
     TypeAttributeState type_state() const;
-    void set_type(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-button-element

@@ -58,7 +58,7 @@ public:
 
     DeprecatedString type() const;
     TypeAttributeState type_state() const { return m_type; }
-    void set_type(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
 
     DeprecatedString default_value() const { return attribute(HTML::AttributeNames::value); }
     DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }

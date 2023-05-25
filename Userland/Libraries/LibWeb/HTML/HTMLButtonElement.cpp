@@ -87,9 +87,9 @@ HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
     return HTMLButtonElement::TypeAttributeState::Submit;
 }
 
-void HTMLButtonElement::set_type(DeprecatedString const& type)
+WebIDL::ExceptionOr<void> HTMLButtonElement::set_type(DeprecatedString const& type)
 {
-    MUST(set_attribute(HTML::AttributeNames::type, type));
+    return set_attribute(HTML::AttributeNames::type, type);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
