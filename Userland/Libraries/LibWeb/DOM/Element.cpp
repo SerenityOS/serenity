@@ -357,7 +357,8 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
     if (display.is_flow_inside() || display.is_flow_root_inside())
         return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
-    TODO();
+    dbgln("FIXME: CSS display '{}' not implemented yet.", display.to_string().release_value_but_fixme_should_propagate_errors());
+    return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
 }
 
 CSS::CSSStyleDeclaration const* Element::inline_style() const
