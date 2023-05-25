@@ -174,12 +174,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto resources_folder = "/res"sv;
     StringView web_driver_ipc_path;
     bool dump_layout_tree = false;
+    bool dump_text = false;
     bool is_layout_test_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(screenshot_timeout, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
+    args_parser.add_option(dump_text, "Dump text and exit", "dump-text", 'T');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
@@ -207,6 +209,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
 
             out("{}", layout_tree);
+            fflush(stdout);
+
+            event_loop.quit(0);
+        };
+    } else if (dump_text) {
+        view->on_load_finish = [&](auto const&) {
+            view->select_all();
+            auto text = view->selected_text();
+
+            out("{}", text);
             fflush(stdout);
 
             event_loop.quit(0);
