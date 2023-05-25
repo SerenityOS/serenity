@@ -4662,17 +4662,20 @@ ResolvedUnitlessFunction Parser::resolve_unitless_function_to_value(ComponentVal
 Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const& component_values)
 {
     Token params[4];
+    Vector<ComponentValue, 4> components;
     bool legacy_syntax = false;
     auto tokens = TokenStream { component_values };
 
     tokens.skip_whitespace();
-    auto const& component1 = tokens.next_token();
+    components.append(tokens.next_token());
 
-    if (!component1.is(Token::Type::Number)
-        && !component1.is(Token::Type::Percentage)
-        && !component1.is(Token::Type::Dimension))
+    if (!components[0].is(Token::Type::Number)
+        && !components[0].is(Token::Type::Percentage)
+        && !components[0].is(Token::Type::Dimension)
+        && !components[0].is_function())
         return {};
-    params[0] = component1.token();
+    if (!components[0].is_function())
+        params[0] = components[0].token();
 
     tokens.skip_whitespace();
     if (tokens.peek_token().is(Token::Type::Comma)) {
@@ -4681,20 +4684,22 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
     }
 
     tokens.skip_whitespace();
-    auto const& component2 = tokens.next_token();
-    if (!component2.is(Token::Type::Number) && !component2.is(Token::Type::Percentage))
+    components.append(tokens.next_token());
+    if (!components[1].is(Token::Type::Number) && !components[1].is(Token::Type::Percentage) && !components[1].is_function())
         return {};
-    params[1] = component2.token();
+    if (!components[1].is_function())
+        params[1] = components[1].token();
 
     tokens.skip_whitespace();
     if (legacy_syntax && !tokens.next_token().is(Token::Type::Comma))
         return {};
 
     tokens.skip_whitespace();
-    auto const& component3 = tokens.next_token();
-    if (!component3.is(Token::Type::Number) && !component3.is(Token::Type::Percentage))
+    components.append(tokens.next_token());
+    if (!components[2].is(Token::Type::Number) && !components[2].is(Token::Type::Percentage) && !components[2].is_function())
         return {};
-    params[2] = component3.token();
+    if (!components[2].is_function())
+        params[2] = components[2].token();
 
     tokens.skip_whitespace();
     auto const& alpha_separator = tokens.peek_token();
@@ -4704,15 +4709,24 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
         tokens.next_token();
 
         tokens.skip_whitespace();
-        auto const& component4 = tokens.next_token();
-        if (!component4.is(Token::Type::Number) && !component4.is(Token::Type::Percentage))
+        components.append(tokens.next_token());
+        if (!components[3].is(Token::Type::Number) && !components[3].is(Token::Type::Percentage) && !components[3].is_function())
             return {};
-        params[3] = component4.token();
+        if (!components[3].is_function())
+            params[3] = components[3].token();
     }
 
     tokens.skip_whitespace();
     if (tokens.has_next_token())
         return {};
+
+    ResolvedUnitlessFunction resolved_functions[4];
+    resolved_functions[0] = resolve_unitless_function_to_value(components[0]);
+    resolved_functions[1] = resolve_unitless_function_to_value(components[1]);
+    resolved_functions[2] = resolve_unitless_function_to_value(components[2]);
+    if (components.size() > 3) {
+        resolved_functions[3] = resolve_unitless_function_to_value(components[3]);
+    }
 
     if (function_name.equals_ignoring_ascii_case("rgb"sv)
         || function_name.equals_ignoring_ascii_case("rgba"sv)) {
@@ -4720,31 +4734,42 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
         // https://www.w3.org/TR/css-color-4/#rgb-functions
 
         u8 a_val = 255;
-        if (params[3].is(Token::Type::Number))
-            a_val = clamp(lroundf(params[3].number_value() * 255.0f), 0, 255);
-        else if (params[3].is(Token::Type::Percentage))
-            a_val = clamp(lroundf(params[3].percentage() * 2.55f), 0, 255);
-
-        if (params[0].is(Token::Type::Number)
-            && params[1].is(Token::Type::Number)
-            && params[2].is(Token::Type::Number)) {
-
-            u8 r_val = clamp(llroundf(params[0].number_value()), 0, 255);
-            u8 g_val = clamp(llroundf(params[1].number_value()), 0, 255);
-            u8 b_val = clamp(llroundf(params[2].number_value()), 0, 255);
-
-            return Color(r_val, g_val, b_val, a_val);
+        if (params[3].is(Token::Type::Number) || resolved_functions[3].is(CalculatedStyleValue::ResolvedType::Number)) {
+            auto resolved_value = resolved_functions[3].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[3].number_value(); });
+            a_val = clamp(lroundf(resolved_value * 255.0f), 0, 255);
+        } else if (params[3].is(Token::Type::Percentage) || resolved_functions[3].is(CalculatedStyleValue::ResolvedType::Percentage)) {
+            auto resolved_value = resolved_functions[3].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[3].percentage(); });
+            a_val = clamp(lroundf(resolved_value * 255.0f), 0, 255);
         }
 
-        if (params[0].is(Token::Type::Percentage)
-            && params[1].is(Token::Type::Percentage)
-            && params[2].is(Token::Type::Percentage)) {
+        if ((params[0].is(Token::Type::Number) || resolved_functions[0].is(CalculatedStyleValue::ResolvedType::Number))
+            && (params[1].is(Token::Type::Number) || resolved_functions[1].is(CalculatedStyleValue::ResolvedType::Number))
+            && (params[2].is(Token::Type::Number) || resolved_functions[2].is(CalculatedStyleValue::ResolvedType::Number))) {
 
-            u8 r_val = lroundf(clamp(params[0].percentage() * 2.55f, 0, 255));
-            u8 g_val = lroundf(clamp(params[1].percentage() * 2.55f, 0, 255));
-            u8 b_val = lroundf(clamp(params[2].percentage() * 2.55f, 0, 255));
+            u8 r_val = resolved_functions[0].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[0].number_value(); });
+            u8 g_val = resolved_functions[1].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[1].number_value(); });
+            u8 b_val = resolved_functions[2].value_if_type_or(CalculatedStyleValue::ResolvedType::Number, [params]() { return params[2].number_value(); });
 
-            return Color(r_val, g_val, b_val, a_val);
+            u8 r_val_clamp = clamp(llroundf(r_val), 0, 255);
+            u8 g_val_clamp = clamp(llroundf(g_val), 0, 255);
+            u8 b_val_clamp = clamp(llroundf(b_val), 0, 255);
+
+            return Color(r_val_clamp, g_val_clamp, b_val_clamp, a_val);
+        }
+
+        if ((params[0].is(Token::Type::Percentage) || resolved_functions[0].is(CalculatedStyleValue::ResolvedType::Percentage))
+            && (params[1].is(Token::Type::Percentage) || resolved_functions[1].is(CalculatedStyleValue::ResolvedType::Percentage))
+            && (params[2].is(Token::Type::Percentage) || resolved_functions[2].is(CalculatedStyleValue::ResolvedType::Percentage))) {
+
+            u8 r_val = resolved_functions[0].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[0].percentage(); });
+            u8 g_val = resolved_functions[1].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[1].percentage(); });
+            u8 b_val = resolved_functions[2].value_if_type_or(CalculatedStyleValue::ResolvedType::Percentage, [params]() { return params[2].percentage(); });
+
+            u8 r_val_clamp = lroundf(clamp(r_val * 2.55f, 0, 255));
+            u8 g_val_clamp = lroundf(clamp(g_val * 2.55f, 0, 255));
+            u8 b_val_clamp = lroundf(clamp(b_val * 2.55f, 0, 255));
+
+            return Color(r_val_clamp, g_val_clamp, b_val_clamp, a_val);
         }
     } else if (function_name.equals_ignoring_ascii_case("hsl"sv)
         || function_name.equals_ignoring_ascii_case("hsla"sv)) {
