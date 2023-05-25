@@ -49,7 +49,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(new_tab_action);
 
-    auto* close_current_tab_action = new QAction("Close Current Tab", this);
+    auto* close_current_tab_action = new QAction("&Close Current Tab", this);
     close_current_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/close-tab.png").arg(s_serenity_resource_root.characters())));
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
