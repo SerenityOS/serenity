@@ -98,6 +98,7 @@ public:
         Color,
         ConicGradient,
         Content,
+        CustomIdent,
         Display,
         Edge,
         FilterValueList,
@@ -150,6 +151,7 @@ public:
     bool is_color() const { return type() == Type::Color; }
     bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
+    bool is_custom_ident() const { return type() == Type::CustomIdent; }
     bool is_display() const { return type() == Type::Display; }
     bool is_edge() const { return type() == Type::Edge; }
     bool is_filter_value_list() const { return type() == Type::FilterValueList; }
@@ -201,6 +203,7 @@ public:
     ColorStyleValue const& as_color() const;
     ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
+    CustomIdentStyleValue const& as_custom_ident() const;
     DisplayStyleValue const& as_display() const;
     EdgeStyleValue const& as_edge() const;
     FilterValueListStyleValue const& as_filter_value_list() const;
@@ -250,6 +253,7 @@ public:
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
     ConicGradientStyleValue& as_conic_gradient() { return const_cast<ConicGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_conic_gradient()); }
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
+    CustomIdentStyleValue& as_custom_ident() { return const_cast<CustomIdentStyleValue&>(const_cast<StyleValue const&>(*this).as_custom_ident()); }
     DisplayStyleValue& as_display() { return const_cast<DisplayStyleValue&>(const_cast<StyleValue const&>(*this).as_display()); }
     EdgeStyleValue& as_edge() { return const_cast<EdgeStyleValue&>(const_cast<StyleValue const&>(*this).as_edge()); }
     FilterValueListStyleValue& as_filter_value_list() { return const_cast<FilterValueListStyleValue&>(const_cast<StyleValue const&>(*this).as_filter_value_list()); }
