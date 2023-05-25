@@ -65,6 +65,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
+    menu->addSeparator();
+
     auto* quit_action = new QAction("&Quit", this);
     quit_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Quit));
     menu->addAction(quit_action);
@@ -82,6 +84,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
     edit_menu->addAction(m_select_all_action);
     QObject::connect(m_select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
+
+    edit_menu->addSeparator();
 
     auto* settings_action = new QAction("&Settings", this);
     settings_action->setIcon(QIcon(QString("%1/res/icons/16x16/settings.png").arg(s_serenity_resource_root.characters())));
