@@ -40,6 +40,7 @@ public:
     using Vector::begin;
     using Vector::clear;
     using Vector::end;
+    using Vector::is_empty;
 
     [[nodiscard]] static JS::NonnullGCPtr<HeaderList> create(JS::VM&);
 
