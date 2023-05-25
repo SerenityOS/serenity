@@ -1285,6 +1285,16 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
                 return found_font;
         }
 
+        // We couldn't find this font with a specific weight and slope, so try again without them.
+        // FIXME: This should be replaced by a proper CSS font selection algorithm.
+        key.weight = 0;
+        key.slope = 0;
+        if (auto it = m_loaded_fonts.find(key); it != m_loaded_fonts.end()) {
+            auto& loader = *it->value;
+            if (auto found_font = loader.font_with_point_size(font_size_in_pt))
+                return found_font;
+        }
+
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
