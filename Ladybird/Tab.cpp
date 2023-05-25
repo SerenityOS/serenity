@@ -521,6 +521,14 @@ void Tab::location_edit_return_pressed()
     navigate(m_location_edit->text());
 }
 
+void Tab::open_file()
+{
+    auto filename = QFileDialog::getOpenFileName(this, tr("Open file"), QDir::homePath(), tr("All Files (*.*)"));
+
+    if (!filename.isEmpty() && !filename.isNull())
+        navigate("file://" + filename);
+}
+
 int Tab::tab_index()
 {
     return m_window->tab_index(this);

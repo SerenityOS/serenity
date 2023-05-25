@@ -11,6 +11,7 @@
 #include "WebContentView.h"
 #include <Browser/History.h>
 #include <QBoxLayout>
+#include <QFileDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QToolBar>
@@ -43,6 +44,7 @@ public:
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
+    void open_file();
     void update_reset_zoom_button();
 
     enum class InspectorTarget {
@@ -85,6 +87,7 @@ private:
     Browser::History m_history;
     QString m_title;
     QLabel* m_hover_label { nullptr };
+    QString m_open_file;
 
     OwnPtr<QMenu> m_page_context_menu;
 
@@ -101,6 +104,7 @@ private:
     OwnPtr<QAction> m_video_context_menu_play_pause_action;
     OwnPtr<QAction> m_video_context_menu_controls_action;
     OwnPtr<QAction> m_video_context_menu_loop_action;
+    OwnPtr<QAction> m_open_file_action;
     URL m_video_context_menu_url;
 
     int tab_index();
