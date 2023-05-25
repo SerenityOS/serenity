@@ -137,7 +137,7 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
     bool print_stdout_stderr = crashed_or_failed || m_print_all_output;
     if (crashed_or_failed) {
         m_failed_test_names.append(test_path);
-        print_modifiers({ Test::BG_RED, Test::FG_BLACK, Test::FG_BOLD });
+        print_modifiers({ Test::BG_RED, Test::FG_BOLD });
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
         print_modifiers({ Test::CLEAR });
         if (test_result.result == Test::Result::Crashed) {

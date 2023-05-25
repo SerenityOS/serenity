@@ -512,7 +512,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
 inline void TestRunner::print_file_result(JSFileResult const& file_result) const
 {
     if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
-        print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
+        print_modifiers({ BG_RED, FG_BOLD });
         out(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
