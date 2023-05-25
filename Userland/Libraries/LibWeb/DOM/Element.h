@@ -143,6 +143,8 @@ public:
 
     RequiredInvalidationAfterStyleChange recompute_style();
 
+    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const { return {}; }
+
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
 
