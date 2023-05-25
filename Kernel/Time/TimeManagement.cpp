@@ -233,7 +233,7 @@ UnixDateTime TimeManagement::boot_time()
     return RTC::boot_time();
 #elif ARCH(AARCH64)
     // FIXME: Return correct boot time
-    return Duration::from_seconds(0);
+    return UnixDateTime::epoch();
 #else
 #    error Unknown architecture
 #endif
@@ -461,7 +461,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
         m_seconds_since_boot = seconds_since_boot;
         m_ticks_this_second = ticks_this_second;
 
-        timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
+        m_epoch_time += Duration::from_nanoseconds(delta_ns);
 
         m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 
