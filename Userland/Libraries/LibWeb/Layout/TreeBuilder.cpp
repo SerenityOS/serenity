@@ -208,10 +208,6 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
 
 ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
-    // If the parent doesn't have a layout node, we don't need one either.
-    if (dom_node.parent_or_shadow_host() && !dom_node.parent_or_shadow_host()->layout_node())
-        return {};
-
     Optional<TemporaryChange<bool>> has_svg_root_change;
 
     if (dom_node.is_svg_container()) {
@@ -228,10 +224,24 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
-        element.clear_pseudo_element_nodes({});
-        VERIFY(!element.needs_style_update());
-        style = element.computed_css_values();
-        display = style->display();
+
+        // Special path for ::placeholder, which corresponds to a synthetic DOM element inside the <input> UA shadow root.
+        // FIXME: This is very hackish. Find a better way to architect this.
+        if (element.pseudo_element() == CSS::Selector::PseudoElement::Placeholder) {
+            auto& input_element = verify_cast<HTML::HTMLInputElement>(*element.root().parent_or_shadow_host());
+            style = TRY(style_computer.compute_style(input_element, CSS::Selector::PseudoElement::Placeholder));
+            if (input_element.placeholder_value().has_value())
+                display = style->display();
+            else
+                display = CSS::Display::from_short(CSS::Display::Short::None);
+        }
+        // Common path: this is a regular DOM element. Style should be present already, thanks to Document::update_style().
+        else {
+            element.clear_pseudo_element_nodes({});
+            VERIFY(!element.needs_style_update());
+            style = element.computed_css_values();
+            display = style->display();
+        }
         if (display.is_none())
             return {};
         layout_node = element.create_layout_node(*style);
@@ -242,9 +252,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     } else if (is<DOM::Text>(dom_node)) {
         layout_node = document.heap().allocate_without_realm<Layout::TextNode>(document, static_cast<DOM::Text&>(dom_node));
         display = CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
-    } else if (is<DOM::ShadowRoot>(dom_node)) {
-        layout_node = document.heap().allocate_without_realm<Layout::BlockContainer>(document, &static_cast<DOM::ShadowRoot&>(dom_node), CSS::ComputedValues {});
-        display = CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::FlowRoot);
     }
 
     if (!layout_node)
@@ -262,8 +269,11 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        if (shadow_root)
-            TRY(create_layout_tree(*shadow_root, context));
+        if (shadow_root) {
+            for (auto* node = shadow_root->first_child(); node; node = node->next_sibling()) {
+                TRY(create_layout_tree(*node, context));
+            }
+        }
 
         // This is the same as verify_cast<DOM::ParentNode>(dom_node).for_each_child
         for (auto* node = verify_cast<DOM::ParentNode>(dom_node).first_child(); node; node = node->next_sibling())
@@ -311,28 +321,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
             pop_parent();
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressBar, progress_bar);
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressValue, progress_value);
-        }
-    }
-
-    if (is<HTML::HTMLInputElement>(dom_node)) {
-        auto& input_element = static_cast<HTML::HTMLInputElement&>(dom_node);
-
-        if (auto placeholder_value = input_element.placeholder_value(); placeholder_value.has_value()) {
-            auto placeholder_style = TRY(style_computer.compute_style(input_element, CSS::Selector::PseudoElement::Placeholder));
-            auto placeholder = DOM::Element::create_layout_node_for_display_type(document, placeholder_style->display(), placeholder_style, nullptr);
-
-            auto text = document.heap().allocate<DOM::Text>(document.realm(), document, *placeholder_value).release_allocated_value_but_fixme_should_propagate_errors();
-            auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
-            text_node->set_generated(true);
-
-            push_parent(verify_cast<NodeWithStyle>(*layout_node));
-            push_parent(verify_cast<NodeWithStyle>(*placeholder));
-            insert_node_into_inline_or_block_ancestor(*text_node, text_node->display(), AppendOrPrepend::Append);
-            pop_parent();
-            insert_node_into_inline_or_block_ancestor(*placeholder, placeholder->display(), AppendOrPrepend::Append);
-            pop_parent();
-
-            input_element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Placeholder, placeholder);
         }
     }
 
