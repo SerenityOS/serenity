@@ -11,3 +11,9 @@ test("ArrayBuffer constructor must be invoked with 'new'", () => {
         ArrayBuffer();
     }).toThrowWithMessage(TypeError, "ArrayBuffer constructor must be called with 'new'");
 });
+
+test("ArrayBuffer size limit", () => {
+    expect(() => {
+        new ArrayBuffer(2 ** 53);
+    }).toThrowWithMessage(RangeError, "Invalid array buffer length");
+});
