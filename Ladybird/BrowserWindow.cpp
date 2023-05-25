@@ -45,14 +45,17 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* menu = menuBar()->addMenu("&File");
 
     auto* new_tab_action = new QAction("New &Tab", this);
+    new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
     new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(new_tab_action);
 
     auto* settings_action = new QAction("&Settings", this);
+    settings_action->setIcon(QIcon(QString("%1/res/icons/16x16/settings.png").arg(s_serenity_resource_root.characters())));
     settings_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Preferences));
     menu->addAction(settings_action);
 
     auto* close_current_tab_action = new QAction("Close Current Tab", this);
+    close_current_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/close-tab.png").arg(s_serenity_resource_root.characters())));
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
@@ -63,11 +66,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* edit_menu = menuBar()->addMenu("&Edit");
 
     m_copy_selection_action = make<QAction>("&Copy", this);
+    m_copy_selection_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
     m_copy_selection_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
     edit_menu->addAction(m_copy_selection_action);
     QObject::connect(m_copy_selection_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
 
     m_select_all_action = make<QAction>("Select &All", this);
+    m_select_all_action->setIcon(QIcon(QString("%1/res/icons/16x16/select-all.png").arg(s_serenity_resource_root.characters())));
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
     edit_menu->addAction(m_select_all_action);
     QObject::connect(m_select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
@@ -89,6 +94,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     m_zoom_menu = view_menu->addMenu("&Zoom");
 
     auto* zoom_in_action = new QAction("Zoom &In", this);
+    zoom_in_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-in.png").arg(s_serenity_resource_root.characters())));
     auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
     zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
     zoom_in_action->setShortcuts(zoom_in_shortcuts);
@@ -96,11 +102,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
 
     auto* zoom_out_action = new QAction("Zoom &Out", this);
+    zoom_out_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-out.png").arg(s_serenity_resource_root.characters())));
     zoom_out_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomOut));
     m_zoom_menu->addAction(zoom_out_action);
     QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
 
     auto* reset_zoom_action = new QAction("&Reset Zoom", this);
+    reset_zoom_action->setIcon(QIcon(QString("%1/res/icons/16x16/zoom-reset.png").arg(s_serenity_resource_root.characters())));
     reset_zoom_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     m_zoom_menu->addAction(reset_zoom_action);
     QObject::connect(reset_zoom_action, &QAction::triggered, this, &BrowserWindow::reset_zoom);
@@ -180,6 +188,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     });
 
     auto* dump_paint_tree_action = new QAction("Dump Paint Tree", this);
+    dump_paint_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_paint_tree_action);
     QObject::connect(dump_paint_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-paint-tree");
