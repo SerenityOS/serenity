@@ -72,14 +72,16 @@ JS::GCPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-caption
-void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
+WebIDL::ExceptionOr<void> HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
 {
     // On setting, the first caption element child of the table element, if any, must be removed,
     // and the new value, if not null, must be inserted as the first node of the table element.
     delete_caption();
 
     if (caption)
-        MUST(pre_insert(*caption, first_child()));
+        TRY(pre_insert(*caption, first_child()));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-createcaption

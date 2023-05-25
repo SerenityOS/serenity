@@ -440,10 +440,10 @@ DeprecatedString HTMLHyperlinkElementUtils::href() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
-void HTMLHyperlinkElementUtils::set_href(DeprecatedString href)
+WebIDL::ExceptionOr<void> HTMLHyperlinkElementUtils::set_href(DeprecatedString href)
 {
     // The href attribute's setter must set this element's href content attribute's value to the given value.
-    set_hyperlink_element_utils_href(move(href));
+    return set_hyperlink_element_utils_href(move(href));
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#update-href
