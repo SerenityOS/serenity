@@ -17,7 +17,11 @@ namespace IPC {
 
 Optional<TrafficDump> TrafficDump::create_if_requested(Stub const& stub)
 {
+#if defined(AK_OS_SERENITY)
+    if (!secure_getenv("DUMP_LIBIPC_TRAFFIC")) {
+#else
     if (!getenv("DUMP_LIBIPC_TRAFFIC")) {
+#endif
         return {};
     }
     // This method is being called from the constructor of `ConnectionBase`.
