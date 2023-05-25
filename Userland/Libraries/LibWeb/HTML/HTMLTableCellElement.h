@@ -19,8 +19,8 @@ public:
     unsigned col_span() const;
     unsigned row_span() const;
 
-    void set_col_span(unsigned);
-    void set_row_span(unsigned);
+    WebIDL::ExceptionOr<void> set_col_span(unsigned);
+    WebIDL::ExceptionOr<void> set_row_span(unsigned);
 
     virtual Optional<ARIA::Role> default_role() const override;
 

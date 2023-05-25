@@ -37,10 +37,10 @@ public:
     RefPtr<Gfx::Bitmap const> bitmap() const;
 
     unsigned width() const;
-    void set_width(unsigned);
+    WebIDL::ExceptionOr<void> set_width(unsigned);
 
     unsigned height() const;
-    void set_height(unsigned);
+    WebIDL::ExceptionOr<void> set_height(unsigned);
 
     unsigned natural_width() const;
     unsigned natural_height() const;

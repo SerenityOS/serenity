@@ -64,9 +64,9 @@ unsigned int HTMLTableCellElement::col_span() const
     return attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
 }
 
-void HTMLTableCellElement::set_col_span(unsigned int value)
+WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value)));
+    return set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value));
 }
 
 unsigned int HTMLTableCellElement::row_span() const
@@ -74,9 +74,9 @@ unsigned int HTMLTableCellElement::row_span() const
     return attribute(HTML::AttributeNames::rowspan).to_uint().value_or(1);
 }
 
-void HTMLTableCellElement::set_row_span(unsigned int value)
+WebIDL::ExceptionOr<void> HTMLTableCellElement::set_row_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
+    return set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value));
 }
 
 Optional<ARIA::Role> HTMLTableCellElement::default_role() const

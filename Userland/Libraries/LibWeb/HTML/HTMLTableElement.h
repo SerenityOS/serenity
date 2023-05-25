@@ -21,7 +21,7 @@ public:
     virtual ~HTMLTableElement() override;
 
     JS::GCPtr<HTMLTableCaptionElement> caption();
-    void set_caption(HTMLTableCaptionElement*);
+    WebIDL::ExceptionOr<void> set_caption(HTMLTableCaptionElement*);
     JS::NonnullGCPtr<HTMLTableCaptionElement> create_caption();
     void delete_caption();
 

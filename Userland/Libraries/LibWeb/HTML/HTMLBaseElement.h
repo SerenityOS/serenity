@@ -17,7 +17,7 @@ public:
     virtual ~HTMLBaseElement() override;
 
     DeprecatedString href() const;
-    void set_href(DeprecatedString const& href);
+    WebIDL::ExceptionOr<void> set_href(DeprecatedString const& href);
 
     AK::URL const& frozen_base_url() const { return m_frozen_base_url; }
 

@@ -68,13 +68,14 @@ double HTMLProgressElement::value() const
     return min(maybe_double.value(), max());
 }
 
-void HTMLProgressElement::set_value(double value)
+WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
 {
     if (value < 0)
-        return;
+        return {};
 
-    MUST(set_attribute(HTML::AttributeNames::value, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::value, DeprecatedString::number(value)));
     progress_position_updated();
+    return {};
 }
 
 double HTMLProgressElement::max() const
@@ -94,13 +95,14 @@ double HTMLProgressElement::max() const
     return double_or_none.value();
 }
 
-void HTMLProgressElement::set_max(double value)
+WebIDL::ExceptionOr<void> HTMLProgressElement::set_max(double value)
 {
     if (value <= 0)
-        return;
+        return {};
 
-    MUST(set_attribute(HTML::AttributeNames::max, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::max, DeprecatedString::number(value)));
     progress_position_updated();
+    return {};
 }
 
 double HTMLProgressElement::position() const

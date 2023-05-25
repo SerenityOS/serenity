@@ -49,7 +49,7 @@ private:
     // ^HTML::HTMLHyperlinkElementUtils
     virtual DOM::Document& hyperlink_element_utils_document() override { return document(); }
     virtual DeprecatedString hyperlink_element_utils_href() const override;
-    virtual void set_hyperlink_element_utils_href(DeprecatedString) override;
+    virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(DeprecatedString) override;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const final { return true; }
     virtual bool hyperlink_element_utils_is_connected() const final { return is_connected(); }
     virtual DeprecatedString hyperlink_element_utils_target() const final { return target(); }
