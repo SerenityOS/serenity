@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,24 @@
 #include <LibTimeZone/Forward.h>
 
 namespace TimeZone {
+
+static constexpr auto max_year_as_time = AK::UnixDateTime::from_unix_time_parts(NumericLimits<u16>::max(), 1, 1, 0, 0, 0, 0);
+
+struct DateTime {
+    AK::UnixDateTime time_since_epoch() const;
+
+    u16 year { 0 };
+    u8 month { 1 };
+    u8 day { 1 };
+
+    u8 last_weekday { 0 };
+    u8 after_weekday { 0 };
+    u8 before_weekday { 0 };
+
+    u8 hour { 0 };
+    u8 minute { 0 };
+    u8 second { 0 };
+};
 
 enum class InDST {
     No,

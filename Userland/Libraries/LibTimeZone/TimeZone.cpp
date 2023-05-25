@@ -16,6 +16,12 @@
 
 namespace TimeZone {
 
+AK::UnixDateTime DateTime::time_since_epoch() const
+{
+    // FIXME: This implementation does not take last_weekday, after_weekday, or before_weekday into account.
+    return AK::UnixDateTime::from_unix_time_parts(year, month, day, hour, minute, second, 0);
+}
+
 // NOTE: Without ENABLE_TIME_ZONE_DATA LibTimeZone operates in a UTC-only mode and only recognizes
 //       the 'UTC' time zone, which is slightly more useful than a bunch of dummy functions that
 //       can't do anything. When we build with time zone data, these weakly linked functions are

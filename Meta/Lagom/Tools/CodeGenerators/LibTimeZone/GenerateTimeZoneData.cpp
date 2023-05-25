@@ -494,28 +494,6 @@ static ErrorOr<void> generate_time_zone_data_implementation(Core::InputBufferedF
 
 namespace TimeZone {
 
-static constexpr auto max_year_as_time = AK::UnixDateTime::from_unix_time_parts(NumericLimits<u16>::max(), 1, 1, 0, 0, 0, 0);
-
-struct DateTime {
-    AK::UnixDateTime time_since_epoch() const
-    {
-        // FIXME: This implementation does not take last_weekday, after_weekday, or before_weekday into account.
-        return AK::UnixDateTime::from_unix_time_parts(year, month, day, hour, minute, second, 0);
-    }
-
-    u16 year { 0 };
-    u8 month { 1 };
-    u8 day { 1 };
-
-    u8 last_weekday { 0 };
-    u8 after_weekday { 0 };
-    u8 before_weekday { 0 };
-
-    u8 hour { 0 };
-    u8 minute { 0 };
-    u8 second { 0 };
-};
-
 struct TimeZoneOffset {
     i64 offset { 0 };
 
