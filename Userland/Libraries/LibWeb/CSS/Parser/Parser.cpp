@@ -3385,6 +3385,39 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_max_function(Function const& function)
     return CalculatedStyleValue::create(move(node), type);
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_clamp_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 3) {
+        return Error::from_string_view("clamp() must have exactly three parameters"sv);
+    }
+
+    Vector<NonnullOwnPtr<CalculationNode>> calculated_parameters;
+    calculated_parameters.ensure_capacity(parameters.size());
+
+    CalculatedStyleValue::ResolvedType type;
+    bool first = true;
+    for (auto& parameter : parameters) {
+        auto calculation_node = TRY(parse_a_calculation(parameter));
+
+        if (first) {
+            type = calculation_node->resolved_type().value();
+            first = false;
+        }
+
+        if (calculation_node->resolved_type().value() != type) {
+            return Error::from_string_view("clamp() parameters must all be of the same type"sv);
+        }
+
+        calculated_parameters.append(calculation_node.release_nonnull());
+    }
+
+    NonnullOwnPtr<CalculationNode> node = TRY(ClampCalculationNode::create(move(calculated_parameters[0]), move(calculated_parameters[1]), move(calculated_parameters[2])));
+    return CalculatedStyleValue::create(move(node), type);
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3403,6 +3436,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
 
         if (function.name().equals_ignoring_ascii_case("max"sv))
             return parse_max_function(function);
+
+        if (function.name().equals_ignoring_ascii_case("clamp"sv))
+            return parse_clamp_function(function);
     }
 
     return nullptr;
