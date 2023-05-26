@@ -22,9 +22,13 @@ jobs:
       matrix:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-22.04]
-        arch: ['x86_64']
+        arch: ['x86_64', 'aarch64']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
+        exclude:
+          # We currently manually disable the ALL_DEBUG build on AArch64 for sake of saving CI time, as it's not our main target.
+          - debug-options: 'ALL_DEBUG'
+            arch: 'aarch64'
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
@@ -56,6 +60,10 @@ jobs:
           sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
           sudo apt-get update
           sudo apt-get install -y clang-format-15 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip
+          if ${{ matrix.arch == 'aarch64' }}; then
+            # FIXME: Remove this when we no longer build our own Qemu binary.
+            sudo apt-get install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev
+          fi
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.7.1
       - name: Install Python dependencies
@@ -104,6 +112,26 @@ jobs:
         with:
           path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
           key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+
+      # FIXME: Qemu currently needs a local patch for AArch64 testing. It is included in Qemu 8.1; remove this when upgrading!
+      - name: AArch64 Qemu cache
+        id: qemu-cache
+        uses: actions/cache/restore@v3
+        if: ${{ matrix.arch == 'aarch64' }}
+        with:
+          path: ${{ github.workspace }}/Toolchain/Local/qemu
+          key: ${{ runner.os }}-qemu-${{ hashFiles('Ports/qemu/version.sh', 'Toolchain/BuildQemu.sh', 'Toolchain/Patches/qemu/*.patch') }}
+
+      - name: Build AArch64 Qemu
+        if: ${{ matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
+        run: ${{ github.workspace }}/Toolchain/BuildQemu.sh
+
+      - name: Update AArch64 Qemu cache
+        uses: actions/cache/save@v3
+        if: ${{ github.event_name != 'pull_request' && matrix.arch == 'aarch64' && !steps.qemu-cache.outputs.cache-hit }}
+        with:
+          path: ${{ github.workspace }}/Toolchain/Local/qemu
+          key: ${{ steps.qemu-cache.outputs.cache-primary-key }}
 
       - name: ccache(1) cache
         # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
@@ -225,7 +253,12 @@ jobs:
           sudo cat fsmount/home/anon/test-results.log
           if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
           then
-            echo "::error :^( Tests failed, failing job"
+            if ${{ matrix.arch == 'aarch64' }}; then
+              # FIXME: Remove this once all tests pass on AArch64
+              echo "::warning:: :^( Some tests failed"
+              exit 0
+            fi
+            echo "::error:: :^( Tests failed, failing job"
             exit 1
           fi
           echo "::endgroup::"
