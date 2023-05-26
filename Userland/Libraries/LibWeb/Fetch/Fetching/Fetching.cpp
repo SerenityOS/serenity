@@ -628,20 +628,23 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
         });
     }
 
-    // 5. If response’s body is null, then run processResponseEndOfBody.
-    if (!response.body().has_value()) {
+    // 5. Let internalResponse be response, if response is a network error; otherwise response’s internal response.
+    auto internal_response = response.is_network_error() ? JS::NonnullGCPtr { response } : response.unsafe_response();
+
+    // 6. If internalResponse’s body is null, then run processResponseEndOfBody.
+    if (!internal_response->body().has_value()) {
         process_response_end_of_body();
     }
-    // 6. Otherwise:
+    // 7. Otherwise:
     else {
         // FIXME: 1. Let transformStream be a new TransformStream.
         // FIXME: 2. Let identityTransformAlgorithm be an algorithm which, given chunk, enqueues chunk in transformStream.
         // FIXME: 3. Set up transformStream with transformAlgorithm set to identityTransformAlgorithm and flushAlgorithm set
         //           to processResponseEndOfBody.
-        // FIXME: 4. Set response’s body’s stream to the result of response’s body’s stream piped through transformStream.
+        // FIXME: 4. Set internalResponse’s body’s stream to the result of internalResponse’s body’s stream piped through transformStream.
     }
 
-    // 7. If fetchParams’s process response consume body is non-null, then:
+    // 8. If fetchParams’s process response consume body is non-null, then:
     if (fetch_params.algorithms()->process_response_consume_body().has_value()) {
         // 1. Let processBody given nullOrBytes be this step: run fetchParams’s process response consume body given
         //    response and nullOrBytes.
@@ -655,17 +658,17 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
             (*fetch_params.algorithms()->process_response_consume_body())(response, Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
         };
 
-        // 3. If response’s body is null, then queue a fetch task to run processBody given null, with fetchParams’s
-        //    task destination.
-        if (!response.body().has_value()) {
+        // 3. If internalResponse's body is null, then queue a fetch task to run processBody given null, with
+        //    fetchParams’s task destination.
+        if (!internal_response->body().has_value()) {
             Infrastructure::queue_fetch_task(task_destination, [process_body = move(process_body)]() {
                 process_body({});
             });
         }
-        // 4. Otherwise, fully read response’s body given processBody, processBodyError, and fetchParams’s task
+        // 4. Otherwise, fully read internalResponse body given processBody, processBodyError, and fetchParams’s task
         //    destination.
         else {
-            TRY(response.body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
+            TRY(internal_response->body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
         }
     }
 
