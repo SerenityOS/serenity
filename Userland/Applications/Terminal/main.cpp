@@ -473,5 +473,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
     utmp_update(ptsname, 0, false);
+    TRY(Core::System::kill(shell_pid, SIGTERM));
     return result;
 }
