@@ -1347,6 +1347,9 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
     if (width.is_auto()) {
         return width.resolved(box, width_of_containing_block_as_length_for_resolve);
     }
+    if (width.is_fit_content()) {
+        return CSS::Length::make_px(calculate_fit_content_width(box, AvailableSpace { available_width, AvailableSize::make_indefinite() }));
+    }
 
     auto& computed_values = box.computed_values();
     if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
