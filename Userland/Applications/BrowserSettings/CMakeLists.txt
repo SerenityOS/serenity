@@ -4,21 +4,18 @@ serenity_component(
     TARGETS BrowserSettings
 )
 
-stringify_gml(AutoplaySettingsWidget.gml AutoplaySettingsWidgetGML.h autoplay_settings_widget_gml)
-stringify_gml(BrowserSettingsWidget.gml BrowserSettingsWidgetGML.h browser_settings_widget_gml)
-stringify_gml(ContentFilterSettingsWidget.gml ContentFilterSettingsWidgetGML.h content_filter_settings_widget_gml)
+compile_gml(AutoplaySettingsWidget.gml AutoplaySettingsWidgetGML.cpp)
+compile_gml(BrowserSettingsWidget.gml BrowserSettingsWidgetGML.cpp)
+compile_gml(ContentFilterSettingsWidget.gml ContentFilterSettingsWidgetGML.cpp)
 
 set(SOURCES
     AutoplaySettingsWidget.cpp
     BrowserSettingsWidget.cpp
     ContentFilterSettingsWidget.cpp
+    AutoplaySettingsWidgetGML.cpp
+    BrowserSettingsWidgetGML.cpp
+    ContentFilterSettingsWidgetGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    AutoplaySettingsWidgetGML.h
-    BrowserSettingsWidgetGML.h
-    ContentFilterSettingsWidgetGML.h
 )
 
 serenity_app(BrowserSettings ICON app-browser)

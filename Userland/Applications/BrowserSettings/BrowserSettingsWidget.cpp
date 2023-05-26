@@ -6,7 +6,6 @@
  */
 
 #include "BrowserSettingsWidget.h"
-#include <Applications/BrowserSettings/BrowserSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
@@ -60,9 +59,8 @@ private:
 
 ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
 {
-    auto widget = TRY(try_make_ref_counted<BrowserSettingsWidget>());
+    auto widget = TRY(BrowserSettingsWidget::try_create());
 
-    TRY(widget->load_from_gml(browser_settings_widget_gml));
     TRY(widget->setup());
 
     return widget;

@@ -5,7 +5,6 @@
  */
 
 #include "AutoplaySettingsWidget.h"
-#include <Applications/BrowserSettings/AutoplaySettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Button.h>
@@ -34,8 +33,8 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
     auto allowlist_model = TRY(try_make_ref_counted<AutoplayAllowlistModel>());
     TRY(allowlist_model->load());
 
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AutoplaySettingsWidget(move(allowlist_model))));
-    TRY(widget->load_from_gml(autoplay_settings_widget_gml));
+    auto widget = TRY(AutoplaySettingsWidget::try_create());
+    widget->set_allowlist_model(move(allowlist_model));
 
     widget->m_allow_autoplay_on_all_websites_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("allow_autoplay_on_all_websites_checkbox");
     widget->m_allow_autoplay_on_all_websites_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, default_allow_autoplay_on_all_websites), GUI::AllowCallback::No);
@@ -72,10 +71,10 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
     return widget;
 }
 
-AutoplaySettingsWidget::AutoplaySettingsWidget(NonnullRefPtr<AutoplayAllowlistModel> allowlist_model)
-    : m_allowlist_model(move(allowlist_model))
+void AutoplaySettingsWidget::set_allowlist_model(NonnullRefPtr<AutoplayAllowlistModel> model)
 {
-}
+    m_allowlist_model = model;
+};
 
 void AutoplaySettingsWidget::apply_settings()
 {
