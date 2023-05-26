@@ -497,6 +497,9 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop, Optional<BitmapFormat> new_bitmap_format) const
 {
+    if (crop == rect() && new_bitmap_format.value_or(format()) == format())
+        return *this;
+
     auto new_bitmap = TRY(Gfx::Bitmap::create(new_bitmap_format.value_or(format()), { crop.width(), crop.height() }, scale()));
     auto scaled_crop = crop * scale();
 
