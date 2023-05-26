@@ -22,6 +22,12 @@ void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule 
         CSSGroupingRule::for_each_effective_style_rule(callback);
 }
 
+void CSSConditionRule::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const
+{
+    if (condition_matches())
+        CSSGroupingRule::for_each_effective_keyframes_at_rule(callback);
+}
+
 JS::ThrowCompletionOr<void> CSSConditionRule::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));

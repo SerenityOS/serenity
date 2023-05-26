@@ -30,6 +30,103 @@
       "align-self"
     ]
   },
+  "animation": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "none 0s ease 1 normal running 0s none",
+    "longhands": [
+      "animation-name",
+      "animation-duration",
+      "animation-timing-function",
+      "animation-iteration-count",
+      "animation-direction",
+      "animation-play-state",
+      "animation-delay",
+      "animation-fill-mode"
+    ]
+  },
+  "animation-name": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "none",
+    "valid-types": [
+      "string", "custom-ident"
+    ],
+    "valid-identifiers": [
+      "none"
+    ]
+  },
+  "animation-duration": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "0s",
+    "valid-types": [
+      "time [0,∞]"
+    ]
+  },
+  "animation-timing-function": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "ease",
+    "__comment": "FIXME: This is like...wrong.",
+    "valid-identifiers": [
+      "ease",
+      "linear",
+      "ease-in-out",
+      "ease-in",
+      "ease-out"
+    ]
+  },
+  "animation-iteration-count": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "1",
+    "valid-types": [
+      "number [0,∞]"
+    ],
+    "valid-identifiers": [
+      "infinite"
+    ]
+  },
+  "animation-direction": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "normal",
+    "valid-identifiers": [
+      "normal",
+      "reverse",
+      "alternate",
+      "alternate-reverse"
+    ]
+  },
+  "animation-play-state": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "running",
+    "valid-identifiers": [
+      "running",
+      "paused"
+    ]
+  },
+  "animation-delay": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "0s",
+    "valid-types": [
+      "time"
+    ]
+  },
+  "animation-fill-mode": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "none",
+    "valid-identifiers": [
+      "none",
+      "forwards",
+      "backwards",
+      "both"
+    ]
+  },
   "appearance": {
     "inherited": false,
     "initial": "auto",
@@ -237,7 +334,7 @@
     "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
-    "valid-types":  [
+    "valid-types": [
       "color"
     ],
     "quirks": [
