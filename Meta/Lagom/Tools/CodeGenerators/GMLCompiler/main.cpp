@@ -166,6 +166,7 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "text_alignment"sv, "Gfx::TextAlignment"sv },
         { "focus_policy"sv, "GUI::FocusPolicy"sv },
         { "foreground_role"sv, "Gfx::ColorRole"sv },
+        { "text_wrapping"sv, "Gfx::TextWrapping"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
