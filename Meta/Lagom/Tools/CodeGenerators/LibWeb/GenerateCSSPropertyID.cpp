@@ -12,6 +12,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 
+ErrorOr<void> replace_logical_aliases(JsonObject& properties);
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file);
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file);
 
@@ -36,6 +37,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(json.is_object());
     auto properties = json.as_object();
 
+    TRY(replace_logical_aliases(properties));
+
     auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
     auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
 
@@ -43,6 +46,37 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(generate_implementation_file(properties, *generated_implementation_file));
 
     return 0;
+}
+
+ErrorOr<void> replace_logical_aliases(JsonObject& properties)
+{
+    AK::HashMap<DeprecatedString, DeprecatedString> logical_aliases;
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        const auto& value_as_object = value.as_object();
+        const auto logical_alias_for = value_as_object.get_deprecated_string("logical-alias-for"sv);
+        if (logical_alias_for.has_value()) {
+            logical_aliases.set(name, logical_alias_for.value());
+        }
+    });
+
+    for (auto& [name, alias] : logical_aliases) {
+        auto const maybe_alias_object = properties.get_object(alias);
+        if (!maybe_alias_object.has_value()) {
+            dbgln("No property '{}' found for logical alias '{}'", alias, name);
+            VERIFY_NOT_REACHED();
+        }
+        JsonObject alias_object = maybe_alias_object.value();
+
+        // Copy over anything the logical property overrides
+        properties.get_object(name).value().for_each_member([&](auto& key, auto& value) {
+            alias_object.set(key, value);
+        });
+
+        properties.set(name, alias_object);
+    }
+
+    return {};
 }
 
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file)
