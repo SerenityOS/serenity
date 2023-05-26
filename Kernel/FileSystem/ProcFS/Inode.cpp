@@ -124,7 +124,6 @@ ErrorOr<void> ProcFSInode::traverse_as_root_directory(Function<ErrorOr<void>(Fil
 
 ErrorOr<void> ProcFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(procfs().m_lock);
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
         auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
@@ -174,7 +173,6 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView n
 
 ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup(StringView name)
 {
-    MutexLocker locker(procfs().m_lock);
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
         auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
