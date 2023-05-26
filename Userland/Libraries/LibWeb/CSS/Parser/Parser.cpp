@@ -3461,6 +3461,35 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_min_function(Function const& function)
     return CalculatedStyleValue::create(move(node), type);
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_max_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    Vector<NonnullOwnPtr<CalculationNode>> calculated_parameters;
+    calculated_parameters.ensure_capacity(parameters.size());
+
+    CalculatedStyleValue::ResolvedType type;
+    bool first = true;
+    for (auto& parameter : parameters) {
+        auto calculation_node = TRY(parse_a_calculation(parameter));
+
+        if (first) {
+            type = calculation_node->resolved_type().value();
+            first = false;
+        }
+
+        if (calculation_node->resolved_type().value() != type) {
+            return Error::from_string_view("max() parameters must all be of the same type"sv);
+        }
+
+        calculated_parameters.append(calculation_node.release_nonnull());
+    }
+
+    NonnullOwnPtr<CalculationNode> node = TRY(MaxCalculationNode::create(move(calculated_parameters)));
+    return CalculatedStyleValue::create(move(node), type);
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3474,9 +3503,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
             VERIFY_NOT_REACHED();
         }
 
-        if (function.name().equals_ignoring_ascii_case("min"sv)) {
+        if (function.name().equals_ignoring_ascii_case("min"sv))
             return parse_min_function(function);
-        }
+
+        if (function.name().equals_ignoring_ascii_case("max"sv))
+            return parse_max_function(function);
     }
 
     return nullptr;
