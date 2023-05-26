@@ -54,6 +54,11 @@ void CSSGroupingRule::for_each_effective_style_rule(Function<void(CSSStyleRule c
     m_rules->for_each_effective_style_rule(callback);
 }
 
+void CSSGroupingRule::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const
+{
+    m_rules->for_each_effective_keyframes_at_rule(callback);
+}
+
 void CSSGroupingRule::set_parent_style_sheet(CSSStyleSheet* parent_style_sheet)
 {
     CSSRule::set_parent_style_sheet(parent_style_sheet);

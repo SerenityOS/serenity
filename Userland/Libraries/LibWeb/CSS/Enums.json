@@ -32,6 +32,18 @@
         "stretch",
         "unsafe"
     ],
+    "animation-fill-mode": [
+        "backwards",
+        "both",
+        "forwards",
+        "none"
+    ],
+    "animation-direction": [
+        "alternate",
+        "alternate-reverse",
+        "normal",
+        "reverse"
+    ],
     "appearance": [
         "auto",
         "button",

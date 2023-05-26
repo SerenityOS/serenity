@@ -242,6 +242,10 @@
 #    cmakedefine01 LIBWEB_CSS_DEBUG
 #endif
 
+#ifndef LIBWEB_CSS_ANIMATION_DEBUG
+#    cmakedefine01 LIBWEB_CSS_ANIMATION_DEBUG
+#endif
+
 #ifndef LINE_EDITOR_DEBUG
 #    cmakedefine01 LINE_EDITOR_DEBUG
 #endif

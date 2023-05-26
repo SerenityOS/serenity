@@ -112,6 +112,12 @@ void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule con
     }
 }
 
+void CSSStyleSheet::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const
+{
+    if (m_media->matches())
+        m_rules->for_each_effective_keyframes_at_rule(callback);
+}
+
 bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 {
     bool any_media_queries_changed_match_state = false;

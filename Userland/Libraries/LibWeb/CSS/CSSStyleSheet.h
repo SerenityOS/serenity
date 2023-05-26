@@ -45,6 +45,7 @@ public:
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.
     bool evaluate_media_queries(HTML::Window const&);
+    void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const;
 
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 

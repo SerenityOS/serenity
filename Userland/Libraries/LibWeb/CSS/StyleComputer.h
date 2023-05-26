@@ -10,7 +10,9 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/RedBlackTree.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
+#include <LibWeb/CSS/CSSKeyframesRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/TokenStream.h>
@@ -88,6 +90,11 @@ public:
 
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
+    struct AnimationKey {
+        CSS::CSSStyleDeclaration const* source_declaration;
+        DOM::Element const* element;
+    };
+
 private:
     enum class ComputeStyleMode {
         Normal,
@@ -126,16 +133,28 @@ private:
 
     JS::NonnullGCPtr<DOM::Document> m_document;
 
+    struct AnimationKeyFrameSet {
+        struct ResolvedKeyFrame {
+            struct UseInitial { };
+            Array<Variant<Empty, UseInitial, NonnullRefPtr<StyleValue const>>, to_underlying(last_property_id) + 1> resolved_properties {};
+        };
+        RedBlackTree<u64, ResolvedKeyFrame> keyframes_by_key;
+    };
+
     struct RuleCache {
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         Vector<MatchingRule> other_rules;
+
+        HashMap<FlyString, NonnullOwnPtr<AnimationKeyFrameSet>> rules_by_animation_keyframes;
     };
 
     NonnullOwnPtr<RuleCache> make_rule_cache_for_cascade_origin(CascadeOrigin);
 
     RuleCache const& rule_cache_for_cascade_origin(CascadeOrigin) const;
+
+    void ensure_animation_timer() const;
 
     OwnPtr<RuleCache> m_author_rule_cache;
     OwnPtr<RuleCache> m_user_agent_rule_cache;
@@ -145,6 +164,57 @@ private:
 
     Length::FontMetrics m_default_font_metrics;
     Length::FontMetrics m_root_element_font_metrics;
+
+    constexpr static u64 AnimationKeyFrameKeyScaleFactor = 1000; // 0..100000
+
+    enum class AnimationStepTransition {
+        NoTransition,
+        IdleOrBeforeToActive,
+        IdleOrBeforeToAfter,
+        ActiveToBefore,
+        ActiveToActiveChangingTheIteration,
+        ActiveToAfter,
+        AfterToActive,
+        AfterToBefore,
+        Cancelled,
+    };
+    enum class AnimationState {
+        Before,
+        After,
+        Idle,
+        Active,
+    };
+
+    struct Animation {
+        String name;
+        CSS::Time duration;
+        CSS::Time delay;
+        Optional<size_t> iteration_count; // Infinite if not set.
+        CSS::AnimationDirection direction;
+        CSS::AnimationFillMode fill_mode;
+        WeakPtr<DOM::Element> owning_element;
+
+        CSS::Percentage progress { 0 };
+        CSS::Time remaining_delay { 0, CSS::Time::Type::Ms };
+        AnimationState current_state { AnimationState::Before };
+        mutable Array<RefPtr<StyleValue const>, to_underlying(last_property_id) + 1> initial_state {};
+
+        AnimationStepTransition step(CSS::Time const& time_step);
+        ErrorOr<void> collect_into(StyleProperties&, RuleCache const&) const;
+        bool is_done() const;
+    };
+
+    mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
+    mutable RefPtr<Platform::Timer> m_animation_driver_timer;
 };
 
 }
+
+template<>
+struct AK::Traits<Web::CSS::StyleComputer::AnimationKey> : public AK::GenericTraits<Web::CSS::StyleComputer::AnimationKey> {
+    static unsigned hash(Web::CSS::StyleComputer::AnimationKey const& k) { return pair_int_hash(ptr_hash(k.source_declaration), ptr_hash(k.element)); }
+    static bool equals(Web::CSS::StyleComputer::AnimationKey const& a, Web::CSS::StyleComputer::AnimationKey const& b)
+    {
+        return a.element == b.element && a.source_declaration == b.source_declaration;
+    }
+};
