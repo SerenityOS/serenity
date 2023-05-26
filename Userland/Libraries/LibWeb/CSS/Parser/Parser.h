@@ -336,6 +336,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
 
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calculation(Vector<ComponentValue> const&);
+    ErrorOr<NonnullOwnPtr<CalculationNode>> simplify_a_calculation(NonnullOwnPtr<CalculationNode>);
 
     ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
     ParseErrorOr<Optional<Selector::CompoundSelector>> parse_compound_selector(TokenStream<ComponentValue>&);

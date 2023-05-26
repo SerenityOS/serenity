@@ -129,6 +129,12 @@ public:
         Negate,
         Invert,
 
+        // Comparison function nodes, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#comp-func
+        Min,
+        Max,
+        Clamp,
+
         // This only exists during parsing.
         Unparsed,
     };
