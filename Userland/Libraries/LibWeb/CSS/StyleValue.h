@@ -294,7 +294,6 @@ public:
     bool has_auto() const;
     virtual bool has_color() const { return false; }
     virtual bool has_length() const { return false; }
-    virtual bool has_rect() const { return false; }
     virtual bool has_number() const { return false; }
     virtual bool has_integer() const { return false; }
 
