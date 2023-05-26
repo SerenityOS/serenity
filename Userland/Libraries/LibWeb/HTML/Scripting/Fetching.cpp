@@ -234,66 +234,6 @@ static void set_up_classic_script_request(Fetch::Infrastructure::Request& reques
     request.set_priority(options.fetch_priority);
 }
 
-class ClassicScriptResponseHandler final : public RefCounted<ClassicScriptResponseHandler> {
-public:
-    ClassicScriptResponseHandler(JS::NonnullGCPtr<HTMLScriptElement> element, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, String character_encoding, OnFetchScriptComplete on_complete)
-        : m_element(element)
-        , m_settings_object(settings_object)
-        , m_options(move(options))
-        , m_character_encoding(move(character_encoding))
-        , m_on_complete(move(on_complete))
-    {
-    }
-
-    // https://html.spec.whatwg.org/multipage/webappapis.html#fetching-scripts:concept-fetch-4
-    void process_response(JS::NonnullGCPtr<Fetch::Infrastructure::Response> response, Fetch::Infrastructure::FetchAlgorithms::BodyBytes body_bytes)
-    {
-        // 1. Set response to response's unsafe response.
-        response = response->unsafe_response();
-
-        // 2. If either of the following conditions are met:
-        // - bodyBytes is null or failure; or
-        // - response's status is not an ok status,
-        if (body_bytes.template has<Empty>() || body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
-            // then run onComplete given null, and abort these steps.
-            m_on_complete(nullptr);
-            return;
-        }
-
-        // 3. Let potentialMIMETypeForEncoding be the result of extracting a MIME type given response's header list.
-        auto potential_mime_type_for_encoding = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
-
-        // 4. Set character encoding to the result of legacy extracting an encoding given potentialMIMETypeForEncoding
-        //    and character encoding.
-        auto character_encoding = Fetch::Infrastructure::legacy_extract_an_encoding(potential_mime_type_for_encoding, m_character_encoding);
-
-        // 5. Let source text be the result of decoding bodyBytes to Unicode, using character encoding as the fallback
-        //    encoding.
-        auto fallback_decoder = TextCodec::decoder_for(character_encoding);
-        VERIFY(fallback_decoder.has_value());
-
-        auto source_text = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*fallback_decoder, body_bytes.template get<ByteBuffer>()).release_value_but_fixme_should_propagate_errors();
-
-        // 6. Let muted errors be true if response was CORS-cross-origin, and false otherwise.
-        auto muted_errors = response->is_cors_cross_origin() ? ClassicScript::MutedErrors::Yes : ClassicScript::MutedErrors::No;
-
-        // 7. Let script be the result of creating a classic script given source text, settings object, response's URL,
-        //    options, and muted errors.
-        // FIXME: Pass options.
-        auto script = ClassicScript::create(m_element->document().url().to_deprecated_string(), source_text, *m_settings_object, response->url().value_or({}), 1, muted_errors);
-
-        // 8. Run onComplete given script.
-        m_on_complete(script);
-    }
-
-private:
-    JS::Handle<HTMLScriptElement> m_element;
-    JS::Handle<EnvironmentSettingsObject> m_settings_object;
-    ScriptFetchOptions m_options;
-    String m_character_encoding;
-    OnFetchScriptComplete m_on_complete;
-};
-
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-script
 WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElement> element, AK::URL const& url, EnvironmentSettingsObject& settings_object, ScriptFetchOptions options, CORSSettingAttribute cors_setting, String character_encoding, OnFetchScriptComplete on_complete)
 {
@@ -314,26 +254,44 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
 
     // 5. Fetch request with the following processResponseConsumeBody steps given response response and null, failure,
     //    or a byte sequence bodyBytes:
-    auto response_handler = make_ref_counted<ClassicScriptResponseHandler>(element, settings_object, move(options), move(character_encoding), move(on_complete));
-
     Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
-    fetch_algorithms_input.process_response_consume_body = [&realm, response_handler = move(response_handler)](auto response, auto body_bytes) {
-        // FIXME: See HTMLLinkElement::default_fetch_and_process_linked_resource for thorough notes on the workaround
-        //        added here for CORS cross-origin responses. The gist is that all cross-origin responses will have a
-        //        null bodyBytes. So we must read the actual body from the unsafe response.
-        //        https://github.com/whatwg/html/issues/9066
-        if (response->is_cors_cross_origin() && body_bytes.template has<Empty>() && response->unsafe_response()->body().has_value()) {
-            auto process_body = [response, response_handler](auto bytes) {
-                response_handler->process_response(response, move(bytes));
-            };
-            auto process_body_error = [response, response_handler](auto) {
-                response_handler->process_response(response, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
-            };
+    fetch_algorithms_input.process_response_consume_body = [element, &settings_object, options = move(options), character_encoding = move(character_encoding), on_complete = move(on_complete)](auto response, auto body_bytes) {
+        // 1. Set response to response's unsafe response.
+        response = response->unsafe_response();
 
-            response->unsafe_response()->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
-        } else {
-            response_handler->process_response(response, move(body_bytes));
+        // 2. If either of the following conditions are met:
+        // - bodyBytes is null or failure; or
+        // - response's status is not an ok status,
+        if (body_bytes.template has<Empty>() || body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
+            // then run onComplete given null, and abort these steps.
+            on_complete(nullptr);
+            return;
         }
+
+        // 3. Let potentialMIMETypeForEncoding be the result of extracting a MIME type given response's header list.
+        auto potential_mime_type_for_encoding = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+
+        // 4. Set character encoding to the result of legacy extracting an encoding given potentialMIMETypeForEncoding
+        //    and character encoding.
+        auto extracted_character_encoding = Fetch::Infrastructure::legacy_extract_an_encoding(potential_mime_type_for_encoding, character_encoding);
+
+        // 5. Let source text be the result of decoding bodyBytes to Unicode, using character encoding as the fallback
+        //    encoding.
+        auto fallback_decoder = TextCodec::decoder_for(extracted_character_encoding);
+        VERIFY(fallback_decoder.has_value());
+
+        auto source_text = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*fallback_decoder, body_bytes.template get<ByteBuffer>()).release_value_but_fixme_should_propagate_errors();
+
+        // 6. Let muted errors be true if response was CORS-cross-origin, and false otherwise.
+        auto muted_errors = response->is_cors_cross_origin() ? ClassicScript::MutedErrors::Yes : ClassicScript::MutedErrors::No;
+
+        // 7. Let script be the result of creating a classic script given source text, settings object, response's URL,
+        //    options, and muted errors.
+        // FIXME: Pass options.
+        auto script = ClassicScript::create(element->document().url().to_deprecated_string(), source_text, settings_object, response->url().value_or({}), 1, muted_errors);
+
+        // 8. Run onComplete given script.
+        on_complete(script);
     };
 
     TRY(Fetch::Fetching::fetch(element->realm(), request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));

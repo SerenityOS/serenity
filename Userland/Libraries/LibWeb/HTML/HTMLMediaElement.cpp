@@ -840,6 +840,10 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
         fetch_algorithms_input.process_response = [this, byte_range = move(byte_range), failure_callback = move(failure_callback)](auto response) mutable {
             auto& realm = this->realm();
 
+            // FIXME: If the response is CORS cross-origin, we must use its internal response to query any of its data. See:
+            //        https://github.com/whatwg/html/issues/9355
+            response = response->unsafe_response();
+
             // 1. Let global be the media element's node document's relevant global object.
             auto& global = document().realm().global_object();
 
@@ -881,14 +885,6 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
             //           ability to cache data.
 
             // 5. Otherwise, incrementally read response's body given updateMedia, processEndOfMedia, an empty algorithm, and global.
-
-            // FIXME: Spec issue: If the response is CORS-cross-origin, we need to read from its internal response instead.
-            //        https://github.com/whatwg/html/issues/3483
-            //        https://github.com/whatwg/html/issues/9066
-            if (response->type() == Fetch::Infrastructure::Response::Type::Opaque || response->type() == Fetch::Infrastructure::Response::Type::OpaqueRedirect) {
-                auto& filtered_response = static_cast<Fetch::Infrastructure::FilteredResponse&>(*response);
-                response = filtered_response.internal_response();
-            }
 
             VERIFY(response->body().has_value());
             auto empty_algorithm = [](auto) {};

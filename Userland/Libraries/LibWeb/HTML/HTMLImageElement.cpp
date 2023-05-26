@@ -492,6 +492,10 @@ after_step_6:
 
         Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
         fetch_algorithms_input.process_response = [this, image_request, url_string](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response) {
+            // FIXME: If the response is CORS cross-origin, we must use its internal response to query any of its data. See:
+            //        https://github.com/whatwg/html/issues/9355
+            response = response->unsafe_response();
+
             // 25. As soon as possible, jump to the first applicable entry from the following list:
 
             // FIXME: - If the resource type is multipart/x-mixed-replace
@@ -500,30 +504,15 @@ after_step_6:
             // - The next task that is queued by the networking task source while the image is being fetched must run the following steps:
             queue_an_element_task(HTML::Task::Source::Networking, [this, response, image_request, url_string] {
                 auto process_body = [response, image_request, url_string, this](ByteBuffer data) {
-                    // FIXME: Another instance of the CORS cross-origin response workaround here:
-                    auto response_with_headers = response;
-                    if (response->is_cors_cross_origin()
-                        && response->header_list()->is_empty()
-                        && !response->unsafe_response()->header_list()->is_empty()) {
-                        response_with_headers = response->unsafe_response();
-                    }
-                    auto extracted_mime_type = response_with_headers->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+                    auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
                     auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
                     handle_successful_fetch(url_string, mime_type, image_request, move(data));
                 };
                 auto process_body_error = [this](auto) {
                     handle_failed_fetch();
                 };
-                // FIXME: See HTMLLinkElement::default_fetch_and_process_linked_resource for thorough notes on the workaround
-                //        added here for CORS cross-origin responses. The gist is that all cross-origin responses will have a
-                //        null bodyBytes. So we must read the actual body from the unsafe response.
-                //        https://github.com/whatwg/html/issues/9066
-                if (response->is_cors_cross_origin() && !response->body().has_value() && response->unsafe_response()->body().has_value()) {
-                    auto unsafe_response = static_cast<Fetch::Infrastructure::OpaqueFilteredResponse const&>(*response).internal_response();
-                    unsafe_response->body()->fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
-                } else if (response->body().has_value()) {
-                    response->body().value().fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
-                }
+
+                response->body().value().fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
             });
         };
 
