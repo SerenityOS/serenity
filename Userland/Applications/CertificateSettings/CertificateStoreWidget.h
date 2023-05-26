@@ -58,11 +58,13 @@ class CertificateStoreWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(CertStoreWidget)
 public:
     virtual ~CertificateStoreWidget() override = default;
-    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> create();
     virtual void apply_settings() override {};
 
 private:
+    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> try_create();
     CertificateStoreWidget() = default;
+
     ErrorOr<void> initialize();
     ErrorOr<void> import_pem();
     ErrorOr<void> export_pem();
