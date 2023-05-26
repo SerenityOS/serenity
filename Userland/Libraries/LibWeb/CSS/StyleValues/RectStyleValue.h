@@ -21,7 +21,6 @@ public:
 
     EdgeRect rect() const { return m_rect; }
     virtual ErrorOr<String> to_string() const override;
-    virtual bool has_rect() const override { return true; }
 
     bool properties_equal(RectStyleValue const& other) const { return m_rect == other.m_rect; }
 

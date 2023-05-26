@@ -357,7 +357,7 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
 CSS::Clip StyleProperties::clip() const
 {
     auto value = property(CSS::PropertyID::Clip);
-    if (!value->has_rect())
+    if (!value->is_rect())
         return CSS::Clip::make_auto();
     return CSS::Clip(value->as_rect().rect());
 }
