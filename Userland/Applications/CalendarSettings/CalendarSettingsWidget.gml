@@ -1,4 +1,4 @@
-@GUI::Frame {
+@CalendarSettings::CalendarSettingsWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [8]
@@ -15,7 +15,7 @@
 
         @GUI::Label {
             text: "Determines which day a week starts with in the calendar view."
-            word_wrap: true
+            text_wrapping: "Wrap"
             text_alignment: "CenterLeft"
         }
 
@@ -46,7 +46,7 @@
 
         @GUI::Label {
             text: "Determines the start and length of the weekend."
-            word_wrap: true
+            text_wrapping: "Wrap"
             text_alignment: "CenterLeft"
         }
 
@@ -103,7 +103,7 @@
 
         @GUI::Label {
             text: "Show the month or the year view when Calendar is started."
-            word_wrap: true
+            text_wrapping: "Wrap"
             text_alignment: "CenterLeft"
         }
 
