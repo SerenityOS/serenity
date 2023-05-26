@@ -6349,7 +6349,7 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
         auto const& function = component_value.function();
         if (function.name().equals_ignoring_ascii_case("calc"sv)) {
             auto calculated_style_value = parse_calculated_value(function.values());
-            if (calculated_style_value.is_error()) {
+            if (calculated_style_value.is_error() || calculated_style_value.value().is_null()) {
                 // FIXME: Propagate error
                 return {};
             }
