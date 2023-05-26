@@ -37,15 +37,15 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
             // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors(), nullptr);
         } else if (name.equals_ignoring_ascii_case("text"sv)) {
             // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-2
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
+                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors(), nullptr);
         } else if (name.equals_ignoring_ascii_case("background"sv)) {
             VERIFY(m_background_style_value);
-            style.set_property(CSS::PropertyID::BackgroundImage, *m_background_style_value);
+            style.set_property(CSS::PropertyID::BackgroundImage, *m_background_style_value, nullptr);
         }
     });
 }

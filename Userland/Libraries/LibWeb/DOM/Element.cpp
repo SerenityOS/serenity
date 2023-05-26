@@ -412,10 +412,10 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
         auto const& new_value = new_style.properties()[i];
-        if (!old_value && !new_value)
+        if (!old_value.has_value() && !new_value.has_value())
             continue;
 
-        bool const property_value_changed = (!old_value || !new_value) || *old_value != *new_value;
+        bool const property_value_changed = (!old_value.has_value() || !new_value.has_value()) || *old_value->style != *new_value->style;
         if (!property_value_changed)
             continue;
 
@@ -428,7 +428,7 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         // OPTIMIZATION: Special handling for CSS `visibility`:
         if (property_id == CSS::PropertyID::Visibility) {
             // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
-            if ((old_value && old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value && new_value->to_identifier() == CSS::ValueID::Collapse))
+            if ((old_value.has_value() && old_value->style->to_identifier() == CSS::ValueID::Collapse) != (new_value.has_value() && new_value->style->to_identifier() == CSS::ValueID::Collapse))
                 invalidation.relayout = true;
             // Of course, we still have to repaint on any visibility change.
             invalidation.repaint = true;
@@ -481,7 +481,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
         auto maybe_value = element_computed_style->property(property_id);
         if (!maybe_value.has_value())
             continue;
-        properties->set_property(property_id, maybe_value.release_value().value);
+        properties->set_property(property_id, maybe_value.release_value().value, nullptr);
     }
 
     return properties;
