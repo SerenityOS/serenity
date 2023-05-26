@@ -161,7 +161,7 @@ ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params c
 
 ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto credentials = this->credentials();
     if (!credentials->is_superuser())
         return EPERM;
