@@ -4,16 +4,14 @@ serenity_component(
     TARGETS Calculator
 )
 
-stringify_gml(CalculatorWindow.gml CalculatorGML.h calculator_gml)
+compile_gml(CalculatorWindow.gml CalculatorGML.cpp)
+
 set(SOURCES
     main.cpp
     Calculator.cpp
+    CalculatorGML.cpp
     CalculatorWidget.cpp
     Keypad.cpp
-)
-
-set(GENERATED_SOURCES
-    CalculatorGML.h
 )
 
 serenity_app(Calculator ICON app-calculator)

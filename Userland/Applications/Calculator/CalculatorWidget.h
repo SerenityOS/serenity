@@ -15,9 +15,13 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Widget.h>
 
+namespace Calculator {
+
 class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
+    static ErrorOr<NonnullRefPtr<CalculatorWidget>> create();
+
     virtual ~CalculatorWidget() override = default;
     DeprecatedString get_entry();
     void set_entry(Crypto::BigFraction);
@@ -29,8 +33,11 @@ public:
 
     void set_rounding_custom(GUI::Action& action, StringView);
 
+    // Generated from GML, don't call manually.
+    static ErrorOr<NonnullRefPtr<CalculatorWidget>> try_create();
+    CalculatorWidget() = default;
+
 private:
-    CalculatorWidget();
     void add_operation_button(GUI::Button&, Calculator::Operation);
     void add_digit_button(GUI::Button&, int digit);
 
@@ -67,3 +74,5 @@ private:
     StringView m_format;
     RefPtr<GUI::Action> m_rounding_custom;
 };
+
+}

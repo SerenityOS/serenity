@@ -10,13 +10,14 @@
 #include <AK/Optional.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
+namespace Calculator {
+
 // This type implements the regular calculator
 // behavior, such as performing arithmetic
 // operations and providing a memory cell.
 // It does not deal with number input; you
 // have to pass in already parsed double
 // values.
-
 class Calculator final {
 public:
     Calculator() = default;
@@ -64,3 +65,5 @@ private:
 
     Crypto::BigFraction finish_binary_operation(Crypto::BigFraction const& left_side, Operation operation, Crypto::BigFraction const& right_side);
 };
+
+}
