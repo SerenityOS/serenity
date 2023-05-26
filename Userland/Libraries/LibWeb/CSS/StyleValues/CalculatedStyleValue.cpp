@@ -418,25 +418,8 @@ ErrorOr<String> MinCalculationNode::to_string() const
 
 Optional<CalculatedStyleValue::ResolvedType> MinCalculationNode::resolved_type() const
 {
-    CalculatedStyleValue::ResolvedType type;
-    bool has_first = false;
-    for (auto const& value : m_values) {
-        auto value_type = value->resolved_type();
-        if (!value_type.has_value())
-            return {};
-
-        auto type_value = value_type.value();
-
-        if (!has_first) {
-            has_first = true;
-            type = type_value;
-        }
-
-        if (type_value != type)
-            return {};
-    }
-
-    return type;
+    // NOTE: We check during parsing that all values have the same type.
+    return m_values[0]->resolved_type();
 }
 
 bool MinCalculationNode::contains_percentage() const
