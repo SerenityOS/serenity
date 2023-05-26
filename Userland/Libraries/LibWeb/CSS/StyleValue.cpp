@@ -395,8 +395,8 @@ int StyleValue::to_font_weight() const
             return Gfx::FontWeight::Regular;
         }
     }
-    if (has_integer()) {
-        return to_integer();
+    if (is_numeric() && as_numeric().has_integer()) {
+        return as_numeric().integer();
     }
     if (is_calculated()) {
         auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();

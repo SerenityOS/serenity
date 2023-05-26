@@ -35,8 +35,8 @@ public:
             [](i64 value) { return (float)value; });
     }
 
-    virtual bool has_integer() const override { return m_value.has<i64>(); }
-    virtual float to_integer() const override { return m_value.get<i64>(); }
+    bool has_integer() const { return m_value.has<i64>(); }
+    float integer() const { return m_value.get<i64>(); }
 
     virtual ErrorOr<String> to_string() const override;
 
