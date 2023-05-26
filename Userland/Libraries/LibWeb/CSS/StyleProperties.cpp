@@ -45,22 +45,30 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
     return adopt_ref(*new StyleProperties(*this));
 }
 
-void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value)
+void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration)
 {
-    m_property_values[to_underlying(id)] = move(value);
+    m_property_values[to_underlying(id)] = StyleAndSourceDeclaration { move(value), source_declaration };
 }
 
 NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID property_id) const
 {
     auto value = m_property_values[to_underlying(property_id)];
     // By the time we call this method, all properties have values assigned.
-    VERIFY(!value.is_null());
-    return value.release_nonnull();
+    VERIFY(value.has_value());
+    return value->style;
 }
 
 RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
 {
-    return m_property_values[to_underlying(property_id)];
+    auto value = m_property_values[to_underlying(property_id)];
+    if (value.has_value())
+        return value->style;
+    return {};
+}
+
+CSS::CSSStyleDeclaration const* StyleProperties::property_source_declaration(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)].map([](auto& value) { return value.declaration; }).value_or(nullptr);
 }
 
 CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
@@ -509,17 +517,17 @@ bool StyleProperties::operator==(StyleProperties const& other) const
         return false;
 
     for (size_t i = 0; i < m_property_values.size(); ++i) {
-        auto const& my_ptr = m_property_values[i];
-        auto const& other_ptr = other.m_property_values[i];
-        if (!my_ptr) {
-            if (other_ptr)
+        auto const& my_style = m_property_values[i];
+        auto const& other_style = other.m_property_values[i];
+        if (!my_style.has_value()) {
+            if (other_style.has_value())
                 return false;
             continue;
         }
-        if (!other_ptr)
+        if (!other_style.has_value())
             return false;
-        auto const& my_value = *my_ptr;
-        auto const& other_value = *other_ptr;
+        auto const& my_value = *my_style->style;
+        auto const& other_value = *other_style->style;
         if (my_value.type() != other_value.type())
             return false;
         if (my_value != other_value)

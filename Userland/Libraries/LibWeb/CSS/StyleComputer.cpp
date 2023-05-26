@@ -277,75 +277,75 @@ static bool contains(Edge a, Edge b)
     return a == b || b == Edge::All;
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration)
 {
     if (value.is_composite()) {
         auto& composite_value = value.as_composite();
         auto& properties = composite_value.sub_properties();
         auto& values = composite_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
-            set_property_expanding_shorthands(style, properties[i], values[i], document);
+            set_property_expanding_shorthands(style, properties[i], values[i], document, declaration);
     }
 
-    auto assign_edge_values = [&style](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
+    auto assign_edge_values = [&style, &declaration](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
         if (values.size() == 4) {
-            style.set_property(top_property, values[0]);
-            style.set_property(right_property, values[1]);
-            style.set_property(bottom_property, values[2]);
-            style.set_property(left_property, values[3]);
+            style.set_property(top_property, values[0], declaration);
+            style.set_property(right_property, values[1], declaration);
+            style.set_property(bottom_property, values[2], declaration);
+            style.set_property(left_property, values[3], declaration);
         } else if (values.size() == 3) {
-            style.set_property(top_property, values[0]);
-            style.set_property(right_property, values[1]);
-            style.set_property(bottom_property, values[2]);
-            style.set_property(left_property, values[1]);
+            style.set_property(top_property, values[0], declaration);
+            style.set_property(right_property, values[1], declaration);
+            style.set_property(bottom_property, values[2], declaration);
+            style.set_property(left_property, values[1], declaration);
         } else if (values.size() == 2) {
-            style.set_property(top_property, values[0]);
-            style.set_property(right_property, values[1]);
-            style.set_property(bottom_property, values[0]);
-            style.set_property(left_property, values[1]);
+            style.set_property(top_property, values[0], declaration);
+            style.set_property(right_property, values[1], declaration);
+            style.set_property(bottom_property, values[0], declaration);
+            style.set_property(left_property, values[1], declaration);
         } else if (values.size() == 1) {
-            style.set_property(top_property, values[0]);
-            style.set_property(right_property, values[0]);
-            style.set_property(bottom_property, values[0]);
-            style.set_property(left_property, values[0]);
+            style.set_property(top_property, values[0], declaration);
+            style.set_property(right_property, values[0], declaration);
+            style.set_property(bottom_property, values[0], declaration);
+            style.set_property(left_property, values[0], declaration);
         }
     };
 
     if (property_id == CSS::PropertyID::TextDecoration) {
         if (value.is_text_decoration()) {
             auto const& text_decoration = value.as_text_decoration();
-            style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
-            style.set_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness());
-            style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
-            style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
+            style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line(), declaration);
+            style.set_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness(), declaration);
+            style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style(), declaration);
+            style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::TextDecorationLine, value);
-        style.set_property(CSS::PropertyID::TextDecorationThickness, value);
-        style.set_property(CSS::PropertyID::TextDecorationStyle, value);
-        style.set_property(CSS::PropertyID::TextDecorationColor, value);
+        style.set_property(CSS::PropertyID::TextDecorationLine, value, declaration);
+        style.set_property(CSS::PropertyID::TextDecorationThickness, value, declaration);
+        style.set_property(CSS::PropertyID::TextDecorationStyle, value, declaration);
+        style.set_property(CSS::PropertyID::TextDecorationColor, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::Overflow) {
         if (value.is_overflow()) {
             auto const& overflow = value.as_overflow();
-            style.set_property(CSS::PropertyID::OverflowX, overflow.overflow_x());
-            style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
+            style.set_property(CSS::PropertyID::OverflowX, overflow.overflow_x(), declaration);
+            style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::OverflowX, value);
-        style.set_property(CSS::PropertyID::OverflowY, value);
+        style.set_property(CSS::PropertyID::OverflowX, value, declaration);
+        style.set_property(CSS::PropertyID::OverflowY, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::Border) {
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document, declaration);
         // FIXME: Also reset border-image, in line with the spec: https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
         return;
     }
@@ -353,17 +353,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::BorderRadius) {
         if (value.is_border_radius_shorthand()) {
             auto const& shorthand = value.as_border_radius_shorthand();
-            style.set_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left());
-            style.set_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right());
-            style.set_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right());
-            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left());
+            style.set_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left(), declaration);
+            style.set_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right(), declaration);
+            style.set_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right(), declaration);
+            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopLeftRadius, value);
-        style.set_property(CSS::PropertyID::BorderTopRightRadius, value);
-        style.set_property(CSS::PropertyID::BorderBottomRightRadius, value);
-        style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value);
+        style.set_property(CSS::PropertyID::BorderTopLeftRadius, value, declaration);
+        style.set_property(CSS::PropertyID::BorderTopRightRadius, value, declaration);
+        style.set_property(CSS::PropertyID::BorderBottomRightRadius, value, declaration);
+        style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value, declaration);
         return;
     }
 
@@ -393,24 +393,24 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_border()) {
             auto const& border = value.as_border();
             if (contains(Edge::Top, edge)) {
-                style.set_property(PropertyID::BorderTopWidth, border.border_width());
-                style.set_property(PropertyID::BorderTopStyle, border.border_style());
-                style.set_property(PropertyID::BorderTopColor, border.border_color());
+                style.set_property(PropertyID::BorderTopWidth, border.border_width(), declaration);
+                style.set_property(PropertyID::BorderTopStyle, border.border_style(), declaration);
+                style.set_property(PropertyID::BorderTopColor, border.border_color(), declaration);
             }
             if (contains(Edge::Right, edge)) {
-                style.set_property(PropertyID::BorderRightWidth, border.border_width());
-                style.set_property(PropertyID::BorderRightStyle, border.border_style());
-                style.set_property(PropertyID::BorderRightColor, border.border_color());
+                style.set_property(PropertyID::BorderRightWidth, border.border_width(), declaration);
+                style.set_property(PropertyID::BorderRightStyle, border.border_style(), declaration);
+                style.set_property(PropertyID::BorderRightColor, border.border_color(), declaration);
             }
             if (contains(Edge::Bottom, edge)) {
-                style.set_property(PropertyID::BorderBottomWidth, border.border_width());
-                style.set_property(PropertyID::BorderBottomStyle, border.border_style());
-                style.set_property(PropertyID::BorderBottomColor, border.border_color());
+                style.set_property(PropertyID::BorderBottomWidth, border.border_width(), declaration);
+                style.set_property(PropertyID::BorderBottomStyle, border.border_style(), declaration);
+                style.set_property(PropertyID::BorderBottomColor, border.border_color(), declaration);
             }
             if (contains(Edge::Left, edge)) {
-                style.set_property(PropertyID::BorderLeftWidth, border.border_width());
-                style.set_property(PropertyID::BorderLeftStyle, border.border_style());
-                style.set_property(PropertyID::BorderLeftColor, border.border_color());
+                style.set_property(PropertyID::BorderLeftWidth, border.border_width(), declaration);
+                style.set_property(PropertyID::BorderLeftStyle, border.border_style(), declaration);
+                style.set_property(PropertyID::BorderLeftColor, border.border_color(), declaration);
             }
             return;
         }
@@ -424,10 +424,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopStyle, value);
-        style.set_property(CSS::PropertyID::BorderRightStyle, value);
-        style.set_property(CSS::PropertyID::BorderBottomStyle, value);
-        style.set_property(CSS::PropertyID::BorderLeftStyle, value);
+        style.set_property(CSS::PropertyID::BorderTopStyle, value, declaration);
+        style.set_property(CSS::PropertyID::BorderRightStyle, value, declaration);
+        style.set_property(CSS::PropertyID::BorderBottomStyle, value, declaration);
+        style.set_property(CSS::PropertyID::BorderLeftStyle, value, declaration);
         return;
     }
 
@@ -438,10 +438,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopWidth, value);
-        style.set_property(CSS::PropertyID::BorderRightWidth, value);
-        style.set_property(CSS::PropertyID::BorderBottomWidth, value);
-        style.set_property(CSS::PropertyID::BorderLeftWidth, value);
+        style.set_property(CSS::PropertyID::BorderTopWidth, value, declaration);
+        style.set_property(CSS::PropertyID::BorderRightWidth, value, declaration);
+        style.set_property(CSS::PropertyID::BorderBottomWidth, value, declaration);
+        style.set_property(CSS::PropertyID::BorderLeftWidth, value, declaration);
         return;
     }
 
@@ -452,43 +452,43 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopColor, value);
-        style.set_property(CSS::PropertyID::BorderRightColor, value);
-        style.set_property(CSS::PropertyID::BorderBottomColor, value);
-        style.set_property(CSS::PropertyID::BorderLeftColor, value);
+        style.set_property(CSS::PropertyID::BorderTopColor, value, declaration);
+        style.set_property(CSS::PropertyID::BorderRightColor, value, declaration);
+        style.set_property(CSS::PropertyID::BorderBottomColor, value, declaration);
+        style.set_property(CSS::PropertyID::BorderLeftColor, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::Background) {
         if (value.is_background()) {
             auto const& background = value.as_background();
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, background.size(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, background.repeat(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, background.size(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, background.repeat(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document, declaration);
             return;
         }
 
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::BackgroundPosition) {
         if (value.is_position()) {
             auto const& position = value.as_position();
-            style.set_property(CSS::PropertyID::BackgroundPositionX, position.edge_x());
-            style.set_property(CSS::PropertyID::BackgroundPositionY, position.edge_y());
+            style.set_property(CSS::PropertyID::BackgroundPositionX, position.edge_x(), declaration);
+            style.set_property(CSS::PropertyID::BackgroundPositionY, position.edge_y(), declaration);
         } else if (value.is_value_list()) {
             // Expand background-position layer list into separate lists for x and y positions:
             auto const& values_list = value.as_value_list();
@@ -506,11 +506,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                     y_positions.unchecked_append(layer);
                 }
             }
-            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
-            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
+            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors(), declaration);
+            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors(), declaration);
         } else {
-            style.set_property(CSS::PropertyID::BackgroundPositionX, value);
-            style.set_property(CSS::PropertyID::BackgroundPositionY, value);
+            style.set_property(CSS::PropertyID::BackgroundPositionX, value, declaration);
+            style.set_property(CSS::PropertyID::BackgroundPositionY, value, declaration);
         }
 
         return;
@@ -523,10 +523,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::MarginTop, value);
-        style.set_property(CSS::PropertyID::MarginRight, value);
-        style.set_property(CSS::PropertyID::MarginBottom, value);
-        style.set_property(CSS::PropertyID::MarginLeft, value);
+        style.set_property(CSS::PropertyID::MarginTop, value, declaration);
+        style.set_property(CSS::PropertyID::MarginRight, value, declaration);
+        style.set_property(CSS::PropertyID::MarginBottom, value, declaration);
+        style.set_property(CSS::PropertyID::MarginLeft, value, declaration);
         return;
     }
 
@@ -537,47 +537,47 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::PaddingTop, value);
-        style.set_property(CSS::PropertyID::PaddingRight, value);
-        style.set_property(CSS::PropertyID::PaddingBottom, value);
-        style.set_property(CSS::PropertyID::PaddingLeft, value);
+        style.set_property(CSS::PropertyID::PaddingTop, value, declaration);
+        style.set_property(CSS::PropertyID::PaddingRight, value, declaration);
+        style.set_property(CSS::PropertyID::PaddingBottom, value, declaration);
+        style.set_property(CSS::PropertyID::PaddingLeft, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::ListStyle) {
         if (value.is_list_style()) {
             auto const& list_style = value.as_list_style();
-            style.set_property(CSS::PropertyID::ListStylePosition, list_style.position());
-            style.set_property(CSS::PropertyID::ListStyleImage, list_style.image());
-            style.set_property(CSS::PropertyID::ListStyleType, list_style.style_type());
+            style.set_property(CSS::PropertyID::ListStylePosition, list_style.position(), declaration);
+            style.set_property(CSS::PropertyID::ListStyleImage, list_style.image(), declaration);
+            style.set_property(CSS::PropertyID::ListStyleType, list_style.style_type(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::ListStylePosition, value);
-        style.set_property(CSS::PropertyID::ListStyleImage, value);
-        style.set_property(CSS::PropertyID::ListStyleType, value);
+        style.set_property(CSS::PropertyID::ListStylePosition, value, declaration);
+        style.set_property(CSS::PropertyID::ListStyleImage, value, declaration);
+        style.set_property(CSS::PropertyID::ListStyleType, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::Font) {
         if (value.is_font()) {
             auto const& font_shorthand = value.as_font();
-            style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
-            style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
-            style.set_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch());
-            style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
-            style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
-            style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
+            style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size(), declaration);
+            style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families(), declaration);
+            style.set_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch(), declaration);
+            style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style(), declaration);
+            style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight(), declaration);
+            style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height(), declaration);
             // FIXME: Implement font-variant
             return;
         }
 
-        style.set_property(CSS::PropertyID::FontStretch, value);
-        style.set_property(CSS::PropertyID::FontSize, value);
-        style.set_property(CSS::PropertyID::FontFamily, value);
-        style.set_property(CSS::PropertyID::FontStyle, value);
-        style.set_property(CSS::PropertyID::FontWeight, value);
-        style.set_property(CSS::PropertyID::LineHeight, value);
+        style.set_property(CSS::PropertyID::FontStretch, value, declaration);
+        style.set_property(CSS::PropertyID::FontSize, value, declaration);
+        style.set_property(CSS::PropertyID::FontFamily, value, declaration);
+        style.set_property(CSS::PropertyID::FontStyle, value, declaration);
+        style.set_property(CSS::PropertyID::FontWeight, value, declaration);
+        style.set_property(CSS::PropertyID::LineHeight, value, declaration);
         // FIXME: Implement font-variant
         return;
     }
@@ -585,106 +585,106 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::Flex) {
         if (value.is_flex()) {
             auto const& flex = value.as_flex();
-            style.set_property(CSS::PropertyID::FlexGrow, flex.grow());
-            style.set_property(CSS::PropertyID::FlexShrink, flex.shrink());
-            style.set_property(CSS::PropertyID::FlexBasis, flex.basis());
+            style.set_property(CSS::PropertyID::FlexGrow, flex.grow(), declaration);
+            style.set_property(CSS::PropertyID::FlexShrink, flex.shrink(), declaration);
+            style.set_property(CSS::PropertyID::FlexBasis, flex.basis(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::FlexGrow, value);
-        style.set_property(CSS::PropertyID::FlexShrink, value);
-        style.set_property(CSS::PropertyID::FlexBasis, value);
+        style.set_property(CSS::PropertyID::FlexGrow, value, declaration);
+        style.set_property(CSS::PropertyID::FlexShrink, value, declaration);
+        style.set_property(CSS::PropertyID::FlexBasis, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::FlexFlow) {
         if (value.is_flex_flow()) {
             auto const& flex_flow = value.as_flex_flow();
-            style.set_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction());
-            style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
+            style.set_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction(), declaration);
+            style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::FlexDirection, value);
-        style.set_property(CSS::PropertyID::FlexWrap, value);
+        style.set_property(CSS::PropertyID::FlexDirection, value, declaration);
+        style.set_property(CSS::PropertyID::FlexWrap, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridArea) {
         if (value.is_grid_area_shorthand()) {
             auto const& shorthand = value.as_grid_area_shorthand();
-            style.set_property(CSS::PropertyID::GridRowStart, shorthand.row_start());
-            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.column_start());
-            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.row_end());
-            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.column_end());
+            style.set_property(CSS::PropertyID::GridRowStart, shorthand.row_start(), declaration);
+            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.column_start(), declaration);
+            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.row_end(), declaration);
+            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.column_end(), declaration);
             return;
         }
-        style.set_property(CSS::PropertyID::GridRowStart, value);
-        style.set_property(CSS::PropertyID::GridColumnStart, value);
-        style.set_property(CSS::PropertyID::GridRowEnd, value);
-        style.set_property(CSS::PropertyID::GridColumnEnd, value);
+        style.set_property(CSS::PropertyID::GridRowStart, value, declaration);
+        style.set_property(CSS::PropertyID::GridColumnStart, value, declaration);
+        style.set_property(CSS::PropertyID::GridRowEnd, value, declaration);
+        style.set_property(CSS::PropertyID::GridColumnEnd, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridColumn) {
         if (value.is_grid_track_placement_shorthand()) {
             auto const& shorthand = value.as_grid_track_placement_shorthand();
-            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.start());
-            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.end());
+            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.start(), declaration);
+            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.end(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::GridColumnStart, value);
-        style.set_property(CSS::PropertyID::GridColumnEnd, value);
+        style.set_property(CSS::PropertyID::GridColumnStart, value, declaration);
+        style.set_property(CSS::PropertyID::GridColumnEnd, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridRow) {
         if (value.is_grid_track_placement_shorthand()) {
             auto const& shorthand = value.as_grid_track_placement_shorthand();
-            style.set_property(CSS::PropertyID::GridRowStart, shorthand.start());
-            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.end());
+            style.set_property(CSS::PropertyID::GridRowStart, shorthand.start(), declaration);
+            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.end(), declaration);
             return;
         }
 
-        style.set_property(CSS::PropertyID::GridRowStart, value);
-        style.set_property(CSS::PropertyID::GridRowEnd, value);
+        style.set_property(CSS::PropertyID::GridRowStart, value, declaration);
+        style.set_property(CSS::PropertyID::GridRowEnd, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridTemplate || property_id == CSS::PropertyID::Grid) {
         if (value.is_grid_track_size_list_shorthand()) {
             auto const& shorthand = value.as_grid_track_size_list_shorthand();
-            style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
-            style.set_property(CSS::PropertyID::GridTemplateRows, shorthand.rows());
-            style.set_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns());
+            style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas(), declaration);
+            style.set_property(CSS::PropertyID::GridTemplateRows, shorthand.rows(), declaration);
+            style.set_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns(), declaration);
             return;
         }
-        style.set_property(CSS::PropertyID::GridTemplateAreas, value);
-        style.set_property(CSS::PropertyID::GridTemplateRows, value);
-        style.set_property(CSS::PropertyID::GridTemplateColumns, value);
+        style.set_property(CSS::PropertyID::GridTemplateAreas, value, declaration);
+        style.set_property(CSS::PropertyID::GridTemplateRows, value, declaration);
+        style.set_property(CSS::PropertyID::GridTemplateColumns, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::Gap || property_id == CSS::PropertyID::GridGap) {
         if (value.is_value_list()) {
             auto const& values_list = value.as_value_list();
-            style.set_property(CSS::PropertyID::RowGap, values_list.values()[0]);
-            style.set_property(CSS::PropertyID::ColumnGap, values_list.values()[1]);
+            style.set_property(CSS::PropertyID::RowGap, values_list.values()[0], declaration);
+            style.set_property(CSS::PropertyID::ColumnGap, values_list.values()[1], declaration);
             return;
         }
-        style.set_property(CSS::PropertyID::RowGap, value);
-        style.set_property(CSS::PropertyID::ColumnGap, value);
+        style.set_property(CSS::PropertyID::RowGap, value, declaration);
+        style.set_property(CSS::PropertyID::ColumnGap, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::RowGap || property_id == CSS::PropertyID::GridRowGap) {
-        style.set_property(CSS::PropertyID::RowGap, value);
+        style.set_property(CSS::PropertyID::RowGap, value, declaration);
         return;
     }
 
     if (property_id == CSS::PropertyID::ColumnGap || property_id == CSS::PropertyID::GridColumnGap) {
-        style.set_property(CSS::PropertyID::ColumnGap, value);
+        style.set_property(CSS::PropertyID::ColumnGap, value, declaration);
         return;
     }
 
@@ -694,21 +694,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         if (is_horizontal) {
             if (property_id == CSS::PropertyID::MaxInlineSize) {
-                style.set_property(CSS::PropertyID::MaxWidth, value);
+                style.set_property(CSS::PropertyID::MaxWidth, value, declaration);
             } else {
-                style.set_property(CSS::PropertyID::MinWidth, value);
+                style.set_property(CSS::PropertyID::MinWidth, value, declaration);
             }
         } else {
             if (property_id == CSS::PropertyID::MaxInlineSize) {
-                style.set_property(CSS::PropertyID::MaxHeight, value);
+                style.set_property(CSS::PropertyID::MaxHeight, value, declaration);
             } else {
-                style.set_property(CSS::PropertyID::MinHeight, value);
+                style.set_property(CSS::PropertyID::MinHeight, value, declaration);
             }
         }
         return;
     }
 
-    style.set_property(property_id, value);
+    style.set_property(property_id, value, declaration);
 }
 
 static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element, FlyString const& custom_property_name)
@@ -934,7 +934,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     property_value = resolved.release_nonnull();
             }
             if (!property_value->is_unresolved())
-                set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
+                set_property_expanding_shorthands(style, property.property_id, property_value, m_document, &match.rule->declaration());
         }
     }
 
@@ -949,7 +949,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                         property_value = resolved.release_nonnull();
                 }
                 if (!property_value->is_unresolved())
-                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
+                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document, inline_style);
             }
         }
     }
@@ -1025,9 +1025,9 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
             for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
                 auto property_id = (CSS::PropertyID)i;
                 auto& property = style.m_property_values[i];
-                if (property && property->is_unresolved()) {
-                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property->as_unresolved()))
-                        property = resolved.release_nonnull();
+                if (property.has_value() && property->style->is_unresolved()) {
+                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property->style->as_unresolved()))
+                        property->style = resolved.release_nonnull();
                 }
             }
         }
@@ -1077,33 +1077,33 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
     auto& value_slot = style.m_property_values[to_underlying(property_id)];
-    if (!value_slot) {
+    if (!value_slot.has_value()) {
         if (is_inherited_property(property_id))
-            style.m_property_values[to_underlying(property_id)] = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+            style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr } };
         else
-            style.m_property_values[to_underlying(property_id)] = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
+            style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors(), nullptr } };
         return;
     }
 
-    if (value_slot->is_initial()) {
-        value_slot = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
+    if (value_slot->style->is_initial()) {
+        value_slot->style = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
-    if (value_slot->is_inherit()) {
-        value_slot = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+    if (value_slot->style->is_inherit()) {
+        value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         return;
     }
 
     // https://www.w3.org/TR/css-cascade-4/#inherit-initial
     // If the cascaded value of a property is the unset keyword,
-    if (value_slot->is_unset()) {
+    if (value_slot->style->is_unset()) {
         if (is_inherited_property(property_id)) {
             // then if it is an inherited property, this is treated as inherit,
-            value_slot = get_inherit_value(document().realm(), property_id, element, pseudo_element);
+            value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         } else {
             // and if it is not, this is treated as initial.
-            value_slot = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
+            value_slot->style = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
         }
     }
 }
@@ -1402,8 +1402,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     FontCache::the().set(font_selector, *found_font);
 
-    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors());
-    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors());
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
 
     style.set_computed_font(found_font.release_nonnull());
 
@@ -1448,24 +1448,24 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
     //       We have to resolve them right away, so that the *computed* line-height is ready for inheritance.
     //       We can't simply absolutize *all* percentage values against the font size,
     //       because most percentages are relative to containing block metrics.
-    auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
-    if (line_height_value_slot && line_height_value_slot->is_percentage()) {
-        line_height_value_slot = TRY(LengthStyleValue::create(
-            Length::make_px(font_size * static_cast<double>(line_height_value_slot->as_percentage().percentage().as_fraction()))));
+    auto line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)].map([](auto& x) -> auto& { return x.style; });
+    if (line_height_value_slot.has_value() && (*line_height_value_slot)->is_percentage()) {
+        *line_height_value_slot = TRY(LengthStyleValue::create(
+            Length::make_px(font_size * static_cast<double>((*line_height_value_slot)->as_percentage().percentage().as_fraction()))));
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.line_height = line_height;
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
-    if (line_height_value_slot && line_height_value_slot->is_length())
-        line_height_value_slot = TRY(LengthStyleValue::create(Length::make_px(line_height)));
+    if (line_height_value_slot.has_value() && (*line_height_value_slot)->is_length())
+        (*line_height_value_slot) = TRY(LengthStyleValue::create(Length::make_px(line_height)));
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
-        if (!value_slot)
+        if (!value_slot.has_value())
             continue;
-        value_slot = TRY(value_slot->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics));
+        value_slot->style = TRY(value_slot->style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics));
     }
     return {};
 }
@@ -1559,7 +1559,7 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
     }
 
     if (new_display != display)
-        style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create(new_display).release_value_but_fixme_should_propagate_errors());
+        style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create(new_display).release_value_but_fixme_should_propagate_errors(), style.property_source_declaration(CSS::PropertyID::Display));
 }
 
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
@@ -1568,9 +1568,9 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
     absolutize_values(style, nullptr, {}).release_value_but_fixme_should_propagate_errors();
-    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())).release_value_but_fixme_should_propagate_errors());
-    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())).release_value_but_fixme_should_propagate_errors());
-    style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)).release_value_but_fixme_should_propagate_errors());
+    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)).release_value_but_fixme_should_propagate_errors(), nullptr);
     return style;
 }
 
