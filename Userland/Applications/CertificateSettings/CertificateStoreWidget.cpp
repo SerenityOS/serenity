@@ -6,7 +6,6 @@
 
 #include "CertificateStoreWidget.h"
 #include <AK/String.h>
-#include <Applications/CertificateSettings/CertificateStoreWidgetGML.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -152,17 +151,15 @@ ErrorOr<void> CertificateStoreWidget::export_pem()
     return {};
 }
 
-ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::try_create()
+ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CertificateStoreWidget()));
+    auto widget = TRY(CertificateStoreWidget::try_create());
     TRY(widget->initialize());
     return widget;
 }
 
 ErrorOr<void> CertificateStoreWidget::initialize()
 {
-    TRY(load_from_gml(certificate_store_widget_gml));
-
     m_root_ca_tableview = find_descendant_of_type_named<GUI::TableView>("root_ca_tableview");
     m_root_ca_tableview->set_highlight_selected_rows(true);
     m_root_ca_tableview->set_alternating_row_colors(false);
