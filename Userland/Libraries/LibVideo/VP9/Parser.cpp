@@ -593,7 +593,7 @@ void Parser::setup_past_independence()
 
 DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
-    auto decoder = TRY_READ(BooleanDecoder::initialize(MaybeOwned(frame_context.bit_stream), frame_context.header_size_in_bytes));
+    auto decoder = TRY_READ(BooleanDecoder::initialize_vp9(MaybeOwned(frame_context.bit_stream), frame_context.header_size_in_bytes));
     frame_context.transform_mode = TRY(read_tx_mode(decoder, frame_context));
     if (frame_context.transform_mode == TransformMode::Select)
         TRY(tx_mode_probs(decoder));
@@ -610,7 +610,7 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
         TRY(read_partition_probs(decoder));
         TRY(mv_probs(decoder, frame_context));
     }
-    TRY_READ(decoder.finish_decode());
+    TRY_READ(decoder.finish_decode_vp9());
     return {};
 }
 
@@ -1002,7 +1002,7 @@ DecoderErrorOr<void> Parser::decode_tile(TileContext& tile_context)
             TRY(decode_partition(tile_context, row, col, Block_64x64));
         }
     }
-    TRY_READ(tile_context.decoder.finish_decode());
+    TRY_READ(tile_context.decoder.finish_decode_vp9());
     return {};
 }
 

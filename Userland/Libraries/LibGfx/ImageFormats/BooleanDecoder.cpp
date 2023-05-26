@@ -11,14 +11,19 @@
 
 namespace Gfx {
 
-/* 9.2.1 */
 ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
 {
     VERIFY(bit_stream->is_aligned_to_byte_boundary());
     auto value = TRY(bit_stream->read_value<u8>());
     u8 range = 255;
     u64 bits_left = (8 * size_in_bytes) - 8;
-    BooleanDecoder decoder { move(bit_stream), value, range, bits_left };
+    return BooleanDecoder { move(bit_stream), value, range, bits_left };
+}
+
+/* 9.2.1 */
+ErrorOr<BooleanDecoder> BooleanDecoder::initialize_vp9(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
+{
+    BooleanDecoder decoder = TRY(initialize(move(bit_stream), size_in_bytes));
     if (TRY(decoder.read_bool(128)))
         return Error::from_string_literal("Range decoder marker was non-zero");
     return decoder;
@@ -63,7 +68,7 @@ ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
 }
 
 /* 9.2.3 */
-ErrorOr<void> BooleanDecoder::finish_decode()
+ErrorOr<void> BooleanDecoder::finish_decode_vp9()
 {
     while (m_bits_left > 0) {
         auto padding_read_size = min(m_bits_left, 64);
