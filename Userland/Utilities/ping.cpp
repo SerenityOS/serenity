@@ -159,11 +159,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
 
-        if (count.has_value() && total_pings == count.value())
-            closing_statistics();
-        else
-            total_pings++;
-
         TRY(Core::System::sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in)));
 
         for (;;) {
@@ -238,6 +233,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             break;
         }
+
+        total_pings++;
+        if (count.has_value() && total_pings == count.value())
+            closing_statistics();
 
         clock_nanosleep(CLOCK_MONOTONIC, 0, &interval_timespec, nullptr);
     }
