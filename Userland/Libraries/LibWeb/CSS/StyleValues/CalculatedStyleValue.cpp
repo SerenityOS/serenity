@@ -777,6 +777,71 @@ ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) cons
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<ConstantCalculationNode>> ConstantCalculationNode::create(ConstantType constant)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) ConstantCalculationNode(constant));
+}
+
+ConstantCalculationNode::ConstantCalculationNode(ConstantType constant)
+    : CalculationNode(Type::Constant)
+    , m_constant(constant)
+{
+}
+
+ConstantCalculationNode::~ConstantCalculationNode() = default;
+
+ErrorOr<String> ConstantCalculationNode::to_string() const
+{
+    switch (m_constant) {
+    case CalculationNode::ConstantType::E:
+        return "e"_short_string;
+    case CalculationNode::ConstantType::PI:
+        return "pi"_short_string;
+    case CalculationNode::ConstantType::Infinity:
+        return "infinity"_string;
+    case CalculationNode::ConstantType::MinusInfinity:
+        return "-infinity"_string;
+    case CalculationNode::ConstantType::NaN:
+        return "NaN"_string;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+Optional<CalculatedStyleValue::ResolvedType> ConstantCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe_unused]] Optional<Length::ResolutionContext const&> context, [[maybe_unused]] CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    switch (m_constant) {
+    case CalculationNode::ConstantType::E:
+        return { Number(Number::Type::Number, M_E) };
+    case CalculationNode::ConstantType::PI:
+        return { Number(Number::Type::Number, M_PI) };
+    // FIXME: We need to keep track of Infinity and NaN across all nodes, since they require special handling.
+    case CalculationNode::ConstantType::Infinity:
+        return { Number(Number::Type::Number, NumericLimits<float>::max()) };
+    case CalculationNode::ConstantType::MinusInfinity:
+        return { Number(Number::Type::Number, NumericLimits<float>::lowest()) };
+    case CalculationNode::ConstantType::NaN:
+        return { Number(Number::Type::Number, NAN) };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> ConstantCalculationNode::for_each_child_node([[maybe_unused]] Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    return {};
+}
+
+ErrorOr<void> ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}CONSTANT: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);

@@ -115,6 +115,16 @@ private:
 // https://www.w3.org/TR/css-values-4/#calculation-tree
 class CalculationNode {
 public:
+    // https://drafts.csswg.org/css-values-4/#calc-constants
+    // https://drafts.csswg.org/css-values-4/#calc-error-constants
+    enum class ConstantType {
+        E,
+        PI,
+        NaN,
+        Infinity,
+        MinusInfinity,
+    };
+
     enum class Type {
         Numeric,
         // NOTE: Currently, any value with a `var()` or `attr()` function in it is always an
@@ -137,6 +147,10 @@ public:
         // https://drafts.csswg.org/css-values-4/#sign-funcs
         Abs,
         Sign,
+
+        // Constant Nodes
+        // https://drafts.csswg.org/css-values-4/#calc-constants
+        Constant,
 
         // This only exists during parsing.
         Unparsed,
@@ -352,6 +366,24 @@ public:
 private:
     SignCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_value;
+};
+
+class ConstantCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<ConstantCalculationNode>> create(CalculationNode::ConstantType);
+    ~ConstantCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    ConstantCalculationNode(ConstantType);
+    CalculationNode::ConstantType m_constant;
 };
 
 }
