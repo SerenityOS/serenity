@@ -31,6 +31,8 @@ static Optional<StringView> map_class_to_file(StringView class_)
         { "GUI::VerticalBoxLayout"sv, "GUI/BoxLayout"sv },
         { "GUI::HorizontalProgressbar"sv, "GUI/Progressbar"sv },
         { "GUI::VerticalProgressbar"sv, "GUI/Progressbar"sv },
+        // Map Layout::Spacer to the Layout header even though it's a pseudo class.
+        { "GUI::Layout::Spacer"sv, "GUI/Layout"sv },
     };
     return class_file_mappings.get(class_);
 }
@@ -233,6 +235,12 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
         return String::formatted("{}_child_{}", object_name, current_child_index++);
     };
     TRY(gml_object.try_for_each_child_object([&](auto const& child) -> ErrorOr<void> {
+        // Spacer is a pseudo-class that insteads causes a call to `Widget::add_spacer` on the parent object.
+        if (child.name() == "GUI::Layout::Spacer"sv) {
+            TRY(append(generator, "TRY(@object_name@->add_spacer());"));
+            return {};
+        }
+
         auto child_generator = TRY(generator.fork());
         auto child_variable_name = TRY(next_child_name());
         child_generator.set("child_variable_name", child_variable_name.bytes_as_string_view());
