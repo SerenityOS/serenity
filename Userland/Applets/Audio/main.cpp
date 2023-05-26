@@ -55,7 +55,6 @@ private:
     AudioWidget(NonnullRefPtr<Audio::ConnectionToServer> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
-        , m_show_percent(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, audio_applet_show_percent_default))
     {
         m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
         m_audio_muted = m_audio_client->is_main_mix_muted();
@@ -88,15 +87,13 @@ private:
         m_root_container->set_frame_style(Gfx::FrameStyle::Window);
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9"_short_string);
-        m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
-        m_percent_box->set_checked(m_show_percent);
+        m_percent_box->set_tooltip(show_percent() ? "Hide percent" : "Show percent");
+        m_percent_box->set_checked(show_percent());
         m_percent_box->on_checked = [&](bool show_percent) {
-            m_show_percent = show_percent;
-            set_audio_widget_size(m_show_percent);
-            m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
+            set_show_percent(show_percent);
             GUI::Application::the()->hide_tooltip();
 
-            Config::write_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, m_show_percent);
+            Config::write_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, show_percent);
         };
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
@@ -127,8 +124,12 @@ private:
 public:
     virtual ~AudioWidget() override = default;
 
-    void set_audio_widget_size(bool show_percent)
+    bool show_percent() const { return m_show_percent; }
+    void set_show_percent(bool show_percent)
     {
+        m_show_percent = show_percent;
+        m_percent_box->set_checked(show_percent);
+        m_percent_box->set_tooltip(show_percent ? "Hide percent" : "Show percent");
         if (show_percent)
             window()->resize(44, 16);
         else
@@ -168,7 +169,7 @@ private:
         auto& audio_bitmap = choose_bitmap_from_volume();
         painter.blit({}, audio_bitmap, audio_bitmap.rect());
 
-        if (m_show_percent) {
+        if (show_percent()) {
             auto volume_text = m_audio_muted ? "mute" : DeprecatedString::formatted("{}%", m_audio_volume);
             painter.draw_text(Gfx::IntRect { 16, 3, 24, 16 }, volume_text, Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::TopLeft, palette().window_text());
         }
@@ -247,8 +248,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto audio_widget = TRY(window->set_main_widget<AudioWidget>());
     window->show();
 
-    // This positioning code depends on the window actually existing.
-    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, audio_applet_show_percent_default));
+    // This affects the positioning, which depends on the window actually existing.
+    bool should_show_percent = Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, audio_applet_show_percent_default);
+    audio_widget->set_show_percent(should_show_percent);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
