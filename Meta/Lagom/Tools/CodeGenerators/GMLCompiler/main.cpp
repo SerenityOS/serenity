@@ -29,6 +29,8 @@ static Optional<StringView> map_class_to_file(StringView clazz)
     static HashMap<StringView, StringView> class_file_mappings {
         { "GUI::HorizontalSplitter"sv, "GUI/Splitter"sv },
         { "GUI::VerticalSplitter"sv, "GUI/Splitter"sv },
+        { "GUI::HorizontalSeparator"sv, "GUI/SeparatorWidget"sv },
+        { "GUI::VerticalSeparator"sv, "GUI/SeparatorWidget"sv },
         { "GUI::HorizontalBoxLayout"sv, "GUI/BoxLayout"sv },
         { "GUI::VerticalBoxLayout"sv, "GUI/BoxLayout"sv },
         { "GUI::HorizontalProgressbar"sv, "GUI/Progressbar"sv },
@@ -162,6 +164,8 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
     // The value is the enum's type name.
     static HashMap<StringView, StringView> enum_properties = {
         { "text_alignment"sv, "Gfx::TextAlignment"sv },
+        { "focus_policy"sv, "GUI::FocusPolicy"sv },
+        { "foreground_role"sv, "Gfx::ColorRole"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
@@ -334,6 +338,8 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml)
         TRY(String::from_utf8("<AK/JsonValue.h>"sv)),
         TRY(String::from_utf8("<AK/NonnullRefPtr.h>"sv)),
         TRY(String::from_utf8("<AK/RefPtr.h>"sv)),
+        // For Gfx::ColorRole
+        TRY(String::from_utf8("<LibGfx/SystemTheme.h>"sv)),
         TRY(String::from_utf8("<LibGUI/Widget.h>"sv)),
     };
     TRY(necessary_includes.try_set_from(always_necessary_includes));
