@@ -295,6 +295,7 @@ pushd "$DIR/Build/$ARCH"
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
+                                            --disable-libstdcxx-pch \
                                             --enable-shared \
                                             --enable-languages=c,c++ \
                                             --enable-default-pie \
