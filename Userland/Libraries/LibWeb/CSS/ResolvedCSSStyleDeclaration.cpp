@@ -520,6 +520,11 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
+    case CSS::PropertyID::LetterSpacing: {
+        auto length_node = layout_node.computed_values().letter_spacing();
+        // FIXME: Return "normal" if the value resolves to 0px.
+        return style_value_for_length_percentage(length_node);
+    }
     case CSS::PropertyID::LineHeight:
         return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
     case CSS::PropertyID::ListStyleType:
