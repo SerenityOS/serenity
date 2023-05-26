@@ -39,6 +39,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
@@ -7167,22 +7168,76 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     // Multiple ComponentValues will usually produce multiple StyleValues, so make a StyleValueList.
-    StyleValueVector parsed_values;
-    auto stream = TokenStream { component_values };
-    while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
-        FIXME_TRY(parsed_values.try_append(parsed_value.release_nonnull()));
-        if (!stream.has_next_token())
-            break;
+    {
+        StyleValueVector parsed_values;
+        auto stream = TokenStream { component_values };
+        while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
+            FIXME_TRY(parsed_values.try_append(parsed_value.release_nonnull()));
+            if (!stream.has_next_token())
+                break;
+        }
+
+        // Some types (such as <ratio>) can be made from multiple ComponentValues, so if we only made 1 StyleValue, return it directly.
+        if (parsed_values.size() == 1)
+            return *parsed_values.take_first();
+
+        if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
+            return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
     }
 
-    // Some types (such as <ratio>) can be made from multiple ComponentValues, so if we only made 1 StyleValue, return it directly.
-    if (parsed_values.size() == 1)
-        return *parsed_values.take_first();
+    // We have multiple values, but the property claims to accept only a single one, check if it's a shorthand property.
+    auto unassigned_properties = longhands_for_shorthand(property_id);
+    if (unassigned_properties.is_empty())
+        return ParseError::SyntaxError;
 
-    if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-        return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
+    auto stream = TokenStream { component_values };
 
-    return ParseError::SyntaxError;
+    HashMap<UnderlyingType<PropertyID>, Vector<ValueComparingNonnullRefPtr<StyleValue const>>> assigned_values;
+
+    while (stream.has_next_token() && !unassigned_properties.is_empty()) {
+        auto property_and_value = parse_css_value_for_properties(unassigned_properties, stream);
+        if (!property_and_value.is_error() && property_and_value.value().style_value) {
+            auto property = property_and_value.value().property;
+            auto value = property_and_value.release_value().style_value;
+            auto& values = assigned_values.ensure(to_underlying(property));
+            if (values.size() + 1 == property_maximum_value_count(property)) {
+                // We're done with this property, move on to the next one.
+                unassigned_properties.remove_first_matching([&](auto& unassigned_property) { return unassigned_property == property; });
+            }
+
+            values.append(value.release_nonnull());
+            continue;
+        }
+
+        // No property matched, so we're done.
+        dbgln("No property (from {} properties) matched {}", unassigned_properties.size(), stream.peek_token().to_debug_string());
+        for (auto id : unassigned_properties)
+            dbgln("    {}", string_from_property_id(id));
+        break;
+    }
+
+    for (auto& property : unassigned_properties)
+        assigned_values.ensure(to_underlying(property)).append(FIXME_TRY(property_initial_value(m_context.realm(), property)));
+
+    stream.skip_whitespace();
+    if (stream.has_next_token())
+        return ParseError::SyntaxError;
+
+    Vector<PropertyID> longhand_properties;
+    longhand_properties.ensure_capacity(assigned_values.size());
+    for (auto& it : assigned_values)
+        longhand_properties.unchecked_append(static_cast<PropertyID>(it.key));
+
+    StyleValueVector longhand_values;
+    longhand_values.ensure_capacity(assigned_values.size());
+    for (auto& it : assigned_values) {
+        if (it.value.size() == 1)
+            longhand_values.unchecked_append(it.value.take_first());
+        else
+            longhand_values.unchecked_append(FIXME_TRY(StyleValueList::create(move(it.value), StyleValueList::Separator::Space)));
+    }
+
+    return { FIXME_TRY(CompositeStyleValue::create(move(longhand_properties), move(longhand_values))) };
 #undef FIXME_TRY
 }
 

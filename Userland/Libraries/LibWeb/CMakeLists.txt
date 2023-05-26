@@ -77,6 +77,7 @@ set(SOURCES
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/StyleValues/CalculatedStyleValue.cpp
     CSS/StyleValues/ColorStyleValue.cpp
+    CSS/StyleValues/CompositeStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp

@@ -170,6 +170,8 @@ enum class ValueType {
 };
 bool property_accepts_type(PropertyID, ValueType);
 bool property_accepts_identifier(PropertyID, ValueID);
+Vector<PropertyID> longhands_for_shorthand(PropertyID);
+
 size_t property_maximum_value_count(PropertyID);
 
 bool property_affects_layout(PropertyID);
@@ -216,6 +218,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& f
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS {
@@ -617,8 +620,45 @@ size_t property_maximum_value_count(PropertyID property_id)
     }
 }
 
-} // namespace Web::CSS
+Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+    properties.for_each_member([&](auto& name, auto& value) {
+        if (value.as_object().has("longhands"sv)) {
+            auto longhands = value.as_object().get("longhands"sv);
+            VERIFY(longhands.has_value() && longhands->is_array());
+            auto longhand_values = longhands->as_array();
+            auto property_generator = generator.fork();
+            property_generator.set("name:titlecase", title_casify(name));
+            StringBuilder builder;
+            bool first = true;
+            longhand_values.for_each([&](auto& longhand) {
+                if (first)
+                    first = false;
+                else
+                    builder.append(", "sv);
+                builder.appendff("PropertyID::{}", title_casify(longhand.to_deprecated_string()));
+                return IterationDecision::Continue;
+            });
+            property_generator.set("longhands", builder.to_deprecated_string());
+            property_generator.append(R"~~~(
+        case PropertyID::@name:titlecase@:
+                return { @longhands@ };
+)~~~");
+        }
+    });
 
+    generator.append(R"~~~(
+        default:
+                return { };
+        }
+}
+)~~~");
+
+    generator.append(R"~~~(
+
+} // namespace Web::CSS
 )~~~");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
