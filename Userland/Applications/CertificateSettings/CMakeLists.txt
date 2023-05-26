@@ -4,15 +4,12 @@ serenity_component(
     TARGETS CertificateSettings
 )
 
-stringify_gml(CertificateStoreWidget.gml CertificateStoreWidgetGML.h certificate_store_widget_gml)
+compile_gml(CertificateStoreWidget.gml CertificateStoreWidgetGML.cpp)
 
 set(SOURCES
     CertificateStoreWidget.cpp
+    CertificateStoreWidgetGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    CertificateStoreWidgetGML.h
 )
 
 serenity_app(CertificateSettings ICON certificate)

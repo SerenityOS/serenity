@@ -58,11 +58,14 @@ class CertificateStoreWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(CertStoreWidget)
 public:
     virtual ~CertificateStoreWidget() override = default;
-    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> try_create();
+    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> create();
     virtual void apply_settings() override {};
 
-private:
+    // Generated from GML, don't call manually.
+    static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> try_create();
     CertificateStoreWidget() = default;
+
+private:
     ErrorOr<void> initialize();
     ErrorOr<void> import_pem();
     ErrorOr<void> export_pem();
