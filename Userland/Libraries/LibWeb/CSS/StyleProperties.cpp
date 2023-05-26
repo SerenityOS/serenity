@@ -226,10 +226,10 @@ Optional<int> StyleProperties::z_index() const
     auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
-    if (value->has_integer()) {
+    if (value->is_numeric() && value->as_numeric().has_integer()) {
         // Clamp z-index to the range of a signed 32-bit integer for consistency with other engines.
         // NOTE: Casting between 32-bit float and 32-bit integer is finicky here, since INT32_MAX is not representable as a 32-bit float!
-        auto integer = value->to_integer();
+        auto integer = value->as_numeric().integer();
         if (integer >= static_cast<float>(NumericLimits<int>::max()))
             return NumericLimits<int>::max();
         if (integer <= static_cast<float>(NumericLimits<int>::min()))
@@ -344,9 +344,9 @@ float StyleProperties::flex_shrink() const
 int StyleProperties::order() const
 {
     auto value = property(CSS::PropertyID::Order);
-    if (!value->has_integer())
+    if (!value->is_numeric() || !value->as_numeric().has_integer())
         return 0;
-    return value->to_integer();
+    return value->as_numeric().integer();
 }
 
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
