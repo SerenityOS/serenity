@@ -28,7 +28,7 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual void request_file_read_only_approved(i32, i32, i32, DeprecatedString const&) override;
+    virtual void request_file_read_only_approved(i32, DeprecatedString const&) override;
     virtual void request_file(i32, i32, i32, DeprecatedString const&, Core::File::OpenMode) override;
     virtual void prompt_open_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode, Optional<Vector<GUI::FileTypeFilter>> const&) override;
     virtual void prompt_save_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode) override;

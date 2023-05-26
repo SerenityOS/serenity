@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_widget = TRY(window->set_main_widget<ThemeEditor::MainWidget>());
 
     if (path.has_value()) {
-        // Note: This is deferred to ensure that the window has already popped and thus proper window stealing can be performed.
+        // Note: This is deferred to ensure that the window has already popped and any error dialog boxes would show up correctly.
         app->event_loop().deferred_invoke(
             [&window, &path, &main_widget]() {
                 auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value().to_deprecated_string());
