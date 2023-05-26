@@ -536,26 +536,27 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     resolve_vertical_box_model_metrics(box, m_state);
 
-    auto const y = m_y_offset_of_current_block_container.value();
-
     if (box.is_floating()) {
+        auto const y = m_y_offset_of_current_block_container.value();
         auto margin_top = !m_margin_state.has_block_container_waiting_for_final_y_position() ? m_margin_state.current_collapsed_margin() : 0;
         layout_floating_box(box, block_container, layout_mode, available_space, margin_top + y);
         bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
 
+    m_margin_state.add_margin(box_state.margin_top);
+    auto introduce_clearance = clear_floating_boxes(box);
+    if (introduce_clearance == DidIntroduceClearance::Yes)
+        m_margin_state.reset();
+
+    auto const y = m_y_offset_of_current_block_container.value();
+
     if (box_state.has_definite_height()) {
         compute_height(box, available_space);
     }
 
-    if (box.computed_values().clear() != CSS::Clear::None) {
-        m_margin_state.reset();
-    }
-
     auto independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
 
-    m_margin_state.add_margin(box_state.margin_top);
     m_margin_state.update_block_waiting_for_final_y_position();
     CSSPixels margin_top = m_margin_state.current_collapsed_margin();
 
@@ -592,7 +593,9 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
             } else if (!m_margin_state.has_block_container_waiting_for_final_y_position()) {
                 // margin-top of block container can be updated during children layout hence it's final y position yet to be determined
                 m_margin_state.register_block_container_y_position_update_callback([&](CSSPixels margin_top) {
-                    place_block_level_element_in_normal_flow_vertically(box, margin_top + y + box_state.border_box_top());
+                    if (introduce_clearance == DidIntroduceClearance::No) {
+                        place_block_level_element_in_normal_flow_vertically(box, margin_top + y);
+                    }
                 });
             }
 
@@ -689,10 +692,10 @@ CSSPixels BlockFormattingContext::BlockMarginState::current_collapsed_margin() c
     return collapsed_margin;
 }
 
-void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, CSSPixels y)
+BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floating_boxes(Box const& child_box)
 {
-    auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
+    auto result = DidIntroduceClearance::No;
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
@@ -714,9 +717,11 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
             for (auto* containing_block = child_box.containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block())
                 clearance_y_in_containing_block -= m_state.get(*containing_block).offset.y();
 
-            if (clearance_y_in_containing_block > y)
+            if (clearance_y_in_containing_block > m_y_offset_of_current_block_container.value()) {
+                result = DidIntroduceClearance::Yes;
                 m_y_offset_of_current_block_container = clearance_y_in_containing_block;
-            y = max(y, clearance_y_in_containing_block);
+            }
+
             float_side.clear();
         }
     };
@@ -727,8 +732,13 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
-    y += box_state.border_box_top();
+    return result;
+}
 
+void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, CSSPixels y)
+{
+    auto& box_state = m_state.get_mutable(child_box);
+    y += box_state.border_box_top();
     box_state.set_content_offset(CSSPixelPoint { box_state.offset.x(), y.value() });
 }
 
