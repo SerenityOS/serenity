@@ -72,6 +72,8 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
             return CSS::Size::make_min_content();
         case ValueID::MaxContent:
             return CSS::Size::make_max_content();
+        case ValueID::FitContent:
+            return CSS::Size::make_fit_content();
         case ValueID::None:
             return CSS::Size::make_none();
         default:
