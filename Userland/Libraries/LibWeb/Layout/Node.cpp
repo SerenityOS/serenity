@@ -563,6 +563,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (text_transform.has_value())
         computed_values.set_text_transform(text_transform.value());
 
+    auto letter_spacing = computed_style.length_percentage(CSS::PropertyID::LetterSpacing);
+    if (letter_spacing.has_value())
+        computed_values.set_letter_spacing(letter_spacing.value());
+
     if (auto list_style_type = computed_style.list_style_type(); list_style_type.has_value())
         computed_values.set_list_style_type(list_style_type.value());
 

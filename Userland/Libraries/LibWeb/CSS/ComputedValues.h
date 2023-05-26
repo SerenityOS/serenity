@@ -86,6 +86,7 @@ public:
     static CSS::Size row_gap() { return CSS::Size::make_auto(); }
     static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
     static Vector<Vector<String>> grid_template_areas() { return {}; }
+    static CSS::LengthPercentage letter_spacing() { return CSS::Length::make_px(0); }
 };
 
 enum class BackgroundSize {
@@ -304,6 +305,8 @@ public:
     int font_weight() const { return m_inherited.font_weight; }
     CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
 
+    CSS::LengthPercentage letter_spacing() const { return m_inherited.letter_spacing; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -334,6 +337,7 @@ protected:
         float fill_opacity { InitialValues::fill_opacity() };
         float stroke_opacity { InitialValues::stroke_opacity() };
         Optional<LengthPercentage> stroke_width;
+        CSS::LengthPercentage letter_spacing { InitialValues::letter_spacing() };
     } m_inherited;
 
     struct {
@@ -447,6 +451,7 @@ public:
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
     void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }
     void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
+    void set_letter_spacing(CSS::LengthPercentage value) { m_inherited.letter_spacing = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
     void set_backdrop_filter(CSS::BackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
