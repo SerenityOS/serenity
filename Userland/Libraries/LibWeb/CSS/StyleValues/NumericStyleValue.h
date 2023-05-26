@@ -25,11 +25,10 @@ public:
         return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
     }
 
-    virtual bool has_length() const override { return to_number() == 0; }
+    virtual bool has_length() const override { return number() == 0; }
     virtual Length to_length() const override { return Length::make_px(0); }
 
-    virtual bool has_number() const override { return true; }
-    virtual float to_number() const override
+    float number() const
     {
         return m_value.visit(
             [](float value) { return value; },

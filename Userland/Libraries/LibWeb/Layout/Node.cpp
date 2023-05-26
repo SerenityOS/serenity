@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
@@ -676,7 +677,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
     if (stroke_width->is_numeric())
-        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->to_number()));
+        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_numeric().number()));
     else if (stroke_width->is_length())
         computed_values.set_stroke_width(stroke_width->to_length());
     else if (stroke_width->is_percentage())
