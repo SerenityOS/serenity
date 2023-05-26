@@ -38,7 +38,6 @@ target_link_libraries(fuzz-syscalls PRIVATE LibSystem)
 serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 
 set(LIBTEST_BASED_SOURCES
-    TestEFault.cpp
     TestEmptyPrivateInodeVMObject.cpp
     TestEmptySharedInodeVMObject.cpp
     TestInvalidUIDSet.cpp
@@ -57,6 +56,10 @@ set(LIBTEST_BASED_SOURCES
     TestSigHandler.cpp
     TestSigWait.cpp
 )
+
+if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    list(APPEND LIBTEST_BASED_SOURCES TestEFault.cpp)
+endif()
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
     serenity_test("${libtest_source}" Kernel)
