@@ -1220,6 +1220,7 @@
       "percentage [0,∞]"
     ],
     "valid-identifiers": [
+      "fit-content",
       "none"
     ],
     "quirks": [
@@ -1250,6 +1251,7 @@
     ],
     "valid-identifiers": [
       "auto",
+      "fit-content",
       "none"
     ],
     "quirks": [
