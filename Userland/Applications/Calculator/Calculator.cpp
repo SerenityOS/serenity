@@ -10,6 +10,8 @@
 #include <AK/Math.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
+namespace Calculator {
+
 Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operation operation, Crypto::BigFraction argument)
 {
     // Support binary operations with percentages, for example "2+3%" == 2.06
@@ -168,4 +170,6 @@ void Calculator::clear_operation()
     }
     m_binary_operation_saved_left_side.set_to_0();
     clear_error();
+}
+
 }
