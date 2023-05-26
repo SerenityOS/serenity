@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$utime(Userspace<char const*> user_path, size_t pat
     if (user_buf) {
         TRY(copy_from_user(&buf, user_buf));
     } else {
-        auto now = kgettimeofday().to_truncated_seconds();
+        auto now = kgettimeofday().truncated_seconds_since_epoch();
         // Not a bug!
         buf = { now, now };
     }

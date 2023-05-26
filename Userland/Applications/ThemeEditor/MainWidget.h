@@ -124,7 +124,7 @@ private:
 
     Optional<DeprecatedString> m_path;
     Gfx::Palette m_current_palette;
-    Time m_last_modified_time { Time::now_monotonic() };
+    MonotonicTime m_last_modified_time { MonotonicTime::now() };
 
     RefPtr<AlignmentModel> m_alignment_model;
 

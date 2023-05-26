@@ -42,8 +42,6 @@ class Node
 public:
     virtual ~Node();
 
-    size_t serial_id() const { return m_serial_id; }
-
     bool is_anonymous() const;
     DOM::Node const* dom_node() const;
     DOM::Node* dom_node();
@@ -164,8 +162,6 @@ private:
     JS::GCPtr<Painting::Paintable> m_paintable;
 
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
-
-    size_t m_serial_id { 0 };
 
     bool m_anonymous { false };
     bool m_has_style { false };

@@ -71,7 +71,7 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
-DecoderErrorOr<Optional<Time>> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time timestamp, Optional<Time> earliest_available_sample)
+DecoderErrorOr<Optional<Duration>> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Duration timestamp, Optional<Duration> earliest_available_sample)
 {
     // Removing the track status will cause us to start from the beginning.
     if (timestamp.is_zero()) {
@@ -113,10 +113,10 @@ DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track
     return make<VideoSample>(status.block->frame(status.frame_index++), cicp, status.block->timestamp());
 }
 
-DecoderErrorOr<Time> MatroskaDemuxer::duration()
+DecoderErrorOr<Duration> MatroskaDemuxer::duration()
 {
     auto duration = TRY(m_reader.segment_information()).duration();
-    return duration.value_or(Time::zero());
+    return duration.value_or(Duration::zero());
 }
 
 }

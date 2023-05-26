@@ -130,6 +130,9 @@ public:
 
     virtual Optional<ARIA::Role> default_role() const override;
 
+    JS::GCPtr<Element> placeholder_element() { return m_placeholder_element; }
+    JS::GCPtr<Element const> placeholder_element() const { return m_placeholder_element; }
+
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
 
@@ -156,6 +159,11 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     DeprecatedString value_sanitization_algorithm(DeprecatedString) const;
 
+    void update_placeholder_visibility();
+    JS::GCPtr<DOM::Element> m_placeholder_element;
+    JS::GCPtr<DOM::Text> m_placeholder_text_node;
+
+    JS::GCPtr<DOM::Element> m_inner_text_element;
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
 

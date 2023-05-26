@@ -101,14 +101,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         VERIFY(sheet_ptr); // How did we get here without a sheet?
         auto& sheet = *sheet_ptr;
         String new_name = String::from_deprecated_string(sheet.name()).release_value_but_fixme_should_propagate_errors();
-        if (GUI::InputBox::show(window(), new_name, {}, "Rename sheet"sv, GUI::InputType::NonemptyText, "Name"sv) == GUI::Dialog::ExecResult::OK) {
+        if (GUI::InputBox::show(window(), new_name, {}, "Rename Sheet"sv, GUI::InputType::NonemptyText, "Name"sv) == GUI::Dialog::ExecResult::OK) {
             sheet.set_name(new_name);
             sheet.update();
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
         }
     });
     m_tab_context_menu->add_action(*m_rename_action);
-    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("Add New Sheet...", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         String name;
         auto icon = Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-spreadsheet.png"sv).release_value_but_fixme_should_propagate_errors();
         if (GUI::InputBox::show(window(), name, "Enter a name:"sv, "New sheet"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::Dialog::ExecResult::OK) {
@@ -134,7 +134,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         load_file(response.value().filename(), response.value().stream());
     });
 
-    m_import_action = GUI::Action::create("Import sheets...", [&](auto&) {
+    m_import_action = GUI::Action::create("Import Sheets...", [&](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;

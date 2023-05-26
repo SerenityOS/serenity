@@ -246,11 +246,11 @@ void ComboBox::open()
     auto max_height = min(m_list_view->item_height() * m_max_visible_items, m_list_view->content_height());
     auto min_width = m_list_view->content_width() + frame;
     Gfx::IntSize size { max(width(), min_width), max_height + frame };
-    Gfx::IntRect rect { screen_relative_rect().bottom_left(), size };
+    Gfx::IntRect rect { screen_relative_rect().bottom_left().moved_up(1), size };
 
     auto desktop = Desktop::the().rect();
     auto min_height = 5 * m_list_view->item_height() + frame;
-    auto go_upwards_instead = rect.bottom() >= desktop.height() && rect.intersected(desktop).height() < min_height;
+    auto go_upwards_instead = rect.bottom() - 1 >= desktop.height() && rect.intersected(desktop).height() < min_height;
     if (go_upwards_instead) {
         auto origin = screen_relative_rect().top_left();
         rect = { Gfx::IntPoint { origin.x(), origin.y() - size.height() }, size };

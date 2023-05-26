@@ -123,7 +123,10 @@ template<>
 ErrorOr<void> encode(Encoder&, JsonValue const&);
 
 template<>
-ErrorOr<void> encode(Encoder&, Time const&);
+ErrorOr<void> encode(Encoder&, Duration const&);
+
+template<>
+ErrorOr<void> encode(Encoder&, UnixDateTime const&);
 
 template<>
 ErrorOr<void> encode(Encoder&, URL const&);

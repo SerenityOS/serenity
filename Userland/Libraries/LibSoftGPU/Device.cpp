@@ -231,9 +231,9 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
 
     // Quad bounds
     auto const render_bounds_left = render_bounds.left();
-    auto const render_bounds_right = render_bounds.right();
+    auto const render_bounds_right = render_bounds.right() - 1;
     auto const render_bounds_top = render_bounds.top();
-    auto const render_bounds_bottom = render_bounds.bottom();
+    auto const render_bounds_bottom = render_bounds.bottom() - 1;
     auto const qx0 = render_bounds_left & ~1;
     auto const qx1 = render_bounds_right & ~1;
     auto const qy0 = render_bounds_top & ~1;
@@ -678,9 +678,9 @@ void Device::rasterize_triangle(Triangle& triangle)
     // Calculate render bounds based on the triangle's vertices
     Gfx::IntRect render_bounds;
     render_bounds.set_left(min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor);
-    render_bounds.set_right(max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor);
+    render_bounds.set_right(max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor + 1);
     render_bounds.set_top(min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor);
-    render_bounds.set_bottom(max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor);
+    render_bounds.set_bottom(max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor + 1);
 
     // Calculate depth of fragment for fog;
     // OpenGL 1.5 chapter 3.10: "An implementation may choose to approximate the

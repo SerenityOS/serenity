@@ -18,7 +18,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Highlight Color"
+        title: "Highlight color"
         preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -36,7 +36,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Highlight Opacity"
+        title: "Highlight opacity"
         preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -70,7 +70,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Highlight Size"
+        title: "Highlight size"
         preferred_height: "opportunistic_grow"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]

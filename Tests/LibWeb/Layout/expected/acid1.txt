@@ -24,45 +24,45 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                   "the way"
               TextNode <#text>
             TextNode <#text>
-            BlockContainer <li#bar> at (235,55) content-size 139.977996x90 floating [BFC] children: not-inline
-              BlockContainer <(anonymous)> at (235,55) content-size 139.977996x0 children: inline
+            BlockContainer <li#bar> at (235,55) content-size 139.977993x90 floating [BFC] children: not-inline
+              BlockContainer <(anonymous)> at (235,55) content-size 139.977993x0 children: inline
                 TextNode <#text>
-              BlockContainer <p> at (235,55) content-size 139.977996x10 children: inline
+              BlockContainer <p> at (235,55) content-size 139.977993x10 children: inline
                 line 0 width: 74.316406, height: 10, bottom: 10, baseline: 7.998046
                   frag 0 from TextNode start: 0, length: 14, rect: [235,55 74.316406x10]
                     "the world ends"
                 TextNode <#text>
-              BlockContainer <(anonymous)> at (235,65) content-size 139.977996x0 children: inline
+              BlockContainer <(anonymous)> at (235,65) content-size 139.977993x0 children: inline
                 TextNode <#text>
                 InlineNode <form>
                   TextNode <#text>
                   TextNode <#text>
                   TextNode <#text>
-              BlockContainer <p> at (235,65) content-size 139.977996x19 children: inline
-                line 0 width: 39.490234, height: 19, bottom: 19, baseline: 12.498046
-                  frag 0 from TextNode start: 1, length: 5, rect: [235,65 27.490234x19]
+              BlockContainer <p> at (235,65) content-size 139.977993x18.999999 children: inline
+                line 0 width: 39.490234, height: 18.999999, bottom: 18.999999, baseline: 12.498046
+                  frag 0 from TextNode start: 1, length: 5, rect: [235,65 27.490234x18.999999]
                     "bang "
                   frag 1 from RadioButton start: 0, length: 0, rect: [262,65 12x12]
                 TextNode <#text>
                 RadioButton <input> at (262,65) content-size 12x12 inline-block children: not-inline
                 TextNode <#text>
-              BlockContainer <p> at (235,84) content-size 139.977996x19 children: inline
-                line 0 width: 57.15625, height: 19, bottom: 19, baseline: 12.498046
-                  frag 0 from TextNode start: 1, length: 8, rect: [235,84 45.15625x19]
+              BlockContainer <p> at (235,83.999999) content-size 139.977993x18.999999 children: inline
+                line 0 width: 57.15625, height: 18.999999, bottom: 18.999999, baseline: 12.498046
+                  frag 0 from TextNode start: 1, length: 8, rect: [235,83.999999 45.15625x18.999999]
                     "whimper "
-                  frag 1 from RadioButton start: 0, length: 0, rect: [280,84 12x12]
+                  frag 1 from RadioButton start: 0, length: 0, rect: [280,83.999999 12x12]
                 TextNode <#text>
-                RadioButton <input> at (280,84) content-size 12x12 inline-block children: not-inline
+                RadioButton <input> at (280,83.999999) content-size 12x12 inline-block children: not-inline
                 TextNode <#text>
-              BlockContainer <(anonymous)> at (235,103) content-size 139.977996x0 children: inline
+              BlockContainer <(anonymous)> at (235,102.999999) content-size 139.977993x0 children: inline
                 TextNode <#text>
             TextNode <#text>
-            BlockContainer <li> at (409.977996,60) content-size 50x90 floating [BFC] children: inline
+            BlockContainer <li> at (409.977993,60) content-size 50x90 floating [BFC] children: inline
               line 0 width: 31.582031, height: 10, bottom: 10, baseline: 7.998046
-                frag 0 from TextNode start: 0, length: 6, rect: [409.977996,60 31.582031x10]
+                frag 0 from TextNode start: 0, length: 6, rect: [409.977993,60 31.582031x10]
                   "i grow"
               line 1 width: 14.033203, height: 10, bottom: 20, baseline: 7.998046
-                frag 0 from TextNode start: 7, length: 3, rect: [409.977996,70 14.033203x10]
+                frag 0 from TextNode start: 7, length: 3, rect: [409.977993,70 14.033203x10]
                   "old"
               TextNode <#text>
             TextNode <#text>
@@ -100,29 +100,29 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       BlockContainer <(anonymous)> at (20,30) content-size 480x0 children: inline
         TextNode <#text>
-      BlockContainer <p> at (20,335) content-size 480x65 children: inline
-        line 0 width: 473.642578, height: 13, bottom: 13, baseline: 9.498046
-          frag 0 from TextNode start: 1, length: 90, rect: [20,335 473.642578x13]
+      BlockContainer <p> at (20,335) content-size 480x64.999999 children: inline
+        line 0 width: 473.642578, height: 12.999999, bottom: 12.999999, baseline: 9.498046
+          frag 0 from TextNode start: 1, length: 90, rect: [20,335 473.642578x12.999999]
             "This is a nonsensical document, but syntactically valid HTML 4.0. All 100%-conformant CSS1"
-        line 1 width: 396.953125, height: 13, bottom: 26, baseline: 9.498046
-          frag 0 from TextNode start: 92, length: 74, rect: [20,348 396.953125x13]
+        line 1 width: 396.953125, height: 13, bottom: 25.999999, baseline: 9.498046
+          frag 0 from TextNode start: 92, length: 74, rect: [20,348 396.953125x12.999999]
             "agents should be able to render the document elements above this paragraph"
-        line 2 width: 470.585937, height: 13, bottom: 39, baseline: 9.498046
-          frag 0 from TextNode start: 167, length: 43, rect: [20,361 207.900390x13]
+        line 2 width: 470.585937, height: 13, bottom: 38.999999, baseline: 9.498046
+          frag 0 from TextNode start: 167, length: 43, rect: [20,361 207.900390x12.999999]
             "indistinguishably (to the pixel) from this "
-          frag 1 from TextNode start: 0, length: 20, rect: [228,361 103.007812x13]
+          frag 1 from TextNode start: 0, length: 20, rect: [228,361 103.007812x12.999999]
             "reference rendering,"
-          frag 2 from TextNode start: 0, length: 31, rect: [331,361 159.677734x13]
+          frag 2 from TextNode start: 0, length: 31, rect: [331,361 159.677734x12.999999]
             " (except font rasterization and"
-        line 3 width: 465.019531, height: 13, bottom: 52, baseline: 9.498046
-          frag 0 from TextNode start: 32, length: 89, rect: [20,374 465.019531x13]
+        line 3 width: 465.019531, height: 13.000000, bottom: 51.999999, baseline: 9.498046
+          frag 0 from TextNode start: 32, length: 89, rect: [20,374 465.019531x12.999999]
             "form widgets). All discrepancies should be traceable to CSS1 implementation shortcomings."
-        line 4 width: 408.164062, height: 13, bottom: 65, baseline: 9.498046
-          frag 0 from TextNode start: 122, length: 67, rect: [20,387 345.556640x13]
+        line 4 width: 408.164062, height: 13.000001, bottom: 64.999999, baseline: 9.498046
+          frag 0 from TextNode start: 122, length: 67, rect: [20,387 345.556640x12.999999]
             "Once you have finished evaluating this test, you can return to the "
-          frag 1 from TextNode start: 0, length: 11, rect: [366,387 59.892578x13]
+          frag 1 from TextNode start: 0, length: 11, rect: [366,387 59.892578x12.999999]
             "parent page"
-          frag 2 from TextNode start: 0, length: 1, rect: [425,387 2.714843x13]
+          frag 2 from TextNode start: 0, length: 1, rect: [425,387 2.714843x12.999999]
             "."
         TextNode <#text>
         InlineNode <a>
@@ -131,5 +131,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         InlineNode <a>
           TextNode <#text>
         TextNode <#text>
-      BlockContainer <(anonymous)> at (20,400) content-size 480x0 children: inline
+      BlockContainer <(anonymous)> at (20,399.999999) content-size 480x0 children: inline
         TextNode <#text>

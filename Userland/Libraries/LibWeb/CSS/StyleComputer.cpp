@@ -59,6 +59,16 @@
 #include <LibWeb/Platform/FontPlugin.h>
 #include <stdio.h>
 
+namespace AK {
+
+// traits for FontFaceKey
+template<>
+struct Traits<Web::CSS::FontFaceKey> : public GenericTraits<Web::CSS::FontFaceKey> {
+    static unsigned hash(Web::CSS::FontFaceKey const& key) { return pair_int_hash(key.family_name.hash(), pair_int_hash(key.weight, key.slope)); }
+};
+
+}
+
 namespace Web::CSS {
 
 StyleComputer::StyleComputer(DOM::Document& document)
@@ -973,8 +983,22 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // FIXME: Normal user declarations
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
-    if (!pseudo_element.has_value())
+    if (!pseudo_element.has_value()) {
         element.apply_presentational_hints(style);
+
+        // SVG presentation attributes are parsed as CSS values, so we need to handle potential custom properties here.
+        if (element.is_svg_element()) {
+            // FIXME: This is not very efficient, we should only resolve the custom properties that are actually used.
+            for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+                auto property_id = (CSS::PropertyID)i;
+                auto& property = style.m_property_values[i];
+                if (property && property->is_unresolved()) {
+                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property->as_unresolved()))
+                        property = resolved.release_nonnull();
+                }
+            }
+        }
+    }
 
     // Normal author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
@@ -1157,39 +1181,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    int weight = Gfx::FontWeight::Regular;
-    if (font_weight->is_identifier()) {
-        switch (static_cast<IdentifierStyleValue const&>(*font_weight).id()) {
-        case CSS::ValueID::Normal:
-            weight = Gfx::FontWeight::Regular;
-            break;
-        case CSS::ValueID::Bold:
-            weight = Gfx::FontWeight::Bold;
-            break;
-        case CSS::ValueID::Lighter:
-            // FIXME: This should be relative to the parent.
-            weight = Gfx::FontWeight::Regular;
-            break;
-        case CSS::ValueID::Bolder:
-            // FIXME: This should be relative to the parent.
-            weight = Gfx::FontWeight::Bold;
-            break;
-        default:
-            break;
-        }
-    } else if (font_weight->has_integer()) {
-        int font_weight_integer = font_weight->to_integer();
-        if (font_weight_integer <= Gfx::FontWeight::Regular)
-            weight = Gfx::FontWeight::Regular;
-        else if (font_weight_integer <= Gfx::FontWeight::Bold)
-            weight = Gfx::FontWeight::Bold;
-        else
-            weight = Gfx::FontWeight::Black;
-    } else if (font_weight->is_calculated()) {
-        auto maybe_weight = const_cast<CalculatedStyleValue&>(font_weight->as_calculated()).resolve_integer();
-        if (maybe_weight.has_value())
-            weight = maybe_weight.value();
-    }
+    auto weight = font_weight->to_font_weight();
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
@@ -1250,7 +1242,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         Optional<Length> maybe_length;
         if (font_size->is_percentage()) {
             // Percentages refer to parent element's font size
-            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size());
+            maybe_length = Length::make_px(static_cast<double>(font_size->as_percentage().percentage().as_fraction()) * parent_font_size());
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->to_length();
@@ -1268,21 +1260,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    int slope = Gfx::name_to_slope("Normal"sv);
-    // FIXME: Implement oblique <angle>
-    if (font_style->is_identifier()) {
-        switch (static_cast<IdentifierStyleValue const&>(*font_style).id()) {
-        case CSS::ValueID::Italic:
-            slope = Gfx::name_to_slope("Italic"sv);
-            break;
-        case CSS::ValueID::Oblique:
-            slope = Gfx::name_to_slope("Oblique"sv);
-            break;
-        case CSS::ValueID::Normal:
-        default:
-            break;
-        }
-    }
+    auto slope = font_style->to_font_slope();
 
     // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
@@ -1290,11 +1268,28 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
+    float const font_size_in_pt = font_size_in_px * 0.75f;
+
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
-        float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
-        if (auto it = m_loaded_fonts.find(family); it != m_loaded_fonts.end()) {
+        FontFaceKey key {
+            .family_name = family,
+            .weight = weight,
+            .slope = slope,
+        };
+
+        if (auto it = m_loaded_fonts.find(key); it != m_loaded_fonts.end()) {
+            auto& loader = *it->value;
+            if (auto found_font = loader.font_with_point_size(font_size_in_pt))
+                return found_font;
+        }
+
+        // We couldn't find this font with a specific weight and slope, so try again without them.
+        // FIXME: This should be replaced by a proper CSS font selection algorithm.
+        key.weight = 0;
+        key.slope = 0;
+        if (auto it = m_loaded_fonts.find(key); it != m_loaded_fonts.end()) {
             auto& loader = *it->value;
             if (auto found_font = loader.font_with_point_size(font_size_in_pt))
                 return found_font;
@@ -1366,6 +1361,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     if (!found_font) {
         found_font = StyleProperties::font_fallback(monospace, bold);
+        if (found_font) {
+            if (auto scaled_fallback_font = found_font->with_size(font_size_in_pt))
+                found_font = scaled_fallback_font;
+        }
     }
 
     FontCache::the().set(font_selector, *found_font);
@@ -1419,7 +1418,7 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
     auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
     if (line_height_value_slot && line_height_value_slot->is_percentage()) {
         line_height_value_slot = TRY(LengthStyleValue::create(
-            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction())));
+            Length::make_px(font_size * static_cast<double>(line_height_value_slot->as_percentage().percentage().as_fraction()))));
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);
@@ -1727,7 +1726,12 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         auto const& font_face = static_cast<CSSFontFaceRule const&>(*rule).font_face();
         if (font_face.sources().is_empty())
             continue;
-        if (m_loaded_fonts.contains(font_face.font_family()))
+        FontFaceKey key {
+            .family_name = font_face.font_family(),
+            .weight = font_face.weight().value_or(0),
+            .slope = font_face.slope().value_or(0),
+        };
+        if (m_loaded_fonts.contains(key))
             continue;
 
         Vector<AK::URL> urls;
@@ -1740,7 +1744,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
             continue;
 
         auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(urls));
-        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(key, move(loader));
     }
 }
 

@@ -38,7 +38,7 @@ public:
 
 protected:
     Core::ElapsedTimer m_timer;
-    Time m_time_difference {};
+    Duration m_time_difference {};
 };
 
 class PassManager : public Pass {

@@ -31,8 +31,8 @@ void ToolbarContainer::paint_event(GUI::PaintEvent& event)
     for_each_child_widget([&](auto& widget) {
         if (widget.is_visible()) {
             auto rect = widget.relative_rect();
-            painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
-            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
+            painter.draw_line(rect.top_left().moved_up(1), rect.top_right().translated(-1), palette().threed_highlight());
+            painter.draw_line(rect.bottom_left(), rect.bottom_right().moved_left(1), palette().threed_shadow1());
         }
         return IterationDecision::Continue;
     });

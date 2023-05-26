@@ -17,10 +17,9 @@ namespace Video::VP9 {
 class BooleanDecoder {
 public:
     /* (9.2) */
-    static ErrorOr<BooleanDecoder> initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t bytes);
+    static ErrorOr<BooleanDecoder> initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes);
     ErrorOr<bool> read_bool(u8 probability);
     ErrorOr<u8> read_literal(u8 bits);
-    size_t bits_remaining() const;
     ErrorOr<void> finish_decode();
 
 private:

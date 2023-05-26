@@ -97,9 +97,6 @@ public:
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
-    size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
-    size_t layout_node_count() const { return m_next_layout_node_serial_id; }
-
     DeprecatedString cookie(Cookie::Source = Cookie::Source::NonHttp);
     void set_cookie(DeprecatedString const&, Cookie::Source = Cookie::Source::NonHttp);
 
@@ -493,8 +490,6 @@ private:
 
     WebIDL::ExceptionOr<void> run_the_document_write_steps(DeprecatedString);
 
-    size_t m_next_layout_node_serial_id { 0 };
-
     OwnPtr<CSS::StyleComputer> m_style_computer;
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
     JS::GCPtr<Node> m_hovered_node;
@@ -617,7 +612,7 @@ private:
     JS::GCPtr<HTMLCollection> m_all;
 
     // https://html.spec.whatwg.org/#completely-loaded-time
-    Optional<AK::Time> m_completely_loaded_time;
+    Optional<AK::UnixDateTime> m_completely_loaded_time;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
     Optional<String> m_navigation_id;

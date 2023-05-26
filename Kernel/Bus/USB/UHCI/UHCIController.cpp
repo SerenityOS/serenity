@@ -590,7 +590,7 @@ ErrorOr<void> UHCIController::spawn_port_process()
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
 
-            (void)Thread::current()->sleep(Time::from_seconds(1));
+            (void)Thread::current()->sleep(Duration::from_seconds(1));
         }
     }));
     return {};
@@ -616,7 +616,7 @@ ErrorOr<void> UHCIController::spawn_async_poll_process()
                     }
                 }
             }
-            (void)Thread::current()->sleep(Time::from_milliseconds(poll_interval_ms));
+            (void)Thread::current()->sleep(Duration::from_milliseconds(poll_interval_ms));
         }
     }));
     return {};

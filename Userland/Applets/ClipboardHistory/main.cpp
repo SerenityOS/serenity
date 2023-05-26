@@ -73,13 +73,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     });
 
-    auto debug_dump_action = GUI::Action::create("Dump to debug console", [&](const GUI::Action&) {
+    auto debug_dump_action = GUI::Action::create("Dump to Debug Console", [&](const GUI::Action&) {
         table_view->selection().for_each_index([&](GUI::ModelIndex& index) {
             dbgln("{}", model->data(index, GUI::ModelRole::Display).as_string());
         });
     });
 
-    auto clear_action = GUI::Action::create("Clear history", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](const GUI::Action&) {
+    auto clear_action = GUI::Action::create("Clear History", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](const GUI::Action&) {
         model->clear();
         GUI::Clipboard::the().clear();
     });

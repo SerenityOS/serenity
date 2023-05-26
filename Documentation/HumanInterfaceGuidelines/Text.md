@@ -52,3 +52,26 @@ of proper names, weekdays, etc.
 - Radio button labels
 - Status bar text
 - Text box labels
+
+## Ellipses
+
+The ellipsis, represented by a series of three periods (...), has two special
+functions in the interface:
+
+- Eliding text
+- Foreshadowing additional user input
+
+The first occurs programmatically, but the second requires care when setting
+text manually.
+
+Control text which implies an action whose effect is incomplete pending further
+user input should end in an ellipsis. Opening a new window does not in itself
+justify the use of an ellipsis; the dialog must be an intermediate step toward
+completing the action.
+
+Ellipses should be used sparingly elsewhere to avoid confusion with elision.
+
+#### Examples:
+- Save As...
+- Browse...
+- Insert Emoji...

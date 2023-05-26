@@ -137,7 +137,6 @@ target_link_libraries(syscall PRIVATE LibSystem)
 target_link_libraries(ttfdisasm PRIVATE LibGfx)
 target_link_libraries(tar PRIVATE LibArchive LibCompress LibFileSystem)
 target_link_libraries(telws PRIVATE LibProtocol LibLine)
-target_link_libraries(test-fuzz PRIVATE LibGemini LibGfx LibHTTP LibIPC LibJS LibMarkdown LibRegex LibShell)
 target_link_libraries(test-imap PRIVATE LibIMAP)
 target_link_libraries(test-pthread PRIVATE LibThreading)
 target_link_libraries(touch PRIVATE LibFileSystem)
@@ -158,3 +157,13 @@ target_link_libraries(zip PRIVATE LibArchive LibCompress LibCrypto LibFileSystem
 
 # FIXME: Link this file into headless-browser without compiling it again.
 target_sources(headless-browser PRIVATE "${SerenityOS_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp")
+
+include("${SerenityOS_SOURCE_DIR}/Meta/Lagom/Fuzzers/fuzzers.cmake")
+
+foreach(name IN LISTS FUZZER_TARGETS)
+    set(fuzz_source_file "${SerenityOS_SOURCE_DIR}/Meta/Lagom/Fuzzers/Fuzz${name}.cpp")
+    target_sources(test-fuzz PRIVATE "${fuzz_source_file}")
+    set_source_files_properties("${fuzz_source_file}" PROPERTIES COMPILE_DEFINITIONS "LLVMFuzzerTestOneInput=Test${name}")
+    set_source_files_properties("${fuzz_source_file}" PROPERTIES COMPILE_OPTIONS "-Wno-missing-declarations")
+    target_link_libraries(test-fuzz PRIVATE "${FUZZER_DEPENDENCIES_${name}}")
+endforeach()

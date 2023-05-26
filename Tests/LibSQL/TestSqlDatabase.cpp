@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,8 @@
 #include <unistd.h>
 
 #include <AK/ScopeGuard.h>
+#include <AK/StringBuilder.h>
+#include <LibCore/System.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Heap.h>
@@ -15,21 +18,15 @@
 #include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>
 
-NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database&);
-NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database&);
-void insert_into_table(SQL::Database&, int);
-void verify_table_contents(SQL::Database&, int);
-void insert_and_verify(int);
-void commit(SQL::Database&);
-
-NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
+static NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
 {
     auto schema = SQL::SchemaDef::construct("TestSchema");
     MUST(db.add_schema(schema));
     return schema;
 }
 
-NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
+// FIXME: using the return value for SQL::TableDef to insert a row results in a segfault
+static NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
 {
     auto schema = setup_schema(db);
     auto table = SQL::TableDef::construct(schema, "TestTable");
@@ -40,7 +37,7 @@ NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
     return table;
 }
 
-void insert_into_table(SQL::Database& db, int count)
+static void insert_into_table(SQL::Database& db, int count)
 {
     auto table = MUST(db.get_table("TestSchema", "TestTable"));
 
@@ -55,7 +52,7 @@ void insert_into_table(SQL::Database& db, int count)
     }
 }
 
-void verify_table_contents(SQL::Database& db, int expected_count)
+static void verify_table_contents(SQL::Database& db, int expected_count)
 {
     auto table = MUST(db.get_table("TestSchema", "TestTable"));
 
@@ -73,12 +70,12 @@ void verify_table_contents(SQL::Database& db, int expected_count)
     EXPECT_EQ(sum, (expected_count * (expected_count - 1)) / 2);
 }
 
-void commit(SQL::Database& db)
+static void commit(SQL::Database& db)
 {
     TRY_OR_FAIL(db.commit());
 }
 
-void insert_and_verify(int count)
+static void insert_and_verify(int count)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
@@ -208,4 +205,33 @@ TEST_CASE(insert_10_into_table)
 TEST_CASE(insert_100_into_table)
 {
     insert_and_verify(100);
+}
+
+TEST_CASE(reuse_row_storage)
+{
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto db = SQL::Database::construct("/tmp/test.db");
+    MUST(db->open());
+    (void)setup_table(db);
+    auto table = MUST(db->get_table("TestSchema", "TestTable"));
+
+    // Insert row
+    SQL::Row row(*table);
+    row["TextColumn"] = "text value";
+    row["IntColumn"] = 12345;
+    TRY_OR_FAIL(db->insert(row));
+    TRY_OR_FAIL(db->commit());
+    auto original_size_in_bytes = MUST(db->file_size_in_bytes());
+
+    // Remove row
+    TRY_OR_FAIL(db->remove(row));
+    TRY_OR_FAIL(db->commit());
+    auto size_in_bytes_after_removal = MUST(db->file_size_in_bytes());
+    EXPECT(size_in_bytes_after_removal <= original_size_in_bytes);
+
+    // Insert same row again
+    TRY_OR_FAIL(db->insert(row));
+    TRY_OR_FAIL(db->commit());
+    auto size_in_bytes_after_reinsertion = MUST(db->file_size_in_bytes());
+    EXPECT(size_in_bytes_after_reinsertion <= original_size_in_bytes);
 }

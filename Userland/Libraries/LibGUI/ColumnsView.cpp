@@ -80,8 +80,8 @@ void ColumnsView::second_paint_event(PaintEvent& event)
     auto column_right = column_x + m_rubber_band_origin_column.width;
 
     // The rubber band rect always stays inside the widget inner rect, the vertical component is handled by mousemove
-    auto rubber_band_left = clamp(column_left, widget_inner_rect().left(), widget_inner_rect().right() + 1);
-    auto rubber_band_right = clamp(column_right, widget_inner_rect().left(), widget_inner_rect().right() + 1);
+    auto rubber_band_left = clamp(column_left, widget_inner_rect().left(), widget_inner_rect().right());
+    auto rubber_band_right = clamp(column_right, widget_inner_rect().left(), widget_inner_rect().right());
 
     auto rubber_band_rect = Gfx::IntRect::from_two_points({ rubber_band_left, m_rubber_band_origin }, { rubber_band_right, m_rubber_band_current });
 
@@ -155,7 +155,7 @@ void ColumnsView::paint_event(PaintEvent& event)
             }
 
             Gfx::IntRect text_rect = {
-                icon_rect.right() + 1 + icon_spacing(), row * item_height(),
+                icon_rect.right() + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - static_cast<int>(s_arrow_bitmap.width()) - icon_spacing(), item_height()
             };
             draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_deprecated_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::None);
@@ -172,7 +172,7 @@ void ColumnsView::paint_event(PaintEvent& event)
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
                 Gfx::IntRect arrow_rect = {
-                    text_rect.right() + 1 + icon_spacing(), 0,
+                    text_rect.right() + icon_spacing(), 0,
                     s_arrow_bitmap.width(), s_arrow_bitmap.height()
                 };
                 arrow_rect.center_vertically_within(row_rect);
@@ -339,7 +339,7 @@ void ColumnsView::mousedown_event(MouseEvent& event)
 void ColumnsView::mousemove_event(MouseEvent& event)
 {
     if (m_rubber_banding) {
-        m_rubber_band_current = clamp(event.position().y(), widget_inner_rect().top(), widget_inner_rect().bottom() + 1);
+        m_rubber_band_current = clamp(event.position().y(), widget_inner_rect().top(), widget_inner_rect().bottom());
 
         auto parent = m_rubber_band_origin_column.parent_index;
         int row_count = model()->row_count(parent);

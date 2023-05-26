@@ -56,7 +56,7 @@ static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
     serialized_cookie.set("domain"sv, cookie.domain);
     serialized_cookie.set("secure"sv, cookie.secure);
     serialized_cookie.set("httpOnly"sv, cookie.http_only);
-    serialized_cookie.set("expiry"sv, cookie.expiry_time.to_seconds());
+    serialized_cookie.set("expiry"sv, cookie.expiry_time.seconds_since_epoch());
     serialized_cookie.set("sameSite"sv, Web::Cookie::same_site_to_string(cookie.same_site));
 
     return serialized_cookie;
@@ -1132,10 +1132,10 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     // -> current browsing context’s active document’s type is not "xml"
     if (!m_page_client.page().top_level_browsing_context().active_document()->is_xml_document()) {
         // computed value of parameter property name from element’s style declarations. property name is obtained from url variables.
-        auto property = Web::CSS::property_id_from_string(name);
-
-        if (auto* computed_values = element->computed_css_values())
-            computed_value = computed_values->property(property)->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        if (auto property = Web::CSS::property_id_from_string(name); property.has_value()) {
+            if (auto* computed_values = element->computed_css_values())
+                computed_value = computed_values->property(property.value())->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        }
     }
     // -> Otherwise
     else {
@@ -1602,7 +1602,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     if (data.has("expiry"sv)) {
         // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
         auto expiry = TRY(get_property<u32>(data, "expiry"sv));
-        cookie.expiry_time_from_expires_attribute = Time::from_seconds(expiry);
+        cookie.expiry_time_from_expires_attribute = UnixDateTime::from_seconds_since_epoch(expiry);
     }
 
     // Cookie same site
@@ -1958,7 +1958,7 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
 ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
-    auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
+    auto end_time = MonotonicTime::now() + Duration::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
 
     // 2. Let location strategy be equal to using.
     auto location_strategy = using_;
@@ -1985,7 +1985,7 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGet
             return true;
 
         // 6. If elements returned is empty and the current time is less than end time return to step 4. Otherwise, continue to the next step.
-        return maybe_elements.value()->length() != 0 || Time::now_monotonic() >= end_time;
+        return maybe_elements.value()->length() != 0 || MonotonicTime::now() >= end_time;
     });
 
     auto elements = TRY(maybe_elements);
@@ -2039,7 +2039,7 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
         // -> name is equal to cookie name
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
-            cookie.expiry_time = Time::from_seconds(0);
+            cookie.expiry_time = UnixDateTime::earliest();
             m_page_client.page_did_update_cookie(move(cookie));
         }
         // -> Otherwise

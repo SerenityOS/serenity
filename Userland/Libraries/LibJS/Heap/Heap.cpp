@@ -323,7 +323,7 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
     }
 
     if (print_report) {
-        Time const time_spent = measurement_timer.elapsed_time();
+        Duration const time_spent = measurement_timer.elapsed_time();
         size_t live_block_count = 0;
         for_each_block([&](auto&) {
             ++live_block_count;

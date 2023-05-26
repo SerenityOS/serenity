@@ -41,6 +41,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
@@ -1260,9 +1261,9 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID med
         auto transaction = tokens.begin_transaction();
         tokens.skip_whitespace();
         auto ident = value_id_from_string(tokens.next_token().token().ident());
-        if (ident != ValueID::Invalid && media_feature_accepts_identifier(media_feature, ident)) {
+        if (ident.has_value() && media_feature_accepts_identifier(media_feature, ident.value())) {
             transaction.commit();
-            return MediaFeatureValue(ident);
+            return MediaFeatureValue(ident.value());
         }
     }
 
@@ -3235,7 +3236,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     auto property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
-    if (property_id == PropertyID::Invalid) {
+    if (!property_id.has_value()) {
         if (property_name.starts_with("--"sv)) {
             property_id = PropertyID::Custom;
         } else if (has_ignored_vendor_prefix(property_name)) {
@@ -3247,7 +3248,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     }
 
     auto value_token_stream = TokenStream(declaration.values());
-    auto value = parse_css_value(property_id, value_token_stream);
+    auto value = parse_css_value(property_id.value(), value_token_stream);
     if (value.is_error()) {
         if (value.error() == ParseError::SyntaxError) {
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse value for CSS property '{}'.", property_name);
@@ -3258,10 +3259,10 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
         return {};
     }
 
-    if (property_id == PropertyID::Custom)
-        return StyleProperty { declaration.importance(), property_id, value.release_value(), declaration.name() };
+    if (property_id.value() == PropertyID::Custom)
+        return StyleProperty { declaration.importance(), property_id.value(), value.release_value(), declaration.name() };
 
-    return StyleProperty { declaration.importance(), property_id, value.release_value(), {} };
+    return StyleProperty { declaration.importance(), property_id.value(), value.release_value(), {} };
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& component_value)
@@ -3720,8 +3721,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_identifier_value(ComponentValue const&
 {
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
-        if (value_id != ValueID::Invalid)
-            return IdentifierStyleValue::create(value_id);
+        if (value_id.has_value())
+            return IdentifierStyleValue::create(value_id.value());
     }
 
     return nullptr;
@@ -4029,6 +4030,72 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_color_value(ComponentValue const& comp
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
+    if (component_value.is(Token::Type::Ident)) {
+        if (auto ident = value_id_from_string(component_value.token().ident()); ident.has_value()) {
+            switch (ident.value()) {
+            case ValueID::Currentcolor:
+            case ValueID::LibwebLink:
+            case ValueID::LibwebPaletteActiveLink:
+            case ValueID::LibwebPaletteActiveWindowBorder1:
+            case ValueID::LibwebPaletteActiveWindowBorder2:
+            case ValueID::LibwebPaletteActiveWindowTitle:
+            case ValueID::LibwebPaletteBase:
+            case ValueID::LibwebPaletteBaseText:
+            case ValueID::LibwebPaletteButton:
+            case ValueID::LibwebPaletteButtonText:
+            case ValueID::LibwebPaletteDesktopBackground:
+            case ValueID::LibwebPaletteFocusOutline:
+            case ValueID::LibwebPaletteHighlightWindowBorder1:
+            case ValueID::LibwebPaletteHighlightWindowBorder2:
+            case ValueID::LibwebPaletteHighlightWindowTitle:
+            case ValueID::LibwebPaletteHoverHighlight:
+            case ValueID::LibwebPaletteInactiveSelection:
+            case ValueID::LibwebPaletteInactiveSelectionText:
+            case ValueID::LibwebPaletteInactiveWindowBorder1:
+            case ValueID::LibwebPaletteInactiveWindowBorder2:
+            case ValueID::LibwebPaletteInactiveWindowTitle:
+            case ValueID::LibwebPaletteLink:
+            case ValueID::LibwebPaletteMenuBase:
+            case ValueID::LibwebPaletteMenuBaseText:
+            case ValueID::LibwebPaletteMenuSelection:
+            case ValueID::LibwebPaletteMenuSelectionText:
+            case ValueID::LibwebPaletteMenuStripe:
+            case ValueID::LibwebPaletteMovingWindowBorder1:
+            case ValueID::LibwebPaletteMovingWindowBorder2:
+            case ValueID::LibwebPaletteMovingWindowTitle:
+            case ValueID::LibwebPaletteRubberBandBorder:
+            case ValueID::LibwebPaletteRubberBandFill:
+            case ValueID::LibwebPaletteRuler:
+            case ValueID::LibwebPaletteRulerActiveText:
+            case ValueID::LibwebPaletteRulerBorder:
+            case ValueID::LibwebPaletteRulerInactiveText:
+            case ValueID::LibwebPaletteSelection:
+            case ValueID::LibwebPaletteSelectionText:
+            case ValueID::LibwebPaletteSyntaxComment:
+            case ValueID::LibwebPaletteSyntaxControlKeyword:
+            case ValueID::LibwebPaletteSyntaxIdentifier:
+            case ValueID::LibwebPaletteSyntaxKeyword:
+            case ValueID::LibwebPaletteSyntaxNumber:
+            case ValueID::LibwebPaletteSyntaxOperator:
+            case ValueID::LibwebPaletteSyntaxPreprocessorStatement:
+            case ValueID::LibwebPaletteSyntaxPreprocessorValue:
+            case ValueID::LibwebPaletteSyntaxPunctuation:
+            case ValueID::LibwebPaletteSyntaxString:
+            case ValueID::LibwebPaletteSyntaxType:
+            case ValueID::LibwebPaletteTextCursor:
+            case ValueID::LibwebPaletteThreedHighlight:
+            case ValueID::LibwebPaletteThreedShadow1:
+            case ValueID::LibwebPaletteThreedShadow2:
+            case ValueID::LibwebPaletteVisitedLink:
+            case ValueID::LibwebPaletteWindow:
+            case ValueID::LibwebPaletteWindowText:
+                return IdentifierStyleValue::create(ident.value());
+            default:
+                break;
+            }
+        }
+    }
+
     return nullptr;
 }
 
@@ -4079,15 +4146,19 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<Comp
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(Vector<ComponentValue> const& component_values)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, Vector<ComponentValue> const& component_values)
 {
     return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> ErrorOr<RefPtr<StyleValue>> {
-        auto& token = tokens.next_token();
-        if (auto value = TRY(parse_css_value(token)); value && property_accepts_value(m_context.current_property_id(), *value))
+        if (auto value = TRY(parse_css_value_for_property(property_id, tokens)))
             return value;
         tokens.reconsume_current_input_token();
         return nullptr;
     });
+}
+
+static void remove_property(Vector<PropertyID>& properties, PropertyID property_to_remove)
+{
+    properties.remove_first_matching([&](auto it) { return it == property_to_remove; });
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
@@ -4101,6 +4172,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     StyleValueVector background_origins;
     RefPtr<StyleValue> background_color;
 
+    auto initial_background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+    auto initial_background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+    auto initial_background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+    auto initial_background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+    auto initial_background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+    auto initial_background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+    auto initial_background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
+    auto initial_background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+
     // Per-layer values
     RefPtr<StyleValue> background_image;
     RefPtr<StyleValue> background_position;
@@ -4111,6 +4191,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     RefPtr<StyleValue> background_origin;
 
     bool has_multiple_layers = false;
+    // BackgroundSize is always parsed as part of BackgroundPosition, so we don't include it here.
+    Vector<PropertyID> remaining_layer_properties {
+        PropertyID::BackgroundAttachment,
+        PropertyID::BackgroundClip,
+        PropertyID::BackgroundColor,
+        PropertyID::BackgroundImage,
+        PropertyID::BackgroundOrigin,
+        PropertyID::BackgroundPosition,
+        PropertyID::BackgroundRepeat,
+    };
 
     auto background_layer_is_valid = [&](bool allow_background_color) -> bool {
         if (allow_background_color) {
@@ -4124,15 +4214,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     };
 
     auto complete_background_layer = [&]() -> ErrorOr<void> {
-        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage))));
-        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition))));
-        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize))));
-        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat))));
-        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment))));
+        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : initial_background_image));
+        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : initial_background_position));
+        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : initial_background_size));
+        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : initial_background_repeat));
+        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : initial_background_attachment));
 
         if (!background_origin && !background_clip) {
-            background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
-            background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+            background_origin = initial_background_origin;
+            background_clip = initial_background_clip;
         } else if (!background_clip) {
             background_clip = background_origin;
         }
@@ -4147,44 +4237,50 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         background_clip = nullptr;
         background_origin = nullptr;
 
+        remaining_layer_properties.clear_with_capacity();
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundAttachment);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundClip);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundColor);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundImage);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundOrigin);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundPosition);
+        remaining_layer_properties.unchecked_append(PropertyID::BackgroundRepeat);
+
         return {};
     };
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto const& part = tokens.next_token();
-
-        if (part.is(Token::Type::Comma)) {
+        if (tokens.peek_token().is(Token::Type::Comma)) {
             has_multiple_layers = true;
             if (!background_layer_is_valid(false))
                 return nullptr;
             TRY(complete_background_layer());
+            (void)tokens.next_token();
             continue;
         }
 
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+        auto value_and_property = TRY(parse_css_value_for_properties(remaining_layer_properties, tokens));
+        if (!value_and_property.style_value)
             return nullptr;
+        auto& value = value_and_property.style_value;
+        remove_property(remaining_layer_properties, value_and_property.property);
 
-        if (property_accepts_value(PropertyID::BackgroundAttachment, *value)) {
-            if (background_attachment)
-                return nullptr;
+        switch (value_and_property.property) {
+        case PropertyID::BackgroundAttachment:
+            VERIFY(!background_attachment);
             background_attachment = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundColor, *value)) {
-            if (background_color)
-                return nullptr;
+        case PropertyID::BackgroundColor:
+            VERIFY(!background_color);
             background_color = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundImage, *value)) {
-            if (background_image)
-                return nullptr;
+        case PropertyID::BackgroundImage:
+            VERIFY(!background_image);
             background_image = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::BackgroundOrigin, *value)) {
+        case PropertyID::BackgroundClip:
+        case PropertyID::BackgroundOrigin: {
             // background-origin and background-clip accept the same values. From the spec:
             //   "If one <box> value is present then it sets both background-origin and background-clip to that value.
             //    If two values are present, then the first sets background-origin and the second background-clip."
@@ -4193,17 +4289,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             // If we only get one, we copy the value before creating the BackgroundStyleValue.
             if (!background_origin) {
                 background_origin = value.release_nonnull();
-                continue;
-            }
-            if (!background_clip) {
+            } else if (!background_clip) {
                 background_clip = value.release_nonnull();
-                continue;
+            } else {
+                VERIFY_NOT_REACHED();
             }
-            return nullptr;
+            continue;
         }
-        if (property_accepts_value(PropertyID::BackgroundPosition, *value)) {
-            if (background_position)
-                return nullptr;
+        case PropertyID::BackgroundPosition: {
+            VERIFY(!background_position);
             tokens.reconsume_current_input_token();
             if (auto maybe_background_position = TRY(parse_single_background_position_value(tokens))) {
                 background_position = maybe_background_position.release_nonnull();
@@ -4223,15 +4317,17 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             }
             return nullptr;
         }
-        if (property_accepts_value(PropertyID::BackgroundRepeat, *value)) {
-            if (background_repeat)
-                return nullptr;
+        case PropertyID::BackgroundRepeat: {
+            VERIFY(!background_repeat);
             tokens.reconsume_current_input_token();
             if (auto maybe_repeat = TRY(parse_single_background_repeat_value(tokens))) {
                 background_repeat = maybe_repeat.release_nonnull();
                 continue;
             }
             return nullptr;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
 
         return nullptr;
@@ -4246,7 +4342,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         TRY(complete_background_layer());
 
         if (!background_color)
-            background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+            background_color = initial_background_color;
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
             TRY(StyleValueList::create(move(background_images), StyleValueList::Separator::Comma)),
@@ -4259,21 +4355,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     }
 
     if (!background_color)
-        background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+        background_color = initial_background_color;
     if (!background_image)
-        background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+        background_image = initial_background_image;
     if (!background_position)
-        background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+        background_position = initial_background_position;
     if (!background_size)
-        background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+        background_size = initial_background_size;
     if (!background_repeat)
-        background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+        background_repeat = initial_background_repeat;
     if (!background_attachment)
-        background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+        background_attachment = initial_background_attachment;
 
     if (!background_origin && !background_clip) {
-        background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
-        background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+        background_origin = initial_background_origin;
+        background_clip = initial_background_clip;
     } else if (!background_clip) {
         background_clip = background_origin;
     }
@@ -4366,15 +4462,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         if (seen_items == 2)
             break;
 
-        auto const& token = tokens.peek_token();
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(PropertyID::BackgroundPosition, *maybe_value))
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
+        if (!maybe_value)
             break;
-        tokens.next_token();
         auto value = maybe_value.release_nonnull();
 
-        auto offset = style_value_to_length_percentage(value);
-        if (offset.has_value()) {
+        if (auto offset = style_value_to_length_percentage(value); offset.has_value()) {
             if (!horizontal.has_value()) {
                 horizontal = EdgeOffset { PositionEdge::Left, *offset, false, true };
             } else if (!vertical.has_value()) {
@@ -4386,15 +4479,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         }
 
         auto try_parse_offset = [&](bool& offset_provided) -> ErrorOr<LengthPercentage> {
+            auto transaction = tokens.begin_transaction();
             if (tokens.has_next_token()) {
-                auto& token = tokens.peek_token();
-                auto maybe_value = TRY(parse_css_value(token));
+                auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
                 if (!maybe_value)
                     return zero_offset;
                 auto offset = style_value_to_length_percentage(maybe_value.release_nonnull());
                 if (offset.has_value()) {
                     offset_provided = true;
-                    tokens.next_token();
+                    transaction.commit();
                     return *offset;
                 }
             }
@@ -4479,14 +4572,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
     if (!tokens.has_next_token())
         return nullptr;
 
-    auto parse_value = [&](auto& token) -> ErrorOr<RefPtr<StyleValue>> {
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(property, *maybe_value))
-            return nullptr;
-        return maybe_value.release_nonnull();
-    };
+    auto value = TRY(parse_css_value_for_property(property, tokens));
+    if (!value)
+        return nullptr;
 
-    auto value = TRY(parse_value(tokens.next_token()));
     if (value->is_identifier()) {
         auto identifier = value->to_identifier();
         if (identifier == ValueID::Center) {
@@ -4499,12 +4588,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
             return nullptr;
         }
         if (tokens.has_next_token()) {
-            value = TRY(parse_value(tokens.peek_token()));
+            value = TRY(parse_css_value_for_property(property, tokens));
             if (!value) {
                 transaction.commit();
                 return EdgeStyleValue::create(relative_edge, Length::make_px(0));
             }
-            tokens.next_token();
         }
     }
 
@@ -4541,9 +4629,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         }
     };
 
-    auto const& token = tokens.next_token();
-    auto maybe_x_value = TRY(parse_css_value(token));
-    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_x_value))
+    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
@@ -4560,14 +4647,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         return nullptr;
 
     // See if we have a second value for Y
-    auto const& second_token = tokens.peek_token();
-    auto maybe_y_value = TRY(parse_css_value(second_token));
-    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundRepeat, *maybe_y_value)) {
+    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    if (!maybe_y_value) {
         // We don't have a second value, so use x for both
         transaction.commit();
         return BackgroundRepeatStyleValue::create(x_repeat.value(), x_repeat.value());
     }
-    tokens.next_token();
     auto y_value = maybe_y_value.release_nonnull();
     if (is_directional_repeat(*y_value))
         return nullptr;
@@ -4594,8 +4679,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return {};
     };
 
-    auto maybe_x_value = TRY(parse_css_value(tokens.next_token()));
-    if (!maybe_x_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_x_value))
+    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
 
@@ -4604,8 +4689,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return x_value;
     }
 
-    auto maybe_y_value = TRY(parse_css_value(tokens.peek_token()));
-    if (!maybe_y_value || !property_accepts_value(PropertyID::BackgroundSize, *maybe_y_value)) {
+    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    if (!maybe_y_value) {
         auto y_value = LengthPercentage { Length::make_auto() };
         auto x_size = get_length_percentage(*x_value);
         if (!x_size.has_value())
@@ -4614,7 +4699,6 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         transaction.commit();
         return BackgroundSizeStyleValue::create(x_size.value(), y_value);
     }
-    tokens.next_token();
 
     auto y_value = maybe_y_value.release_nonnull();
     auto x_size = get_length_percentage(*x_value);
@@ -4636,31 +4720,35 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> co
     RefPtr<StyleValue> border_color;
     RefPtr<StyleValue> border_style;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
-            return nullptr;
+    auto remaining_longhands = Vector { PropertyID::BorderWidth, PropertyID::BorderColor, PropertyID::BorderStyle };
 
-        if (property_accepts_value(PropertyID::BorderWidth, *value)) {
-            if (border_width)
-                return nullptr;
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::BorderWidth: {
+            VERIFY(!border_width);
             border_width = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::BorderColor, *value)) {
-            if (border_color)
-                return nullptr;
+        case PropertyID::BorderColor: {
+            VERIFY(!border_color);
             border_color = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::BorderStyle, *value)) {
-            if (border_style)
-                return nullptr;
+        case PropertyID::BorderStyle: {
+            VERIFY(!border_style);
             border_style = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!border_width)
@@ -4910,22 +4998,25 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
     StyleValueVector alt_text_values;
     bool in_alt_text = false;
 
-    for (auto const& value : component_values) {
-        if (value.is(Token::Type::Delim) && value.token().delim() == '/') {
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto& next = tokens.peek_token();
+        if (next.is(Token::Type::Delim) && next.token().delim() == '/') {
             if (in_alt_text || content_values.is_empty())
                 return nullptr;
             in_alt_text = true;
+            (void)tokens.next_token();
             continue;
         }
-        auto style_value = TRY(parse_css_value(value));
-        if (style_value && property_accepts_value(PropertyID::Content, *style_value)) {
+
+        if (auto style_value = TRY(parse_css_value_for_property(PropertyID::Content, tokens))) {
             if (is_single_value_identifier(style_value->to_identifier()))
                 return nullptr;
 
             if (in_alt_text) {
-                alt_text_values.append(style_value.release_nonnull());
+                TRY(alt_text_values.try_append(style_value.release_nonnull()));
             } else {
-                content_values.append(style_value.release_nonnull());
+                TRY(content_values.try_append(style_value.release_nonnull()));
             }
             continue;
         }
@@ -5287,34 +5378,37 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<Compone
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
+    auto tokens = TokenStream { component_values };
+
     if (component_values.size() == 1) {
         // One-value syntax: <flex-grow> | <flex-basis> | none
-        auto value = TRY(parse_css_value(component_values[0]));
-        if (!value)
+        auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
+        auto property_and_value = TRY(parse_css_value_for_properties(properties, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
 
-        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
+        auto& value = property_and_value.style_value;
+        switch (property_and_value.property) {
+        case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
             auto zero_percent = TRY(NumericStyleValue::create_integer(0));
             auto one = TRY(NumericStyleValue::create_integer(1));
             return FlexStyleValue::create(*value, one, zero_percent);
         }
-
-        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
+        case PropertyID::FlexBasis: {
             auto one = TRY(NumericStyleValue::create_integer(1));
             return FlexStyleValue::create(one, one, *value);
         }
-
-        if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
-            switch (value->to_identifier()) {
-            case ValueID::None: {
+        case PropertyID::Flex: {
+            if (value->is_identifier() && value->to_identifier() == ValueID::None) {
                 auto zero = TRY(NumericStyleValue::create_integer(0));
                 return FlexStyleValue::create(zero, zero, TRY(IdentifierStyleValue::create(ValueID::Auto)));
             }
-            default:
-                return value;
-            }
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
 
         return nullptr;
@@ -5324,43 +5418,36 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     RefPtr<StyleValue> flex_shrink;
     RefPtr<StyleValue> flex_basis;
 
-    for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = TRY(parse_css_value(component_values[i]));
-        if (!value)
+    // NOTE: FlexGrow has to be before FlexBasis. `0` is a valid FlexBasis, but only
+    //       if FlexGrow (along with optional FlexShrink) have already been specified.
+    auto remaining_longhands = Vector { PropertyID::FlexGrow, PropertyID::FlexBasis };
+
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
 
-        // Zero is a valid value for basis, but only if grow and shrink are already specified.
-        if (value->has_number() && value->to_number() == 0) {
-            if (flex_grow && flex_shrink && !flex_basis) {
-                flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
-                continue;
-            }
-        }
-
-        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
-            if (flex_grow)
-                return nullptr;
+        switch (property_and_value.property) {
+        case PropertyID::FlexGrow: {
+            VERIFY(!flex_grow);
             flex_grow = value.release_nonnull();
 
             // Flex-shrink may optionally follow directly after.
-            if (i + 1 < component_values.size()) {
-                auto second_value = TRY(parse_css_value(component_values[i + 1]));
-                if (second_value && property_accepts_value(PropertyID::FlexShrink, *second_value)) {
-                    flex_shrink = second_value.release_nonnull();
-                    i++;
-                }
-            }
+            auto maybe_flex_shrink = TRY(parse_css_value_for_property(PropertyID::FlexShrink, tokens));
+            if (maybe_flex_shrink)
+                flex_shrink = maybe_flex_shrink.release_nonnull();
             continue;
         }
-
-        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
-            if (flex_basis)
-                return nullptr;
+        case PropertyID::FlexBasis: {
+            VERIFY(!flex_basis);
             flex_basis = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!flex_grow)
@@ -5381,21 +5468,26 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue>
     RefPtr<StyleValue> flex_direction;
     RefPtr<StyleValue> flex_wrap;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+    auto remaining_longhands = Vector { PropertyID::FlexDirection, PropertyID::FlexWrap };
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
-        if (property_accepts_value(PropertyID::FlexDirection, *value)) {
-            if (flex_direction)
-                return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::FlexDirection:
+            VERIFY(!flex_direction);
             flex_direction = value.release_nonnull();
             continue;
-        }
-        if (property_accepts_value(PropertyID::FlexWrap, *value)) {
-            if (flex_wrap)
-                return nullptr;
+        case PropertyID::FlexWrap:
+            VERIFY(!flex_wrap);
             flex_wrap = value.release_nonnull();
             continue;
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -5441,64 +5533,71 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
     // So, we have to handle that separately.
     int normal_count = 0;
 
-    for (size_t i = 0; i < component_values.size(); ++i) {
-        auto value = TRY(parse_css_value(component_values[i]));
-        if (!value)
-            return nullptr;
+    auto tokens = TokenStream { component_values };
+    auto remaining_longhands = Vector { PropertyID::FontSize, PropertyID::FontStretch, PropertyID::FontStyle, PropertyID::FontVariant, PropertyID::FontWeight };
 
-        if (value->to_identifier() == ValueID::Normal) {
+    while (tokens.has_next_token()) {
+        auto& peek_token = tokens.peek_token();
+        if (peek_token.is(Token::Type::Ident) && value_id_from_string(peek_token.token().ident()) == ValueID::Normal) {
             normal_count++;
+            (void)tokens.next_token();
             continue;
         }
-        // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
-        if (property_accepts_value(PropertyID::FontStyle, *value)) {
-            if (font_style)
-                return nullptr;
-            font_style = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontWeight, *value)) {
-            if (font_weight)
-                return nullptr;
-            font_weight = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontVariant, *value)) {
-            if (font_variant)
-                return nullptr;
-            font_variant = value.release_nonnull();
-            continue;
-        }
-        if (property_accepts_value(PropertyID::FontSize, *value)) {
-            if (font_size)
-                return nullptr;
+
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::FontSize: {
+            VERIFY(!font_size);
             font_size = value.release_nonnull();
 
             // Consume `/ line-height` if present
-            if (i + 2 < component_values.size()) {
-                auto const& maybe_solidus = component_values[i + 1];
-                if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
-                    auto maybe_line_height = TRY(parse_css_value(component_values[i + 2]));
-                    if (!(maybe_line_height && property_accepts_value(PropertyID::LineHeight, *maybe_line_height)))
-                        return nullptr;
-                    line_height = maybe_line_height.release_nonnull();
-                    i += 2;
-                }
+            auto maybe_solidus = tokens.peek_token();
+            if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
+                (void)tokens.next_token();
+                auto maybe_line_height = TRY(parse_css_value_for_property(PropertyID::LineHeight, tokens));
+                if (!maybe_line_height)
+                    return nullptr;
+                line_height = maybe_line_height.release_nonnull();
             }
 
             // Consume font-families
-            auto maybe_font_families = TRY(parse_font_family_value(component_values, i + 1));
-            if (!maybe_font_families)
+            auto maybe_font_families = TRY(parse_font_family_value(tokens));
+            // font-family comes last, so we must not have any tokens left over.
+            if (!maybe_font_families || tokens.has_next_token())
                 return nullptr;
             font_families = maybe_font_families.release_nonnull();
-            break;
+            continue;
         }
-        if (property_accepts_value(PropertyID::FontStretch, *value)) {
-            if (font_stretch)
-                return nullptr;
+        case PropertyID::FontStretch: {
+            VERIFY(!font_stretch);
             font_stretch = value.release_nonnull();
             continue;
         }
+        case PropertyID::FontStyle: {
+            // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
+            VERIFY(!font_style);
+            font_style = value.release_nonnull();
+            continue;
+        }
+        case PropertyID::FontVariant: {
+            VERIFY(!font_variant);
+            font_variant = value.release_nonnull();
+            continue;
+        }
+        case PropertyID::FontWeight: {
+            VERIFY(!font_weight);
+            font_weight = value.release_nonnull();
+            continue;
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
         return nullptr;
     }
 
@@ -5524,15 +5623,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
     return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<ComponentValue>& tokens)
 {
-    auto is_comma_or_eof = [&](size_t i) -> bool {
-        if (i < component_values.size()) {
-            auto const& maybe_comma = component_values[i];
-            if (!maybe_comma.is(Token::Type::Comma))
-                return false;
-        }
-        return true;
+    auto next_is_comma_or_eof = [&]() -> bool {
+        return !tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma);
     };
 
     // Note: Font-family names can either be a quoted string, or a keyword, or a series of custom-idents.
@@ -5541,54 +5635,59 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(Vector<ComponentValu
     //     font-family: "my cool font!", serif;
     StyleValueVector font_families;
     Vector<DeprecatedString> current_name_parts;
-    for (size_t i = start_index; i < component_values.size(); ++i) {
-        auto const& part = component_values[i];
+    while (tokens.has_next_token()) {
+        auto const& peek = tokens.peek_token();
 
-        if (part.is(Token::Type::String)) {
+        if (peek.is(Token::Type::String)) {
             // `font-family: my cool "font";` is invalid.
             if (!current_name_parts.is_empty())
                 return nullptr;
-            if (!is_comma_or_eof(i + 1))
+            (void)tokens.next_token(); // String
+            if (!next_is_comma_or_eof())
                 return nullptr;
-            font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(part.token().string())))));
-            i++;
+            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::from_utf8(peek.token().string()))))));
+            (void)tokens.next_token(); // Comma
             continue;
         }
-        if (part.is(Token::Type::Ident)) {
+
+        if (peek.is(Token::Type::Ident)) {
             // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
-            auto maybe_ident = TRY(parse_css_value(part));
-            if (maybe_ident) {
-                // CSS-wide keywords are not allowed
-                if (maybe_ident->is_builtin())
+
+            // CSS-wide keywords are not allowed
+            if (auto builtin = TRY(parse_builtin_value(peek)))
+                return nullptr;
+
+            auto maybe_ident = value_id_from_string(peek.token().ident());
+            // Can't have a generic-font-name as a token in an unquoted font name.
+            if (maybe_ident.has_value() && is_generic_font_family(maybe_ident.value())) {
+                if (!current_name_parts.is_empty())
                     return nullptr;
-                if (is_generic_font_family(maybe_ident->to_identifier())) {
-                    // Can't have a generic-font-name as a token in an unquoted font name.
-                    if (!current_name_parts.is_empty())
-                        return nullptr;
-                    if (!is_comma_or_eof(i + 1))
-                        return nullptr;
-                    font_families.append(maybe_ident.release_nonnull());
-                    i++;
-                    continue;
-                }
+                (void)tokens.next_token(); // Ident
+                if (!next_is_comma_or_eof())
+                    return nullptr;
+                TRY(font_families.try_append(TRY(IdentifierStyleValue::create(maybe_ident.value()))));
+                (void)tokens.next_token(); // Comma
+                continue;
             }
-            current_name_parts.append(part.token().ident());
+            TRY(current_name_parts.try_append(tokens.next_token().token().ident()));
             continue;
         }
-        if (part.is(Token::Type::Comma)) {
+
+        if (peek.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(DeprecatedString::join(' ', current_name_parts))))));
+            (void)tokens.next_token(); // Comma
+            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
             current_name_parts.clear();
             // Can't have a trailing comma
-            if (i + 1 == component_values.size())
+            if (!tokens.has_next_token())
                 return nullptr;
             continue;
         }
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(TRY(StringStyleValue::create(TRY(String::from_utf8(DeprecatedString::join(' ', current_name_parts))))));
+        TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
         current_name_parts.clear();
     }
 
@@ -5604,6 +5703,8 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
     Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
+    Optional<int> weight;
+    Optional<int> slope;
 
     for (auto& declaration_or_at_rule : declarations_and_at_rules) {
         if (declaration_or_at_rule.is_at_rule()) {
@@ -5612,6 +5713,20 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         }
 
         auto const& declaration = declaration_or_at_rule.declaration();
+        if (declaration.name().equals_ignoring_ascii_case("font-weight"sv)) {
+            TokenStream token_stream { declaration.values() };
+            if (auto value = parse_css_value(CSS::PropertyID::FontWeight, token_stream); !value.is_error()) {
+                weight = value.value()->to_font_weight();
+            }
+            continue;
+        }
+        if (declaration.name().equals_ignoring_ascii_case("font-style"sv)) {
+            TokenStream token_stream { declaration.values() };
+            if (auto value = parse_css_value(CSS::PropertyID::FontStyle, token_stream); !value.is_error()) {
+                slope = value.value()->to_font_slope();
+            }
+            continue;
+        }
         if (declaration.name().equals_ignoring_ascii_case("font-family"sv)) {
             // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
             //        Ideally they could share code.
@@ -5637,7 +5752,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
                         break;
                     }
                     auto value_id = value_id_from_string(part.token().ident());
-                    if (is_generic_font_family(value_id)) {
+                    if (value_id.has_value() && is_generic_font_family(value_id.value())) {
                         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
                         had_syntax_error = true;
                         break;
@@ -5698,7 +5813,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
+    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
@@ -5796,33 +5911,40 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
     RefPtr<StyleValue> list_type;
     int found_nones = 0;
 
-    for (auto const& part : component_values) {
-        auto value = TRY(parse_css_value(part));
-        if (!value)
-            return nullptr;
+    Vector<PropertyID> remaining_longhands { PropertyID::ListStyleImage, PropertyID::ListStylePosition, PropertyID::ListStyleType };
 
-        if (value->to_identifier() == ValueID::None) {
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        if (auto peek = tokens.peek_token(); peek.is(Token::Type::Ident) && peek.token().ident().equals_ignoring_ascii_case("none"sv)) {
+            (void)tokens.next_token();
             found_nones++;
             continue;
         }
 
-        if (property_accepts_value(PropertyID::ListStylePosition, *value)) {
-            if (list_position)
-                return nullptr;
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
+            return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
+
+        switch (property_and_value.property) {
+        case PropertyID::ListStylePosition: {
+            VERIFY(!list_position);
             list_position = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::ListStyleImage, *value)) {
-            if (list_image)
-                return nullptr;
+        case PropertyID::ListStyleImage: {
+            VERIFY(!list_image);
             list_image = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::ListStyleType, *value)) {
-            if (list_type)
-                return nullptr;
+        case PropertyID::ListStyleType: {
+            VERIFY(!list_type);
             list_type = value.release_nonnull();
             continue;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -5858,28 +5980,20 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
 {
+    auto tokens = TokenStream { component_values };
     if (component_values.size() == 1) {
-        auto maybe_value = TRY(parse_css_value(component_values.first()));
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::Overflow, tokens));
         if (!maybe_value)
             return nullptr;
-        auto value = maybe_value.release_nonnull();
-        if (property_accepts_value(PropertyID::Overflow, *value))
-            return OverflowStyleValue::create(value, value);
-        return nullptr;
+        return OverflowStyleValue::create(*maybe_value, *maybe_value);
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = TRY(parse_css_value(component_values[0]));
-        auto maybe_y_value = TRY(parse_css_value(component_values[1]));
-
+        auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::OverflowX, tokens));
+        auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::OverflowY, tokens));
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
-        auto x_value = maybe_x_value.release_nonnull();
-        auto y_value = maybe_y_value.release_nonnull();
-        if (!property_accepts_value(PropertyID::OverflowX, x_value) || !property_accepts_value(PropertyID::OverflowY, y_value)) {
-            return nullptr;
-        }
-        return OverflowStyleValue::create(x_value, y_value);
+        return OverflowStyleValue::create(maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull());
     }
 
     return nullptr;
@@ -5892,23 +6006,24 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
     RefPtr<StyleValue> decoration_style;
     RefPtr<StyleValue> decoration_color;
 
+    auto remaining_longhands = Vector { PropertyID::TextDecorationColor, PropertyID::TextDecorationLine, PropertyID::TextDecorationStyle, PropertyID::TextDecorationThickness };
+
     auto tokens = TokenStream { component_values };
-
     while (tokens.has_next_token()) {
-        auto const& part = tokens.next_token();
-        auto value = TRY(parse_css_value(part));
-        if (!value)
+        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        if (!property_and_value.style_value)
             return nullptr;
+        auto& value = property_and_value.style_value;
+        remove_property(remaining_longhands, property_and_value.property);
 
-        if (property_accepts_value(PropertyID::TextDecorationColor, *value)) {
-            if (decoration_color)
-                return nullptr;
+        switch (property_and_value.property) {
+        case PropertyID::TextDecorationColor: {
+            VERIFY(!decoration_color);
             decoration_color = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationLine, *value)) {
-            if (decoration_line)
-                return nullptr;
+        case PropertyID::TextDecorationLine: {
+            VERIFY(!decoration_line);
             tokens.reconsume_current_input_token();
             auto parsed_decoration_line = TRY(parse_text_decoration_line_value(tokens));
             if (!parsed_decoration_line)
@@ -5916,20 +6031,19 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
             decoration_line = parsed_decoration_line.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationThickness, *value)) {
-            if (decoration_thickness)
-                return nullptr;
+        case PropertyID::TextDecorationThickness: {
+            VERIFY(!decoration_thickness);
             decoration_thickness = value.release_nonnull();
             continue;
         }
-        if (property_accepts_value(PropertyID::TextDecorationStyle, *value)) {
-            if (decoration_style)
-                return nullptr;
+        case PropertyID::TextDecorationStyle: {
+            VERIFY(!decoration_style);
             decoration_style = value.release_nonnull();
             continue;
         }
-
-        return nullptr;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (!decoration_line)
@@ -5949,32 +6063,23 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
     StyleValueVector style_values;
 
     while (tokens.has_next_token()) {
-        auto const& token = tokens.next_token();
-        auto maybe_value = TRY(parse_css_value(token));
-        if (!maybe_value || !property_accepts_value(PropertyID::TextDecorationLine, *maybe_value)) {
-            tokens.reconsume_current_input_token();
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::TextDecorationLine, tokens));
+        if (!maybe_value)
             break;
-        }
         auto value = maybe_value.release_nonnull();
 
         if (auto maybe_line = value_id_to_text_decoration_line(value->to_identifier()); maybe_line.has_value()) {
-            auto line = maybe_line.release_value();
-            if (line == TextDecorationLine::None) {
-                if (!style_values.is_empty()) {
-                    tokens.reconsume_current_input_token();
+            if (maybe_line == TextDecorationLine::None) {
+                if (!style_values.is_empty())
                     break;
-                }
                 return value;
             }
-            if (style_values.contains_slow(value)) {
-                tokens.reconsume_current_input_token();
+            if (style_values.contains_slow(value))
                 break;
-            }
-            style_values.append(move(value));
+            TRY(style_values.try_append(move(value)));
             continue;
         }
 
-        tokens.reconsume_current_input_token();
         break;
     }
 
@@ -6161,9 +6266,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     };
 
+    auto tokens = TokenStream { component_values };
     switch (component_values.size()) {
     case 1: {
-        auto single_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[0]))));
+        auto single_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
         if (!single_value.has_value())
             return nullptr;
         // If only one value is specified, the second value is assumed to be center.
@@ -6178,8 +6284,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         VERIFY_NOT_REACHED();
     }
     case 2: {
-        auto first_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[0]))));
-        auto second_value = TRY(to_axis_offset(TRY(parse_css_value(component_values[1]))));
+        auto first_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
+        auto second_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
         if (!first_value.has_value() || !second_value.has_value())
             return nullptr;
 
@@ -6869,7 +6975,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BackgroundClip:
     case PropertyID::BackgroundImage:
     case PropertyID::BackgroundOrigin:
-        if (auto parsed_value = FIXME_TRY(parse_simple_comma_separated_value_list(component_values)))
+        if (auto parsed_value = FIXME_TRY(parse_simple_comma_separated_value_list(property_id, component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPosition:
@@ -6932,10 +7038,12 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = FIXME_TRY(parse_font_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
-    case PropertyID::FontFamily:
-        if (auto parsed_value = FIXME_TRY(parse_font_family_value(component_values)))
+    case PropertyID::FontFamily: {
+        auto tokens_without_whitespace = TokenStream { component_values };
+        if (auto parsed_value = FIXME_TRY(parse_font_family_value(tokens_without_whitespace)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    }
     case PropertyID::GridColumn:
         if (auto parsed_value = FIXME_TRY(parse_grid_track_placement_shorthand_value(component_values)))
             return parsed_value.release_nonnull();
@@ -7031,62 +7139,202 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         break;
     }
 
+    // If there's only 1 ComponentValue, we can only produce a single StyleValue.
     if (component_values.size() == 1) {
-        if (auto parsed_value = FIXME_TRY(parse_css_value(component_values.first()))) {
-            if (property_accepts_value(property_id, *parsed_value))
-                return parsed_value.release_nonnull();
-        }
+        auto stream = TokenStream { component_values };
+        if (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream)))
+            return parsed_value.release_nonnull();
+
         return ParseError::SyntaxError;
     }
 
-    // We have multiple values, so treat them as a StyleValueList.
-    if (property_maximum_value_count(property_id) > 1) {
-        StyleValueVector parsed_values;
-        for (auto& component_value : component_values) {
-            auto parsed_value = FIXME_TRY(parse_css_value(component_value));
-            if (!parsed_value || !property_accepts_value(property_id, *parsed_value))
-                return ParseError::SyntaxError;
-            parsed_values.append(parsed_value.release_nonnull());
-        }
-        if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-            return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
+    // Multiple ComponentValues will usually produce multiple StyleValues, so make a StyleValueList.
+    StyleValueVector parsed_values;
+    auto stream = TokenStream { component_values };
+    while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
+        FIXME_TRY(parsed_values.try_append(parsed_value.release_nonnull()));
+        if (!stream.has_next_token())
+            break;
     }
+
+    // Some types (such as <ratio>) can be made from multiple ComponentValues, so if we only made 1 StyleValue, return it directly.
+    if (parsed_values.size() == 1)
+        return *parsed_values.take_first();
+
+    if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
+        return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
 
     return ParseError::SyntaxError;
 #undef FIXME_TRY
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value(ComponentValue const& component_value)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    if (auto builtin = TRY(parse_builtin_value(component_value)))
-        return builtin;
+    auto result = parse_css_value_for_properties({ &property_id, 1 }, tokens);
+    if (result.is_error())
+        return result.release_error();
+    return result.value().style_value;
+}
 
-    if (auto dynamic = TRY(parse_dynamic_value(component_value)))
-        return dynamic;
+ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
+{
+    auto any_property_accepts_type = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_type(property, value_type))
+                return property;
+        }
+        return {};
+    };
+    auto any_property_accepts_identifier = [](ReadonlySpan<PropertyID> property_ids, ValueID identifier) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_identifier(property, identifier))
+                return property;
+        }
+        return {};
+    };
 
-    // We parse colors before numbers, to catch hashless hex colors.
-    if (auto color = TRY(parse_color_value(component_value)))
-        return color;
+    auto& peek_token = tokens.peek_token();
 
-    if (auto dimension = TRY(parse_dimension_value(component_value)))
-        return dimension;
+    if (peek_token.is(Token::Type::Ident)) {
+        // NOTE: We do not try to parse "CSS-wide keywords" here. https://www.w3.org/TR/css-values-4/#common-keywords
+        //       These are only valid on their own, and so should be parsed directly in `parse_css_value()`.
+        auto ident = value_id_from_string(peek_token.token().ident());
+        if (ident.has_value()) {
+            if (auto property = any_property_accepts_identifier(property_ids, ident.value()); property.has_value()) {
+                (void)tokens.next_token();
+                return PropertyAndValue { *property, TRY(IdentifierStyleValue::create(ident.value())) };
+            }
+        }
 
-    if (auto numeric = TRY(parse_numeric_value(component_value)))
-        return numeric;
+        // Custom idents
+        if (auto property = any_property_accepts_type(property_ids, ValueType::CustomIdent); property.has_value()) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, TRY(CustomIdentStyleValue::create(TRY(FlyString::from_utf8(peek_token.token().ident())))) };
+        }
+    }
 
-    if (auto identifier = TRY(parse_identifier_value(component_value)))
-        return identifier;
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Color); property.has_value()) {
+        if (auto maybe_color = TRY(parse_color_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_color };
+        }
+    }
 
-    if (auto string = TRY(parse_string_value(component_value)))
-        return string;
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Image); property.has_value()) {
+        if (auto maybe_image = TRY(parse_image_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_image };
+        }
+    }
 
-    if (auto image = TRY(parse_image_value(component_value)))
-        return image;
+    auto property_accepting_integer = any_property_accepts_type(property_ids, ValueType::Integer);
+    auto property_accepting_number = any_property_accepts_type(property_ids, ValueType::Number);
+    bool property_accepts_numeric = property_accepting_integer.has_value() || property_accepting_number.has_value();
 
-    if (auto rect = TRY(parse_rect_value(component_value)))
-        return rect;
+    if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
+        auto numeric = TRY(parse_numeric_value(peek_token));
+        (void)tokens.next_token();
+        if (numeric->as_numeric().has_integer() && property_accepting_integer.has_value())
+            return PropertyAndValue { *property_accepting_integer, numeric };
+        return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), numeric };
+    }
 
-    return nullptr;
+    if (peek_token.is(Token::Type::Percentage)) {
+        if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value()) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, TRY(PercentageStyleValue::create(Percentage(peek_token.token().percentage()))) };
+        }
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Rect); property.has_value()) {
+        if (auto maybe_rect = TRY(parse_rect_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, maybe_rect };
+        }
+    }
+
+    if (peek_token.is(Token::Type::String)) {
+        if (auto property = any_property_accepts_type(property_ids, ValueType::String); property.has_value())
+            return PropertyAndValue { *property, TRY(StringStyleValue::create(TRY(String::from_utf8(tokens.next_token().token().string())))) };
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
+        if (auto url = TRY(parse_url_value(peek_token))) {
+            (void)tokens.next_token();
+            return PropertyAndValue { *property, url };
+        }
+    }
+
+    bool property_accepts_dimension = any_property_accepts_type(property_ids, ValueType::Angle).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Length).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Percentage).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Resolution).has_value()
+        || any_property_accepts_type(property_ids, ValueType::Time).has_value();
+
+    if (property_accepts_dimension) {
+        if (auto maybe_dimension = parse_dimension(peek_token); maybe_dimension.has_value()) {
+            (void)tokens.next_token();
+            auto dimension = maybe_dimension.release_value();
+            if (dimension.is_angle()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, TRY(AngleStyleValue::create(dimension.angle())) };
+            }
+            if (dimension.is_frequency()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(dimension.frequency())) };
+            }
+            if (dimension.is_length()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, TRY(LengthStyleValue::create(dimension.length())) };
+            }
+            if (dimension.is_resolution()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value())
+                    return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(dimension.resolution())) };
+            }
+            if (dimension.is_time()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
+                    return PropertyAndValue { *property, TRY(TimeStyleValue::create(dimension.time())) };
+            }
+        }
+    }
+
+    // In order to not end up parsing `calc()` and other math expressions multiple times,
+    // we parse it once, and then see if its resolved type matches what the property accepts.
+    if (peek_token.is_function() && (property_accepts_dimension || property_accepts_numeric)) {
+        if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
+            (void)tokens.next_token();
+            auto& calculated = maybe_dynamic->as_calculated();
+            switch (calculated.resolved_type()) {
+            case CalculatedStyleValue::ResolvedType::Angle:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Frequency:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Integer:
+            case CalculatedStyleValue::ResolvedType::Number:
+                if (property_accepts_numeric)
+                    return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Length:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Percentage:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            case CalculatedStyleValue::ResolvedType::Time:
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+                break;
+            }
+        }
+    }
+
+    return PropertyAndValue { property_ids.first(), nullptr };
 }
 
 Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values)
@@ -7591,6 +7839,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                 return {};
             }
             node = leaf_calculation.release_nonnull();
+            return {};
         }
 
         // 2. If leaf is a math function, replace leaf with the internal representation of that math function.
@@ -7604,6 +7853,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                     return {};
                 }
                 node = leaf_calculation.release_nonnull();
+                return {};
             } else {
                 // FIXME: Parse more math functions once we have them.
                 parsing_failed_for_child_node = true;
@@ -7611,6 +7861,10 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
             }
         }
 
+        // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.
+        //       So, the calc() is invalid.
+        dbgln_if(CSS_PARSER_DEBUG, "Leftover UnparsedCalculationNode in calc tree! That probably means the syntax is invalid, but maybe we just didn't implement `{}` yet.", component_value.to_debug_string());
+        parsing_failed_for_child_node = true;
         return {};
     }));
 

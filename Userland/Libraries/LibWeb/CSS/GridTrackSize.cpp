@@ -14,7 +14,7 @@ GridSize::GridSize(LengthPercentage length_percentage)
     : m_type(Type::LengthPercentage)
     , m_length_percentage(length_percentage) {};
 
-GridSize::GridSize(float flex_factor)
+GridSize::GridSize(double flex_factor)
     : m_type(Type::FlexibleLength)
     , m_length_percentage { Length::make_px(0) }
     , m_flex_factor(flex_factor)

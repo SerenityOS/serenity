@@ -54,7 +54,7 @@ URL url_from_user_input(DeprecatedString const& input)
     if (input.starts_with('?') && !g_search_engine.is_empty())
         return URL(g_search_engine.replace("{}"sv, URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
 
-    URL url_with_http_schema = URL(DeprecatedString::formatted("http://{}", input));
+    URL url_with_http_schema = URL(DeprecatedString::formatted("https://{}", input));
     if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
         return url_with_http_schema;
 
@@ -144,7 +144,7 @@ Tab::Tab(BrowserWindow& window)
             i++;
             m_go_back_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
-        m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left());
+        m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left().moved_up(1));
     };
 
     auto& go_forward_button = toolbar.add_action(window.go_forward_action());
@@ -157,7 +157,7 @@ Tab::Tab(BrowserWindow& window)
             i++;
             m_go_forward_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
-        m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left());
+        m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left().moved_up(1));
     };
 
     auto& go_home_button = toolbar.add_action(window.go_home_action());
@@ -850,7 +850,7 @@ void Tab::show_storage_inspector()
     if (!m_storage_widget) {
         auto storage_window = GUI::Window::construct(&window());
         storage_window->resize(500, 300);
-        storage_window->set_title("Storage inspector");
+        storage_window->set_title("Storage Inspector");
         storage_window->set_icon(g_icon_bag.cookie);
         m_storage_widget = storage_window->set_main_widget<StorageWidget>().release_value_but_fixme_should_propagate_errors();
         m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {

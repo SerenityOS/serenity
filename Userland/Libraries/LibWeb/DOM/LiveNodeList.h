@@ -18,7 +18,12 @@ class LiveNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(LiveNodeList, NodeList);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> create(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
+    enum class Scope {
+        Children,
+        Descendants,
+    };
+
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> create(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
     virtual ~LiveNodeList() override;
 
     virtual u32 length() const override;
@@ -27,7 +32,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 private:
-    LiveNodeList(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
+    LiveNodeList(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -35,6 +40,7 @@ private:
 
     JS::NonnullGCPtr<Node> m_root;
     Function<bool(Node const&)> m_filter;
+    Scope m_scope { Scope::Descendants };
 };
 
 }

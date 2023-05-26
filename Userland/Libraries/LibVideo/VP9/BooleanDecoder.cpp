@@ -12,13 +12,13 @@
 namespace Video::VP9 {
 
 /* 9.2.1 */
-ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t bytes)
+ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
 {
     VERIFY(bit_stream->is_aligned_to_byte_boundary());
     auto value = TRY(bit_stream->read_value<u8>());
     u8 range = 255;
-    u64 max_bits = (8 * bytes) - 8;
-    BooleanDecoder decoder { move(bit_stream), value, range, max_bits };
+    u64 bits_left = (8 * size_in_bytes) - 8;
+    BooleanDecoder decoder { move(bit_stream), value, range, bits_left };
     if (TRY(decoder.read_bool(128)))
         return Error::from_string_literal("Range decoder marker was non-zero");
     return decoder;
@@ -60,11 +60,6 @@ ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
         return_value = (2 * return_value) + TRY(read_bool(128));
     }
     return return_value;
-}
-
-size_t BooleanDecoder::bits_remaining() const
-{
-    return m_bits_left;
 }
 
 /* 9.2.3 */

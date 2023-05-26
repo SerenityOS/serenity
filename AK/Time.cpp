@@ -38,31 +38,31 @@ unsigned day_of_week(int year, unsigned month, int day)
     return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
 }
 
-Time Time::from_ticks(clock_t ticks, time_t ticks_per_second)
+Duration Duration::from_ticks(clock_t ticks, time_t ticks_per_second)
 {
     auto secs = ticks % ticks_per_second;
 
     i32 nsecs = 1'000'000'000 * (ticks - (ticks_per_second * secs)) / ticks_per_second;
     i32 extra_secs = sane_mod(nsecs, 1'000'000'000);
-    return Time::from_half_sanitized(secs, extra_secs, nsecs);
+    return Duration::from_half_sanitized(secs, extra_secs, nsecs);
 }
 
-Time Time::from_timespec(const struct timespec& ts)
+Duration Duration::from_timespec(const struct timespec& ts)
 {
     i32 nsecs = ts.tv_nsec;
     i32 extra_secs = sane_mod(nsecs, 1'000'000'000);
-    return Time::from_half_sanitized(ts.tv_sec, extra_secs, nsecs);
+    return Duration::from_half_sanitized(ts.tv_sec, extra_secs, nsecs);
 }
 
-Time Time::from_timeval(const struct timeval& tv)
+Duration Duration::from_timeval(const struct timeval& tv)
 {
     i32 usecs = tv.tv_usec;
     i32 extra_secs = sane_mod(usecs, 1'000'000);
     VERIFY(0 <= usecs && usecs < 1'000'000);
-    return Time::from_half_sanitized(tv.tv_sec, extra_secs, usecs * 1'000);
+    return Duration::from_half_sanitized(tv.tv_sec, extra_secs, usecs * 1'000);
 }
 
-i64 Time::to_truncated_seconds() const
+i64 Duration::to_truncated_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     if (m_seconds < 0 && m_nanoseconds) {
@@ -72,7 +72,7 @@ i64 Time::to_truncated_seconds() const
     return m_seconds;
 }
 
-i64 Time::to_truncated_milliseconds() const
+i64 Duration::to_truncated_milliseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
@@ -91,7 +91,7 @@ i64 Time::to_truncated_milliseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-i64 Time::to_truncated_microseconds() const
+i64 Duration::to_truncated_microseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
@@ -110,7 +110,7 @@ i64 Time::to_truncated_microseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-i64 Time::to_seconds() const
+i64 Duration::to_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     if (m_seconds >= 0 && m_nanoseconds) {
@@ -121,7 +121,7 @@ i64 Time::to_seconds() const
     return m_seconds;
 }
 
-i64 Time::to_milliseconds() const
+i64 Duration::to_milliseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
@@ -138,7 +138,7 @@ i64 Time::to_milliseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-i64 Time::to_microseconds() const
+i64 Duration::to_microseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
@@ -155,7 +155,7 @@ i64 Time::to_microseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-i64 Time::to_nanoseconds() const
+i64 Duration::to_nanoseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     Checked<i64> nanoseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
@@ -170,13 +170,13 @@ i64 Time::to_nanoseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-timespec Time::to_timespec() const
+timespec Duration::to_timespec() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     return { static_cast<time_t>(m_seconds), static_cast<long>(m_nanoseconds) };
 }
 
-timeval Time::to_timeval() const
+timeval Duration::to_timeval() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     // This is done because winsock defines tv_sec and tv_usec as long, and Linux64 as long int.
@@ -185,78 +185,7 @@ timeval Time::to_timeval() const
     return { static_cast<sec_type>(m_seconds), static_cast<usec_type>(m_nanoseconds) / 1000 };
 }
 
-Time Time::operator+(Time const& other) const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    VERIFY(other.m_nanoseconds < 1'000'000'000);
-
-    u32 new_nsecs = m_nanoseconds + other.m_nanoseconds;
-    u32 extra_secs = new_nsecs / 1'000'000'000;
-    new_nsecs %= 1'000'000'000;
-
-    i64 this_secs = m_seconds;
-    i64 other_secs = other.m_seconds;
-    // We would like to just add "this_secs + other_secs + extra_secs".
-    // However, computing this naively may overflow even though the result is in-bounds.
-    // Example in 8-bit: (-127) + (-2) + (+1) = (-128), which fits in an i8.
-    // Example in 8-bit, the other way around: (-2) + (127) + (+1) = 126.
-    // So we do something more sophisticated:
-    if (extra_secs) {
-        VERIFY(extra_secs == 1);
-        if (this_secs != 0x7fff'ffff'ffff'ffff) {
-            this_secs += 1;
-        } else if (other_secs != 0x7fff'ffff'ffff'ffff) {
-            other_secs += 1;
-        } else {
-            /* If *both* are INT64_MAX, then adding them will overflow in any case. */
-            return Time::max();
-        }
-    }
-
-    Checked<i64> new_secs { this_secs };
-    new_secs += other_secs;
-    if (new_secs.has_overflow()) {
-        if (other_secs > 0)
-            return Time::max();
-        else
-            return Time::min();
-    }
-
-    return Time { new_secs.value(), new_nsecs };
-}
-
-Time& Time::operator+=(Time const& other)
-{
-    *this = *this + other;
-    return *this;
-}
-
-Time Time::operator-(Time const& other) const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    VERIFY(other.m_nanoseconds < 1'000'000'000);
-
-    if (other.m_nanoseconds)
-        return *this + Time((i64) ~(u64)other.m_seconds, 1'000'000'000 - other.m_nanoseconds);
-
-    if (other.m_seconds != (i64)-0x8000'0000'0000'0000)
-        return *this + Time(-other.m_seconds, 0);
-
-    // Only remaining case: We want to subtract -0x8000'0000'0000'0000 seconds,
-    // i.e. add a very large number.
-
-    if (m_seconds >= 0)
-        return Time::max();
-    return Time { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
-}
-
-Time& Time::operator-=(Time const& other)
-{
-    *this = *this - other;
-    return *this;
-}
-
-Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
+Duration Duration::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
 {
     VERIFY(nanoseconds < 1'000'000'000);
 
@@ -269,43 +198,43 @@ Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
     // Now the only possible way to become invalid is overflowing i64 towards positive infinity:
     if (Checked<i64>::addition_would_overflow<i64, i64>(seconds, extra_seconds)) {
         if (seconds < 0) {
-            return Time::min();
+            return Duration::min();
         } else {
-            return Time::max();
+            return Duration::max();
         }
     }
 
-    return Time { seconds + extra_seconds, nanoseconds };
+    return Duration { seconds + extra_seconds, nanoseconds };
 }
 
 #ifndef KERNEL
 namespace {
-static Time now_time_from_clock(clockid_t clock_id)
+static Duration now_time_from_clock(clockid_t clock_id)
 {
     timespec now_spec {};
     ::clock_gettime(clock_id, &now_spec);
-    return Time::from_timespec(now_spec);
+    return Duration::from_timespec(now_spec);
 }
 }
 
-Time Time::now_realtime()
+MonotonicTime MonotonicTime::now()
 {
-    return now_time_from_clock(CLOCK_REALTIME);
+    return MonotonicTime { now_time_from_clock(CLOCK_MONOTONIC) };
 }
 
-Time Time::now_realtime_coarse()
+MonotonicTime MonotonicTime::now_coarse()
 {
-    return now_time_from_clock(CLOCK_REALTIME_COARSE);
+    return MonotonicTime { now_time_from_clock(CLOCK_MONOTONIC_COARSE) };
 }
 
-Time Time::now_monotonic()
+UnixDateTime UnixDateTime::now()
 {
-    return now_time_from_clock(CLOCK_MONOTONIC);
+    return UnixDateTime { now_time_from_clock(CLOCK_REALTIME) };
 }
 
-Time Time::now_monotonic_coarse()
+UnixDateTime UnixDateTime::now_coarse()
 {
-    return now_time_from_clock(CLOCK_MONOTONIC_COARSE);
+    return UnixDateTime { now_time_from_clock(CLOCK_REALTIME_COARSE) };
 }
 
 #endif

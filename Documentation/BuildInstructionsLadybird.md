@@ -2,7 +2,7 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-13 are required at a minimum for c++20 support.
+Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-14 are required at a minimum for c++20 support.
 
 On Debian/Ubuntu required packages include, but are not limited to:
 
@@ -19,7 +19,7 @@ sudo apt install qt6-wayland
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
+sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-svg qt6-tools qt6-wayland
 ```
 
 On Fedora or derivatives:
@@ -39,7 +39,7 @@ nix-shell ladybird.nix
 
 On macOS:
 
-Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. Xcode 14.x or clang from homebrew may be required to successfully build ladybird.
+Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. Xcode 14 versions before 14.3 might crash while building ladybird. Xcode 14.3 or clang from homebrew may be required to successfully build ladybird.
 
 ```
 xcode-select --install
@@ -103,7 +103,7 @@ The install rules in Ladybird/cmake/InstallRules.cmake define which binaries and
 installed into the configured CMAKE_PREFIX_PATH or path passed to ``cmake --install``.
 
 Note that when using a custom build directory rather than Meta/serenity.sh, the user may need to provide
-a suitable C++ compiler (g++ >= 12, clang >= 13, Apple Clang >= 14) via the CMAKE_CXX_COMPILER and
+a suitable C++ compiler (g++ >= 12, clang >= 14, Apple Clang >= 14.3) via the CMAKE_CXX_COMPILER and
 CMAKE_C_COMPILER cmake options.
 
 ```

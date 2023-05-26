@@ -118,8 +118,8 @@ void IncrementalSearchBanner::paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.draw_line({ 0, rect().bottom() - 1 }, { width(), rect().bottom() - 1 }, palette().threed_shadow1());
-    painter.draw_line({ 0, rect().bottom() }, { width(), rect().bottom() }, palette().threed_shadow2());
+    painter.draw_line({ 0, rect().bottom() - 2 }, { width(), rect().bottom() - 2 }, palette().threed_shadow1());
+    painter.draw_line({ 0, rect().bottom() - 1 }, { width(), rect().bottom() - 1 }, palette().threed_shadow2());
 }
 
 Optional<UISize> IncrementalSearchBanner::calculated_min_size() const

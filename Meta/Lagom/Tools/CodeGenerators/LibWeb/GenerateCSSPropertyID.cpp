@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GeneratorUtil.h"
+#include <AK/GenericShorthands.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -13,6 +14,11 @@
 
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file);
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file);
+
+static bool type_name_is_enum(StringView type_name)
+{
+    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -103,13 +109,33 @@ enum class PropertyID {
     generator.append(R"~~~(
 };
 
-PropertyID property_id_from_camel_case_string(StringView);
-PropertyID property_id_from_string(StringView);
+Optional<PropertyID> property_id_from_camel_case_string(StringView);
+Optional<PropertyID> property_id_from_string(StringView);
 StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm&, PropertyID);
 
-bool property_accepts_value(PropertyID, StyleValue&);
+enum class ValueType {
+    Angle,
+    Color,
+    CustomIdent,
+    FilterValueList,
+    Frequency,
+    Image,
+    Integer,
+    Length,
+    Number,
+    Paint,
+    Percentage,
+    Position,
+    Rect,
+    Resolution,
+    String,
+    Time,
+    Url,
+};
+bool property_accepts_type(PropertyID, ValueType);
+bool property_accepts_identifier(PropertyID, ValueID);
 size_t property_maximum_value_count(PropertyID);
 
 bool property_affects_layout(PropertyID);
@@ -160,7 +186,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& f
 
 namespace Web::CSS {
 
-PropertyID property_id_from_camel_case_string(StringView string)
+Optional<PropertyID> property_id_from_camel_case_string(StringView string)
 {
 )~~~");
 
@@ -178,10 +204,10 @@ PropertyID property_id_from_camel_case_string(StringView string)
     });
 
     generator.append(R"~~~(
-    return PropertyID::Invalid;
+    return {};
 }
 
-PropertyID property_id_from_string(StringView string)
+Optional<PropertyID> property_id_from_string(StringView string)
 {
 )~~~");
 
@@ -198,7 +224,7 @@ PropertyID property_id_from_string(StringView string)
     });
 
     generator.append(R"~~~(
-    return PropertyID::Invalid;
+    return {};
 }
 
 StringView string_from_property_id(PropertyID property_id) {
@@ -403,176 +429,131 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
     }
 }
 
-bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
+bool property_accepts_type(PropertyID property_id, ValueType value_type)
 {
-    if (style_value.is_builtin())
-        return true;
-
     switch (property_id) {
 )~~~");
-
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         auto& object = value.as_object();
-        bool has_valid_types = object.has("valid-types"sv);
-        auto has_valid_identifiers = object.has("valid-identifiers"sv);
-        if (has_valid_types || has_valid_identifiers) {
+        if (auto maybe_valid_types = object.get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
+            auto& valid_types = maybe_valid_types.value();
             auto property_generator = generator.fork();
             property_generator.set("name:titlecase", title_casify(name));
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@: {
+        switch (value_type) {
 )~~~");
 
-            auto output_numeric_value_check = [](SourceGenerator& generator, StringView type_check_function, StringView value_getter, Span<StringView> resolved_type_names, StringView min_value, StringView max_value) {
-                auto test_generator = generator.fork();
-                test_generator.set("type_check_function", type_check_function);
-                test_generator.set("value_getter", value_getter);
-                test_generator.append(R"~~~(
-        if ((style_value.@type_check_function@())~~~");
-                if (!min_value.is_empty() && min_value != "-∞") {
-                    test_generator.set("minvalue", min_value);
-                    test_generator.append(" && (style_value.@value_getter@ >= @minvalue@)");
-                }
-                if (!max_value.is_empty() && max_value != "∞") {
-                    test_generator.set("maxvalue", max_value);
-                    test_generator.append(" && (style_value.@value_getter@ <= @maxvalue@)");
-                }
-                test_generator.append(")");
-                if (!resolved_type_names.is_empty()) {
-                    test_generator.append(R"~~~(
-        || (style_value.is_calculated() && ()~~~");
-                    bool first = true;
-                    for (auto& type_name : resolved_type_names) {
-                        test_generator.set("resolved_type_name", type_name);
-                        if (!first)
-                            test_generator.append(" || ");
-                        test_generator.append("style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::@resolved_type_name@");
-                        first = false;
-                    }
-                    test_generator.append("))");
-                }
-                test_generator.append(R"~~~() {
-            return true;
-        }
-)~~~");
-            };
+            bool did_output_accepted_type = false;
+            for (auto& type : valid_types.values()) {
+                VERIFY(type.is_string());
+                auto type_name = type.as_string().split_view(' ').first();
+                if (type_name_is_enum(type_name))
+                    continue;
 
-            if (has_valid_types) {
-                auto valid_types_value = object.get_array("valid-types"sv);
-                VERIFY(valid_types_value.has_value());
-                auto& valid_types = valid_types_value.value();
-                if (!valid_types.is_empty()) {
-                    for (auto& type : valid_types.values()) {
-                        VERIFY(type.is_string());
-                        auto type_parts = type.as_string().split_view(' ');
-                        auto type_name = type_parts.first();
-                        auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
-                        StringView min_value;
-                        StringView max_value;
-                        if (!type_args.is_empty()) {
-                            VERIFY(type_args.starts_with('[') && type_args.ends_with(']'));
-                            auto comma_index = type_args.find(',').value();
-                            min_value = type_args.substring_view(1, comma_index - 1);
-                            max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
-                        }
-
-                        if (type_name == "angle") {
-                            output_numeric_value_check(property_generator, "is_angle"sv, "as_angle().angle().to_degrees()"sv, Array { "Angle"sv }, min_value, max_value);
-                        } else if (type_name == "color") {
-                            property_generator.append(R"~~~(
-        if (style_value.has_color())
-            return true;
-)~~~");
-                        } else if (type_name == "filter-value-list") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_filter_value_list())
-            return true;
-)~~~");
-                        } else if (type_name == "frequency") {
-                            output_numeric_value_check(property_generator, "is_frequency"sv, "as_frequency().frequency().to_hertz()"sv, Array { "Frequency"sv }, min_value, max_value);
-                        } else if (type_name == "image") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_abstract_image())
-            return true;
-)~~~");
-                        } else if (type_name == "integer") {
-                            output_numeric_value_check(property_generator, "has_integer"sv, "to_integer()"sv, Array { "Integer"sv }, min_value, max_value);
-                        } else if (type_name == "length") {
-                            output_numeric_value_check(property_generator, "has_length"sv, "to_length().raw_value()"sv, Array { "Length"sv }, min_value, max_value);
-                        } else if (type_name == "number") {
-                            output_numeric_value_check(property_generator, "has_number"sv, "to_number()"sv, Array { "Integer"sv, "Number"sv }, min_value, max_value);
-                        } else if (type_name == "percentage") {
-                            output_numeric_value_check(property_generator, "is_percentage"sv, "as_percentage().percentage().value()"sv, Array { "Percentage"sv }, min_value, max_value);
-                        } else if (type_name == "rect") {
-                            property_generator.append(R"~~~(
-        if (style_value.has_rect())
-            return true;
-)~~~");
-                        } else if (type_name == "resolution") {
-                            output_numeric_value_check(property_generator, "is_resolution"sv, "as_resolution().resolution().to_dots_per_pixel()"sv, Array<StringView, 0> {}, min_value, max_value);
-                        } else if (type_name == "string") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_string())
-            return true;
-)~~~");
-                        } else if (type_name == "time") {
-                            output_numeric_value_check(property_generator, "is_time"sv, "as_time().time().to_seconds()"sv, Array { "Time"sv }, min_value, max_value);
-                        } else if (type_name == "url") {
-                            // FIXME: Handle urls!
-                        } else if (type_name == "paint") {
-                            // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
-                            property_generator.append(R"~~~(
-        if (style_value.has_color() || style_value.is_url())
-            return true;
-)~~~");
-                        } else {
-                            // Assume that any other type names are defined in Enums.json.
-                            // If they're not, the output won't compile, but that's fine since it's invalid.
-                            property_generator.set("type_name:snakecase", snake_casify(type_name));
-                            property_generator.append(R"~~~(
-        if (auto converted_identifier = value_id_to_@type_name:snakecase@(style_value.to_identifier()); converted_identifier.has_value())
-            return true;
-)~~~");
-                        }
-                    }
+                if (type_name == "angle") {
+                    property_generator.appendln("        case ValueType::Angle:");
+                } else if (type_name == "color") {
+                    property_generator.appendln("        case ValueType::Color:");
+                } else if (type_name == "custom-ident") {
+                    property_generator.appendln("        case ValueType::CustomIdent:");
+                } else if (type_name == "frequency") {
+                    property_generator.appendln("        case ValueType::Frequency:");
+                } else if (type_name == "image") {
+                    property_generator.appendln("        case ValueType::Image:");
+                } else if (type_name == "integer") {
+                    property_generator.appendln("        case ValueType::Integer:");
+                } else if (type_name == "length") {
+                    property_generator.appendln("        case ValueType::Length:");
+                } else if (type_name == "number") {
+                    property_generator.appendln("        case ValueType::Number:");
+                } else if (type_name == "percentage") {
+                    property_generator.appendln("        case ValueType::Percentage:");
+                } else if (type_name == "rect") {
+                    property_generator.appendln("        case ValueType::Rect:");
+                } else if (type_name == "resolution") {
+                    property_generator.appendln("        case ValueType::Resolution:");
+                } else if (type_name == "string") {
+                    property_generator.appendln("        case ValueType::String:");
+                } else if (type_name == "time") {
+                    property_generator.appendln("        case ValueType::Time:");
+                } else if (type_name == "url") {
+                    property_generator.appendln("        case ValueType::Url:");
+                } else {
+                    VERIFY_NOT_REACHED();
                 }
+                did_output_accepted_type = true;
             }
 
-            if (has_valid_identifiers) {
-                auto valid_identifiers_value = object.get_array("valid-identifiers"sv);
-                VERIFY(valid_identifiers_value.has_value());
-                auto& valid_identifiers = valid_identifiers_value.value();
-                if (!valid_identifiers.is_empty()) {
-                    property_generator.append(R"~~~(
-        switch (style_value.to_identifier()) {
+            if (did_output_accepted_type)
+                property_generator.appendln("            return true;");
+
+            property_generator.append(R"~~~(
+        default:
+            return false;
+        }
+    }
 )~~~");
-                    for (auto& identifier : valid_identifiers.values()) {
-                        VERIFY(identifier.is_string());
-                        auto identifier_generator = generator.fork();
-                        identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
-                        identifier_generator.append(R"~~~(
-        case ValueID::@identifier:titlecase@:
+        }
+    });
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
+}
+
+bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
+{
+    switch (property_id) {
 )~~~");
-                    }
-                    property_generator.append(R"~~~(
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto& object = value.as_object();
+
+        auto property_generator = generator.fork();
+        property_generator.set("name:titlecase", title_casify(name));
+        property_generator.appendln("    case PropertyID::@name:titlecase@: {");
+
+        if (auto maybe_valid_identifiers = object.get_array("valid-identifiers"sv); maybe_valid_identifiers.has_value() && !maybe_valid_identifiers->is_empty()) {
+            property_generator.appendln("        switch (identifier) {");
+            auto& valid_identifiers = maybe_valid_identifiers.value();
+            for (auto& identifier : valid_identifiers.values()) {
+                auto identifier_generator = generator.fork();
+                identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
+                identifier_generator.appendln("        case ValueID::@identifier:titlecase@:");
+            }
+            property_generator.append(R"~~~(
             return true;
         default:
             break;
         }
 )~~~");
-                }
-            }
+        }
 
-            generator.append(R"~~~(
+        if (auto maybe_valid_types = object.get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
+            auto& valid_types = maybe_valid_types.value();
+            for (auto& valid_type : valid_types.values()) {
+                auto type_name = valid_type.as_string().split_view(' ').first();
+                if (!type_name_is_enum(type_name))
+                    continue;
+
+                auto type_generator = generator.fork();
+                type_generator.set("type_name:snakecase", snake_casify(type_name));
+                type_generator.append(R"~~~(
+        if (value_id_to_@type_name:snakecase@(identifier).has_value())
+            return true;
+)~~~");
+            }
+        }
+        property_generator.append(R"~~~(
         return false;
     }
 )~~~");
-        }
     });
-
     generator.append(R"~~~(
     default:
-        return true;
+        return false;
     }
 }
 

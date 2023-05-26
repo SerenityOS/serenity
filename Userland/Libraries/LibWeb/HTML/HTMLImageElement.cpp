@@ -500,7 +500,14 @@ after_step_6:
             // - The next task that is queued by the networking task source while the image is being fetched must run the following steps:
             queue_an_element_task(HTML::Task::Source::Networking, [this, response, image_request, url_string] {
                 auto process_body = [response, image_request, url_string, this](ByteBuffer data) {
-                    auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+                    // FIXME: Another instance of the CORS cross-origin response workaround here:
+                    auto response_with_headers = response;
+                    if (response->is_cors_cross_origin()
+                        && response->header_list()->is_empty()
+                        && !response->unsafe_response()->header_list()->is_empty()) {
+                        response_with_headers = response->unsafe_response();
+                    }
+                    auto extracted_mime_type = response_with_headers->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
                     auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
                     handle_successful_fetch(url_string, mime_type, image_request, move(data));
                 };

@@ -19,9 +19,9 @@ void initialize()
     s_boot_time = now();
 }
 
-Time boot_time()
+UnixDateTime boot_time()
 {
-    return Time::from_timespec({ s_boot_time, 0 });
+    return UnixDateTime::from_seconds_since_epoch(s_boot_time);
 }
 
 static bool update_in_progress()

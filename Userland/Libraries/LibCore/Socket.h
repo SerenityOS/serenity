@@ -141,7 +141,7 @@ public:
 
     ErrorOr<void> set_blocking(bool enabled);
     ErrorOr<void> set_close_on_exec(bool enabled);
-    ErrorOr<void> set_receive_timeout(Time timeout);
+    ErrorOr<void> set_receive_timeout(Duration timeout);
 
     void setup_notifier();
     RefPtr<Core::Notifier> notifier() { return m_notifier; }
@@ -215,8 +215,8 @@ private:
 
 class UDPSocket final : public Socket {
 public:
-    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(DeprecatedString const& host, u16 port, Optional<Time> timeout = {});
-    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address, Optional<Time> timeout = {});
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(DeprecatedString const& host, u16 port, Optional<Duration> timeout = {});
+    static ErrorOr<NonnullOwnPtr<UDPSocket>> connect(SocketAddress const& address, Optional<Duration> timeout = {});
 
     UDPSocket(UDPSocket&& other)
         : Socket(static_cast<Socket&&>(other))

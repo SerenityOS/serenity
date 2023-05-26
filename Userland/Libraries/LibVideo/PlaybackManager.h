@@ -25,26 +25,32 @@ namespace Video {
 
 class FrameQueueItem {
 public:
-    static constexpr Time no_timestamp = Time::min();
+    FrameQueueItem()
+        : m_data(Empty())
+        , m_timestamp(Duration::zero())
+    {
+    }
+
+    static constexpr Duration no_timestamp = Duration::min();
 
     enum class Type {
         Frame,
         Error,
     };
 
-    static FrameQueueItem frame(RefPtr<Gfx::Bitmap> bitmap, Time timestamp)
+    static FrameQueueItem frame(RefPtr<Gfx::Bitmap> bitmap, Duration timestamp)
     {
         return FrameQueueItem(move(bitmap), timestamp);
     }
 
-    static FrameQueueItem error_marker(DecoderError&& error, Time timestamp)
+    static FrameQueueItem error_marker(DecoderError&& error, Duration timestamp)
     {
         return FrameQueueItem(move(error), timestamp);
     }
 
     bool is_frame() const { return m_data.has<RefPtr<Gfx::Bitmap>>(); }
     RefPtr<Gfx::Bitmap> bitmap() const { return m_data.get<RefPtr<Gfx::Bitmap>>(); }
-    Time timestamp() const { return m_timestamp; }
+    Duration timestamp() const { return m_timestamp; }
 
     bool is_error() const { return m_data.has<DecoderError>(); }
     DecoderError const& error() const { return m_data.get<DecoderError>(); }
@@ -55,6 +61,8 @@ public:
         return error;
     }
 
+    bool is_empty() const { return m_data.has<Empty>(); }
+
     DeprecatedString debug_string() const
     {
         if (is_error())
@@ -63,25 +71,25 @@ public:
     }
 
 private:
-    FrameQueueItem(RefPtr<Gfx::Bitmap> bitmap, Time timestamp)
+    FrameQueueItem(RefPtr<Gfx::Bitmap> bitmap, Duration timestamp)
         : m_data(move(bitmap))
         , m_timestamp(timestamp)
     {
         VERIFY(m_timestamp != no_timestamp);
     }
 
-    FrameQueueItem(DecoderError&& error, Time timestamp)
+    FrameQueueItem(DecoderError&& error, Duration timestamp)
         : m_data(move(error))
         , m_timestamp(timestamp)
     {
     }
 
-    Variant<Empty, RefPtr<Gfx::Bitmap>, DecoderError> m_data;
-    Time m_timestamp;
+    Variant<Empty, RefPtr<Gfx::Bitmap>, DecoderError> m_data { Empty() };
+    Duration m_timestamp { no_timestamp };
 };
 
-static constexpr size_t FRAME_BUFFER_COUNT = 4;
-using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
+static constexpr size_t frame_buffer_count = 4;
+using VideoFrameQueue = Core::SharedSingleProducerCircularQueue<FrameQueueItem, frame_buffer_count>;
 
 enum class PlaybackState {
     Playing,
@@ -92,6 +100,9 @@ enum class PlaybackState {
 };
 
 class PlaybackManager {
+    AK_MAKE_NONCOPYABLE(PlaybackManager);
+    AK_MAKE_NONMOVABLE(PlaybackManager);
+
 public:
     enum class SeekMode {
         Accurate,
@@ -105,13 +116,13 @@ public:
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data);
 
-    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
+    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, VideoFrameQueue&& frame_queue);
     ~PlaybackManager();
 
     void resume_playback();
     void pause_playback();
     void restart_playback();
-    void seek_to_timestamp(Time, SeekMode = DEFAULT_SEEK_MODE);
+    void seek_to_timestamp(Duration, SeekMode = DEFAULT_SEEK_MODE);
     bool is_playing() const
     {
         return m_playback_handler->is_playing();
@@ -123,8 +134,8 @@ public:
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
-    Time current_playback_time();
-    Time duration();
+    Duration current_playback_time();
+    Duration duration();
 
     Function<void(RefPtr<Gfx::Bitmap>)> on_video_frame;
     Function<void()> on_playback_state_change;
@@ -143,14 +154,16 @@ private:
     class SeekingStateHandler;
     class StoppedStateHandler;
 
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create(NonnullOwnPtr<Demuxer> demuxer);
 
-    void start_timer(int milliseconds);
     void timer_callback();
-    Optional<Time> seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample = OptionalNone());
+    // This must be called with m_demuxer_mutex locked!
+    Optional<Duration> seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample = OptionalNone());
 
-    bool decode_and_queue_one_sample();
-    void on_decode_timer();
+    Optional<FrameQueueItem> dequeue_one_frame();
+    void set_state_update_timer(int delay_ms);
+
+    void decode_and_queue_one_sample();
 
     void dispatch_decoder_error(DecoderError error);
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
@@ -159,20 +172,25 @@ private:
     void dispatch_state_change();
     void dispatch_fatal_error(Error);
 
-    Time m_last_present_in_media_time = Time::zero();
+    Duration m_last_present_in_media_time = Duration::zero();
 
     NonnullOwnPtr<Demuxer> m_demuxer;
+    Threading::Mutex m_demuxer_mutex;
     Track m_selected_video_track;
-    NonnullOwnPtr<VideoDecoder> m_decoder;
 
-    NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
+    VideoFrameQueue m_frame_queue;
 
-    RefPtr<Core::Timer> m_present_timer;
+    RefPtr<Core::Timer> m_state_update_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    RefPtr<Core::Timer> m_decode_timer;
+    RefPtr<Threading::Thread> m_decode_thread;
+    NonnullOwnPtr<VideoDecoder> m_decoder;
+    Atomic<bool> m_stop_decoding { false };
+    Threading::Mutex m_decode_wait_mutex;
+    Threading::ConditionVariable m_decode_wait_condition;
+    Atomic<bool> m_buffer_is_full { false };
 
-    NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
+    OwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
 
     u64 m_skipped_frames { 0 };
@@ -194,13 +212,12 @@ private:
         virtual PlaybackState get_state() const = 0;
         virtual ErrorOr<void> pause() { return {}; };
         virtual ErrorOr<void> buffer() { return {}; };
-        virtual ErrorOr<void> seek(Time target_timestamp, SeekMode);
+        virtual ErrorOr<void> seek(Duration target_timestamp, SeekMode);
         virtual ErrorOr<void> stop();
 
-        virtual Time current_time() const;
+        virtual Duration current_time() const;
 
-        virtual ErrorOr<void> on_timer_callback() { return {}; };
-        virtual ErrorOr<void> on_buffer_filled() { return {}; };
+        virtual ErrorOr<void> do_timed_state_update() { return {}; };
 
     protected:
         template<class T, class... Args>

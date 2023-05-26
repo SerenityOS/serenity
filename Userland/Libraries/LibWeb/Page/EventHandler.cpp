@@ -597,6 +597,8 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
             auto const& hit_layout_node = hit_paintable->layout_node();
             if (!hit_layout_node.is_text_node())
                 return true;
+
+            auto& hit_dom_node = verify_cast<DOM::Text>(*hit_paintable->dom_node());
             auto const& text_for_rendering = verify_cast<Layout::TextNode>(hit_layout_node).text_for_rendering();
 
             int first_word_break_before = [&] {
@@ -619,9 +621,9 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
                 return text_for_rendering.length();
             }();
 
-            m_browsing_context->set_cursor_position(DOM::Position(*paintable->dom_node(), first_word_break_after));
+            m_browsing_context->set_cursor_position(DOM::Position(hit_dom_node, first_word_break_after));
             if (auto selection = node->document().get_selection()) {
-                (void)selection->set_base_and_extent(*paintable->dom_node(), first_word_break_before, *paintable->dom_node(), first_word_break_after);
+                (void)selection->set_base_and_extent(hit_dom_node, first_word_break_before, hit_dom_node, first_word_break_after);
             }
         }
     }

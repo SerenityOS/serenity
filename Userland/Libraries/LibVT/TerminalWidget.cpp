@@ -369,12 +369,12 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             }
 
             if (underline_style == UnderlineStyle::Solid) {
-                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), underline_color);
+                painter.draw_line(cell_rect.bottom_left().moved_up(1), cell_rect.bottom_right().translated(-1), underline_color);
             } else if (underline_style == UnderlineStyle::Dotted) {
-                int x1 = cell_rect.bottom_left().x();
-                int x2 = cell_rect.bottom_right().x();
-                int y = cell_rect.bottom_left().y();
-                for (int x = x1; x <= x2; ++x) {
+                int x1 = cell_rect.left();
+                int x2 = cell_rect.right();
+                int y = cell_rect.bottom() - 1;
+                for (int x = x1; x < x2; ++x) {
                     if ((x % 3) == 0)
                         painter.set_pixel({ x, y }, underline_color);
                 }
@@ -439,16 +439,16 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto cursor_color = terminal_color_to_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
         auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
         if (m_cursor_shape == VT::CursorShape::Underline) {
-            auto x1 = cell_rect.bottom_left().x();
-            auto x2 = cell_rect.bottom_right().x();
-            auto y = cell_rect.bottom_left().y();
-            for (auto x = x1; x <= x2; ++x)
+            auto x1 = cell_rect.left();
+            auto x2 = cell_rect.right();
+            auto y = cell_rect.bottom() - 1;
+            for (auto x = x1; x < x2; ++x)
                 painter.set_pixel({ x, y }, cursor_color);
         } else if (m_cursor_shape == VT::CursorShape::Bar) {
-            auto x = cell_rect.bottom_left().x();
-            auto y1 = cell_rect.top_left().y();
-            auto y2 = cell_rect.bottom_left().y();
-            for (auto y = y1; y <= y2; ++y)
+            auto x = cell_rect.left();
+            auto y1 = cell_rect.top();
+            auto y2 = cell_rect.bottom();
+            for (auto y = y1; y < y2; ++y)
                 painter.set_pixel({ x, y }, cursor_color);
         } else {
             // We fall back to a block if we don't support the selected cursor type.

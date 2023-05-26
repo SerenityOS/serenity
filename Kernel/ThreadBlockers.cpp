@@ -15,13 +15,13 @@
 
 namespace Kernel {
 
-Thread::BlockTimeout::BlockTimeout(bool is_absolute, Time const* time, Time const* start_time, clockid_t clock_id)
+Thread::BlockTimeout::BlockTimeout(bool is_absolute, Duration const* time, Duration const* start_time, clockid_t clock_id)
     : m_clock_id(clock_id)
     , m_infinite(!time)
 {
     if (m_infinite)
         return;
-    if (*time > Time::zero())
+    if (*time > Duration::zero())
         m_time = *time;
     m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id);
     if (!is_absolute)
@@ -272,7 +272,7 @@ auto Thread::WriteBlocker::override_timeout(BlockTimeout const& timeout) -> Bloc
     if (description.is_socket()) {
         auto const& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            Time send_timeout = socket.send_timeout();
+            Duration send_timeout = socket.send_timeout();
             m_timeout = BlockTimeout(false, &send_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
@@ -292,7 +292,7 @@ auto Thread::ReadBlocker::override_timeout(BlockTimeout const& timeout) -> Block
     if (description.is_socket()) {
         auto const& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            Time receive_timeout = socket.receive_timeout();
+            Duration receive_timeout = socket.receive_timeout();
             m_timeout = BlockTimeout(false, &receive_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
@@ -301,7 +301,7 @@ auto Thread::ReadBlocker::override_timeout(BlockTimeout const& timeout) -> Block
     return timeout;
 }
 
-Thread::SleepBlocker::SleepBlocker(BlockTimeout const& deadline, Time* remaining)
+Thread::SleepBlocker::SleepBlocker(BlockTimeout const& deadline, Duration* remaining)
     : m_deadline(deadline)
     , m_remaining(remaining)
 {

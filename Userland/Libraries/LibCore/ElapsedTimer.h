@@ -23,13 +23,19 @@ public:
     void start();
     void reset();
 
-    i64 elapsed() const; // milliseconds
-    Time elapsed_time() const;
+    i64 elapsed_milliseconds() const;
+    Duration elapsed_time() const;
 
-    Time const& origin_time() const { return m_origin_time; }
+    // FIXME: Move callers to elapsed_milliseconds(), remove this.
+    i64 elapsed() const // milliseconds
+    {
+        return elapsed_milliseconds();
+    }
+
+    MonotonicTime const& origin_time() const { return m_origin_time; }
 
 private:
-    Time m_origin_time {};
+    MonotonicTime m_origin_time { MonotonicTime::now() };
     bool m_precise { false };
     bool m_valid { false };
 };

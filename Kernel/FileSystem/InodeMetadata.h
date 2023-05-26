@@ -120,10 +120,10 @@ struct InodeMetadata {
     UserID uid { 0 };
     GroupID gid { 0 };
     nlink_t link_count { 0 };
-    Time atime {};
-    Time ctime {};
-    Time mtime {};
-    Time dtime {};
+    UnixDateTime atime {};
+    UnixDateTime ctime {};
+    UnixDateTime mtime {};
+    UnixDateTime dtime {};
     blkcnt_t block_count { 0 };
     blksize_t block_size { 0 };
     MajorNumber major_device { 0 };

@@ -159,16 +159,16 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, Time const* time, Time const* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
+        explicit BlockTimeout(bool is_absolute, Duration const* time, Duration const* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
 
-        Time const& absolute_time() const { return m_time; }
-        Time const* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        Duration const& absolute_time() const { return m_time; }
+        Duration const* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
         clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
 
     private:
-        Time m_time {};
-        Time m_start_time {};
+        Duration m_time {};
+        Duration m_start_time {};
         clockid_t m_clock_id { CLOCK_MONOTONIC_COARSE };
         bool m_infinite { false };
     };
@@ -559,7 +559,7 @@ public:
 
     class SleepBlocker final : public Blocker {
     public:
-        explicit SleepBlocker(BlockTimeout const&, Time* = nullptr);
+        explicit SleepBlocker(BlockTimeout const&, Duration* = nullptr);
         virtual StringView state_string() const override { return "Sleeping"sv; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual BlockTimeout const& override_timeout(BlockTimeout const&) override;
@@ -571,7 +571,7 @@ public:
         void calculate_remaining();
 
         BlockTimeout m_deadline;
-        Time* m_remaining;
+        Duration* m_remaining;
     };
 
     class SelectBlocker final : public FileBlocker {
@@ -824,13 +824,13 @@ public:
         return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
-    BlockResult sleep(clockid_t, Time const&, Time* = nullptr);
-    BlockResult sleep(Time const& duration, Time* remaining_time = nullptr)
+    BlockResult sleep(clockid_t, Duration const&, Duration* = nullptr);
+    BlockResult sleep(Duration const& duration, Duration* remaining_time = nullptr)
     {
         return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
-    BlockResult sleep_until(clockid_t, Time const&);
-    BlockResult sleep_until(Time const& duration)
+    BlockResult sleep_until(clockid_t, Duration const&);
+    BlockResult sleep_until(Duration const& duration)
     {
         return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }

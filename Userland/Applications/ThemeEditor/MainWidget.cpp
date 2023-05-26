@@ -242,7 +242,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window, "Select theme file", "/res/themes"sv);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, "Select Theme", "/res/themes"sv);
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
@@ -347,7 +347,7 @@ void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> 
     if (sync_result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
-        m_last_modified_time = Time::now_monotonic();
+        m_last_modified_time = MonotonicTime::now();
         set_path(filename.to_deprecated_string());
         window()->set_modified(false);
     }
@@ -643,7 +643,7 @@ ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<C
     ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
-    m_last_modified_time = Time::now_monotonic();
+    m_last_modified_time = MonotonicTime::now();
     window()->set_modified(false);
     return {};
 }

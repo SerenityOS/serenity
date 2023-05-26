@@ -8,12 +8,20 @@
 
 #include <AK/Array.h>
 #include <AK/Assertions.h>
+#include <AK/Badge.h>
+#include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
 #    include <Kernel/API/POSIX/sys/time.h>
 #    include <Kernel/API/POSIX/time.h>
+
+// We need a Badge<TimeManagement> for some MonotonicTime operations.
+namespace Kernel {
+class TimeManagement;
+}
+
 #else
 #    include <sys/time.h>
 #    include <time.h>
@@ -130,26 +138,28 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
     return 1970 + round_down(years_since_epoch);
 }
 
-/*
- * Represents a time amount in a "safe" way.
- * Minimum: 0 seconds, 0 nanoseconds
- * Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
- * If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
- * Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
- * Outputs (e.g. from 'to_timeval') are always in normal form.
- */
-class Time {
+// Represents a duration in a "safe" way.
+// Minimum: -(2**63) seconds, 0 nanoseconds
+// Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
+// If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
+// Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
+// Outputs (e.g. from 'to_timeval') are always in normal form.
+//
+// NOTE: This class is naive. It may represent either absolute offsets or relative durations. It does not have a reference point in itself,
+//       and therefore comparing multiple instances of this class is only sensible if you are sure that their reference point is identical.
+//       You should not be using this class directly to represent absolute time.
+class Duration {
 public:
-    Time() = default;
-    Time(Time const&) = default;
-    Time& operator=(Time const&) = default;
+    constexpr Duration() = default;
+    constexpr Duration(Duration const&) = default;
+    constexpr Duration& operator=(Duration const&) = default;
 
-    Time(Time&& other)
+    constexpr Duration(Duration&& other)
         : m_seconds(exchange(other.m_seconds, 0))
         , m_nanoseconds(exchange(other.m_nanoseconds, 0))
     {
     }
-    Time& operator=(Time&& other)
+    constexpr Duration& operator=(Duration&& other)
     {
         if (this != &other) {
             m_seconds = exchange(other.m_seconds, 0);
@@ -188,54 +198,29 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr static Time from_timestamp(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
-    {
-        constexpr auto milliseconds_per_day = 86'400'000;
-        constexpr auto milliseconds_per_hour = 3'600'000;
-        constexpr auto milliseconds_per_minute = 60'000;
-        constexpr auto milliseconds_per_second = 1'000;
-
-        i64 milliseconds_since_epoch = days_since_epoch(year, month, day);
-        milliseconds_since_epoch *= milliseconds_per_day;
-
-        milliseconds_since_epoch += hour * milliseconds_per_hour;
-        milliseconds_since_epoch += minute * milliseconds_per_minute;
-        milliseconds_since_epoch += second * milliseconds_per_second;
-        milliseconds_since_epoch += millisecond;
-
-        return from_milliseconds(milliseconds_since_epoch);
-    }
-
-    [[nodiscard]] constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
-    [[nodiscard]] constexpr static Time from_nanoseconds(i64 nanoseconds)
+    [[nodiscard]] constexpr static Duration from_seconds(i64 seconds) { return Duration(seconds, 0); }
+    [[nodiscard]] constexpr static Duration from_nanoseconds(i64 nanoseconds)
     {
         i64 seconds = sane_mod(nanoseconds, 1'000'000'000);
-        return Time(seconds, nanoseconds);
+        return Duration(seconds, nanoseconds);
     }
-    [[nodiscard]] constexpr static Time from_microseconds(i64 microseconds)
+    [[nodiscard]] constexpr static Duration from_microseconds(i64 microseconds)
     {
         i64 seconds = sane_mod(microseconds, 1'000'000);
-        return Time(seconds, microseconds * 1'000);
+        return Duration(seconds, microseconds * 1'000);
     }
-    [[nodiscard]] constexpr static Time from_milliseconds(i64 milliseconds)
+    [[nodiscard]] constexpr static Duration from_milliseconds(i64 milliseconds)
     {
         i64 seconds = sane_mod(milliseconds, 1'000);
-        return Time(seconds, milliseconds * 1'000'000);
+        return Duration(seconds, milliseconds * 1'000'000);
     }
-    [[nodiscard]] static Time from_ticks(clock_t, time_t);
-    [[nodiscard]] static Time from_timespec(const struct timespec&);
-    [[nodiscard]] static Time from_timeval(const struct timeval&);
+    [[nodiscard]] static Duration from_ticks(clock_t, time_t);
+    [[nodiscard]] static Duration from_timespec(const struct timespec&);
+    [[nodiscard]] static Duration from_timeval(const struct timeval&);
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
-    [[nodiscard]] constexpr static Time min() { return Time(-__INT64_MAX__ - 1LL, 0); };
-    [[nodiscard]] constexpr static Time zero() { return Time(0, 0); };
-    [[nodiscard]] constexpr static Time max() { return Time(__INT64_MAX__, 999'999'999); };
-
-#ifndef KERNEL
-    [[nodiscard]] static Time now_realtime();
-    [[nodiscard]] static Time now_realtime_coarse();
-    [[nodiscard]] static Time now_monotonic();
-    [[nodiscard]] static Time now_monotonic_coarse();
-#endif
+    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); };
+    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); };
+    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
 
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     [[nodiscard]] i64 to_truncated_seconds() const;
@@ -253,13 +238,79 @@ public:
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
-    Time operator+(Time const& other) const;
-    Time& operator+=(Time const& other);
-    Time operator-(Time const& other) const;
-    Time& operator-=(Time const& other);
+    constexpr Duration operator+(Duration const& other) const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        VERIFY(other.m_nanoseconds < 1'000'000'000);
 
-    constexpr bool operator==(Time const& other) const = default;
-    constexpr int operator<=>(Time const& other) const
+        u32 new_nsecs = m_nanoseconds + other.m_nanoseconds;
+        u32 extra_secs = new_nsecs / 1'000'000'000;
+        new_nsecs %= 1'000'000'000;
+
+        i64 this_secs = m_seconds;
+        i64 other_secs = other.m_seconds;
+        // We would like to just add "this_secs + other_secs + extra_secs".
+        // However, computing this naively may overflow even though the result is in-bounds.
+        // Example in 8-bit: (-127) + (-2) + (+1) = (-128), which fits in an i8.
+        // Example in 8-bit, the other way around: (-2) + (127) + (+1) = 126.
+        // So we do something more sophisticated:
+        if (extra_secs) {
+            VERIFY(extra_secs == 1);
+            if (this_secs != 0x7fff'ffff'ffff'ffff) {
+                this_secs += 1;
+            } else if (other_secs != 0x7fff'ffff'ffff'ffff) {
+                other_secs += 1;
+            } else {
+                /* If *both* are INT64_MAX, then adding them will overflow in any case. */
+                return Duration::max();
+            }
+        }
+
+        Checked<i64> new_secs { this_secs };
+        new_secs += other_secs;
+        if (new_secs.has_overflow()) {
+            if (other_secs > 0)
+                return Duration::max();
+            else
+                return Duration::min();
+        }
+
+        return Duration { new_secs.value(), new_nsecs };
+    }
+
+    constexpr Duration& operator+=(Duration const& other)
+    {
+        *this = *this + other;
+        return *this;
+    }
+
+    constexpr Duration operator-(Duration const& other) const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        VERIFY(other.m_nanoseconds < 1'000'000'000);
+
+        if (other.m_nanoseconds)
+            return *this + Duration((i64) ~(u64)other.m_seconds, 1'000'000'000 - other.m_nanoseconds);
+
+        if (other.m_seconds != (i64)-0x8000'0000'0000'0000)
+            return *this + Duration(-other.m_seconds, 0);
+
+        // Only remaining case: We want to subtract -0x8000'0000'0000'0000 seconds,
+        // i.e. add a very large number.
+
+        if (m_seconds >= 0)
+            return Duration::max();
+        return Duration { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
+    }
+
+    constexpr Duration& operator-=(Duration const& other)
+    {
+        *this = *this - other;
+        return *this;
+    }
+
+    constexpr bool operator==(Duration const& other) const = default;
+    constexpr int operator<=>(Duration const& other) const
     {
         if (int cmp = (m_seconds > other.m_seconds ? 1 : m_seconds < other.m_seconds ? -1
                                                                                      : 0);
@@ -273,16 +324,199 @@ public:
     }
 
 private:
-    constexpr explicit Time(i64 seconds, u32 nanoseconds)
+    constexpr explicit Duration(i64 seconds, u32 nanoseconds)
         : m_seconds(seconds)
         , m_nanoseconds(nanoseconds)
     {
     }
 
-    [[nodiscard]] static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
+    [[nodiscard]] static Duration from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
 
     i64 m_seconds { 0 };
     u32 m_nanoseconds { 0 }; // Always less than 1'000'000'000
+};
+
+namespace Detail {
+
+// Common base class for all unaware time types.
+// Naive, or unaware, in the time context means to make heavily simplifying assumptions about time.
+// In the case of this class and its children, they are not timezone-aware and strictly ordered.
+class UnawareTime {
+public:
+    constexpr UnawareTime(UnawareTime const&) = default;
+    constexpr UnawareTime& operator=(UnawareTime const&) = default;
+
+    [[nodiscard]] timespec to_timespec() const { return m_offset.to_timespec(); }
+    // Rounds towards -inf.
+    [[nodiscard]] timeval to_timeval() const { return m_offset.to_timeval(); }
+
+    // We intentionally do not define a comparison operator here to avoid accidentally comparing incompatible time types.
+
+protected:
+    constexpr explicit UnawareTime(Duration offset)
+        : m_offset(offset)
+    {
+    }
+
+    Duration m_offset {};
+};
+
+}
+
+// Naive UNIX time, representing an offset from 1970-01-01 00:00:00Z, without accounting for UTC leap seconds.
+// This class is mainly intended for interoperating with anything that expects a unix timestamp.
+class UnixDateTime : public Detail::UnawareTime {
+public:
+    constexpr UnixDateTime()
+        : Detail::UnawareTime(Duration::zero())
+    {
+    }
+
+    constexpr static UnixDateTime epoch()
+    {
+        return UnixDateTime {};
+    }
+
+    // Creates UNIX time from a unix timestamp.
+    // Note that the returned time is probably not equivalent to the same timestamp in UTC time, since UNIX time does not observe leap seconds.
+    [[nodiscard]] constexpr static UnixDateTime from_unix_time_parts(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
+    {
+        constexpr auto milliseconds_per_day = 86'400'000;
+        constexpr auto milliseconds_per_hour = 3'600'000;
+        constexpr auto milliseconds_per_minute = 60'000;
+        constexpr auto milliseconds_per_second = 1'000;
+
+        i64 days = days_since_epoch(year, month, day);
+        i64 milliseconds_since_epoch = days * milliseconds_per_day;
+
+        milliseconds_since_epoch += hour * milliseconds_per_hour;
+        milliseconds_since_epoch += minute * milliseconds_per_minute;
+        milliseconds_since_epoch += second * milliseconds_per_second;
+        milliseconds_since_epoch += millisecond;
+
+        return from_milliseconds_since_epoch(milliseconds_since_epoch);
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_seconds_since_epoch(i64 seconds)
+    {
+        return UnixDateTime { Duration::from_seconds(seconds) };
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_milliseconds_since_epoch(i64 milliseconds)
+    {
+        return UnixDateTime { Duration::from_milliseconds(milliseconds) };
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_nanoseconds_since_epoch(i64 nanoseconds)
+    {
+        return UnixDateTime { Duration::from_nanoseconds(nanoseconds) };
+    }
+
+    [[nodiscard]] static UnixDateTime from_unix_timespec(struct timespec const& time)
+    {
+        return UnixDateTime { Duration::from_timespec(time) };
+    }
+
+    // Earliest and latest representable UNIX timestamps.
+    [[nodiscard]] constexpr static UnixDateTime earliest() { return UnixDateTime { Duration::min() }; }
+    [[nodiscard]] constexpr static UnixDateTime latest() { return UnixDateTime { Duration::max() }; }
+
+    [[nodiscard]] constexpr Duration offset_to_epoch() const { return m_offset; }
+    // May return an epoch offset *after* what this UnixDateTime contains, because rounding to seconds occurs.
+    [[nodiscard]] i64 seconds_since_epoch() const { return m_offset.to_seconds(); }
+    [[nodiscard]] i64 milliseconds_since_epoch() const { return m_offset.to_milliseconds(); }
+    [[nodiscard]] i64 nanoseconds_since_epoch() const { return m_offset.to_nanoseconds(); }
+    // Never returns a point after this UnixDateTime, since fractional seconds are cut off.
+    [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
+
+    // Offsetting a UNIX time by a duration yields another UNIX time.
+    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; };
+    constexpr UnixDateTime& operator+=(Duration const& other)
+    {
+        this->m_offset = this->m_offset + other;
+        return *this;
+    };
+    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; };
+    // Subtracting two UNIX times yields their time difference.
+    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; };
+
+#ifndef KERNEL
+    [[nodiscard]] static UnixDateTime now();
+    [[nodiscard]] static UnixDateTime now_coarse();
+#endif
+
+    constexpr bool operator==(UnixDateTime const& other) const
+    {
+        return this->m_offset == other.m_offset;
+    }
+    constexpr int operator<=>(UnixDateTime const& other) const { return this->m_offset <=> other.m_offset; }
+
+private:
+    constexpr explicit UnixDateTime(Duration offset)
+        : Detail::UnawareTime(offset)
+    {
+    }
+};
+
+// Monotonic time represents time returned from the CLOCK_MONOTONIC clock, which has an arbitrary fixed reference point.
+class MonotonicTime : private Detail::UnawareTime {
+public:
+    // Monotonic time does not have a defined reference point.
+    // A MonotonicTime at the reference point is therefore meaningless.
+    MonotonicTime() = delete;
+    constexpr MonotonicTime(MonotonicTime const&) = default;
+    constexpr MonotonicTime(MonotonicTime&&) = default;
+    constexpr MonotonicTime& operator=(MonotonicTime const&) = default;
+    constexpr MonotonicTime& operator=(MonotonicTime&&) = default;
+
+#ifndef KERNEL
+    [[nodiscard]] static MonotonicTime now();
+    [[nodiscard]] static MonotonicTime now_coarse();
+#endif
+
+    // clang-format off
+    // Clang-format likes to expand this function for some reason.
+    [[nodiscard]] i64 seconds() const { return m_offset.to_seconds(); }
+    // clang-format on
+    [[nodiscard]] i64 milliseconds() const { return m_offset.to_milliseconds(); }
+    [[nodiscard]] i64 nanoseconds() const { return m_offset.to_nanoseconds(); }
+    // Never returns a point in the future, since fractional seconds are cut off.
+    [[nodiscard]] i64 truncated_seconds() const { return m_offset.to_truncated_seconds(); }
+    [[nodiscard]] i64 nanoseconds_within_second() const { return to_timespec().tv_nsec; }
+
+    // clang-format off
+    constexpr bool operator==(MonotonicTime const& other) const { return this->m_offset == other.m_offset; }
+    // clang-format on
+    constexpr int operator<=>(MonotonicTime const& other) const { return this->m_offset <=> other.m_offset; }
+
+    constexpr MonotonicTime operator+(Duration const& other) const { return MonotonicTime { m_offset + other }; }
+    constexpr MonotonicTime& operator+=(Duration const& other)
+    {
+        this->m_offset = this->m_offset + other;
+        return *this;
+    }
+    constexpr MonotonicTime operator-(Duration const& other) const { return MonotonicTime { m_offset - other }; }
+    constexpr Duration operator-(MonotonicTime const& other) const { return m_offset - other.m_offset; }
+
+#ifdef KERNEL
+    // Required in the Kernel in order to create monotonic time information from hardware timers.
+    [[nodiscard]] static MonotonicTime from_hardware_time(Badge<Kernel::TimeManagement>, time_t seconds, long nanoseconds)
+    {
+        return MonotonicTime { Duration::from_timespec({ seconds, nanoseconds }) };
+    }
+
+    // "Start" is whenever the hardware timers started counting (e.g. for HPET it's most certainly boot).
+    [[nodiscard]] Duration time_since_start(Badge<Kernel::TimeManagement>)
+    {
+        return m_offset;
+    }
+#endif
+
+private:
+    constexpr explicit MonotonicTime(Duration offset)
+        : Detail::UnawareTime(offset)
+    {
+    }
 };
 
 template<typename TimevalType>
@@ -357,10 +591,10 @@ inline void timespec_to_timeval(TimespecType const& ts, TimevalType& tv)
 // To use these, add a ``using namespace AK::TimeLiterals`` at block or file scope
 namespace TimeLiterals {
 
-constexpr Time operator""_ns(unsigned long long nanoseconds) { return Time::from_nanoseconds(static_cast<i64>(nanoseconds)); }
-constexpr Time operator""_us(unsigned long long microseconds) { return Time::from_microseconds(static_cast<i64>(microseconds)); }
-constexpr Time operator""_ms(unsigned long long milliseconds) { return Time::from_milliseconds(static_cast<i64>(milliseconds)); }
-constexpr Time operator""_sec(unsigned long long seconds) { return Time::from_seconds(static_cast<i64>(seconds)); }
+constexpr Duration operator""_ns(unsigned long long nanoseconds) { return Duration::from_nanoseconds(static_cast<i64>(nanoseconds)); }
+constexpr Duration operator""_us(unsigned long long microseconds) { return Duration::from_microseconds(static_cast<i64>(microseconds)); }
+constexpr Duration operator""_ms(unsigned long long milliseconds) { return Duration::from_milliseconds(static_cast<i64>(milliseconds)); }
+constexpr Duration operator""_sec(unsigned long long seconds) { return Duration::from_seconds(static_cast<i64>(seconds)); }
 
 }
 
@@ -372,9 +606,10 @@ using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
 using AK::days_since_epoch;
+using AK::Duration;
 using AK::is_leap_year;
+using AK::MonotonicTime;
 using AK::seconds_since_epoch_to_year;
-using AK::Time;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
@@ -382,5 +617,6 @@ using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;
 using AK::timeval_to_timespec;
+using AK::UnixDateTime;
 using AK::years_to_days_since_epoch;
 #endif

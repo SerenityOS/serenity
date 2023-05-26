@@ -316,7 +316,7 @@ index 0000000000000000000000000000000000000000..e1cd5348b67c23c49b25f99f4f36e020
 +        return (static_cast<double>(input) - NumericLimits<i16>::min()) / NumericLimits<u16>::max() * 2. - 1.;
 +    };
 +
-+    auto const sleep_spec = Time::from_nanoseconds(100).to_timespec();
++    auto const sleep_spec = Duration::from_nanoseconds(100).to_timespec();
 +    auto input_buffer = reinterpret_cast<i16*>(h->mixbuf);
 +    auto input_samples = h->mixlen / that->spec.channels / sizeof(i16);
 +    size_t input_position = 0;

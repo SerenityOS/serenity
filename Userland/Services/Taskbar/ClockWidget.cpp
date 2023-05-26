@@ -219,7 +219,7 @@ void ClockWidget::position_calendar_window()
 {
     constexpr auto taskbar_top_padding { 4 };
     m_calendar_window->set_rect(
-        screen_relative_rect().right() - m_calendar_window->width() + 1,
+        screen_relative_rect().right() - m_calendar_window->width(),
         screen_relative_rect().top() - taskbar_top_padding - m_calendar_window->height(),
         m_window_size.width(),
         m_window_size.height());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
  *
@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -56,7 +57,10 @@ JS::ThrowCompletionOr<void> HTMLInputElement::initialize(JS::Realm& realm)
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_text_node.ptr());
+    visitor.visit(m_inner_text_element);
+    visitor.visit(m_text_node);
+    visitor.visit(m_placeholder_element);
+    visitor.visit(m_placeholder_text_node);
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
     visitor.visit(m_selected_files);
 }
@@ -284,6 +288,8 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     m_value = value_sanitization_algorithm(m_text_node->data());
     m_dirty_value = true;
 
+    update_placeholder_visibility();
+
     // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
     //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
@@ -342,10 +348,24 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(DeprecatedString value)
     // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
     //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
     //    text control, unselecting any selected text and resetting the selection direction to "none".
-    if (m_text_node && (m_value != old_value))
+    if (m_text_node && (m_value != old_value)) {
         m_text_node->set_data(m_value);
+        update_placeholder_visibility();
+    }
 
     return {};
+}
+
+void HTMLInputElement::update_placeholder_visibility()
+{
+    if (!m_placeholder_element)
+        return;
+    auto placeholder_text = this->placeholder_value();
+    if (placeholder_text.has_value()) {
+        MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "block"sv));
+    } else {
+        MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Display, "none"sv));
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-placeholder-3
@@ -389,6 +409,17 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
     return placeholder;
 }
 
+class PlaceholderElement final : public HTMLDivElement {
+    JS_CELL(PlaceholderElement, HTMLDivElement);
+
+public:
+    PlaceholderElement(DOM::Document& document)
+        : HTMLDivElement(document, DOM::QualifiedName { HTML::TagNames::div, ""sv, Namespace::HTML })
+    {
+    }
+    virtual Optional<CSS::Selector::PseudoElement> pseudo_element() const override { return CSS::Selector::PseudoElement::Placeholder; }
+};
+
 void HTMLInputElement::create_shadow_tree_if_needed()
 {
     if (shadow_root_internal())
@@ -412,7 +443,27 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
     auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
-    MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px; height: 1lh;"));
+    MUST(element->set_attribute(HTML::AttributeNames::style, R"~~~(
+        display: flex;
+        height: 100%;
+        align-items: center;
+        white-space: pre;
+        border: none;
+        padding: 1px 2px;
+)~~~"));
+
+    m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document()).release_allocated_value_but_fixme_should_propagate_errors();
+    MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
+
+    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
+    m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder));
+    m_placeholder_text_node->set_owner_input_element({}, *this);
+    MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
+    MUST(element->append_child(*m_placeholder_element));
+
+    m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
+
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
@@ -420,7 +471,8 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (m_type == TypeAttributeState::Password)
         m_text_node->set_is_password_input({}, true);
 
-    MUST(element->append_child(*m_text_node));
+    MUST(m_inner_text_element->append_child(*m_text_node));
+    MUST(element->append_child(*m_inner_text_element));
     MUST(shadow_root->append_child(element));
     set_shadow_root(shadow_root);
 }
@@ -446,8 +498,13 @@ void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value);
     } else if (name == HTML::AttributeNames::value) {
-        if (!m_dirty_value)
+        if (!m_dirty_value) {
             m_value = value_sanitization_algorithm(value);
+            update_placeholder_visibility();
+        }
+    } else if (name == HTML::AttributeNames::placeholder) {
+        if (m_placeholder_text_node)
+            m_placeholder_text_node->set_data(value);
     }
 }
 
@@ -474,8 +531,13 @@ void HTMLInputElement::did_remove_attribute(DeprecatedFlyString const& name)
         if (!m_dirty_checkedness)
             set_checked(false, ChangeSource::Programmatic);
     } else if (name == HTML::AttributeNames::value) {
-        if (!m_dirty_value)
+        if (!m_dirty_value) {
             m_value = DeprecatedString::empty();
+            update_placeholder_visibility();
+        }
+    } else if (name == HTML::AttributeNames::placeholder) {
+        if (m_placeholder_text_node)
+            m_placeholder_text_node->set_data({});
     }
 }
 
@@ -785,8 +847,10 @@ void HTMLInputElement::reset_algorithm()
 
     // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
     m_value = value_sanitization_algorithm(m_value);
-    if (m_text_node)
+    if (m_text_node) {
         m_text_node->set_data(m_value);
+        update_placeholder_visibility();
+    }
 }
 
 void HTMLInputElement::form_associated_element_was_inserted()

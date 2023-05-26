@@ -357,7 +357,8 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
     if (display.is_flow_inside() || display.is_flow_root_inside())
         return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
-    TODO();
+    dbgln("FIXME: CSS display '{}' not implemented yet.", display.to_string().release_value_but_fixme_should_propagate_errors());
+    return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
 }
 
 CSS::CSSStyleDeclaration const* Element::inline_style() const
@@ -395,52 +396,48 @@ void Element::did_remove_attribute(DeprecatedFlyString const& name)
     }
 }
 
-enum class RequiredInvalidation {
-    None,
-    RepaintOnly,
-    RebuildStackingContextTree,
-    Relayout,
-};
-
-static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
+static Element::RequiredInvalidationAfterStyleChange compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
+    Element::RequiredInvalidationAfterStyleChange invalidation;
+
     if (&old_style.computed_font() != &new_style.computed_font())
-        return RequiredInvalidation::Relayout;
-    bool requires_repaint = false;
-    bool requires_stacking_context_tree_rebuild = false;
+        invalidation.relayout = true;
+
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
         auto const& new_value = new_style.properties()[i];
         if (!old_value && !new_value)
             continue;
-        if (!old_value || !new_value)
-            return RequiredInvalidation::Relayout;
-        if (*old_value == *new_value)
+
+        bool const property_value_changed = (!old_value || !new_value) || *old_value != *new_value;
+        if (!property_value_changed)
             continue;
+
+        // NOTE: If the computed CSS display property changes, we have to rebuild the entire layout tree.
+        //       In the future, we should figure out ways to rebuild a smaller part of the tree.
+        if (property_id == CSS::PropertyID::Display) {
+            return Element::RequiredInvalidationAfterStyleChange::full();
+        }
 
         // OPTIMIZATION: Special handling for CSS `visibility`:
         if (property_id == CSS::PropertyID::Visibility) {
             // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
-            if ((old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value->to_identifier() == CSS::ValueID::Collapse))
-                return RequiredInvalidation::Relayout;
+            if ((old_value && old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value && new_value->to_identifier() == CSS::ValueID::Collapse))
+                invalidation.relayout = true;
             // Of course, we still have to repaint on any visibility change.
-            requires_repaint = true;
+            invalidation.repaint = true;
         } else if (CSS::property_affects_layout(property_id)) {
-            return RequiredInvalidation::Relayout;
+            invalidation.relayout = true;
         }
         if (CSS::property_affects_stacking_context(property_id))
-            requires_stacking_context_tree_rebuild = true;
-        requires_repaint = true;
+            invalidation.rebuild_stacking_context_tree = true;
+        invalidation.repaint = true;
     }
-    if (requires_stacking_context_tree_rebuild)
-        return RequiredInvalidation::RebuildStackingContextTree;
-    if (requires_repaint)
-        return RequiredInvalidation::RepaintOnly;
-    return RequiredInvalidation::None;
+    return invalidation;
 }
 
-Element::NeedsRelayout Element::recompute_style()
+Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
@@ -448,30 +445,25 @@ Element::NeedsRelayout Element::recompute_style()
     // FIXME propagate errors
     auto new_computed_css_values = MUST(document().style_computer().compute_style(*this));
 
-    auto required_invalidation = RequiredInvalidation::Relayout;
-
+    RequiredInvalidationAfterStyleChange invalidation;
     if (m_computed_css_values)
-        required_invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
+        invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
+    else
+        invalidation = RequiredInvalidationAfterStyleChange::full();
 
-    if (required_invalidation == RequiredInvalidation::None)
-        return NeedsRelayout::No;
+    if (invalidation.is_none())
+        return invalidation;
 
     m_computed_css_values = move(new_computed_css_values);
 
-    if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
+    if (!invalidation.rebuild_layout_tree && layout_node()) {
+        // If we're keeping the layout tree, we can just apply the new style to the existing layout tree.
         layout_node()->apply_style(*m_computed_css_values);
-        layout_node()->set_needs_display();
-        return NeedsRelayout::No;
+        if (invalidation.repaint)
+            layout_node()->set_needs_display();
     }
 
-    if (required_invalidation == RequiredInvalidation::RebuildStackingContextTree && layout_node()) {
-        layout_node()->apply_style(*m_computed_css_values);
-        document().invalidate_stacking_context_tree();
-        layout_node()->set_needs_display();
-        return NeedsRelayout::No;
-    }
-
-    return NeedsRelayout::Yes;
+    return invalidation;
 }
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
@@ -640,7 +632,7 @@ JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedF
     for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
         list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
-    return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
         for (auto& name : list_of_class_names) {
             if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
                 return false;
@@ -718,7 +710,7 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<double>().to_type<float>()).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -1128,16 +1120,70 @@ void Element::set_scroll_top(double y)
     box->set_scroll_offset(scroll_offset);
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollwidth
 int Element::scroll_width() const
 {
-    dbgln("FIXME: Implement Element::scroll_width() (called on element: {})", debug_description());
-    return 0;
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
+    //    or zero if there is no viewport.
+    auto viewport_width = document.browsing_context()->viewport_rect().width().value();
+    auto viewport_scroll_width = document.browsing_context()->size().width().value();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area width, viewport width).
+    if (document.document_element() == this && !document.in_quirks_mode())
+        return max(viewport_scroll_width, viewport_width);
+
+    // 5. If the element is the body element, document is in quirks mode and the element is not potentially scrollable,
+    //    return max(viewport scrolling area width, viewport width).
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return max(viewport_scroll_width, viewport_width);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!paintable_box())
+        return 0;
+
+    // 7. Return the width of the element’s scrolling area.
+    return paintable_box()->border_box_width().value();
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollheight
 int Element::scroll_height() const
 {
-    dbgln("FIXME: Implement Element::scroll_height() (called on element: {})", debug_description());
-    return 0;
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
+    //    or zero if there is no viewport.
+    auto viewport_height = document.browsing_context()->viewport_rect().height().value();
+    auto viewport_scroll_height = document.browsing_context()->size().height().value();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area height, viewport height).
+    if (document.document_element() == this && !document.in_quirks_mode())
+        return max(viewport_scroll_height, viewport_height);
+
+    // 5. If the element is the body element, document is in quirks mode and the element is not potentially scrollable,
+    //    return max(viewport scrolling area height, viewport height).
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return max(viewport_scroll_height, viewport_height);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!paintable_box())
+        return 0;
+
+    // 7. Return the height of the element’s scrolling area.
+    return paintable_box()->border_box_height().value();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled

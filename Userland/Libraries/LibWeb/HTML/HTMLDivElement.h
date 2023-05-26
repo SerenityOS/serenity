@@ -11,7 +11,7 @@
 
 namespace Web::HTML {
 
-class HTMLDivElement final : public HTMLElement {
+class HTMLDivElement : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLDivElement, HTMLElement);
 
 public:
@@ -20,9 +20,10 @@ public:
     // https://www.w3.org/TR/html-aria/#el-div
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; }
 
-private:
+protected:
     HTMLDivElement(DOM::Document&, DOM::QualifiedName);
 
+private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/FontStyleMapping.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
@@ -20,6 +21,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
@@ -140,6 +142,12 @@ ContentStyleValue const& StyleValue::as_content() const
 {
     VERIFY(is_content());
     return static_cast<ContentStyleValue const&>(*this);
+}
+
+CustomIdentStyleValue const& StyleValue::as_custom_ident() const
+{
+    VERIFY(is_custom_ident());
+    return static_cast<CustomIdentStyleValue const&>(*this);
 }
 
 DisplayStyleValue const& StyleValue::as_display() const
@@ -367,6 +375,56 @@ ValueID StyleValue::to_identifier() const
     if (is_identifier())
         return as_identifier().id();
     return ValueID::Invalid;
+}
+
+int StyleValue::to_font_weight() const
+{
+    if (is_identifier()) {
+        switch (static_cast<IdentifierStyleValue const&>(*this).id()) {
+        case CSS::ValueID::Normal:
+            return Gfx::FontWeight::Regular;
+        case CSS::ValueID::Bold:
+            return Gfx::FontWeight::Bold;
+        case CSS::ValueID::Lighter:
+            // FIXME: This should be relative to the parent.
+            return Gfx::FontWeight::Regular;
+        case CSS::ValueID::Bolder:
+            // FIXME: This should be relative to the parent.
+            return Gfx::FontWeight::Bold;
+        default:
+            return Gfx::FontWeight::Regular;
+        }
+    }
+    if (has_integer()) {
+        return to_integer();
+    }
+    if (is_calculated()) {
+        auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();
+        if (maybe_weight.has_value())
+            return maybe_weight.value();
+    }
+    return Gfx::FontWeight::Regular;
+}
+
+int StyleValue::to_font_slope() const
+{
+    // FIXME: Implement oblique <angle>
+    if (is_identifier()) {
+        switch (static_cast<IdentifierStyleValue const&>(*this).id()) {
+        case CSS::ValueID::Italic: {
+            static int italic_slope = Gfx::name_to_slope("Italic"sv);
+            return italic_slope;
+        }
+        case CSS::ValueID::Oblique:
+            static int oblique_slope = Gfx::name_to_slope("Oblique"sv);
+            return oblique_slope;
+        case CSS::ValueID::Normal:
+        default:
+            break;
+        }
+    }
+    static int normal_slope = Gfx::name_to_slope("Normal"sv);
+    return normal_slope;
 }
 
 }

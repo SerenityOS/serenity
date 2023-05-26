@@ -66,12 +66,26 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
+static ErrorOr<String> get_event_key(KeyCode platform_key, u32 code_point)
+{
+    auto event_key = String::from_deprecated_string(key_code_to_string(platform_key));
+    if (event_key.is_error()) {
+        return event_key;
+    }
+    // Original case should be preserved for the key value of the event.
+    // https://www.w3.org/TR/uievents-key/#key-attr-values
+    if (is_ascii_lower_alpha(code_point)) {
+        event_key = event_key.release_value().to_lowercase();
+    }
+    return event_key;
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     auto& vm = realm.vm();
 
     // FIXME: Figure out what these should actually contain.
-    auto event_key = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(key_code_to_string(platform_key)));
+    auto event_key = TRY_OR_THROW_OOM(vm, get_event_key(platform_key, code_point));
     auto event_code = TRY_OR_THROW_OOM(vm, "FIXME"_string);
 
     auto key_code = determine_key_code(platform_key, code_point);

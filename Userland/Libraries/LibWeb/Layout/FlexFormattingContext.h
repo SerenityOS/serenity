@@ -35,7 +35,7 @@ private:
     [[nodiscard]] bool should_treat_cross_size_as_auto(Box const&) const;
 
     [[nodiscard]] CSSPixels adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const&, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const;
-    [[nodiscard]] CSSPixels calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, float aspect_ratio) const;
+    [[nodiscard]] CSSPixels calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const;
 
     void dump_items() const;
 
@@ -61,9 +61,9 @@ private:
         CSSPixels hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after + borders.cross_after + borders.cross_before + padding.cross_after + padding.cross_before; }
         CSSPixels target_main_size { 0 };
         bool frozen { false };
-        Optional<float> flex_factor {};
-        float scaled_flex_shrink_factor { 0 };
-        float desired_flex_fraction { 0 };
+        Optional<double> flex_factor {};
+        double scaled_flex_shrink_factor { 0 };
+        double desired_flex_fraction { 0 };
 
         CSSPixels outer_hypothetical_main_size() const
         {
@@ -109,10 +109,10 @@ private:
         Vector<FlexItem&> items;
         CSSPixels cross_size { 0 };
         CSSPixels remaining_free_space { 0 };
-        float chosen_flex_fraction { 0 };
+        double chosen_flex_fraction { 0 };
 
-        float sum_of_flex_factor_of_unfrozen_items() const;
-        float sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const;
+        double sum_of_flex_factor_of_unfrozen_items() const;
+        double sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const;
     };
 
     CSSPixels main_gap() const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
@@ -98,6 +98,7 @@ public:
         Color,
         ConicGradient,
         Content,
+        CustomIdent,
         Display,
         Edge,
         FilterValueList,
@@ -115,7 +116,6 @@ public:
         Image,
         Inherit,
         Initial,
-        Invalid,
         Length,
         LinearGradient,
         ListStyle,
@@ -151,6 +151,7 @@ public:
     bool is_color() const { return type() == Type::Color; }
     bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
+    bool is_custom_ident() const { return type() == Type::CustomIdent; }
     bool is_display() const { return type() == Type::Display; }
     bool is_edge() const { return type() == Type::Edge; }
     bool is_filter_value_list() const { return type() == Type::FilterValueList; }
@@ -202,6 +203,7 @@ public:
     ColorStyleValue const& as_color() const;
     ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
+    CustomIdentStyleValue const& as_custom_ident() const;
     DisplayStyleValue const& as_display() const;
     EdgeStyleValue const& as_edge() const;
     FilterValueListStyleValue const& as_filter_value_list() const;
@@ -251,6 +253,7 @@ public:
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
     ConicGradientStyleValue& as_conic_gradient() { return const_cast<ConicGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_conic_gradient()); }
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
+    CustomIdentStyleValue& as_custom_ident() { return const_cast<CustomIdentStyleValue&>(const_cast<StyleValue const&>(*this).as_custom_ident()); }
     DisplayStyleValue& as_display() { return const_cast<DisplayStyleValue&>(const_cast<StyleValue const&>(*this).as_display()); }
     EdgeStyleValue& as_edge() { return const_cast<EdgeStyleValue&>(const_cast<StyleValue const&>(*this).as_edge()); }
     FilterValueListStyleValue& as_filter_value_list() { return const_cast<FilterValueListStyleValue&>(const_cast<StyleValue const&>(*this).as_filter_value_list()); }
@@ -304,6 +307,9 @@ public:
     virtual float to_integer() const { return 0; }
     virtual ErrorOr<String> to_string() const = 0;
 
+    [[nodiscard]] int to_font_weight() const;
+    [[nodiscard]] int to_font_slope() const;
+
     virtual bool equals(StyleValue const& other) const = 0;
 
     bool operator==(StyleValue const& other) const
@@ -315,7 +321,7 @@ protected:
     explicit StyleValue(Type);
 
 private:
-    Type m_type { Type::Invalid };
+    Type m_type;
 };
 
 template<typename T>

@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PromiseCapability.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HostDefined.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -135,9 +136,14 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
     case PackageDataType::JSON:
         // Return the result of running parse JSON from bytes on bytes.
         return Infra::parse_json_bytes_to_javascript_value(realm, bytes);
-    case PackageDataType::Text:
+    case PackageDataType::Text: {
         // Return the result of running UTF-8 decode on bytes.
-        return JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(bytes)));
+        auto decoder = TextCodec::decoder_for("UTF-8"sv);
+        VERIFY(decoder.has_value());
+
+        auto utf8_text = TRY_OR_THROW_OOM(vm, TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, bytes));
+        return JS::PrimitiveString::create(vm, move(utf8_text));
+    }
     default:
         VERIFY_NOT_REACHED();
     }

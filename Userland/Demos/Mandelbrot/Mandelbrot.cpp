@@ -48,9 +48,9 @@ public:
     {
         set_view(
             rect.left() * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
-            rect.right() * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
+            (rect.right() - 1) * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
             rect.top() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start,
-            rect.bottom() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
+            (rect.bottom() - 1) * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
         correct_aspect();
         calculate();
     }
@@ -146,8 +146,8 @@ public:
         if (rect.is_empty())
             return;
 
-        for (int py = rect.top(); py <= rect.bottom(); py++)
-            for (int px = rect.left(); px <= rect.right(); px++)
+        for (int py = rect.top(); py < rect.bottom(); py++)
+            for (int px = rect.left(); px < rect.right(); px++)
                 calculate_pixel(px, py, max_iterations);
     }
 
@@ -417,7 +417,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& export_submenu = file_menu->add_submenu("&Export"_short_string);
 
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP",
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP...",
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
             if (!export_path.has_value())
@@ -425,7 +425,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::BMP); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG", { Mod_Ctrl | Mod_Shift, Key_S },
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
@@ -433,7 +433,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::PNG); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI",
+    TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI...",
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
             if (!export_path.has_value())

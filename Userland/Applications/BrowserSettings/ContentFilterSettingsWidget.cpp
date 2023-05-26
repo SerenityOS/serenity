@@ -142,7 +142,7 @@ ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget:
     widget->m_add_new_domain_button->on_click = [widget](unsigned) {
         String text;
 
-        if (GUI::InputBox::show(widget->window(), text, "Domain:"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
+        if (GUI::InputBox::show(widget->window(), text, "Enter a domain:"sv, "Add Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
             widget->m_domain_list_model->add_domain(move(text));
             widget->set_modified(true);
         }

@@ -21,7 +21,7 @@ ErrorOr<FlatPtr> Process::sys$beep(int tone)
         return EINVAL;
 #if ARCH(X86_64)
     PCSpeaker::tone_on(tone);
-    auto result = Thread::current()->sleep(Time::from_nanoseconds(200'000'000));
+    auto result = Thread::current()->sleep(Duration::from_nanoseconds(200'000'000));
     PCSpeaker::tone_off();
     if (result.was_interrupted())
         return EINTR;

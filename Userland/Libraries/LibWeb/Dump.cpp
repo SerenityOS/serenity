@@ -662,6 +662,16 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     indent(builder, indent_levels + 1);
     builder.appendff("font-family: {}\n", font_face.font_family());
 
+    if (font_face.weight().has_value()) {
+        indent(builder, indent_levels + 1);
+        builder.appendff("weight: {}\n", font_face.weight().value());
+    }
+
+    if (font_face.slope().has_value()) {
+        indent(builder, indent_levels + 1);
+        builder.appendff("slope: {}\n", font_face.slope().value());
+    }
+
     indent(builder, indent_levels + 1);
     builder.append("sources:\n"sv);
     for (auto const& source : font_face.sources()) {

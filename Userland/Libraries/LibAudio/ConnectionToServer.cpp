@@ -88,7 +88,7 @@ void ConnectionToServer::update_good_sleep_time()
     auto sample_rate = static_cast<double>(get_sample_rate());
     auto buffer_play_time_ns = 1'000'000'000.0 / (sample_rate / static_cast<double>(AUDIO_BUFFER_SIZE));
     // A factor of 1 should be good for now.
-    m_good_sleep_time = Time::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
+    m_good_sleep_time = Duration::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
 }
 
 // Non-realtime audio writing loop

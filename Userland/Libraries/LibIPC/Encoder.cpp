@@ -85,9 +85,15 @@ ErrorOr<void> encode(Encoder& encoder, JsonValue const& value)
 }
 
 template<>
-ErrorOr<void> encode(Encoder& encoder, Time const& value)
+ErrorOr<void> encode(Encoder& encoder, Duration const& value)
 {
     return encoder.encode(value.to_nanoseconds());
+}
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, UnixDateTime const& value)
+{
+    return encoder.encode(value.nanoseconds_since_epoch());
 }
 
 template<>

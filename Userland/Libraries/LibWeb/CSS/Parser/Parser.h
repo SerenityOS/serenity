@@ -280,7 +280,12 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_radial_gradient_function(ComponentValue const&);
 
     ParseErrorOr<NonnullRefPtr<StyleValue>> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
-    ErrorOr<RefPtr<StyleValue>> parse_css_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_css_value_for_property(PropertyID, TokenStream<ComponentValue>&);
+    struct PropertyAndValue {
+        PropertyID property;
+        RefPtr<StyleValue> style_value;
+    };
+    ErrorOr<PropertyAndValue> parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
@@ -293,7 +298,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_image_value(ComponentValue const&);
     template<typename ParseFunction>
     ErrorOr<RefPtr<StyleValue>> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
-    ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
 
     ErrorOr<RefPtr<StyleValue>> parse_filter_value_list_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_background_value(Vector<ComponentValue> const&);
@@ -309,7 +314,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_flex_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_flex_flow_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_font_value(Vector<ComponentValue> const&);
-    ErrorOr<RefPtr<StyleValue>> parse_font_family_value(Vector<ComponentValue> const&, size_t start_index = 0);
+    ErrorOr<RefPtr<StyleValue>> parse_font_family_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_list_style_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_overflow_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {

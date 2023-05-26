@@ -28,7 +28,7 @@ public:
     Color color() const { return m_color; }
 
 private:
-    explicit ColorPicker(Color, Window* parent_window = nullptr, DeprecatedString title = "Edit Color");
+    explicit ColorPicker(Color, Window* parent_window = nullptr, DeprecatedString title = "Color Picker");
 
     void build_ui();
     void build_ui_custom(Widget& root_container);

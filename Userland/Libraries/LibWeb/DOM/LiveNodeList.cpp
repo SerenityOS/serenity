@@ -10,15 +10,16 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> LiveNodeList::create(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> LiveNodeList::create(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<LiveNodeList>(realm, realm, root, move(filter)));
+    return MUST_OR_THROW_OOM(realm.heap().allocate<LiveNodeList>(realm, realm, root, scope, move(filter)));
 }
 
-LiveNodeList::LiveNodeList(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)
+LiveNodeList::LiveNodeList(JS::Realm& realm, Node& root, Scope scope, Function<bool(Node const&)> filter)
     : NodeList(realm)
     , m_root(root)
     , m_filter(move(filter))
+    , m_scope(scope)
 {
 }
 
@@ -33,12 +34,19 @@ void LiveNodeList::visit_edges(Cell::Visitor& visitor)
 JS::MarkedVector<Node*> LiveNodeList::collection() const
 {
     JS::MarkedVector<Node*> nodes(heap());
-    m_root->for_each_in_inclusive_subtree([&](auto& node) {
-        if (m_filter(node))
-            nodes.append(const_cast<Node*>(&node));
-
-        return IterationDecision::Continue;
-    });
+    if (m_scope == Scope::Descendants) {
+        m_root->for_each_in_subtree([&](auto& node) {
+            if (m_filter(node))
+                nodes.append(const_cast<Node*>(&node));
+            return IterationDecision::Continue;
+        });
+    } else {
+        m_root->for_each_child([&](auto& node) {
+            if (m_filter(node))
+                nodes.append(const_cast<Node*>(&node));
+            return IterationDecision::Continue;
+        });
+    }
     return nodes;
 }
 

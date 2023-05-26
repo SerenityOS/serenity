@@ -80,7 +80,7 @@ void SlavePTY::on_master_write(UserOrKernelBuffer const& buffer, size_t size)
 
 ErrorOr<size_t> SlavePTY::on_tty_write(UserOrKernelBuffer const& data, size_t size)
 {
-    m_time_of_last_write = kgettimeofday().to_truncated_seconds();
+    m_time_of_last_write = kgettimeofday();
     return m_master->on_slave_write(data, size);
 }
 

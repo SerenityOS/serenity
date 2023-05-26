@@ -15,10 +15,10 @@
 #include <Kernel/UnixTypes.h>
 
 ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*>, size_t);
-ErrorOr<Time> copy_time_from_user(timespec const*);
-ErrorOr<Time> copy_time_from_user(timeval const*);
+ErrorOr<Duration> copy_time_from_user(timespec const*);
+ErrorOr<Duration> copy_time_from_user(timeval const*);
 template<typename T>
-ErrorOr<Time> copy_time_from_user(Userspace<T*>);
+ErrorOr<Duration> copy_time_from_user(Userspace<T*>);
 
 [[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val);
 [[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(u32 volatile* var, u32 val);

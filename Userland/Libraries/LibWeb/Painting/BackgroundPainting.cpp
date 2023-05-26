@@ -148,16 +148,16 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            float max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
-            float max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
-            float ratio = min(max_width_ratio, max_height_ratio);
+            double max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
+            double max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
+            double ratio = min(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            float max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
-            float max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
-            float ratio = max(max_width_ratio, max_height_ratio);
+            double max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
+            double max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
+            double ratio = max(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
@@ -253,7 +253,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 repeat_x = false;
             } else {
                 auto space = fmod(background_positioning_area.width(), image_rect.width());
-                x_step = image_rect.width() + (space / (float)(whole_images - 1));
+                x_step = image_rect.width() + (space / static_cast<double>(whole_images - 1));
                 repeat_x = true;
             }
             break;
@@ -284,7 +284,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 repeat_y = false;
             } else {
                 auto space = fmod(background_positioning_area.height(), image_rect.height());
-                y_step = image_rect.height() + ((float)space / (float)(whole_images - 1));
+                y_step = image_rect.height() + (static_cast<double>(space) / static_cast<double>(whole_images - 1));
                 repeat_y = true;
             }
             break;
@@ -309,11 +309,11 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         image.resolve_for_size(layout_node, image_rect.size());
 
-        while (image_y <= css_clip_rect.bottom()) {
+        while (image_y < css_clip_rect.bottom()) {
             image_rect.set_y(image_y);
 
             auto image_x = initial_image_x;
-            while (image_x <= css_clip_rect.right()) {
+            while (image_x < css_clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto image_device_rect = context.rounded_device_rect(image_rect);
                 if (image_device_rect != last_image_device_rect && image_device_rect.intersects(context.device_viewport_rect()))

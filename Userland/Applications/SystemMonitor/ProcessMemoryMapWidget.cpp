@@ -42,7 +42,7 @@ public:
             else
                 VERIFY_NOT_REACHED();
 
-            painter.draw_line({ x, rect.top() }, { x, rect.bottom() }, color);
+            painter.draw_line({ x, rect.top() }, { x, rect.bottom() - 1 }, color);
         }
 
         painter.draw_rect(rect, Color::Black);

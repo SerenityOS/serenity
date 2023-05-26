@@ -20,24 +20,23 @@ ElapsedTimer ElapsedTimer::start_new()
 void ElapsedTimer::start()
 {
     m_valid = true;
-    m_origin_time = m_precise ? Time::now_monotonic() : Time::now_monotonic_coarse();
+    m_origin_time = m_precise ? MonotonicTime::now() : MonotonicTime::now_coarse();
 }
 
 void ElapsedTimer::reset()
 {
     m_valid = false;
-    m_origin_time = {};
 }
 
-i64 ElapsedTimer::elapsed() const
+i64 ElapsedTimer::elapsed_milliseconds() const
 {
     return elapsed_time().to_milliseconds();
 }
 
-Time ElapsedTimer::elapsed_time() const
+Duration ElapsedTimer::elapsed_time() const
 {
     VERIFY(is_valid());
-    auto now = m_precise ? Time::now_monotonic() : Time::now_monotonic_coarse();
+    auto now = m_precise ? MonotonicTime::now() : MonotonicTime::now_coarse();
     return now - m_origin_time;
 }
 

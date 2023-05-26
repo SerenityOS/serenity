@@ -155,7 +155,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         if (should_clip_rect) {
             context.painter().save();
             auto border_box = absolute_border_box_rect();
-            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<float>()).to_type<CSSPixels>()).to_type<int>());
+            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<double>()).to_type<CSSPixels>()).to_type<int>());
         }
         paint_backdrop_filter(context);
         paint_background(context);
@@ -434,7 +434,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
     CSSPixels css_line_thickness = [&] {
         CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em));
         if (computed_thickness.is_auto())
-            return max(glyph_height * 0.1f, 1.f);
+            return max(glyph_height * 0.1, 1.);
 
         return computed_thickness.to_px(text_node);
     }();
@@ -450,16 +450,16 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
             return;
         case CSS::TextDecorationLine::Underline:
             line_start_point = context.rounded_device_point(fragment_box.top_left().translated(0, baseline + 2));
-            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(0, baseline + 2));
+            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(-1, baseline + 2));
             break;
         case CSS::TextDecorationLine::Overline:
             line_start_point = context.rounded_device_point(fragment_box.top_left().translated(0, baseline - glyph_height));
-            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(0, baseline - glyph_height));
+            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(-1, baseline - glyph_height));
             break;
         case CSS::TextDecorationLine::LineThrough: {
             auto x_height = font.x_height();
             line_start_point = context.rounded_device_point(fragment_box.top_left().translated(0, baseline - x_height * 0.5f));
-            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(0, baseline - x_height * 0.5f));
+            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(-1, baseline - x_height * 0.5f));
             break;
         }
         case CSS::TextDecorationLine::Blink:
@@ -598,12 +598,15 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
+            auto fragment_absolute_rect = fragment.absolute_rect();
+            auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
+            if (context.would_be_fully_clipped_by_painter(fragment_absolute_device_rect))
+                continue;
             if (context.should_show_line_box_borders()) {
-                auto fragment_absolute_rect = fragment.absolute_rect();
-                context.painter().draw_rect(context.enclosing_device_rect(fragment_absolute_rect).to_type<int>(), Color::Green);
+                context.painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Green);
                 context.painter().draw_line(
                     context.rounded_device_point(fragment_absolute_rect.top_left().translated(0, fragment.baseline())).to_type<int>(),
-                    context.rounded_device_point(fragment_absolute_rect.top_right().translated(0, fragment.baseline())).to_type<int>(), Color::Red);
+                    context.rounded_device_point(fragment_absolute_rect.top_right().translated(-1, fragment.baseline())).to_type<int>(), Color::Red);
             }
             if (is<Layout::TextNode>(fragment.layout_node()))
                 paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
@@ -715,7 +718,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             // The best candidate is either the end of the line above, the beginning of the line below, or the beginning or end of the current line.
             // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
             // If we knew the direction of selection, we could make a better choice.
-            if (fragment_absolute_rect.bottom() <= position.y()) { // fully below the fragment
+            if (fragment_absolute_rect.bottom() - 1 <= position.y()) { // fully below the fragment
                 last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
             } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
                 if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment

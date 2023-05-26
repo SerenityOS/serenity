@@ -45,8 +45,8 @@ private:
     ErrorOr<void> setup_interface();
     void update_play_pause_icon();
     void update_seek_slider_max();
-    void set_current_timestamp(Time);
-    void set_time_label(Time);
+    void set_current_timestamp(Duration);
+    void set_time_label(Duration);
     void on_decoding_error(Video::DecoderError const&);
 
     void cycle_sizing_modes();

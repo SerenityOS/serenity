@@ -30,9 +30,9 @@ struct DropShadow {
     Optional<Length> radius {};
     Optional<Color> color {};
     struct Resolved {
-        float offset_x;
-        float offset_y;
-        float radius;
+        double offset_x;
+        double offset_y;
+        double radius;
         Color color;
     };
     Resolved resolved(Layout::Node const&) const;

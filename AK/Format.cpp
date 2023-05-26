@@ -916,14 +916,14 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
 #ifdef AK_OS_SERENITY
 #    ifdef KERNEL
     if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
-        struct timespec ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
+        auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
         if (Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, Kernel::Processor::current_id(), process_name->view(), thread.pid().value(), thread.tid().value());
+                builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name->view(), thread.pid().value(), thread.tid().value());
             });
         } else {
-            builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, Kernel::Processor::current_id());
+            builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id());
         }
     } else {
         builder.appendff("\033[34;1m[Kernel]\033[0m: ");
@@ -968,18 +968,16 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     StringBuilder builder;
 
 #    ifdef AK_OS_SERENITY
-    struct timespec ts = {};
-
     if (TimeManagement::is_initialized()) {
-        ts = TimeManagement::the().monotonic_time(TimePrecision::Coarse).to_timespec();
+        auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
 
         if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000, process_name->view(), thread.pid().value(), thread.tid().value());
+                builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, process_name->view(), thread.pid().value(), thread.tid().value());
             });
         } else {
-            builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", ts.tv_sec, ts.tv_nsec / 1000000);
+            builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000);
         }
     } else {
         builder.appendff("\033[34;1m[Kernel]\033[0m: ");

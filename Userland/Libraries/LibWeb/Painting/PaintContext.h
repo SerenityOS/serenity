@@ -18,7 +18,7 @@ namespace Web {
 
 class PaintContext {
 public:
-    PaintContext(Gfx::Painter& painter, Palette const& palette, float device_pixels_per_css_pixel);
+    PaintContext(Gfx::Painter& painter, Palette const& palette, double device_pixels_per_css_pixel);
 
     Gfx::Painter& painter() const { return m_painter; }
     Palette const& palette() const { return m_palette; }
@@ -34,6 +34,8 @@ public:
     DevicePixelRect device_viewport_rect() const { return m_device_viewport_rect; }
     void set_device_viewport_rect(DevicePixelRect const& rect) { m_device_viewport_rect = rect; }
     CSSPixelRect css_viewport_rect() const;
+
+    [[nodiscard]] bool would_be_fully_clipped_by_painter(DevicePixelRect) const;
 
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
@@ -62,13 +64,13 @@ public:
         return clone;
     }
 
-    float device_pixels_per_css_pixel() const { return m_device_pixels_per_css_pixel; }
+    double device_pixels_per_css_pixel() const { return m_device_pixels_per_css_pixel; }
 
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;
     Optional<SVGContext> m_svg_context;
-    float m_device_pixels_per_css_pixel;
+    double m_device_pixels_per_css_pixel { 0 };
     DevicePixelRect m_device_viewport_rect;
     bool m_should_show_line_box_borders { false };
     bool m_focus { false };

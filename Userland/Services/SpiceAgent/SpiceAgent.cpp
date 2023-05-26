@@ -53,6 +53,12 @@ ErrorOr<void> SpiceAgent::start()
 
 ErrorOr<void> SpiceAgent::on_clipboard_update(String const& mime_type)
 {
+    // NOTE: If we indicate that we don't support clipboard by demand, the spice server will ignore our messages,
+    //       but it will do some ugly debug logging.. so let's just not send anything instead.
+    if (!m_capabilities.contains_slow(Capability::ClipboardByDemand)) {
+        return {};
+    }
+
     // If we just copied something to the clipboard, we shouldn't do anything here.
     if (m_clipboard_dirty) {
         m_clipboard_dirty = false;

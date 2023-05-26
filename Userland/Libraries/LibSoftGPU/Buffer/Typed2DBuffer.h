@@ -29,7 +29,7 @@ public:
         return adopt_ref(*new Typed2DBuffer(buffer));
     }
 
-    void fill(T value, Gfx::IntRect const& rect) { m_buffer->fill(value, rect.left(), rect.right(), rect.top(), rect.bottom(), 0, 0); }
+    void fill(T value, Gfx::IntRect const& rect) { m_buffer->fill(value, rect.left(), rect.right(), rect.top(), rect.bottom(), 0, 1); }
     ALWAYS_INLINE T* scanline(int y) { return m_buffer->buffer_pointer(0, y, 0); }
     ALWAYS_INLINE T const* scanline(int y) const { return m_buffer->buffer_pointer(0, y, 0); }
 
@@ -40,7 +40,7 @@ public:
         int source_y = 0;
 
         // NOTE: we are flipping the Y-coordinate here, which is OpenGL-specific: (0, 0) is considered the lower-left corner of the window
-        for (int y = target.bottom(); y >= target.top(); --y) {
+        for (int y = target.bottom() - 1; y >= target.top(); --y) {
             auto const* buffer_scanline = scanline(source_y++);
             auto* bitmap_scanline = bitmap.scanline(y);
             memcpy(bitmap_scanline + target.left(), buffer_scanline, sizeof(u32) * target.width());

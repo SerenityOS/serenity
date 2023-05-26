@@ -23,7 +23,7 @@ void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GU
 {
     DeprecatedString message;
     if (paths.size() == 1) {
-        message = DeprecatedString::formatted("Are you sure you want to delete {}?", LexicalPath::basename(paths[0]));
+        message = DeprecatedString::formatted("Are you sure you want to delete \"{}\"?", LexicalPath::basename(paths[0]));
     } else {
         message = DeprecatedString::formatted("Are you sure you want to delete {} files?", paths.size());
     }
@@ -31,7 +31,7 @@ void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GU
     if (should_confirm) {
         auto result = GUI::MessageBox::show(parent_window,
             message,
-            "Confirm deletion"sv,
+            "Confirm Deletion"sv,
             GUI::MessageBox::Type::Warning,
             GUI::MessageBox::InputType::OKCancel);
         if (result == GUI::MessageBox::ExecResult::Cancel)

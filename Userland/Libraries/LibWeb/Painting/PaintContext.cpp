@@ -5,11 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Painter.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web {
 
-PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, float device_pixels_per_css_pixel)
+PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, double device_pixels_per_css_pixel)
     : m_painter(painter)
     , m_palette(palette)
     , m_device_pixels_per_css_pixel(device_pixels_per_css_pixel)
@@ -138,6 +139,11 @@ CSSPixelRect PaintContext::scale_to_css_rect(DevicePixelRect rect) const
         scale_to_css_point(rect.location()),
         scale_to_css_size(rect.size())
     };
+}
+
+bool PaintContext::would_be_fully_clipped_by_painter(DevicePixelRect rect) const
+{
+    return !painter().clip_rect().intersects(rect.to_type<int>().translated(painter().translation()));
 }
 
 }

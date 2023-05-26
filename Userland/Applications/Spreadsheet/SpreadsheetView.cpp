@@ -388,7 +388,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     };
 
     m_cell_range_context_menu = GUI::Menu::construct();
-    m_cell_range_context_menu->add_action(GUI::Action::create("Type and Formatting...", [this](auto&) {
+    m_cell_range_context_menu->add_action(GUI::Action::create("Format...", [this](auto&) {
         Vector<Position> positions;
         for (auto& index : m_table_view->selection().indices()) {
             Position position { (size_t)index.column(), (size_t)index.row() };

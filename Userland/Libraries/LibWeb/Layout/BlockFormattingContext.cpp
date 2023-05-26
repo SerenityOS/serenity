@@ -706,7 +706,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
             CSSPixels clearance_y_in_root = 0;
             for (auto const& floating_box : float_side.current_boxes) {
                 auto floating_box_rect_in_root = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
-                clearance_y_in_root = max(clearance_y_in_root, floating_box_rect_in_root.bottom() + 1);
+                clearance_y_in_root = max(clearance_y_in_root, floating_box_rect_in_root.bottom());
             }
 
             // Then, convert the clearance Y to a coordinate relative to the containing block of `child_box`.
@@ -762,8 +762,8 @@ static void measure_scrollable_overflow(LayoutState const& state, Box const& box
     auto child_rect = absolute_content_rect(box, state);
     child_rect.inflate(child_state.border_box_top(), child_state.border_box_right(), child_state.border_box_bottom(), child_state.border_box_left());
 
-    bottom_edge = max(bottom_edge, child_rect.bottom());
-    right_edge = max(right_edge, child_rect.right());
+    bottom_edge = max(bottom_edge, child_rect.bottom() - 1);
+    right_edge = max(right_edge, child_rect.right() - 1);
 
     if (box.computed_values().overflow_x() == CSS::Overflow::Hidden && box.computed_values().overflow_y() == CSS::Overflow::Hidden)
         return;
@@ -992,7 +992,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
     marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1).value());
 
     marker_state.set_content_offset({ -(marker_state.content_width() + default_marker_width),
-        max(CSSPixels(0.f), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2.f) });
+        max(CSSPixels(0), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2) });
 
     if (marker_state.content_height() > list_item_state.content_height())
         list_item_state.set_content_height(marker_state.content_height());
@@ -1011,7 +1011,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_left());
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_left();
             }
             space_used_by_floats.left = offset_from_containing_block_chain_margins_between_here_and_root
                 + floating_box.offset_from_edge
@@ -1030,7 +1030,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
                 auto const& containing_block_state = m_state.get(*containing_block);
-                offset_from_containing_block_chain_margins_between_here_and_root = max(offset_from_containing_block_chain_margins_between_here_and_root, containing_block_state.margin_box_right());
+                offset_from_containing_block_chain_margins_between_here_and_root += containing_block_state.margin_box_right();
             }
             space_used_by_floats.right = offset_from_containing_block_chain_margins_between_here_and_root
                 + floating_box.offset_from_edge

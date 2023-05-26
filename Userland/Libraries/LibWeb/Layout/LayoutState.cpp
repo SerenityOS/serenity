@@ -11,44 +11,56 @@
 
 namespace Web::Layout {
 
+LayoutState::LayoutState(LayoutState const* parent)
+    : m_parent(parent)
+    , m_root(find_root())
+{
+}
+
+LayoutState::~LayoutState()
+{
+}
+
 LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
 {
-    auto serial_id = box.serial_id();
-    if (used_values_per_layout_node[serial_id])
-        return *used_values_per_layout_node[serial_id];
+    if (auto* used_values = used_values_per_layout_node.get(&box).value_or(nullptr))
+        return *used_values;
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (ancestor->used_values_per_layout_node[serial_id]) {
-            auto cow_used_values = adopt_own(*new UsedValues(*ancestor->used_values_per_layout_node[serial_id]));
+        if (auto* ancestor_used_values = ancestor->used_values_per_layout_node.get(&box).value_or(nullptr)) {
+            auto cow_used_values = adopt_own(*new UsedValues(*ancestor_used_values));
             auto* cow_used_values_ptr = cow_used_values.ptr();
-            used_values_per_layout_node[serial_id] = move(cow_used_values);
+            used_values_per_layout_node.set(&box, move(cow_used_values));
             return *cow_used_values_ptr;
         }
     }
 
     auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
 
-    used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
-    used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
-    return *used_values_per_layout_node[serial_id];
+    auto new_used_values = adopt_own(*new UsedValues);
+    auto* new_used_values_ptr = new_used_values.ptr();
+    new_used_values->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
+    used_values_per_layout_node.set(&box, move(new_used_values));
+    return *new_used_values_ptr;
 }
 
 LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics const& box) const
 {
-    auto serial_id = box.serial_id();
-    if (used_values_per_layout_node[serial_id])
-        return *used_values_per_layout_node[serial_id];
+    if (auto const* used_values = used_values_per_layout_node.get(&box).value_or(nullptr))
+        return *used_values;
 
-    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (ancestor->used_values_per_layout_node[serial_id])
-            return *ancestor->used_values_per_layout_node[serial_id];
+    for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
+        if (auto const* ancestor_used_values = ancestor->used_values_per_layout_node.get(&box).value_or(nullptr))
+            return *ancestor_used_values;
     }
 
     auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
 
-    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
-    const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
-    return *used_values_per_layout_node[serial_id];
+    auto new_used_values = adopt_own(*new UsedValues);
+    auto* new_used_values_ptr = new_used_values.ptr();
+    new_used_values->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
+    const_cast<LayoutState*>(this)->used_values_per_layout_node.set(&box, move(new_used_values));
+    return *new_used_values_ptr;
 }
 
 void LayoutState::commit()
@@ -58,10 +70,8 @@ void LayoutState::commit()
 
     HashTable<Layout::TextNode*> text_nodes;
 
-    for (auto& used_values_ptr : used_values_per_layout_node) {
-        if (!used_values_ptr)
-            continue;
-        auto& used_values = *used_values_ptr;
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
         auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
 
         // Transfer box model metrics.
@@ -135,23 +145,25 @@ CSSPixels box_baseline(LayoutState const& state, Box const& box)
 CSSPixelRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    rect.set_x(rect.x() - box_state.margin_box_left());
-    rect.set_width(rect.width() + box_state.margin_box_left() + box_state.margin_box_right());
-    rect.set_y(rect.y() - box_state.margin_box_top());
-    rect.set_height(rect.height() + box_state.margin_box_top() + box_state.margin_box_bottom());
-    return rect;
+    return {
+        box_state.offset.translated(-box_state.margin_box_left(), -box_state.margin_box_top()),
+        {
+            box_state.margin_box_left() + box_state.content_width() + box_state.margin_box_right(),
+            box_state.margin_box_top() + box_state.content_height() + box_state.margin_box_bottom(),
+        },
+    };
 }
 
 CSSPixelRect border_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    rect.set_x(rect.x() - box_state.border_box_left());
-    rect.set_width(rect.width() + box_state.border_box_left() + box_state.border_box_right());
-    rect.set_y(rect.y() - box_state.border_box_top());
-    rect.set_height(rect.height() + box_state.border_box_top() + box_state.border_box_bottom());
-    return rect;
+    return {
+        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
+        {
+            box_state.border_box_left() + box_state.content_width() + box_state.border_box_right(),
+            box_state.border_box_top() + box_state.content_height() + box_state.border_box_bottom(),
+        },
+    };
 }
 
 CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
@@ -308,7 +320,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
         if (size.is_percentage()) {
             if (containing_block_has_definite_size) {
                 auto containing_block_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
-                resolved_definite_size = adjust_for_box_sizing(containing_block_size * size.percentage().as_fraction(), size, width);
+                resolved_definite_size = adjust_for_box_sizing(containing_block_size * static_cast<double>(size.percentage().as_fraction()), size, width);
                 return true;
             }
             return false;

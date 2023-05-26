@@ -859,13 +859,11 @@ void Document::update_layout()
     auto viewport_rect = browsing_context()->viewport_rect();
 
     if (!m_layout_root) {
-        m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
         m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
     }
 
     Layout::LayoutState layout_state;
-    layout_state.used_values_per_layout_node.resize(layout_node_count());
 
     {
         Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
@@ -908,13 +906,13 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-[[nodiscard]] static bool update_style_recursively(DOM::Node& node)
+[[nodiscard]] static Element::RequiredInvalidationAfterStyleChange update_style_recursively(DOM::Node& node)
 {
     bool const needs_full_style_update = node.document().needs_full_style_update();
-    bool needs_relayout = false;
+    Element::RequiredInvalidationAfterStyleChange invalidation;
 
     if (is<Element>(node)) {
-        needs_relayout |= static_cast<Element&>(node).recompute_style() == Element::NeedsRelayout::Yes;
+        invalidation |= static_cast<Element&>(node).recompute_style();
     }
     node.set_needs_style_update(false);
 
@@ -922,18 +920,18 @@ void Document::update_layout()
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root_internal()) {
                 if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
-                    needs_relayout |= update_style_recursively(*shadow_root);
+                    invalidation |= update_style_recursively(*shadow_root);
             }
         }
         node.for_each_child([&](auto& child) {
             if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update())
-                needs_relayout |= update_style_recursively(child);
+                invalidation |= update_style_recursively(child);
             return IterationDecision::Continue;
         });
     }
 
     node.set_child_needs_style_update(false);
-    return needs_relayout;
+    return invalidation;
 }
 
 void Document::update_style()
@@ -948,8 +946,16 @@ void Document::update_style()
         return;
 
     evaluate_media_rules();
-    if (update_style_recursively(*this))
+
+    auto invalidation = update_style_recursively(*this);
+    if (invalidation.rebuild_layout_tree) {
         invalidate_layout();
+    } else {
+        if (invalidation.relayout)
+            set_needs_layout();
+        if (invalidation.rebuild_stacking_context_tree)
+            invalidate_stacking_context_tree();
+    }
     m_needs_full_style_update = false;
     m_style_update_timer->stop();
 }
@@ -1048,7 +1054,7 @@ void Document::set_hovered_node(Node* node)
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString const& name)
 {
-    return HTMLCollection::create(*this, [name](Element const& element) {
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
         return element.name() == name;
     }).release_value_but_fixme_should_propagate_errors();
 }
@@ -1059,7 +1065,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
     for (auto& name : class_names.view().split_view(' ')) {
         list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
-    return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
         for (auto& name : list_of_class_names) {
             if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
                 return false;
@@ -1072,7 +1078,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
     if (!m_applets)
-        m_applets = HTMLCollection::create(*this, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
+        m_applets = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
     return *m_applets;
 }
 
@@ -1080,7 +1086,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::applets()
 JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
     if (!m_anchors) {
-        m_anchors = HTMLCollection::create(*this, [](Element const& element) {
+        m_anchors = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1091,7 +1097,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 JS::NonnullGCPtr<HTMLCollection> Document::images()
 {
     if (!m_images) {
-        m_images = HTMLCollection::create(*this, [](Element const& element) {
+        m_images = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLImageElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1102,7 +1108,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::images()
 JS::NonnullGCPtr<HTMLCollection> Document::embeds()
 {
     if (!m_embeds) {
-        m_embeds = HTMLCollection::create(*this, [](Element const& element) {
+        m_embeds = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLEmbedElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1119,7 +1125,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::plugins()
 JS::NonnullGCPtr<HTMLCollection> Document::links()
 {
     if (!m_links) {
-        m_links = HTMLCollection::create(*this, [](Element const& element) {
+        m_links = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1130,7 +1136,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::links()
 JS::NonnullGCPtr<HTMLCollection> Document::forms()
 {
     if (!m_forms) {
-        m_forms = HTMLCollection::create(*this, [](Element const& element) {
+        m_forms = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLFormElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1141,7 +1147,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::forms()
 JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 {
     if (!m_scripts) {
-        m_scripts = HTMLCollection::create(*this, [](Element const& element) {
+        m_scripts = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLScriptElement>(element);
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1152,7 +1158,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 JS::NonnullGCPtr<HTMLCollection> Document::all()
 {
     if (!m_all) {
-        m_all = HTMLCollection::create(*this, [](Element const&) {
+        m_all = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
             return true;
         }).release_value_but_fixme_should_propagate_errors();
     }
@@ -1645,7 +1651,7 @@ void Document::completely_finish_loading()
     VERIFY(browsing_context());
 
     // 2. Set document's completely loaded time to the current time.
-    m_completely_loaded_time = AK::Time::now_realtime();
+    m_completely_loaded_time = AK::UnixDateTime::now();
 
     // 3. Let container be document's browsing context's container.
     auto container = JS::make_handle(browsing_context()->container());
@@ -1805,7 +1811,7 @@ void Document::run_the_resize_steps()
     if (!browsing_context())
         return;
 
-    auto viewport_size = browsing_context()->viewport_rect().size().to_type<float>().to_type<int>();
+    auto viewport_size = browsing_context()->viewport_rect().size().to_type<double>().to_type<float>().to_type<int>();
     if (m_last_viewport_size == viewport_size)
         return;
     m_last_viewport_size = viewport_size;
@@ -2086,7 +2092,7 @@ void Document::check_favicon_after_loading_link_resource()
     if (!head_element)
         return;
 
-    auto favicon_link_elements = HTMLCollection::create(*head_element, [](Element const& element) {
+    auto favicon_link_elements = HTMLCollection::create(*head_element, HTMLCollection::Scope::Descendants, [](Element const& element) {
         if (!is<HTML::HTMLLinkElement>(element))
             return false;
 

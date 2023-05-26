@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         if (remaining_samples > 0) {
             sample_timer = sample_timer.start_new();
             auto samples = loader->get_more_samples(min(MAX_CHUNK_SIZE, remaining_samples));
-            total_loader_time += sample_timer.elapsed();
+            total_loader_time += sample_timer.elapsed_milliseconds();
             if (!samples.is_error()) {
                 remaining_samples -= samples.value().size();
                 total_loaded_samples += samples.value().size();

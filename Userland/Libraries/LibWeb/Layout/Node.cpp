@@ -32,8 +32,6 @@ Node::Node(DOM::Document& document, DOM::Node* node)
     , m_browsing_context(*document.browsing_context())
     , m_anonymous(node == nullptr)
 {
-    m_serial_id = document.next_layout_node_serial_id({});
-
     if (node)
         node->set_layout_node({}, *this);
 }
@@ -611,7 +609,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         if (border.line_style == CSS::LineStyle::None || border.line_style == CSS::LineStyle::Hidden) {
             border.width = 0;
         } else {
-            auto resolve_border_width = [&]() {
+            auto resolve_border_width = [&]() -> double {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
                     return value->as_calculated().resolve_length(*this)->to_px(*this).value();
@@ -621,11 +619,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
                     case CSS::ValueID::Thin:
-                        return 1.0f;
+                        return 1.0;
                     case CSS::ValueID::Medium:
-                        return 3.0f;
+                        return 3.0;
                     case CSS::ValueID::Thick:
-                        return 5.0f;
+                        return 5.0;
                     default:
                         VERIFY_NOT_REACHED();
                     }

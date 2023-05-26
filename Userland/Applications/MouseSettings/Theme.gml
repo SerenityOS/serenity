@@ -5,7 +5,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Available Cursor Themes"
+        title: "Available cursor themes"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
             spacing: 4

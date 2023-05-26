@@ -18,7 +18,7 @@
 
 namespace Web::Layout {
 
-constexpr float text_justification_threshold = 0.1;
+constexpr double text_justification_threshold = 0.1;
 
 InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
@@ -209,7 +209,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         }
     }
 
-    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<float>(whitespace_count)) : 0;
+    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<double>(whitespace_count)) : 0;
 
     // This is the amount that each fragment will be offset by. If a whitespace
     // fragment is shorter than the justified space width, it increases to push
@@ -329,7 +329,6 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-
     auto top_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
     auto bottom_intrusions = parent().intrusion_by_floats_into_box(containing_block(), y + containing_block().line_height() - 1);
 
