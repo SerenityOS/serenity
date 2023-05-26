@@ -7,11 +7,12 @@
 
 #include "CalendarSettingsWidget.h"
 #include <AK/DateConstants.h>
-#include <Applications/CalendarSettings/CalendarSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/SpinBox.h>
+
+namespace CalendarSettings {
 
 void CalendarSettingsWidget::apply_settings()
 {
@@ -29,17 +30,15 @@ void CalendarSettingsWidget::reset_default_values()
     m_default_view_combobox->set_text("Month");
 }
 
-ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> CalendarSettingsWidget::try_create()
+ErrorOr<NonnullRefPtr<CalendarSettingsWidget>> CalendarSettingsWidget::create()
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CalendarSettingsWidget()));
+    auto widget = TRY(try_create());
     TRY(widget->setup());
     return widget;
 }
 
 ErrorOr<void> CalendarSettingsWidget::setup()
 {
-    TRY(load_from_gml(calendar_settings_widget_gml));
-
     m_first_day_of_week_combobox = *find_descendant_of_type_named<GUI::ComboBox>("first_day_of_week");
     m_first_day_of_week_combobox->set_text(Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv));
     m_first_day_of_week_combobox->set_only_allow_values_from_model(true);
@@ -70,4 +69,6 @@ ErrorOr<void> CalendarSettingsWidget::setup()
         set_modified(true);
     };
     return {};
+}
+
 }
