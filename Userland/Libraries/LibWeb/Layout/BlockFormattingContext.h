@@ -72,6 +72,13 @@ private:
 
     void layout_list_item_marker(ListItemBox const&);
 
+    enum class DidIntroduceClearance {
+        Yes,
+        No,
+    };
+
+    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Box const& child_box);
+
     enum class FloatSide {
         Left,
         Right,
