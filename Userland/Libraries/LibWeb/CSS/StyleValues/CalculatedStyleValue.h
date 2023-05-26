@@ -119,8 +119,11 @@ public:
         // NOTE: Currently, any value with a `var()` or `attr()` function in it is always an
         //       UnresolvedStyleValue so we do not have to implement a NonMathFunction type here.
 
-        // Operator nodes
-        // https://www.w3.org/TR/css-values-4/#calculation-tree-operator-nodes
+        // Comparison function nodes, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#comp-func
+        Min,
+        Max,
+        Clamp,
 
         // Calc-operator nodes, a sub-type of operator node
         // https://www.w3.org/TR/css-values-4/#calculation-tree-calc-operator-nodes
@@ -251,6 +254,24 @@ public:
 private:
     explicit InvertCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_value;
+};
+
+class MinCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<MinCalculationNode>> create(Vector<NonnullOwnPtr<CalculationNode>>);
+    ~MinCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    explicit MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
+    Vector<NonnullOwnPtr<CalculationNode>> m_values;
 };
 
 }

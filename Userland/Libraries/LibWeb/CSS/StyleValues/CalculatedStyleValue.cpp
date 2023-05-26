@@ -24,6 +24,17 @@ static bool is_dimension(CalculatedStyleValue::ResolvedType type)
         && type != CalculatedStyleValue::ResolvedType::Percentage;
 }
 
+static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Layout::Node const* layout_node)
+{
+    return value.visit(
+        [](Number const& number) { return number.value(); },
+        [](Angle const& angle) { return angle.to_degrees(); },
+        [](Frequency const& frequency) { return frequency.to_hertz(); },
+        [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
+        [](Percentage const& percentage) { return percentage.value(); },
+        [](Time const& time) { return time.to_seconds(); });
+};
+
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
 {
@@ -387,6 +398,84 @@ ErrorOr<void> InvertCalculationNode::dump(StringBuilder& builder, int indent) co
 {
     TRY(builder.try_appendff("{: >{}}INVERT:\n", "", indent));
     TRY(m_value->dump(builder, indent + 2));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<MinCalculationNode>> MinCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) MinCalculationNode(move(values)));
+}
+
+MinCalculationNode::MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Min)
+    , m_values(move(values))
+{
+}
+
+MinCalculationNode::~MinCalculationNode() = default;
+
+ErrorOr<String> MinCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    TRY(builder.try_append("min("sv));
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (i != 0)
+            TRY(builder.try_append(", "sv));
+        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+    }
+    TRY(builder.try_append(")"sv));
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> MinCalculationNode::resolved_type() const
+{
+    // NOTE: We check during parsing that all values have the same type.
+    return m_values[0]->resolved_type();
+}
+
+bool MinCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    CalculatedStyleValue::CalculationResult smallest_node = m_values.first()->resolve(layout_node, percentage_basis);
+    auto smallest_value = resolve_value(smallest_node.value(), layout_node);
+
+    for (size_t i = 1; i < m_values.size(); i++) {
+        auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value(), layout_node);
+
+        if (child_value < smallest_value) {
+            smallest_value = child_value;
+            smallest_node = child_resolved;
+        }
+    }
+
+    return smallest_node;
+}
+
+ErrorOr<void> MinCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& value : m_values) {
+        TRY(value->for_each_child_node(callback));
+        TRY(callback(value));
+    }
+
+    return {};
+}
+
+ErrorOr<void> MinCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}MIN:\n", "", indent));
+    for (auto const& value : m_values)
+        TRY(value->dump(builder, indent + 2));
     return {};
 }
 
