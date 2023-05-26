@@ -33,7 +33,7 @@ static int max_ms;
 static DeprecatedString host;
 static int payload_size = -1;
 static bool quiet = false;
-static u64 interval_in_microseconds = 1'000'000;
+static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 static constexpr int max_optional_header_size_in_bytes = 40;
@@ -78,10 +78,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
 
             auto interval_in_seconds = interval_in_seconds_string.to_double();
-            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0)
+            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > UINT32_MAX)
                 return false;
 
-            interval_in_microseconds = static_cast<u64>(interval_in_seconds.value() * 1'000'000);
+            auto whole_seconds = static_cast<time_t>(interval_in_seconds.value());
+            auto fractional_seconds = interval_in_seconds.value() - static_cast<double>(whole_seconds);
+            interval_timespec = {
+                .tv_sec = whole_seconds,
+                .tv_nsec = static_cast<long>(fractional_seconds * 1'000'000'000)
+            };
             return true;
         },
     });
@@ -234,6 +239,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         }
 
-        usleep(interval_in_microseconds);
+        clock_nanosleep(CLOCK_MONOTONIC, 0, &interval_timespec, nullptr);
     }
 }
