@@ -6869,6 +6869,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_area_shorthand_value(Vector<Compo
     return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_shorthand_value(Vector<ComponentValue> const& component_value)
+{
+    // <'grid-template'> |
+    // FIXME: <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>? |
+    // FIXME: [ auto-flow && dense? ] <'grid-auto-rows'>? / <'grid-template-columns'>
+    return parse_grid_track_size_list_shorthand_value(component_value);
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
 {
     Vector<Vector<String>> grid_area_rows;
@@ -7074,6 +7082,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridRowStart:
         if (auto parsed_value = FIXME_TRY(parse_grid_track_placement(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::Grid:
+        if (auto parsed_value = FIXME_TRY(parse_grid_shorthand_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
