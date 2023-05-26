@@ -137,10 +137,16 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         // FIXME: This const_cast is gross.
         const_cast<ReplacedBox&>(replaced).prepare_for_replaced_layout();
         compute_width_for_block_level_replaced_element_in_normal_flow(replaced, remaining_available_space);
-        // NOTE: We don't return here.
+        if (box.is_floating()) {
+            // 10.3.6 Floating, replaced elements:
+            // https://www.w3.org/TR/CSS22/visudet.html#float-replaced-width
+            return;
+        }
     }
 
     if (box.is_floating()) {
+        // 10.3.5 Floating, non-replaced elements:
+        // https://www.w3.org/TR/CSS22/visudet.html#float-width
         compute_width_for_floating_box(box, available_space);
         return;
     }
