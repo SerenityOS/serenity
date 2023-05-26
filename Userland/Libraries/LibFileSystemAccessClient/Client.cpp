@@ -28,21 +28,11 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     auto const id = get_new_id();
     m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, Core::File::OpenMode::Read });
 
-    auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
-    auto child_window_server_client_id = expose_window_server_client_id();
-    auto parent_window_id = parent_window->window_id();
-
-    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
-
-    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
-    });
-
     if (path.starts_with('/')) {
-        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
+        async_request_file_read_only_approved(id, path);
     } else {
         auto full_path = LexicalPath::join(TRY(FileSystem::current_working_directory()), path).string();
-        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
+        async_request_file_read_only_approved(id, full_path);
     }
 
     return handle_promise(id);
