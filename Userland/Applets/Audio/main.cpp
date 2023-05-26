@@ -24,6 +24,8 @@
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 
+static constexpr bool audio_applet_show_percent_default = false;
+
 class AudioWidget final : public GUI::Widget {
     C_OBJECT_ABSTRACT(AudioWidget)
 
@@ -53,7 +55,7 @@ private:
     AudioWidget(NonnullRefPtr<Audio::ConnectionToServer> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
-        , m_show_percent(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, false))
+        , m_show_percent(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, audio_applet_show_percent_default))
     {
         m_audio_volume = static_cast<int>(m_audio_client->get_main_mix_volume() * 100);
         m_audio_muted = m_audio_client->is_main_mix_muted();
@@ -246,7 +248,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     // This positioning code depends on the window actually existing.
-    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, false));
+    static_cast<AudioWidget*>(window->main_widget())->set_audio_widget_size(Config::read_bool("AudioApplet"sv, "Applet"sv, "ShowPercent"sv, audio_applet_show_percent_default));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
