@@ -229,7 +229,7 @@ public:
         auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, height, width);
 
         auto bit_stream = DECODER_TRY_ALLOC(try_make<BigEndianInputBitStream>(DECODER_TRY_ALLOC(try_make<FixedMemoryStream>(*frame_context.stream))));
-        auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize(move(bit_stream), tile_size));
+        auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize_vp9(move(bit_stream), tile_size));
 
         return TileContext {
             frame_context,
