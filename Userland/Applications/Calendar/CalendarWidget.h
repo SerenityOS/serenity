@@ -10,6 +10,7 @@
 #include "EventCalendar.h"
 #include <AK/NonnullRefPtr.h>
 #include <LibFileSystemAccessClient/Client.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Widget.h>
 
@@ -28,6 +29,9 @@ public:
     bool request_close();
 
 private:
+    CalendarWidget() = default;
+    static ErrorOr<NonnullRefPtr<CalendarWidget>> try_create();
+
     void create_on_tile_doubleclick();
 
     String const& current_filename() const { return m_event_calendar->event_manager().current_filename(); }

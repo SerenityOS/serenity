@@ -9,7 +9,6 @@
 #include "AddEventDialog.h"
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
-#include <Applications/Calendar/CalendarWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -31,8 +30,7 @@ namespace Calendar {
 
 ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* parent_window)
 {
-    auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) CalendarWidget));
-    TRY(widget->load_from_gml(calendar_window_gml));
+    auto widget = TRY(CalendarWidget::try_create());
 
     widget->m_event_calendar = widget->find_descendant_of_type_named<EventCalendar>("calendar");
     widget->create_on_events_change();

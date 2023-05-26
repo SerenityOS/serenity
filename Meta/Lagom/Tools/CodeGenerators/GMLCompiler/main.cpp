@@ -179,7 +179,9 @@ static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView proper
         { "button_style"sv, "Gfx::ButtonStyle"sv },
         { "opportunistic_resizee"sv, "GUI::Splitter::OpportunisticResizee"sv },
         { "checkbox_position"sv, "GUI::CheckBox::CheckBoxPosition"sv },
-        { "button_style"sv, "Gfx::ButtonStyle"sv }
+        { "button_style"sv, "Gfx::ButtonStyle"sv },
+        { "mode"sv, "GUI::TextEditor::Mode"sv },
+        { "font_weight"sv, "Gfx::FontWeight"sv },
     };
 
     auto const& enum_type_name = enum_properties.get(property_name);
@@ -352,6 +354,8 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
         // For Gfx::ColorRole
         TRY(String::from_utf8("<LibGfx/SystemTheme.h>"sv)),
         TRY(String::from_utf8("<LibGUI/Widget.h>"sv)),
+        // For Gfx::FontWeight
+        TRY(String::from_utf8("<LibGfx/Font/FontDatabase.h>"sv)),
     };
     TRY(necessary_includes.try_set_from(always_necessary_includes));
     for (auto const& include : necessary_includes)
