@@ -17,7 +17,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::proc));
 
     auto child_name = TRY(name().with([](auto& name) { return name->try_clone(); }));
