@@ -940,6 +940,21 @@
       "string"
     ]
   },
+  "grid": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ],
+    "longhands": [
+      "grid-template"
+    ]
+  },
   "grid-template": {
     "inherited": false,
     "initial": "auto",

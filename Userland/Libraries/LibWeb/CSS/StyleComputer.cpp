@@ -639,7 +639,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (property_id == CSS::PropertyID::GridTemplate) {
+    if (property_id == CSS::PropertyID::GridTemplate || property_id == CSS::PropertyID::Grid) {
         if (value.is_grid_track_size_list_shorthand()) {
             auto const& shorthand = value.as_grid_track_size_list_shorthand();
             style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
