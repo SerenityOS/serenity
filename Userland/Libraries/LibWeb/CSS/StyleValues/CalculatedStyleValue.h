@@ -147,12 +147,17 @@ public:
     bool is_operator_node() const
     {
         // FIXME: Check for operator node types once they exist
-        return is_calc_operator_node();
+        return is_calc_operator_node() || is_math_function_node();
     }
 
     bool is_calc_operator_node() const
     {
         return first_is_one_of(m_type, Type::Sum, Type::Product, Type::Negate, Type::Invert);
+    }
+
+    bool is_math_function_node() const
+    {
+        return first_is_one_of(m_type, Type::Min);
     }
 
     virtual ErrorOr<String> to_string() const = 0;
@@ -257,6 +262,24 @@ public:
 private:
     explicit InvertCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_value;
+};
+
+class MinCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<MinCalculationNode>> create(Vector<NonnullOwnPtr<CalculationNode>>);
+    ~MinCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    explicit MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
+    Vector<NonnullOwnPtr<CalculationNode>> m_values;
 };
 
 }
