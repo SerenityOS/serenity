@@ -9,7 +9,7 @@
 
 #include "BooleanDecoder.h"
 
-namespace Video::VP9 {
+namespace Gfx {
 
 /* 9.2.1 */
 ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
