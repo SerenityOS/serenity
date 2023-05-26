@@ -390,6 +390,94 @@ ErrorOr<void> InvertCalculationNode::dump(StringBuilder& builder, int indent) co
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<MinCalculationNode>> MinCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) MinCalculationNode(move(values)));
+}
+
+MinCalculationNode::MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Min)
+    , m_values(move(values))
+{
+}
+
+MinCalculationNode::~MinCalculationNode() = default;
+
+ErrorOr<String> MinCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    TRY(builder.try_append("min("sv));
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (i != 0)
+            TRY(builder.try_append(", "sv));
+        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+    }
+    TRY(builder.try_append(")"sv));
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> MinCalculationNode::resolved_type() const
+{
+    // NOTE: We check during parsing that all values have the same type.
+    return m_values[0]->resolved_type();
+}
+
+bool MinCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) {
+        return value.visit(
+            [](Number const& number) { return number.value(); },
+            [](Angle const& angle) { return angle.to_degrees(); },
+            [](Frequency const& frequency) { return frequency.to_hertz(); },
+            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [](Percentage const& percentage) { return percentage.value(); },
+            [](Time const& time) { return time.to_seconds(); });
+    };
+
+    CalculatedStyleValue::CalculationResult smallest_node = m_values.first()->resolve(layout_node, percentage_basis);
+    auto smallest_value = resolve_value(smallest_node.value());
+
+    for (size_t i = 1; i < m_values.size(); i++) {
+        auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value());
+
+        if (child_value < smallest_value) {
+            smallest_value = child_value;
+            smallest_node = child_resolved;
+        }
+    }
+
+    return smallest_node;
+}
+
+ErrorOr<void> MinCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& value : m_values) {
+        TRY(value->for_each_child_node(callback));
+        TRY(callback(value));
+    }
+
+    return {};
+}
+
+ErrorOr<void> MinCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}MIN:\n", "", indent));
+    for (auto const& value : m_values)
+        TRY(value->dump(builder, indent + 2));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
