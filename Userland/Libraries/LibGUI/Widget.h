@@ -295,6 +295,7 @@ public:
     void set_font_size(unsigned);
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
+    bool is_font_fixed_width();
 
     void notify_layout_changed(Badge<Layout>);
     void invalidate_layout();

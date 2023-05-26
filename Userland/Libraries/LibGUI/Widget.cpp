@@ -88,6 +88,7 @@ Widget::Widget()
 
     REGISTER_STRING_PROPERTY("title", title, set_title);
 
+    REGISTER_BOOL_PROPERTY("font_fixed_width", is_font_fixed_width, set_font_fixed_width)
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
         [this](auto& value) {
@@ -839,6 +840,11 @@ void Widget::set_font_fixed_width(bool fixed_width)
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
     else
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
+}
+
+bool Widget::is_font_fixed_width()
+{
+    return font().is_fixed_width();
 }
 
 void Widget::set_min_size(UISize const& size)
