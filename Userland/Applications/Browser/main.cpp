@@ -122,6 +122,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/sql", "rw"));
+    if (getenv("DUMP_LIBIPC_TRAFFIC")) {
+        TRY(Core::System::unveil("/tmp/", "rwc"));
+    }
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
