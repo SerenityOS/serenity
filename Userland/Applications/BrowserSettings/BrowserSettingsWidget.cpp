@@ -6,13 +6,14 @@
  */
 
 #include "BrowserSettingsWidget.h"
-#include <Applications/BrowserSettings/BrowserSettingsWidgetGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibWebView/SearchEngine.h>
+
+namespace BrowserSettings {
 
 struct ColorScheme {
     ByteString title;
@@ -96,9 +97,8 @@ private:
 
 ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
 {
-    auto widget = TRY(try_make_ref_counted<BrowserSettingsWidget>());
+    auto widget = TRY(BrowserSettingsWidget::try_create());
 
-    TRY(widget->load_from_gml(browser_settings_widget_gml));
     TRY(widget->setup());
 
     return widget;
@@ -250,4 +250,6 @@ void BrowserSettingsWidget::reset_default_values()
     set_color_scheme(Browser::default_color_scheme);
     m_auto_close_download_windows_checkbox->set_checked(Browser::default_close_download_widget_on_finish);
     set_search_engine_url(WebView::default_search_engine().query_url);
+}
+
 }
