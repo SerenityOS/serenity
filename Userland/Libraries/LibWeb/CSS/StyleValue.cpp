@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
@@ -130,6 +131,12 @@ ColorStyleValue const& StyleValue::as_color() const
 {
     VERIFY(is_color());
     return static_cast<ColorStyleValue const&>(*this);
+}
+
+CompositeStyleValue const& StyleValue::as_composite() const
+{
+    VERIFY(is_composite());
+    return static_cast<CompositeStyleValue const&>(*this);
 }
 
 ConicGradientStyleValue const& StyleValue::as_conic_gradient() const

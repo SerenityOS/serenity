@@ -96,6 +96,7 @@ public:
         BorderRadiusShorthand,
         Calculated,
         Color,
+        Composite,
         ConicGradient,
         Content,
         CustomIdent,
@@ -149,6 +150,7 @@ public:
     bool is_border_radius_shorthand() const { return type() == Type::BorderRadiusShorthand; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
+    bool is_composite() const { return type() == Type::Composite; }
     bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
     bool is_custom_ident() const { return type() == Type::CustomIdent; }
@@ -201,6 +203,7 @@ public:
     BorderStyleValue const& as_border() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
+    CompositeStyleValue const& as_composite() const;
     ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
     CustomIdentStyleValue const& as_custom_ident() const;
