@@ -27,6 +27,7 @@ public:
 
     ErrorOr<String> to_string() const;
     float to_seconds() const;
+    double to_milliseconds() const;
 
     Type type() const { return m_type; }
     float raw_value() const { return m_value; }

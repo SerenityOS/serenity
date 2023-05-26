@@ -47,6 +47,17 @@ float Time::to_seconds() const
     VERIFY_NOT_REACHED();
 }
 
+double Time::to_milliseconds() const
+{
+    switch (m_type) {
+    case Type::S:
+        return static_cast<double>(m_value) * 1000.0;
+    case Type::Ms:
+        return static_cast<double>(m_value);
+    }
+    VERIFY_NOT_REACHED();
+}
+
 StringView Time::unit_name() const
 {
     switch (m_type) {
