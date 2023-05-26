@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -170,7 +171,7 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length
     }
 
     if (line_height->is_numeric())
-        return Length(line_height->to_number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
+        return Length(line_height->as_numeric().number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -200,7 +201,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
     }
 
     if (line_height->is_numeric())
-        return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
+        return Length(line_height->as_numeric().number(), Length::Type::Em).to_px(layout_node);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -242,8 +243,8 @@ static float resolve_opacity_value(CSS::StyleValue const& value)
 {
     float unclamped_opacity = 1.0f;
 
-    if (value.has_number()) {
-        unclamped_opacity = value.to_number();
+    if (value.is_numeric()) {
+        unclamped_opacity = value.as_numeric().number();
     } else if (value.is_calculated()) {
         auto& calculated = value.as_calculated();
         if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
@@ -327,17 +328,17 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 float StyleProperties::flex_grow() const
 {
     auto value = property(CSS::PropertyID::FlexGrow);
-    if (!value->has_number())
+    if (!value->is_numeric())
         return 0;
-    return value->to_number();
+    return value->as_numeric().number();
 }
 
 float StyleProperties::flex_shrink() const
 {
     auto value = property(CSS::PropertyID::FlexShrink);
-    if (!value->has_number())
+    if (!value->is_numeric())
         return 1;
-    return value->to_number();
+    return value->as_numeric().number();
 }
 
 int StyleProperties::order() const
@@ -395,7 +396,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             } else if (transformation_value->is_percentage()) {
                 values.append({ transformation_value->as_percentage().percentage() });
             } else if (transformation_value->is_numeric()) {
-                values.append({ transformation_value->to_number() });
+                values.append({ transformation_value->as_numeric().number() });
             } else if (transformation_value->is_angle()) {
                 values.append({ transformation_value->as_angle().angle() });
             } else {
