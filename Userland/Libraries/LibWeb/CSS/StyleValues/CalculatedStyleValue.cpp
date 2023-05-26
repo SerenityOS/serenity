@@ -557,6 +557,88 @@ ErrorOr<void> MaxCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<ClampCalculationNode>> ClampCalculationNode::create(NonnullOwnPtr<CalculationNode> min, NonnullOwnPtr<CalculationNode> center, NonnullOwnPtr<CalculationNode> max)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) ClampCalculationNode(move(min), move(center), move(max)));
+}
+
+ClampCalculationNode::ClampCalculationNode(NonnullOwnPtr<CalculationNode> min, NonnullOwnPtr<CalculationNode> center, NonnullOwnPtr<CalculationNode> max)
+    : CalculationNode(Type::Clamp)
+    , m_min_value(move(min))
+    , m_center_value(move(center))
+    , m_max_value(move(max))
+{
+}
+
+ClampCalculationNode::~ClampCalculationNode() = default;
+
+ErrorOr<String> ClampCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    TRY(builder.try_append("clamp("sv));
+    TRY(builder.try_append(TRY(m_min_value->to_string())));
+    TRY(builder.try_append(", "sv));
+    TRY(builder.try_append(TRY(m_center_value->to_string())));
+    TRY(builder.try_append(", "sv));
+    TRY(builder.try_append(TRY(m_max_value->to_string())));
+    TRY(builder.try_append(")"sv));
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> ClampCalculationNode::resolved_type() const
+{
+    // NOTE: We check during parsing that all values have the same type.
+    return m_min_value->resolved_type();
+}
+
+bool ClampCalculationNode::contains_percentage() const
+{
+    return m_min_value->contains_percentage() || m_center_value->contains_percentage() || m_max_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto min_node = m_min_value->resolve(layout_node, percentage_basis);
+    auto center_node = m_center_value->resolve(layout_node, percentage_basis);
+    auto max_node = m_max_value->resolve(layout_node, percentage_basis);
+
+    auto min_value = resolve_value(min_node.value(), layout_node);
+    auto center_value = resolve_value(center_node.value(), layout_node);
+    auto max_value = resolve_value(max_node.value(), layout_node);
+
+    // NOTE: The value should be returned as "max(MIN, min(VAL, MAX))"
+    auto chosen_value = max(min_value, min(center_value, max_value));
+    if (chosen_value == min_value)
+        return min_node;
+    if (chosen_value == center_value)
+        return center_node;
+    if (chosen_value == max_value)
+        return max_node;
+
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> ClampCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_min_value->for_each_child_node(callback));
+    TRY(m_center_value->for_each_child_node(callback));
+    TRY(m_max_value->for_each_child_node(callback));
+    TRY(callback(m_min_value));
+    TRY(callback(m_center_value));
+    TRY(callback(m_max_value));
+
+    return {};
+}
+
+ErrorOr<void> ClampCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}CLAMP:\n", "", indent));
+    TRY(m_min_value->dump(builder, indent + 2));
+    TRY(m_center_value->dump(builder, indent + 2));
+    TRY(m_max_value->dump(builder, indent + 2));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
