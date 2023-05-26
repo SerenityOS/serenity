@@ -253,7 +253,7 @@ void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
         Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
     }
 
-    if ((m_modifiers & Mod_Alt) != 0 && key >= Key_1 && key <= Key_1 + ConsoleManagement::s_max_virtual_consoles + 1) {
+    if ((m_modifiers & Mod_Alt) != 0 && key >= Key_1 && key < Key_1 + ConsoleManagement::s_max_virtual_consoles) {
         // FIXME: Do something sanely here if we can't allocate a work queue?
         MUST(g_io_work->try_queue([key]() {
             ConsoleManagement::the().switch_to(key - Key_1);
