@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CalendarSettingsWidget.h"
+#include "Widget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-calendar"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Calendar Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<CalendarSettingsWidget>(TRY("Calendar"_string), "Calendar"sv));
+    (void)TRY(window->add_tab(TRY(CalendarSettings::Widget::create()), TRY("Calendar"_string), "Calendar"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_active_tab(selected_tab);
 
