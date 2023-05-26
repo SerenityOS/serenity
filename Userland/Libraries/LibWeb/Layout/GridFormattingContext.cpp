@@ -1393,7 +1393,13 @@ void GridFormattingContext::resolve_grid_item_widths()
         box_state.border_right = border_right;
 
         auto const& computed_width = item.box().computed_values().width();
-        auto used_width = computed_width.is_auto() ? (containing_block_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right) : computed_width.to_px(grid_container(), containing_block_width);
+        CSSPixels used_width;
+        if (computed_width.is_auto())
+            used_width = (containing_block_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right);
+        else if (computed_width.is_fit_content())
+            used_width = calculate_fit_content_width(item.box(), get_available_space_for_item(item));
+        else
+            used_width = computed_width.to_px(grid_container(), containing_block_width);
         box_state.set_content_width(used_width);
     }
 }
