@@ -4,15 +4,12 @@ serenity_component(
     TARGETS Run
 )
 
-stringify_gml(Run.gml RunGML.h run_gml)
+compile_gml(Run.gml RunGML.cpp)
 
 set(SOURCES
     main.cpp
     RunWindow.cpp
-)
-
-set(GENERATED_SOURCES
-    RunGML.h
+    RunGML.cpp
 )
 
 serenity_app(Run ICON app-run)
