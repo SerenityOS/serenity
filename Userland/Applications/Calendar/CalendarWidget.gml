@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Calendar::CalendarWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {}
 
@@ -10,7 +10,7 @@
         }
     }
 
-    @::Calendar::EventCalendar {
+    @Calendar::EventCalendar {
         name: "calendar"
     }
 }
