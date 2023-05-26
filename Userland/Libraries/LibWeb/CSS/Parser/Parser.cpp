@@ -6892,6 +6892,32 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_template_areas_value(Vector<Compo
     return GridTemplateAreaStyleValue::create(grid_area_rows);
 }
 
+static bool block_contains_var_or_attr(Block const& block);
+
+static bool function_contains_var_or_attr(Function const& function)
+{
+    if (function.name().equals_ignoring_ascii_case("var"sv) || function.name().equals_ignoring_ascii_case("attr"sv))
+        return true;
+    for (auto const& token : function.values()) {
+        if (token.is_function() && function_contains_var_or_attr(token.function()))
+            return true;
+        if (token.is_block() && block_contains_var_or_attr(token.block()))
+            return true;
+    }
+    return false;
+}
+
+bool block_contains_var_or_attr(Block const& block)
+{
+    for (auto const& token : block.values()) {
+        if (token.is_function() && function_contains_var_or_attr(token.function()))
+            return true;
+        if (token.is_block() && block_contains_var_or_attr(token.block()))
+            return true;
+    }
+    return false;
+};
+
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     // FIXME: This is a hack. Until we can reasonably combine the error types, just log the error
@@ -6907,25 +6933,6 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         }                                                                                          \
         _temporary_result.release_value();                                                         \
     })
-
-    auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
-        if (function.name().equals_ignoring_ascii_case("var"sv) || function.name().equals_ignoring_ascii_case("attr"sv))
-            return true;
-        for (auto const& token : function.values()) {
-            if (token.is_function() && recurse(token.function(), recurse))
-                return true;
-        }
-        return false;
-    };
-    auto block_contains_var_or_attr = [function_contains_var_or_attr](Block const& block, auto&& recurse) -> bool {
-        for (auto const& token : block.values()) {
-            if (token.is_function() && function_contains_var_or_attr(token.function(), function_contains_var_or_attr))
-                return true;
-            if (token.is_block() && recurse(token.block(), recurse))
-                return true;
-        }
-        return false;
-    };
 
     m_context.set_current_property_id(property_id);
     Vector<ComponentValue> component_values;
@@ -6948,9 +6955,9 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         }
 
         if (!contains_var_or_attr) {
-            if (token.is_function() && function_contains_var_or_attr(token.function(), function_contains_var_or_attr))
+            if (token.is_function() && function_contains_var_or_attr(token.function()))
                 contains_var_or_attr = true;
-            else if (token.is_block() && block_contains_var_or_attr(token.block(), block_contains_var_or_attr))
+            else if (token.is_block() && block_contains_var_or_attr(token.block()))
                 contains_var_or_attr = true;
         }
 
