@@ -5,7 +5,7 @@
  */
 
 #include "AddEventDialog.h"
-#include <Applications/Calendar/CalendarWindowGML.h>
+#include "MainWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -42,8 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(600, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(main_widget->load_from_gml(calendar_window_gml));
+    auto main_widget = TRY(window->set_main_widget<Calendar::MainWidget>());
 
     auto toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto calendar = main_widget->find_descendant_of_type_named<GUI::Calendar>("calendar");
