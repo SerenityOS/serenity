@@ -479,6 +479,84 @@ ErrorOr<void> MinCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<MaxCalculationNode>> MaxCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) MaxCalculationNode(move(values)));
+}
+
+MaxCalculationNode::MaxCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Max)
+    , m_values(move(values))
+{
+}
+
+MaxCalculationNode::~MaxCalculationNode() = default;
+
+ErrorOr<String> MaxCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    TRY(builder.try_append("max("sv));
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (i != 0)
+            TRY(builder.try_append(", "sv));
+        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+    }
+    TRY(builder.try_append(")"sv));
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> MaxCalculationNode::resolved_type() const
+{
+    // NOTE: We check during parsing that all values have the same type.
+    return m_values[0]->resolved_type();
+}
+
+bool MaxCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    CalculatedStyleValue::CalculationResult largest_node = m_values.first()->resolve(layout_node, percentage_basis);
+    auto largest_value = resolve_value(largest_node.value(), layout_node);
+
+    for (size_t i = 1; i < m_values.size(); i++) {
+        auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value(), layout_node);
+
+        if (child_value > largest_value) {
+            largest_value = child_value;
+            largest_node = child_resolved;
+        }
+    }
+
+    return largest_node;
+}
+
+ErrorOr<void> MaxCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& value : m_values) {
+        TRY(value->for_each_child_node(callback));
+        TRY(callback(value));
+    }
+
+    return {};
+}
+
+ErrorOr<void> MaxCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}MAX:\n", "", indent));
+    for (auto const& value : m_values)
+        TRY(value->dump(builder, indent + 2));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
