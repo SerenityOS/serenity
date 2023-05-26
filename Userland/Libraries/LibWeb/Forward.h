@@ -71,6 +71,7 @@ class BorderStyleValue;
 class CalculatedStyleValue;
 class Clip;
 class ColorStyleValue;
+class CompositeStyleValue;
 class ConicGradientStyleValue;
 class ContentStyleValue;
 class CSSConditionRule;
