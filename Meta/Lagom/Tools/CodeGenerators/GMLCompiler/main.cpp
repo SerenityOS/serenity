@@ -128,13 +128,39 @@ static char const footer[] = R"~~~(
 }
 )~~~";
 
+static ErrorOr<String> escape_string(JsonValue to_escape)
+{
+    auto string = TRY(String::from_deprecated_string(to_escape.as_string()));
+
+    // All C++ simple escape sequences; see https://en.cppreference.com/w/cpp/language/escape
+    // Other commonly-escaped characters are hard-to-type Unicode and therefore fine to include verbatim in UTF-8 coded strings.
+    static HashMap<StringView, StringView> escape_sequences = {
+        { "\0"sv, "\\0"sv },
+        { "\'"sv, "\\'"sv },
+        { "\""sv, "\\\""sv },
+        { "\\"sv, "\\\\"sv },
+        { "\a"sv, "\\a"sv },
+        { "\b"sv, "\\b"sv },
+        { "\f"sv, "\\f"sv },
+        { "\n"sv, "\\n"sv },
+        { "\r"sv, "\\r"sv },
+        { "\t"sv, "\\t"sv },
+        { "\v"sv, "\\v"sv },
+    };
+
+    for (auto const& entries : escape_sequences)
+        string = TRY(string.replace(entries.key, entries.value, ReplaceMode::All));
+
+    return string;
+}
+
 // FIXME: In case of error, propagate the precise array+property that triggered the error.
 static ErrorOr<String> generate_initializer_for(Optional<StringView> property_name, JsonValue value)
 {
     if (value.is_string()) {
         if (property_name.has_value() && takes_deprecated_string(*property_name))
-            return String::formatted(R"~~~("{}"sv)~~~", value.as_string());
-        return String::formatted(R"~~~("{}"_string)~~~", value.as_string());
+            return String::formatted(R"~~~("{}"sv)~~~", TRY(escape_string(value)));
+        return String::formatted(R"~~~("{}"_string)~~~", TRY(escape_string(value)));
     }
     // No need to handle the smaller integer types separately.
     if (value.is_integer<i64>())
