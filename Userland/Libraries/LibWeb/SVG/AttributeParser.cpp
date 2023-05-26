@@ -343,10 +343,10 @@ Vector<float> AttributeParser::parse_coordinate_pair_triplet()
 Vector<float> AttributeParser::parse_elliptical_arg_argument()
 {
     Vector<float> numbers;
-    numbers.append(parse_nonnegative_number());
+    numbers.append(parse_number());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_nonnegative_number());
+    numbers.append(parse_number());
     if (match_comma_whitespace())
         parse_comma_whitespace();
     numbers.append(parse_number());
