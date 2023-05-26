@@ -9,6 +9,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/SettingsWindow.h>
 
 class DomainListModel : public GUI::Model {
@@ -30,6 +31,8 @@ protected:
     Vector<String> m_domain_list;
 };
 
+namespace BrowserSettings {
+
 class ContentFilterSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ContentFilterSettingsWidget)
 
@@ -40,11 +43,16 @@ public:
     virtual void reset_default_values() override;
 
 private:
-    explicit ContentFilterSettingsWidget(NonnullRefPtr<DomainListModel>);
+    static ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> try_create();
+    ContentFilterSettingsWidget() = default;
+
+    void set_domain_list_model(NonnullRefPtr<DomainListModel>);
 
     RefPtr<GUI::Menu> m_entry_context_menu;
     RefPtr<GUI::CheckBox> m_enable_content_filtering_checkbox;
     RefPtr<GUI::Button> m_add_new_domain_button;
     RefPtr<GUI::ListView> m_domain_list_view;
-    NonnullRefPtr<DomainListModel> m_domain_list_model;
+    RefPtr<DomainListModel> m_domain_list_model;
 };
+
+}

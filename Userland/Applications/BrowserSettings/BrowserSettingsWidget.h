@@ -12,6 +12,8 @@
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/TextBox.h>
 
+namespace BrowserSettings {
+
 class BrowserSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(BrowserSettingsWidget)
 public:
@@ -22,6 +24,8 @@ public:
     virtual void reset_default_values() override;
 
 private:
+    static ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> try_create();
+
     ErrorOr<void> setup();
 
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
@@ -39,3 +43,5 @@ private:
     RefPtr<GUI::Widget> m_custom_search_engine_group;
     RefPtr<GUI::TextBox> m_custom_search_engine_textbox;
 };
+
+}

@@ -8,7 +8,6 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
-#include <Applications/BrowserSettings/ContentFilterSettingsWidgetGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
@@ -116,13 +115,15 @@ void DomainListModel::reset_default_values()
     did_update(UpdateFlag::InvalidateAllIndices);
 }
 
+namespace BrowserSettings {
+
 ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget::create()
 {
     auto domain_list_model = TRY(try_make_ref_counted<DomainListModel>());
     TRY(domain_list_model->load());
 
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ContentFilterSettingsWidget(move(domain_list_model))));
-    TRY(widget->load_from_gml(content_filter_settings_widget_gml));
+    auto widget = TRY(ContentFilterSettingsWidget::try_create());
+    widget->set_domain_list_model(move(domain_list_model));
 
     widget->m_enable_content_filtering_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("enable_content_filtering_checkbox");
     widget->m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, Browser::default_enable_content_filters), GUI::AllowCallback::No);
@@ -159,9 +160,9 @@ ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget:
     return widget;
 }
 
-ContentFilterSettingsWidget::ContentFilterSettingsWidget(NonnullRefPtr<DomainListModel> domain_list_model)
-    : m_domain_list_model(move(domain_list_model))
+void ContentFilterSettingsWidget::set_domain_list_model(NonnullRefPtr<DomainListModel> domain_list_model)
 {
+    m_domain_list_model = move(domain_list_model);
 }
 
 void ContentFilterSettingsWidget::apply_settings()
@@ -174,4 +175,6 @@ void ContentFilterSettingsWidget::reset_default_values()
 {
     m_domain_list_model->reset_default_values();
     m_enable_content_filtering_checkbox->set_checked(Browser::default_enable_content_filters);
+}
+
 }
