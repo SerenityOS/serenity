@@ -183,6 +183,9 @@ static ErrorOr<String> generate_initializer_for(Optional<StringView> property_na
 
             if (auto const enum_value = TRY(generate_enum_initializer_for(*property_name, value)); enum_value.has_value())
                 return String::formatted("{}", *enum_value);
+
+            if (*property_name == "bitmap"sv)
+                return String::formatted(R"~~~(TRY(Gfx::Bitmap::load_from_file("{}"sv)))~~~", TRY(escape_string(value)));
         }
 
         return String::formatted(R"~~~("{}"_string)~~~", TRY(escape_string(value)));
