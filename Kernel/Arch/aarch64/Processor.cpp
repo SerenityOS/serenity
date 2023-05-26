@@ -453,7 +453,7 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
 {
     (void)thread;
     (void)max_frames;
-    TODO_AARCH64();
+    dbgln("FIXME: Implement Processor::capture_stack_trace() for AArch64");
     return Vector<FlatPtr, 32> {};
 }
 
