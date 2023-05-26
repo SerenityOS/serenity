@@ -22,6 +22,8 @@ set(SOURCES
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
+    CSS/CSSKeyframeRule.cpp
+    CSS/CSSKeyframesRule.cpp
     CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
     CSS/CSSRule.cpp

@@ -54,11 +54,18 @@ public:
         bool m_commit { false };
     };
 
-    explicit TokenStream(Vector<T> const& tokens)
+    explicit TokenStream(Span<T const> tokens)
         : m_tokens(tokens)
         , m_eof(make_eof())
     {
     }
+
+    explicit TokenStream(Vector<T> const& tokens)
+        : m_tokens(tokens.span())
+        , m_eof(make_eof())
+    {
+    }
+
     TokenStream(TokenStream<T> const&) = delete;
     TokenStream(TokenStream<T>&&) = default;
 
@@ -128,7 +135,7 @@ public:
     }
 
 private:
-    Vector<T> const& m_tokens;
+    Span<T const> m_tokens;
     int m_iterator_offset { -1 };
 
     T make_eof()

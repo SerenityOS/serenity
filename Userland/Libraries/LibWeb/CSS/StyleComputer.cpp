@@ -986,6 +986,297 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Optional<C
     return {};
 }
 
+StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time const& time_step)
+{
+    auto delay_ms = remaining_delay.to_milliseconds();
+    auto time_step_ms = time_step.to_milliseconds();
+
+    if (delay_ms > time_step_ms) {
+        remaining_delay = CSS::Time { static_cast<float>(delay_ms - time_step_ms), CSS::Time::Type::Ms };
+        return AnimationStepTransition::NoTransition;
+    }
+
+    remaining_delay = CSS::Time { 0, CSS::Time::Type::Ms };
+    time_step_ms -= delay_ms;
+
+    float added_progress = static_cast<float>(time_step_ms / duration.to_milliseconds());
+    auto new_progress = progress.as_fraction() + added_progress;
+    auto changed_iteration = false;
+    if (new_progress >= 1) {
+        if (iteration_count.has_value()) {
+            if (iteration_count.value() == 0) {
+                progress = CSS::Percentage(100);
+                return AnimationStepTransition::ActiveToAfter;
+            }
+            --iteration_count.value();
+            changed_iteration = true;
+        }
+        new_progress = 0;
+    }
+    progress = CSS::Percentage(new_progress * 100);
+
+    if (changed_iteration)
+        return AnimationStepTransition::ActiveToActiveChangingTheIteration;
+
+    return AnimationStepTransition::AfterToActive;
+}
+
+static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const& from, StyleValue const& to, float delta)
+{
+    if (from.type() != to.type()) {
+        if (delta > 0.999f)
+            return to;
+        return from;
+    }
+
+    auto interpolate_raw = [delta = static_cast<double>(delta)](auto from, auto to) {
+        return static_cast<RemoveCVReference<decltype(from)>>(static_cast<double>(from) + static_cast<double>(to - from) * delta);
+    };
+
+    switch (from.type()) {
+    case StyleValue::Type::Angle:
+        return AngleStyleValue::create(Angle::make_degrees(interpolate_raw(from.as_angle().angle().to_degrees(), to.as_angle().angle().to_degrees())));
+    case StyleValue::Type::Color: {
+        auto from_color = from.as_color().color();
+        auto to_color = to.as_color().color();
+        auto from_hsv = from_color.to_hsv();
+        auto to_hsv = to_color.to_hsv();
+
+        auto color = Color::from_hsv(
+            interpolate_raw(from_hsv.hue, to_hsv.hue),
+            interpolate_raw(from_hsv.saturation, to_hsv.saturation),
+            interpolate_raw(from_hsv.value, to_hsv.value));
+        color.set_alpha(interpolate_raw(from_color.alpha(), to_color.alpha()));
+
+        return ColorStyleValue::create(color);
+    }
+    case StyleValue::Type::Length: {
+        auto& from_length = from.as_length().length();
+        auto& to_length = to.as_length().length();
+        return LengthStyleValue::create(Length(interpolate_raw(from_length.raw_value(), to_length.raw_value()), from_length.type()));
+    }
+    case StyleValue::Type::Numeric:
+        return NumericStyleValue::create_float(interpolate_raw(from.as_numeric().number(), to.as_numeric().number()));
+    case StyleValue::Type::Percentage:
+        return PercentageStyleValue::create(Percentage(interpolate_raw(from.as_percentage().percentage().value(), to.as_percentage().percentage().value())));
+    case StyleValue::Type::Position: {
+        auto& from_position = from.as_position();
+        auto& to_position = to.as_position();
+        return PositionStyleValue::create(
+            TRY(interpolate_property(from_position.edge_x(), to_position.edge_x(), delta)),
+            TRY(interpolate_property(from_position.edge_y(), to_position.edge_y(), delta)));
+    }
+    case StyleValue::Type::Rect: {
+        auto from_rect = from.as_rect().rect();
+        auto to_rect = to.as_rect().rect();
+        return RectStyleValue::create({
+            Length(interpolate_raw(from_rect.top_edge.raw_value(), to_rect.top_edge.raw_value()), from_rect.top_edge.type()),
+            Length(interpolate_raw(from_rect.right_edge.raw_value(), to_rect.right_edge.raw_value()), from_rect.right_edge.type()),
+            Length(interpolate_raw(from_rect.bottom_edge.raw_value(), to_rect.bottom_edge.raw_value()), from_rect.bottom_edge.type()),
+            Length(interpolate_raw(from_rect.left_edge.raw_value(), to_rect.left_edge.raw_value()), from_rect.left_edge.type()),
+        });
+    }
+    case StyleValue::Type::Transformation: {
+        auto& from_transform = from.as_transformation();
+        auto& to_transform = to.as_transformation();
+        if (from_transform.transform_function() != to_transform.transform_function())
+            return from;
+
+        auto from_input_values = from_transform.values();
+        auto to_input_values = to_transform.values();
+        if (from_input_values.size() != to_input_values.size())
+            return from;
+
+        StyleValueVector interpolated_values;
+        interpolated_values.ensure_capacity(from_input_values.size());
+        for (size_t i = 0; i < from_input_values.size(); ++i)
+            interpolated_values.append(TRY(interpolate_property(*from_input_values[i], *to_input_values[i], delta)));
+
+        return TransformationStyleValue::create(from_transform.transform_function(), move(interpolated_values));
+    }
+    case StyleValue::Type::ValueList: {
+        auto& from_list = from.as_value_list();
+        auto& to_list = to.as_value_list();
+        if (from_list.size() != to_list.size())
+            return from;
+
+        StyleValueVector interpolated_values;
+        interpolated_values.ensure_capacity(from_list.size());
+        for (size_t i = 0; i < from_list.size(); ++i)
+            interpolated_values.append(TRY(interpolate_property(from_list.values()[i], to_list.values()[i], delta)));
+
+        return StyleValueList::create(move(interpolated_values), from_list.separator());
+    }
+    default:
+        return from;
+    }
+}
+
+ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_properties, RuleCache const& rule_cache) const
+{
+    if (remaining_delay.to_milliseconds() != 0)
+        return {};
+
+    auto matching_keyframes = rule_cache.rules_by_animation_keyframes.get(name);
+    if (!matching_keyframes.has_value())
+        return {};
+
+    auto& keyframes = matching_keyframes.value()->keyframes_by_key;
+
+    auto key = static_cast<u64>(progress.value() * AnimationKeyFrameKeyScaleFactor);
+    auto matching_keyframe_it = keyframes.find_largest_not_above_iterator(key);
+    if (matching_keyframe_it.is_end()) {
+        if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
+            dbgln("    Did not find any start keyframe for the current state ({}) :(", key);
+            dbgln("    (have {} keyframes)", keyframes.size());
+            for (auto it = keyframes.begin(); it != keyframes.end(); ++it)
+                dbgln("        - {}", it.key());
+        }
+        return {};
+    }
+
+    auto keyframe_start = matching_keyframe_it.key();
+    auto keyframe_values = *matching_keyframe_it;
+
+    auto keyframe_end_it = ++matching_keyframe_it;
+    if (keyframe_end_it.is_end()) {
+        if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
+            dbgln("    Did not find any end keyframe for the current state ({}) :(", key);
+            dbgln("    (have {} keyframes)", keyframes.size());
+            for (auto it = keyframes.begin(); it != keyframes.end(); ++it)
+                dbgln("        - {}", it.key());
+        }
+        return {};
+    }
+
+    auto keyframe_end = keyframe_end_it.key();
+    auto keyframe_end_values = *keyframe_end_it;
+
+    auto progress_in_keyframe = (progress.value() * AnimationKeyFrameKeyScaleFactor - keyframe_start) / (keyframe_end - keyframe_start);
+
+    auto valid_properties = 0;
+    for (auto const& property : keyframe_values.resolved_properties) {
+        if (property.has<Empty>())
+            continue;
+        valid_properties++;
+    }
+
+    dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Animation {} contains {} properties to interpolate, progress = {}%", name, valid_properties, progress_in_keyframe * 100);
+
+    UnderlyingType<PropertyID> property_id_value = 0;
+    for (auto const& property : keyframe_values.resolved_properties) {
+        auto property_id = static_cast<PropertyID>(property_id_value++);
+        if (property.has<Empty>())
+            continue;
+
+        auto resolve_property = [&](auto& property) {
+            return property.visit(
+                [](Empty) -> RefPtr<StyleValue const> { VERIFY_NOT_REACHED(); },
+                [&](AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial) {
+                    if (auto value = initial_state[to_underlying(property_id)])
+                        return value;
+
+                    auto value = style_properties.maybe_null_property(property_id);
+                    initial_state[to_underlying(property_id)] = value;
+                    return value;
+                },
+                [&](RefPtr<StyleValue const> value) { return value; });
+        };
+
+        auto resolved_start_property = resolve_property(property);
+
+        auto const& end_property = keyframe_end_values.resolved_properties[to_underlying(property_id)];
+        if (end_property.has<Empty>()) {
+            if (resolved_start_property) {
+                style_properties.set_property(property_id, resolved_start_property.release_nonnull());
+                dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "No end property for property {}, using {}", string_from_property_id(property_id), resolved_start_property->to_string());
+            }
+            continue;
+        }
+
+        auto resolved_end_property = resolve_property(end_property);
+
+        if (!resolved_start_property || !resolved_end_property)
+            continue;
+
+        auto start = resolved_start_property.release_nonnull();
+        auto end = resolved_end_property.release_nonnull();
+
+        // FIXME: This should be a function of the animation-timing-function.
+        auto next_value = TRY(interpolate_property(*start, *end, progress_in_keyframe));
+        dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(property_id), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
+        style_properties.set_property(property_id, next_value);
+    }
+
+    return {};
+}
+
+bool StyleComputer::Animation::is_done() const
+{
+    return progress.as_fraction() >= 0.9999f && iteration_count.has_value() && iteration_count.value() == 0;
+}
+
+void StyleComputer::ensure_animation_timer() const
+{
+    constexpr static auto timer_delay_ms = 1000 / 60;
+    if (!m_animation_driver_timer) {
+        m_animation_driver_timer = Platform::Timer::create_repeating(timer_delay_ms, [this] {
+            HashTable<AnimationKey> animations_to_remove;
+            HashTable<DOM::Element*> owning_elements_to_invalidate;
+
+            for (auto& it : m_active_animations) {
+                if (!it.value->owning_element) {
+                    // The element disappeared since we last ran, just discard the animation.
+                    animations_to_remove.set(it.key);
+                    continue;
+                }
+
+                auto transition = it.value->step(CSS::Time { timer_delay_ms, CSS::Time::Type::Ms });
+                owning_elements_to_invalidate.set(it.value->owning_element);
+
+                switch (transition) {
+                case AnimationStepTransition::NoTransition:
+                    break;
+                case AnimationStepTransition::IdleOrBeforeToActive:
+                    // FIXME: Dispatch `animationstart`.
+                    break;
+                case AnimationStepTransition::IdleOrBeforeToAfter:
+                    // FIXME: Dispatch `animationstart` then `animationend`.
+                    break;
+                case AnimationStepTransition::ActiveToBefore:
+                    // FIXME: Dispatch `animationend`.
+                    break;
+                case AnimationStepTransition::ActiveToActiveChangingTheIteration:
+                    // FIXME: Dispatch `animationiteration`.
+                    break;
+                case AnimationStepTransition::ActiveToAfter:
+                    // FIXME: Dispatch `animationend`.
+                    break;
+                case AnimationStepTransition::AfterToActive:
+                    // FIXME: Dispatch `animationstart`.
+                    break;
+                case AnimationStepTransition::AfterToBefore:
+                    // FIXME: Dispatch `animationstart` then `animationend`.
+                    break;
+                case AnimationStepTransition::Cancelled:
+                    // FIXME: Dispatch `animationcancel`.
+                    break;
+                }
+                if (it.value->is_done())
+                    animations_to_remove.set(it.key);
+            }
+
+            for (auto key : animations_to_remove)
+                m_active_animations.remove(key);
+
+            for (auto* element : owning_elements_to_invalidate)
+                element->invalidate_style();
+        });
+    }
+
+    m_animation_driver_timer->start();
+}
+
 // https://www.w3.org/TR/css-cascade/#cascading
 ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
 {
@@ -1036,7 +1327,56 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // Normal author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
 
-    // FIXME: Animation declarations [css-animations-1]
+    // Animation declarations [css-animations-2]
+    if (auto animation_name = style.maybe_null_property(PropertyID::AnimationName)) {
+        ensure_animation_timer();
+
+        if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName)) {
+            AnimationKey animation_key {
+                .source_declaration = source_declaration,
+                .element = &element,
+            };
+            if (auto name = TRY(animation_name->to_string()); !name.is_empty()) {
+                auto active_animation = m_active_animations.get(animation_key);
+                if (!active_animation.has_value()) {
+                    // New animation!
+                    CSS::Time duration { 0, CSS::Time::Type::S };
+                    if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value && duration_value->is_time())
+                        duration = duration_value->as_time().time();
+
+                    CSS::Time delay { 0, CSS::Time::Type::S };
+                    if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())
+                        delay = delay_value->as_time().time();
+
+                    Optional<size_t> iteration_count = 1;
+                    if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
+                        if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
+                            iteration_count = {};
+                        else if (iteration_count_value->is_numeric())
+                            iteration_count = static_cast<size_t>(iteration_count_value->as_numeric().number());
+                    }
+
+                    auto animation = make<Animation>(Animation {
+                        .name = move(name),
+                        .duration = duration,
+                        .delay = delay,
+                        .iteration_count = iteration_count,
+                        .direction = Animation::Direction::Normal,
+                        .fill_mode = Animation::FillMode::None,
+                        .owning_element = TRY(element.try_make_weak_ptr<DOM::Element>()),
+                        .progress = CSS::Percentage(0),
+                        .remaining_delay = delay,
+                    });
+                    active_animation = animation;
+                    m_active_animations.set(animation_key, move(animation));
+                }
+
+                TRY((*active_animation)->collect_into(style, rule_cache_for_cascade_origin(CascadeOrigin::Author)));
+            } else {
+                m_active_animations.remove(animation_key);
+            }
+        }
+    }
 
     // Important author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes);
@@ -1708,6 +2048,93 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                 ++selector_index;
             }
             ++rule_index;
+        });
+
+        sheet.for_each_effective_keyframes_at_rule([&](CSSKeyframesRule const& rule) {
+            auto keyframe_set = make<AnimationKeyFrameSet>();
+            AnimationKeyFrameSet::ResolvedKeyFrame resolved_keyframe;
+
+            // Forwards pass, resolve all the user-specified keyframe properties.
+            for (auto const& keyframe : rule.keyframes()) {
+                auto key = static_cast<u64>(keyframe->key().value() * AnimationKeyFrameKeyScaleFactor);
+                auto keyframe_rule = keyframe->style();
+
+                if (!is<PropertyOwningCSSStyleDeclaration>(*keyframe_rule))
+                    continue;
+
+                auto current_keyframe = resolved_keyframe;
+                auto& keyframe_style = static_cast<PropertyOwningCSSStyleDeclaration const&>(*keyframe_rule);
+                for (auto& property : keyframe_style.properties())
+                    current_keyframe.resolved_properties[to_underlying(property.property_id)] = property.value;
+
+                resolved_keyframe = move(current_keyframe);
+                keyframe_set->keyframes_by_key.insert(key, resolved_keyframe);
+            }
+
+            // If there is no 'from' keyframe, make a synthetic one.
+            auto made_a_synthetic_from_keyframe = false;
+            if (!keyframe_set->keyframes_by_key.find(0)) {
+                keyframe_set->keyframes_by_key.insert(0, AnimationKeyFrameSet::ResolvedKeyFrame());
+                made_a_synthetic_from_keyframe = true;
+            }
+
+            // Backwards pass, resolve all the implied properties, go read <https://drafts.csswg.org/css-animations-2/#keyframe-processing> to see why.
+            auto first = true;
+            for (auto const& keyframe : rule.keyframes().in_reverse()) {
+                auto key = static_cast<u64>(keyframe->key().value() * AnimationKeyFrameKeyScaleFactor);
+                auto keyframe_rule = keyframe->style();
+
+                if (!is<PropertyOwningCSSStyleDeclaration>(*keyframe_rule))
+                    continue;
+
+                // The last keyframe is already fully resolved.
+                if (first) {
+                    first = false;
+                    continue;
+                }
+
+                auto next_keyframe = resolved_keyframe;
+                auto& current_keyframes = *keyframe_set->keyframes_by_key.find(key);
+
+                for (auto it = next_keyframe.resolved_properties.begin(); !it.is_end(); ++it) {
+                    auto& current_property = current_keyframes.resolved_properties[it.index()];
+                    if (!current_property.has<Empty>() || it->has<Empty>())
+                        continue;
+
+                    if (key == 0)
+                        current_property = AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial();
+                    else
+                        current_property = *it;
+                }
+
+                resolved_keyframe = current_keyframes;
+            }
+
+            if (made_a_synthetic_from_keyframe && !first) {
+                auto next_keyframe = resolved_keyframe;
+                auto& current_keyframes = *keyframe_set->keyframes_by_key.find(0);
+
+                for (auto it = next_keyframe.resolved_properties.begin(); !it.is_end(); ++it) {
+                    auto& current_property = current_keyframes.resolved_properties[it.index()];
+                    if (!current_property.has<Empty>() || it->has<Empty>())
+                        continue;
+                    current_property = AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial();
+                }
+
+                resolved_keyframe = current_keyframes;
+            }
+
+            if constexpr (LIBWEB_CSS_DEBUG) {
+                dbgln("Resolved keyframe set '{}' into {} keyframes:", rule.name(), keyframe_set->keyframes_by_key.size());
+                for (auto it = keyframe_set->keyframes_by_key.begin(); it != keyframe_set->keyframes_by_key.end(); ++it) {
+                    size_t props = 0;
+                    for (auto& entry : it->resolved_properties)
+                        props += !entry.has<Empty>();
+                    dbgln("    - keyframe {}: {} properties", it.key(), props);
+                }
+            }
+
+            rule_cache->rules_by_animation_keyframes.set(rule.name(), move(keyframe_set));
         });
         ++style_sheet_index;
     });

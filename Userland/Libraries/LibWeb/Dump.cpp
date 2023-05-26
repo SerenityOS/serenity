@@ -652,6 +652,9 @@ ErrorOr<void> dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int in
     case CSS::CSSRule::Type::Supports:
         TRY(dump_supports_rule(builder, verify_cast<CSS::CSSSupportsRule const>(rule), indent_levels));
         break;
+    case CSS::CSSRule::Type::Keyframe:
+    case CSS::CSSRule::Type::Keyframes:
+        break;
     }
     return {};
 }
