@@ -154,12 +154,37 @@ static ErrorOr<String> escape_string(JsonValue to_escape)
     return string;
 }
 
+// This function assumes that the string is already the same as its enum constant's name.
+// Therefore, it does not handle UI dimensions.
+static ErrorOr<Optional<String>> generate_enum_initializer_for(StringView property_name, JsonValue value)
+{
+    // The value is the enum's type name.
+    static HashMap<StringView, StringView> enum_properties = {
+        { "text_alignment"sv, "Gfx::TextAlignment"sv },
+        { "focus_policy"sv, "GUI::FocusPolicy"sv },
+        { "foreground_role"sv, "Gfx::ColorRole"sv },
+        { "text_wrapping"sv, "Gfx::TextWrapping"sv },
+    };
+
+    auto const& enum_type_name = enum_properties.get(property_name);
+    if (!enum_type_name.has_value())
+        return Optional<String> {};
+
+    return String::formatted("{}::{}", *enum_type_name, value.as_string());
+}
+
 // FIXME: In case of error, propagate the precise array+property that triggered the error.
 static ErrorOr<String> generate_initializer_for(Optional<StringView> property_name, JsonValue value)
 {
     if (value.is_string()) {
-        if (property_name.has_value() && takes_deprecated_string(*property_name))
-            return String::formatted(R"~~~("{}"sv)~~~", TRY(escape_string(value)));
+        if (property_name.has_value()) {
+            if (takes_deprecated_string(*property_name))
+                return String::formatted(R"~~~("{}"sv)~~~", TRY(escape_string(value)));
+
+            if (auto const enum_value = TRY(generate_enum_initializer_for(*property_name, value)); enum_value.has_value())
+                return String::formatted("{}", *enum_value);
+        }
+
         return String::formatted(R"~~~("{}"_string)~~~", TRY(escape_string(value)));
     }
     // No need to handle the smaller integer types separately.
