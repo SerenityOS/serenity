@@ -32,11 +32,6 @@ namespace Kernel::Memory {
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;
 constexpr u32 END_OF_NORMAL_MEMORY = 0x3EFFFFFF;
 
-// TODO: We should change the RPi drivers to use the MemoryManager to map physical memory,
-//       instead of mapping the complete MMIO region beforehand.
-constexpr u32 START_OF_MMIO_MEMORY = 0x3F000000;
-constexpr u32 END_OF_MMIO_MEMORY = 0x3F000000 + 0x00FFFFFF;
-
 ALWAYS_INLINE static u64* descriptor_to_pointer(FlatPtr descriptor)
 {
     return (u64*)(descriptor & DESCRIPTOR_MASK);
@@ -160,11 +155,16 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
+    // TODO: We should change the RPi drivers to use the MemoryManager to map physical memory,
+    //       instead of mapping the complete MMIO region beforehand.
+    auto mmio_base = RPi::MMIO::the().peripheral_base_address().get();
+    auto mmio_end = RPi::MMIO::the().peripheral_end_address().get();
+
     // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
     auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
     auto end_of_kernel_range = VirtualAddress(((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
-    auto start_of_mmio_range = VirtualAddress(START_OF_MMIO_MEMORY + KERNEL_MAPPING_BASE);
-    auto end_of_mmio_range = VirtualAddress(END_OF_MMIO_MEMORY + KERNEL_MAPPING_BASE);
+    auto start_of_mmio_range = VirtualAddress(mmio_base + KERNEL_MAPPING_BASE);
+    auto end_of_mmio_range = VirtualAddress(mmio_end + KERNEL_MAPPING_BASE);
 
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-KERNEL_MAPPING_BASE);
     auto start_of_physical_mmio_range = PhysicalAddress(start_of_mmio_range.get()).offset(-KERNEL_MAPPING_BASE);
