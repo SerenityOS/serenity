@@ -166,14 +166,8 @@ endif()
 include(CTest)
 if (BUILD_TESTING)
     add_test(
-        NAME Layout
-        COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Layout/layout_test.sh ${CMAKE_CURRENT_BINARY_DIR}
+        NAME LibWeb
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/headless-browser --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
     )
-    set_tests_properties(Layout PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
-
-    add_test(
-        NAME LibWebText
-        COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Text/text_test.sh ${CMAKE_CURRENT_BINARY_DIR}
-    )
-set_tests_properties(LibWebText PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+    set_tests_properties(LibWeb PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
