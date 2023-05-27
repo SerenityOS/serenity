@@ -1117,6 +1117,70 @@ ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<SignCalculationNode>> SignCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SignCalculationNode(move(a)));
+}
+
+SignCalculationNode::SignCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Sign)
+    , m_a(move(a))
+{
+}
+
+SignCalculationNode::~SignCalculationNode() = default;
+
+ErrorOr<String> SignCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("sign("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Integer;
+}
+
+CalculatedStyleValue::CalculationResult SignCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
+        return value.visit(
+            [](Number const& number) { return number.value(); },
+            [](Angle const& angle) { return angle.to_degrees(); },
+            [](Frequency const& frequency) { return frequency.to_hertz(); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
+            [](Percentage const& percentage) { return percentage.value(); },
+            [](Time const& time) { return time.to_seconds(); });
+    };
+
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value());
+
+    if (node_a_value < 0)
+        return { Number(Number::Type::Integer, -1) };
+
+    if (node_a_value > 0)
+        return { Number(Number::Type::Integer, 1) };
+
+    return { Number(Number::Type::Integer, 0) };
+}
+
+ErrorOr<void> SignCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SIGN: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

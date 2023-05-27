@@ -3610,6 +3610,19 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_abs_function(Function cons
     return TRY(AbsCalculationNode::create(move(node_a)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_sign_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 1) {
+        return Error::from_string_view("sign() must have exactly one parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    return TRY(SignCalculationNode::create(move(node_a)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3635,6 +3648,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("abs"sv))
         return TRY(parse_abs_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("sign"sv))
+        return TRY(parse_sign_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
