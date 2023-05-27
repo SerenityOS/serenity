@@ -24,6 +24,14 @@ static bool is_dimension(CalculatedStyleValue::ResolvedType type)
         && type != CalculatedStyleValue::ResolvedType::Percentage;
 }
 
+static double resolve_value_radians(CalculatedStyleValue::CalculationResult::Value value)
+{
+    return value.visit(
+        [](Number const& number) { return number.value(); },
+        [](Angle const& angle) { return angle.to_radians(); },
+        [](auto const&) { VERIFY_NOT_REACHED(); return 0.0; });
+};
+
 static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Optional<Length::ResolutionContext const&> context)
 {
     return value.visit(
@@ -839,6 +847,60 @@ ErrorOr<void> ConstantCalculationNode::for_each_child_node([[maybe_unused]] Func
 ErrorOr<void> ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     TRY(builder.try_appendff("{: >{}}CONSTANT: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<SinCalculationNode>> SinCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SinCalculationNode(move(value)));
+}
+
+SinCalculationNode::SinCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Sin)
+    , m_value(move(value))
+{
+}
+
+SinCalculationNode::~SinCalculationNode() = default;
+
+ErrorOr<String> SinCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("sin("sv);
+    builder.append(TRY(m_value->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SinCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+bool SinCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult SinCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_value->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value_radians(node_a.value());
+    auto result = sin(node_a_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> SinCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> SinCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SIN: {}\n", "", indent, TRY(to_string())));
     return {};
 }
 

@@ -3594,6 +3594,30 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_sign_function(Function const& fun
     return TRY(SignCalculationNode::create(calculation_node.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_sin_function(Function const& function)
+{
+    auto calculation_node = TRY(parse_a_calculation(function.values()));
+
+    if (!calculation_node) {
+        dbgln_if(CSS_PARSER_DEBUG, "sin() parameter must be a valid calculation"sv);
+        return nullptr;
+    }
+
+    auto maybe_parameter_type = calculation_node->resolved_type();
+    if (!maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for sin() parameter"sv);
+        return nullptr;
+    }
+
+    auto resolved_type = maybe_parameter_type.value();
+    if (resolved_type != CalculatedStyleValue::ResolvedType::Number && resolved_type != CalculatedStyleValue::ResolvedType::Angle) {
+        dbgln_if(CSS_PARSER_DEBUG, "sin() parameter must be a number or angle"sv);
+        return nullptr;
+    }
+
+    return TRY(SinCalculationNode::create(calculation_node.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3637,6 +3661,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("sign"sv))
         return TRY(parse_sign_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("sin"sv))
+        return TRY(parse_sin_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
