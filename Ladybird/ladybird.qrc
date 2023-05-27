@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource>
+        <file>Icons/ladybird.png</file>
         <file>Icons/back.svg</file>
         <file>Icons/forward.svg</file>
         <file>Icons/reload.svg</file>
