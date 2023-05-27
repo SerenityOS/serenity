@@ -35,6 +35,28 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Time const& time) { return time.to_seconds(); });
 };
 
+static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleValue::ResolvedType type, double value)
+{
+    switch (type) {
+    case CalculatedStyleValue::ResolvedType::Integer:
+        return { Number(Number::Type::Integer, value) };
+    case CalculatedStyleValue::ResolvedType::Number:
+        return { Number(Number::Type::Number, value) };
+    case CalculatedStyleValue::ResolvedType::Angle:
+        return { Angle::make_degrees(value) };
+    case CalculatedStyleValue::ResolvedType::Frequency:
+        return { Frequency::make_hertz(value) };
+    case CalculatedStyleValue::ResolvedType::Length:
+        return { Length::make_px(value) };
+    case CalculatedStyleValue::ResolvedType::Percentage:
+        return { Percentage(value) };
+    case CalculatedStyleValue::ResolvedType::Time:
+        return { Time::make_seconds(value) };
+    }
+
+    VERIFY_NOT_REACHED();
+};
+
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
 {
@@ -636,6 +658,63 @@ ErrorOr<void> ClampCalculationNode::dump(StringBuilder& builder, int indent) con
     TRY(m_min_value->dump(builder, indent + 2));
     TRY(m_center_value->dump(builder, indent + 2));
     TRY(m_max_value->dump(builder, indent + 2));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<AbsCalculationNode>> AbsCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) AbsCalculationNode(move(value)));
+}
+
+AbsCalculationNode::AbsCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Abs)
+    , m_value(move(value))
+{
+}
+
+AbsCalculationNode::~AbsCalculationNode() = default;
+
+ErrorOr<String> AbsCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("abs("sv);
+    builder.append(TRY(m_value->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type() const
+{
+    return m_value->resolved_type();
+}
+
+bool AbsCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolved_type = m_value->resolved_type().value();
+    auto node_a = m_value->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), context);
+
+    if (node_a_value < 0)
+        return to_resolved_type(resolved_type, -node_a_value);
+
+    return node_a;
+}
+
+ErrorOr<void> AbsCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ABS: {}\n", "", indent, TRY(to_string())));
     return {};
 }
 
