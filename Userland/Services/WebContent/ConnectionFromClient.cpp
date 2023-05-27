@@ -368,6 +368,26 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
         }
     }
 
+    if (request == "dump-all-resolved-styles") {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
+            Queue<Web::DOM::Node*> elements_to_visit;
+            elements_to_visit.enqueue(doc->document_element());
+            while (!elements_to_visit.is_empty()) {
+                auto element = elements_to_visit.dequeue();
+                for (auto& child : element->children_as_vector())
+                    elements_to_visit.enqueue(child.ptr());
+                if (element->is_element()) {
+                    auto styles = doc->style_computer().compute_style(*static_cast<Web::DOM::Element*>(element)).release_value_but_fixme_should_propagate_errors();
+                    dbgln("+ Element {}", element->debug_description());
+                    auto& properties = styles->properties();
+                    for (size_t i = 0; i < properties.size(); ++i)
+                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].has_value() ? properties[i]->style->to_string() : ""_short_string);
+                    dbgln("---");
+                }
+            }
+        }
+    }
+
     if (request == "collect-garbage") {
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
     }

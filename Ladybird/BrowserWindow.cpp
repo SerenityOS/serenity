@@ -219,6 +219,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("dump-style-sheets");
     });
 
+    auto* dump_styles_action = new QAction("Dump All Resolved Styles", this);
+    dump_styles_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_styles_action);
+    QObject::connect(dump_styles_action, &QAction::triggered, this, [this] {
+        debug_request("dump-all-resolved-styles");
+    });
+
     auto* dump_history_action = new QAction("Dump History", this);
     dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_history_action);
