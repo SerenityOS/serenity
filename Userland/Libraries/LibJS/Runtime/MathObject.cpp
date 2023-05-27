@@ -303,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
     }
 
     // 10. If ny < -0𝔽, then
-    if (y.as_double() < 0) {
+    if (y.as_double() < -0) {
         // a. If nx is +∞𝔽, return -0𝔽.
         if (x.is_positive_infinity())
             return Value(-0.0);
