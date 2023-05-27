@@ -114,6 +114,14 @@ private:
 // https://www.w3.org/TR/css-values-4/#calculation-tree
 class CalculationNode {
 public:
+    // https://drafts.csswg.org/css-values-4/#round-func
+    enum class RoundingMode {
+        Nearest,
+        Up,
+        Down,
+        TowardZero
+    };
+
     // https://drafts.csswg.org/css-values-4/#calc-constants
     // https://drafts.csswg.org/css-values-4/#calc-error-constants
     enum class ConstantType {
@@ -144,6 +152,12 @@ public:
         Min,
         Max,
         Clamp,
+
+        // Stepped value functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#round-func
+        Round,
+        Mod,
+        Rem,
 
         // Constant Nodes
         // https://drafts.csswg.org/css-values-4/#calc-constants
@@ -345,6 +359,26 @@ public:
 private:
     ConstantCalculationNode(ConstantType);
     CalculationNode::ConstantType m_constant;
+};
+
+class RoundCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<RoundCalculationNode>> create(CalculationNode::RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~RoundCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    RoundCalculationNode(RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    CalculationNode::RoundingMode m_mode;
+    NonnullOwnPtr<CalculationNode> m_a;
+    NonnullOwnPtr<CalculationNode> m_b;
 };
 
 }

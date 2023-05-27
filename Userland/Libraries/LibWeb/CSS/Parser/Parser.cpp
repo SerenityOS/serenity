@@ -3515,6 +3515,52 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_clamp_function(Function co
     return TRY(ClampCalculationNode::create(move(calculated_parameters[0]), move(calculated_parameters[1]), move(calculated_parameters[2])));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_round_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2 && parameters.size() != 3) {
+        return Error::from_string_view("round() must have exactly two or three parameters"sv);
+    }
+
+    OwnPtr<CalculationNode> node_a = nullptr;
+    OwnPtr<CalculationNode> node_b = nullptr;
+    auto mode = CalculationNode::RoundingMode::Nearest;
+    if (parameters.size() == 3) {
+        auto rounding_mode_component = parameters[0][0];
+        if (!rounding_mode_component.is(Token::Type::Ident))
+            return Error::from_string_view("round() mode must be a string"sv);
+
+        auto mode_string = rounding_mode_component.token().ident();
+        if (mode_string == "nearest"sv) {
+            mode = CalculationNode::RoundingMode::Nearest;
+        } else if (mode_string == "up"sv) {
+            mode = CalculationNode::RoundingMode::Up;
+        } else if (mode_string == "down"sv) {
+            mode = CalculationNode::RoundingMode::Down;
+        } else if (mode_string == "to-zero"sv) {
+            mode = CalculationNode::RoundingMode::TowardZero;
+        } else {
+            return Error::from_string_view("round() mode must be one of nearest, up, down, to-zero"sv);
+        }
+
+        node_a = TRY(parse_a_calculation(parameters[1]));
+        node_b = TRY(parse_a_calculation(parameters[2]));
+    } else {
+        node_a = TRY(parse_a_calculation(parameters[0]));
+        node_b = TRY(parse_a_calculation(parameters[1]));
+    }
+
+    if (node_a->resolved_type().value() != node_a->resolved_type().value())
+        return Error::from_string_view("round() parameters must all be of the same type"sv);
+
+    auto nonnull_a = node_a.release_nonnull();
+    auto nonnull_b = node_b.release_nonnull();
+
+    return TRY(RoundCalculationNode::create(mode, move(nonnull_a), move(nonnull_b)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3528,6 +3574,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("clamp"sv))
         return TRY(parse_clamp_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("round"sv))
+        return TRY(parse_round_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
@@ -3544,7 +3593,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
         }
 
         auto function_node = TRY(parse_a_function_node(function));
-        return CalculatedStyleValue::create(move(function_node), function_node->resolved_type().value());
+        auto function_type = function_node->resolved_type().value();
+        return CalculatedStyleValue::create(move(function_node), function_type);
     }
 
     return Error::from_string_view("Component was not a function"sv);

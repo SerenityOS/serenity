@@ -292,6 +292,7 @@ private:
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_min_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_max_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_clamp_function(Function const&);
+    ErrorOr<NonnullOwnPtr<CalculationNode>> parse_round_function(Function const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_numeric_value(ComponentValue const&);
