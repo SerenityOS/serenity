@@ -745,7 +745,7 @@ Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percent
         });
 }
 
-Optional<float> CalculatedStyleValue::resolve_number()
+Optional<float> CalculatedStyleValue::resolve_number() const
 {
     auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Number>())
