@@ -19,7 +19,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -222,7 +221,7 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
     }
 
     StringBuilder resolved_base_path_builder;
-    resolved_base_path_builder.append(Core::DeprecatedFile::real_path_for(base));
+    resolved_base_path_builder.append(FileSystem::real_path(base).release_value_but_fixme_should_propagate_errors());
     if (S_ISDIR(statbuf.st_mode))
         resolved_base_path_builder.append('/');
 
@@ -341,7 +340,7 @@ DeprecatedString Shell::resolve_path(DeprecatedString path) const
     if (!path.starts_with('/'))
         path = DeprecatedString::formatted("{}/{}", cwd, path);
 
-    return Core::DeprecatedFile::real_path_for(path);
+    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
@@ -940,11 +939,21 @@ void Shell::execute_process(Vector<char const*>&& argv)
         }
         if (saved_errno == ENOENT) {
             do {
-                auto file_result = Core::DeprecatedFile::open(argv[0], Core::OpenMode::ReadOnly);
+                auto path_as_string_or_error = String::from_utf8({ argv[0], strlen(argv[0]) });
+                if (path_as_string_or_error.is_error())
+                    break;
+                auto file_result = Core::File::open(path_as_string_or_error.value(), Core::File::OpenMode::Read);
                 if (file_result.is_error())
                     break;
-                auto& file = file_result.value();
-                auto line = file->read_line();
+                auto buffered_file_result = Core::InputBufferedFile::create(file_result.release_value());
+                if (buffered_file_result.is_error())
+                    break;
+                auto file = buffered_file_result.release_value();
+                Array<u8, 1 * KiB> line_buf;
+                auto line_or_error = file->read_line(line_buf);
+                if (line_or_error.is_error())
+                    break;
+                auto line = line_or_error.release_value();
                 if (!line.starts_with("#!"sv))
                     break;
                 GenericLexer shebang_lexer { line.substring_view(2) };
@@ -1413,7 +1422,7 @@ void Shell::cache_path()
         cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
-    // TODO: Can we make this rely on Core::DeprecatedFile::resolve_executable_from_environment()?
+    // TODO: Can we make this rely on FileSystem::resolve_executable_from_environment()?
     DeprecatedString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
