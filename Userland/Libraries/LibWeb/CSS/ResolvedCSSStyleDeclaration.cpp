@@ -91,6 +91,35 @@ static ErrorOr<RefPtr<StyleValue>> style_value_for_display(CSS::Display display)
         return IdentifierStyleValue::create(CSS::ValueID::None);
 
     if (display.is_outside_and_inside()) {
+        // NOTE: Following the precedence rules of “most backwards-compatible, then shortest”,
+        //       serialization of equivalent display values uses the “Short display” column.
+        if (display == CSS::Display::from_short(CSS::Display::Short::Block))
+            return IdentifierStyleValue::create(CSS::ValueID::Block);
+        if (display == CSS::Display::from_short(CSS::Display::Short::FlowRoot))
+            return IdentifierStyleValue::create(CSS::ValueID::FlowRoot);
+        if (display == CSS::Display::from_short(CSS::Display::Short::Inline))
+            return IdentifierStyleValue::create(CSS::ValueID::Inline);
+        if (display == CSS::Display::from_short(CSS::Display::Short::InlineBlock))
+            return IdentifierStyleValue::create(CSS::ValueID::InlineBlock);
+        if (display == CSS::Display::from_short(CSS::Display::Short::RunIn))
+            return IdentifierStyleValue::create(CSS::ValueID::RunIn);
+        if (display == CSS::Display::from_short(CSS::Display::Short::ListItem))
+            return IdentifierStyleValue::create(CSS::ValueID::ListItem);
+        if (display == CSS::Display::from_short(CSS::Display::Short::Flex))
+            return IdentifierStyleValue::create(CSS::ValueID::Flex);
+        if (display == CSS::Display::from_short(CSS::Display::Short::InlineFlex))
+            return IdentifierStyleValue::create(CSS::ValueID::InlineFlex);
+        if (display == CSS::Display::from_short(CSS::Display::Short::Grid))
+            return IdentifierStyleValue::create(CSS::ValueID::Grid);
+        if (display == CSS::Display::from_short(CSS::Display::Short::InlineGrid))
+            return IdentifierStyleValue::create(CSS::ValueID::InlineGrid);
+        if (display == CSS::Display::from_short(CSS::Display::Short::Ruby))
+            return IdentifierStyleValue::create(CSS::ValueID::Ruby);
+        if (display == CSS::Display::from_short(CSS::Display::Short::Table))
+            return IdentifierStyleValue::create(CSS::ValueID::Table);
+        if (display == CSS::Display::from_short(CSS::Display::Short::InlineTable))
+            return IdentifierStyleValue::create(CSS::ValueID::InlineTable);
+
         StyleValueVector values;
         switch (display.outside()) {
         case CSS::Display::Outside::Inline:
