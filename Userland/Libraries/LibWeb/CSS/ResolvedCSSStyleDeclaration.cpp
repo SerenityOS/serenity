@@ -356,6 +356,19 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
                 VERIFY_NOT_REACHED();
             },
             [] { return IdentifierStyleValue::create(ValueID::Auto); });
+    case PropertyID::Border: {
+        auto top = layout_node.computed_values().border_top();
+        auto right = layout_node.computed_values().border_right();
+        auto bottom = layout_node.computed_values().border_bottom();
+        auto left = layout_node.computed_values().border_left();
+        // `border` only has a reasonable value if all four sides are the same.
+        if (top != right || top != bottom || top != left)
+            return nullptr;
+        auto width = TRY(LengthStyleValue::create(Length::make_px(top.width)));
+        auto style = TRY(IdentifierStyleValue::create(to_value_id(top.line_style)));
+        auto color = TRY(ColorStyleValue::create(top.color));
+        return BorderStyleValue::create(width, style, color);
+    }
     case PropertyID::BorderBottom: {
         auto border = layout_node.computed_values().border_bottom();
         auto width = TRY(LengthStyleValue::create(Length::make_px(border.width)));
@@ -377,6 +390,13 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style));
     case PropertyID::BorderBottomWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width));
+    case PropertyID::BorderColor: {
+        auto top = TRY(ColorStyleValue::create(layout_node.computed_values().border_top().color));
+        auto right = TRY(ColorStyleValue::create(layout_node.computed_values().border_right().color));
+        auto bottom = TRY(ColorStyleValue::create(layout_node.computed_values().border_bottom().color));
+        auto left = TRY(ColorStyleValue::create(layout_node.computed_values().border_left().color));
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
     case PropertyID::BorderCollapse:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_collapse()));
     case PropertyID::BorderLeft: {
@@ -430,6 +450,13 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
     case PropertyID::BorderRightWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
+    case PropertyID::BorderStyle: {
+        auto top = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style)));
+        auto right = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style)));
+        auto bottom = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_bottom().line_style)));
+        auto left = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_left().line_style)));
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
     case PropertyID::BorderTop: {
         auto border = layout_node.computed_values().border_top();
         auto width = TRY(LengthStyleValue::create(Length::make_px(border.width)));
@@ -451,6 +478,13 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
     case PropertyID::BorderTopWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
+    case PropertyID::BorderWidth: {
+        auto top = TRY(LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width)));
+        auto right = TRY(LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width)));
+        auto bottom = TRY(LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_bottom().width)));
+        auto left = TRY(LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_left().width)));
+        return style_value_for_sided_shorthand(top, right, bottom, left);
+    }
     case PropertyID::Bottom:
         return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
     case PropertyID::BoxShadow: {
