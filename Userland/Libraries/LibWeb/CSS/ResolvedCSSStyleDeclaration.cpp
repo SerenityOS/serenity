@@ -235,6 +235,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
             return TRY(ColorStyleValue::create(accent_color.value()));
         return TRY(IdentifierStyleValue::create(ValueID::Auto));
     }
+    case PropertyID::AlignContent:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_content())));
+    case PropertyID::AlignItems:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_items())));
+    case PropertyID::AlignSelf:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_self())));
     case PropertyID::Background: {
         auto maybe_background_color = property(PropertyID::BackgroundColor);
         auto maybe_background_image = property(PropertyID::BackgroundImage);
