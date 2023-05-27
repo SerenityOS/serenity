@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -162,6 +164,160 @@ static ErrorOr<URL> format_url(StringView url)
     return formatted_url;
 }
 
+enum class TestMode {
+    Layout,
+    Text,
+};
+
+static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 5000)
+{
+    Core::EventLoop loop;
+    bool did_timeout = false;
+
+    auto timeout_timer = TRY(Core::Timer::create_single_shot(5000, [&] {
+        did_timeout = true;
+        loop.quit(0);
+    }));
+
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
+    (void)expectation_path;
+
+    String result;
+
+    if (mode == TestMode::Layout) {
+        view.on_load_finish = [&](auto const&) {
+            result = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
+            loop.quit(0);
+        };
+    } else if (mode == TestMode::Text) {
+        view.on_load_finish = [&](auto const&) {
+            view.select_all();
+            result = String::from_utf8(view.selected_text()).release_value_but_fixme_should_propagate_errors();
+            loop.quit(0);
+        };
+    }
+
+    timeout_timer->start(timeout_in_milliseconds);
+    loop.exec();
+
+    if (did_timeout)
+        return Error::from_errno(ETIMEDOUT);
+
+    return result;
+}
+
+enum class TestResult {
+    Pass,
+    Fail,
+    Timeout,
+};
+
+static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode)
+{
+    auto result = run_one_test(view, input_path, expectation_path, mode);
+
+    if (result.is_error() && result.error().code() == ETIMEDOUT)
+        return TestResult::Timeout;
+    if (result.is_error())
+        return result.release_error();
+
+    auto expectation_file = TRY(Core::File::open(expectation_path, Core::File::OpenMode::Read));
+    auto expectation = TRY(String::from_utf8(StringView(TRY(expectation_file->read_until_eof()).bytes())));
+
+    auto actual = result.release_value();
+    actual = TRY(actual.trim("\n"sv, TrimMode::Right));
+    expectation = TRY(expectation.trim("\n"sv, TrimMode::Right));
+
+    if (actual == expectation)
+        return TestResult::Pass;
+
+    return TestResult::Fail;
+}
+
+struct Test {
+    String input_path;
+    String expectation_path;
+    TestMode mode;
+    Optional<TestResult> result;
+};
+
+static ErrorOr<void> collect_tests(Vector<Test>& tests, StringView path, StringView trail, TestMode mode)
+{
+    Core::DirIterator it(TRY(String::formatted("{}/input/{}", path, trail)).to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
+    while (it.has_next()) {
+        auto name = it.next_path();
+        auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/input/{}/{}", path, trail, name))));
+        if (FileSystem::is_directory(input_path)) {
+            TRY(collect_tests(tests, path, TRY(String::formatted("{}/{}", trail, name)), mode));
+            continue;
+        }
+        if (!name.ends_with(".html"sv))
+            continue;
+        auto basename = LexicalPath::title(name);
+        auto expectation_path = TRY(String::formatted("{}/expected/{}/{}.txt", path, trail, basename));
+
+        tests.append({ move(input_path), move(expectation_path), mode, {} });
+    }
+    return {};
+}
+
+static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path)
+{
+    Vector<Test> tests;
+    TRY(collect_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
+    TRY(collect_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
+
+    size_t pass_count = 0;
+    size_t fail_count = 0;
+    size_t timeout_count = 0;
+
+    bool is_tty = isatty(STDOUT_FILENO);
+
+    outln("Running {} tests...", tests.size());
+    for (size_t i = 0; i < tests.size(); ++i) {
+        auto& test = tests[i];
+
+        if (is_tty) {
+            // Keep clearing and reusing the same line if stdout is a TTY.
+            out("\33[2K\r");
+        }
+
+        out("{}/{}: {}", i + 1, tests.size(), LexicalPath::relative_path(test.input_path, test_root_path));
+
+        if (!is_tty)
+            outln("");
+
+        test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode));
+        switch (*test.result) {
+        case TestResult::Pass:
+            ++pass_count;
+            break;
+        case TestResult::Fail:
+            ++fail_count;
+            break;
+        case TestResult::Timeout:
+            ++timeout_count;
+            break;
+        }
+    }
+
+    if (is_tty)
+        outln("\33[2K\rDone!");
+
+    outln("==================================================");
+    outln("Pass: {}, Fail: {}, Timeout: {}", pass_count, fail_count, timeout_count);
+    outln("==================================================");
+    for (auto& test : tests) {
+        if (*test.result == TestResult::Pass)
+            continue;
+        outln("{}: {}", *test.result == TestResult::Fail ? "Fail" : "Timeout", test.input_path);
+    }
+
+    if (timeout_count == 0 && fail_count == 0)
+        return 0;
+    return 1;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #if !defined(AK_OS_SERENITY)
@@ -176,16 +332,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_layout_tree = false;
     bool dump_text = false;
     bool is_layout_test_mode = false;
+    StringView test_root_path;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(screenshot_timeout, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.add_option(dump_text, "Dump text and exit", "dump-text", 'T');
+    args_parser.add_option(test_root_path, "Run tests in path", "run-tests", 'R', "test-root-path");
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
-    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
@@ -201,8 +359,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Allow passing the window size as an argument.
     static constexpr Gfx::IntSize window_size { 800, 600 };
 
+    if (!test_root_path.is_empty()) {
+        // --run-tests implies --layout-test-mode.
+        is_layout_test_mode = true;
+    }
+
     auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No));
     RefPtr<Core::Timer> timer;
+
+    if (!test_root_path.is_empty()) {
+        return run_tests(*view, test_root_path);
+    }
 
     if (dump_layout_tree) {
         view->on_load_finish = [&](auto const&) {
