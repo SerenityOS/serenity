@@ -33,7 +33,7 @@ Frequency Frequency::percentage_of(Percentage const& percentage) const
 
 ErrorOr<String> Frequency::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}hz", to_hertz());
 }
 
 double Frequency::to_hertz() const
