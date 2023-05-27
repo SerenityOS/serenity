@@ -364,6 +364,11 @@ void BrowserWindow::build_menus()
             active_tab().view().debug_request("dump-style-sheets");
         },
         this));
+    debug_menu.add_action(GUI::Action::create(
+        "Dump &All Resolved Styles", g_icon_bag.filetype_css, [this](auto&) {
+            active_tab().view().debug_request("dump-all-resolved-styles");
+        },
+        this));
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
         active_tab().m_history.dump();
     }));
