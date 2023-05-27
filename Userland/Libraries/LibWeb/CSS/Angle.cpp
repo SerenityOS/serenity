@@ -34,7 +34,7 @@ Angle Angle::percentage_of(Percentage const& percentage) const
 
 ErrorOr<String> Angle::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}deg", to_degrees());
 }
 
 float Angle::to_degrees() const
