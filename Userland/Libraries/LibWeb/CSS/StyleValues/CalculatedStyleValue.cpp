@@ -1034,6 +1034,89 @@ ErrorOr<void> RemCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<AbsCalculationNode>> AbsCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) AbsCalculationNode(move(a)));
+}
+
+AbsCalculationNode::AbsCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Abs)
+    , m_a(move(a))
+{
+}
+
+AbsCalculationNode::~AbsCalculationNode() = default;
+
+ErrorOr<String> AbsCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("abs("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type() const
+{
+    return m_a->resolved_type();
+}
+
+CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
+        return value.visit(
+            [](Number const& number) { return number.value(); },
+            [](Angle const& angle) { return angle.to_degrees(); },
+            [](Frequency const& frequency) { return frequency.to_hertz(); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
+            [](Percentage const& percentage) { return percentage.value(); },
+            [](Time const& time) { return time.to_seconds(); });
+    };
+
+    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
+        switch (type) {
+        case CalculatedStyleValue::ResolvedType::Integer:
+            return { Number(Number::Type::Integer, value) };
+        case CalculatedStyleValue::ResolvedType::Number:
+            return { Number(Number::Type::Number, value) };
+        case CalculatedStyleValue::ResolvedType::Angle:
+            return { Angle::make_degrees(value) };
+        case CalculatedStyleValue::ResolvedType::Frequency:
+            return { Frequency::make_hertz(value) };
+        case CalculatedStyleValue::ResolvedType::Length:
+            return { Length::make_px(value) };
+        case CalculatedStyleValue::ResolvedType::Percentage:
+            return { Percentage(value) };
+        case CalculatedStyleValue::ResolvedType::Time:
+            return { Time::make_seconds(value) };
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    auto resolved_type = m_a->resolved_type().value();
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value());
+
+    if (node_a_value < 0)
+        return to_resolved_type(resolved_type, -node_a_value);
+
+    return node_a;
+}
+
+ErrorOr<void> AbsCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ABS: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

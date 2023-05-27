@@ -159,6 +159,11 @@ public:
         Mod,
         Rem,
 
+        // Sign-Related Functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#sign-funcs
+        Abs,
+        Sign,
+
         // Constant Nodes
         // https://drafts.csswg.org/css-values-4/#calc-constants
         Constant,
@@ -417,6 +422,24 @@ private:
     RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_a;
     NonnullOwnPtr<CalculationNode> m_b;
+};
+
+class AbsCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<AbsCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~AbsCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    AbsCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_a;
 };
 
 }
