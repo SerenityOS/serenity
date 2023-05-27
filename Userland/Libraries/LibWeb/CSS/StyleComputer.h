@@ -205,6 +205,7 @@ private:
     };
 
     mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
+    mutable HashTable<AnimationKey> m_finished_animations;
     mutable RefPtr<Platform::Timer> m_animation_driver_timer;
 };
 
