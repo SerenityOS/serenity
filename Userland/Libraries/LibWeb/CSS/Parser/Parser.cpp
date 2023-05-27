@@ -3579,6 +3579,24 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_mod_function(Function cons
     return TRY(ModCalculationNode::create(move(node_a), move(node_b)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_rem_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2) {
+        return Error::from_string_view("rem() must have exactly two parameters"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_b = TRY(parse_a_calculation(parameters[1]));
+
+    if (node_a->resolved_type().value() != node_a->resolved_type().value())
+        return Error::from_string_view("rem() parameters must all be of the same type"sv);
+
+    return TRY(RemCalculationNode::create(move(node_a), move(node_b)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3598,6 +3616,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("mod"sv))
         return TRY(parse_mod_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("rem"sv))
+        return TRY(parse_rem_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);

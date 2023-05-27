@@ -400,4 +400,23 @@ private:
     NonnullOwnPtr<CalculationNode> m_b;
 };
 
+class RemCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<RemCalculationNode>> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~RemCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_a;
+    NonnullOwnPtr<CalculationNode> m_b;
+};
+
 }
