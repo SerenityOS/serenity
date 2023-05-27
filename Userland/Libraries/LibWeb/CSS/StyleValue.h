@@ -293,13 +293,11 @@ public:
 
     bool has_auto() const;
     virtual bool has_color() const { return false; }
-    virtual bool has_length() const { return false; }
 
     virtual ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
 
     virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const { return {}; }
     ValueID to_identifier() const;
-    virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual ErrorOr<String> to_string() const = 0;
 
     [[nodiscard]] int to_font_weight() const;
