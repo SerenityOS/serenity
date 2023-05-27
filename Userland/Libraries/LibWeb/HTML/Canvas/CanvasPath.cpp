@@ -53,7 +53,9 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
     if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
         || (counter_clockwise && (start_angle - end_angle) >= tau)) {
         start_angle = 0;
-        end_angle = tau;
+        // FIXME: elliptical_arc_to() incorrectly handles the case where the start/end points are very close.
+        // So we slightly fudge the numbers here to correct for that.
+        end_angle = tau * 0.9999f;
     } else {
         start_angle = fmodf(start_angle, tau);
         end_angle = fmodf(end_angle, tau);
@@ -63,8 +65,9 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
     // To do so, we can pretend that the center of this ellipse is at (0, 0),
     // and the whole coordinate system is rotated `rotation` radians around the x axis, centered on `center`.
     // The sign of the resulting relative positions is just whether our angle is on one of the left quadrants.
-    auto sin_rotation = sinf(rotation);
-    auto cos_rotation = cosf(rotation);
+    float sin_rotation;
+    float cos_rotation;
+    AK::sincos(rotation, sin_rotation, cos_rotation);
 
     auto resolve_point_with_angle = [&](float angle) {
         auto tan_relative = tanf(angle);
@@ -79,7 +82,9 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
         auto relative_y_position = ab * tan_relative / sqrt;
 
         // Make sure to set the correct sign
-        float sn = sinf(angle) >= 0 ? 1 : -1;
+        // -1 if 0 ≤ θ < 90° or 270°< θ ≤ 360°
+        //  1 if 90° < θ< 270°
+        float sn = cosf(angle) >= 0 ? 1 : -1;
         relative_x_position *= sn;
         relative_y_position *= sn;
 
@@ -94,12 +99,10 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
 
     m_path.move_to(start_point);
 
-    double delta_theta = end_angle - start_angle;
+    auto delta_theta = end_angle - start_angle;
 
-    // FIXME: This is still goofy for some values.
-    m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > M_PI, !counter_clockwise);
+    m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > AK::Pi<float>, !counter_clockwise);
 
-    m_path.close();
     return {};
 }
 
