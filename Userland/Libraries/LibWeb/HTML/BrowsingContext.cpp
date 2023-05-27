@@ -554,7 +554,7 @@ void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
         if (auto* document = active_document()) {
             // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
             document->invalidate_style();
-            document->invalidate_layout();
+            document->set_needs_layout();
         }
         did_change = true;
     }
@@ -582,7 +582,7 @@ void BrowsingContext::set_size(CSSPixelSize size)
 
     if (auto* document = active_document()) {
         document->invalidate_style();
-        document->invalidate_layout();
+        document->set_needs_layout();
     }
 
     for (auto* client : m_viewport_clients)
