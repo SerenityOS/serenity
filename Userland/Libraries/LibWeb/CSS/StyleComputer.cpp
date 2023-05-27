@@ -1015,7 +1015,7 @@ StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time 
     remaining_delay = CSS::Time { 0, CSS::Time::Type::Ms };
     time_step_ms -= delay_ms;
 
-    float added_progress = static_cast<float>(time_step_ms / duration.to_milliseconds());
+    auto added_progress = time_step_ms / duration.to_milliseconds();
     auto new_progress = progress.as_fraction() + added_progress;
     auto changed_iteration = false;
     if (new_progress >= 1) {
@@ -1250,7 +1250,7 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
 
 bool StyleComputer::Animation::is_done() const
 {
-    return progress.as_fraction() >= 0.9999f && iteration_count.has_value() && iteration_count.value() == 0;
+    return progress.as_fraction() >= 0.9999 && iteration_count.has_value() && iteration_count.value() == 0;
 }
 
 float StyleComputer::Animation::compute_output_progress(float input_progress) const

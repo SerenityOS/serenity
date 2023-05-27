@@ -40,7 +40,7 @@ float Filter::HueRotate::angle_degrees() const
     // Default value when omitted is 0deg.
     if (!angle.has_value())
         return 0.0f;
-    return angle->visit([&](Angle const& a) { return a.to_degrees(); }, [&](auto) { return 0.0f; });
+    return angle->visit([&](Angle const& a) { return a.to_degrees(); }, [&](auto) { return 0.0; });
 }
 
 float Filter::Color::resolved_amount() const

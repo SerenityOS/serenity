@@ -15,13 +15,13 @@ Frequency::Frequency(int value, Type type)
 {
 }
 
-Frequency::Frequency(float value, Type type)
+Frequency::Frequency(double value, Type type)
     : m_type(type)
     , m_value(value)
 {
 }
 
-Frequency Frequency::make_hertz(float value)
+Frequency Frequency::make_hertz(double value)
 {
     return { value, Type::Hz };
 }
@@ -36,7 +36,7 @@ ErrorOr<String> Frequency::to_string() const
     return String::formatted("{}hz", to_hertz());
 }
 
-float Frequency::to_hertz() const
+double Frequency::to_hertz() const
 {
     switch (m_type) {
     case Type::Hz:

@@ -513,7 +513,7 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
 void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Layout::Node const* layout_node)
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
-    // Both of these are represented as a float.
+    // Both of these are represented as a double.
     VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
     bool other_is_number = other.m_value.has<Number>();
 
@@ -552,7 +552,7 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
     // Both of these are represented as a Number.
     auto denominator = other.m_value.get<Number>().value();
     // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
-    VERIFY(denominator != 0.0f);
+    VERIFY(denominator != 0.0);
 
     m_value.visit(
         [&](Number const& number) {
@@ -745,7 +745,7 @@ Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percent
         });
 }
 
-Optional<float> CalculatedStyleValue::resolve_number() const
+Optional<double> CalculatedStyleValue::resolve_number() const
 {
     auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Number>())

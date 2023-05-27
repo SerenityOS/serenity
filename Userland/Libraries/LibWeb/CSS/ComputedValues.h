@@ -140,7 +140,7 @@ public:
     bool operator==(BorderData const&) const = default;
 };
 
-using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, float>;
+using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, double>;
 
 struct Transformation {
     CSS::TransformFunction function;
