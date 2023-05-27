@@ -5392,9 +5392,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
         case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
-            auto zero_percent = TRY(NumericStyleValue::create_integer(0));
+            // (flex-basis takes `<length>`, not `<number>`, so the 0 is a Length.)
+            auto flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
             auto one = TRY(NumericStyleValue::create_integer(1));
-            return FlexStyleValue::create(*value, one, zero_percent);
+            return FlexStyleValue::create(*value, one, flex_basis);
         }
         case PropertyID::FlexBasis: {
             auto one = TRY(NumericStyleValue::create_integer(1));
