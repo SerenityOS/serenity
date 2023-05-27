@@ -434,12 +434,12 @@ bool MinCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
@@ -522,12 +522,12 @@ bool MaxCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
@@ -607,12 +607,12 @@ bool ClampCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
@@ -702,9 +702,9 @@ CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe
     case CalculationNode::ConstantType::PI:
         return { Number(Number::Type::Number, M_PI) };
     case CalculationNode::ConstantType::Infinity:
-        return { Number(Number::Type::Number, NumericLimits<float>::max()) };
+        return { Number(Number::Type::Number, NumericLimits<double>::max()) };
     case CalculationNode::ConstantType::MinusInfinity:
-        return { Number(Number::Type::Number, NumericLimits<float>::lowest()) };
+        return { Number(Number::Type::Number, NumericLimits<double>::lowest()) };
     case CalculationNode::ConstantType::NaN:
         return { Number(Number::Type::Number, NAN) };
     }
@@ -772,17 +772,17 @@ Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type
 
 CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> float {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
 
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, float value) -> CalculatedStyleValue::CalculationResult {
+    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
             return { Number(Number::Type::Integer, value) };
@@ -810,12 +810,12 @@ CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::No
     auto node_a_value = resolve_value(node_a.value());
     auto node_b_value = resolve_value(node_b.value());
 
-    float upper_b = ceilf(node_a_value / node_b_value) * node_b_value;
-    float lower_b = floorf(node_a_value / node_b_value) * node_b_value;
+    auto upper_b = ceil(node_a_value / node_b_value) * node_b_value;
+    auto lower_b = floor(node_a_value / node_b_value) * node_b_value;
 
     if (m_mode == RoundingMode::Nearest) {
-        auto upper_diff = fabsf(upper_b - node_a_value);
-        auto lower_diff = fabsf(node_a_value - lower_b);
+        auto upper_diff = fabs(upper_b - node_a_value);
+        auto lower_diff = fabs(node_a_value - lower_b);
         auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;
         return to_resolved_type(resolved_type, rounded_value);
     }
@@ -829,8 +829,8 @@ CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::No
     }
 
     if (m_mode == RoundingMode::TowardZero) {
-        auto upper_diff = fabsf(upper_b);
-        auto lower_diff = fabsf(lower_b);
+        auto upper_diff = fabs(upper_b);
+        auto lower_diff = fabs(lower_b);
         auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;
         return to_resolved_type(resolved_type, rounded_value);
     }
@@ -886,17 +886,17 @@ Optional<CalculatedStyleValue::ResolvedType> ModCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> float {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
 
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, float value) -> CalculatedStyleValue::CalculationResult {
+    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
             return { Number(Number::Type::Integer, value) };
@@ -924,7 +924,7 @@ CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Layout::Node
     auto node_a_value = resolve_value(node_a.value());
     auto node_b_value = resolve_value(node_b.value());
 
-    auto quotient = floorf(node_a_value / node_b_value);
+    auto quotient = floor(node_a_value / node_b_value);
     auto value = node_a_value - (node_b_value * quotient);
     return to_resolved_type(resolved_type, value);
 }
@@ -977,17 +977,17 @@ Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> float {
+    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
         return value.visit(
             [](Number const& number) { return number.value(); },
             [](Angle const& angle) { return angle.to_degrees(); },
             [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return static_cast<float>(length.to_px(*layout_node).value()); },
+            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
             [](Percentage const& percentage) { return percentage.value(); },
             [](Time const& time) { return time.to_seconds(); });
     };
 
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, float value) -> CalculatedStyleValue::CalculationResult {
+    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
             return { Number(Number::Type::Integer, value) };
@@ -1015,7 +1015,7 @@ CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Layout::Node
     auto node_a_value = resolve_value(node_a.value());
     auto node_b_value = resolve_value(node_b.value());
 
-    auto value = fmodf(node_a_value, node_b_value);
+    auto value = fmod(node_a_value, node_b_value);
     return to_resolved_type(resolved_type, value);
 }
 
@@ -1157,7 +1157,7 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
 void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Layout::Node const* layout_node)
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
-    // Both of these are represented as a float.
+    // Both of these are represented as a double.
     VERIFY(m_value.has<Number>() || other.m_value.has<Number>());
     bool other_is_number = other.m_value.has<Number>();
 
@@ -1196,7 +1196,7 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
     // Both of these are represented as a Number.
     auto denominator = other.m_value.get<Number>().value();
     // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
-    VERIFY(denominator != 0.0f);
+    VERIFY(denominator != 0.0);
 
     m_value.visit(
         [&](Number const& number) {
@@ -1389,7 +1389,7 @@ Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percent
         });
 }
 
-Optional<float> CalculatedStyleValue::resolve_number() const
+Optional<double> CalculatedStyleValue::resolve_number() const
 {
     auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Number>())

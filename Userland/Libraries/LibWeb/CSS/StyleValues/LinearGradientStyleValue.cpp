@@ -66,35 +66,35 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
 float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
 {
     auto corner_angle_degrees = [&] {
-        return static_cast<float>(atan2(gradient_size.height().value(), gradient_size.width().value())) * 180 / AK::Pi<float>;
+        return atan2(gradient_size.height().value(), gradient_size.width().value()) * 180 / AK::Pi<double>;
     };
     return m_properties.direction.visit(
         [&](SideOrCorner side_or_corner) {
             auto angle = [&] {
                 switch (side_or_corner) {
                 case SideOrCorner::Top:
-                    return 0.0f;
+                    return 0.0;
                 case SideOrCorner::Bottom:
-                    return 180.0f;
+                    return 180.0;
                 case SideOrCorner::Left:
-                    return 270.0f;
+                    return 270.0;
                 case SideOrCorner::Right:
-                    return 90.0f;
+                    return 90.0;
                 case SideOrCorner::TopRight:
                     return corner_angle_degrees();
                 case SideOrCorner::BottomLeft:
-                    return corner_angle_degrees() + 180.0f;
+                    return corner_angle_degrees() + 180.0;
                 case SideOrCorner::TopLeft:
                     return -corner_angle_degrees();
                 case SideOrCorner::BottomRight:
-                    return -(corner_angle_degrees() + 180.0f);
+                    return -(corner_angle_degrees() + 180.0);
                 default:
                     VERIFY_NOT_REACHED();
                 }
             }();
             // Note: For unknowable reasons the angles are opposite on the -webkit- version
             if (m_properties.gradient_type == GradientType::WebKit)
-                return angle + 180.0f;
+                return angle + 180.0;
             return angle;
         },
         [&](Angle const& angle) {

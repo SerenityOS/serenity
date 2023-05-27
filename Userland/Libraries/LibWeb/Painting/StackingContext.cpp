@@ -232,7 +232,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     auto count = transformation.values.size();
     auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
-            [this, reference_length](CSS::LengthPercentage const& value) -> float {
+            [this, reference_length](CSS::LengthPercentage const& value) -> double {
                 if (reference_length.has_value()) {
                     return value.resolved(m_box, reference_length.value()).to_px(m_box).value();
                 }
@@ -240,9 +240,9 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 return value.length().to_px(m_box).value();
             },
             [this](CSS::AngleOrCalculated const& value) {
-                return value.resolved(m_box).to_degrees() * static_cast<float>(M_DEG2RAD);
+                return value.resolved(m_box).to_degrees() * M_DEG2RAD;
             },
-            [](float value) {
+            [](double value) {
                 return value;
             });
     };

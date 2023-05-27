@@ -21,16 +21,16 @@ public:
     static Optional<Type> unit_from_name(StringView);
 
     Time(int value, Type type);
-    Time(float value, Type type);
-    static Time make_seconds(float);
+    Time(double value, Type type);
+    static Time make_seconds(double);
     Time percentage_of(Percentage const&) const;
 
     ErrorOr<String> to_string() const;
-    float to_seconds() const;
     double to_milliseconds() const;
+    double to_seconds() const;
 
     Type type() const { return m_type; }
-    float raw_value() const { return m_value; }
+    double raw_value() const { return m_value; }
 
     bool operator==(Time const& other) const
     {
@@ -41,7 +41,7 @@ private:
     StringView unit_name() const;
 
     Type m_type;
-    float m_value { 0 };
+    double m_value { 0 };
 };
 
 }
