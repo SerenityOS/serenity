@@ -3427,7 +3427,7 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
     return CalculatedStyleValue::create(move(calculation_tree), calc_type.release_value());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_min_function(Function const& function)
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_min_function(Function const& function)
 {
     TokenStream stream { function.values() };
     auto parameters = parse_a_comma_separated_list_of_component_values(stream);
@@ -3452,11 +3452,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_min_function(Function const& function)
         calculated_parameters.append(move(calculation_node));
     }
 
-    NonnullOwnPtr<CalculationNode> node = TRY(MinCalculationNode::create(move(calculated_parameters)));
-    return CalculatedStyleValue::create(move(node), type);
+    return TRY(MinCalculationNode::create(move(calculated_parameters)));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_max_function(Function const& function)
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_max_function(Function const& function)
 {
     TokenStream stream { function.values() };
     auto parameters = parse_a_comma_separated_list_of_component_values(stream);
@@ -3481,11 +3480,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_max_function(Function const& function)
         calculated_parameters.append(move(calculation_node));
     }
 
-    NonnullOwnPtr<CalculationNode> node = TRY(MaxCalculationNode::create(move(calculated_parameters)));
-    return CalculatedStyleValue::create(move(node), type);
+    return TRY(MaxCalculationNode::create(move(calculated_parameters)));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_clamp_function(Function const& function)
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_clamp_function(Function const& function)
 {
     TokenStream stream { function.values() };
     auto parameters = parse_a_comma_separated_list_of_component_values(stream);
@@ -3514,8 +3512,25 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_clamp_function(Function const& functio
         calculated_parameters.append(move(calculation_node));
     }
 
-    NonnullOwnPtr<CalculationNode> node = TRY(ClampCalculationNode::create(move(calculated_parameters[0]), move(calculated_parameters[1]), move(calculated_parameters[2])));
-    return CalculatedStyleValue::create(move(node), type);
+    return TRY(ClampCalculationNode::create(move(calculated_parameters[0]), move(calculated_parameters[1]), move(calculated_parameters[2])));
+}
+
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
+{
+    if (function.name().equals_ignoring_ascii_case("calc"sv))
+        return TRY(parse_a_calculation(function.values()));
+
+    if (function.name().equals_ignoring_ascii_case("min"sv))
+        return TRY(parse_min_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("max"sv))
+        return TRY(parse_max_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("clamp"sv))
+        return TRY(parse_clamp_function(function));
+
+    dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
+    return Error::from_string_view("Unknown function"sv);
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
@@ -3523,25 +3538,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
     if (component_value.is_function()) {
         auto const& function = component_value.function();
 
-        if (function.name().equals_ignoring_ascii_case("calc"sv))
-            return parse_calculated_value(function.values());
-
         if (function.name().equals_ignoring_ascii_case("var"sv)) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
 
-        if (function.name().equals_ignoring_ascii_case("min"sv))
-            return parse_min_function(function);
-
-        if (function.name().equals_ignoring_ascii_case("max"sv))
-            return parse_max_function(function);
-
-        if (function.name().equals_ignoring_ascii_case("clamp"sv))
-            return parse_clamp_function(function);
-
-        dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
-        return Error::from_string_view("Unknown function"sv);
+        auto function_node = TRY(parse_a_function_node(function));
+        return CalculatedStyleValue::create(move(function_node), function_node->resolved_type().value());
     }
 
     return Error::from_string_view("Component was not a function"sv);
@@ -8148,20 +8151,14 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<Compo
         // 2. If leaf is a math function, replace leaf with the internal representation of that math function.
         // NOTE: All function tokens at this point should be math functions.
         else if (component_value.is_function()) {
-            auto& function = component_value.function();
-            if (function.name().equals_ignoring_ascii_case("calc"sv)) {
-                auto leaf_calculation = parse_a_calculation(function.values());
-                if (leaf_calculation.is_error()) {
-                    parsing_failed_for_child_node = Error::copy(leaf_calculation.error());
-                    return {};
-                }
-                node = leaf_calculation.release_value();
-                return {};
-            } else {
-                dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` functions yet", function.name());
-                parsing_failed_for_child_node = Error::from_string_view("Unknown math function"sv);
+            auto leaf_calculation = parse_a_function_node(component_value.function());
+            if (leaf_calculation.is_error()) {
+                parsing_failed_for_child_node = Error::copy(leaf_calculation.error());
                 return {};
             }
+
+            node = leaf_calculation.release_value();
+            return {};
         }
 
         // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.
