@@ -28,12 +28,23 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
+static QIcon const& app_icon()
+{
+    static QIcon icon;
+    if (icon.isNull()) {
+        QPixmap pixmap;
+        pixmap.load(":/Icons/ladybird.png");
+        icon = QIcon(pixmap);
+    }
+    return icon;
+}
+
 BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)
-
 {
+    setWindowIcon(app_icon());
     m_tabs_container = new QTabWidget(this);
     m_tabs_container->installEventFilter(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -333,7 +344,6 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
-        setWindowIcon(m_tabs_container->tabIcon(index));
         set_current_tab(verify_cast<Tab>(m_tabs_container->widget(index)));
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
@@ -513,8 +523,6 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
 void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
     m_tabs_container->setTabIcon(index, icon);
-    if (m_tabs_container->currentIndex() == index)
-        setWindowIcon(icon);
 }
 
 void BrowserWindow::open_next_tab()
