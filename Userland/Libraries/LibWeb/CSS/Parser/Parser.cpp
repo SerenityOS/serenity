@@ -7492,8 +7492,10 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
                 break;
             case CalculatedStyleValue::ResolvedType::Integer:
             case CalculatedStyleValue::ResolvedType::Number:
-                if (property_accepts_numeric)
-                    return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), calculated };
+                if (property_accepts_numeric) {
+                    auto property_or_resolved = property_accepting_integer.value_or_lazy_evaluated([property_accepting_number]() { return property_accepting_number.value(); });
+                    return PropertyAndValue { property_or_resolved, calculated };
+                }
                 break;
             case CalculatedStyleValue::ResolvedType::Length:
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
