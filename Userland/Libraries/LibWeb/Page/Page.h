@@ -44,6 +44,9 @@ public:
     PageClient& client() { return m_client; }
     PageClient const& client() const { return m_client; }
 
+    // FIXME: This is a hack.
+    bool top_level_browsing_context_is_initialized() const;
+
     HTML::BrowsingContext& top_level_browsing_context();
     HTML::BrowsingContext const& top_level_browsing_context() const;
 

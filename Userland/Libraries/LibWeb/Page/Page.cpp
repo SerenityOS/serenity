@@ -158,6 +158,11 @@ bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
     return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
 }
 
+bool Page::top_level_browsing_context_is_initialized() const
+{
+    return m_top_level_browsing_context;
+}
+
 HTML::BrowsingContext& Page::top_level_browsing_context()
 {
     return *m_top_level_browsing_context;
