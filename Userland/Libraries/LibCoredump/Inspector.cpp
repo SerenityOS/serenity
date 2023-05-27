@@ -8,7 +8,7 @@
 
 namespace Coredump {
 
-OwnPtr<Inspector> Inspector::create(DeprecatedString const& coredump_path, Function<void(float)> on_progress)
+OwnPtr<Inspector> Inspector::create(StringView coredump_path, Function<void(float)> on_progress)
 {
     auto reader = Reader::create(coredump_path);
     if (!reader)
