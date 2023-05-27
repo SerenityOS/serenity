@@ -241,6 +241,8 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_items())));
     case PropertyID::AlignSelf:
         return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_self())));
+    case PropertyID::Appearance:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().appearance())));
     case PropertyID::Background: {
         auto maybe_background_color = property(PropertyID::BackgroundColor);
         auto maybe_background_image = property(PropertyID::BackgroundImage);
