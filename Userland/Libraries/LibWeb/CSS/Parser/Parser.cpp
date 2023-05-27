@@ -6426,12 +6426,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
 
             auto const& value = argument_tokens.next_token();
             RefPtr<CalculatedStyleValue> maybe_calc_value;
-            if (auto maybe_dynamic_value = TRY(parse_dynamic_value(value))) {
+            auto maybe_dynamic_value = parse_dynamic_value(value);
+            if (!maybe_dynamic_value.is_error()) {
                 // TODO: calc() is the only dynamic value we support for now, but more will come later.
                 // FIXME: Actually, calc() should probably be parsed inside parse_dimension_value() etc,
                 //        so that it affects every use instead of us having to manually implement it.
-                VERIFY(maybe_dynamic_value->is_calculated());
-                maybe_calc_value = maybe_dynamic_value->as_calculated();
+                auto dynamic_value = maybe_dynamic_value.release_value();
+                VERIFY(dynamic_value->is_calculated());
+                maybe_calc_value = dynamic_value->as_calculated();
             }
 
             switch (function_metadata.parameters[argument_index].type) {

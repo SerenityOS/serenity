@@ -400,7 +400,20 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         transformation.function = transformation_style_value.transform_function();
         Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
-            if (transformation_value->is_length()) {
+            if (transformation_value->is_calculated()) {
+                auto& calculated = transformation_value->as_calculated();
+                if (calculated.resolves_to_length()) {
+                    dbgln("FIXME: Unable to resolve length with no layout node! {}", calculated.to_string());
+                } else if (calculated.resolves_to_percentage()) {
+                    values.append({ calculated.resolve_percentage().value() });
+                } else if (calculated.resolves_to_number()) {
+                    values.append({ calculated.resolve_number().value() });
+                } else if (calculated.resolves_to_angle()) {
+                    values.append({ calculated.resolve_angle().value() });
+                } else {
+                    dbgln("FIXME: Unsupported calc value in transform! {}", calculated.to_string());
+                }
+            } else if (transformation_value->is_length()) {
                 values.append({ transformation_value->as_length().length() });
             } else if (transformation_value->is_percentage()) {
                 values.append({ transformation_value->as_percentage().percentage() });
@@ -409,7 +422,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             } else if (transformation_value->is_angle()) {
                 values.append({ transformation_value->as_angle().angle() });
             } else {
-                dbgln("FIXME: Unsupported value in transform!");
+                dbgln("FIXME: Unsupported value in transform! {}", transformation_value->to_string());
             }
         }
         transformation.values = move(values);

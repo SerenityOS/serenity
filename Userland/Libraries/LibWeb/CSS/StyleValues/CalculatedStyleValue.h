@@ -94,7 +94,7 @@ public:
 
     bool resolves_to_integer() const { return m_resolved_type == ResolvedType::Integer; }
     bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
-    Optional<float> resolve_number();
+    Optional<float> resolve_number() const;
     Optional<i64> resolve_integer();
 
     bool contains_percentage() const;
