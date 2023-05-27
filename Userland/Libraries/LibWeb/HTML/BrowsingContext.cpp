@@ -532,7 +532,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
     // AD-HOC:
     document->set_browsing_context(this);
 
-    if (m_page && is_top_level())
+    if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_change_title(document->title());
 
     if (previously_active_document && previously_active_document != document.ptr())
