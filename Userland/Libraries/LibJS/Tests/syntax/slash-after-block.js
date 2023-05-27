@@ -19,7 +19,30 @@ test("slash token resolution in lexer", () => {
     expect("a.instanceof / b").toEval();
     expect("class A { #name; d = a.#name / b; }").toEval();
 
-    // FIXME: Even more 'reserved' words are valid however the cases below do still need to pass.
-    //expect("a.void / b").toEval();
+    expect("async / b").toEval();
+    expect("a.delete / b").toEval();
+    expect("delete / b/").toEval();
+    expect("a.in / b").toEval();
+    expect("for (a in / b/) {}").toEval();
+    expect("a.instanceof / b").toEval();
+    expect("a instanceof / b/").toEval();
+    expect("new / b/").toEval();
+    expect("null / b").toEval();
+    expect("for (a of / b/) {}").toEval();
+    expect("a.return / b").toEval();
+    expect("function foo() { return / b/ }").toEval();
+    expect("throw / b/").toEval();
+    expect("a.typeof / b").toEval();
+    expect("a.void / b").toEval();
     expect("void / b/").toEval();
+
+    expect("await / b").toEval();
+    expect("await / b/").not.toEval();
+    expect("async function foo() { await / b }").not.toEval();
+    expect("async function foo() { await / b/ }").toEval();
+
+    expect("yield / b").toEval();
+    expect("yield / b/").not.toEval();
+    expect("function* foo() { yield / b }").not.toEval();
+    expect("function* foo() { yield / b/ }").toEval();
 });
