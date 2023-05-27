@@ -434,6 +434,8 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style));
     case PropertyID::BorderTopWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_top().width));
+    case PropertyID::Bottom:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
     case PropertyID::BoxShadow: {
         auto box_shadow_layers = layout_node.computed_values().box_shadow();
         if (box_shadow_layers.is_empty())
@@ -454,8 +456,6 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     }
     case PropertyID::BoxSizing:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().box_sizing()));
-    case PropertyID::Bottom:
-        return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
     case PropertyID::Clear:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().clear()));
     case PropertyID::Clip:
