@@ -159,6 +159,16 @@ public:
         Mod,
         Rem,
 
+        // Trigonometric functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#trig-funcs
+        Sin,
+        Cos,
+        Tan,
+        Asin,
+        Acos,
+        Atan,
+        Atan2,
+
         // Sign-Related Functions, a sub-type of operator node
         // https://drafts.csswg.org/css-values-4/#sign-funcs
         Abs,
@@ -457,6 +467,24 @@ public:
 
 private:
     SignCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_a;
+};
+
+class SinCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<SinCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~SinCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    SinCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_a;
 };
 

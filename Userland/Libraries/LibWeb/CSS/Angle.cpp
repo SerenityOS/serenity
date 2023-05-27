@@ -52,6 +52,11 @@ double Angle::to_degrees() const
     VERIFY_NOT_REACHED();
 }
 
+double Angle::to_radians() const
+{
+    return to_degrees() * (AK::Pi<double> / 180.0);
+}
+
 StringView Angle::unit_name() const
 {
     switch (m_type) {

@@ -1116,6 +1116,62 @@ ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) cons
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<SinCalculationNode>> SinCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SinCalculationNode(move(a)));
+}
+
+SinCalculationNode::SinCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Sin)
+    , m_a(move(a))
+{
+}
+
+SinCalculationNode::~SinCalculationNode() = default;
+
+ErrorOr<String> SinCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("sin("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SinCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult SinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolve_value_radians = [](CalculatedStyleValue::CalculationResult::Value value) -> double {
+        return value.visit(
+            [](Number const& number) { return number.value(); },
+            [](Angle const& angle) { return angle.to_radians(); },
+            [](auto const&) { VERIFY_NOT_REACHED(); return 0.0; });
+    };
+
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value_radians(node_a.value());
+    auto result = sin(node_a_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> SinCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> SinCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SIN: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

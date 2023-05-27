@@ -29,6 +29,7 @@ public:
 
     ErrorOr<String> to_string() const;
     double to_degrees() const;
+    double to_radians() const;
 
     Type type() const { return m_type; }
     double raw_value() const { return m_value; }
