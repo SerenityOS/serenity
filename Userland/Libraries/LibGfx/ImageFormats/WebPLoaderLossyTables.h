@@ -221,7 +221,7 @@ const Prob KEYFRAME_BLOCK_MODE_PROBABILITIES[num_intra_bmodes][num_intra_bmodes]
 // clang-format on
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-13.2 "Coding of Individual Coefficient Values"
-enum dct_token {
+enum DCTToken {
     DCT_0,         /* value 0 */
     DCT_1,         /* 1 */
     DCT_2,         /* 2 */
@@ -239,7 +239,7 @@ enum dct_token {
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-13.4 "Token Probability Updates"
 // clang-format off
-static Prob constexpr coeff_update_probs[4][8][3][num_dct_tokens - 1] = {
+static Prob constexpr COEFFICIENT_UPDATE_PROBABILITIES[4][8][3][num_dct_tokens - 1] = {
     {
         {
             { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 },
@@ -413,7 +413,7 @@ static Prob constexpr coeff_update_probs[4][8][3][num_dct_tokens - 1] = {
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-13.5 "Default Token Probability Table"
 // clang-format off
-static Prob constexpr default_coeff_probs[4][8][3][num_dct_tokens - 1] = {
+static Prob constexpr DEFAULT_COEFFICIENT_PROBABILITIES[4][8][3][num_dct_tokens - 1] = {
     {
         {
             { 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128 },
