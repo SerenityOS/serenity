@@ -14,6 +14,7 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
+#include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -608,6 +609,15 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     computed_values.set_transformations(computed_style.transformations());
     computed_values.set_transform_origin(computed_style.transform_origin());
+
+    auto transition_delay_property = computed_style.property(CSS::PropertyID::TransitionDelay);
+    if (transition_delay_property->is_time()) {
+        auto& transition_delay = transition_delay_property->as_time();
+        computed_values.set_transition_delay(transition_delay.time());
+    } else if (transition_delay_property->is_calculated()) {
+        auto& transition_delay = transition_delay_property->as_calculated();
+        computed_values.set_transition_delay(transition_delay.resolve_time().value());
+    }
 
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
         // FIXME: The default border color value is `currentcolor`, but since we can't resolve that easily,

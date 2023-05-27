@@ -36,6 +36,7 @@
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
+#include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -767,8 +768,10 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         StyleValueVector matrix_functions { matrix_function };
         return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
     }
-    case PropertyID::VerticalAlign:
-        if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<LengthPercentage>()) {
+    case CSS::PropertyID::TransitionDelay:
+        return TimeStyleValue::create(layout_node.computed_values().transition_delay());
+    case CSS::PropertyID::VerticalAlign:
+        if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
             return style_value_for_length_percentage(*length_percentage);
         }
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().vertical_align().get<VerticalAlign>()));

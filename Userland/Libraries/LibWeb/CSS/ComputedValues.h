@@ -87,6 +87,7 @@ public:
     static CSS::Size row_gap() { return CSS::Size::make_auto(); }
     static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
     static Vector<Vector<String>> grid_template_areas() { return {}; }
+    static CSS::Time transition_delay() { return CSS::Time::make_seconds(0); }
 };
 
 enum class BackgroundSize {
@@ -305,6 +306,7 @@ public:
     float font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
     CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
+    CSS::Time transition_delay() const { return m_noninherited.transition_delay; }
 
     ComputedValues clone_inherited_values() const
     {
@@ -406,6 +408,7 @@ protected:
         Vector<Vector<String>> grid_template_areas { InitialValues::grid_template_areas() };
         Gfx::Color stop_color { InitialValues::stop_color() };
         float stop_opacity { InitialValues::stop_opacity() };
+        CSS::Time transition_delay { InitialValues::transition_delay() };
     } m_noninherited;
 };
 
@@ -493,6 +496,7 @@ public:
     void set_row_gap(CSS::Size const& row_gap) { m_noninherited.row_gap = row_gap; }
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_noninherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
+    void set_transition_delay(CSS::Time const& transition_delay) { m_noninherited.transition_delay = transition_delay; }
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
