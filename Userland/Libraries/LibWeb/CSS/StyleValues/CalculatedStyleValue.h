@@ -152,6 +152,16 @@ public:
         // https://drafts.csswg.org/css-values-4/#calc-constants
         Constant,
 
+        // Trigonometric functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#trig-funcs
+        Sin,
+        Cos,
+        Tan,
+        Asin,
+        Acos,
+        Atan,
+        Atan2,
+
         // This only exists during parsing.
         Unparsed,
     };
@@ -384,6 +394,24 @@ public:
 private:
     ConstantCalculationNode(ConstantType);
     CalculationNode::ConstantType m_constant;
+};
+
+class SinCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<SinCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~SinCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    SinCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_value;
 };
 
 }
