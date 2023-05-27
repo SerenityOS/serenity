@@ -1868,7 +1868,7 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font const> font)
     Config::write_i32("HackStudio"sv, "EditorFont"sv, "Size"sv, m_editor_font->presentation_size());
 }
 
-void HackStudioWidget::open_coredump(DeprecatedString const& coredump_path)
+void HackStudioWidget::open_coredump(StringView coredump_path)
 {
     open_project("/usr/src/serenity");
     m_mode = Mode::Coredump;
