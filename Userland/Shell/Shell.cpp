@@ -23,6 +23,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibFileSystem/FileSystem.h>
@@ -531,15 +532,16 @@ DeprecatedString Shell::resolve_alias(StringView name) const
 
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
 {
-    auto parts = name.split_view('/');
-    auto path = name.to_deprecated_string();
-    if (parts.size() > 1) {
-        auto file = Core::DeprecatedFile::open(path.characters(), Core::OpenMode::ReadOnly);
-        if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
+    auto parts = name.find('/');
+    if (parts.has_value()) {
+        auto file_or_error = Core::File::open(name, Core::File::OpenMode::Read);
+        if (!file_or_error.is_error()
+            && !FileSystem::is_directory(file_or_error.value()->fd())
+            && !Core::System::access(name, X_OK).is_error())
             return RunnablePath { RunnablePath::Kind::Executable, name };
     }
 
-    auto* found = binary_search(cached_path.span(), path, nullptr, RunnablePathComparator {});
+    auto* found = binary_search(cached_path.span(), name, nullptr, RunnablePathComparator {});
     if (!found)
         return {};
 
