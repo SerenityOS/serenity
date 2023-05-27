@@ -386,6 +386,110 @@ ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder& 
     return {};
 }
 
+// https://datatracker.ietf.org/doc/html/rfc6386#section-8.1 "Tree Coding Implementation"
+ErrorOr<u8> tree_decode(BooleanDecoder& decoder, ReadonlySpan<TreeIndex> tree, ReadonlyBytes probabilities, TreeIndex initial_i = 0)
+{
+    TreeIndex i = initial_i;
+    while (true) {
+        u8 b = TRY(B(probabilities[i >> 1]));
+        i = tree[i + b];
+        if (i <= 0)
+            return -i;
+    }
+}
+
+// Similar to BlockContext in LibVideo/VP9/Context.h
+struct MacroblockMetadata {
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-10 "Segment-Based Feature Adjustments"
+    // Read only if `update_mb_segmentation_map` is set.
+    int segment_id { 0 }; // 0, 1, 2, or 3. Fits in two bits.
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-11.1 "mb_skip_coeff"
+    bool skip_coefficients { false };
+
+    IntraMetablockMode intra_y_mode;
+    IntraMetablockMode uv_mode;
+
+    IntraBlockMode intra_b_modes[16];
+};
+
+ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecoder& decoder, FrameHeader const& header, int macroblock_width, int macroblock_height)
+{
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-19.3
+
+    // Corresponds to "macroblock_header()" in section 19.3 of the spec.
+
+    Vector<MacroblockMetadata> macroblock_metadata;
+
+    // Key frames must use intra prediction, that is new macroblocks are predicted from old macroblocks in the same frame.
+    // (Inter prediction on the other hand predicts new macroblocks from the corresponding macroblock in the previous frame.)
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-11.3 "Subblock Mode Contexts"
+    // "For macroblocks on the top row or left edge of the image, some of
+    //  the predictors will be non-existent.  Such predictors are taken
+    //  to have had the value B_DC_PRED, which, perhaps conveniently,
+    //  takes the value 0 in the enumeration above.
+    //  A simple management scheme for these contexts might maintain a row
+    //  of above predictors and four left predictors.  Before decoding the
+    //  frame, the entire row is initialized to B_DC_PRED; before decoding
+    //  each row of macroblocks, the four left predictors are also set to
+    //  B_DC_PRED.  After decoding a macroblock, the bottom four subblock
+    //  modes are copied into the row predictor (at the current position,
+    //  which then advances to be above the next macroblock), and the
+    //  right four subblock modes are copied into the left predictor."
+    Vector<IntraBlockMode> above;
+    TRY(above.try_resize(macroblock_width * 4)); // One per 4x4 subblock.
+
+    for (int mb_y = 0; mb_y < macroblock_height; ++mb_y) {
+        IntraBlockMode left[4] {};
+
+        for (int mb_x = 0; mb_x < macroblock_width; ++mb_x) {
+            MacroblockMetadata metadata;
+
+            if (header.segmentation.update_metablock_segmentation_map)
+                metadata.segment_id = TRY(tree_decode(decoder, METABLOCK_SEGMENT_TREE, header.segmentation.metablock_segment_tree_probabilities));
+
+            if (header.enable_skipping_of_metablocks_containing_only_zero_coefficients)
+                metadata.skip_coefficients = TRY(B(header.probability_skip_false));
+
+            int intra_y_mode = TRY(tree_decode(decoder, KEYFRAME_YMODE_TREE, KEYFRAME_YMODE_PROBABILITIES));
+            metadata.intra_y_mode = (IntraMetablockMode)intra_y_mode;
+
+            // "If the Ymode is B_PRED, it is followed by a (tree-coded) mode for each of the 16 Y subblocks."
+            if (intra_y_mode == B_PRED) {
+                for (int y = 0; y < 4; ++y) {
+                    for (int x = 0; x < 4; ++x) {
+                        // "The outer two dimensions of this array are indexed by the already-
+                        //  coded subblock modes above and to the left of the current block,
+                        //  respectively."
+                        int A = above[mb_x * 4 + x];
+                        int L = left[y];
+
+                        auto intra_b_mode = static_cast<IntraBlockMode>(TRY(tree_decode(decoder, BLOCK_MODE_TREE, KEYFRAME_BLOCK_MODE_PROBABILITIES[A][L])));
+                        metadata.intra_b_modes[y * 4 + x] = intra_b_mode;
+
+                        above[mb_x * 4 + x] = intra_b_mode;
+                        left[y] = intra_b_mode;
+                    }
+                }
+            } else {
+                VERIFY(intra_y_mode < B_PRED);
+                constexpr IntraBlockMode b_mode_from_y_mode[] = { B_DC_PRED, B_VE_PRED, B_HE_PRED, B_TM_PRED };
+                IntraBlockMode intra_b_mode = b_mode_from_y_mode[intra_y_mode];
+                for (int i = 0; i < 4; ++i) {
+                    above[mb_x * 4 + i] = intra_b_mode;
+                    left[i] = intra_b_mode;
+                }
+            }
+
+            metadata.uv_mode = (IntraMetablockMode)TRY(tree_decode(decoder, UV_MODE_TREE, KEYFRAME_UV_MODE_PROBABILITIES));
+
+            TRY(macroblock_metadata.try_append(metadata));
+        }
+    }
+
+    return macroblock_metadata;
+}
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
@@ -397,6 +501,16 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
     auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, vp8_header.lossy_data.size() * 8));
 
     auto header = TRY(decode_VP8_frame_header(decoder));
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-2 "Format Overview"
+    // "Internally, VP8 decomposes each output frame into an array of
+    //  macroblocks.  A macroblock is a square array of pixels whose Y
+    //  dimensions are 16x16 and whose U and V dimensions are 8x8."
+    int macroblock_width = ceil_div(vp8_header.width, 16);
+    int macroblock_height = ceil_div(vp8_header.height, 16);
+
+    auto macroblock_metadata = TRY(decode_VP8_macroblock_metadata(decoder, header, macroblock_width, macroblock_height));
+    (void)macroblock_metadata;
 
     if (header.number_of_dct_partitions > 1)
         return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps with more than one dct partition not yet implemented");
