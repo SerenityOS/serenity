@@ -621,7 +621,7 @@ void BrowsingContext::scroll_to(CSSPixelPoint position)
             active_document()->update_layout();
     }
 
-    if (m_page)
+    if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_to(position);
 }
 
@@ -659,7 +659,7 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
         target_rect.translate_by(-padding_box.left, -padding_box.top);
     }
 
-    if (m_page)
+    if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_into_view(target_rect);
 }
 

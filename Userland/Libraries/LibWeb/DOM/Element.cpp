@@ -1029,8 +1029,10 @@ void Element::set_scroll_left(double x)
     // 8. If the element is the root element invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        }
 
         return;
     }
@@ -1038,8 +1040,10 @@ void Element::set_scroll_left(double x)
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        }
 
         return;
     }
@@ -1093,8 +1097,10 @@ void Element::set_scroll_top(double y)
     // 8. If the element is the root element invoke scroll() on window with scrollX on window as first argument and y as second argument, and terminate these steps.
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        }
 
         return;
     }
@@ -1102,8 +1108,10 @@ void Element::set_scroll_top(double y)
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with scrollX as first argument and y as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        }
 
         return;
     }
@@ -1390,7 +1398,8 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!layout_node)
         return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
-    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+    if (element.document().browsing_context() == &page->top_level_browsing_context())
+        page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
 
     return {};
 }
