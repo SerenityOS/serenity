@@ -86,14 +86,15 @@ jobs:
         uses: actions/cache/restore@v3
         id: toolchain-cache
         with:
-          path: ${{ github.workspace }}/Toolchain/Cache/
+          path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
           # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
           # This is wrong, and causes more Toolchain rebuilds than necessary.
           # However, we want to avoid false cache hits at all costs.
           key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
 
-      - name: Restore or regenerate Toolchain
-        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+      - name: Build toolchain
+        if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
+        run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
       - name: Update toolchain cache
         uses: actions/cache/save@v3
@@ -101,7 +102,7 @@ jobs:
         # as it would be discarded after being merged anyway.
         if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit }}
         with:
-          path: ${{ github.workspace }}/Toolchain/Cache/
+          path: ${{ github.workspace }}/Toolchain/Local/${{ matrix.arch }}
           key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
 
       - name: ccache(1) cache
