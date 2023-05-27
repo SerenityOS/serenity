@@ -3439,9 +3439,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
+
+        dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
+        return Error::from_string_view("Unknown function"sv);
     }
 
-    return nullptr;
+    return Error::from_string_view("Component was not a function"sv);
 }
 
 Optional<Parser::Dimension> Parser::parse_dimension(ComponentValue const& component_value)
