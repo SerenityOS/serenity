@@ -1004,7 +1004,7 @@ StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time 
     auto changed_iteration = false;
     if (new_progress >= 1) {
         if (iteration_count.has_value()) {
-            if (iteration_count.value() == 0) {
+            if (iteration_count.value() <= 1) {
                 progress = CSS::Percentage(100);
                 return AnimationStepTransition::ActiveToAfter;
             }
@@ -1221,6 +1221,12 @@ void StyleComputer::ensure_animation_timer() const
     constexpr static auto timer_delay_ms = 1000 / 60;
     if (!m_animation_driver_timer) {
         m_animation_driver_timer = Platform::Timer::create_repeating(timer_delay_ms, [this] {
+            // If we run out of animations, stop the timer - it'll turn back on the next time we have an active animation.
+            if (m_active_animations.is_empty()) {
+                m_animation_driver_timer->stop();
+                return;
+            }
+
             HashTable<AnimationKey> animations_to_remove;
             HashTable<DOM::Element*> owning_elements_to_invalidate;
 
@@ -1242,24 +1248,29 @@ void StyleComputer::ensure_animation_timer() const
                     break;
                 case AnimationStepTransition::IdleOrBeforeToAfter:
                     // FIXME: Dispatch `animationstart` then `animationend`.
+                    m_finished_animations.set(it.key);
                     break;
                 case AnimationStepTransition::ActiveToBefore:
                     // FIXME: Dispatch `animationend`.
+                    m_finished_animations.set(it.key);
                     break;
                 case AnimationStepTransition::ActiveToActiveChangingTheIteration:
                     // FIXME: Dispatch `animationiteration`.
                     break;
                 case AnimationStepTransition::ActiveToAfter:
                     // FIXME: Dispatch `animationend`.
+                    m_finished_animations.set(it.key);
                     break;
                 case AnimationStepTransition::AfterToActive:
                     // FIXME: Dispatch `animationstart`.
                     break;
                 case AnimationStepTransition::AfterToBefore:
                     // FIXME: Dispatch `animationstart` then `animationend`.
+                    m_finished_animations.set(it.key);
                     break;
                 case AnimationStepTransition::Cancelled:
                     // FIXME: Dispatch `animationcancel`.
+                    m_finished_animations.set(it.key);
                     break;
                 }
                 if (it.value->is_done())
@@ -1329,14 +1340,16 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
 
     // Animation declarations [css-animations-2]
     if (auto animation_name = style.maybe_null_property(PropertyID::AnimationName)) {
-        ensure_animation_timer();
-
         if (auto source_declaration = style.property_source_declaration(PropertyID::AnimationName)) {
             AnimationKey animation_key {
                 .source_declaration = source_declaration,
                 .element = &element,
             };
-            if (auto name = TRY(animation_name->to_string()); !name.is_empty()) {
+
+            if (m_finished_animations.contains(animation_key)) {
+                // We've already finished going through this animation, so drop it from the active animations.
+                m_active_animations.remove(animation_key);
+            } else if (auto name = TRY(animation_name->to_string()); !name.is_empty()) {
                 auto active_animation = m_active_animations.get(animation_key);
                 if (!active_animation.has_value()) {
                     // New animation!
@@ -1376,6 +1389,9 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                 m_active_animations.remove(animation_key);
             }
         }
+
+        if (!m_active_animations.is_empty())
+            ensure_animation_timer();
     }
 
     // Important author declarations
