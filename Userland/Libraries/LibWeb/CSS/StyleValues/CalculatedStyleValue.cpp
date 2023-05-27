@@ -1527,6 +1527,110 @@ ErrorOr<void> ExpCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<RoundCalculationNode>> RoundCalculationNode::create(RoundingMode mode, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) RoundCalculationNode(mode, move(x), move(y)));
+}
+
+RoundCalculationNode::RoundCalculationNode(RoundingMode mode, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+    : CalculationNode(Type::Round)
+    , m_mode(mode)
+    , m_x(move(x))
+    , m_y(move(y))
+{
+}
+
+RoundCalculationNode::~RoundCalculationNode() = default;
+
+ErrorOr<String> RoundCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("round("sv);
+    switch (m_mode) {
+    case RoundingMode::Nearest:
+        builder.append("nearest"sv);
+        break;
+    case RoundingMode::Up:
+        builder.append("up"sv);
+        break;
+    case RoundingMode::Down:
+        builder.append("down"sv);
+        break;
+    case RoundingMode::TowardZero:
+        builder.append("toward-zero"sv);
+        break;
+    }
+    builder.append(", "sv);
+    builder.append(TRY(m_x->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_y->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type() const
+{
+    // Note: We check during parsing that all values have the same type
+    return m_x->resolved_type();
+}
+
+bool RoundCalculationNode::contains_percentage() const
+{
+    return m_x->contains_percentage() || m_y->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolved_type = m_x->resolved_type().value();
+    auto node_a = m_x->resolve(context, percentage_basis);
+    auto node_b = m_y->resolve(context, percentage_basis);
+
+    auto node_a_value = resolve_value(node_a.value(), context);
+    auto node_b_value = resolve_value(node_b.value(), context);
+
+    auto upper_b = ceil(node_a_value / node_b_value) * node_b_value;
+    auto lower_b = floor(node_a_value / node_b_value) * node_b_value;
+
+    if (m_mode == RoundingMode::Nearest) {
+        auto upper_diff = fabs(upper_b - node_a_value);
+        auto lower_diff = fabs(node_a_value - lower_b);
+        auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;
+        return to_resolved_type(resolved_type, rounded_value);
+    }
+
+    if (m_mode == RoundingMode::Up) {
+        return to_resolved_type(resolved_type, upper_b);
+    }
+
+    if (m_mode == RoundingMode::Down) {
+        return to_resolved_type(resolved_type, lower_b);
+    }
+
+    if (m_mode == RoundingMode::TowardZero) {
+        auto upper_diff = fabs(upper_b);
+        auto lower_diff = fabs(lower_b);
+        auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;
+        return to_resolved_type(resolved_type, rounded_value);
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> RoundCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_x->for_each_child_node(callback));
+    TRY(m_y->for_each_child_node(callback));
+    TRY(callback(m_x));
+    TRY(callback(m_y));
+    return {};
+}
+
+ErrorOr<void> RoundCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ROUND: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);

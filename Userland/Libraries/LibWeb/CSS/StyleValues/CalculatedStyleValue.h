@@ -125,6 +125,14 @@ public:
         MinusInfinity,
     };
 
+    // https://drafts.csswg.org/css-values-4/#round-func
+    enum class RoundingMode {
+        Nearest,
+        Up,
+        Down,
+        TowardZero
+    };
+
     enum class Type {
         Numeric,
         // NOTE: Currently, any value with a `var()` or `attr()` function in it is always an
@@ -169,6 +177,12 @@ public:
         Hypot,
         Log,
         Exp,
+
+        // Stepped value functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#round-func
+        Round,
+        Mod,
+        Rem,
 
         // This only exists during parsing.
         Unparsed,
@@ -621,6 +635,26 @@ public:
 private:
     ExpCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_value;
+};
+
+class RoundCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<RoundCalculationNode>> create(CalculationNode::RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~RoundCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    RoundCalculationNode(RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    CalculationNode::RoundingMode m_mode;
+    NonnullOwnPtr<CalculationNode> m_x;
+    NonnullOwnPtr<CalculationNode> m_y;
 };
 
 }
