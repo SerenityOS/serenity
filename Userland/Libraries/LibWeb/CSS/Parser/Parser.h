@@ -308,6 +308,7 @@ private:
     ErrorOr<OwnPtr<CalculationNode>> parse_log_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_exp_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_round_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_mod_function(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);
