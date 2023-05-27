@@ -227,6 +227,23 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> style_value_for_size(Size const&
     TODO();
 }
 
+static ErrorOr<NonnullRefPtr<StyleValue const>> style_value_for_sided_shorthand(ValueComparingNonnullRefPtr<StyleValue const> top, ValueComparingNonnullRefPtr<StyleValue const> right, ValueComparingNonnullRefPtr<StyleValue const> bottom, ValueComparingNonnullRefPtr<StyleValue const> left)
+{
+    bool top_and_bottom_same = top == bottom;
+    bool left_and_right_same = left == right;
+
+    if (top_and_bottom_same && left_and_right_same && top == left)
+        return top;
+
+    if (top_and_bottom_same && left_and_right_same)
+        return StyleValueList::create(StyleValueVector { move(top), move(right) }, StyleValueList::Separator::Space);
+
+    if (left_and_right_same)
+        return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom) }, StyleValueList::Separator::Space);
+
+    return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom), move(left) }, StyleValueList::Separator::Space);
+}
+
 ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     switch (property_id) {
@@ -608,13 +625,11 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case PropertyID::Margin: {
         auto margin = layout_node.computed_values().margin();
-        auto values = StyleValueVector {};
-        TRY(values.try_ensure_capacity(4));
-        values.unchecked_append(TRY(style_value_for_length_percentage(margin.top())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(margin.right())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(margin.bottom())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(margin.left())));
-        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
+        auto top = TRY(style_value_for_length_percentage(margin.top()));
+        auto right = TRY(style_value_for_length_percentage(margin.right()));
+        auto bottom = TRY(style_value_for_length_percentage(margin.bottom()));
+        auto left = TRY(style_value_for_length_percentage(margin.left()));
+        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
     }
     case PropertyID::MarginBottom:
         return style_value_for_length_percentage(layout_node.computed_values().margin().bottom());
@@ -642,13 +657,11 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_y()));
     case PropertyID::Padding: {
         auto padding = layout_node.computed_values().padding();
-        auto values = StyleValueVector {};
-        TRY(values.try_ensure_capacity(4));
-        values.unchecked_append(TRY(style_value_for_length_percentage(padding.top())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(padding.right())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(padding.bottom())));
-        values.unchecked_append(TRY(style_value_for_length_percentage(padding.left())));
-        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
+        auto top = TRY(style_value_for_length_percentage(padding.top()));
+        auto right = TRY(style_value_for_length_percentage(padding.right()));
+        auto bottom = TRY(style_value_for_length_percentage(padding.bottom()));
+        auto left = TRY(style_value_for_length_percentage(padding.left()));
+        return style_value_for_sided_shorthand(move(top), move(right), move(bottom), move(left));
     }
     case PropertyID::PaddingBottom:
         return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
