@@ -519,7 +519,8 @@ Optional<Vector<Transform>> AttributeParser::parse_transform()
         m_lexer.consume_specific(',');
         consume_whitespace();
     };
-    // FIXME: AttributeParser currently does not handle invalid parses in most cases (e.g. parse_number()) and just crashes.
+
+    // FIXME: This parsing is quite lenient, so will accept (with default values) some transforms that should be rejected.
     auto parse_optional_number = [&](float default_value = 0.0f) {
         consume_comma_whitespace();
         if (match_number())
@@ -527,12 +528,21 @@ Optional<Vector<Transform>> AttributeParser::parse_transform()
         return default_value;
     };
 
+    auto try_parse_number = [&]() -> Optional<float> {
+        if (match_number())
+            return parse_number();
+        return {};
+    };
+
     auto parse_function = [&](auto body) -> Optional<Transform> {
         consume_whitespace();
         if (!m_lexer.consume_specific('('))
             return {};
         consume_whitespace();
-        Transform transform { .operation = Transform::Operation { body() } };
+        auto maybe_operation = body();
+        if (!maybe_operation.has_value())
+            return {};
+        Transform transform { .operation = Transform::Operation { *maybe_operation } };
         consume_whitespace();
         if (m_lexer.consume_specific(')'))
             return transform;
@@ -545,53 +555,86 @@ Optional<Vector<Transform>> AttributeParser::parse_transform()
     while (!done()) {
         Optional<Transform> maybe_transform;
         if (m_lexer.consume_specific("translate"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::Translate> {
                 Transform::Translate translate {};
-                translate.x = parse_number();
+                auto maybe_x = try_parse_number();
+                if (!maybe_x.has_value())
+                    return {};
+                translate.x = *maybe_x;
                 translate.y = parse_optional_number();
                 return translate;
             });
         } else if (m_lexer.consume_specific("scale"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::Scale> {
                 Transform::Scale scale {};
-                scale.x = parse_number();
+                auto maybe_x = try_parse_number();
+                if (!maybe_x.has_value())
+                    return {};
+                scale.x = *maybe_x;
                 scale.y = parse_optional_number(scale.x);
                 return scale;
             });
         } else if (m_lexer.consume_specific("rotate"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::Rotate> {
                 Transform::Rotate rotate {};
-                rotate.a = parse_number();
+                auto maybe_a = try_parse_number();
+                if (!maybe_a.has_value())
+                    return {};
+                rotate.a = *maybe_a;
                 rotate.x = parse_optional_number();
                 rotate.y = parse_optional_number();
                 return rotate;
             });
         } else if (m_lexer.consume_specific("skewX"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::SkewX> {
                 Transform::SkewX skew_x {};
-                skew_x.a = parse_number();
+                auto maybe_a = try_parse_number();
+                if (!maybe_a.has_value())
+                    return {};
+                skew_x.a = *maybe_a;
                 return skew_x;
             });
         } else if (m_lexer.consume_specific("skewY"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::SkewY> {
                 Transform::SkewY skew_y {};
-                skew_y.a = parse_number();
+                auto maybe_a = try_parse_number();
+                if (!maybe_a.has_value())
+                    return {};
+                skew_y.a = *maybe_a;
                 return skew_y;
             });
         } else if (m_lexer.consume_specific("matrix"sv)) {
-            maybe_transform = parse_function([&] {
+            maybe_transform = parse_function([&]() -> Optional<Transform::Matrix> {
                 Transform::Matrix matrix;
-                matrix.a = parse_number();
+                auto maybe_a = try_parse_number();
+                if (!maybe_a.has_value())
+                    return {};
+                matrix.a = *maybe_a;
                 consume_comma_whitespace();
-                matrix.b = parse_number();
+                auto maybe_b = try_parse_number();
+                if (!maybe_b.has_value())
+                    return {};
+                matrix.b = *maybe_b;
                 consume_comma_whitespace();
-                matrix.c = parse_number();
+                auto maybe_c = try_parse_number();
+                if (!maybe_c.has_value())
+                    return {};
+                matrix.c = *maybe_c;
                 consume_comma_whitespace();
-                matrix.d = parse_number();
+                auto maybe_d = try_parse_number();
+                if (!maybe_d.has_value())
+                    return {};
+                matrix.d = *maybe_d;
                 consume_comma_whitespace();
-                matrix.e = parse_number();
+                auto maybe_e = try_parse_number();
+                if (!maybe_e.has_value())
+                    return {};
+                matrix.e = *maybe_e;
                 consume_comma_whitespace();
-                matrix.f = parse_number();
+                auto maybe_f = try_parse_number();
+                if (!maybe_f.has_value())
+                    return {};
+                matrix.f = *maybe_f;
                 return matrix;
             });
         }
