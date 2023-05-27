@@ -185,6 +185,10 @@ private:
         Active,
     };
 
+    struct AnimationStateSnapshot {
+        Array<RefPtr<StyleValue const>, to_underlying(last_property_id) + 1> state;
+    };
+
     struct Animation {
         String name;
         CSS::Time duration;
@@ -197,7 +201,9 @@ private:
         CSS::Percentage progress { 0 };
         CSS::Time remaining_delay { 0, CSS::Time::Type::Ms };
         AnimationState current_state { AnimationState::Before };
-        mutable Array<RefPtr<StyleValue const>, to_underlying(last_property_id) + 1> initial_state {};
+
+        mutable AnimationStateSnapshot initial_state {};
+        mutable OwnPtr<AnimationStateSnapshot> active_state_if_fill_forward {};
 
         AnimationStepTransition step(CSS::Time const& time_step);
         ErrorOr<void> collect_into(StyleProperties&, RuleCache const&) const;
@@ -205,7 +211,7 @@ private:
     };
 
     mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
-    mutable HashTable<AnimationKey> m_finished_animations;
+    mutable HashMap<AnimationKey, OwnPtr<AnimationStateSnapshot>> m_finished_animations; // If fill-mode is forward/both, this is non-null and contains the final state.
     mutable RefPtr<Platform::Timer> m_animation_driver_timer;
 };
 
