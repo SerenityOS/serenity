@@ -1114,8 +1114,11 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
 
 ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_properties, RuleCache const& rule_cache) const
 {
-    if (remaining_delay.to_milliseconds() != 0)
-        return {};
+    if (remaining_delay.to_milliseconds() != 0) {
+        // If the fill mode is backwards or both, we'll pretend that the animation is started, but stuck at progress 0
+        if (fill_mode != CSS::AnimationFillMode::Backwards && fill_mode != CSS::AnimationFillMode::Both)
+            return {};
+    }
 
     auto matching_keyframes = rule_cache.rules_by_animation_keyframes.get(name);
     if (!matching_keyframes.has_value())
@@ -1163,6 +1166,11 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
 
     dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Animation {} contains {} properties to interpolate, progress = {}%", name, valid_properties, progress_in_keyframe * 100);
 
+    if (fill_mode == CSS::AnimationFillMode::Forwards || fill_mode == CSS::AnimationFillMode::Both) {
+        if (!active_state_if_fill_forward)
+            active_state_if_fill_forward = make<AnimationStateSnapshot>();
+    }
+
     UnderlyingType<PropertyID> property_id_value = 0;
     for (auto const& property : keyframe_values.resolved_properties) {
         auto property_id = static_cast<PropertyID>(property_id_value++);
@@ -1173,11 +1181,11 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
             return property.visit(
                 [](Empty) -> RefPtr<StyleValue const> { VERIFY_NOT_REACHED(); },
                 [&](AnimationKeyFrameSet::ResolvedKeyFrame::UseInitial) {
-                    if (auto value = initial_state[to_underlying(property_id)])
+                    if (auto value = initial_state.state[to_underlying(property_id)])
                         return value;
 
                     auto value = style_properties.maybe_null_property(property_id);
-                    initial_state[to_underlying(property_id)] = value;
+                    initial_state.state[to_underlying(property_id)] = value;
                     return value;
                 },
                 [&](RefPtr<StyleValue const> value) { return value; });
@@ -1206,6 +1214,8 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
         auto next_value = TRY(interpolate_property(*start, *end, progress_in_keyframe));
         dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(property_id), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
         style_properties.set_property(property_id, next_value);
+        if (active_state_if_fill_forward)
+            active_state_if_fill_forward->state[to_underlying(property_id)] = next_value;
     }
 
     return {};
@@ -1248,29 +1258,29 @@ void StyleComputer::ensure_animation_timer() const
                     break;
                 case AnimationStepTransition::IdleOrBeforeToAfter:
                     // FIXME: Dispatch `animationstart` then `animationend`.
-                    m_finished_animations.set(it.key);
+                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
                     break;
                 case AnimationStepTransition::ActiveToBefore:
                     // FIXME: Dispatch `animationend`.
-                    m_finished_animations.set(it.key);
+                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
                     break;
                 case AnimationStepTransition::ActiveToActiveChangingTheIteration:
                     // FIXME: Dispatch `animationiteration`.
                     break;
                 case AnimationStepTransition::ActiveToAfter:
                     // FIXME: Dispatch `animationend`.
-                    m_finished_animations.set(it.key);
+                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
                     break;
                 case AnimationStepTransition::AfterToActive:
                     // FIXME: Dispatch `animationstart`.
                     break;
                 case AnimationStepTransition::AfterToBefore:
                     // FIXME: Dispatch `animationstart` then `animationend`.
-                    m_finished_animations.set(it.key);
+                    m_finished_animations.set(it.key, move(it.value->active_state_if_fill_forward));
                     break;
                 case AnimationStepTransition::Cancelled:
                     // FIXME: Dispatch `animationcancel`.
-                    m_finished_animations.set(it.key);
+                    m_finished_animations.set(it.key, nullptr);
                     break;
                 }
                 if (it.value->is_done())
@@ -1346,9 +1356,17 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                 .element = &element,
             };
 
-            if (m_finished_animations.contains(animation_key)) {
+            if (auto finished_state = m_finished_animations.get(animation_key); finished_state.has_value()) {
                 // We've already finished going through this animation, so drop it from the active animations.
                 m_active_animations.remove(animation_key);
+                // If the animation's fill mode was set to forwards/both, we need to collect and use the final frame's styles.
+                if (*finished_state) {
+                    auto& state = (*finished_state)->state;
+                    for (size_t property_id_value = 0; property_id_value < state.size(); ++property_id_value) {
+                        if (auto& property_value = state[property_id_value])
+                            style.set_property(static_cast<PropertyID>(property_id_value), *property_value);
+                    }
+                }
             } else if (auto name = TRY(animation_name->to_string()); !name.is_empty()) {
                 auto active_animation = m_active_animations.get(animation_key);
                 if (!active_animation.has_value()) {
@@ -1369,13 +1387,19 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                             iteration_count = static_cast<size_t>(iteration_count_value->as_numeric().number());
                     }
 
+                    CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
+                    if (auto fill_mode_property = style.maybe_null_property(PropertyID::AnimationFillMode); fill_mode_property && fill_mode_property->is_identifier()) {
+                        if (auto fill_mode_value = value_id_to_animation_fill_mode(fill_mode_property->to_identifier()); fill_mode_value.has_value())
+                            fill_mode = *fill_mode_value;
+                    }
+
                     auto animation = make<Animation>(Animation {
                         .name = move(name),
                         .duration = duration,
                         .delay = delay,
                         .iteration_count = iteration_count,
                         .direction = Animation::Direction::Normal,
-                        .fill_mode = Animation::FillMode::None,
+                        .fill_mode = fill_mode,
                         .owning_element = TRY(element.try_make_weak_ptr<DOM::Element>()),
                         .progress = CSS::Percentage(0),
                         .remaining_delay = delay,
