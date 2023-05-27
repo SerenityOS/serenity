@@ -229,6 +229,12 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> style_value_for_size(Size const&
 ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     switch (property_id) {
+    case PropertyID::AccentColor: {
+        auto accent_color = layout_node.computed_values().accent_color();
+        if (accent_color.has_value())
+            return TRY(ColorStyleValue::create(accent_color.value()));
+        return TRY(IdentifierStyleValue::create(ValueID::Auto));
+    }
     case PropertyID::Background: {
         auto maybe_background_color = property(PropertyID::BackgroundColor);
         auto maybe_background_image = property(PropertyID::BackgroundImage);
