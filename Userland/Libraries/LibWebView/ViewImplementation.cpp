@@ -19,6 +19,12 @@ ViewImplementation::ViewImplementation()
     m_backing_store_shrink_timer = Core::Timer::create_single_shot(3000, [this] {
         resize_backing_stores_if_needed(WindowResizeInProgress::No);
     }).release_value_but_fixme_should_propagate_errors();
+
+    m_repeated_crash_timer = Core::Timer::create_single_shot(1000, [this] {
+        // Reset the "crashing a lot" counter after 1 second in case we just
+        // happen to be visiting crashy websites a lot.
+        this->m_crash_count = 0;
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 WebContentClient& ViewImplementation::client()
@@ -303,6 +309,15 @@ void ViewImplementation::request_repaint()
 void ViewImplementation::handle_web_content_process_crash()
 {
     dbgln("WebContent process crashed!");
+
+    ++m_crash_count;
+    constexpr size_t max_reasonable_crash_count = 5U;
+    if (m_crash_count >= max_reasonable_crash_count) {
+        dbgln("WebContent has crashed {} times in quick succession! Not restarting...", m_crash_count);
+        m_repeated_crash_timer->stop();
+        return;
+    }
+    m_repeated_crash_timer->restart();
 
     create_client();
     VERIFY(m_client_state.client);
