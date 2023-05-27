@@ -1121,7 +1121,7 @@ Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProp
 
     auto font_pixel_metrics = style.computed_font().pixel_metrics();
     Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics, font_pixel_metrics.line_spacing() };
-    font_metrics.font_size = root_value->to_length().to_px(viewport_rect(), font_metrics, font_metrics);
+    font_metrics.font_size = root_value->as_length().length().to_px(viewport_rect(), font_metrics, font_metrics);
     font_metrics.line_height = style.line_height(viewport_rect(), font_metrics, font_metrics);
 
     return font_metrics;
@@ -1249,7 +1249,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
                 return font_size_in_px;
             auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
             if (value->is_length()) {
-                auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                auto length = value->as_length().length();
                 auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
                 if (length.is_absolute() || length.is_relative()) {
                     Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
@@ -1265,7 +1265,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = Length::make_px(static_cast<double>(font_size->as_percentage().percentage().as_fraction()) * parent_font_size());
 
         } else if (font_size->is_length()) {
-            maybe_length = font_size->to_length();
+            maybe_length = font_size->as_length().length();
 
         } else if (font_size->is_calculated()) {
             // FIXME: Support font-size: calc(...)
@@ -1412,7 +1412,7 @@ CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* 
         return m_root_element_font_metrics.line_height;
     auto const* computed_values = parent_element->computed_css_values();
     auto parent_font_pixel_metrics = computed_values->computed_font().pixel_metrics();
-    auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->to_length();
+    auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->as_length().length();
     // FIXME: Can the parent font size be non-absolute here?
     auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : m_root_element_font_metrics.font_size;
     auto parent_parent_line_height = parent_or_root_element_line_height(parent_element, {});
@@ -1428,7 +1428,7 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
 
     Length::FontMetrics font_metrics { m_root_element_font_metrics.font_size, font_pixel_metrics, parent_or_root_line_height };
 
-    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
+    auto font_size = style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
     font_metrics.font_size = font_size;
 
     // NOTE: Percentage line-height values are relative to the font-size of the element.

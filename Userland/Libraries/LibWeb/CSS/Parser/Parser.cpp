@@ -4405,8 +4405,8 @@ static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
 {
     if (value->is_percentage())
         return LengthPercentage { value->as_percentage().percentage() };
-    if (value->has_length())
-        return LengthPercentage { value->to_length() };
+    if (value->is_length())
+        return LengthPercentage { value->as_length().length() };
     if (value->is_calculated())
         return LengthPercentage { value->as_calculated() };
     return {};
@@ -4674,8 +4674,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
             return LengthPercentage { Length::make_auto() };
         if (style_value.is_percentage())
             return LengthPercentage { style_value.as_percentage().percentage() };
-        if (style_value.has_length())
-            return LengthPercentage { style_value.to_length() };
+        if (style_value.is_length())
+            return LengthPercentage { style_value.as_length().length() };
         return {};
     };
 
@@ -6239,8 +6239,6 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
             return AxisOffset { Axis::None, value->as_percentage() };
         if (value->is_length())
             return AxisOffset { Axis::None, value->as_length() };
-        if (value->has_length())
-            return AxisOffset { Axis::None, TRY(LengthStyleValue::create(value->to_length())) };
         if (value->is_identifier()) {
             switch (value->to_identifier()) {
             case ValueID::Top:

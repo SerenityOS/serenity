@@ -25,9 +25,6 @@ public:
         return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
     }
 
-    virtual bool has_length() const override { return number() == 0; }
-    virtual Length to_length() const override { return Length::make_px(0); }
-
     float number() const
     {
         return m_value.visit(
