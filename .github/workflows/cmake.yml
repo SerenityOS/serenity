@@ -83,10 +83,8 @@ jobs:
           message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildIt.sh') }}")
 
       - name: Toolchain cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-        env:
-          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        uses: actions/cache/restore@v3
+        id: toolchain-cache
         with:
           path: ${{ github.workspace }}/Toolchain/Cache/
           # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
@@ -97,12 +95,19 @@ jobs:
       - name: Restore or regenerate Toolchain
         run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
+      - name: Update toolchain cache
+        uses: actions/cache/save@v3
+        # Do not waste time and storage space by updating the toolchain cache from a PR,
+        # as it would be discarded after being merged anyway.
+        if: ${{ github.event_name != 'pull_request' && !steps.toolchain-cache.outputs.cache-hit }}
+        with:
+          path: ${{ github.workspace }}/Toolchain/Cache/
+          key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+
       - name: ccache(1) cache
         # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-        env:
-          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        uses: actions/cache/restore@v3
+        id: ccache
         with:
           path: ${{ github.workspace }}/.ccache
           # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
@@ -131,20 +136,17 @@ jobs:
           mkdir -p ${{ github.workspace }}/Build/caches/UCD
           mkdir -p ${{ github.workspace }}/Build/caches/CLDR
       - name: TimeZoneData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
       - name: UnicodeData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
@@ -185,6 +187,14 @@ jobs:
         run: cmake --build .
       - name: Show ccache stats after build
         run: ccache -s
+
+      - name: Update ccache(1) cache
+        uses: actions/cache/save@v3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
+
       - name: Lint (Phase 2/2)
         working-directory: ${{ github.workspace }}/Meta
         env:
