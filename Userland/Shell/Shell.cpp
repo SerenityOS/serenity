@@ -2427,28 +2427,47 @@ void Shell::possibly_print_error() const
             }
         };
         int line = -1;
-        DeprecatedString current_line;
+        // FIXME: Support arbitrarily long lines?
+        auto line_buf_or_error = ByteBuffer::create_uninitialized(4 * KiB);
+        if (line_buf_or_error.is_error()) {
+            warnln("Shell: Internal error while trying to display source information: {} (while allocating line buffer for {})", line_buf_or_error.error(), source_position.source_file);
+            return;
+        }
+        auto line_buf = line_buf_or_error.release_value();
+        StringView current_line;
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
         if (!source_position.source_file.is_null()) {
-            auto file = Core::DeprecatedFile::open(source_position.source_file, Core::OpenMode::ReadOnly);
-            if (file.is_error()) {
-                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file.error(), source_position.source_file);
+            auto file_or_error = Core::File::open(source_position.source_file, Core::File::OpenMode::Read);
+            if (file_or_error.is_error()) {
+                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file_or_error.error(), source_position.source_file);
                 return;
             }
+            auto file = Core::InputBufferedFile::create(file_or_error.release_value());
             while (line < line_to_skip_to) {
-                if (file.value()->eof())
+                if (file.value()->is_eof())
                     return;
-                current_line = file.value()->read_line();
+                auto current_line_or_error = file.value()->read_line(line_buf);
+                if (current_line_or_error.is_error()) {
+                    warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
+                    return;
+                }
+                current_line = current_line_or_error.release_value();
                 ++line;
             }
 
             for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
                 do_line(line, current_line);
-                if (file.value()->eof())
-                    current_line = "";
-                else
-                    current_line = file.value()->read_line();
+                if (file.value()->is_eof()) {
+                    current_line = ""sv;
+                } else {
+                    auto current_line_or_error = file.value()->read_line(line_buf);
+                    if (current_line_or_error.is_error()) {
+                        warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
+                        return;
+                    }
+                    current_line = current_line_or_error.release_value();
+                }
             }
         } else if (!source_position.literal_source_text.is_empty()) {
             GenericLexer lexer { source_position.literal_source_text };
@@ -2462,7 +2481,7 @@ void Shell::possibly_print_error() const
             for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
                 do_line(line, current_line);
                 if (lexer.is_eof())
-                    current_line = "";
+                    current_line = ""sv;
                 else
                     current_line = lexer.consume_line();
             }
