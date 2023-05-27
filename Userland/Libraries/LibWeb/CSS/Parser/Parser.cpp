@@ -3390,16 +3390,11 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
 {
     auto calculation_tree = TRY(parse_a_calculation(component_values));
 
-    if (calculation_tree == nullptr) {
-        dbgln_if(CSS_PARSER_DEBUG, "Failed to parse calculation tree");
-        return nullptr;
-    } else {
-        if constexpr (CSS_PARSER_DEBUG) {
-            dbgln("Parsed calculation tree:");
-            StringBuilder builder;
-            TRY(calculation_tree->dump(builder, 0));
-            dbgln(builder.string_view());
-        }
+    if constexpr (CSS_PARSER_DEBUG) {
+        dbgln("Parsed calculation tree:");
+        StringBuilder builder;
+        TRY(calculation_tree->dump(builder, 0));
+        dbgln(builder.string_view());
     }
 
     auto calc_type = calculation_tree->resolved_type();
@@ -3429,7 +3424,7 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
     };
     dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
 
-    return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value());
+    return CalculatedStyleValue::create(move(calculation_tree), calc_type.release_value());
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_min_function(Function const& function)
@@ -3454,7 +3449,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_min_function(Function const& function)
             return Error::from_string_view("min() parameters must all be of the same type"sv);
         }
 
-        calculated_parameters.append(calculation_node.release_nonnull());
+        calculated_parameters.append(move(calculation_node));
     }
 
     NonnullOwnPtr<CalculationNode> node = TRY(MinCalculationNode::create(move(calculated_parameters)));
@@ -3483,7 +3478,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_max_function(Function const& function)
             return Error::from_string_view("max() parameters must all be of the same type"sv);
         }
 
-        calculated_parameters.append(calculation_node.release_nonnull());
+        calculated_parameters.append(move(calculation_node));
     }
 
     NonnullOwnPtr<CalculationNode> node = TRY(MaxCalculationNode::create(move(calculated_parameters)));
@@ -3516,7 +3511,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_clamp_function(Function const& functio
             return Error::from_string_view("clamp() parameters must all be of the same type"sv);
         }
 
-        calculated_parameters.append(calculation_node.release_nonnull());
+        calculated_parameters.append(move(calculation_node));
     }
 
     NonnullOwnPtr<CalculationNode> node = TRY(ClampCalculationNode::create(move(calculated_parameters[0]), move(calculated_parameters[1]), move(calculated_parameters[2])));
@@ -7950,7 +7945,7 @@ private:
 };
 
 // https://www.w3.org/TR/css-values-4/#parse-a-calculation
-ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
 {
     // 1. Discard any <whitespace-token>s from values.
     // 2. An item in values is an “operator” if it’s a <delim-token> with the value "+", "-", "*", or "/". Otherwise, it’s a “value”.
@@ -7964,9 +7959,8 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
             continue;
         if (value.is(Token::Type::Delim)) {
             if (first_is_one_of(value.token().delim(), static_cast<u32>('+'), static_cast<u32>('-'), static_cast<u32>('*'), static_cast<u32>('/'))) {
-                // NOTE: Sequential operators are invalid syntax.
                 if (!values.is_empty() && values.last().has<Operator>())
-                    return nullptr;
+                    return Error::from_string_view("Sequential operators are invalid"sv);
 
                 TRY(values.try_append(Operator { static_cast<char>(value.token().delim()) }));
                 continue;
@@ -8028,11 +8022,11 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
 
     // If we have no values, the syntax is invalid.
     if (values.is_empty())
-        return nullptr;
+        return Error::from_string_view("No values in calculation tree"sv);
 
     // NOTE: If the first or last value is an operator, the syntax is invalid.
     if (values.first().has<Operator>() || values.last().has<Operator>())
-        return nullptr;
+        return Error::from_string_view("First or last value is an operator"sv);
 
     // 3. Collect children into Product and Invert nodes.
     //    For every consecutive run of value items in values separated by "*" or "/" operators:
@@ -8128,7 +8122,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
 
     // 5. At this point values is a tree of Sum, Product, Negate, and Invert nodes, with other types of values at the leaf nodes. Process the leaf nodes.
     //     For every leaf node leaf in values:
-    bool parsing_failed_for_child_node = false;
+    ErrorOr<OwnPtr<CalculationNode>> parsing_failed_for_child_node = nullptr;
     TRY(single_value.value()->for_each_child_node([&](NonnullOwnPtr<CalculationNode>& node) -> ErrorOr<void> {
         if (node->type() != CalculationNode::Type::Unparsed)
             return {};
@@ -8138,12 +8132,13 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
 
         // 1. If leaf is a parenthesized simple block, replace leaf with the result of parsing a calculation from leaf’s contents.
         if (component_value.is_block() && component_value.block().is_paren()) {
-            auto leaf_calculation = TRY(parse_a_calculation(component_value.block().values()));
-            if (!leaf_calculation) {
-                parsing_failed_for_child_node = true;
+            auto leaf_calculation = parse_a_calculation(component_value.block().values());
+            if (leaf_calculation.is_error()) {
+                parsing_failed_for_child_node = Error::copy(leaf_calculation.error());
                 return {};
             }
-            node = leaf_calculation.release_nonnull();
+
+            node = leaf_calculation.release_value();
             return {};
         }
 
@@ -8152,16 +8147,16 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         else if (component_value.is_function()) {
             auto& function = component_value.function();
             if (function.name().equals_ignoring_ascii_case("calc"sv)) {
-                auto leaf_calculation = TRY(parse_a_calculation(function.values()));
-                if (!leaf_calculation) {
-                    parsing_failed_for_child_node = true;
+                auto leaf_calculation = parse_a_calculation(function.values());
+                if (leaf_calculation.is_error()) {
+                    parsing_failed_for_child_node = Error::copy(leaf_calculation.error());
                     return {};
                 }
-                node = leaf_calculation.release_nonnull();
+                node = leaf_calculation.release_value();
                 return {};
             } else {
-                // FIXME: Parse more math functions once we have them.
-                parsing_failed_for_child_node = true;
+                dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` functions yet", function.name());
+                parsing_failed_for_child_node = Error::from_string_view("Unknown math function"sv);
                 return {};
             }
         }
@@ -8169,12 +8164,12 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.
         //       So, the calc() is invalid.
         dbgln_if(CSS_PARSER_DEBUG, "Leftover UnparsedCalculationNode in calc tree! That probably means the syntax is invalid, but maybe we just didn't implement `{}` yet.", component_value.to_debug_string());
-        parsing_failed_for_child_node = true;
+        parsing_failed_for_child_node = Error::from_string_view("Leftover UnparsedCalculationNode in calc tree"sv);
         return {};
     }));
 
-    if (parsing_failed_for_child_node)
-        return nullptr;
+    if (parsing_failed_for_child_node.is_error())
+        return Error::copy(parsing_failed_for_child_node.error());
 
     // 6. Return the result of simplifying a calculation tree from values.
     return simplify_a_calculation(single_value.release_value());
