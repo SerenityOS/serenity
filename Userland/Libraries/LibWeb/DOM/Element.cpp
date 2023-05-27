@@ -133,6 +133,8 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
 
+    DeprecatedString old_value;
+
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
         auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value));
@@ -143,12 +145,15 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 5. Change attribute to value.
     else {
+        old_value = attribute->value();
         attribute->set_value(value);
     }
 
     parse_attribute(attribute->local_name(), value);
 
-    invalidate_style_after_attribute_change(name);
+    if (value != old_value) {
+        invalidate_style_after_attribute_change(name);
+    }
 
     return {};
 }
