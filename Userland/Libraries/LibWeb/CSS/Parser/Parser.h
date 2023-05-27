@@ -299,6 +299,7 @@ private:
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_sign_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_sin_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_cos_function(Function const&);
+    ErrorOr<NonnullOwnPtr<CalculationNode>> parse_tan_function(Function const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_numeric_value(ComponentValue const&);
