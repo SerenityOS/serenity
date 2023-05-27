@@ -443,7 +443,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MiniUART.cpp
-        Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
@@ -453,6 +452,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/MMU.cpp
         Arch/aarch64/pre_init.cpp
+        Arch/aarch64/RPi/MMIO.cpp
         )
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
