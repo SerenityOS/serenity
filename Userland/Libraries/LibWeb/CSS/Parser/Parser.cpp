@@ -3582,6 +3582,18 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_abs_function(Function const& func
     return TRY(AbsCalculationNode::create(calculation_node.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_sign_function(Function const& function)
+{
+    auto calculation_node = TRY(parse_a_calculation(function.values()));
+
+    if (!calculation_node) {
+        dbgln_if(CSS_PARSER_DEBUG, "sign() parameter must be a valid calculation"sv);
+        return nullptr;
+    }
+
+    return TRY(SignCalculationNode::create(calculation_node.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3622,6 +3634,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("abs"sv))
         return TRY(parse_abs_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("sign"sv))
+        return TRY(parse_sign_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;

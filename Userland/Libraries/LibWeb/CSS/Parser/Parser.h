@@ -294,6 +294,7 @@ private:
     ErrorOr<OwnPtr<CalculationNode>> parse_max_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_clamp_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_abs_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_sign_function(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);
