@@ -1696,6 +1696,70 @@ ErrorOr<void> ModCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<RemCalculationNode>> RemCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) RemCalculationNode(move(x), move(y)));
+}
+
+RemCalculationNode::RemCalculationNode(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+    : CalculationNode(Type::Rem)
+    , m_x(move(x))
+    , m_y(move(y))
+{
+}
+
+RemCalculationNode::~RemCalculationNode() = default;
+
+ErrorOr<String> RemCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("rem("sv);
+    builder.append(TRY(m_x->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_y->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type() const
+{
+    // Note: We check during parsing that all values have the same type
+    return m_x->resolved_type();
+}
+
+bool RemCalculationNode::contains_percentage() const
+{
+    return m_x->contains_percentage() || m_y->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto resolved_type = m_x->resolved_type().value();
+    auto node_a = m_x->resolve(context, percentage_basis);
+    auto node_b = m_y->resolve(context, percentage_basis);
+
+    auto node_a_value = resolve_value(node_a.value(), context);
+    auto node_b_value = resolve_value(node_b.value(), context);
+
+    auto value = fmod(node_a_value, node_b_value);
+    return to_resolved_type(resolved_type, value);
+}
+
+ErrorOr<void> RemCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_x->for_each_child_node(callback));
+    TRY(m_y->for_each_child_node(callback));
+    TRY(callback(m_x));
+    TRY(callback(m_y));
+    return {};
+}
+
+ErrorOr<void> RemCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}REM: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);
