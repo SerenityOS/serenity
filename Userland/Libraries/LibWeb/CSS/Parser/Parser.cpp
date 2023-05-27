@@ -3539,9 +3539,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
 
         if (function.name().equals_ignoring_ascii_case("clamp"sv))
             return parse_clamp_function(function);
+
+        dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
+        return Error::from_string_view("Unknown function"sv);
     }
 
-    return nullptr;
+    return Error::from_string_view("Component was not a function"sv);
 }
 
 Optional<Parser::Dimension> Parser::parse_dimension(ComponentValue const& component_value)
