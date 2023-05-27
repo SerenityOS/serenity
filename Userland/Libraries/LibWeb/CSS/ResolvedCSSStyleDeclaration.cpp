@@ -289,6 +289,29 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
             layout_node,
             [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.origin)); },
             [] { return IdentifierStyleValue::create(ValueID::PaddingBox); });
+    case PropertyID::BackgroundPosition:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) -> ErrorOr<NonnullRefPtr<StyleValue>> {
+                return PositionStyleValue::create(
+                    TRY(EdgeStyleValue::create(layer.position_edge_x, layer.position_offset_x)),
+                    TRY(EdgeStyleValue::create(layer.position_edge_y, layer.position_offset_y)));
+            },
+            []() -> ErrorOr<NonnullRefPtr<StyleValue>> {
+                return PositionStyleValue::create(
+                    TRY(EdgeStyleValue::create(PositionEdge::Left, Percentage(0))),
+                    TRY(EdgeStyleValue::create(PositionEdge::Top, Percentage(0))));
+            });
+    case PropertyID::BackgroundPositionX:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) { return EdgeStyleValue::create(layer.position_edge_x, layer.position_offset_x); },
+            [] { return EdgeStyleValue::create(PositionEdge::Left, Percentage(0)); });
+    case PropertyID::BackgroundPositionY:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) { return EdgeStyleValue::create(layer.position_edge_y, layer.position_offset_y); },
+            [] { return EdgeStyleValue::create(PositionEdge::Top, Percentage(0)); });
     case PropertyID::BackgroundRepeat:
         return style_value_for_background_property(
             layout_node,
