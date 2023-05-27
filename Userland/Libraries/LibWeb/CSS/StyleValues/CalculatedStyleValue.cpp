@@ -718,6 +718,65 @@ ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<SignCalculationNode>> SignCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SignCalculationNode(move(value)));
+}
+
+SignCalculationNode::SignCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Sign)
+    , m_value(move(value))
+{
+}
+
+SignCalculationNode::~SignCalculationNode() = default;
+
+ErrorOr<String> SignCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("sign("sv);
+    builder.append(TRY(m_value->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Integer;
+}
+
+bool SignCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult SignCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_value->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), context);
+
+    if (node_a_value < 0)
+        return { Number(Number::Type::Integer, -1) };
+
+    if (node_a_value > 0)
+        return { Number(Number::Type::Integer, 1) };
+
+    return { Number(Number::Type::Integer, 0) };
+}
+
+ErrorOr<void> SignCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SIGN: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);

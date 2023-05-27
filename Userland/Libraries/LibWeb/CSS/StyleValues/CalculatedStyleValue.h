@@ -336,4 +336,22 @@ private:
     NonnullOwnPtr<CalculationNode> m_value;
 };
 
+class SignCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<SignCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~SignCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    SignCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_value;
+};
+
 }
