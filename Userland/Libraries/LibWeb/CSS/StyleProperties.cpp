@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
@@ -88,11 +89,11 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     if (value->is_percentage())
         return CSS::Size::make_percentage(value->as_percentage().percentage());
 
-    if (value->has_length()) {
-        auto length = value->to_length();
+    if (value->is_length()) {
+        auto length = value->as_length().length();
         if (length.is_auto())
             return CSS::Size::make_auto();
-        return CSS::Size::make_length(value->to_length());
+        return CSS::Size::make_length(length);
     }
 
     // FIXME: Support `fit-content(<length>)`
@@ -115,8 +116,8 @@ Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id
     if (value->is_percentage())
         return value->as_percentage().percentage();
 
-    if (value->has_length())
-        return value->to_length();
+    if (value->is_length())
+        return value->as_length().length();
 
     if (value->has_auto())
         return LengthPercentage { Length::make_auto() };
@@ -165,7 +166,7 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length
         return font_metrics.line_height;
 
     if (line_height->is_length()) {
-        auto line_height_length = line_height->to_length();
+        auto line_height_length = line_height->as_length().length();
         if (!line_height_length.is_auto())
             return line_height_length.to_px(viewport_rect, font_metrics, root_font_metrics);
     }
@@ -195,7 +196,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
         return layout_node.font().pixel_metrics().line_spacing();
 
     if (line_height->is_length()) {
-        auto line_height_length = line_height->to_length();
+        auto line_height_length = line_height->as_length().length();
         if (!line_height_length.is_auto())
             return line_height_length.to_px(layout_node);
     }
@@ -316,8 +317,8 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     if (value->is_percentage())
         return { { CSS::FlexBasis::LengthPercentage, value->as_percentage().percentage() } };
 
-    if (value->has_length())
-        return { { CSS::FlexBasis::LengthPercentage, value->to_length() } };
+    if (value->is_length())
+        return { { CSS::FlexBasis::LengthPercentage, value->as_length().length() } };
 
     if (value->is_calculated())
         return { { CSS::FlexBasis::LengthPercentage, CSS::LengthPercentage { value->as_calculated() } } };
@@ -392,7 +393,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value->is_length()) {
-                values.append({ transformation_value->to_length() });
+                values.append({ transformation_value->as_length().length() });
             } else if (transformation_value->is_percentage()) {
                 values.append({ transformation_value->as_percentage().percentage() });
             } else if (transformation_value->is_numeric()) {
@@ -412,7 +413,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
 static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue const& value)
 {
     if (value.is_length())
-        return value.to_length();
+        return value.as_length().length();
     if (value.is_percentage())
         return value.as_percentage().percentage();
     return {};
@@ -747,7 +748,7 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
         return value_id_to_vertical_align(value->to_identifier()).release_value();
 
     if (value->is_length())
-        return CSS::LengthPercentage(value->to_length());
+        return CSS::LengthPercentage(value->as_length().length());
 
     if (value->is_percentage())
         return CSS::LengthPercentage(value->as_percentage().percentage());

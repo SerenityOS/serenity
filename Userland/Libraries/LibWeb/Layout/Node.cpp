@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
@@ -294,7 +295,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
-    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->to_length().to_px(*this).value());
+    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).value());
     computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->as_numeric().integer());
     m_line_height = computed_style.line_height(*this);
 
@@ -625,8 +626,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
                     return value->as_calculated().resolve_length(*this)->to_px(*this).value();
-                if (value->has_length())
-                    return value->to_length().to_px(*this).value();
+                if (value->is_length())
+                    return value->as_length().length().to_px(*this).value();
                 if (value->is_identifier()) {
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
@@ -679,7 +680,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (stroke_width->is_numeric())
         computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_numeric().number()));
     else if (stroke_width->is_length())
-        computed_values.set_stroke_width(stroke_width->to_length());
+        computed_values.set_stroke_width(stroke_width->as_length().length());
     else if (stroke_width->is_percentage())
         computed_values.set_stroke_width(CSS::LengthPercentage { stroke_width->as_percentage().percentage() });
 
