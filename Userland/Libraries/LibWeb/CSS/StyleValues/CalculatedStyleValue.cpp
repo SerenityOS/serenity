@@ -24,6 +24,21 @@ static bool is_dimension(CalculatedStyleValue::ResolvedType type)
         && type != CalculatedStyleValue::ResolvedType::Percentage;
 }
 
+static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Layout::Node const* layout_node)
+{
+    return value.visit(
+        [](Number const& number) { return number.value(); },
+        [](Angle const& angle) { return angle.to_degrees(); },
+        [](Frequency const& frequency) { return frequency.to_hertz(); },
+        [layout_node](Length const& length) {
+            if (!layout_node)
+                return 0.0;
+            return length.to_px(*layout_node).value();
+        },
+        [](Percentage const& percentage) { return percentage.value(); },
+        [](Time const& time) { return time.to_seconds(); });
+}
+
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
 {
@@ -434,22 +449,12 @@ bool MinCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     CalculatedStyleValue::CalculationResult smallest_node = m_values.first()->resolve(layout_node, percentage_basis);
-    auto smallest_value = resolve_value(smallest_node.value());
+    auto smallest_value = resolve_value(smallest_node.value(), layout_node);
 
     for (size_t i = 1; i < m_values.size(); i++) {
         auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
-        auto child_value = resolve_value(child_resolved.value());
+        auto child_value = resolve_value(child_resolved.value(), layout_node);
 
         if (child_value < smallest_value) {
             smallest_value = child_value;
@@ -522,22 +527,12 @@ bool MaxCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     CalculatedStyleValue::CalculationResult largest_node = m_values.first()->resolve(layout_node, percentage_basis);
-    auto largest_value = resolve_value(largest_node.value());
+    auto largest_value = resolve_value(largest_node.value(), layout_node);
 
     for (size_t i = 1; i < m_values.size(); i++) {
         auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
-        auto child_value = resolve_value(child_resolved.value());
+        auto child_value = resolve_value(child_resolved.value(), layout_node);
 
         if (child_value > largest_value) {
             largest_value = child_value;
@@ -607,23 +602,13 @@ bool ClampCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto min_node = m_min_value->resolve(layout_node, percentage_basis);
     auto center_node = m_center_value->resolve(layout_node, percentage_basis);
     auto max_node = m_max_value->resolve(layout_node, percentage_basis);
 
-    auto min_value = resolve_value(min_node.value());
-    auto center_value = resolve_value(center_node.value());
-    auto max_value = resolve_value(max_node.value());
+    auto min_value = resolve_value(min_node.value(), layout_node);
+    auto center_value = resolve_value(center_node.value(), layout_node);
+    auto max_value = resolve_value(max_node.value(), layout_node);
 
     // NOTE: The value should be returned as "max(MIN, min(VAL, MAX))"
     auto correct_value = max(min_value, min(center_value, max_value));
@@ -772,16 +757,6 @@ Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type
 
 CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
@@ -807,8 +782,8 @@ CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::No
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
 
-    auto node_a_value = resolve_value(node_a.value());
-    auto node_b_value = resolve_value(node_b.value());
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto node_b_value = resolve_value(node_b.value(), layout_node);
 
     auto upper_b = ceil(node_a_value / node_b_value) * node_b_value;
     auto lower_b = floor(node_a_value / node_b_value) * node_b_value;
@@ -886,16 +861,6 @@ Optional<CalculatedStyleValue::ResolvedType> ModCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
@@ -921,8 +886,8 @@ CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Layout::Node
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
 
-    auto node_a_value = resolve_value(node_a.value());
-    auto node_b_value = resolve_value(node_b.value());
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto node_b_value = resolve_value(node_b.value(), layout_node);
 
     auto quotient = floor(node_a_value / node_b_value);
     auto value = node_a_value - (node_b_value * quotient);
@@ -977,16 +942,6 @@ Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
@@ -1012,8 +967,8 @@ CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Layout::Node
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
 
-    auto node_a_value = resolve_value(node_a.value());
-    auto node_b_value = resolve_value(node_b.value());
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto node_b_value = resolve_value(node_b.value(), layout_node);
 
     auto value = fmod(node_a_value, node_b_value);
     return to_resolved_type(resolved_type, value);
@@ -1063,16 +1018,6 @@ Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
         switch (type) {
         case CalculatedStyleValue::ResolvedType::Integer:
@@ -1096,7 +1041,7 @@ CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Layout::Node
 
     auto resolved_type = m_a->resolved_type().value();
     auto node_a = m_a->resolve(layout_node, percentage_basis);
-    auto node_a_value = resolve_value(node_a.value());
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
 
     if (node_a_value < 0)
         return to_resolved_type(resolved_type, -node_a_value);
@@ -1146,18 +1091,8 @@ Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type(
 
 CalculatedStyleValue::CalculationResult SignCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto resolve_value = [layout_node](CalculatedStyleValue::CalculationResult::Value value) -> double {
-        return value.visit(
-            [](Number const& number) { return number.value(); },
-            [](Angle const& angle) { return angle.to_degrees(); },
-            [](Frequency const& frequency) { return frequency.to_hertz(); },
-            [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
-            [](Percentage const& percentage) { return percentage.value(); },
-            [](Time const& time) { return time.to_seconds(); });
-    };
-
     auto node_a = m_a->resolve(layout_node, percentage_basis);
-    auto node_a_value = resolve_value(node_a.value());
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
 
     if (node_a_value < 0)
         return { Number(Number::Type::Integer, -1) };
