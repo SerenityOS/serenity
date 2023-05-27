@@ -48,15 +48,17 @@ jobs:
       - name: Toolchain cache
         # This job should always read the cache, never populate it.
         uses: actions/cache/restore@v3
+        id: toolchain-cache
         with:
-          path: ${{ github.workspace }}/Toolchain/Cache/
+          path: ${{ github.workspace }}/Toolchain/Local/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
           # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
           # This is wrong, and causes more Toolchain rebuilds than necessary.
           # However, we want to avoid false cache hits at all costs.
-          key: ${{ runner.os }}-toolchain-${{ env.PVS_STUDIO_NALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
+          key: ${{ runner.os }}-toolchain-${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-${{ steps.stamps.outputs.libc_headers }}
 
-      - name: Restore or regenerate Toolchain
-        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ env.PVS_STUDIO_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+      - name: Build toolchain
+        if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
+        run: ARCH="${{ env.PVS_STUDIO_ANALYSIS_ARCH }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
       - name: Create build directory
         run: |
