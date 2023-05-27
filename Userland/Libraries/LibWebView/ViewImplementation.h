@@ -200,6 +200,9 @@ protected:
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     Gfx::IntSize m_backup_bitmap_size;
+
+    size_t m_crash_count = 0;
+    RefPtr<Core::Timer> m_repeated_crash_timer;
 };
 
 }
