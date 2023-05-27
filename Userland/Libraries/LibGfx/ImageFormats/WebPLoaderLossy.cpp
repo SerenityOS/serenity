@@ -235,7 +235,7 @@ ErrorOr<FrameHeader> decode_VP8_frame_header(BooleanDecoder& decoder)
     u8 refresh_entropy_probs = TRY(L(1)); // Has no effect in webp files.
     dbgln_if(WEBP_DEBUG, "refresh_entropy_probs {}", refresh_entropy_probs);
 
-    memcpy(header.coefficient_probabilities, default_coeff_probs, sizeof(header.coefficient_probabilities));
+    memcpy(header.coefficient_probabilities, DEFAULT_COEFFICIENT_PROBABILITIES, sizeof(header.coefficient_probabilities));
     TRY(decode_VP8_frame_header_coefficient_probabilities(decoder, header.coefficient_probabilities));
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-9.11 "Remaining Frame Header Data (Key Frame)"
@@ -376,7 +376,7 @@ ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder& 
                 for (int l = 0; l < 11; l++) {
                     // token_prob_update() says L(1) and L(8), but it's actually B(p) and L(8).
                     // https://datatracker.ietf.org/doc/html/rfc6386#section-13.4 "Token Probability Updates" describes it correctly.
-                    if (TRY(B(coeff_update_probs[i][j][k][l])))
+                    if (TRY(B(COEFFICIENT_UPDATE_PROBABILITIES[i][j][k][l])))
                         coefficient_probabilities[i][j][k][l] = TRY(L(8));
                 }
             }
