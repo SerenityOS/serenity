@@ -11,7 +11,6 @@
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
@@ -35,7 +34,7 @@ static bool make_is_available();
 static ErrorOr<void> notify_make_not_available();
 static void update_path_environment_variable();
 static Optional<DeprecatedString> last_opened_project_path();
-static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, DeprecatedString const& path, pid_t pid_to_debug);
+static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, StringView path, pid_t pid_to_debug);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -64,8 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
     args_parser.parse(arguments);
 
-    auto absolute_path_argument = Core::DeprecatedFile::real_path_for(path_argument);
-    auto hack_studio_widget = TRY(create_hack_studio_widget(mode_coredump, absolute_path_argument, pid_to_debug));
+    auto hack_studio_widget = TRY(create_hack_studio_widget(mode_coredump, path_argument, pid_to_debug));
     window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
@@ -84,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     hack_studio_widget->update_actions();
 
     if (mode_coredump)
-        hack_studio_widget->open_coredump(absolute_path_argument);
+        hack_studio_widget->open_coredump(path_argument);
 
     if (pid_to_debug != -1)
         hack_studio_widget->debug_process(pid_to_debug);
@@ -211,18 +209,18 @@ bool semantic_syntax_highlighting_is_enabled()
 
 }
 
-static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, DeprecatedString const& absolute_path_argument, pid_t pid_to_debug)
+static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, StringView raw_path_argument, pid_t pid_to_debug)
 {
-    auto project_path = Core::DeprecatedFile::real_path_for(".");
-    if (!mode_coredump) {
-        if (!absolute_path_argument.is_null())
-            project_path = absolute_path_argument;
-        else if (auto last_path = last_opened_project_path(); last_path.has_value())
-            project_path = last_path.release_value();
-    }
-
-    if (pid_to_debug != -1)
+    DeprecatedString project_path;
+    if (pid_to_debug != -1 || mode_coredump)
         project_path = "/usr/src/serenity";
+    else if (!raw_path_argument.is_null())
+        // FIXME: Validation is unintentional, and should be removed when migrating to String.
+        project_path = TRY(DeprecatedString::from_utf8(raw_path_argument));
+    else if (auto last_path = last_opened_project_path(); last_path.has_value())
+        project_path = last_path.release_value();
+    else
+        project_path = TRY(FileSystem::real_path("."sv)).to_deprecated_string();
 
     return HackStudioWidget::create(project_path);
 }
