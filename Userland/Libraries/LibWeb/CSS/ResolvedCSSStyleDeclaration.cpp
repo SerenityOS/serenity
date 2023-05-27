@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
@@ -323,6 +324,21 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
                 return StyleValueList::create(move(repeat), StyleValueList::Separator::Space);
             },
             [] { return BackgroundRepeatStyleValue::create(Repeat::Repeat, Repeat::Repeat); });
+    case PropertyID::BackgroundSize:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) -> ErrorOr<NonnullRefPtr<StyleValue>> {
+                switch (layer.size_type) {
+                case BackgroundSize::Contain:
+                    return IdentifierStyleValue::create(ValueID::Contain);
+                case BackgroundSize::Cover:
+                    return IdentifierStyleValue::create(ValueID::Cover);
+                case BackgroundSize::LengthPercentage:
+                    return BackgroundSizeStyleValue::create(layer.size_x, layer.size_y);
+                }
+                VERIFY_NOT_REACHED();
+            },
+            [] { return IdentifierStyleValue::create(ValueID::Auto); });
     case PropertyID::BorderBottom: {
         auto border = layout_node.computed_values().border_bottom();
         auto width = TRY(LengthStyleValue::create(Length::make_px(border.width)));
