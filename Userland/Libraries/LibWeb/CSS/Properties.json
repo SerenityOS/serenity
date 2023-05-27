@@ -1755,6 +1755,13 @@
       "top"
     ]
   },
+  "transition-delay": {
+    "inherited": false,
+    "initial": "0s",
+    "valid-types": [
+        "time"
+    ]
+  },
   "user-select": {
     "affects-layout": false,
     "inherited": false,
