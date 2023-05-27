@@ -13,6 +13,32 @@
 
 // Lossy format: https://datatracker.ietf.org/doc/html/rfc6386
 
+// Summary:
+// A lossy webp image is a VP8 keyframe.
+// A VP8 keyframe consists of 16x16 pixel tiles called macroblocks. Each macroblock is subdivided into 4x4 pixel tiles called subblocks.
+// Pixel values are stored as YUV 4:2:0. That is, each 4x4 luma pixels are covered by 1 pixel U chroma and 1 pixel V chroma.
+// This means one macroblock is covered by 4x4 Y subblocks and 2x2 U and V subblocks each.
+// VP8 data consists of:
+// * A tiny bit of uncompressed data, storing image dimensions and the size of the first compressed chunk of data, called the first partition
+// * The first partition, which is a entropy-coded bitstream storing:
+//   1. A fixed-size header.
+//      The main piece of data this stores is a probability distribution for how pixel values of each metablock are predicted from previously decoded data.
+//      It also stores how may independent entropy-coded bitstreams are used to store the actual pixel data (for all images I've seen so far, just one).
+//   2. For each metablock, it stores how that metablock's pixel values are predicted from previously decoded data (and some more per-metablock metadata).
+//      There are independent prediction modes for Y, U, V.
+//      U and V store a single prediction mode per macroblock.
+//      Y can store a single prediction mode per macroblock, or it can store one subblock prediction mode for each of the 4x4 luma subblocks.
+// * One or more additional entropy-coded bitstreams ("partitions") that store the discrete cosine transform ("DCT") coefficients for the actual pixel data for each metablock.
+//   Each metablock is subdivided into 4x4 tiles called "subblocks". A 16x16 pixel metablock consists of:
+//   0. If the metablock stores 4x4 luma subblock prediction modes, the 4x4 DC coefficients of each subblock's DCT are stored at the start of the macroblock's data,
+//      as coefficients of an inverse Walsh-Hadamard Transform (WHT).
+//   1. 4x4 luma subblocks
+//   2. 2x2 U chrome subblocks
+//   3. 2x2 U chrome subblocks
+//   That is, each metablock stores 24 or 25 sets of coefficients.
+//   Each set of coefficients stores 16 numbers, using a combination of a custom prefix tree and dequantization.
+//   The inverse DCT output is added to the output of the prediction.
+
 namespace Gfx {
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossy
