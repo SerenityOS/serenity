@@ -33,7 +33,7 @@ Time Time::percentage_of(Percentage const& percentage) const
 
 ErrorOr<String> Time::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}s", to_seconds());
 }
 
 float Time::to_seconds() const
