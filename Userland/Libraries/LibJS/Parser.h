@@ -244,6 +244,7 @@ private:
     void expected(char const* what);
     void syntax_error(DeprecatedString const& message, Optional<Position> = {});
     Token consume();
+    Token consume_and_allow_division();
     Token consume_identifier();
     Token consume_identifier_reference();
     Token consume(TokenType type);

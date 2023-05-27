@@ -500,23 +500,18 @@ bool Lexer::is_numeric_literal_start() const
 bool Lexer::slash_means_division() const
 {
     auto type = m_current_token.type();
-    return type == TokenType::BigIntLiteral
-        || type == TokenType::BoolLiteral
+    return m_current_token.is_identifier_name()
+        || type == TokenType::BigIntLiteral
         || type == TokenType::BracketClose
         || type == TokenType::CurlyClose
-        || type == TokenType::Identifier
-        || type == TokenType::In
-        || type == TokenType::Instanceof
         || type == TokenType::MinusMinus
-        || type == TokenType::NullLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::ParenClose
         || type == TokenType::PlusPlus
         || type == TokenType::PrivateIdentifier
         || type == TokenType::RegexLiteral
         || type == TokenType::StringLiteral
-        || type == TokenType::TemplateLiteralEnd
-        || type == TokenType::This;
+        || type == TokenType::TemplateLiteralEnd;
 }
 
 Token Lexer::next()
