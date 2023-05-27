@@ -136,6 +136,8 @@ public:
     Color color { Color::Transparent };
     CSS::LineStyle line_style { CSS::LineStyle::None };
     double width { 0 };
+
+    bool operator==(BorderData const&) const = default;
 };
 
 using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, float>;
