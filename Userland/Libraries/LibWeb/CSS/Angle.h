@@ -23,15 +23,15 @@ public:
     static Optional<Type> unit_from_name(StringView);
 
     Angle(int value, Type type);
-    Angle(float value, Type type);
-    static Angle make_degrees(float);
+    Angle(double value, Type type);
+    static Angle make_degrees(double);
     Angle percentage_of(Percentage const&) const;
 
     ErrorOr<String> to_string() const;
-    float to_degrees() const;
+    double to_degrees() const;
 
     Type type() const { return m_type; }
-    float raw_value() const { return m_value; }
+    double raw_value() const { return m_value; }
 
     bool operator==(Angle const& other) const
     {
@@ -42,7 +42,7 @@ private:
     StringView unit_name() const;
 
     Type m_type;
-    float m_value { 0 };
+    double m_value { 0 };
 };
 
 }
