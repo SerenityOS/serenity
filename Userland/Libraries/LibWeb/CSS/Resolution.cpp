@@ -22,7 +22,7 @@ Resolution::Resolution(float value, Type type)
 
 ErrorOr<String> Resolution::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}dppx", to_dots_per_pixel());
 }
 
 float Resolution::to_dots_per_pixel() const
