@@ -193,7 +193,8 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
             auto offset = compute_mouse_event_offset(position, *layout_node);
             if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y, buttons, button).release_value_but_fixme_should_propagate_errors())) {
                 if (auto* page = m_browsing_context->page()) {
-                    page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
+                    if (m_browsing_context == &page->top_level_browsing_context())
+                        page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
                 }
             }
 
