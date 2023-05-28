@@ -12,7 +12,7 @@ GDB_VERSION="13.1"
 GDB_MD5SUM="4aaad768ff2585464173c091947287ec"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.xz"
-GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
+GDB_BASE_URL="https://ftpmirror.gnu.org/gnu/gdb"
 
 ARCH=${1:-"x86_64"}
 TARGET="$ARCH-pc-serenity"
@@ -82,7 +82,7 @@ pushd "$DIR/Tarballs"
         md5="$($MD5SUM "$GDB_PKG" | cut -f1 -d' ')"
     fi
     if [ "$md5" != "$GDB_MD5SUM" ]; then
-        curl -C - -O "$GDB_BASE_URL/$GDB_PKG"
+        curl -C - -LO "$GDB_BASE_URL/$GDB_PKG"
     else
         echo "Skipped downloading $GDB_PKG"
     fi
