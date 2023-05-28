@@ -19,7 +19,7 @@ SVGGeometryBox::SVGGeometryBox(DOM::Document& document, SVG::SVGGeometryElement&
 
 CSSPixelPoint SVGGeometryBox::viewbox_origin() const
 {
-    auto* svg_box = dom_node().first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto* svg_box = dom_node().shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     if (!svg_box || !svg_box->view_box().has_value())
         return { 0, 0 };
     return { svg_box->view_box().value().min_x, svg_box->view_box().value().min_y };
@@ -29,7 +29,7 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
 {
     auto& geometry_element = dom_node();
     auto transform = geometry_element.get_transform();
-    auto* svg_box = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto* svg_box = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     double scaling = 1;
     auto origin = viewbox_origin().to_type<double>().to_type<float>();
     Gfx::FloatPoint paint_offset = {};

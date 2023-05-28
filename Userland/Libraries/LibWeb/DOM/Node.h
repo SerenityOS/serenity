@@ -636,6 +636,15 @@ public:
         return nullptr;
     }
 
+    template<typename U>
+    U const* shadow_including_first_ancestor_of_type() const
+    {
+        return const_cast<Node*>(this)->template shadow_including_first_ancestor_of_type<U>();
+    }
+
+    template<typename U>
+    U* shadow_including_first_ancestor_of_type();
+
     bool is_parent_of(Node const& other) const
     {
         for (auto* child = first_child(); child; child = child->next_sibling()) {
