@@ -378,6 +378,7 @@ public:
     DeprecatedString to_deprecated_string() const;
     DeprecatedString to_deprecated_string_without_alpha() const;
     static Optional<Color> from_string(StringView);
+    static Optional<Color> from_named_css_color_string(StringView);
 
     constexpr HSV to_hsv() const
     {
