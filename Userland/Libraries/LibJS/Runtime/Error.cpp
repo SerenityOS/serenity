@@ -15,6 +15,15 @@
 
 namespace JS {
 
+SourceRange const& TracebackFrame::source_range() const
+{
+    if (auto* unrealized = source_range_storage.get_pointer<UnrealizedSourceRange>()) {
+        auto source_range = unrealized->source_code->range_from_offsets(unrealized->start_offset, unrealized->end_offset);
+        source_range_storage = move(source_range);
+    }
+    return source_range_storage.get<SourceRange>();
+}
+
 NonnullGCPtr<Error> Error::create(Realm& realm)
 {
     return realm.heap().allocate<Error>(realm, realm.intrinsics().error_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
@@ -69,13 +78,24 @@ void Error::populate_stack()
         auto function_name = context->function_name;
         if (function_name.is_empty())
             function_name = "<unknown>"sv;
-        m_traceback.empend(
-            move(function_name),
-            // We might not have an AST node associated with the execution context, e.g. in promise
-            // reaction jobs (which aren't called anywhere from the source code).
-            // They're not going to generate any _unhandled_ exceptions though, so a meaningless
-            // source range is fine.
-            context->current_node ? context->current_node->source_range() : dummy_source_range);
+
+        TracebackFrame frame {
+            .function_name = move(function_name),
+            .source_range_storage = TracebackFrame::UnrealizedSourceRange {},
+        };
+
+        // We might not have an AST node associated with the execution context, e.g. in promise
+        // reaction jobs (which aren't called anywhere from the source code).
+        // They're not going to generate any _unhandled_ exceptions though, so a meaningless
+        // source range is fine.
+        if (context->current_node) {
+            auto* unrealized = frame.source_range_storage.get_pointer<TracebackFrame::UnrealizedSourceRange>();
+            unrealized->source_code = context->current_node->source_code();
+            unrealized->start_offset = context->current_node->start_offset();
+            unrealized->end_offset = context->current_node->end_offset();
+        }
+
+        m_traceback.append(move(frame));
     }
 }
 
@@ -90,13 +110,14 @@ ThrowCompletionOr<String> Error::stack_string(VM& vm) const
     for (size_t i = 0; i < m_traceback.size() - 1; ++i) {
         auto const& frame = m_traceback[i];
         auto function_name = frame.function_name;
+        auto source_range = frame.source_range();
         // Note: Since we don't know whether we have a valid SourceRange here we just check for some default values.
-        if (!frame.source_range.filename().is_empty() || frame.source_range.start.offset != 0 || frame.source_range.end.offset != 0) {
+        if (!source_range.filename().is_empty() || source_range.start.offset != 0 || source_range.end.offset != 0) {
 
             if (function_name == "<unknown>"sv)
-                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}:{}:{}\n", frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column));
+                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}:{}:{}\n", source_range.filename(), source_range.start.line, source_range.start.column));
             else
-                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column));
+                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, source_range.filename(), source_range.start.line, source_range.start.column));
         } else {
             MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view()));
         }
