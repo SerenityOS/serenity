@@ -36,6 +36,33 @@ GridSize::GridSize()
 
 GridSize::~GridSize() = default;
 
+bool GridSize::is_auto(Layout::AvailableSize const& available_size) const
+{
+    if (m_type == Type::LengthPercentage) {
+        if (m_length_percentage.is_percentage())
+            return !available_size.is_definite();
+        return m_length_percentage.is_auto();
+    }
+
+    return false;
+}
+
+bool GridSize::is_fixed(Layout::AvailableSize const& available_size) const
+{
+    if (m_type == Type::LengthPercentage) {
+        if (m_length_percentage.is_percentage())
+            return available_size.is_definite();
+        return !m_length_percentage.is_auto();
+    }
+
+    return false;
+}
+
+bool GridSize::is_intrinsic(Layout::AvailableSize const& available_size) const
+{
+    return is_auto(available_size) || is_max_content() || is_min_content();
+}
+
 GridSize GridSize::make_auto()
 {
     return GridSize(CSS::Length::make_auto());
