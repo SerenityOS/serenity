@@ -503,6 +503,11 @@ bool String::starts_with(u32 code_point) const
     return *code_points().begin() == code_point;
 }
 
+bool String::starts_with(StringView str, AK::CaseSensitivity case_sensitivity) const
+{
+    return AK::StringUtils::starts_with(*this, str, case_sensitivity);
+}
+
 bool String::starts_with_bytes(StringView bytes) const
 {
     return bytes_as_string_view().starts_with(bytes);

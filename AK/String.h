@@ -112,6 +112,7 @@ public:
     [[nodiscard]] bool equals_ignoring_case(String const&) const;
 
     [[nodiscard]] bool starts_with(u32 code_point) const;
+    [[nodiscard]] bool starts_with(StringView, AK::CaseSensitivity = AK::CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool starts_with_bytes(StringView) const;
 
     [[nodiscard]] bool ends_with(u32 code_point) const;
