@@ -160,7 +160,8 @@ private:
         size_t column_start { 0 };
         size_t column_end { 1 };
     };
-    Vector<GridArea> m_valid_grid_areas;
+
+    HashMap<String, GridArea> m_grid_areas;
 
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
@@ -216,8 +217,7 @@ private:
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&);
 
-    void build_valid_grid_areas();
-    int find_valid_grid_area(String const& needle);
+    void build_grid_areas();
 
     void place_grid_items(AvailableSpace const& available_space);
     void place_item_with_row_and_column_position(Box const& child_box);
