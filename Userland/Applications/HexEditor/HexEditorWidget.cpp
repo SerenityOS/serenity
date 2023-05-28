@@ -121,7 +121,7 @@ HexEditorWidget::HexEditorWidget()
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), {}, Core::StandardPaths::home_directory(), Core::File::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), { .requested_access = Core::File::OpenMode::ReadWrite });
         if (response.is_error())
             return;
 

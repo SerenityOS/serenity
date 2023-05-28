@@ -101,7 +101,12 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.on_click = [this](auto) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Select Wallpaper"sv, "/res/wallpapers"sv, Core::File::OpenMode::Read, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
+        FileSystemAccessClient::OpenFileOptions options {
+            .window_title = "Select Wallpaper"sv,
+            .path = "/res/wallpapers"sv,
+            .allowed_file_types = { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } }
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
         m_wallpaper_view->selection().clear();

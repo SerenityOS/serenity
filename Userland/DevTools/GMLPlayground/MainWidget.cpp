@@ -161,11 +161,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window, {}, "/usr/src/serenity/Userland/Applications"sv, Core::File::OpenMode::Read,
-            Vector {
+        FileSystemAccessClient::OpenFileOptions options {
+            .path = "/usr/src/serenity/Userland/Applications"sv,
+            .allowed_file_types = Vector {
                 GUI::FileTypeFilter { "GML Files", { { "gml" } } },
                 GUI::FileTypeFilter::all_files(),
-            });
+            }
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
         if (response.is_error())
             return;
 
