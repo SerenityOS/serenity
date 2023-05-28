@@ -78,7 +78,7 @@ BINUTILS_VERSION="2.40"
 BINUTILS_MD5SUM="007b59bd908a737c06e5a8d3d2c737eb"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.xz"
-BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
+BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
@@ -86,7 +86,7 @@ GCC_VERSION="13.1.0"
 GCC_MD5SUM="43e4de77f2218c83ca675257ea1af9ef"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
-GCC_BASE_URL="https://ftp.gnu.org/gnu/gcc"
+GCC_BASE_URL="https://ftpmirror.gnu.org/gnu/gcc"
 
 buildstep() {
     NAME=$1
