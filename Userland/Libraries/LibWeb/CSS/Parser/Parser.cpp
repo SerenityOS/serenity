@@ -3758,13 +3758,13 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_atan2_function(Function const& fu
 
     auto node_a_maybe_parameter_type = node_a->resolved_type();
     if (!node_a_maybe_parameter_type.has_value()) {
-        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan() parameter 1"sv);
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan2() parameter 1"sv);
         return nullptr;
     }
 
     auto node_b_maybe_parameter_type = node_b->resolved_type();
     if (!node_b_maybe_parameter_type.has_value()) {
-        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan() parameter 2"sv);
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan2() parameter 2"sv);
         return nullptr;
     }
 
@@ -3776,6 +3776,51 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_atan2_function(Function const& fu
     }
 
     return TRY(Atan2CalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
+}
+
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_pow_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2) {
+        dbgln_if(CSS_PARSER_DEBUG, "pow() must have exactly two parameters"sv);
+        return nullptr;
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_b = TRY(parse_a_calculation(parameters[1]));
+
+    if (!node_a || !node_b) {
+        dbgln_if(CSS_PARSER_DEBUG, "pow() parameters must be valid calculations"sv);
+        return nullptr;
+    }
+
+    auto node_a_maybe_parameter_type = node_a->resolved_type();
+    if (!node_a_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for pow() parameter 1"sv);
+        return nullptr;
+    }
+
+    auto node_b_maybe_parameter_type = node_b->resolved_type();
+    if (!node_b_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for pow() parameter 2"sv);
+        return nullptr;
+    }
+
+    auto node_a_resolved_type = node_a_maybe_parameter_type.value();
+    auto node_b_resolved_type = node_b_maybe_parameter_type.value();
+    if (node_a_resolved_type != node_b_resolved_type) {
+        dbgln_if(CSS_PARSER_DEBUG, "pow() parameters must be of the same type"sv);
+        return nullptr;
+    }
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number) {
+        dbgln_if(CSS_PARSER_DEBUG, "pow() parameters must be numbers"sv);
+        return nullptr;
+    }
+
+    return TRY(PowCalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
@@ -3842,6 +3887,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("atan2"sv))
         return TRY(parse_atan2_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("pow"sv))
+        return TRY(parse_pow_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;

@@ -1237,6 +1237,64 @@ ErrorOr<void> Atan2CalculationNode::dump(StringBuilder& builder, int indent) con
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<PowCalculationNode>> PowCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) PowCalculationNode(move(x), move(y)));
+}
+
+PowCalculationNode::PowCalculationNode(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+    : CalculationNode(Type::Pow)
+    , m_x(move(x))
+    , m_y(move(y))
+{
+}
+
+PowCalculationNode::~PowCalculationNode() = default;
+
+ErrorOr<String> PowCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("pow("sv);
+    builder.append(TRY(m_x->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_y->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> PowCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult PowCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_x->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), context);
+
+    auto node_b = m_y->resolve(context, percentage_basis);
+    auto node_b_value = resolve_value(node_b.value(), context);
+
+    auto result = pow(node_a_value, node_b_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> PowCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_x->for_each_child_node(callback));
+    TRY(m_y->for_each_child_node(callback));
+    TRY(callback(m_x));
+    TRY(callback(m_y));
+    return {};
+}
+
+ErrorOr<void> PowCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}POW: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);
