@@ -1693,6 +1693,64 @@ ErrorOr<void> HypotCalculationNode::dump(StringBuilder& builder, int indent) con
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<LogCalculationNode>> LogCalculationNode::create(NonnullOwnPtr<CalculationNode> a, NonnullOwnPtr<CalculationNode> b)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) LogCalculationNode(move(a), move(b)));
+}
+
+LogCalculationNode::LogCalculationNode(NonnullOwnPtr<CalculationNode> a, NonnullOwnPtr<CalculationNode> b)
+    : CalculationNode(Type::Log)
+    , m_a(move(a))
+    , m_b(move(b))
+{
+}
+
+LogCalculationNode::~LogCalculationNode() = default;
+
+ErrorOr<String> LogCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("log("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_b->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> LogCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult LogCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+
+    auto node_b = m_b->resolve(layout_node, percentage_basis);
+    auto node_b_value = resolve_value(node_b.value(), layout_node);
+
+    auto result = log2(node_a_value) / log2(node_b_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> LogCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(m_b->for_each_child_node(callback));
+    TRY(callback(m_a));
+    TRY(callback(m_b));
+    return {};
+}
+
+ErrorOr<void> LogCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}LOG: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

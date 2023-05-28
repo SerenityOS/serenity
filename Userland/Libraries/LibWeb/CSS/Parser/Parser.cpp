@@ -3822,6 +3822,35 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_hypot_function(Function co
     return TRY(HypotCalculationNode::create(move(calculated_parameters)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_log_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_a_resolved_type = node_a->resolved_type().value();
+
+    OwnPtr<CalculationNode> node_b_temp;
+    if (parameters.size() == 1) {
+        node_b_temp = TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::E));
+    } else if (parameters.size() == 2) {
+        node_b_temp = TRY(parse_a_calculation(parameters[1]));
+    } else {
+        return Error::from_string_view("log() must have exactly one or two parameters"sv);
+    }
+
+    auto node_b = node_b_temp.release_nonnull();
+    auto node_b_resolved_type = node_b->resolved_type().value();
+
+    if (node_a_resolved_type != node_b_resolved_type)
+        return Error::from_string_view("log() parameters must be of the same type"sv);
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("log() parameters must be numbers"sv);
+
+    return TRY(LogCalculationNode::create(move(node_a), move(node_b)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3880,6 +3909,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("hypot"sv))
         return TRY(parse_hypot_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("log"sv))
+        return TRY(parse_log_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
