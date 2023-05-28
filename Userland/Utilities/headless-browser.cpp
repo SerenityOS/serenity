@@ -80,6 +80,11 @@ public:
         return String::from_deprecated_string(client().dump_layout_tree());
     }
 
+    ErrorOr<String> dump_text()
+    {
+        return String::from_deprecated_string(client().dump_text());
+    }
+
 private:
     HeadlessWebContentView() = default;
 
@@ -191,8 +196,7 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
         };
     } else if (mode == TestMode::Text) {
         view.on_load_finish = [&](auto const&) {
-            view.select_all();
-            result = String::from_utf8(view.selected_text()).release_value_but_fixme_should_propagate_errors();
+            result = view.dump_text().release_value_but_fixme_should_propagate_errors();
             loop.quit(0);
         };
     }
@@ -384,8 +388,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
     } else if (dump_text) {
         view->on_load_finish = [&](auto const&) {
-            view->select_all();
-            auto text = view->selected_text();
+            auto text = view->dump_text().release_value_but_fixme_should_propagate_errors();
 
             out("{}", text);
             fflush(stdout);

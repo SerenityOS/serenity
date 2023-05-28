@@ -50,6 +50,7 @@ endpoint WebContentServer
     run_javascript(DeprecatedString js_source) =|
 
     dump_layout_tree() => (DeprecatedString dump)
+    dump_text() => (DeprecatedString dump)
 
     get_selected_text() => (DeprecatedString selection)
     select_all() =|
