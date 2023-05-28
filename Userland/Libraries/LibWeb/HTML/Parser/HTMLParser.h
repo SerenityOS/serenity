@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Color.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
@@ -200,5 +201,6 @@ private:
 
 RefPtr<CSS::StyleValue> parse_dimension_value(StringView);
 RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView);
+Optional<Color> parse_legacy_color_value(DeprecatedString input);
 
 }
