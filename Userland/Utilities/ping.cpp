@@ -39,7 +39,7 @@ static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
 static constexpr int max_optional_header_size_in_bytes = 40;
 static constexpr int min_header_size_in_bytes = 5;
 
-static void closing_statistics()
+static void print_closing_statistics()
 {
     int packet_loss = 100;
 
@@ -57,8 +57,6 @@ static void closing_statistics()
     if (successful_pings)
         average_ms = total_ms / successful_pings;
     outln("rtt min/avg/max = {}/{}/{} ms", min_ms, average_ms, max_ms);
-
-    exit(0);
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -133,7 +131,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uint16_t seq = 1;
 
     TRY(Core::System::signal(SIGINT, [](int) {
-        closing_statistics();
+        print_closing_statistics();
+        exit(0);
     }));
 
     for (;;) {
@@ -235,9 +234,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         total_pings++;
-        if (count.has_value() && total_pings == count.value())
-            closing_statistics();
+        if (count.has_value() && total_pings == count.value()) {
+            print_closing_statistics();
+            break;
+        }
 
         clock_nanosleep(CLOCK_MONOTONIC, 0, &interval_timespec, nullptr);
     }
+
+    return 0;
 }
