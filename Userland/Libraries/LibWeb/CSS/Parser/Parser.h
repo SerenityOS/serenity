@@ -305,6 +305,7 @@ private:
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_atan_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_atan2_function(Function const&);
     ErrorOr<NonnullOwnPtr<CalculationNode>> parse_pow_function(Function const&);
+    ErrorOr<NonnullOwnPtr<CalculationNode>> parse_sqrt_function(Function const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_numeric_value(ComponentValue const&);

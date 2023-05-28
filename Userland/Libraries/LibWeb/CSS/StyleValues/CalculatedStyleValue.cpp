@@ -1547,6 +1547,55 @@ ErrorOr<void> PowCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<SqrtCalculationNode>> SqrtCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SqrtCalculationNode(move(a)));
+}
+
+SqrtCalculationNode::SqrtCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Sqrt)
+    , m_a(move(a))
+{
+}
+
+SqrtCalculationNode::~SqrtCalculationNode() = default;
+
+ErrorOr<String> SqrtCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("sqrt("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SqrtCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult SqrtCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto result = sqrt(node_a_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> SqrtCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> SqrtCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SQRT: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

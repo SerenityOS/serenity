@@ -3776,6 +3776,24 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_pow_function(Function cons
     return TRY(PowCalculationNode::create(move(node_a), move(node_b)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_sqrt_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 1) {
+        return Error::from_string_view("sqrt() must have exactly one parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_a_resolved_type = node_a->resolved_type().value();
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("sqrt() parameter must be number"sv);
+
+    return TRY(SqrtCalculationNode::create(move(node_a)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3828,6 +3846,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("pow"sv))
         return TRY(parse_pow_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("sqrt"sv))
+        return TRY(parse_sqrt_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
