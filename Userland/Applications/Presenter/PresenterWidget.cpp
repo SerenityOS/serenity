@@ -57,7 +57,10 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     // Set up the menu bar.
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(this->window());
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = { { GUI::FileTypeFilter { "Presentation Files", { { "presenter" } } }, GUI::FileTypeFilter::all_files() } },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(this->window(), options);
         if (response.is_error())
             return;
         this->set_file(response.value().filename());

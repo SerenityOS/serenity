@@ -192,7 +192,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(&window);
+        auto image_files = GUI::FileTypeFilter::image_files();
+        image_files.extensions->append("pp");
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, { .allowed_file_types = Vector { image_files, GUI::FileTypeFilter::all_files() } });
         if (response.is_error())
             return;
         open_image(response.release_value());
@@ -455,7 +457,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
         "&Load Color Palette...", g_icon_bag.load_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().open_file(&window, { .window_title = "Load Color Palette"sv });
+            FileSystemAccessClient::OpenFileOptions options {
+                .window_title = "Load Color Palette"sv,
+                .allowed_file_types = Vector {
+                    { "Palette Files", { { "palette" } } },
+                    GUI::FileTypeFilter::all_files(),
+                },
+            };
+            auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
             if (response.is_error())
                 return;
 

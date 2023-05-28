@@ -128,14 +128,26 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().open_file(window());
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = Vector {
+                { "Spreadsheets", { { "sheets", "csv" } } },
+                GUI::FileTypeFilter::all_files(),
+            },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
         load_file(response.value().filename(), response.value().stream());
     });
 
     m_import_action = GUI::Action::create("Import Sheets...", [&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window());
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = Vector {
+                { "Spreadsheets", { { "sheets", "csv" } } },
+                GUI::FileTypeFilter::all_files(),
+            },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
 
