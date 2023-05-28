@@ -8151,9 +8151,15 @@ CSS::Length CSS::Parser::Parser::parse_as_sizes_attribute()
         if (unparsed_size.is_empty())
             return size.value();
 
-        // FIXME: 4. Parse the remaining component values in unparsed size as a <media-condition>.
-        //           If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue. [MQ]
-        dbgln("FIXME: Implement parsing of media conditions in sizes attribute");
+        // 4. Parse the remaining component values in unparsed size as a <media-condition>.
+        //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
+        TokenStream<ComponentValue> token_stream { unparsed_size };
+        auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
+        if (media_condition && media_condition->evaluate(m_context.document()->window()) == CSS::MatchResult::True) {
+            return size.value();
+        } else {
+            continue;
+        }
     }
 
     return CSS::Length(100, CSS::Length::Type::Vw);
