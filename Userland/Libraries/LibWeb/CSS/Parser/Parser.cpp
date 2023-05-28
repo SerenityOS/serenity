@@ -3713,6 +3713,24 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_acos_function(Function con
     return TRY(AcosCalculationNode::create(move(node_a)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_atan_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 1) {
+        return Error::from_string_view("atan() must have exactly one parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto resolved_type = node_a->resolved_type().value();
+
+    if (resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("atan() parameter must be a number"sv);
+
+    return TRY(AtanCalculationNode::create(move(node_a)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3756,6 +3774,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("acos"sv))
         return TRY(parse_acos_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("atan"sv))
+        return TRY(parse_atan_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
