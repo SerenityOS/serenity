@@ -468,4 +468,22 @@ private:
     NonnullOwnPtr<CalculationNode> m_value;
 };
 
+class AcosCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<AcosCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~AcosCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    AcosCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_value;
+};
+
 }
