@@ -1352,6 +1352,9 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
     if (width.is_max_content()) {
         return CSS::Length::make_px(calculate_max_content_width(box));
     }
+    if (width.is_min_content()) {
+        return CSS::Length::make_px(calculate_min_content_width(box));
+    }
 
     auto& computed_values = box.computed_values();
     if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {

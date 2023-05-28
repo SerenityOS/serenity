@@ -1339,6 +1339,7 @@
     "valid-identifiers": [
       "fit-content",
       "max-content",
+      "min-content",
       "none"
     ],
     "quirks": [
@@ -1376,6 +1377,7 @@
       "auto",
       "fit-content",
       "max-content",
+      "min-content",
       "none"
     ],
     "quirks": [
@@ -1776,7 +1778,8 @@
     "valid-identifiers": [
       "auto",
       "fit-content",
-      "max-content"
+      "max-content",
+      "min-content"
     ],
     "quirks": [
       "unitless-length"
