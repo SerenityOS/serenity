@@ -568,4 +568,22 @@ private:
     NonnullOwnPtr<CalculationNode> m_value;
 };
 
+class HypotCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<HypotCalculationNode>> create(Vector<NonnullOwnPtr<CalculationNode>>);
+    ~HypotCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    explicit HypotCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
+    Vector<NonnullOwnPtr<CalculationNode>> m_values;
+};
+
 }
