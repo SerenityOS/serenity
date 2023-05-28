@@ -24,20 +24,20 @@
 // * A tiny bit of uncompressed data, storing image dimensions and the size of the first compressed chunk of data, called the first partition
 // * The first partition, which is a entropy-coded bitstream storing:
 //   1. A fixed-size header.
-//      The main piece of data this stores is a probability distribution for how pixel values of each metablock are predicted from previously decoded data.
+//      The main piece of data this stores is a probability distribution for how pixel values of each macroblock are predicted from previously decoded data.
 //      It also stores how may independent entropy-coded bitstreams are used to store the actual pixel data (for all images I've seen so far, just one).
-//   2. For each metablock, it stores how that metablock's pixel values are predicted from previously decoded data (and some more per-metablock metadata).
+//   2. For each macroblock, it stores how that macroblock's pixel values are predicted from previously decoded data (and some more per-macroblock metadata).
 //      There are independent prediction modes for Y, U, V.
 //      U and V store a single prediction mode per macroblock.
 //      Y can store a single prediction mode per macroblock, or it can store one subblock prediction mode for each of the 4x4 luma subblocks.
-// * One or more additional entropy-coded bitstreams ("partitions") that store the discrete cosine transform ("DCT") coefficients for the actual pixel data for each metablock.
-//   Each metablock is subdivided into 4x4 tiles called "subblocks". A 16x16 pixel metablock consists of:
-//   0. If the metablock stores 4x4 luma subblock prediction modes, the 4x4 DC coefficients of each subblock's DCT are stored at the start of the macroblock's data,
+// * One or more additional entropy-coded bitstreams ("partitions") that store the discrete cosine transform ("DCT") coefficients for the actual pixel data for each macroblock.
+//   Each macroblock is subdivided into 4x4 tiles called "subblocks". A 16x16 pixel macroblock consists of:
+//   0. If the macroblock stores 4x4 luma subblock prediction modes, the 4x4 DC coefficients of each subblock's DCT are stored at the start of the macroblock's data,
 //      as coefficients of an inverse Walsh-Hadamard Transform (WHT).
 //   1. 4x4 luma subblocks
 //   2. 2x2 U chrome subblocks
 //   3. 2x2 U chrome subblocks
-//   That is, each metablock stores 24 or 25 sets of coefficients.
+//   That is, each macroblock stores 24 or 25 sets of coefficients.
 //   Each set of coefficients stores 16 numbers, using a combination of a custom prefix tree and dequantization.
 //   The inverse DCT output is added to the output of the prediction.
 
@@ -138,13 +138,13 @@ enum class SegmentFeatureMode {
 
 };
 struct Segmentation {
-    bool update_metablock_segmentation_map { false };
+    bool update_macroblock_segmentation_map { false };
     SegmentFeatureMode segment_feature_mode { SegmentFeatureMode::DeltaValueMode };
 
     i8 quantizer_update_value[4] {};
     i8 loop_filter_update_value[4] {};
 
-    u8 metablock_segment_tree_probabilities[3] = { 255, 255, 255 };
+    u8 macroblock_segment_tree_probabilities[3] = { 255, 255, 255 };
 };
 ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder&);
 
@@ -197,7 +197,7 @@ struct FrameHeader {
 
     CoefficientProbabilities coefficient_probabilities;
 
-    bool enable_skipping_of_metablocks_containing_only_zero_coefficients {};
+    bool enable_skipping_of_macroblocks_containing_only_zero_coefficients {};
     u8 probability_skip_false;
 };
 
@@ -239,9 +239,9 @@ ErrorOr<FrameHeader> decode_VP8_frame_header(BooleanDecoder& decoder)
     TRY(decode_VP8_frame_header_coefficient_probabilities(decoder, header.coefficient_probabilities));
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-9.11 "Remaining Frame Header Data (Key Frame)"
-    header.enable_skipping_of_metablocks_containing_only_zero_coefficients = TRY(L(1));
-    dbgln_if(WEBP_DEBUG, "mb_no_skip_coeff {}", header.enable_skipping_of_metablocks_containing_only_zero_coefficients);
-    if (header.enable_skipping_of_metablocks_containing_only_zero_coefficients) {
+    header.enable_skipping_of_macroblocks_containing_only_zero_coefficients = TRY(L(1));
+    dbgln_if(WEBP_DEBUG, "mb_no_skip_coeff {}", header.enable_skipping_of_macroblocks_containing_only_zero_coefficients);
+    if (header.enable_skipping_of_macroblocks_containing_only_zero_coefficients) {
         header.probability_skip_false = TRY(L(8));
         dbgln_if(WEBP_DEBUG, "prob_skip_false {}", header.probability_skip_false);
     }
@@ -256,11 +256,11 @@ ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decod
     // Corresponds to "update_segmentation()" in section 19.2 of the spec.
     Segmentation segmentation;
 
-    segmentation.update_metablock_segmentation_map = TRY(L(1));
+    segmentation.update_macroblock_segmentation_map = TRY(L(1));
     u8 update_segment_feature_data = TRY(L(1));
 
     dbgln_if(WEBP_DEBUG, "update_mb_segmentation_map {} update_segment_feature_data {}",
-        segmentation.update_metablock_segmentation_map, update_segment_feature_data);
+        segmentation.update_macroblock_segmentation_map, update_segment_feature_data);
 
     if (update_segment_feature_data) {
         segmentation.segment_feature_mode = static_cast<SegmentFeatureMode>(TRY(L(1)));
@@ -286,7 +286,7 @@ ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decod
         }
     }
 
-    if (segmentation.update_metablock_segmentation_map) {
+    if (segmentation.update_macroblock_segmentation_map) {
         // This reads mb_segment_tree_probs for https://datatracker.ietf.org/doc/html/rfc6386#section-10.
         for (int i = 0; i < 3; ++i) {
             u8 segment_prob_update = TRY(L(1));
@@ -294,7 +294,7 @@ ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decod
             if (segment_prob_update) {
                 u8 segment_prob = TRY(L(8));
                 dbgln_if(WEBP_DEBUG, "segment_prob {}", segment_prob);
-                segmentation.metablock_segment_tree_probabilities[i] = segment_prob;
+                segmentation.macroblock_segment_tree_probabilities[i] = segment_prob;
             }
         }
     }
@@ -407,8 +407,8 @@ struct MacroblockMetadata {
     // https://datatracker.ietf.org/doc/html/rfc6386#section-11.1 "mb_skip_coeff"
     bool skip_coefficients { false };
 
-    IntraMetablockMode intra_y_mode;
-    IntraMetablockMode uv_mode;
+    IntraMacroblockMode intra_y_mode;
+    IntraMacroblockMode uv_mode;
 
     IntraBlockMode intra_b_modes[16];
 };
@@ -446,14 +446,14 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
         for (int mb_x = 0; mb_x < macroblock_width; ++mb_x) {
             MacroblockMetadata metadata;
 
-            if (header.segmentation.update_metablock_segmentation_map)
-                metadata.segment_id = TRY(tree_decode(decoder, METABLOCK_SEGMENT_TREE, header.segmentation.metablock_segment_tree_probabilities));
+            if (header.segmentation.update_macroblock_segmentation_map)
+                metadata.segment_id = TRY(tree_decode(decoder, MACROBLOCK_SEGMENT_TREE, header.segmentation.macroblock_segment_tree_probabilities));
 
-            if (header.enable_skipping_of_metablocks_containing_only_zero_coefficients)
+            if (header.enable_skipping_of_macroblocks_containing_only_zero_coefficients)
                 metadata.skip_coefficients = TRY(B(header.probability_skip_false));
 
             int intra_y_mode = TRY(tree_decode(decoder, KEYFRAME_YMODE_TREE, KEYFRAME_YMODE_PROBABILITIES));
-            metadata.intra_y_mode = (IntraMetablockMode)intra_y_mode;
+            metadata.intra_y_mode = (IntraMacroblockMode)intra_y_mode;
 
             // "If the Ymode is B_PRED, it is followed by a (tree-coded) mode for each of the 16 Y subblocks."
             if (intra_y_mode == B_PRED) {
@@ -482,7 +482,7 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
                 }
             }
 
-            metadata.uv_mode = (IntraMetablockMode)TRY(tree_decode(decoder, UV_MODE_TREE, KEYFRAME_UV_MODE_PROBABILITIES));
+            metadata.uv_mode = (IntraMacroblockMode)TRY(tree_decode(decoder, UV_MODE_TREE, KEYFRAME_UV_MODE_PROBABILITIES));
 
             TRY(macroblock_metadata.try_append(metadata));
         }
