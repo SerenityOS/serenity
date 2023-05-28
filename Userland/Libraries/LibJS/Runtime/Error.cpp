@@ -17,9 +17,12 @@ namespace JS {
 
 SourceRange const& TracebackFrame::source_range() const
 {
-    if (auto* unrealized = source_range_storage.get_pointer<UnrealizedSourceRange>()) {
+    if (auto* unrealized = source_range_storage.get_pointer<UnrealizedSourceRange>(); unrealized && unrealized->source_code) {
         auto source_range = unrealized->source_code->range_from_offsets(unrealized->start_offset, unrealized->end_offset);
         source_range_storage = move(source_range);
+    } else {
+        static auto dummy_source_range = SourceRange { .code = SourceCode::create(String {}, String {}), .start = {}, .end = {} };
+        return dummy_source_range;
     }
     return source_range_storage.get<SourceRange>();
 }
@@ -69,8 +72,6 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
 
 void Error::populate_stack()
 {
-    static auto dummy_source_range = SourceRange { .code = SourceCode::create(String {}, String {}), .start = {}, .end = {} };
-
     auto& vm = this->vm();
     m_traceback.ensure_capacity(vm.execution_context_stack().size());
     for (ssize_t i = vm.execution_context_stack().size() - 1; i >= 0; i--) {
