@@ -3738,6 +3738,46 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_atan_function(Function const& fun
     return TRY(AtanCalculationNode::create(calculation_node.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_atan2_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2) {
+        dbgln_if(CSS_PARSER_DEBUG, "atan2() must have exactly two parameter"sv);
+        return nullptr;
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_b = TRY(parse_a_calculation(parameters[1]));
+
+    if (!node_a || !node_b) {
+        dbgln_if(CSS_PARSER_DEBUG, "atan2() parameters must be valid calculations"sv);
+        return nullptr;
+    }
+
+    auto node_a_maybe_parameter_type = node_a->resolved_type();
+    if (!node_a_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan() parameter 1"sv);
+        return nullptr;
+    }
+
+    auto node_b_maybe_parameter_type = node_b->resolved_type();
+    if (!node_b_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for atan() parameter 2"sv);
+        return nullptr;
+    }
+
+    auto node_a_resolved_type = node_a_maybe_parameter_type.value();
+    auto node_b_resolved_type = node_b_maybe_parameter_type.value();
+    if (node_a_resolved_type != node_b_resolved_type) {
+        dbgln_if(CSS_PARSER_DEBUG, "atan2() parameters must be of the same type"sv);
+        return nullptr;
+    }
+
+    return TRY(Atan2CalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3799,6 +3839,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("atan"sv))
         return TRY(parse_atan_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("atan2"sv))
+        return TRY(parse_atan2_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;

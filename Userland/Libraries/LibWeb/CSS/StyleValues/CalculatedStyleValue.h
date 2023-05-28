@@ -504,4 +504,23 @@ private:
     NonnullOwnPtr<CalculationNode> m_value;
 };
 
+class Atan2CalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<Atan2CalculationNode>> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~Atan2CalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    Atan2CalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_y;
+    NonnullOwnPtr<CalculationNode> m_x;
+};
+
 }
