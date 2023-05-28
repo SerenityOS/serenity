@@ -3891,6 +3891,55 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_hypot_function(Function const& fu
     return TRY(HypotCalculationNode::create(move(calculated_parameters)));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_log_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    OwnPtr<CalculationNode> node_b;
+    if (parameters.size() == 1) {
+        node_b = TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::E));
+    } else if (parameters.size() == 2) {
+        node_b = TRY(parse_a_calculation(parameters[1]));
+    } else {
+        dbgln_if(CSS_PARSER_DEBUG, "log() must have exactly one or two parameters"sv);
+        return nullptr;
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+
+    if (!node_a || !node_b) {
+        dbgln_if(CSS_PARSER_DEBUG, "log() parameters must be valid calculations"sv);
+        return nullptr;
+    }
+
+    auto node_a_maybe_parameter_type = node_a->resolved_type();
+    if (!node_a_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for log() parameter 1"sv);
+        return nullptr;
+    }
+
+    auto node_b_maybe_parameter_type = node_b->resolved_type();
+    if (!node_b_maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for log() parameter 2"sv);
+        return nullptr;
+    }
+
+    auto node_a_resolved_type = node_a_maybe_parameter_type.value();
+    auto node_b_resolved_type = node_b_maybe_parameter_type.value();
+    if (node_a_resolved_type != node_b_resolved_type) {
+        dbgln_if(CSS_PARSER_DEBUG, "log() parameters must be of the same type"sv);
+        return nullptr;
+    }
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number) {
+        dbgln_if(CSS_PARSER_DEBUG, "log() parameters must be numbers"sv);
+        return nullptr;
+    }
+
+    return TRY(LogCalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3964,6 +4013,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("hypot"sv))
         return TRY(parse_hypot_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("log"sv))
+        return TRY(parse_log_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;

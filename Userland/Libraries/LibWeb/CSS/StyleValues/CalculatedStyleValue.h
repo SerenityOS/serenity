@@ -586,4 +586,23 @@ private:
     Vector<NonnullOwnPtr<CalculationNode>> m_values;
 };
 
+class LogCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<LogCalculationNode>> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~LogCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    LogCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_x;
+    NonnullOwnPtr<CalculationNode> m_y;
+};
+
 }
