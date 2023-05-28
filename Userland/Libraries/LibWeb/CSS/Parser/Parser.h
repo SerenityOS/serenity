@@ -299,6 +299,7 @@ private:
     ErrorOr<OwnPtr<CalculationNode>> parse_cos_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_tan_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_asin_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_acos_function(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);

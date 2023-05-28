@@ -1066,6 +1066,60 @@ ErrorOr<void> AsinCalculationNode::dump(StringBuilder& builder, int indent) cons
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<AcosCalculationNode>> AcosCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) AcosCalculationNode(move(value)));
+}
+
+AcosCalculationNode::AcosCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Acos)
+    , m_value(move(value))
+{
+}
+
+AcosCalculationNode::~AcosCalculationNode() = default;
+
+ErrorOr<String> AcosCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("acos("sv);
+    builder.append(TRY(m_value->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> AcosCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+bool AcosCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult AcosCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_value->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), context);
+    auto result = acos(node_a_value);
+
+    return { Angle(result, Angle::Type::Rad) };
+}
+
+ErrorOr<void> AcosCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> AcosCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ACOS: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);
