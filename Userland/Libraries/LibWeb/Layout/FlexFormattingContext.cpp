@@ -1323,11 +1323,20 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 }
                 break;
             case CSS::JustifyContent::SpaceBetween:
+                if (is_direction_reverse()) {
+                    initial_offset = inner_main_size(flex_container());
+                } else {
+                    initial_offset = 0;
+                }
                 space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
                 break;
             case CSS::JustifyContent::SpaceAround:
                 space_between_items = flex_line.remaining_free_space / number_of_items;
-                initial_offset = space_between_items / 2.0;
+                if (is_direction_reverse()) {
+                    initial_offset = inner_main_size(flex_container()) - space_between_items / 2.0;
+                } else {
+                    initial_offset = space_between_items / 2.0;
+                }
                 break;
             }
         }
