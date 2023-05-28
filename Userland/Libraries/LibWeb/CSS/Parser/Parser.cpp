@@ -3794,6 +3794,34 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_sqrt_function(Function con
     return TRY(SqrtCalculationNode::create(move(node_a)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_hypot_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    Vector<NonnullOwnPtr<CalculationNode>> calculated_parameters;
+    calculated_parameters.ensure_capacity(parameters.size());
+
+    CalculatedStyleValue::ResolvedType type;
+    bool first = true;
+    for (auto& parameter : parameters) {
+        auto calculation_node = TRY(parse_a_calculation(parameter));
+
+        if (first) {
+            type = calculation_node->resolved_type().value();
+            first = false;
+        }
+
+        if (calculation_node->resolved_type().value() != type) {
+            return Error::from_string_view("hypot() parameters must all be of the same type"sv);
+        }
+
+        calculated_parameters.append(move(calculation_node));
+    }
+
+    return TRY(HypotCalculationNode::create(move(calculated_parameters)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3849,6 +3877,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("sqrt"sv))
         return TRY(parse_sqrt_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("hypot"sv))
+        return TRY(parse_hypot_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);

@@ -1596,6 +1596,103 @@ ErrorOr<void> SqrtCalculationNode::dump(StringBuilder& builder, int indent) cons
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<HypotCalculationNode>> HypotCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) HypotCalculationNode(move(values)));
+}
+
+HypotCalculationNode::HypotCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Hypot)
+    , m_values(move(values))
+{
+}
+
+HypotCalculationNode::~HypotCalculationNode() = default;
+
+ErrorOr<String> HypotCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    TRY(builder.try_append("hypot("sv));
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (i != 0)
+            TRY(builder.try_append(", "sv));
+        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+    }
+    TRY(builder.try_append(")"sv));
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> HypotCalculationNode::resolved_type() const
+{
+    // NOTE: We check during parsing that all values have the same type.
+    return m_values[0]->resolved_type();
+}
+
+bool HypotCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult HypotCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
+        switch (type) {
+        case CalculatedStyleValue::ResolvedType::Integer:
+            return { Number(Number::Type::Integer, value) };
+        case CalculatedStyleValue::ResolvedType::Number:
+            return { Number(Number::Type::Number, value) };
+        case CalculatedStyleValue::ResolvedType::Angle:
+            return { Angle::make_degrees(value) };
+        case CalculatedStyleValue::ResolvedType::Frequency:
+            return { Frequency::make_hertz(value) };
+        case CalculatedStyleValue::ResolvedType::Length:
+            return { Length::make_px(value) };
+        case CalculatedStyleValue::ResolvedType::Percentage:
+            return { Percentage(value) };
+        case CalculatedStyleValue::ResolvedType::Time:
+            return { Time::make_seconds(value) };
+        }
+
+        VERIFY_NOT_REACHED();
+    };
+
+    double square_sum = 0.0;
+
+    for (auto const& value : m_values) {
+        auto child_resolved = value->resolve(layout_node, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value(), layout_node);
+
+        square_sum += child_value * child_value;
+    }
+
+    auto result = sqrt(square_sum);
+
+    return to_resolved_type(resolved_type().value(), result);
+}
+
+ErrorOr<void> HypotCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& value : m_values) {
+        TRY(value->for_each_child_node(callback));
+        TRY(callback(value));
+    }
+
+    return {};
+}
+
+ErrorOr<void> HypotCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}HYPOT:\n", "", indent));
+    for (auto const& value : m_values)
+        TRY(value->dump(builder, indent + 2));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
