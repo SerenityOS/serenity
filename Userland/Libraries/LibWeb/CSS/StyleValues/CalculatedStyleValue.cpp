@@ -1284,6 +1284,55 @@ ErrorOr<void> TanCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<AsinCalculationNode>> AsinCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) AsinCalculationNode(move(a)));
+}
+
+AsinCalculationNode::AsinCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Asin)
+    , m_a(move(a))
+{
+}
+
+AsinCalculationNode::~AsinCalculationNode() = default;
+
+ErrorOr<String> AsinCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("asin("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> AsinCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+CalculatedStyleValue::CalculationResult AsinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto result = asin(node_a_value);
+
+    return { Angle(result, Angle::Type::Rad) };
+}
+
+ErrorOr<void> AsinCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> AsinCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ASIN: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
