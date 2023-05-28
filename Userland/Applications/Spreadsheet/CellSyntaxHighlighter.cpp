@@ -36,7 +36,7 @@ void CellSyntaxHighlighter::rehighlight(Palette const& palette)
         if (m_cell && m_cell->thrown_value().has_value()) {
             if (auto value = m_cell->thrown_value().value(); value.is_object() && is<JS::Error>(value.as_object())) {
                 auto& error = static_cast<JS::Error const&>(value.as_object());
-                auto& range = error.traceback().first().source_range;
+                auto& range = error.traceback().first().source_range();
 
                 spans.prepend({
                     GUI::TextRange { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column } },
