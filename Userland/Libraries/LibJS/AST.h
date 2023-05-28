@@ -58,6 +58,9 @@ public:
 
     [[nodiscard]] SourceRange source_range() const;
     u32 start_offset() const { return m_start_offset; }
+    u32 end_offset() const { return m_end_offset; }
+
+    SourceCode const& source_code() const { return *m_source_code; }
 
     void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 

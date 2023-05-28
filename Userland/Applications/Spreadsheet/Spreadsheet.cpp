@@ -70,7 +70,7 @@ Sheet::Sheet(Workbook& workbook)
                     warnln(" with message '{}'", error.get_without_side_effects(interpreter().vm().names.message));
                     for (auto& traceback_frame : error.traceback()) {
                         auto& function_name = traceback_frame.function_name;
-                        auto& source_range = traceback_frame.source_range;
+                        auto& source_range = traceback_frame.source_range();
                         dbgln("  {} at {}:{}:{}", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
                     }
                 } else {
