@@ -162,7 +162,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             auxiliary_instance.globals().append(*ptr);
     }
 
-    BytecodeInterpreter interpreter;
+    BytecodeInterpreter interpreter(m_stack_info);
 
     module.for_each_section_of_type<GlobalSection>([&](auto& global_section) {
         for (auto& entry : global_section.entries()) {
@@ -491,7 +491,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_final_phase(Module co
 
 Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)
 {
-    BytecodeInterpreter interpreter;
+    BytecodeInterpreter interpreter(m_stack_info);
     return invoke(interpreter, address, move(arguments));
 }
 
