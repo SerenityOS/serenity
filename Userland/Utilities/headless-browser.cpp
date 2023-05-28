@@ -284,7 +284,9 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
 
         out("{}/{}: {}", i + 1, tests.size(), LexicalPath::relative_path(test.input_path, test_root_path));
 
-        if (!is_tty)
+        if (is_tty)
+            fflush(stdout);
+        else
             outln("");
 
         test.result = TRY(run_test(view, test.input_path, test.expectation_path, test.mode));
