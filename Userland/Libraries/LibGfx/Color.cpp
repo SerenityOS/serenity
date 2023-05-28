@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -78,7 +79,7 @@ static Optional<Color> parse_rgba_color(StringView string)
     return Color(r, g, b, a);
 }
 
-Optional<Color> Color::from_string(StringView string)
+Optional<Color> Color::from_named_css_color_string(StringView string)
 {
     if (string.is_empty())
         return {};
@@ -243,13 +244,24 @@ Optional<Color> Color::from_string(StringView string)
         WebColor { 0x663399, "rebeccapurple"sv },
     };
 
-    if (string.equals_ignoring_ascii_case("transparent"sv))
-        return Color::from_argb(0x00000000);
-
     for (auto const& web_color : web_colors) {
         if (string.equals_ignoring_ascii_case(web_color.name))
             return Color::from_rgb(web_color.color);
     }
+
+    return {};
+}
+
+Optional<Color> Color::from_string(StringView string)
+{
+    if (string.is_empty())
+        return {};
+
+    if (string.equals_ignoring_ascii_case("transparent"sv))
+        return Color::from_argb(0x00000000);
+
+    if (auto const color = from_named_css_color_string(string); color.has_value())
+        return color;
 
     if (string.starts_with("rgb("sv, CaseSensitivity::CaseInsensitive) && string.ends_with(')'))
         return parse_rgb_color(string);
