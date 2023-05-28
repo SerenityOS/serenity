@@ -605,4 +605,22 @@ private:
     NonnullOwnPtr<CalculationNode> m_y;
 };
 
+class ExpCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<ExpCalculationNode>> create(NonnullOwnPtr<CalculationNode>);
+    ~ExpCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    ExpCalculationNode(NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_value;
+};
+
 }

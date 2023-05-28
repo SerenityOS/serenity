@@ -3940,6 +3940,29 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_log_function(Function const& func
     return TRY(LogCalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_exp_function(Function const& function)
+{
+    auto node_a = TRY(parse_a_calculation(function.values()));
+    if (!node_a) {
+        dbgln_if(CSS_PARSER_DEBUG, "exp() parameter must be valid calculation"sv);
+        return nullptr;
+    }
+
+    auto maybe_parameter_type = node_a->resolved_type();
+    if (!maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for exp() parameter"sv);
+        return nullptr;
+    }
+
+    auto resolved_type = maybe_parameter_type.value();
+    if (resolved_type != CalculatedStyleValue::ResolvedType::Number) {
+        dbgln_if(CSS_PARSER_DEBUG, "exp() parameter must be number"sv);
+        return nullptr;
+    }
+
+    return TRY(ExpCalculationNode::create(node_a.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -4016,6 +4039,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("log"sv))
         return TRY(parse_log_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("exp"sv))
+        return TRY(parse_exp_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
