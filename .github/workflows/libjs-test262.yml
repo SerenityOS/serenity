@@ -150,7 +150,7 @@ jobs:
           mv wasm-new-results.json ../../libjs-website/wasm/data/results.json
 
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        uses: JamesIves/github-pages-deploy-action@v4.4.2
         with:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
