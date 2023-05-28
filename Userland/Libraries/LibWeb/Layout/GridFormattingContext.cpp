@@ -153,8 +153,8 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& c
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
     if (child_box.computed_values().grid_column_end().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
-            column_end = m_valid_grid_areas[grid_area_index].column_end;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_column_end().line_name()); maybe_grid_area.has_value())
+            column_end = maybe_grid_area->column_end;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_end = line_name_index;
         else
@@ -162,16 +162,16 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& c
         column_start = column_end - 1;
     }
     if (child_box.computed_values().grid_column_start().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
-            column_start = m_valid_grid_areas[grid_area_index].column_start;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_column_end().line_name()); maybe_grid_area.has_value())
+            column_start = maybe_grid_area->column_start;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_start = line_name_index;
         else
             column_start = 0;
     }
     if (child_box.computed_values().grid_row_end().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
-            row_end = m_valid_grid_areas[grid_area_index].row_end;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_row_end().line_name()); maybe_grid_area.has_value())
+            row_end = maybe_grid_area->row_end;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_end = line_name_index;
         else
@@ -179,8 +179,8 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& c
         row_start = row_end - 1;
     }
     if (child_box.computed_values().grid_row_start().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
-            row_start = m_valid_grid_areas[grid_area_index].row_start;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_row_end().line_name()); maybe_grid_area.has_value())
+            row_start = maybe_grid_area->row_start;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_start = line_name_index;
         else
@@ -277,8 +277,8 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
     if (child_box.computed_values().grid_row_end().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
-            row_end = m_valid_grid_areas[grid_area_index].row_end;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_row_end().line_name()); maybe_grid_area.has_value())
+            row_end = maybe_grid_area->row_end;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_end = line_name_index;
         else
@@ -286,8 +286,8 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
         row_start = row_end - 1;
     }
     if (child_box.computed_values().grid_row_start().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
-            row_start = m_valid_grid_areas[grid_area_index].row_start;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_row_end().line_name()); maybe_grid_area.has_value())
+            row_start = maybe_grid_area->row_start;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), grid_container().computed_values().grid_template_rows()); line_name_index > -1)
             row_start = line_name_index;
         else
@@ -401,8 +401,8 @@ void GridFormattingContext::place_item_with_column_position(Box const& child_box
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
     if (child_box.computed_values().grid_column_end().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
-            column_end = m_valid_grid_areas[grid_area_index].column_end;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_column_end().line_name()); maybe_grid_area.has_value())
+            column_end = maybe_grid_area->column_end;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_end = line_name_index;
         else
@@ -410,8 +410,8 @@ void GridFormattingContext::place_item_with_column_position(Box const& child_box
         column_start = column_end - 1;
     }
     if (child_box.computed_values().grid_column_start().has_line_name()) {
-        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
-            column_start = m_valid_grid_areas[grid_area_index].column_start;
+        if (auto maybe_grid_area = m_grid_areas.get(child_box.computed_values().grid_column_end().line_name()); maybe_grid_area.has_value())
+            column_start = maybe_grid_area->column_start;
         else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), grid_container().computed_values().grid_template_columns()); line_name_index > -1)
             column_start = line_name_index;
         else
@@ -1191,28 +1191,19 @@ void GridFormattingContext::run_track_sizing(AvailableSpace const& available_spa
     // spanned by such items; otherwise ignore the effects of track alignment in this estimation.
 }
 
-void GridFormattingContext::build_valid_grid_areas()
+void GridFormattingContext::build_grid_areas()
 {
-    Vector<GridArea> found_grid_areas;
-
-    auto get_index_of_found_grid_area = [&](String needle) -> int {
-        for (size_t x = 0; x < found_grid_areas.size(); x++) {
-            if (found_grid_areas[x].name == needle)
-                return static_cast<int>(x);
-        }
-        return -1;
-    };
-
     // https://www.w3.org/TR/css-grid-2/#grid-template-areas-property
     // If a named grid area spans multiple grid cells, but those cells do not form a single
     // filled-in rectangle, the declaration is invalid.
     for (size_t y = 0; y < grid_container().computed_values().grid_template_areas().size(); y++) {
         for (size_t x = 0; x < grid_container().computed_values().grid_template_areas()[y].size(); x++) {
-            auto grid_area_idx = get_index_of_found_grid_area(grid_container().computed_values().grid_template_areas()[y][x]);
-            if (grid_area_idx == -1) {
-                found_grid_areas.append({ grid_container().computed_values().grid_template_areas()[y][x], y, y + 1, x, x + 1 });
+            auto grid_area_name = grid_container().computed_values().grid_template_areas()[y][x];
+            auto maybe_grid_area = m_grid_areas.get(grid_area_name);
+            if (!maybe_grid_area.has_value()) {
+                m_grid_areas.set(grid_area_name, { grid_area_name, y, y + 1, x, x + 1 });
             } else {
-                auto& grid_area = found_grid_areas[grid_area_idx];
+                auto& grid_area = maybe_grid_area.value();
                 if (grid_area.row_start == y) {
                     if (grid_area.column_end == x)
                         grid_area.column_end = grid_area.column_end + 1;
@@ -1233,18 +1224,6 @@ void GridFormattingContext::build_valid_grid_areas()
             }
         }
     }
-
-    for (auto const& checked_grid_area : found_grid_areas)
-        m_valid_grid_areas.append(checked_grid_area);
-}
-
-int GridFormattingContext::find_valid_grid_area(String const& needle)
-{
-    for (size_t x = 0; x < m_valid_grid_areas.size(); x++) {
-        if (m_valid_grid_areas[x].name == needle)
-            return static_cast<int>(x);
-    }
-    return -1;
 }
 
 void GridFormattingContext::place_grid_items(AvailableSpace const& available_space)
@@ -1269,7 +1248,7 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
 
     m_occupation_grid = OccupationGrid(column_count, row_count);
 
-    build_valid_grid_areas();
+    build_grid_areas();
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
