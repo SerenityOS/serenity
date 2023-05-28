@@ -14,7 +14,7 @@ using Prob = u8;
 using TreeIndex = i8;
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-10 "Segment-Based Feature Adjustments"
-const TreeIndex METABLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
+const TreeIndex MACROBLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
     2, 4,   /* root: "0", "1" subtrees */
     -0, -1, /* "00" = 0th value, "01" = 1st value */
     -2, -3  /* "10" = 2nd value, "11" = 3rd value */
@@ -22,7 +22,7 @@ const TreeIndex METABLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-8.2 "Tree Coding Example"
 // Repeated in https://datatracker.ietf.org/doc/html/rfc6386#section-11.2 "Luma Modes"
-enum IntraMetablockMode {
+enum IntraMacroblockMode {
     DC_PRED,               /* predict DC using row above and column to the left */
     V_PRED,                /* predict rows using row above */
     H_PRED,                /* predict columns using column to the left */
