@@ -366,7 +366,7 @@ void TabWidget::paint_event(PaintEvent& event)
             painter.draw_line(icon_rect.top_right().moved_left(1), icon_rect.bottom_left().moved_up(1), palette().button_text());
         } else {
             painter.draw_line(icon_rect.top_left().moved_right(1), icon_rect.bottom_right().translated(-2, -2), palette().button_text());
-            painter.draw_line(icon_rect.top_right().moved_left(2), icon_rect.bottom_left().moved_right(1), palette().button_text());
+            painter.draw_line(icon_rect.top_right().moved_left(2), icon_rect.bottom_left().translated(1, -2), palette().button_text());
             painter.draw_line(icon_rect.bottom_left(), icon_rect.bottom_right().moved_left(1), palette().button_text(), 1, Painter::LineStyle::Dotted);
         }
     }
