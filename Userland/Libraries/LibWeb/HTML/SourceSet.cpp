@@ -5,6 +5,8 @@
  */
 
 #include <AK/Function.h>
+#include <AK/HashMap.h>
+#include <AK/QuickSort.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/SourceSet.h>
@@ -22,19 +24,43 @@ bool SourceSet::is_empty() const
     return m_sources.is_empty();
 }
 
+static double pixel_density(ImageSource const& image_source)
+{
+    return image_source.descriptor.get<ImageSource::PixelDensityDescriptorValue>().value;
+}
+
 // https://html.spec.whatwg.org/multipage/images.html#select-an-image-source-from-a-source-set
 ImageSourceAndPixelDensity SourceSet::select_an_image_source()
 {
-    // FIXME: 1. If an entry b in sourceSet has the same associated pixel density descriptor as an earlier entry a in sourceSet,
-    //           then remove entry b.
-    //           Repeat this step until none of the entries in sourceSet have the same associated pixel density descriptor
-    //           as an earlier entry.
+    // 1. If an entry b in sourceSet has the same associated pixel density descriptor as an earlier entry a in sourceSet,
+    //    then remove entry b.
+    //    Repeat this step until none of the entries in sourceSet have the same associated pixel density descriptor
+    //    as an earlier entry.
 
-    // FIXME: 2. In an implementation-defined manner, choose one image source from sourceSet. Let this be selectedSource.
+    Vector<ImageSource> unique_pixel_density_sources;
+    HashMap<double, ImageSource> unique_pixel_density_sources_map;
+    for (auto const& source : m_sources) {
+        auto source_pixel_density = pixel_density(source);
+        if (!unique_pixel_density_sources_map.contains(source_pixel_density)) {
+            unique_pixel_density_sources.append(source);
+            unique_pixel_density_sources_map.set(source_pixel_density, source);
+        }
+    }
 
-    // FIXME: 3. Return selectedSource and its associated pixel density.
+    // 2. In an implementation-defined manner, choose one image source from sourceSet. Let this be selectedSource.
+    //    In our case, select the lowest density greater than 1, otherwise the greatest density available.
+    // 3. Return selectedSource and its associated pixel density.
 
-    return { m_sources.first(), 1.0f };
+    quick_sort(unique_pixel_density_sources, [](auto& a, auto& b) {
+        return pixel_density(a) < pixel_density(b);
+    });
+    for (auto const& source : unique_pixel_density_sources) {
+        if (pixel_density(source) >= 1) {
+            return { source, pixel_density(source) };
+        }
+    }
+
+    return { unique_pixel_density_sources.last(), pixel_density(unique_pixel_density_sources.last()) };
 }
 
 static StringView collect_a_sequence_of_code_points(Function<bool(u32 code_point)> condition, StringView input, size_t& position)
@@ -328,7 +354,7 @@ SourceSet SourceSet::create(DOM::Document const& document, String default_source
         source_set = parse_a_srcset_attribute(srcset);
 
     // 3. Let source size be the result of parsing sizes.
-    auto source_size = parse_a_sizes_attribute(document, sizes);
+    source_set.m_source_size = parse_a_sizes_attribute(document, sizes);
 
     // 4. If default source is not the empty string and source set does not contain an image source
     //    with a pixel density descriptor value of 1, and no image source with a width descriptor,
