@@ -98,7 +98,7 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
     dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
         version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
 
-    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10) };
+    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale, vp8_data.slice(10, size_of_first_partition), vp8_data.slice(10 + size_of_first_partition) };
 }
 
 namespace {
@@ -440,6 +440,10 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
     Vector<IntraBlockMode> above;
     TRY(above.try_resize(macroblock_width * 4)); // One per 4x4 subblock.
 
+    // It's possible to not decode all macroblock metadata at once. Instead, this could for example decode one row of metadata,
+    // then decode the coefficients for one row of macroblocks, convert that row to pixels, and then go on to the next row of macroblocks.
+    // That'd require slightly less memory. But MacroblockMetadata is fairly small, and this way we can keep the context
+    // (`above`, `left`) in stack variables instead of having to have a class for that. So keep it simple for now.
     for (int mb_y = 0; mb_y < macroblock_height; ++mb_y) {
         IntraBlockMode left[4] {};
 
@@ -490,15 +494,430 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
 
     return macroblock_metadata;
 }
+
+// Every macroblock stores:
+// - One optional set of coefficients for Y2
+// - 16 sets of Y coefficients for the 4x4 Y subblocks of the macroblock
+// - 4 sets of U coefficients for the 2x2 U subblocks of the macroblock
+// - 4 sets of V coefficients for the 2x2 V subblocks of the macroblock
+// That's 24 or 25 sets of coefficients total. This struct identifies one of these sets by index.
+// If a macroblock does not have Y2, then i goes from [1..25], else it goes [0..25].
+struct CoefficientBlockIndex {
+    int i;
+
+    CoefficientBlockIndex(int i)
+        : i(i)
+    {
+        VERIFY(i >= 0);
+        VERIFY(i <= 25);
+    }
+
+    bool is_y2() const { return i == 0; }
+    bool is_y() const { return i >= 1 && i <= 16; }
+    bool is_u() const { return i >= 17 && i <= 20; }
+    bool is_v() const { return i >= 21; }
+
+    u8 sub_x() const
+    {
+        VERIFY(i > 0);
+        if (i <= 16)
+            return (i - 1) % 4;
+        if (i <= 20)
+            return (i - 17) % 2;
+        return (i - 21) % 2;
+    }
+
+    u8 sub_y() const
+    {
+        VERIFY(i > 0);
+        if (i <= 16)
+            return (i - 1) / 4;
+        if (i <= 20)
+            return (i - 17) / 2;
+        return (i - 21) / 2;
+    }
+};
+
+int plane_index(CoefficientBlockIndex index, bool have_y2)
+{
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-13.3 "Token Probabilities"
+    // "o  0 - Y beginning at coefficient 1 (i.e., Y after Y2)
+    //  o  1 - Y2
+    //  o  2 - U or V
+    //  o  3 - Y beginning at coefficient 0 (i.e., Y in the absence of Y2)."
+    if (index.is_y2())
+        return 1;
+    if (index.is_u() || index.is_v())
+        return 2;
+    if (have_y2)
+        return 0;
+    return 3;
+}
+
+ErrorOr<i16> coefficient_value_for_token(BooleanDecoder& decoder, u8 token)
+{
+    // Implements the second half of https://datatracker.ietf.org/doc/html/rfc6386#section-13.2 "Coding of Individual Coefficient Values"
+    i16 v = static_cast<i16>(token); // For DCT_0 to DCT4
+
+    if (token >= dct_cat1 && token <= dct_cat6) {
+        static int constexpr starts[] = { 5, 7, 11, 19, 35, 67 };
+        static int constexpr bits[] = { 1, 2, 3, 4, 5, 11 };
+
+        static Prob constexpr Pcat1[] = { 159 };
+        static Prob constexpr Pcat2[] = { 165, 145 };
+        static Prob constexpr Pcat3[] = { 173, 148, 140 };
+        static Prob constexpr Pcat4[] = { 176, 155, 140, 135 };
+        static Prob constexpr Pcat5[] = { 180, 157, 141, 134, 130 };
+        static Prob constexpr Pcat6[] = { 254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129 };
+        static Prob const* const Pcats[] = { Pcat1, Pcat2, Pcat3, Pcat4, Pcat5, Pcat6 };
+
+        v = 0;
+
+        // This loop corresponds to `DCTextra` in the spec in section 13.2.
+        for (int i = 0; i < bits[token - dct_cat1]; ++i)
+            v = (v << 1) | TRY(decoder.read_bool(Pcats[token - dct_cat1][i]));
+
+        v += starts[token - dct_cat1];
+    }
+
+    if (v) {
+        if (TRY(decoder.read_bool(128)))
+            v = -v;
+    }
+
+    return v;
+}
+
+i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantization_indices, Segmentation const& segmentation, int segment_id, CoefficientBlockIndex index)
+{
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-9.6 "Dequantization Indices"
+    // "before inverting the transform, each decoded coefficient
+    //  is multiplied by one of six dequantization factors, the choice of
+    //  which depends on the plane (Y, chroma = U or V, Y2) and coefficient
+    //  position (DC = coefficient 0, AC = coefficients 1-15).  The six
+    //  values are specified using 7-bit indices into six corresponding fixed
+    //  tables (the tables are given in Section 14)."
+    // Section 14 then lists two (!) fixed tables (which are in WebPLoaderLossyTables.h)
+
+    // "Lookup values from the above two tables are directly used in the DC
+    //  and AC coefficients in Y1, respectively.  For Y2 and chroma, values
+    //  from the above tables undergo either scaling or clamping before the
+    //  multiplies.  Details regarding these scaling and clamping processes
+    //  can be found in related lookup functions in dixie.c (Section 20.4)."
+    // Apparently spec writing became too much work at this point. In section 20.4, in dequant_init():
+    // * For y2, the output (!) of dc_qlookup is multiplied by 2, the output of ac_qlookup is multiplied by 155 / 100
+    // * Also for y2, ac_qlookup is at least 8 for lower table entries (XXX!)
+    // * For uv, the dc_qlookup index is clamped to 117 (instead of 127 for everything else)
+    //   (or, alternatively, the value is clamped to 132 at most)
+
+    u8 y_ac_base = quantization_indices.y_ac;
+    if (segmentation.update_macroblock_segmentation_map) {
+        if (segmentation.segment_feature_mode == SegmentFeatureMode::DeltaValueMode)
+            y_ac_base += segmentation.quantizer_update_value[segment_id];
+        else
+            y_ac_base = segmentation.quantizer_update_value[segment_id];
+    }
+
+    u8 dequantization_index;
+    if (index.is_y2())
+        dequantization_index = y_ac_base + (is_dc ? quantization_indices.y2_dc_delta : quantization_indices.y2_ac_delta);
+    else if (index.is_u() || index.is_v())
+        dequantization_index = y_ac_base + (is_dc ? quantization_indices.uv_dc_delta : quantization_indices.uv_ac_delta);
+    else
+        dequantization_index = is_dc ? (y_ac_base + quantization_indices.y_dc_delta) : y_ac_base;
+
+    // clamp index
+    if ((index.is_u() || index.is_v()) && is_dc)
+        dequantization_index = min(dequantization_index, 117);
+    else
+        dequantization_index = min(dequantization_index, 127);
+
+    // "the multiplies are computed and stored using 16-bit signed integers."
+    i16 dequantization_factor;
+    if (is_dc)
+        dequantization_factor = (i16)dc_qlookup[dequantization_index];
+    else
+        dequantization_factor = (i16)ac_qlookup[dequantization_index];
+
+    if (index.is_y2()) {
+        if (is_dc)
+            dequantization_factor *= 2;
+        else
+            dequantization_factor = (dequantization_factor * 155) / 100;
+    }
+
+    return dequantization_factor * value;
+}
+
+// Reading macroblock coefficients requires needing to know if the block to the left and above the current macroblock
+// has non-zero coefficients. This stores that state.
+struct CoefficientReadingContext {
+    // Store if each plane has nonzero coefficients in the block above and to the left of the current block.
+    Vector<bool> y2_above;
+    Vector<bool> y_above;
+    Vector<bool> u_above;
+    Vector<bool> v_above;
+
+    bool y2_left {};
+    bool y_left[4] {};
+    bool u_left[2] {};
+    bool v_left[2] {};
+
+    ErrorOr<void> initialize(int macroblock_width)
+    {
+        TRY(y2_above.try_resize(macroblock_width));
+        TRY(y_above.try_resize(macroblock_width * 4));
+        TRY(u_above.try_resize(macroblock_width * 2));
+        TRY(v_above.try_resize(macroblock_width * 2));
+        return {};
+    }
+
+    void start_new_row()
+    {
+        y2_left = false;
+        for (bool& b : y_left)
+            b = false;
+        for (bool& b : u_left)
+            b = false;
+        for (bool& b : v_left)
+            b = false;
+    }
+
+    bool& was_above_nonzero(CoefficientBlockIndex index, int mb_x)
+    {
+        if (index.is_y2())
+            return y2_above[mb_x];
+        if (index.is_u())
+            return u_above[mb_x * 2 + index.sub_x()];
+        if (index.is_v())
+            return v_above[mb_x * 2 + index.sub_x()];
+        return y_above[mb_x * 4 + index.sub_x()];
+    }
+    bool was_above_nonzero(CoefficientBlockIndex index, int mb_x) const { return const_cast<CoefficientReadingContext&>(*this).was_above_nonzero(index, mb_x); }
+
+    bool& was_left_nonzero(CoefficientBlockIndex index)
+    {
+        if (index.is_y2())
+            return y2_left;
+        if (index.is_u())
+            return u_left[index.sub_y()];
+        if (index.is_v())
+            return v_left[index.sub_y()];
+        return y_left[index.sub_y()];
+    }
+    bool was_left_nonzero(CoefficientBlockIndex index) const { return const_cast<CoefficientReadingContext&>(*this).was_left_nonzero(index); }
+
+    void update(CoefficientBlockIndex index, int mb_x, bool subblock_has_nonzero_coefficients)
+    {
+        was_above_nonzero(index, mb_x) = subblock_has_nonzero_coefficients;
+        was_left_nonzero(index) = subblock_has_nonzero_coefficients;
+    }
+};
+
+using Coefficients = i16[16];
+
+// Returns if any non-zero coefficients were read.
+ErrorOr<bool> read_coefficent_block(BooleanDecoder& decoder, Coefficients out_coefficients, CoefficientBlockIndex block_index, CoefficientReadingContext& coefficient_reading_context, int mb_x, bool have_y2, int segment_id, FrameHeader const& header)
+{
+    // Corresponds to `residual_block()` in https://datatracker.ietf.org/doc/html/rfc6386#section-19.3,
+    // but also does dequantization of the stored values.
+    // "firstCoeff is 1 for luma blocks of macroblocks containing Y2 subblock; otherwise 0"
+    int firstCoeff = have_y2 && block_index.is_y() ? 1 : 0;
+    i16 last_decoded_value = num_dct_tokens; // Start with an invalid value
+
+    bool subblock_has_nonzero_coefficients = false;
+
+    for (int j = firstCoeff; j < 16; ++j) {
+        // https://datatracker.ietf.org/doc/html/rfc6386#section-13.2 "Coding of Individual Coefficient Values"
+        // https://datatracker.ietf.org/doc/html/rfc6386#section-13.3 "Token Probabilities"
+
+        // "Working from the outside in, the outermost dimension is indexed by
+        //  the type of plane being decoded"
+        int plane = plane_index(block_index, have_y2);
+
+        // "The next dimension is selected by the position of the coefficient
+        //  being decoded.  That position, c, steps by ones up to 15, starting
+        //  from zero for block types 1, 2, or 3 and starting from one for block
+        //  type 0.  The second array index is then"
+        // "block type" here seems to refer to the "type of plane" in the previous paragraph.
+        static int constexpr coeff_bands[16] = { 0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7 };
+        int band = coeff_bands[j];
+
+        // "The third dimension is the trickiest."
+        int tricky = 0;
+
+        // "For the first coefficient (DC, unless the block type is 0), we
+        //  consider the (already encoded) blocks within the same plane (Y2, Y,
+        //  U, or V) above and to the left of the current block.  The context
+        //  index is then the number (0, 1, or 2) of these blocks that had at
+        //  least one non-zero coefficient in their residue record.  Specifically
+        //  for Y2, because macroblocks above and to the left may or may not have
+        //  a Y2 block, the block above is determined by the most recent
+        //  macroblock in the same column that has a Y2 block, and the block to
+        //  the left is determined by the most recent macroblock in the same row
+        //  that has a Y2 block.
+        //  [...]
+        //  As with other contexts used by VP8, the "neighboring block" context
+        //  described here needs a special definition for subblocks lying along
+        //  the top row or left edge of the frame.  These "non-existent"
+        //  predictors above and to the left of the image are simply taken to be
+        //  empty -- that is, taken to contain no non-zero coefficients."
+        if (j == firstCoeff) {
+            bool was_left_nonzero = coefficient_reading_context.was_left_nonzero(block_index);
+            bool was_above_nonzero = coefficient_reading_context.was_above_nonzero(block_index, mb_x);
+            tricky = static_cast<int>(was_left_nonzero) + static_cast<int>(was_above_nonzero);
+        }
+        // "Beyond the first coefficient, the context index is determined by the
+        //  absolute value of the most recently decoded coefficient (necessarily
+        //  within the current block) and is 0 if the last coefficient was a
+        //  zero, 1 if it was plus or minus one, and 2 if its absolute value
+        //  exceeded one."
+        else {
+            if (last_decoded_value == 0)
+                tricky = 0;
+            else if (last_decoded_value == 1 || last_decoded_value == -1)
+                tricky = 1;
+            else
+                tricky = 2;
+        }
+
+        // "In general, all DCT coefficients are decoded using the same tree.
+        //  However, if the preceding coefficient is a DCT_0, decoding will skip
+        //  the first branch, since it is not possible for dct_eob to follow a
+        //  DCT_0."
+        u8 token = TRY(tree_decode(decoder, COEFFICIENT_TREE, header.coefficient_probabilities[plane][band][tricky], last_decoded_value == DCT_0 ? 2 : 0));
+        if (token == dct_eob)
+            break;
+
+        i16 v = TRY(coefficient_value_for_token(decoder, token));
+
+        if (v) {
+            // Subblock has non-0 coefficients. Store that, so that `tricky` on the next subblock is initialized correctly.
+            subblock_has_nonzero_coefficients = true;
+        }
+
+        // last_decoded_value is used for setting `tricky`. It needs to be set to the last decoded token, not to the last dequantized value.
+        last_decoded_value = v;
+
+        i16 dequantized_value = dequantize_value(v, j == 0, header.quantization_indices, header.segmentation, segment_id, block_index);
+
+        static int constexpr Zigzag[] = { 0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15 };
+        out_coefficients[Zigzag[j]] = dequantized_value;
+    }
+
+    return subblock_has_nonzero_coefficients;
+}
+
+struct MacroblockCoefficients {
+    Coefficients y_coeffs[16] {};
+    Coefficients u_coeffs[4] {};
+    Coefficients v_coeffs[4] {};
+};
+
+ErrorOr<MacroblockCoefficients> read_macroblock_coefficients(BooleanDecoder& decoder, FrameHeader const& header, CoefficientReadingContext& coefficient_reading_context, MacroblockMetadata const& metadata, int mb_x)
+{
+    // Corresponds to `residual_data()` in https://datatracker.ietf.org/doc/html/rfc6386#section-19.3,
+    // but also does the inverse walsh-hadamard transform if a Y2 block is present.
+
+    MacroblockCoefficients coefficients;
+    Coefficients y2_coeffs {};
+
+    // "firstCoeff is 1 for luma blocks of macroblocks containing Y2 subblock; otherwise 0"
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-13
+
+    // "For all intra- and inter-prediction modes apart from B_PRED (intra:
+    //  whose Y subblocks are independently predicted) and SPLITMV (inter),
+    //  each macroblock's residue record begins with the Y2 component of the
+    //  residue, coded using a WHT.  B_PRED and SPLITMV coded macroblocks
+    //  omit this WHT and specify the 0th DCT coefficient in each of the 16 Y
+    //  subblocks."
+    bool have_y2 = metadata.intra_y_mode != B_PRED;
+
+    // "for Y2, because macroblocks above and to the left may or may not have
+    //  a Y2 block, the block above is determined by the most recent
+    //  macroblock in the same column that has a Y2 block, and the block to
+    //  the left is determined by the most recent macroblock in the same row
+    //  that has a Y2 block."
+    // We only write to y2_above / y2_left when it's present, so we don't need to do any explicit work to get the right behavior.
+
+    // "After the optional Y2 block, the residue record continues with 16
+    //  DCTs for the Y subblocks, followed by 4 DCTs for the U subblocks,
+    //  ending with 4 DCTs for the V subblocks.  The subblocks occur in the
+    //  usual order."
+
+    /* (1 Y2)?, 16 Y, 4 U, 4 V */
+    for (int i = have_y2 ? 0 : 1; i < 25; ++i) {
+        CoefficientBlockIndex block_index { i };
+
+        bool subblock_has_nonzero_coefficients = false;
+
+        if (!metadata.skip_coefficients) {
+            i16* to_read;
+            if (block_index.is_y2())
+                to_read = y2_coeffs;
+            else if (block_index.is_u())
+                to_read = coefficients.u_coeffs[i - 17];
+            else if (block_index.is_v())
+                to_read = coefficients.v_coeffs[i - 21];
+            else // Y
+                to_read = coefficients.y_coeffs[i - 1];
+            subblock_has_nonzero_coefficients = TRY(read_coefficent_block(decoder, to_read, block_index, coefficient_reading_context, mb_x, have_y2, metadata.segment_id, header));
+        }
+
+        coefficient_reading_context.update(block_index, mb_x, subblock_has_nonzero_coefficients);
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-14.2 "Inverse Transforms"
+    // "If the Y2 residue block exists (i.e., the macroblock luma mode is not
+    //  SPLITMV or B_PRED), it is inverted first (using the inverse WHT) and
+    //  the element of the result at row i, column j is used as the 0th
+    //  coefficient of the Y subblock at position (i, j), that is, the Y
+    //  subblock whose index is (i * 4) + j."
+    if (have_y2) {
+        Coefficients wht_output;
+        vp8_short_inv_walsh4x4_c(y2_coeffs, wht_output);
+        for (size_t i = 0; i < 16; ++i)
+            coefficients.y_coeffs[i][0] = wht_output[i];
+    }
+
+    return coefficients;
+}
+
+ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& header, ReadonlyBytes data, int macroblock_width, int macroblock_height, Vector<MacroblockMetadata> const& macroblock_metadata)
+{
+    FixedMemoryStream memory_stream { data };
+    BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+    auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, data.size() * 8));
+
+    CoefficientReadingContext coefficient_reading_context;
+    TRY(coefficient_reading_context.initialize(macroblock_width));
+
+    for (int mb_y = 0, macroblock_index = 0; mb_y < macroblock_height; ++mb_y) {
+        coefficient_reading_context.start_new_row();
+
+        for (int mb_x = 0; mb_x < macroblock_width; ++mb_x, ++macroblock_index) {
+            auto const& metadata = macroblock_metadata[macroblock_index];
+
+            auto coefficients = TRY(read_macroblock_coefficients(decoder, header, coefficient_reading_context, metadata, mb_x));
+
+            // FIXME: Decode the rest of the duck.
+            (void)coefficients;
+            (void)bitmap;
+        }
+    }
+
+    return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+}
+
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
 {
     // The first partition stores header, per-segment state, and macroblock metadata.
-
-    FixedMemoryStream memory_stream { vp8_header.lossy_data };
+    FixedMemoryStream memory_stream { vp8_header.first_partition };
     BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
-    auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, vp8_header.lossy_data.size() * 8));
+    auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, vp8_header.first_partition.size() * 8));
 
     auto header = TRY(decode_VP8_frame_header(decoder));
 
@@ -510,21 +929,22 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
     int macroblock_height = ceil_div(vp8_header.height, 16);
 
     auto macroblock_metadata = TRY(decode_VP8_macroblock_metadata(decoder, header, macroblock_width, macroblock_height));
-    (void)macroblock_metadata;
+
+    // Done with the first partition!
 
     if (header.number_of_dct_partitions > 1)
         return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps with more than one dct partition not yet implemented");
 
     auto bitmap_format = include_alpha_channel ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
+    auto bitmap = TRY(Bitmap::create(bitmap_format, { macroblock_width * 16, macroblock_height * 16 }));
 
-    // Uncomment this to test ALPH decoding for WebP-lossy-with-alpha images while lossy decoding isn't implemented yet.
-#if 0
-    return Bitmap::create(bitmap_format, { vp8_header.width, vp8_header.height });
-#else
-    // FIXME: Implement webp lossy decoding.
-    (void)bitmap_format;
-    return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
-#endif
+    TRY(decode_VP8_image_data(*bitmap, header, vp8_header.second_partition, macroblock_width, macroblock_height, macroblock_metadata));
+
+    auto width = static_cast<int>(vp8_header.width);
+    auto height = static_cast<int>(vp8_header.height);
+    if (bitmap->physical_size() == IntSize { width, height })
+        return bitmap;
+    return bitmap->cropped({ 0, 0, width, height });
 }
 
 }
