@@ -1420,6 +1420,64 @@ ErrorOr<void> HypotCalculationNode::dump(StringBuilder& builder, int indent) con
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<LogCalculationNode>> LogCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) LogCalculationNode(move(x), move(y)));
+}
+
+LogCalculationNode::LogCalculationNode(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+    : CalculationNode(Type::Log)
+    , m_x(move(x))
+    , m_y(move(y))
+{
+}
+
+LogCalculationNode::~LogCalculationNode() = default;
+
+ErrorOr<String> LogCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("log("sv);
+    builder.append(TRY(m_x->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_y->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> LogCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult LogCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_x->resolve(context, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), context);
+
+    auto node_b = m_y->resolve(context, percentage_basis);
+    auto node_b_value = resolve_value(node_b.value(), context);
+
+    auto result = log2(node_a_value) / log2(node_b_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> LogCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_x->for_each_child_node(callback));
+    TRY(m_y->for_each_child_node(callback));
+    TRY(callback(m_x));
+    TRY(callback(m_y));
+    return {};
+}
+
+ErrorOr<void> LogCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}LOG: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);
