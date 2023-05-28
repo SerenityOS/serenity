@@ -3851,6 +3851,24 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_log_function(Function cons
     return TRY(LogCalculationNode::create(move(node_a), move(node_b)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_exp_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 1) {
+        return Error::from_string_view("exp() must have exactly one parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_a_resolved_type = node_a->resolved_type().value();
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("exp() parameter must be number"sv);
+
+    return TRY(ExpCalculationNode::create(move(node_a)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3912,6 +3930,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("log"sv))
         return TRY(parse_log_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("exp"sv))
+        return TRY(parse_exp_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);

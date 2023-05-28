@@ -1751,6 +1751,55 @@ ErrorOr<void> LogCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<ExpCalculationNode>> ExpCalculationNode::create(NonnullOwnPtr<CalculationNode> a)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) ExpCalculationNode(move(a)));
+}
+
+ExpCalculationNode::ExpCalculationNode(NonnullOwnPtr<CalculationNode> a)
+    : CalculationNode(Type::Exp)
+    , m_a(move(a))
+{
+}
+
+ExpCalculationNode::~ExpCalculationNode() = default;
+
+ErrorOr<String> ExpCalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("exp("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> ExpCalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Number;
+}
+
+CalculatedStyleValue::CalculationResult ExpCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+    auto result = exp(node_a_value);
+
+    return { Number(Number::Type::Number, result) };
+}
+
+ErrorOr<void> ExpCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(callback(m_a));
+    return {};
+}
+
+ErrorOr<void> ExpCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}EXP: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
