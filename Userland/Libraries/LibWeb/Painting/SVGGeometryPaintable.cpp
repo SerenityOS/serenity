@@ -62,7 +62,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
-    auto const* svg_element = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto const* svg_element = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
 
     auto transform = layout_box().layout_transform();

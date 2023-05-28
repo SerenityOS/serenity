@@ -97,7 +97,7 @@ Gfx::AffineTransform SVGGraphicsElement::get_transform() const
 {
     // FIXME: It would be nice to do this using the SVGContext, however, then layout/hit testing knows nothing about the transform.
     Gfx::AffineTransform transform = m_transform;
-    for (auto* svg_ancestor = first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->first_ancestor_of_type<SVGGraphicsElement>()) {
+    for (auto* svg_ancestor = shadow_including_first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->shadow_including_first_ancestor_of_type<SVGGraphicsElement>()) {
         transform = Gfx::AffineTransform { svg_ancestor->m_transform }.multiply(transform);
     }
     return transform;
@@ -179,7 +179,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         // FIXME: This isn't right, but it's something.
         CSSPixels viewport_width = 0;
         CSSPixels viewport_height = 0;
-        if (auto* svg_svg_element = first_ancestor_of_type<SVGSVGElement>()) {
+        if (auto* svg_svg_element = shadow_including_first_ancestor_of_type<SVGSVGElement>()) {
             if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
                 viewport_width = svg_svg_layout_node->computed_values().width().to_px(*svg_svg_layout_node, 0);
                 viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
