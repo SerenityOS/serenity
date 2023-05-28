@@ -39,6 +39,28 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Time const& time) { return time.to_seconds(); });
 }
 
+static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleValue::ResolvedType type, double value)
+{
+    switch (type) {
+    case CalculatedStyleValue::ResolvedType::Integer:
+        return { Number(Number::Type::Integer, value) };
+    case CalculatedStyleValue::ResolvedType::Number:
+        return { Number(Number::Type::Number, value) };
+    case CalculatedStyleValue::ResolvedType::Angle:
+        return { Angle::make_degrees(value) };
+    case CalculatedStyleValue::ResolvedType::Frequency:
+        return { Frequency::make_hertz(value) };
+    case CalculatedStyleValue::ResolvedType::Length:
+        return { Length::make_px(value) };
+    case CalculatedStyleValue::ResolvedType::Percentage:
+        return { Percentage(value) };
+    case CalculatedStyleValue::ResolvedType::Time:
+        return { Time::make_seconds(value) };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
 {
@@ -757,27 +779,6 @@ Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type
 
 CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return { Number(Number::Type::Integer, value) };
-        case CalculatedStyleValue::ResolvedType::Number:
-            return { Number(Number::Type::Number, value) };
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return { Angle::make_degrees(value) };
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return { Frequency::make_hertz(value) };
-        case CalculatedStyleValue::ResolvedType::Length:
-            return { Length::make_px(value) };
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return { Percentage(value) };
-        case CalculatedStyleValue::ResolvedType::Time:
-            return { Time::make_seconds(value) };
-        }
-
-        VERIFY_NOT_REACHED();
-    };
-
     auto resolved_type = m_a->resolved_type().value();
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
@@ -861,27 +862,6 @@ Optional<CalculatedStyleValue::ResolvedType> ModCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return { Number(Number::Type::Integer, value) };
-        case CalculatedStyleValue::ResolvedType::Number:
-            return { Number(Number::Type::Number, value) };
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return { Angle::make_degrees(value) };
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return { Frequency::make_hertz(value) };
-        case CalculatedStyleValue::ResolvedType::Length:
-            return { Length::make_px(value) };
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return { Percentage(value) };
-        case CalculatedStyleValue::ResolvedType::Time:
-            return { Time::make_seconds(value) };
-        }
-
-        VERIFY_NOT_REACHED();
-    };
-
     auto resolved_type = m_a->resolved_type().value();
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
@@ -942,27 +922,6 @@ Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return { Number(Number::Type::Integer, value) };
-        case CalculatedStyleValue::ResolvedType::Number:
-            return { Number(Number::Type::Number, value) };
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return { Angle::make_degrees(value) };
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return { Frequency::make_hertz(value) };
-        case CalculatedStyleValue::ResolvedType::Length:
-            return { Length::make_px(value) };
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return { Percentage(value) };
-        case CalculatedStyleValue::ResolvedType::Time:
-            return { Time::make_seconds(value) };
-        }
-
-        VERIFY_NOT_REACHED();
-    };
-
     auto resolved_type = m_a->resolved_type().value();
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_b = m_b->resolve(layout_node, percentage_basis);
@@ -1018,27 +977,6 @@ Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type()
 
 CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return { Number(Number::Type::Integer, value) };
-        case CalculatedStyleValue::ResolvedType::Number:
-            return { Number(Number::Type::Number, value) };
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return { Angle::make_degrees(value) };
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return { Frequency::make_hertz(value) };
-        case CalculatedStyleValue::ResolvedType::Length:
-            return { Length::make_px(value) };
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return { Percentage(value) };
-        case CalculatedStyleValue::ResolvedType::Time:
-            return { Time::make_seconds(value) };
-        }
-
-        VERIFY_NOT_REACHED();
-    };
-
     auto resolved_type = m_a->resolved_type().value();
     auto node_a = m_a->resolve(layout_node, percentage_basis);
     auto node_a_value = resolve_value(node_a.value(), layout_node);
@@ -1640,27 +1578,6 @@ bool HypotCalculationNode::contains_percentage() const
 
 CalculatedStyleValue::CalculationResult HypotCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto to_resolved_type = [](CalculatedStyleValue::ResolvedType type, double value) -> CalculatedStyleValue::CalculationResult {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return { Number(Number::Type::Integer, value) };
-        case CalculatedStyleValue::ResolvedType::Number:
-            return { Number(Number::Type::Number, value) };
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return { Angle::make_degrees(value) };
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return { Frequency::make_hertz(value) };
-        case CalculatedStyleValue::ResolvedType::Length:
-            return { Length::make_px(value) };
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return { Percentage(value) };
-        case CalculatedStyleValue::ResolvedType::Time:
-            return { Time::make_seconds(value) };
-        }
-
-        VERIFY_NOT_REACHED();
-    };
-
     double square_sum = 0.0;
 
     for (auto const& value : m_values) {
