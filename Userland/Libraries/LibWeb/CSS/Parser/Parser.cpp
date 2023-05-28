@@ -3823,6 +3823,27 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_pow_function(Function const& func
     return TRY(PowCalculationNode::create(node_a.release_nonnull(), node_b.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_sqrt_function(Function const& function)
+{
+    auto node = TRY(parse_a_calculation(function.values()));
+    if (!node) {
+        dbgln_if(CSS_PARSER_DEBUG, "sqrt() parameter must be valid calculation"sv);
+        return nullptr;
+    }
+
+    auto maybe_parameter_type = node->resolved_type();
+    if (!maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for sqrt() parameter"sv);
+        return nullptr;
+    }
+
+    auto resolved_type = maybe_parameter_type.value();
+    if (resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("sqrt() parameter must be number"sv);
+
+    return TRY(SqrtCalculationNode::create(node.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3890,6 +3911,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("pow"sv))
         return TRY(parse_pow_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("sqrt"sv))
+        return TRY(parse_sqrt_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
