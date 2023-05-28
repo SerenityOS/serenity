@@ -455,7 +455,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
         "&Load Color Palette...", g_icon_bag.load_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().open_file(&window, "Load Color Palette");
+            auto response = FileSystemAccessClient::Client::the().open_file(&window, { .window_title = "Load Color Palette"sv });
             if (response.is_error())
                 return;
 

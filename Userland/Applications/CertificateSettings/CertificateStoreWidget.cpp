@@ -92,7 +92,7 @@ ErrorOr<size_t> CertificateStoreModel::add(Vector<Certificate> const& certificat
 
 ErrorOr<void> CertificateStoreWidget::import_pem()
 {
-    auto fsac_result = FileSystemAccessClient::Client::the().open_file(window(), "Import");
+    auto fsac_result = FileSystemAccessClient::Client::the().open_file(window(), { .window_title = "Import"sv });
     if (fsac_result.is_error())
         return {};
 

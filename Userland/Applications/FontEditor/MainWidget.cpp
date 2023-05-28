@@ -133,9 +133,12 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         if (!request_close())
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Open", "/res/fonts"sv, Core::File::OpenMode::Read,
-            { { GUI::FileTypeFilter { "Bitmap Font Files", { { "font" } } },
-                GUI::FileTypeFilter::all_files() } });
+        FileSystemAccessClient::OpenFileOptions options {
+            .window_title = "Open"sv,
+            .path = "/res/fonts"sv,
+            .allowed_file_types = { { GUI::FileTypeFilter { "Bitmap Font Files", { { "font" } } }, GUI::FileTypeFilter::all_files() } },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
         auto file = response.release_value();

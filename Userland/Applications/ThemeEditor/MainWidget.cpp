@@ -242,7 +242,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window, "Select Theme", "/res/themes"sv);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, { .window_title = "Select Theme"sv, .path = "/res/themes"sv });
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
