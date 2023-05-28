@@ -8,6 +8,7 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/CSS/PercentageOr.h>
+#include <LibWeb/Layout/AvailableSpace.h>
 
 namespace Web::CSS {
 
@@ -30,8 +31,8 @@ public:
 
     Type type() const { return m_type; }
 
-    bool is_auto() const { return m_type == Type::LengthPercentage && m_length_percentage.is_auto(); }
-    bool is_length_percentage() const { return m_type == Type::LengthPercentage; }
+    bool is_auto(Layout::AvailableSize const&) const;
+    bool is_fixed(Layout::AvailableSize const&) const;
     bool is_flexible_length() const { return m_type == Type::FlexibleLength; }
     bool is_max_content() const { return m_type == Type::MaxContent; }
     bool is_min_content() const { return m_type == Type::MinContent; }
@@ -42,10 +43,7 @@ public:
     // https://www.w3.org/TR/css-grid-2/#layout-algorithm
     // An intrinsic sizing function (min-content, max-content, auto, fit-content()).
     // FIXME: Add missing properties once implemented.
-    bool is_intrinsic_track_sizing() const
-    {
-        return is_auto() || is_max_content() || is_min_content();
-    }
+    bool is_intrinsic(Layout::AvailableSize const&) const;
 
     bool is_definite() const
     {
