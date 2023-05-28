@@ -20,7 +20,8 @@ struct VP8Header {
     u8 horizontal_scale;
     u32 height;
     u8 vertical_scale;
-    ReadonlyBytes lossy_data;
+    ReadonlyBytes first_partition;
+    ReadonlyBytes second_partition;
 };
 
 // Parses the header data in a VP8 chunk. Pass the payload of a `VP8 ` chunk, after the tag and after the tag's data size.
