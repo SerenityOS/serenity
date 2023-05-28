@@ -86,6 +86,11 @@ public:
         return String::from_deprecated_string(client().dump_text());
     }
 
+    void clear_content_filters()
+    {
+        client().async_set_content_filters({});
+    }
+
 private:
     HeadlessWebContentView() = default;
 
@@ -315,6 +320,8 @@ static ErrorOr<void> collect_tests(Vector<Test>& tests, StringView path, StringV
 
 static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path)
 {
+    view.clear_content_filters();
+
     Vector<Test> tests;
     TRY(collect_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
     TRY(collect_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
