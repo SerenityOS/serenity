@@ -59,8 +59,9 @@ for lib in gmp isl mpfr mpc; do
         [ "$lib" = "mpc" ] && formula_name="libmpc" || formula_name="$lib"
         config_args+=("--with-$lib=$(brew --prefix --installed "$formula_name")") || missing_lib $lib
     else
+        [ "$lib" = "isl" ] && header="isl/version.h" || header="$lib.h"
         if ! ${CC:-cc} -I /usr/local/include -L /usr/local/lib -l$lib -o /dev/null -xc - >/dev/null <<PROGRAM
-#include <$lib.h>
+#include <$header>
 int main() {}
 PROGRAM
               then
