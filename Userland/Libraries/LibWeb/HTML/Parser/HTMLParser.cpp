@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +34,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>
 
@@ -3934,6 +3936,145 @@ RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
     // 5. If value is a percentage, return value as a percentage.
     // 6. Return value as a length.
     return value;
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-a-legacy-colour-value
+Optional<Color> parse_legacy_color_value(DeprecatedString input)
+{
+    // 1. Let input be the string being parsed
+    // 2. If input is the empty string, then return an error.
+    if (input.is_empty())
+        return {};
+
+    // 3. Strip leading and trailing ASCII whitespace from input.
+    input = input.trim(Infra::ASCII_WHITESPACE);
+
+    // 4. If input is an ASCII case-insensitive match for the string "transparent", then return an error.
+    if (Infra::is_ascii_case_insensitive_match(input, "transparent"sv))
+        return {};
+
+    // 5. If input is an ASCII case-insensitive match for one of the named colors, then return the simple color corresponding to that keyword. [CSSCOLOR]
+    if (auto const color = Color::from_named_css_color_string(input); color.has_value())
+        return color;
+
+    auto hex_nibble_to_u8 = [](char nibble) -> u8 {
+        if (nibble >= '0' && nibble <= '9')
+            return nibble - '0';
+        if (nibble >= 'a' && nibble <= 'f')
+            return nibble - 'a' + 10;
+        return nibble - 'A' + 10;
+    };
+
+    // 6. If input's code point length is four, and the first character in input is U+0023 (#), and the last three characters of input are all ASCII hex digits, then:
+    if (input.length() == 4 && input[0] == '#' && is_ascii_hex_digit(input[1]) && is_ascii_hex_digit(input[2]) && is_ascii_hex_digit(input[3])) {
+        // 1. Let result be a simple color.
+        Color result;
+        result.set_alpha(0xFF);
+
+        // 2. Interpret the second character of input as a hexadecimal digit; let the red component of result be the resulting number multiplied by 17.
+        result.set_red(hex_nibble_to_u8(input[1]) * 17);
+
+        // 3. Interpret the third character of input as a hexadecimal digit; let the green component of result be the resulting number multiplied by 17.
+        result.set_green(hex_nibble_to_u8(input[2]) * 17);
+
+        // 4. Interpret the fourth character of input as a hexadecimal digit; let the blue component of result be the resulting number multiplied by 17.
+        result.set_blue(hex_nibble_to_u8(input[3]) * 17);
+
+        // 5. Return result.
+        return result;
+    }
+
+    // 7. Replace any code points greater than U+FFFF in input (i.e., any characters that are not in the basic multilingual plane) with the two-character string "00".
+    auto replace_non_basic_multilingual_code_points = [](StringView string) -> DeprecatedString {
+        StringBuilder builder;
+        for (auto code_point : Utf8View { string }) {
+            if (code_point > 0xFFFF)
+                builder.append("00"sv);
+            else
+                builder.append_code_point(code_point);
+        }
+        return builder.to_deprecated_string();
+    };
+    input = replace_non_basic_multilingual_code_points(input);
+
+    // 8. If input's code point length is greater than 128, truncate input, leaving only the first 128 characters.
+    if (input.length() > 128)
+        input = input.substring(0, 128);
+
+    // 9. If the first character in input is a U+0023 NUMBER SIGN character (#), remove it.
+    if (input[0] == '#')
+        input = input.substring(1);
+
+    // 10. Replace any character in input that is not an ASCII hex digit with the character U+0030 DIGIT ZERO (0).
+    auto replace_non_ascii_hex = [](StringView string) -> DeprecatedString {
+        StringBuilder builder;
+        for (auto code_point : Utf8View { string }) {
+            if (is_ascii_hex_digit(code_point))
+                builder.append_code_point(code_point);
+            else
+                builder.append_code_point('0');
+        }
+        return builder.to_deprecated_string();
+    };
+    input = replace_non_ascii_hex(input);
+
+    // 11. While input's code point length is zero or not a multiple of three, append a U+0030 DIGIT ZERO (0) character to input.
+    StringBuilder builder;
+    builder.append(input);
+    while (builder.length() == 0 || (builder.length() % 3 != 0))
+        builder.append_code_point('0');
+    input = builder.to_deprecated_string();
+
+    // 12. Split input into three strings of equal code point length, to obtain three components. Let length be the code point length that all of those components have (one third the code point length of input).
+    auto length = input.length() / 3;
+    auto first_component = input.substring_view(0, length);
+    auto second_component = input.substring_view(length, length);
+    auto third_component = input.substring_view(length * 2, length);
+
+    // 13. If length is greater than 8, then remove the leading length-8 characters in each component, and let length be 8.
+    if (length > 8) {
+        first_component = first_component.substring_view(length - 8);
+        second_component = second_component.substring_view(length - 8);
+        third_component = third_component.substring_view(length - 8);
+        length = 8;
+    }
+
+    // 14. While length is greater than two and the first character in each component is a U+0030 DIGIT ZERO (0) character, remove that character and reduce length by one.
+    while (length > 2 && first_component[0] == '0' && second_component[0] == '0' && third_component[0] == '0') {
+        --length;
+        first_component = first_component.substring_view(1);
+        second_component = second_component.substring_view(1);
+        third_component = third_component.substring_view(1);
+    }
+
+    // 15. If length is still greater than two, truncate each component, leaving only the first two characters in each.
+    if (length > 2) {
+        first_component = first_component.substring_view(0, 2);
+        second_component = second_component.substring_view(0, 2);
+        third_component = third_component.substring_view(0, 2);
+    }
+
+    auto to_hex = [&](StringView string) -> u8 {
+        auto nib1 = hex_nibble_to_u8(string[0]);
+        auto nib2 = hex_nibble_to_u8(string[1]);
+        return nib1 << 4 | nib2;
+    };
+
+    // 16. Let result be a simple color.
+    Color result;
+    result.set_alpha(0xFF);
+
+    // 17. Interpret the first component as a hexadecimal number; let the red component of result be the resulting number.
+    result.set_red(to_hex(first_component));
+
+    // 18. Interpret the second component as a hexadecimal number; let the green component of result be the resulting number.
+    result.set_green(to_hex(second_component));
+
+    // 19. Interpret the third component as a hexadecimal number; let the blue component of result be the resulting number.
+    result.set_blue(to_hex(third_component));
+
+    // 20. Return result.
+    return result;
 }
 
 JS::Realm& HTMLParser::realm()
