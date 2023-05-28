@@ -3752,6 +3752,30 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_atan2_function(Function co
     return TRY(Atan2CalculationNode::create(move(node_a), move(node_b)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_pow_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2) {
+        return Error::from_string_view("pow() must have exactly two parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_a_resolved_type = node_a->resolved_type().value();
+
+    auto node_b = TRY(parse_a_calculation(parameters[1]));
+    auto node_b_resolved_type = node_b->resolved_type().value();
+
+    if (node_a_resolved_type != node_b_resolved_type)
+        return Error::from_string_view("pow() parameters must be of the same type"sv);
+
+    if (node_a_resolved_type != CalculatedStyleValue::ResolvedType::Number)
+        return Error::from_string_view("pow() parameters must be numbers"sv);
+
+    return TRY(PowCalculationNode::create(move(node_a), move(node_b)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3801,6 +3825,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("atan2"sv))
         return TRY(parse_atan2_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("pow"sv))
+        return TRY(parse_pow_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);

@@ -169,6 +169,14 @@ public:
         Atan,
         Atan2,
 
+        // Exponential functions, a sub-type of operator node
+        // https://drafts.csswg.org/css-values-4/#exponent-funcs
+        Pow,
+        Sqrt,
+        Hypot,
+        Log,
+        Exp,
+
         // Sign-Related Functions, a sub-type of operator node
         // https://drafts.csswg.org/css-values-4/#sign-funcs
         Abs,
@@ -593,6 +601,25 @@ public:
 
 private:
     Atan2CalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    NonnullOwnPtr<CalculationNode> m_a;
+    NonnullOwnPtr<CalculationNode> m_b;
+};
+
+class PowCalculationNode final : public CalculationNode {
+public:
+    static ErrorOr<NonnullOwnPtr<PowCalculationNode>> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    ~PowCalculationNode();
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual bool contains_percentage() const override { return false; };
+    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
+
+    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+private:
+    PowCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_a;
     NonnullOwnPtr<CalculationNode> m_b;
 };
