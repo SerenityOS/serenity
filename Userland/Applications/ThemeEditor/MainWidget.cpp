@@ -242,7 +242,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window, { .window_title = "Select Theme"sv, .path = "/res/themes"sv });
+        FileSystemAccessClient::OpenFileOptions options {
+            .window_title = "Select Theme"sv,
+            .path = "/res/themes"sv,
+            .allowed_file_types = Vector { { "Theme Files", { { "ini" } } }, GUI::FileTypeFilter::all_files() },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
         if (response.is_error())
             return;
         auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());

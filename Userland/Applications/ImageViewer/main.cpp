@@ -121,7 +121,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            auto result = FileSystemAccessClient::Client::the().open_file(window, { .window_title = "Open Image"sv });
+            FileSystemAccessClient::OpenFileOptions options {
+                .window_title = "Open Image"sv,
+                .allowed_file_types = Vector { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() },
+            };
+            auto result = FileSystemAccessClient::Client::the().open_file(window, options);
             if (result.is_error())
                 return;
 
