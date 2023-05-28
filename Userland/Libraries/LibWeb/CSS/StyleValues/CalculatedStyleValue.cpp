@@ -1431,6 +1431,64 @@ ErrorOr<void> AtanCalculationNode::dump(StringBuilder& builder, int indent) cons
     return {};
 }
 
+ErrorOr<NonnullOwnPtr<Atan2CalculationNode>> Atan2CalculationNode::create(NonnullOwnPtr<CalculationNode> a, NonnullOwnPtr<CalculationNode> b)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) Atan2CalculationNode(move(a), move(b)));
+}
+
+Atan2CalculationNode::Atan2CalculationNode(NonnullOwnPtr<CalculationNode> a, NonnullOwnPtr<CalculationNode> b)
+    : CalculationNode(Type::Atan2)
+    , m_a(move(a))
+    , m_b(move(b))
+{
+}
+
+Atan2CalculationNode::~Atan2CalculationNode() = default;
+
+ErrorOr<String> Atan2CalculationNode::to_string() const
+{
+    StringBuilder builder;
+    builder.append("atan2("sv);
+    builder.append(TRY(m_a->to_string()));
+    builder.append(", "sv);
+    builder.append(TRY(m_b->to_string()));
+    builder.append(")"sv);
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> Atan2CalculationNode::resolved_type() const
+{
+    return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+CalculatedStyleValue::CalculationResult Atan2CalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto node_a = m_a->resolve(layout_node, percentage_basis);
+    auto node_a_value = resolve_value(node_a.value(), layout_node);
+
+    auto node_b = m_b->resolve(layout_node, percentage_basis);
+    auto node_b_value = resolve_value(node_b.value(), layout_node);
+
+    auto result = atan2(node_a_value, node_b_value);
+
+    return { Angle(result, Angle::Type::Rad) };
+}
+
+ErrorOr<void> Atan2CalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_a->for_each_child_node(callback));
+    TRY(m_b->for_each_child_node(callback));
+    TRY(callback(m_a));
+    TRY(callback(m_b));
+    return {};
+}
+
+ErrorOr<void> Atan2CalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}ATAN2: {}\n", "", indent, TRY(to_string())));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);

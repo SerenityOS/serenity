@@ -3731,6 +3731,27 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_atan_function(Function con
     return TRY(AtanCalculationNode::create(move(node_a)));
 }
 
+ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_atan2_function(Function const& function)
+{
+    TokenStream stream { function.values() };
+    auto parameters = parse_a_comma_separated_list_of_component_values(stream);
+
+    if (parameters.size() != 2) {
+        return Error::from_string_view("atan2() must have exactly two parameter"sv);
+    }
+
+    auto node_a = TRY(parse_a_calculation(parameters[0]));
+    auto node_a_resolved_type = node_a->resolved_type().value();
+
+    auto node_b = TRY(parse_a_calculation(parameters[1]));
+    auto node_b_resolved_type = node_b->resolved_type().value();
+
+    if (node_a_resolved_type != node_b_resolved_type)
+        return Error::from_string_view("atan2() parameters must be of the same type"sv);
+
+    return TRY(Atan2CalculationNode::create(move(node_a), move(node_b)));
+}
+
 ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
@@ -3777,6 +3798,9 @@ ErrorOr<NonnullOwnPtr<CalculationNode>> Parser::parse_a_function_node(Function c
 
     if (function.name().equals_ignoring_ascii_case("atan"sv))
         return TRY(parse_atan_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("atan2"sv))
+        return TRY(parse_atan2_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return Error::from_string_view("Unknown function"sv);
