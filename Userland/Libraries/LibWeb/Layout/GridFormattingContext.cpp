@@ -630,59 +630,23 @@ void GridFormattingContext::initialize_track_sizes(AvailableSpace const& availab
     auto& tracks_and_gaps = dimension == GridDimension::Column ? m_grid_columns_and_gaps : m_grid_rows_and_gaps;
     auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
-    // For each track, if the track’s min track sizing function is:
     for (auto& track : tracks_and_gaps) {
         if (track.is_gap)
             continue;
 
-        switch (track.min_track_sizing_function.type()) {
-        // - A fixed sizing function
-        // Resolve to an absolute length and use that size as the track’s initial base size.
-        case CSS::GridSize::Type::LengthPercentage: {
-            if (!track.min_track_sizing_function.is_auto()) {
-                track.base_size = track.min_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
-            }
-
-            break;
-        }
-        // - An intrinsic sizing function
-        // Use an initial base size of zero.
-        case CSS::GridSize::Type::FlexibleLength:
-        case CSS::GridSize::Type::MaxContent:
-        case CSS::GridSize::Type::MinContent: {
+        if (track.min_track_sizing_function.is_fixed(available_size)) {
+            track.base_size = track.min_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+        } else if (track.min_track_sizing_function.is_intrinsic(available_size)) {
             track.base_size = 0;
-            break;
-        }
-        default:
-            VERIFY_NOT_REACHED();
         }
 
-        // For each track, if the track’s max track sizing function is:
-        switch (track.max_track_sizing_function.type()) {
-        // - A fixed sizing function
-        // Resolve to an absolute length and use that size as the track’s initial growth limit.
-        case CSS::GridSize::Type::LengthPercentage: {
-            if (!track.max_track_sizing_function.is_auto()) {
-                track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
-            } else {
-                track.growth_limit = INFINITY;
-            }
-            break;
-        }
-        // - A flexible sizing function
-        // Use an initial growth limit of infinity.
-        case CSS::GridSize::Type::FlexibleLength: {
+        if (track.max_track_sizing_function.is_fixed(available_size)) {
+            track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+        } else if (track.max_track_sizing_function.is_flexible_length()) {
             track.growth_limit = INFINITY;
-            break;
-        }
-        // - An intrinsic sizing function
-        // Use an initial growth limit of infinity.
-        case CSS::GridSize::Type::MaxContent:
-        case CSS::GridSize::Type::MinContent: {
+        } else if (track.max_track_sizing_function.is_intrinsic(available_size)) {
             track.growth_limit = INFINITY;
-            break;
-        }
-        default:
+        } else {
             VERIFY_NOT_REACHED();
         }
 
@@ -891,7 +855,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         //    function by distributing extra space as needed to accommodate these items’ minimum contributions.
         Vector<TemporaryTrack&> intrinsic_minimum_spanned_tracks;
         for (auto& track : spanned_tracks) {
-            if (track.min_track_sizing_function.is_intrinsic_track_sizing())
+            if (track.min_track_sizing_function.is_intrinsic(available_size))
                 intrinsic_minimum_spanned_tracks.append(track);
         }
         auto item_size_contribution = [&] {
@@ -929,7 +893,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         if (available_size.is_max_content()) {
             Vector<TemporaryTrack&> max_content_minimum_tracks;
             for (auto& track : spanned_tracks) {
-                if (track.min_track_sizing_function.is_auto() || track.min_track_sizing_function.is_max_content()) {
+                if (track.min_track_sizing_function.is_auto(available_size) || track.min_track_sizing_function.is_max_content()) {
                     max_content_minimum_tracks.append(track);
                 }
             }
@@ -951,7 +915,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing
         Vector<TemporaryTrack&> intrinsic_maximum_tracks;
         for (auto& track : spanned_tracks) {
-            if (track.max_track_sizing_function.is_intrinsic_track_sizing()) {
+            if (track.max_track_sizing_function.is_intrinsic(available_size)) {
                 intrinsic_maximum_tracks.append(track);
             }
         }
@@ -974,7 +938,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         //    content contributions.
         Vector<TemporaryTrack&> max_content_maximum_tracks;
         for (auto& track : spanned_tracks) {
-            if (track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto()) {
+            if (track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto(available_size)) {
                 max_content_maximum_tracks.append(track);
             }
         }
@@ -1183,19 +1147,19 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_
     // step instead.
     CSSPixels used_space = 0;
     for (auto& track : tracks_and_gaps) {
-        if (!track.max_track_sizing_function.is_auto())
+        if (!track.max_track_sizing_function.is_auto(available_size))
             used_space += track.base_size;
     }
 
     CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px() - used_space : 0;
     auto count_of_auto_max_sizing_tracks = 0;
     for (auto& track : tracks_and_gaps) {
-        if (track.max_track_sizing_function.is_auto())
+        if (track.max_track_sizing_function.is_auto(available_size))
             count_of_auto_max_sizing_tracks++;
     }
 
     for (auto& track : tracks_and_gaps) {
-        if (track.max_track_sizing_function.is_auto())
+        if (track.max_track_sizing_function.is_auto(available_size))
             track.base_size = max(track.base_size, remaining_space / count_of_auto_max_sizing_tracks);
     }
 }
@@ -1424,6 +1388,8 @@ void GridFormattingContext::resolve_grid_item_heights()
 
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
+    m_available_space = available_space;
+
     place_grid_items(available_space);
 
     initialize_grid_tracks_for_columns_and_rows(available_space);
@@ -1812,7 +1778,8 @@ CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, Gr
     auto item_track_index = item.raw_position(dimension);
 
     // FIXME: Check all tracks spanned by an item
-    auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto();
+    AvailableSize const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
+    auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto(available_size);
     if (item_spans_auto_tracks && !item.box().is_scroll_container()) {
         return item.add_border_box_sizes(content_based_minimum_size(item, dimension), dimension, m_state);
     }

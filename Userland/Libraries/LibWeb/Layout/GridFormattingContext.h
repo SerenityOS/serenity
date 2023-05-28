@@ -201,6 +201,8 @@ private:
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
+    Optional<AvailableSpace> m_available_space;
+
     void determine_grid_container_height();
     void determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space);
 
