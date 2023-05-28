@@ -379,6 +379,7 @@ if (BUILD_LAGOM)
         Compress
         Crypto
         DNS
+        Diff
         Gemini
         Gfx
         GL
