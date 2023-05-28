@@ -3666,6 +3666,30 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_tan_function(Function const& func
     return TRY(TanCalculationNode::create(calculation_node.release_nonnull()));
 }
 
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_asin_function(Function const& function)
+{
+    auto calculation_node = TRY(parse_a_calculation(function.values()));
+
+    if (!calculation_node) {
+        dbgln_if(CSS_PARSER_DEBUG, "asin() parameter must be a valid calculation"sv);
+        return nullptr;
+    }
+
+    auto maybe_parameter_type = calculation_node->resolved_type();
+    if (!maybe_parameter_type.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for asin() parameter"sv);
+        return nullptr;
+    }
+
+    auto resolved_type = maybe_parameter_type.value();
+    if (resolved_type != CalculatedStyleValue::ResolvedType::Number) {
+        dbgln_if(CSS_PARSER_DEBUG, "asin() parameter must be a number"sv);
+        return nullptr;
+    }
+
+    return TRY(AsinCalculationNode::create(calculation_node.release_nonnull()));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
@@ -3718,6 +3742,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
 
     if (function.name().equals_ignoring_ascii_case("tan"sv))
         return TRY(parse_tan_function(function));
+
+    if (function.name().equals_ignoring_ascii_case("asin"sv))
+        return TRY(parse_asin_function(function));
 
     dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
