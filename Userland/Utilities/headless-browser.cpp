@@ -20,6 +20,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <LibDiff/Generator.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -229,11 +230,58 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     auto expectation = TRY(String::from_utf8(StringView(TRY(expectation_file->read_until_eof()).bytes())));
 
     auto actual = result.release_value();
-    actual = TRY(actual.trim("\n"sv, TrimMode::Right));
-    expectation = TRY(expectation.trim("\n"sv, TrimMode::Right));
+    auto actual_trimmed = TRY(actual.trim("\n"sv, TrimMode::Right));
+    auto expectation_trimmed = TRY(expectation.trim("\n"sv, TrimMode::Right));
 
-    if (actual == expectation)
+    if (actual_trimmed == expectation_trimmed)
         return TestResult::Pass;
+
+    bool color_output = isatty(STDOUT_FILENO);
+
+    dbgln("Test failed: {}", input_path);
+
+    auto hunks = Diff::from_text(expectation, actual);
+    for (auto const& hunk : hunks) {
+        auto original_start = hunk.original_start_line;
+        auto target_start = hunk.target_start_line;
+        auto num_added = hunk.added_lines.size();
+        auto num_removed = hunk.removed_lines.size();
+
+        StringBuilder builder;
+        // Source line(s)
+        builder.appendff("{}", original_start);
+        if (num_removed > 1)
+            builder.appendff(",{}", original_start + num_removed - 1);
+
+        // Action
+        if (num_added > 0 && num_removed > 0)
+            builder.append('c');
+        else if (num_added > 0)
+            builder.append('a');
+        else
+            builder.append('d');
+
+        // Target line(s)
+        builder.appendff("{}", target_start);
+        if (num_added > 1)
+            builder.appendff(",{}", target_start + num_added - 1);
+
+        outln("Hunk: {}", builder.string_view());
+        for (auto const& line : hunk.removed_lines) {
+            if (color_output)
+                outln("\033[31;1m< {}\033[0m", line);
+            else
+                outln("< {}", line);
+        }
+        if (num_added > 0 && num_removed > 0)
+            outln("---");
+        for (auto const& line : hunk.added_lines) {
+            if (color_output)
+                outln("\033[32;1m> {}\033[0m", line);
+            else
+                outln("> {}", line);
+        }
+    }
 
     return TestResult::Fail;
 }
