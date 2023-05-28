@@ -9,6 +9,7 @@
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Node.h>
 
@@ -33,11 +34,13 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
 {
     for_each_attribute([&](auto& name, auto& value) {
         if (name.equals_ignoring_ascii_case("bgcolor"sv)) {
-            auto color = Color::from_string(value);
+            // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value
+            auto color = parse_legacy_color_value(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         } else if (name.equals_ignoring_ascii_case("text"sv)) {
-            auto color = Color::from_string(value);
+            // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-2
+            auto color = parse_legacy_color_value(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
         } else if (name.equals_ignoring_ascii_case("background"sv)) {
@@ -51,15 +54,18 @@ void HTMLBodyElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
 {
     HTMLElement::parse_attribute(name, value);
     if (name.equals_ignoring_ascii_case("link"sv)) {
-        auto color = Color::from_string(value);
+        // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-3
+        auto color = parse_legacy_color_value(value);
         if (color.has_value())
             document().set_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("alink"sv)) {
-        auto color = Color::from_string(value);
+        // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-5
+        auto color = parse_legacy_color_value(value);
         if (color.has_value())
             document().set_active_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("vlink"sv)) {
-        auto color = Color::from_string(value);
+        // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-4
+        auto color = parse_legacy_color_value(value);
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("background"sv)) {
