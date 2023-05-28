@@ -741,7 +741,14 @@ static void update_the_source_set(DOM::Element& element)
         if (source_set.is_empty())
             continue;
 
-        // FIXME: 6. If child has a media attribute, and its value does not match the environment, continue to the next child.
+        // 6. If child has a media attribute, and its value does not match the environment, continue to the next child.
+        if (child->has_attribute(HTML::AttributeNames::media)) {
+            auto media_query = parse_media_query(CSS::Parser::ParsingContext { element.document() },
+                child->attribute(HTML::AttributeNames::media));
+            if (!media_query || !media_query->evaluate(element.document().window())) {
+                continue;
+            }
+        }
 
         // 7. Parse child's sizes attribute, and let source set's source size be the returned value.
         source_set.m_source_size = parse_a_sizes_attribute(element.document(), child->attribute(HTML::AttributeNames::sizes));
