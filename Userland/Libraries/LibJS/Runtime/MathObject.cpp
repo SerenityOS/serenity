@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -225,57 +226,101 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
     auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
 
+    // 1. Let ny be ? ToNumber(y).
     auto y = TRY(vm.argument(0).to_number(vm));
+
+    // 2. Let nx be ? ToNumber(x).
     auto x = TRY(vm.argument(1).to_number(vm));
 
+    // 3. If ny is NaN or nx is NaN, return NaN.
     if (y.is_nan() || x.is_nan())
         return js_nan();
+
+    // 4. If ny is +∞𝔽, then
     if (y.is_positive_infinity()) {
+        // a. If nx is +∞𝔽, return an implementation-approximated Number value representing π / 4.
         if (x.is_positive_infinity())
             return Value(M_PI_4);
-        else if (x.is_negative_infinity())
+
+        // b. If nx is -∞𝔽, return an implementation-approximated Number value representing 3π / 4.
+        if (x.is_negative_infinity())
             return Value(three_quarters_pi);
-        else
-            return Value(M_PI_2);
+
+        // c. Return an implementation-approximated Number value representing π / 2.
+        return Value(M_PI_2);
     }
+
+    // 5. If ny is -∞𝔽, then
     if (y.is_negative_infinity()) {
+        // a. If nx is +∞𝔽, return an implementation-approximated Number value representing -π / 4.
         if (x.is_positive_infinity())
             return Value(-M_PI_4);
-        else if (x.is_negative_infinity())
+
+        // b. If nx is -∞𝔽, return an implementation-approximated Number value representing -3π / 4.
+        if (x.is_negative_infinity())
             return Value(-three_quarters_pi);
-        else
-            return Value(-M_PI_2);
+
+        // c. Return an implementation-approximated Number value representing -π / 2.
+        return Value(-M_PI_2);
     }
+
+    // 6. If ny is +0𝔽, then
     if (y.is_positive_zero()) {
+        // a. If nx > +0𝔽 or nx is +0𝔽, return +0𝔽.
         if (x.as_double() > 0 || x.is_positive_zero())
             return Value(0.0);
-        else
-            return Value(M_PI);
+
+        // b. Return an implementation-approximated Number value representing π.
+        return Value(M_PI);
     }
+
+    // 7. If ny is -0𝔽, then
     if (y.is_negative_zero()) {
+        // a. If nx > +0𝔽 or nx is +0𝔽, return -0𝔽
         if (x.as_double() > 0 || x.is_positive_zero())
             return Value(-0.0);
-        else
-            return Value(-M_PI);
+
+        // b. Return an implementation-approximated Number value representing -π.
+        return Value(-M_PI);
     }
+
+    // 8. Assert: ny is finite and is neither +0𝔽 nor -0𝔽.
     VERIFY(y.is_finite_number() && !y.is_positive_zero() && !y.is_negative_zero());
+
+    // 9. If ny > +0𝔽, then
     if (y.as_double() > 0) {
+        // a. If nx is +∞𝔽, return +0𝔽.
         if (x.is_positive_infinity())
             return Value(0);
-        else if (x.is_negative_infinity())
+
+        // b. If nx is -∞𝔽, return an implementation-approximated Number value representing π.
+        if (x.is_negative_infinity())
             return Value(M_PI);
-        else if (x.is_positive_zero() || x.is_negative_zero())
+
+        // c. If nx is either +0𝔽 or -0𝔽, return an implementation-approximated Number value representing π / 2.
+        if (x.is_positive_zero() || x.is_negative_zero())
             return Value(M_PI_2);
     }
+
+    // 10. If ny < -0𝔽, then
     if (y.as_double() < 0) {
+        // a. If nx is +∞𝔽, return -0𝔽.
         if (x.is_positive_infinity())
             return Value(-0.0);
-        else if (x.is_negative_infinity())
+
+        // b. If nx is -∞𝔽, return an implementation-approximated Number value representing -π.
+        if (x.is_negative_infinity())
             return Value(-M_PI);
-        else if (x.is_positive_zero() || x.is_negative_zero())
+
+        // c. If nx is either +0𝔽 or -0𝔽, return an implementation-approximated Number value representing -π / 2.
+        if (x.is_positive_zero() || x.is_negative_zero())
             return Value(-M_PI_2);
     }
+
+    // 11. Assert: nx is finite and is neither +0𝔽 nor -0𝔽.
     VERIFY(x.is_finite_number() && !x.is_positive_zero() && !x.is_negative_zero());
+
+    // 12. Return an implementation-approximated Number value representing the result of the inverse tangent of the quotient ℝ(ny) / ℝ(nx).
     return Value(::atan2(y.as_double(), x.as_double()));
 }
 
