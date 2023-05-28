@@ -237,6 +237,25 @@ enum DCTToken {
     num_dct_tokens /* 12 */
 };
 
+// clang-format off
+const TreeIndex COEFFICIENT_TREE[2 * (num_dct_tokens - 1)] = {
+ -dct_eob, 2,               /* eob = "0"   */
+  -DCT_0, 4,                /* 0   = "10"  */
+   -DCT_1, 6,               /* 1   = "110" */
+    8, 12,
+     -DCT_2, 10,            /* 2   = "11100" */
+      -DCT_3, -DCT_4,       /* 3   = "111010", 4 = "111011" */
+     14, 16,
+      -dct_cat1, -dct_cat2, /* cat1 =  "111100",
+                               cat2 = "111101" */
+     18, 20,
+      -dct_cat3, -dct_cat4, /* cat3 = "1111100",
+                               cat4 = "1111101" */
+      -dct_cat5, -dct_cat6  /* cat4 = "1111110",
+                               cat4 = "1111111" */
+};
+// clang-format on
+
 // https://datatracker.ietf.org/doc/html/rfc6386#section-13.4 "Token Probability Updates"
 // clang-format off
 static Prob constexpr COEFFICIENT_UPDATE_PROBABILITIES[4][8][3][num_dct_tokens - 1] = {
@@ -584,5 +603,75 @@ static Prob constexpr DEFAULT_COEFFICIENT_PROBABILITIES[4][8][3][num_dct_tokens 
     },
 };
 // clang-format on
+
+// https://datatracker.ietf.org/doc/html/rfc6386#section-14.1 "Dequantization"
+// clang-format off
+static int constexpr dc_qlookup[] = {
+     4,   5,   6,   7,   8,   9,  10,  10,   11,  12,  13,  14,  15,
+    16,  17,  17,  18,  19,  20,  20,  21,   21,  22,  22,  23,  23,
+    24,  25,  25,  26,  27,  28,  29,  30,   31,  32,  33,  34,  35,
+    36,  37,  37,  38,  39,  40,  41,  42,   43,  44,  45,  46,  46,
+    47,  48,  49,  50,  51,  52,  53,  54,   55,  56,  57,  58,  59,
+    60,  61,  62,  63,  64,  65,  66,  67,   68,  69,  70,  71,  72,
+    73,  74,  75,  76,  76,  77,  78,  79,   80,  81,  82,  83,  84,
+    85,  86,  87,  88,  89,  91,  93,  95,   96,  98, 100, 101, 102,
+    104, 106, 108, 110, 112, 114, 116, 118, 122, 124, 126, 128, 130,
+    132, 134, 136, 138, 140, 143, 145, 148, 151, 154, 157,
+};
+static int constexpr ac_qlookup[] = {
+      4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,
+     17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+     30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,
+     43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,
+     56,  57,  58,  60,  62,  64,  66,  68,  70,  72,  74,  76,  78,
+     80,  82,  84,  86,  88,  90,  92,  94,  96,  98, 100, 102, 104,
+    106, 108, 110, 112, 114, 116, 119, 122, 125, 128, 131, 134, 137,
+    140, 143, 146, 149, 152, 155, 158, 161, 164, 167, 170, 173, 177,
+    181, 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229,
+    234, 239, 245, 249, 254, 259, 264, 269, 274, 279, 284,
+};
+// clang-format on
+
+// https://datatracker.ietf.org/doc/html/rfc6386#section-14.3 "Implementation of the WHT Inversion"
+inline void vp8_short_inv_walsh4x4_c(i16* input, i16* output)
+{
+    i16* ip = input;
+    i16* op = output;
+
+    for (int i = 0; i < 4; i++) {
+        int a1 = ip[0] + ip[12];
+        int b1 = ip[4] + ip[8];
+        int c1 = ip[4] - ip[8];
+        int d1 = ip[0] - ip[12];
+
+        op[0] = a1 + b1;
+        op[4] = c1 + d1;
+        op[8] = a1 - b1;
+        op[12] = d1 - c1;
+        ip++;
+        op++;
+    }
+
+    ip = output;
+    op = output;
+    for (int i = 0; i < 4; i++) {
+        int a1 = ip[0] + ip[3];
+        int b1 = ip[1] + ip[2];
+        int c1 = ip[1] - ip[2];
+        int d1 = ip[0] - ip[3];
+
+        int a2 = a1 + b1;
+        int b2 = c1 + d1;
+        int c2 = a1 - b1;
+        int d2 = d1 - c1;
+        op[0] = (a2 + 3) >> 3;
+        op[1] = (b2 + 3) >> 3;
+        op[2] = (c2 + 3) >> 3;
+        op[3] = (d2 + 3) >> 3;
+
+        ip += 4;
+        op += 4;
+    }
+}
 
 }
