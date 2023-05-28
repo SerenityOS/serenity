@@ -636,6 +636,16 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     return builder.to_deprecated_string();
 }
 
+Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return DeprecatedString { "(no DOM tree)" };
+    if (!document->body())
+        return DeprecatedString { "(no body)" };
+    return document->body()->inner_text();
+}
+
 void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
 {
     Web::ContentFilter::the().set_patterns(filters).release_value_but_fixme_should_propagate_errors();
