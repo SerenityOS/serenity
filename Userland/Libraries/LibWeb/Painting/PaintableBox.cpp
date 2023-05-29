@@ -327,7 +327,7 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
         auto overflow_x = computed_values().overflow_x();
         auto overflow_y = computed_values().overflow_y();
 
-        if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
+        if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
             if (m_clip_rect.has_value()) {
                 m_clip_rect->intersect(absolute_padding_box_rect());
             } else {
