@@ -674,4 +674,59 @@ inline void vp8_short_inv_walsh4x4_c(i16* input, i16* output)
     }
 }
 
+// https://datatracker.ietf.org/doc/html/rfc6386#section-14.4 "Implementation of the DCT Inversion"
+inline void short_idct4x4llm_c(i16* input, i16* output, int pitch)
+{
+    static constexpr int cospi8sqrt2minus1 = 20091;
+    static constexpr int sinpi8sqrt2 = 35468;
+
+    i16* ip = input;
+    i16* op = output;
+    int shortpitch = pitch >> 1;
+
+    for (int i = 0; i < 4; i++) {
+        int a1 = ip[0] + ip[8];
+        int b1 = ip[0] - ip[8];
+
+        int temp1 = (ip[4] * sinpi8sqrt2) >> 16;
+        int temp2 = ip[12] + ((ip[12] * cospi8sqrt2minus1) >> 16);
+        int c1 = temp1 - temp2;
+
+        temp1 = ip[4] + ((ip[4] * cospi8sqrt2minus1) >> 16);
+        temp2 = (ip[12] * sinpi8sqrt2) >> 16;
+        int d1 = temp1 + temp2;
+
+        op[shortpitch * 0] = a1 + d1;
+        op[shortpitch * 3] = a1 - d1;
+        op[shortpitch * 1] = b1 + c1;
+        op[shortpitch * 2] = b1 - c1;
+
+        ip++;
+        op++;
+    }
+
+    ip = output;
+    op = output;
+    for (int i = 0; i < 4; i++) {
+        int a1 = ip[0] + ip[2];
+        int b1 = ip[0] - ip[2];
+
+        int temp1 = (ip[1] * sinpi8sqrt2) >> 16;
+        int temp2 = ip[3] + ((ip[3] * cospi8sqrt2minus1) >> 16);
+        int c1 = temp1 - temp2;
+
+        temp1 = ip[1] + ((ip[1] * cospi8sqrt2minus1) >> 16);
+        temp2 = (ip[3] * sinpi8sqrt2) >> 16;
+        int d1 = temp1 + temp2;
+
+        op[0] = (a1 + d1 + 4) >> 3;
+        op[3] = (a1 - d1 + 4) >> 3;
+        op[1] = (b1 + c1 + 4) >> 3;
+        op[2] = (b1 - c1 + 4) >> 3;
+
+        ip += shortpitch;
+        op += shortpitch;
+    }
+}
+
 }
