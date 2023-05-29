@@ -210,8 +210,16 @@ ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle
         search_spans[i] = m_chunks[i].span();
     }
 
+    auto used_size_of_last_chunk = m_write_offset % CHUNK_SIZE;
+
+    // The case where the stored write offset is actually the used space is the only case where a result of zero
+    // actually is zero. In other cases (i.e. our write offset is beyond the size of a chunk) the write offset
+    // already points to the beginning of the next chunk, in that case a result of zero indicates "use the last chunk in full".
+    if (m_write_offset >= CHUNK_SIZE && used_size_of_last_chunk == 0)
+        used_size_of_last_chunk = CHUNK_SIZE;
+
     // Trimming is done first to ensure that we don't unintentionally shift around if the first and last chunks are the same.
-    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(m_write_offset % CHUNK_SIZE);
+    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(used_size_of_last_chunk);
     search_spans[0] = search_spans[0].slice(m_read_offset);
 
     return AK::memmem(search_spans.begin(), search_spans.end(), needle);
