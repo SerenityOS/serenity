@@ -73,7 +73,6 @@ bool can_delete_or_move(StringView path);
 ErrorOr<String> read_link(StringView link_path);
 ErrorOr<void> link_file(StringView destination_path, StringView source_path);
 
-ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags = 0);
 bool looks_like_shared_library(StringView path);
 
 }

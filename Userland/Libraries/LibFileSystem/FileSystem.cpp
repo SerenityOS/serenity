@@ -359,12 +359,6 @@ ErrorOr<void> link_file(StringView destination_path, StringView source_path)
     return TRY(Core::System::symlink(source_path, TRY(get_duplicate_file_name(destination_path))));
 }
 
-ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags)
-{
-    // FIXME: Callers should Call Core::System::resolve_executable_from_environment instead of FileSystem::resolve_executable_from_environment.
-    return Core::System::resolve_executable_from_environment(filename, flags);
-}
-
 bool looks_like_shared_library(StringView path)
 {
     return path.ends_with(".so"sv) || path.contains(".so."sv);
