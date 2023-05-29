@@ -7,9 +7,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             TextNode <#text>
           Box <tbody> at (9,9) content-size 780x90.21875 children: not-inline
             Box <tr> at (9,9) content-size 780x90.21875 children: not-inline
-              TableCellBox <td.mbox-image> at (10,29.109375) content-size 50x50 [BFC] children: not-inline
+              BlockContainer <td.mbox-image> at (10,29.109375) content-size 50x50 [BFC] children: not-inline
                 BlockContainer <div.mbox-image-div> at (10,29.109375) content-size 50x50 children: not-inline
-              TableCellBox <td.mbox-text> at (62,10) content-size 726x88.21875 [BFC] children: inline
+              BlockContainer <td.mbox-text> at (62,10) content-size 726x88.21875 [BFC] children: inline
                 line 0 width: 689.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                   frag 0 from TextNode start: 1, length: 84, rect: [62,10 689.640625x17.46875]
                     "In a scene set in a lawyer's office, the lawyer sits alone and bounces a rubber ball"

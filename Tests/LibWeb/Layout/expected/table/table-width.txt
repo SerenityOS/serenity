@@ -5,4 +5,4 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <table.table> at (108,108) content-size 584x10 [TFC] children: not-inline
           Box <tbody> at (108,108) content-size 584x10 children: not-inline
             Box <tr> at (108,108) content-size 584x10 children: not-inline
-              TableCellBox <td.cell> at (109,113) content-size 582x0 [BFC] children: not-inline
+              BlockContainer <td.cell> at (109,113) content-size 582x0 [BFC] children: not-inline
