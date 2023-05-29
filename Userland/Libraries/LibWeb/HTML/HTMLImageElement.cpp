@@ -512,7 +512,8 @@ after_step_6:
                     handle_failed_fetch();
                 };
 
-                response->body().value().fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
+                if (response->body().has_value())
+                    response->body().value().fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
             });
         };
 
