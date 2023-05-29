@@ -24,7 +24,6 @@
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
-#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -550,7 +549,7 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
     // An anonymous table-cell box must be generated around each sequence of consecutive children of a table-row box which are not table-cell boxes. !Testcase
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRow>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_cell, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableCellBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableCell });
+            wrap_in_anonymous<BlockContainer>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableCell });
         });
     });
 }
