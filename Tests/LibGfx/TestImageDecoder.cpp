@@ -311,7 +311,13 @@ TEST_CASE(test_webp_simple_lossy)
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(240, 240));
 
-    // FIXME: test plugin_decoder->frame(0) once webp lossy decoding is implemented.
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(240, 240));
+
+    // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
+    // So pixels changing by 1 or so below is fine if you change code.
+    EXPECT_EQ(frame.image->get_pixel(120, 232), Gfx::Color(0xf2, 0xef, 0xf0, 255));
+    EXPECT_EQ(frame.image->get_pixel(198, 202), Gfx::Color(0x7b, 0xaa, 0xd5, 255));
 }
 
 TEST_CASE(test_webp_simple_lossless)
@@ -353,7 +359,24 @@ TEST_CASE(test_webp_extended_lossy)
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
 
-    // FIXME: test plugin_decoder->frame(0) once webp lossy decoding is implemented.
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(417, 223));
+
+    // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
+    // So pixels changing by 1 or so below is fine if you change code.
+    EXPECT_EQ(frame.image->get_pixel(89, 72), Gfx::Color(255, 1, 0, 255));
+    EXPECT_EQ(frame.image->get_pixel(174, 69), Gfx::Color(0, 255, 0, 255));
+    EXPECT_EQ(frame.image->get_pixel(245, 84), Gfx::Color(0, 0, 255, 255));
+    EXPECT_EQ(frame.image->get_pixel(352, 125), Gfx::Color(0, 0, 0, 128));
+    EXPECT_EQ(frame.image->get_pixel(355, 106), Gfx::Color(0, 0, 0, 0));
+
+    // Check same basic pixels as in test_webp_extended_lossless too.
+    // (The top-left pixel in the lossy version is fully transparent white, compared to fully transparent black in the lossless version).
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(255, 255, 255, 0));
+    EXPECT_EQ(frame.image->get_pixel(43, 75), Gfx::Color(255, 0, 2, 255));
+    EXPECT_EQ(frame.image->get_pixel(141, 75), Gfx::Color(0, 255, 3, 255));
+    EXPECT_EQ(frame.image->get_pixel(235, 75), Gfx::Color(0, 0, 255, 255));
+    EXPECT_EQ(frame.image->get_pixel(341, 75), Gfx::Color(0, 0, 0, 128));
 }
 
 TEST_CASE(test_webp_extended_lossless)
