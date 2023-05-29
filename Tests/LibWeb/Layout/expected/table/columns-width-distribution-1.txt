@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <table.ambox> at (9,9) content-size 780x90.21875 [TFC] children: not-inline
           BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
             TextNode <#text>
-          TableRowGroupBox <tbody> at (9,9) content-size 780x90.21875 children: not-inline
+          Box <tbody> at (9,9) content-size 780x90.21875 children: not-inline
             TableRowBox <tr> at (9,9) content-size 780x90.21875 children: not-inline
               TableCellBox <td.mbox-image> at (10,29.109375) content-size 50x50 [BFC] children: not-inline
                 BlockContainer <div.mbox-image-div> at (10,29.109375) content-size 50x50 children: not-inline

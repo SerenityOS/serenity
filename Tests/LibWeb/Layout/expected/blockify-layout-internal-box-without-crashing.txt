@@ -3,7 +3,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x0 children: not-inline
       TableWrapper <(anonymous)> at (8,8) content-size 0x0 [BFC] children: not-inline
         Box <table> at (8,8) content-size 0x0 [TFC] children: not-inline
-          TableRowGroupBox <tbody> at (8,8) content-size 0x0 children: not-inline
+          Box <tbody> at (8,8) content-size 0x0 children: not-inline
             TableRowBox <tr> at (8,8) content-size 0x0 children: not-inline
               TableCellBox <(anonymous)> at (8,8) content-size 0x0 [BFC] children: not-inline
                 BlockContainer <td> at (9,9) content-size 0x0 positioned [BFC] children: not-inline
