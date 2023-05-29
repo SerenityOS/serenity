@@ -12,7 +12,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
