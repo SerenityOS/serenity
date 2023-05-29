@@ -90,3 +90,36 @@ TEST_CASE(allocating_memory_stream_offset_of_oob)
         EXPECT(!offset.has_value());
     }
 }
+
+TEST_CASE(allocating_memory_stream_offset_of_after_chunk_reorder)
+{
+    AllocatingMemoryStream stream;
+
+    // First, fill exactly one chunk (in groups of 16 bytes). This chunk will be reordered.
+    for (size_t i = 0; i < AllocatingMemoryStream::CHUNK_SIZE / 16; ++i)
+        MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
+
+    // Append a few additional bytes to create a second chunk.
+    MUST(stream.write_until_depleted("BCDEFGHIJKLMNOPQ"sv.bytes()));
+
+    // Read back the first chunk, which should reorder it to the end of the list.
+    // The chunk that we wrote to the second time is now the first one.
+    MUST(stream.discard(AllocatingMemoryStream::CHUNK_SIZE));
+
+    {
+        auto offset = MUST(stream.offset_of("A"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("B"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("Q"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 15ul);
+    }
+}
