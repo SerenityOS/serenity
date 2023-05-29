@@ -30,7 +30,7 @@ static QString rebase_default_url_on_serenity_resource_root(StringView default_u
 
 Settings::Settings()
 {
-    m_qsettings = new QSettings("Serenity", "Ladybird", this);
+    m_qsettings = make<QSettings>("Serenity", "Ladybird", this);
 }
 
 Optional<QPoint> Settings::last_position()

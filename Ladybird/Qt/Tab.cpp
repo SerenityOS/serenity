@@ -33,8 +33,6 @@ extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 
-extern Settings* s_settings;
-
 static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
 {
     auto path = QString(":/Icons/%1.tvg").arg(name);

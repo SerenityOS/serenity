@@ -25,8 +25,6 @@
 
 namespace Ladybird {
 
-OwnPtr<Ladybird::Settings> s_settings;
-
 bool is_using_dark_system_theme(QWidget& widget)
 {
     // FIXME: Qt does not provide any method to query if the system is using a dark theme. We will have to implement
@@ -111,17 +109,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())
         initial_url = move(url);
 
-    Ladybird::s_settings = adopt_own_if_nonnull(new Ladybird::Settings());
     Ladybird::BrowserWindow window(initial_url, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
     window.setWindowTitle("Ladybird");
 
-    if (Ladybird::s_settings->is_maximized()) {
+    if (Ladybird::Settings::the()->is_maximized()) {
         window.showMaximized();
     } else {
-        auto last_position = Ladybird::s_settings->last_position();
+        auto last_position = Ladybird::Settings::the()->last_position();
         if (last_position.has_value())
             window.move(last_position.value());
-        window.resize(Ladybird::s_settings->last_size());
+        window.resize(Ladybird::Settings::the()->last_size());
     }
 
     window.show();

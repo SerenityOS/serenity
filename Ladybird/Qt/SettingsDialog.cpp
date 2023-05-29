@@ -13,8 +13,6 @@
 
 namespace Ladybird {
 
-extern Settings* s_settings;
-
 SettingsDialog::SettingsDialog(QMainWindow* window)
     : m_window(window)
 {
@@ -48,7 +46,7 @@ void SettingsDialog::save()
     auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
     if (!URL(url_string).is_valid())
         return;
-    s_settings->set_new_tab_page(m_new_tab_page->text());
+    Settings::the()->set_new_tab_page(m_new_tab_page->text());
 }
 
 }
