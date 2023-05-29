@@ -20,8 +20,6 @@ public:
 
     size_t colspan() const;
     size_t rowspan() const;
-
-    static CSS::Display static_display(bool) { return CSS::Display { CSS::Display::Internal::TableCell }; }
 };
 
 }

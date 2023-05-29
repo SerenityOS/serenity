@@ -18,7 +18,6 @@
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/Viewport.h>
 
@@ -385,7 +384,16 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
-    auto const* table_box = box.first_child_of_type<TableBox>();
+
+    Optional<Box const&> table_box;
+    box.for_each_in_subtree_of_type<Box>([&](Box const& child_box) {
+        if (child_box.display().is_table_inside()) {
+            table_box = child_box;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    VERIFY(table_box.has_value());
 
     auto table_used_width = throwaway_state.get(*table_box).content_width();
     return table_used_width > available_width ? available_width : table_used_width;

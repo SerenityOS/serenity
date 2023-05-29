@@ -13,7 +13,6 @@
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -192,7 +191,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     case Type::Grid:
         return make<GridFormattingContext>(state, child_box, this);
     case Type::Table:
-        return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
+        return make<TableFormattingContext>(state, child_box, this);
     case Type::InternalReplaced:
         return make<ReplacedFormattingContext>(state, child_box);
     case Type::InternalDummy:
@@ -1230,7 +1229,7 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
 CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
     // For block containers, tables, and inline boxes, this is equivalent to the max-content block size.
-    if (box.is_block_container() || box.is_table())
+    if (box.is_block_container() || box.display().is_table_inside())
         return calculate_max_content_height(box, available_width);
 
     if (box.has_intrinsic_height())

@@ -8,21 +8,20 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {
 
 class TableFormattingContext final : public FormattingContext {
 public:
-    explicit TableFormattingContext(LayoutState&, TableBox const&, FormattingContext* parent);
+    explicit TableFormattingContext(LayoutState&, Box const&, FormattingContext* parent);
     ~TableFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual CSSPixels automatic_content_width() const override;
     virtual CSSPixels automatic_content_height() const override;
 
-    TableBox const& table_box() const { return static_cast<TableBox const&>(context_box()); }
+    Box const& table_box() const { return context_box(); }
     TableWrapper const& table_wrapper() const
     {
         return verify_cast<TableWrapper>(*table_box().containing_block());

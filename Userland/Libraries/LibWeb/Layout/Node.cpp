@@ -22,7 +22,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -759,7 +758,7 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 
 void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_values()
 {
-    VERIFY(is<TableBox>(*this));
+    VERIFY(this->display().is_table_inside());
 
     CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
     mutable_computed_values.set_position(CSS::Position::Static);
