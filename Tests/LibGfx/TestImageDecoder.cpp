@@ -379,6 +379,31 @@ TEST_CASE(test_webp_extended_lossy)
     EXPECT_EQ(frame.image->get_pixel(341, 75), Gfx::Color(0, 0, 0, 128));
 }
 
+TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy-uncompressed-alpha.webp"sv)));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(417, 223));
+
+    // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
+    // So pixels changing by 1 or so below is fine if you change code.
+    EXPECT_EQ(frame.image->get_pixel(89, 72), Gfx::Color(255, 0, 4, 255));
+    EXPECT_EQ(frame.image->get_pixel(174, 69), Gfx::Color(4, 255, 0, 255));
+    EXPECT_EQ(frame.image->get_pixel(245, 84), Gfx::Color(0, 0, 255, 255));
+    EXPECT_EQ(frame.image->get_pixel(352, 125), Gfx::Color(0, 0, 0, 128));
+    EXPECT_EQ(frame.image->get_pixel(355, 106), Gfx::Color(0, 0, 0, 0));
+}
+
 TEST_CASE(test_webp_lossy_5)
 {
     // This is https://commons.wikimedia.org/wiki/File:Fr%C3%BChling_bl%C3%BChender_Kirschenbaum.jpg,
