@@ -18,13 +18,8 @@ LocationEdit::LocationEdit(QWidget* parent)
     : QLineEdit(parent)
 {
     setPlaceholderText("Enter web address");
-    connect(this, &QLineEdit::returnPressed, this, [&] {
-        clearFocus();
-    });
-
-    connect(this, &QLineEdit::textChanged, this, [&] {
-        highlight_location();
-    });
+    connect(this, &QLineEdit::editingFinished, this, &LocationEdit::clearFocus);
+    connect(this, &QLineEdit::textChanged, this, &LocationEdit::highlight_location);
 }
 
 void LocationEdit::focusInEvent(QFocusEvent* event)
