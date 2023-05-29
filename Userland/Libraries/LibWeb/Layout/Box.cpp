@@ -47,6 +47,10 @@ static bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
 // https://www.w3.org/TR/css-overflow-3/#scroll-container
 bool Box::is_scroll_container() const
 {
+    // NOTE: This isn't in the spec, but we want the viewport to behave like a scroll container.
+    if (is_viewport())
+        return true;
+
     return overflow_value_makes_box_a_scroll_container(computed_values().overflow_x())
         || overflow_value_makes_box_a_scroll_container(computed_values().overflow_y());
 }
