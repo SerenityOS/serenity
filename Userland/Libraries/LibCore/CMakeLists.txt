@@ -13,7 +13,6 @@ set(SOURCES
     EventLoopImplementation.cpp
     EventLoopImplementationUnix.cpp
     File.cpp
-    IODevice.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
