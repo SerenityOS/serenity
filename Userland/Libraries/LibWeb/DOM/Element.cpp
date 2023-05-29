@@ -50,7 +50,6 @@
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
-#include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
@@ -323,14 +322,11 @@ JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProp
 
 JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
 {
-    if (display.is_table_inside() || display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
+    if (display.is_table_inside() || display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group() || display.is_table_row())
         return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
 
     if (display.is_list_item())
         return document.heap().allocate_without_realm<Layout::ListItemBox>(document, element, move(style));
-
-    if (display.is_table_row())
-        return document.heap().allocate_without_realm<Layout::TableRowBox>(document, element, move(style));
 
     if (display.is_table_cell())
         return document.heap().allocate_without_realm<Layout::TableCellBox>(document, element, move(style));

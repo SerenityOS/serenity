@@ -25,7 +25,6 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
 #include <LibWeb/Layout/TableCellBox.h>
-#include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -525,26 +524,26 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root box which are not proper table child boxes.
     for_each_in_tree_with_inside_display<CSS::Display::Inside::Table>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_proper_table_child, [&](auto sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRowGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
     // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
     // table-header-groups and table-footer-groups.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableHeaderGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
 
@@ -563,7 +562,7 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         // An anonymous table-row box must be generated around each sequence of consecutive table-cell boxes whose parent is not a table-row.
         if (is_not_table_row(parent)) {
             for_each_sequence_of_consecutive_children_matching(parent, is_table_cell, [&](auto& sequence, auto nearest_sibling) {
-                wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+                wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
             });
         }
 
