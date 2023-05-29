@@ -810,42 +810,8 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     box_state.set_content_offset({ x.value(), box_state.offset.y() });
 }
 
-void BlockFormattingContext::measure_scrollable_overflow(Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge) const
-{
-    auto const& child_state = m_state.get(box);
-    auto child_rect = absolute_content_rect(box);
-    child_rect.inflate(child_state.border_box_top(), child_state.border_box_right(), child_state.border_box_bottom(), child_state.border_box_left());
-
-    bottom_edge = max(bottom_edge, child_rect.bottom() - 1);
-    right_edge = max(right_edge, child_rect.right() - 1);
-
-    if (box.computed_values().overflow_x() == CSS::Overflow::Hidden && box.computed_values().overflow_y() == CSS::Overflow::Hidden)
-        return;
-
-    if (box.children_are_inline()) {
-        if (!child_state.line_boxes.is_empty()) {
-            bottom_edge = max(bottom_edge, child_rect.y() + child_state.line_boxes.last().bottom());
-            for (auto& line_box : child_state.line_boxes) {
-                if (line_box.fragments().is_empty())
-                    continue;
-                right_edge = max(right_edge, child_rect.x() + line_box.fragments().last().width());
-            }
-        }
-    } else {
-        box.for_each_child_of_type<Box>([&](Box const& child) {
-            measure_scrollable_overflow(child, bottom_edge, right_edge);
-            return IterationDecision::Continue;
-        });
-    }
-}
-
 void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSpace const& available_space)
 {
-    auto viewport_rect = root().browsing_context().viewport_rect();
-
-    auto& viewport = verify_cast<Layout::Viewport>(root());
-    auto& viewport_state = m_state.get_mutable(viewport);
-
     // NOTE: If we are laying out a standalone SVG document, we give it some special treatment:
     //       The root <svg> container gets the same size as the viewport,
     //       and we call directly into the SVG layout code from here.
@@ -858,18 +824,6 @@ void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSp
             layout_inline_children(root(), layout_mode, available_space);
         else
             layout_block_level_children(root(), layout_mode, available_space);
-    }
-
-    CSSPixels bottom_edge = 0;
-    CSSPixels right_edge = 0;
-    measure_scrollable_overflow(viewport, bottom_edge, right_edge);
-
-    if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
-        // FIXME: Move overflow data to LayoutState!
-        auto& overflow_data = viewport_state.ensure_overflow_data();
-        overflow_data.scrollable_overflow_rect = viewport_rect;
-        // NOTE: The edges are *within* the rectangle, so we add 1 to get the width and height.
-        overflow_data.scrollable_overflow_rect.set_size(right_edge + 1, bottom_edge + 1);
     }
 }
 

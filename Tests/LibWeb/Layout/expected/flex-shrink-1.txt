@@ -2,7 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x104 children: not-inline
       Box <div.container> at (9,9) content-size 250x102 flex-container(row) [FFC] children: not-inline
-        BlockContainer <(anonymous)> at (9,9) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.box> at (10,10) content-size 62.666666x100 flex-item [BFC] children: inline
           line 0 width: 18.9375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -18,21 +18,21 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 15, length: 4, rect: [10,62 38.765625x17.46875]
               "most"
           TextNode <#text>
-        BlockContainer <(anonymous)> at (9,9) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.box> at (74.666666,10) content-size 81.333333x100 flex-item [BFC] children: inline
           line 0 width: 78.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 10, rect: [74.666666,10 78.765625x17.46875]
               "2 I shrink"
           TextNode <#text>
-        BlockContainer <(anonymous)> at (9,9) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.box> at (158,10) content-size 100x100 flex-item [BFC] children: inline
           line 0 width: 68, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 9, rect: [158,10 68x17.46875]
               "3 I don't"
           TextNode <#text>
-        BlockContainer <(anonymous)> at (9,9) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,112) content-size 784x0 children: inline
         TextNode <#text>

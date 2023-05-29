@@ -64,6 +64,38 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics 
     return *new_used_values_ptr;
 }
 
+static void measure_scrollable_overflow(LayoutState const& state, Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge)
+{
+    auto const* maybe_box_state = state.used_values_per_layout_node.get(&box).value_or(nullptr);
+    if (!maybe_box_state)
+        return;
+    auto const& box_state = *maybe_box_state;
+    auto scroll_container_border_box = CSSPixelRect {
+        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
+        { box_state.border_box_width(), box_state.border_box_height() }
+    };
+
+    bottom_edge = max(bottom_edge, scroll_container_border_box.bottom());
+    right_edge = max(right_edge, scroll_container_border_box.right());
+
+    if (box.children_are_inline()) {
+        if (!box_state.line_boxes.is_empty()) {
+            bottom_edge = max(bottom_edge, scroll_container_border_box.y() + box_state.line_boxes.last().bottom());
+            for (auto& line_box : box_state.line_boxes) {
+                if (line_box.fragments().is_empty())
+                    continue;
+                right_edge = max(right_edge, scroll_container_border_box.x() + line_box.fragments().last().width());
+            }
+        }
+    } else {
+        // FIXME: Only check boxes for whom `box` is the containing block.
+        box.for_each_child_of_type<Box>([&](Box const& child) {
+            measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+            return IterationDecision::Continue;
+        });
+    }
+}
+
 void LayoutState::commit()
 {
     // Only the top-level LayoutState should ever be committed.
@@ -89,7 +121,6 @@ void LayoutState::commit()
             auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
-            paintable_box.set_overflow_data(move(used_values.overflow_data));
             paintable_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
 
             if (is<Layout::BlockContainer>(box)) {
@@ -101,6 +132,28 @@ void LayoutState::commit()
                 }
                 static_cast<Painting::PaintableWithLines&>(paintable_box).set_line_boxes(move(used_values.line_boxes));
             }
+        }
+    }
+
+    // Measure overflow in scroll containers.
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        if (!used_values.node().is_box())
+            continue;
+        auto const& box = static_cast<Layout::Box const&>(used_values.node());
+        if (!box.is_scroll_container())
+            continue;
+        CSSPixels bottom_edge = 0;
+        CSSPixels right_edge = 0;
+        measure_scrollable_overflow(*this, box, bottom_edge, right_edge);
+
+        auto padding_box = box.paintable_box()->absolute_padding_box_rect();
+
+        if (bottom_edge > padding_box.height() || right_edge > padding_box.width()) {
+            Painting::PaintableBox::OverflowData overflow_data;
+            overflow_data.scrollable_overflow_rect = padding_box;
+            overflow_data.scrollable_overflow_rect.set_size(right_edge, bottom_edge);
+            const_cast<Painting::PaintableBox&>(*box.paintable_box()).set_overflow_data(overflow_data);
         }
     }
 

@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 20x0 children: inline
         TextNode <#text>
       Box <div.grid> at (8,8) content-size 20x19.46875 [GFC] children: not-inline
-        BlockContainer <(anonymous)>  [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.whee> at (9,9) content-size 18x17.46875 [BFC] children: inline
           line 0 width: 37.953125, height: 17.46875, bottom: 17.46875, baseline: 13.53125

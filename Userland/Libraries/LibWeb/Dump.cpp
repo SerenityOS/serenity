@@ -194,6 +194,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 paintable_box->absolute_y(),
                 paintable_box->content_width(),
                 paintable_box->content_height());
+        } else {
+            builder.appendff("(not painted)");
         }
 
         if (box.is_positioned())
