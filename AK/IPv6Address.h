@@ -251,6 +251,12 @@ public:
         return {};
     }
 
+    // https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.3
+    [[nodiscard]] static IPv6Address loopback()
+    {
+        return IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
+    }
+
 private:
     constexpr u16 group(unsigned i) const
     {
