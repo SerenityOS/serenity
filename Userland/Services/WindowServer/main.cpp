@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
         auto add_unconfigured_display_connector_devices = [&]() -> ErrorOr<void> {
             // Enumerate the /dev/gpu/connectorX devices and try to set up any ones we find that we haven't already used
-            Core::DirIterator di("/dev/gpu", Core::DirIterator::SkipParentAndBaseDir);
+            Core::DirIterator di("/dev/gpu"sv, Core::DirIterator::SkipParentAndBaseDir);
             while (di.has_next()) {
                 auto path = di.next_path();
                 if (!path.starts_with("connector"sv))

@@ -80,7 +80,7 @@ static int handle_variables(Vector<StringView> const& variables)
 
 static int handle_show_all()
 {
-    Core::DirIterator di("/sys/kernel/variables", Core::DirIterator::SkipDots);
+    Core::DirIterator di("/sys/kernel/variables"sv, Core::DirIterator::SkipDots);
     if (di.has_error()) {
         outln("DirIterator: {}", di.error());
         return 1;

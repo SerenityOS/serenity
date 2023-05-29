@@ -739,12 +739,12 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
         if (FileSystem::is_directory(LexicalPath::join(full_dir, path).string())) {
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = DeprecatedString::formatted("{}{}{}/", prefix, include_dir, path);
-            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path.to_deprecated_string(), CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);
         } else if (path.ends_with(".h"sv)) {
             // FIXME: Place the cursor after the trailing > or ", even if it was
             //        already typed.
             auto completion = DeprecatedString::formatted("{}{}{}{}", prefix, include_dir, path, already_has_suffix ? "" : suffix);
-            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path);
+            options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path.to_deprecated_string());
         }
     }
 

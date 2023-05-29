@@ -133,15 +133,15 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
             continue;
         }
         while (dir_iterator.has_next()) {
-            auto path = dir_iterator.next_full_path();
+            auto path = dir_iterator.next_full_path().release_value_but_fixme_should_propagate_errors();
 
             if (FileSystem::is_directory(path)) {
-                path_queue.enqueue(path);
+                path_queue.enqueue(path.to_deprecated_string());
                 continue;
             }
 
             if (path.ends_with(".font"sv)) {
-                if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
+                if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path.to_deprecated_string()); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
                     m_private->full_name_to_font_map.set(font->qualified_name(), *font);
                     auto typeface = get_or_create_typeface(font->family(), font->variant());
@@ -149,13 +149,13 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
                 }
             } else if (path.ends_with(".ttf"sv)) {
                 // FIXME: What about .otf
-                if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                if (auto font_or_error = OpenType::Font::try_load_from_file(path.to_deprecated_string()); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
                     auto typeface = get_or_create_typeface(font->family(), font->variant());
                     typeface->set_vector_font(move(font));
                 }
             } else if (path.ends_with(".woff"sv)) {
-                if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                if (auto font_or_error = WOFF::Font::try_load_from_file(path.to_deprecated_string()); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
                     auto typeface = get_or_create_typeface(font->family(), font->variant());
                     typeface->set_vector_font(move(font));

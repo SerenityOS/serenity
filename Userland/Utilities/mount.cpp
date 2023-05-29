@@ -135,13 +135,13 @@ static ErrorOr<void> mount_all()
     if (auto result = process_fstab_entries("/etc/fstab"sv); result.is_error())
         dbgln("Failed to read '/etc/fstab': {}", result.error());
 
-    auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d", Core::DirIterator::SkipDots);
+    auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d"sv, Core::DirIterator::SkipDots);
 
     if (fstab_directory_iterator.has_error() && fstab_directory_iterator.error().code() != ENOENT) {
         dbgln("Failed to open /etc/fstab.d: {}", fstab_directory_iterator.error());
     } else if (!fstab_directory_iterator.has_error()) {
         while (fstab_directory_iterator.has_next()) {
-            auto path = fstab_directory_iterator.next_full_path();
+            auto path = TRY(fstab_directory_iterator.next_full_path());
             if (auto result = process_fstab_entries(path); result.is_error())
                 dbgln("Failed to read '{}': {}", path, result.error());
         }

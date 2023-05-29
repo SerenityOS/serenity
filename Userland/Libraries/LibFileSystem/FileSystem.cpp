@@ -241,7 +241,7 @@ ErrorOr<void> copy_directory(StringView destination_path, StringView source_path
         return di.error();
 
     while (di.has_next()) {
-        auto filename = TRY(String::from_deprecated_string(di.next_path()));
+        auto filename = di.next_path();
         TRY(copy_file_or_directory(
             TRY(String::formatted("{}/{}", destination_path, filename)),
             TRY(String::formatted("{}/{}", source_path, filename)),
@@ -305,8 +305,10 @@ ErrorOr<void> remove(StringView path, RecursionMode mode)
         if (di.has_error())
             return di.error();
 
-        while (di.has_next())
-            TRY(remove(di.next_full_path(), RecursionMode::Allowed));
+        while (di.has_next()) {
+            auto next_full_path = TRY(di.next_full_path());
+            TRY(remove(next_full_path, RecursionMode::Allowed));
+        }
 
         TRY(Core::System::rmdir(path));
     } else {

@@ -273,7 +273,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     TRY(builder.try_append("<code><table>\n"sv));
 
     Core::DirIterator dt(real_path.bytes_as_string_view());
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     while (dt.has_next())
         TRY(names.try_append(dt.next_path()));
     quick_sort(names);

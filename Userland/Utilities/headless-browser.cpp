@@ -310,7 +310,7 @@ static ErrorOr<void> collect_tests(Vector<Test>& tests, StringView path, StringV
         }
         if (!name.ends_with(".html"sv))
             continue;
-        auto basename = LexicalPath::title(name);
+        auto basename = LexicalPath::title(name.to_deprecated_string());
         auto expectation_path = TRY(String::formatted("{}/expected/{}/{}.txt", path, trail, basename));
 
         tests.append({ move(input_path), move(expectation_path), mode, {} });

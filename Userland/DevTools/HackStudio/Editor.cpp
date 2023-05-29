@@ -201,9 +201,9 @@ static HashMap<DeprecatedString, DeprecatedString>& man_paths()
 
             Core::DirIterator it(json_value.as_string(), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
-                auto path = it.next_full_path();
-                auto title = LexicalPath::title(path);
-                paths.set(title, path);
+                auto path = it.next_full_path().release_value_but_fixme_should_propagate_errors();
+                auto title = LexicalPath::title(path.to_deprecated_string());
+                paths.set(title, path.to_deprecated_string());
             }
         }
     }
@@ -408,7 +408,7 @@ static HashMap<DeprecatedString, DeprecatedString>& include_paths()
     auto add_directory = [](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
         Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
-            auto path = it.next_full_path();
+            auto path = it.next_full_path().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             if (!FileSystem::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
                 dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);

@@ -53,7 +53,7 @@ static Vector<DeprecatedString> lookup_database_names()
     Vector<DeprecatedString> database_names;
 
     while (iterator.has_next()) {
-        if (auto database = iterator.next_path(); database.ends_with(database_extension))
+        if (auto database = iterator.next_path().to_deprecated_string(); database.ends_with(database_extension))
             database_names.append(database.substring(0, database.length() - database_extension.length()));
     }
 

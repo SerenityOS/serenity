@@ -33,7 +33,7 @@ static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
         .release_value();
 }
 
-static u32 convert_sysfs_value_to_uint(DeprecatedString const& value)
+static u32 convert_sysfs_value_to_uint(StringView const& value)
 {
     if (auto result = AK::StringUtils::convert_to_uint_from_hex(value); result.has_value())
         return result.release_value();
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    Core::DirIterator di("/sys/bus/pci/", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/sys/bus/pci/"sv, Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
         auto error = di.error();
         warnln("Failed to open /sys/bus/pci - {}", error);
@@ -79,13 +79,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     while (di.has_next()) {
         auto dir = di.next_path();
-        auto domain_bus_device_parts = dir.split(':');
+        auto domain_bus_device_parts = TRY(dir.split(':'));
         VERIFY(domain_bus_device_parts.size() == 3);
         auto domain = convert_sysfs_value_to_uint(domain_bus_device_parts[0]);
         auto bus = convert_sysfs_value_to_uint(domain_bus_device_parts[1]);
-        auto device = convert_sysfs_value_to_uint(domain_bus_device_parts[2].split('.')[0]);
+        auto unconverted_device_value_parts = TRY(domain_bus_device_parts[2].split('.'));
+        auto device = convert_sysfs_value_to_uint(unconverted_device_value_parts[0]);
 
-        auto function_parts = dir.split('.');
+        auto function_parts = TRY(dir.split('.'));
         VERIFY(function_parts.size() == 2);
         auto function = convert_sysfs_value_to_uint(function_parts[1]);
 

@@ -11,11 +11,16 @@
 
 namespace Core {
 
-DirIterator::DirIterator(DeprecatedString path, Flags flags)
-    : m_path(move(path))
-    , m_flags(flags)
+DirIterator::DirIterator(StringView path, Flags flags)
+    : m_flags(flags)
 {
-    m_dir = opendir(m_path.characters());
+    auto maybe_path = String::from_utf8(path);
+    if (maybe_path.is_error()) {
+        m_error = maybe_path.release_error();
+        return;
+    }
+    m_path = maybe_path.release_value();
+    m_dir = opendir(m_path.to_deprecated_string().characters());
     if (!m_dir) {
         m_error = Error::from_errno(errno);
     }
@@ -96,22 +101,22 @@ Optional<DirectoryEntry> DirIterator::next()
     return result;
 }
 
-DeprecatedString DirIterator::next_path()
+String DirIterator::next_path()
 {
     auto entry = next();
     if (entry.has_value())
-        return entry->name.to_deprecated_string();
-    return "";
+        return entry->name;
+    return ""_short_string;
 }
 
-DeprecatedString DirIterator::next_full_path()
+ErrorOr<String> DirIterator::next_full_path()
 {
     StringBuilder builder;
     builder.append(m_path);
     if (!m_path.ends_with('/'))
         builder.append('/');
     builder.append(next_path());
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 int DirIterator::fd() const

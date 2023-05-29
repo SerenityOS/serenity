@@ -109,8 +109,8 @@ static ErrorOr<void> chown_all_matching_device_nodes_under_specific_directory(St
     if (di.has_error())
         VERIFY_NOT_REACHED();
     while (di.has_next()) {
-        auto entry_name = di.next_full_path();
-        auto rc = stat(entry_name.characters(), &cur_file_stat);
+        auto entry_name = TRY(di.next_full_path());
+        auto rc = stat(entry_name.to_deprecated_string().characters(), &cur_file_stat);
         if (rc < 0)
             continue;
         TRY(Core::System::chown(entry_name, 0, group.gr_gid));
@@ -122,12 +122,12 @@ static ErrorOr<void> chown_all_matching_device_nodes(group const& group, unsigne
 {
     struct stat cur_file_stat;
 
-    Core::DirIterator di("/dev/", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/dev/"sv, Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error())
         VERIFY_NOT_REACHED();
     while (di.has_next()) {
-        auto entry_name = di.next_full_path();
-        auto rc = stat(entry_name.characters(), &cur_file_stat);
+        auto entry_name = TRY(di.next_full_path());
+        auto rc = stat(entry_name.to_deprecated_string().characters(), &cur_file_stat);
         if (rc < 0)
             continue;
         if (major(cur_file_stat.st_rdev) != major_number)
@@ -157,17 +157,17 @@ static ErrorOr<void> create_devtmpfs_char_device(StringView name, mode_t mode, u
 
 static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
 {
-    Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/sys/dev/char/"sv, Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
         auto error = di.error();
         warnln("Failed to open /sys/dev/char - {}", error);
         return error;
     }
     while (di.has_next()) {
-        auto entry_name = di.next_path().split(':');
+        auto entry_name = TRY(di.next_path().split(':'));
         VERIFY(entry_name.size() == 2);
-        auto major_number = entry_name[0].to_uint<unsigned>().value();
-        auto minor_number = entry_name[1].to_uint<unsigned>().value();
+        auto major_number = entry_name[0].to_number<unsigned>().value();
+        auto minor_number = entry_name[1].to_number<unsigned>().value();
         switch (major_number) {
         case 2: {
             switch (minor_number) {

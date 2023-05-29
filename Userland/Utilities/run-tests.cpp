@@ -145,7 +145,7 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
             Core::DirIterator iterator("/tmp/coredump"sv);
             if (!iterator.has_error()) {
                 while (iterator.has_next()) {
-                    auto path = iterator.next_full_path();
+                    auto path = iterator.next_full_path().release_value_but_fixme_should_propagate_errors();
                     if (!path.contains(pid_search_string))
                         continue;
 

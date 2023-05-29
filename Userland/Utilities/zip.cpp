@@ -106,15 +106,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
-            auto child_path = it.next_full_path();
+            auto child_path = TRY(it.next_full_path());
             if (FileSystem::is_link(child_path))
                 return {};
             if (!FileSystem::is_directory(child_path)) {
-                auto result = add_file(child_path);
+                auto result = add_file(child_path.to_deprecated_string());
                 if (result.is_error())
                     warnln("Couldn't add file '{}': {}", child_path, result.error());
             } else {
-                auto result = handle_directory(child_path, handle_directory);
+                auto result = handle_directory(child_path.to_deprecated_string(), handle_directory);
                 if (result.is_error())
                     warnln("Couldn't add directory '{}': {}", child_path, result.error());
             }

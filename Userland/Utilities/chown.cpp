@@ -85,8 +85,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (recursive && S_ISDIR(stat.st_mode)) {
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
 
-            while (it.has_next())
-                TRY(update_path_owner(it.next_full_path()));
+            while (it.has_next()) {
+                auto next_full_path = TRY(it.next_full_path());
+                TRY(update_path_owner(next_full_path));
+            }
         }
 
         return {};

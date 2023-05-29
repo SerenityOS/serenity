@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("List Storage (Block) devices.");
     args_parser.parse(arguments);
 
-    Core::DirIterator di("/sys/devices/storage/", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/sys/devices/storage/"sv, Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
         auto error = di.error();
         warnln("Failed to open /sys/devices/storage - {}", error);

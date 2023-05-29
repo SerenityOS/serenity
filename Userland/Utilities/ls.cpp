@@ -174,11 +174,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             while (di.has_next()) {
-                DeprecatedString directory = di.next_full_path();
+                auto directory = TRY(di.next_full_path());
                 if (FileSystem::is_directory(directory) && !FileSystem::is_link(directory)) {
                     ++subdirs;
                     FileMetadata new_file;
-                    new_file.name = move(directory);
+                    new_file.name = directory.to_deprecated_string();
                     files.insert(i + subdirs, move(new_file));
                 }
             }
@@ -415,7 +415,7 @@ static int do_file_system_object_long(DeprecatedString const& path)
     Vector<FileMetadata> files;
     while (di.has_next()) {
         FileMetadata metadata;
-        metadata.name = di.next_path();
+        metadata.name = di.next_path().to_deprecated_string();
         VERIFY(!metadata.name.is_empty());
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
@@ -529,7 +529,7 @@ int do_file_system_object_short(DeprecatedString const& path)
     size_t longest_name = 0;
     while (di.has_next()) {
         FileMetadata metadata;
-        metadata.name = di.next_path();
+        metadata.name = di.next_path().to_deprecated_string();
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;

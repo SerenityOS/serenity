@@ -116,7 +116,7 @@ void ProjectTemplatesModel::rescan_templates()
     }
 
     while (di.has_next()) {
-        auto full_path = LexicalPath(di.next_full_path());
+        auto full_path = LexicalPath(di.next_full_path().release_value_but_fixme_should_propagate_errors());
         if (!full_path.has_extension(".ini"sv))
             continue;
 

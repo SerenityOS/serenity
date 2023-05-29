@@ -52,9 +52,9 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
         return;
     }
 
-    Vector<DeprecatedString> names;
+    Vector<String> names;
     while (di.has_next()) {
-        DeprecatedString name = di.next_path();
+        auto name = di.next_path();
         if (di.has_error()) {
             warnln("{}: {}", root_path, di.error());
             continue;
@@ -65,7 +65,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
     quick_sort(names);
 
     for (size_t i = 0; i < names.size(); i++) {
-        DeprecatedString name = names[i];
+        auto name = names[i];
 
         StringBuilder builder;
         builder.append(root_path);

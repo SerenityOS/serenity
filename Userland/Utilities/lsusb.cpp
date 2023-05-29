@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/sys/bus/usb", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    Core::DirIterator usb_devices("/sys/bus/usb", Core::DirIterator::SkipDots);
+    Core::DirIterator usb_devices("/sys/bus/usb"sv, Core::DirIterator::SkipDots);
 
     RefPtr<USBDB::Database> usb_db;
     if (!flag_show_numerical) {
@@ -45,7 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     while (usb_devices.has_next()) {
-        auto full_path = LexicalPath(usb_devices.next_full_path());
+        auto next_full_path = TRY(usb_devices.next_full_path());
+        auto full_path = LexicalPath(next_full_path);
 
         auto proc_usb_device = Core::File::open(full_path.string(), Core::File::OpenMode::Read);
         if (proc_usb_device.is_error()) {

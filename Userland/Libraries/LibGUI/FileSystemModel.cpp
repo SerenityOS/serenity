@@ -109,7 +109,7 @@ void FileSystemModel::Node::traverse_if_needed()
 
     Vector<DeprecatedString> child_names;
     while (di.has_next()) {
-        child_names.append(di.next_path());
+        child_names.append(di.next_path().to_deprecated_string());
     }
     quick_sort(child_names);
 

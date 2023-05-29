@@ -63,13 +63,13 @@ public:
         Core::DirIterator iterator(DeprecatedString::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
-            auto path = iterator.next_full_path();
+            auto path = iterator.next_full_path().release_value_but_fixme_should_propagate_errors();
             if (path.ends_with(".ini"sv))
                 continue;
             if (path.contains("2x"sv))
                 continue;
             Cursor cursor;
-            cursor.path = move(path);
+            cursor.path = path.to_deprecated_string();
             cursor.name = LexicalPath::basename(cursor.path);
 
             // FIXME: Animated cursor bitmaps
@@ -151,29 +151,29 @@ public:
     {
         m_icon_sets.clear();
 
-        Core::DirIterator big_iterator("/res/icons/32x32", Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator big_iterator("/res/icons/32x32"sv, Core::DirIterator::Flags::SkipDots);
 
         while (big_iterator.has_next()) {
-            auto path = big_iterator.next_full_path();
+            auto path = big_iterator.next_full_path().release_value_but_fixme_should_propagate_errors();
             if (!path.contains("filetype-"sv) && !path.contains("app-"sv))
                 continue;
             IconSet icon_set;
             icon_set.big_icon = Gfx::Bitmap::load_from_file(path).release_value_but_fixme_should_propagate_errors();
-            icon_set.name = LexicalPath::basename(path);
+            icon_set.name = LexicalPath::basename(path.to_deprecated_string());
             m_icon_sets.append(move(icon_set));
         }
 
         auto big_icons_found = m_icon_sets.size();
 
-        Core::DirIterator little_iterator("/res/icons/16x16", Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator little_iterator("/res/icons/16x16"sv, Core::DirIterator::Flags::SkipDots);
 
         while (little_iterator.has_next()) {
-            auto path = little_iterator.next_full_path();
+            auto path = little_iterator.next_full_path().release_value_but_fixme_should_propagate_errors();
             if (!path.contains("filetype-"sv) && !path.contains("app-"sv))
                 continue;
             IconSet icon_set;
             icon_set.little_icon = Gfx::Bitmap::load_from_file(path).release_value_but_fixme_should_propagate_errors();
-            icon_set.name = LexicalPath::basename(path);
+            icon_set.name = LexicalPath::basename(path.to_deprecated_string());
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {
                     m_icon_sets[i].little_icon = icon_set.little_icon;

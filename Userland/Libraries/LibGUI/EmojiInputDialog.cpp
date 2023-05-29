@@ -104,7 +104,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     static constexpr int button_size = 22;
 
     Vector<Emoji> emojis;
-    Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
+    Core::DirIterator dt("/res/emoji"sv, Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto filename = dt.next_path();
         auto lexical_path = LexicalPath(filename);

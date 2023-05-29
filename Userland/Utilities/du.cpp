@@ -154,8 +154,8 @@ u64 print_space_usage(DeprecatedString const& path, DuOption const& du_option, s
         }
 
         while (di.has_next()) {
-            auto const child_path = di.next_full_path();
-            size += print_space_usage(child_path, du_option, current_depth + 1, true);
+            auto const child_path = di.next_full_path().release_value_but_fixme_should_propagate_errors();
+            size += print_space_usage(child_path.to_deprecated_string(), du_option, current_depth + 1, true);
         }
     }
 

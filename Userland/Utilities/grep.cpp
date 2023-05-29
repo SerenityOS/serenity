@@ -270,14 +270,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto add_directory = [&handle_file, user_has_specified_files, suppress_errors](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
-                auto path = it.next_full_path();
+                auto path = it.next_full_path().release_value_but_fixme_should_propagate_errors();
                 if (!FileSystem::is_directory(path)) {
-                    auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
+                    StringView key = user_has_specified_files ? path : StringView(path).substring_view(base.length() + 1, path.to_deprecated_string().length() - base.length() - 1);
                     if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
                         warnln("Failed with file {}: {}", key, result.release_error());
 
                 } else {
-                    handle_directory(base, path, handle_directory);
+                    handle_directory(base, path.to_deprecated_string(), handle_directory);
                 }
             }
         };

@@ -262,7 +262,7 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
             return {};
 
         while (di.has_next()) {
-            DeprecatedString path = di.next_path();
+            DeprecatedString path = di.next_path().to_deprecated_string();
 
             // Dotfiles have to be explicitly requested
             if (path[0] == '.' && first_segment[0] != '.')
@@ -1416,7 +1416,7 @@ void Shell::cache_path()
     if (!path.is_empty()) {
         auto directories = path.split(':');
         for (auto const& directory : directories) {
-            Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
+            Core::DirIterator programs(directory, Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
                 auto program_path = DeprecatedString::formatted("{}/{}", directory, program);
@@ -1664,15 +1664,15 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
     if (m_editor)
         m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
-    Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator di("/home"sv, Core::DirIterator::SkipParentAndBaseDir);
 
     if (di.has_error())
         return suggestions;
 
     while (di.has_next()) {
-        DeprecatedString name = di.next_path();
+        auto name = di.next_path();
         if (name.starts_with(pattern)) {
-            suggestions.append(name);
+            suggestions.append(name.to_deprecated_string());
             auto& suggestion = suggestions.last();
             suggestion.input_offset = offset;
             suggestion.invariant_offset = invariant_offset;

@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath unix sendfd"));
 
     if (show_all) {
-        Core::DirIterator wallpapers_directory_iterator("/res/wallpapers", Core::DirIterator::SkipDots);
+        Core::DirIterator wallpapers_directory_iterator("/res/wallpapers"sv, Core::DirIterator::SkipDots);
         if (wallpapers_directory_iterator.has_error())
             return Error::from_string_literal("Unable to iterate /res/wallpapers directory");
 
@@ -48,15 +48,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto current_wallpaper_path = GUI::Desktop::the().wallpaper_path();
         outln("{}", current_wallpaper_path);
     } else if (set_random) {
-        Core::DirIterator wallpapers_directory_iterator("/res/wallpapers", Core::DirIterator::SkipDots);
+        Core::DirIterator wallpapers_directory_iterator("/res/wallpapers"sv, Core::DirIterator::SkipDots);
         if (wallpapers_directory_iterator.has_error())
             return Error::from_string_literal("Unable to iterate /res/wallpapers directory");
 
-        Vector<DeprecatedString> wallpaper_paths;
+        Vector<String> wallpaper_paths;
 
-        auto current_wallpaper_path = GUI::Desktop::the().wallpaper_path();
+        auto current_wallpaper_path = TRY(String::from_utf8(GUI::Desktop::the().wallpaper_path()));
         while (wallpapers_directory_iterator.has_next()) {
-            auto next_full_path = wallpapers_directory_iterator.next_full_path();
+            auto next_full_path = TRY(wallpapers_directory_iterator.next_full_path());
             if (next_full_path != current_wallpaper_path)
                 wallpaper_paths.append(move(next_full_path));
         }

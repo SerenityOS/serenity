@@ -282,7 +282,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
-                auto child_path = it.next_full_path();
+                auto child_path = TRY(it.next_full_path()).to_deprecated_string();
                 if (!dereference && FileSystem::is_link(child_path)) {
                     TRY(add_link(child_path));
                 } else if (!FileSystem::is_directory(child_path)) {

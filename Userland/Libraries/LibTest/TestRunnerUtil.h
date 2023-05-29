@@ -27,7 +27,7 @@ inline void iterate_directory_recursively(DeprecatedString const& directory_path
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto name = directory_iterator.next_path();
+        auto name = directory_iterator.next_path().to_deprecated_string();
         struct stat st = {};
         if (fstatat(directory_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0)
             continue;
