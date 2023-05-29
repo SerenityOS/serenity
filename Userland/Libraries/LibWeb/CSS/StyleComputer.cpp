@@ -8,6 +8,8 @@
 
 #include <AK/Debug.h>
 #include <AK/Error.h>
+#include <AK/Find.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
@@ -1574,6 +1576,89 @@ Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProp
     return font_metrics;
 }
 
+RefPtr<Gfx::Font const> StyleComputer::find_matching_font_weight_ascending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive)
+{
+    using Fn = AK::Function<bool(MatchingFontCandidate const&)>;
+    auto pred = inclusive ? Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight >= target_weight; })
+                          : Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight > target_weight; });
+    auto it = find_if(candidates.begin(), candidates.end(), pred);
+    for (; it != candidates.end(); ++it)
+        if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+            return found_font;
+    return {};
+}
+
+RefPtr<Gfx::Font const> StyleComputer::find_matching_font_weight_descending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive)
+{
+    using Fn = AK::Function<bool(MatchingFontCandidate const&)>;
+    auto pred = inclusive ? Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight <= target_weight; })
+                          : Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight < target_weight; });
+    auto it = find_if(candidates.rbegin(), candidates.rend(), pred);
+    for (; it != candidates.rend(); ++it)
+        if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+            return found_font;
+    return {};
+}
+
+// Partial implementation of the font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
+// FIXME: This should be replaced by the full CSS font selection algorithm.
+RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const& key, float font_size_in_pt) const
+{
+    // If a font family match occurs, the user agent assembles the set of font faces in that family and then
+    // narrows the set to a single face using other font properties in the order given below.
+    Vector<MatchingFontCandidate> matching_family_fonts;
+    for (auto const& font_key_and_loader : m_loaded_fonts) {
+        if (font_key_and_loader.key.family_name.equals_ignoring_ascii_case(key.family_name))
+            matching_family_fonts.empend(font_key_and_loader.key, font_key_and_loader.value.ptr());
+    }
+    // FIXME: 1. font-stretch is tried first.
+    // FIXME: 2. font-style is tried next.
+    // We don't have complete support of italic and oblique fonts, so matching on font-style can be simplified to:
+    // If a matching slope is found, all faces which don't have that matching slope are excluded from the matching set.
+    auto style_it = find_if(matching_family_fonts.begin(), matching_family_fonts.end(),
+        [&](auto const& matching_font_candidate) { return matching_font_candidate.key.slope == key.slope; });
+    if (style_it != matching_family_fonts.end()) {
+        matching_family_fonts.remove_all_matching([&](auto const& matching_font_candidate) {
+            return matching_font_candidate.key.slope != key.slope;
+        });
+    }
+    // 3. font-weight is matched next.
+    // If the desired weight is inclusively between 400 and 500, weights greater than or equal to the target weight
+    // are checked in ascending order until 500 is hit and checked, followed by weights less than the target weight
+    // in descending order, followed by weights greater than 500, until a match is found.
+    if (key.weight >= 400 && key.weight <= 500) {
+        auto it = find_if(matching_family_fonts.begin(), matching_family_fonts.end(),
+            [&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight >= key.weight; });
+        for (; it != matching_family_fonts.end() && it->key.weight <= 500; ++it) {
+            if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+                return found_font;
+        }
+        if (auto found_font = find_matching_font_weight_descending(matching_family_fonts, key.weight, font_size_in_pt, false))
+            return found_font;
+        for (; it != matching_family_fonts.end(); ++it) {
+            if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+                return found_font;
+        }
+    }
+    // If the desired weight is less than 400, weights less than or equal to the desired weight are checked in descending order
+    // followed by weights above the desired weight in ascending order until a match is found.
+    if (key.weight < 400) {
+        if (auto found_font = find_matching_font_weight_descending(matching_family_fonts, key.weight, font_size_in_pt, true))
+            return found_font;
+        if (auto found_font = find_matching_font_weight_ascending(matching_family_fonts, key.weight, font_size_in_pt, false))
+            return found_font;
+    }
+    // If the desired weight is greater than 500, weights greater than or equal to the desired weight are checked in ascending order
+    // followed by weights below the desired weight in descending order until a match is found.
+    if (key.weight > 500) {
+        if (auto found_font = find_matching_font_weight_ascending(matching_family_fonts, key.weight, font_size_in_pt, true))
+            return found_font;
+        if (auto found_font = find_matching_font_weight_descending(matching_family_fonts, key.weight, font_size_in_pt, false))
+            return found_font;
+    }
+    return {};
+}
+
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
@@ -1752,15 +1837,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
                 return found_font;
         }
 
-        // We couldn't find this font with a specific weight and slope, so try again without them.
-        // FIXME: This should be replaced by a proper CSS font selection algorithm.
-        key.weight = 0;
-        key.slope = 0;
-        if (auto it = m_loaded_fonts.find(key); it != m_loaded_fonts.end()) {
-            auto& loader = *it->value;
-            if (auto found_font = loader.font_with_point_size(font_size_in_pt))
-                return found_font;
-        }
+        if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
+            return found_font;
 
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;

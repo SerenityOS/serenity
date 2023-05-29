@@ -101,8 +101,17 @@ private:
         CreatePseudoElementStyleIfNeeded,
     };
 
+    class FontLoader;
+    struct MatchingFontCandidate {
+        FontFaceKey key;
+        FontLoader* loader;
+    };
+
     ErrorOr<RefPtr<StyleProperties>> compute_style_impl(DOM::Element&, Optional<CSS::Selector::PseudoElement>, ComputeStyleMode) const;
     ErrorOr<void> compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, bool& did_match_any_pseudo_element_rules, ComputeStyleMode) const;
+    static RefPtr<Gfx::Font const> find_matching_font_weight_ascending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
+    static RefPtr<Gfx::Font const> find_matching_font_weight_descending(Vector<MatchingFontCandidate> const& candidates, int target_weight, float font_size_in_pt, bool inclusive);
+    RefPtr<Gfx::Font const> font_matching_algorithm(FontFaceKey const& key, float font_size_in_pt) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     void compute_defaulted_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
     ErrorOr<void> absolutize_values(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
@@ -159,7 +168,6 @@ private:
     OwnPtr<RuleCache> m_author_rule_cache;
     OwnPtr<RuleCache> m_user_agent_rule_cache;
 
-    class FontLoader;
     HashMap<FontFaceKey, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
 
     Length::FontMetrics m_default_font_metrics;
