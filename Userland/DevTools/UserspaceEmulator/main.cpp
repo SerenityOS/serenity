@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Process.h>
+#include <LibFileSystem/FileSystem.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -43,15 +44,14 @@ int main(int argc, char** argv, char** env)
     if (dump_profile && profile_instruction_interval == 0)
         profile_instruction_interval = 128;
 
-    DeprecatedString executable_path;
-    if (arguments[0].contains("/"sv))
-        executable_path = Core::DeprecatedFile::real_path_for(arguments[0]);
-    else
-        executable_path = Core::DeprecatedFile::resolve_executable_from_environment(arguments[0]).value_or({});
-    if (executable_path.is_empty()) {
+    auto executable_path_or_error = arguments[0].contains('/')
+        ? FileSystem::real_path(arguments[0])
+        : FileSystem::resolve_executable_from_environment(arguments[0]);
+    if (executable_path_or_error.is_error()) {
         reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;
     }
+    auto executable_path = executable_path_or_error.release_value().to_deprecated_string();
 
     if (dump_profile && profile_dump_path.is_empty())
         profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
