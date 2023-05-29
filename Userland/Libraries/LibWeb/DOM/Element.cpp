@@ -49,7 +49,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
-#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
@@ -329,7 +328,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
         return document.heap().allocate_without_realm<Layout::ListItemBox>(document, element, move(style));
 
     if (display.is_table_cell())
-        return document.heap().allocate_without_realm<Layout::TableCellBox>(document, element, move(style));
+        return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.

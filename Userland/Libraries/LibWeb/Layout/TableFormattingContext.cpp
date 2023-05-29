@@ -6,9 +6,9 @@
 
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 
 struct GridPosition {
@@ -77,13 +77,17 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
             x_current++;
 
         for (auto* child = row.first_child(); child; child = child->next_sibling()) {
-            if (is<TableCellBox>(*child)) {
+            if (child->display().is_table_cell()) {
                 Box const* box = static_cast<Box const*>(child);
                 if (x_current == x_width)
                     x_width++;
 
-                const size_t colspan = static_cast<TableCellBox const*>(child)->colspan();
-                const size_t rowspan = static_cast<TableCellBox const*>(child)->rowspan();
+                size_t colspan = 1, rowspan = 1;
+                if (box->dom_node() && is<HTML::HTMLTableCellElement>(*box->dom_node())) {
+                    auto const& node = static_cast<HTML::HTMLTableCellElement const&>(*box->dom_node());
+                    colspan = node.col_span();
+                    rowspan = node.row_span();
+                }
 
                 if (x_width < x_current + colspan)
                     x_width = x_current + colspan;
