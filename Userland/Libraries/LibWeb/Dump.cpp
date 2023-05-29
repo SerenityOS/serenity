@@ -146,6 +146,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     StringView line_box_color_on = ""sv;
     StringView fragment_color_on = ""sv;
     StringView flex_color_on = ""sv;
+    StringView table_color_on = ""sv;
     StringView formatting_context_color_on = ""sv;
     StringView color_off = ""sv;
 
@@ -159,6 +160,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         line_box_color_on = "\033[34;1m"sv;
         fragment_color_on = "\033[35;1m"sv;
         flex_color_on = "\033[34;1m"sv;
+        table_color_on = "\033[91;1m"sv;
         formatting_context_color_on = "\033[37;1m"sv;
         color_off = "\033[0m"sv;
     }
@@ -222,6 +224,18 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
         if (box.is_flex_item())
             builder.appendff(" {}flex-item{}", flex_color_on, color_off);
+        if (box.display().is_table_inside())
+            builder.appendff(" {}table-box{}", table_color_on, color_off);
+        if (box.display().is_table_row_group())
+            builder.appendff(" {}table-row-group{}", table_color_on, color_off);
+        if (box.display().is_table_header_group())
+            builder.appendff(" {}table-header-group{}", table_color_on, color_off);
+        if (box.display().is_table_footer_group())
+            builder.appendff(" {}table-footer-group{}", table_color_on, color_off);
+        if (box.display().is_table_row())
+            builder.appendff(" {}table-row{}", table_color_on, color_off);
+        if (box.display().is_table_cell())
+            builder.appendff(" {}table-cell{}", table_color_on, color_off);
 
         if (show_box_model) {
             // Dump the horizontal box properties

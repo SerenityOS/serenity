@@ -3,9 +3,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     Box <body> at (10,10) content-size 780x21.46875 flex-container(row) [FFC] children: not-inline
       BlockContainer <div.upper> at (11,11) content-size 41.78125x19.46875 flex-item [BFC] children: not-inline
         TableWrapper <(anonymous)> at (11,11) content-size 41.78125x19.46875 [BFC] children: not-inline
-          Box <(anonymous)> at (11,11) content-size 41.78125x19.46875 [TFC] children: not-inline
-            Box <(anonymous)> at (11,11) content-size 41.78125x19.46875 children: not-inline
-              BlockContainer <div.cell> at (12,12) content-size 39.78125x17.46875 [BFC] children: inline
+          Box <(anonymous)> at (11,11) content-size 41.78125x19.46875 table-box [TFC] children: not-inline
+            Box <(anonymous)> at (11,11) content-size 41.78125x19.46875 table-row children: not-inline
+              BlockContainer <div.cell> at (12,12) content-size 39.78125x17.46875 table-cell [BFC] children: inline
                 line 0 width: 39.78125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                   frag 0 from TextNode start: 0, length: 5, rect: [12,12 39.78125x17.46875]
                     "Hello"
