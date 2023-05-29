@@ -55,14 +55,18 @@ TEST_CASE(should_get_groups_by_index)
 
 TEST_CASE(should_convert_to_string)
 {
-    EXPECT_EQ("102:304:506:708:90a:b0c:d0e:f10"sv, IPv6Address({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }).to_deprecated_string());
-    EXPECT_EQ("::"sv, IPv6Address().to_deprecated_string());
-    EXPECT_EQ("::1"sv, IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }).to_deprecated_string());
-    EXPECT_EQ("1::"sv, IPv6Address({ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }).to_deprecated_string());
-    EXPECT_EQ("102:0:506:708:900::10"sv, IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 16 }).to_deprecated_string());
-    EXPECT_EQ("102:0:506:708:900::"sv, IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0 }).to_deprecated_string());
-    EXPECT_EQ("::304:506:708:90a:b0c:d0e:f10"sv, IPv6Address({ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }).to_deprecated_string());
-    EXPECT_EQ("102:304::708:90a:b0c:d0e:f10"sv, IPv6Address({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }).to_deprecated_string());
+    auto to_string = [&](IPv6Address::in6_addr_t const& data) -> String {
+        return MUST(IPv6Address(data).to_string());
+    };
+
+    EXPECT_EQ("102:304:506:708:90a:b0c:d0e:f10"sv, to_string({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    EXPECT_EQ("::"sv, MUST(IPv6Address().to_string()));
+    EXPECT_EQ("::1"sv, to_string({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+    EXPECT_EQ("1::"sv, to_string({ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+    EXPECT_EQ("102:0:506:708:900::10"sv, to_string({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 16 }));
+    EXPECT_EQ("102:0:506:708:900::"sv, to_string({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0 }));
+    EXPECT_EQ("::304:506:708:90a:b0c:d0e:f10"sv, to_string({ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    EXPECT_EQ("102:304::708:90a:b0c:d0e:f10"sv, to_string({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
 }
 
 TEST_CASE(should_make_ipv6_address_from_string)
@@ -86,7 +90,7 @@ TEST_CASE(ipv4_mapped_ipv6)
     IPv6Address mapped_address(ipv4_address_to_map);
     EXPECT(mapped_address.is_ipv4_mapped());
     EXPECT_EQ(ipv4_address_to_map, mapped_address.ipv4_mapped_address().value());
-    EXPECT_EQ("::ffff:192.168.0.1"sv, mapped_address.to_deprecated_string());
+    EXPECT_EQ("::ffff:192.168.0.1"sv, MUST(mapped_address.to_string()));
     EXPECT_EQ(IPv4Address(192, 168, 1, 9), IPv6Address::from_string("::FFFF:192.168.1.9"sv).value().ipv4_mapped_address().value());
     EXPECT(!IPv6Address::from_string("::abcd:192.168.1.9"sv).has_value());
 }

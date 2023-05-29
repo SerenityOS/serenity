@@ -16,7 +16,7 @@
 #    include <AK/Error.h>
 #    include <Kernel/Library/KString.h>
 #else
-#    include <AK/DeprecatedString.h>
+#    include <AK/String.h>
 #endif
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
@@ -51,25 +51,24 @@ public:
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
 #else
-    DeprecatedString to_deprecated_string() const
+    ErrorOr<String> to_string() const
 #endif
     {
         if (is_zero()) {
 #ifdef KERNEL
             return Kernel::KString::try_create("::"sv);
 #else
-            return "::"sv;
+            return "::"_short_string;
 #endif
         }
 
-        // TODO: Error propagation
         StringBuilder builder;
 
         if (is_ipv4_mapped()) {
 #ifdef KERNEL
             return Kernel::KString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #else
-            return DeprecatedString::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
+            return String::formatted("::ffff:{}.{}.{}.{}", m_data[12], m_data[13], m_data[14], m_data[15]);
 #endif
         }
 
@@ -99,24 +98,24 @@ public:
         for (int i = 0; i < 8;) {
             if (longest_zero_span_start.has_value() && longest_zero_span_start.value() == i) {
                 if (longest_zero_span_start.value() + zero_span_length >= 8)
-                    builder.append("::"sv);
+                    TRY(builder.try_append("::"sv));
                 else
-                    builder.append(':');
+                    TRY(builder.try_append(':'));
                 i += zero_span_length;
                 continue;
             }
 
             if (i == 0)
-                builder.appendff("{:x}", group(i));
+                TRY(builder.try_appendff("{:x}", group(i)));
             else
-                builder.appendff(":{:x}", group(i));
+                TRY(builder.try_appendff(":{:x}", group(i)));
 
             i++;
         }
 #ifdef KERNEL
         return Kernel::KString::try_create(builder.string_view());
 #else
-        return builder.string_view();
+        return builder.to_string();
 #endif
     }
 
@@ -298,7 +297,7 @@ template<>
 struct Formatter<IPv6Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv6Address const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(value.to_string()));
     }
 };
 #endif
