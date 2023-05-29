@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         frag 0 from BlockContainer start: 0, length: 0, rect: [9,9 129.984375x38.9375]
       BlockContainer <table> at (9,9) content-size 129.984375x38.9375 inline-block [BFC] children: not-inline
         TableWrapper <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-block [BFC] children: not-inline
-          TableBox <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-table [TFC] children: not-inline
+          Box <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-table [TFC] children: not-inline
             TableRowGroupBox <tbody> at (9,9) content-size 129.984375x38.9375 children: not-inline
               TableRowBox <tr> at (9,9) content-size 129.984375x19.46875 children: not-inline
                 TableCellBox <td> at (10,10) content-size 87.90625x17.46875 [BFC] children: inline

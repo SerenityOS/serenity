@@ -418,7 +418,6 @@ set(SOURCES
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
-    Layout/TableBox.cpp
     Layout/TableCellBox.cpp
     Layout/TableFormattingContext.cpp
     Layout/TableRowBox.cpp

@@ -3,7 +3,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
       BlockContainer <div.wrapper> at (8,8) content-size 784x17.46875 children: not-inline
         TableWrapper <(anonymous)> at (235.265625,8) content-size 329.46875x17.46875 [BFC] children: not-inline
-          TableBox <div.box> at (235.265625,8) content-size 329.46875x17.46875 [TFC] children: not-inline
+          Box <div.box> at (235.265625,8) content-size 329.46875x17.46875 [TFC] children: not-inline
             TableRowBox <(anonymous)> at (235.265625,8) content-size 329.46875x17.46875 children: not-inline
               TableCellBox <div.cell> at (235.265625,8) content-size 329.46875x17.46875 [BFC] children: inline
                 line 0 width: 329.46875, height: 17.46875, bottom: 17.46875, baseline: 13.53125

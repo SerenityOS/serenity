@@ -8,7 +8,6 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 #include <LibWeb/Layout/TableRowBox.h>
@@ -36,7 +35,7 @@ struct Traits<GridPosition> : public GenericTraits<GridPosition> {
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(LayoutState& state, TableBox const& root, FormattingContext* parent)
+TableFormattingContext::TableFormattingContext(LayoutState& state, Box const& root, FormattingContext* parent)
     : FormattingContext(Type::Table, state, root, parent)
 {
 }

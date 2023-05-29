@@ -49,7 +49,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
@@ -326,7 +325,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProp
 JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
 {
     if (display.is_table_inside())
-        return document.heap().allocate_without_realm<Layout::TableBox>(document, element, move(style));
+        return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
 
     if (display.is_list_item())
         return document.heap().allocate_without_realm<Layout::ListItemBox>(document, element, move(style));

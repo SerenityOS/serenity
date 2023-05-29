@@ -24,7 +24,6 @@
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
@@ -503,12 +502,12 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
 }
 
 template<typename WrapperBoxType>
-static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_sibling)
+static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_sibling, CSS::Display display)
 {
     VERIFY(!sequence.is_empty());
     auto& parent = *sequence.first()->parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
-    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display(parent.display().is_inline_outside()));
+    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(display);
     auto wrapper = parent.heap().template allocate_without_realm<WrapperBoxType>(parent.document(), nullptr, move(computed_values));
     for (auto& child : sequence) {
         parent.remove_child(*child);
@@ -526,65 +525,65 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root box which are not proper table child boxes.
     for_each_in_tree_with_inside_display<CSS::Display::Inside::Table>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_proper_table_child, [&](auto sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRowGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
     // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
     // table-header-groups and table-footer-groups.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableHeaderGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
         });
     });
 
     // An anonymous table-cell box must be generated around each sequence of consecutive children of a table-row box which are not table-cell boxes. !Testcase
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRow>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_cell, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<TableCellBox>(sequence, nearest_sibling);
+            wrap_in_anonymous<TableCellBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableCell });
         });
     });
 }
 
 void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
 {
-    Vector<JS::Handle<TableBox>> table_roots_to_wrap;
+    Vector<JS::Handle<Box>> table_roots_to_wrap;
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& parent) {
         // An anonymous table-row box must be generated around each sequence of consecutive table-cell boxes whose parent is not a table-row.
         if (is_not_table_row(parent)) {
             for_each_sequence_of_consecutive_children_matching(parent, is_table_cell, [&](auto& sequence, auto nearest_sibling) {
-                wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+                wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
             });
         }
 
         // A table-row is misparented if its parent is neither a table-row-group nor a table-root box.
         if (!parent.display().is_table_inside() && !is_proper_table_child(parent)) {
             for_each_sequence_of_consecutive_children_matching(parent, is_table_row, [&](auto& sequence, auto nearest_sibling) {
-                wrap_in_anonymous<TableBox>(sequence, nearest_sibling);
+                wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display::from_short(parent.display().is_inline_outside() ? CSS::Display::Short::InlineTable : CSS::Display::Short::Table));
             });
         }
 
         // A table-row-group, table-column-group, or table-caption box is misparented if its parent is not a table-root box.
         if (!parent.display().is_table_inside() && !is_proper_table_child(parent)) {
             for_each_sequence_of_consecutive_children_matching(parent, is_proper_table_child, [&](auto& sequence, auto nearest_sibling) {
-                wrap_in_anonymous<TableBox>(sequence, nearest_sibling);
+                wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display::from_short(parent.display().is_inline_outside() ? CSS::Display::Short::InlineTable : CSS::Display::Short::Table));
             });
         }
 
         // An anonymous table-wrapper box must be generated around each table-root.
         if (parent.display().is_table_inside()) {
-            table_roots_to_wrap.append(static_cast<TableBox&>(parent));
+            table_roots_to_wrap.append(parent);
         }
 
         return IterationDecision::Continue;
