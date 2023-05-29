@@ -123,6 +123,7 @@ public:
         Numeric,
         Overflow,
         Percentage,
+        PlaceContent,
         Position,
         RadialGradient,
         Rect,
@@ -177,6 +178,7 @@ public:
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
+    bool is_place_content() const { return type() == Type::PlaceContent; }
     bool is_position() const { return type() == Type::Position; }
     bool is_radial_gradient() const { return type() == Type::RadialGradient; }
     bool is_rect() const { return type() == Type::Rect; }
@@ -230,6 +232,7 @@ public:
     NumericStyleValue const& as_numeric() const;
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
+    PlaceContentStyleValue const& as_place_content() const;
     PositionStyleValue const& as_position() const;
     RadialGradientStyleValue const& as_radial_gradient() const;
     RectStyleValue const& as_rect() const;
@@ -280,6 +283,7 @@ public:
     NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
+    PlaceContentStyleValue& as_place_content() { return const_cast<PlaceContentStyleValue&>(const_cast<StyleValue const&>(*this).as_place_content()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     RadialGradientStyleValue& as_radial_gradient() { return const_cast<RadialGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_radial_gradient()); }
     RectStyleValue& as_rect() { return const_cast<RectStyleValue&>(const_cast<StyleValue const&>(*this).as_rect()); }
