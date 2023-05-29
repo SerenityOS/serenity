@@ -14,6 +14,7 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/SourceLocation.h>
 #include <AK/StringView.h>
 
 #ifndef KERNEL
@@ -729,6 +730,14 @@ struct Formatter<Optional<T>> : Formatter<FormatString> {
         if (optional.has_value())
             return Formatter<FormatString>::format(builder, "{}"sv, *optional);
         return builder.put_literal("None"sv);
+    }
+};
+
+template<>
+struct Formatter<SourceLocation> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, SourceLocation location)
+    {
+        return Formatter<FormatString>::format(builder, "[\x1b[34m{}\x1b[0m @ {}:{}]"sv, location.function_name(), location.filename(), location.line_number());
     }
 };
 

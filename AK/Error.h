@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/SourceLocation.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
@@ -140,6 +141,8 @@ private:
 #endif
 };
 
+void ak_loudly_complain_about_fixmed_error(Error const&, SourceLocation);
+
 template<typename T, typename E>
 class [[nodiscard]] ErrorOr {
     template<typename U, typename F>
@@ -197,8 +200,13 @@ public:
     T release_value() { return move(value()); }
     ErrorType release_error() { return move(error()); }
 
-    T release_value_but_fixme_should_propagate_errors()
+    T release_value_but_fixme_should_propagate_errors(SourceLocation location = SourceLocation::current())
     {
+        if constexpr (IsSame<E, Error>) {
+            if (is_error())
+                ak_loudly_complain_about_fixmed_error(error(), location);
+        }
+
         VERIFY(!is_error());
         return release_value();
     }
