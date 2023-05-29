@@ -884,6 +884,262 @@ ErrorOr<MacroblockCoefficients> read_macroblock_coefficients(BooleanDecoder& dec
     return coefficients;
 }
 
+template<int N>
+void predict_macroblock(Span<i16> prediction, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 truemotion_corner)
+{
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-12.2 "Chroma Prediction"
+    // (Also used for the DC_PRED, H_PRED, V_PRED, TM_PRED for luma prediction.)
+    if (mode == DC_PRED) {
+        if (mb_x == 0 && mb_y == 0) {
+            for (size_t i = 0; i < N * N; ++i)
+                prediction[i] = 128;
+        } else {
+            int sum = 0, n = 0;
+            if (mb_x > 0) {
+                for (int i = 0; i < N; ++i)
+                    sum += left[i];
+                n += N;
+            }
+            if (mb_y > 0) {
+                for (int i = 0; i < N; ++i)
+                    sum += above[mb_x * N + i];
+                n += N;
+            }
+            i16 average = (sum + n / 2) / n;
+            for (size_t i = 0; i < N * N; ++i)
+                prediction[i] = average;
+        }
+    } else if (mode == H_PRED) {
+        for (int y = 0; y < N; ++y)
+            for (int x = 0; x < N; ++x)
+                prediction[y * N + x] = left[y];
+    } else if (mode == V_PRED) {
+        for (int y = 0; y < N; ++y)
+            for (int x = 0; x < N; ++x)
+                prediction[y * N + x] = above[mb_x * N + x];
+    } else {
+        VERIFY(mode == TM_PRED);
+        for (int y = 0; y < N; ++y)
+            for (int x = 0; x < N; ++x)
+                prediction[y * N + x] = left[y] + above[mb_x * N + x] - truemotion_corner;
+    }
+}
+
+void predict_y_subblock(Span<i16> y_prediction, IntraBlockMode mode, int x, int y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 corner)
+{
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-12.3 "Luma Prediction"
+    // Roughly corresponds to "subblock_intra_predict()" in the spec.
+    auto weighted_average = [](i16 x, i16 y, i16 z) { return (x + 2 * y + z + 2) / 4; };
+    auto average = [](i16 x, i16 y) { return (x + y + 1) / 2; };
+
+    auto at = [&y_prediction, y, x](int px, int py) -> i16& { return y_prediction[(4 * y + py) * 16 + 4 * x + px]; };
+
+    if (mode == B_DC_PRED) {
+        // XXX spec text says this is like DC_PRED but predict_dc_nxn() in the sample impl looks like it doesn't do the "oob isn't read" part. what's right?
+        // DC16NoTopLeft_C vs DC4_C in libwebp dec.c / common_dec.h suggests the spec text is incomplete :/
+        int sum = 0, n = 8;
+        for (int i = 0; i < 4; ++i)
+            sum += left[i] + above[i];
+        i16 average = (sum + n / 2) / n;
+        for (int py = 0; py < 4; ++py)
+            for (int px = 0; px < 4; ++px)
+                y_prediction[(4 * y + py) * 16 + 4 * x + px] = average;
+    } else if (mode == B_TM_PRED) {
+        for (int py = 0; py < 4; ++py)
+            for (int px = 0; px < 4; ++px)
+                y_prediction[(4 * y + py) * 16 + 4 * x + px] = clamp(left[py] + above[px] - corner, 0, 255);
+    } else if (mode == B_VE_PRED) {
+        for (int py = 0; py < 4; ++py)
+            for (int px = 0; px < 4; ++px) {
+                auto top_left = (px > 0 ? above[px - 1] : corner);
+                y_prediction[(4 * y + py) * 16 + 4 * x + px] = weighted_average(top_left, above[px], above[px + 1]);
+            }
+    } else if (mode == B_HE_PRED) {
+        for (int py = 0; py < 4; ++py)
+            for (int px = 0; px < 4; ++px) {
+                if (py == 0) {
+                    y_prediction[(4 * y + py) * 16 + 4 * x + px] = weighted_average(corner, left[py], left[py + 1]);
+                } else if (py == 3) {
+                    /* Bottom row is exceptional because L[4] does not exist */
+                    y_prediction[(4 * y + py) * 16 + 4 * x + px] = weighted_average(left[2], left[3], left[3]);
+                } else {
+                    y_prediction[(4 * y + py) * 16 + 4 * x + px] = weighted_average(left[py - 1], left[py], left[py + 1]);
+                }
+            }
+    } else if (mode == B_LD_PRED) {
+        // this is 45-deg prediction from above, going left-down (i.e. isochromes on -1/+1 diags)
+        at(0, 0) = weighted_average(above[0], above[1], above[2]);
+        at(0, 1) = at(1, 0) = weighted_average(above[1], above[2], above[3]);
+        at(0, 2) = at(1, 1) = at(2, 0) = weighted_average(above[2], above[3], above[4]);
+        at(0, 3) = at(1, 2) = at(2, 1) = at(3, 0) = weighted_average(above[3], above[4], above[5]);
+        at(1, 3) = at(2, 2) = at(3, 1) = weighted_average(above[4], above[5], above[6]);
+        at(2, 3) = at(3, 2) = weighted_average(above[5], above[6], above[7]);
+        at(3, 3) = weighted_average(above[6], above[7], above[7]); // intentionally 6, 7, 7
+    } else if (mode == B_RD_PRED) {
+        // this is 45-deg prediction from above / left, going right-down (i.e. isochromes on +1/+1 diags)
+        at(0, 3) = weighted_average(left[3], left[2], left[1]);
+        at(0, 2) = at(1, 3) = weighted_average(left[2], left[1], left[0]);
+        at(0, 1) = at(1, 2) = at(2, 3) = weighted_average(left[1], left[0], corner);
+        at(0, 0) = at(1, 1) = at(2, 2) = at(3, 3) = weighted_average(left[0], corner, above[0]);
+        at(1, 0) = at(2, 1) = at(3, 2) = weighted_average(corner, above[0], above[1]);
+        at(2, 0) = at(3, 1) = weighted_average(above[0], above[1], above[2]);
+        at(3, 0) = weighted_average(above[1], above[2], above[3]);
+    } else if (mode == B_VR_PRED) {
+        // this is 22.5-deg prediction
+        at(0, 3) = weighted_average(left[2], left[1], left[0]);
+        at(0, 2) = weighted_average(left[1], left[0], corner);
+        at(1, 3) = at(0, 1) = weighted_average(left[0], corner, above[0]);
+        at(1, 2) = at(0, 0) = average(corner, above[0]);
+        at(2, 3) = at(1, 1) = weighted_average(corner, above[0], above[1]);
+        at(2, 2) = at(1, 0) = average(above[0], above[1]);
+        at(3, 3) = at(2, 1) = weighted_average(above[0], above[1], above[2]);
+        at(3, 2) = at(2, 0) = average(above[1], above[2]);
+        at(3, 1) = weighted_average(above[1], above[2], above[3]);
+        at(3, 0) = average(above[2], above[3]);
+    } else if (mode == B_VL_PRED) {
+        // this is 22.5-deg prediction
+        at(0, 0) = average(above[0], above[1]);
+        at(0, 1) = weighted_average(above[0], above[1], above[2]);
+        at(0, 2) = at(1, 0) = average(above[1], above[2]);
+        at(1, 1) = at(0, 3) = weighted_average(above[1], above[2], above[3]);
+        at(1, 2) = at(2, 0) = average(above[2], above[3]);
+        at(1, 3) = at(2, 1) = weighted_average(above[2], above[3], above[4]);
+        at(2, 2) = at(3, 0) = average(above[3], above[4]);
+        at(2, 3) = at(3, 1) = weighted_average(above[3], above[4], above[5]);
+        /* Last two values do not strictly follow the pattern. */
+        at(3, 2) = weighted_average(above[4], above[5], above[6]);
+        at(3, 3) = weighted_average(above[5], above[6], above[7]);
+    } else if (mode == B_HD_PRED) {
+        // this is 22.5-deg prediction
+        at(0, 3) = average(left[3], left[2]);
+        at(1, 3) = weighted_average(left[3], left[2], left[1]);
+        at(0, 2) = at(2, 3) = average(left[2], left[1]);
+        at(1, 2) = at(3, 3) = weighted_average(left[2], left[1], left[0]);
+        at(2, 2) = at(0, 1) = average(left[1], left[0]);
+        at(3, 2) = at(1, 1) = weighted_average(left[1], left[0], corner);
+        at(2, 1) = at(0, 0) = average(left[0], corner);
+        at(3, 1) = at(1, 0) = weighted_average(left[0], corner, above[0]);
+        at(2, 0) = weighted_average(corner, above[0], above[1]);
+        at(3, 0) = weighted_average(above[0], above[1], above[2]);
+    } else {
+        VERIFY(mode == B_HU_PRED);
+        // this is 22.5-deg prediction
+        at(0, 0) = average(left[0], left[1]);
+        at(1, 0) = weighted_average(left[0], left[1], left[2]);
+        at(2, 0) = at(0, 1) = average(left[1], left[2]);
+        at(3, 0) = at(1, 1) = weighted_average(left[1], left[2], left[3]);
+        at(2, 1) = at(0, 2) = average(left[2], left[3]);
+        at(3, 1) = at(1, 2) = weighted_average(left[2], left[3], left[3]); // Intentionally 2, 3, 3
+        /* Not possible to follow pattern for much of the bottom
+           row because no (nearby) already-constructed pixels lie
+           on the diagonals in question. */
+        at(2, 2) = at(3, 2) = at(0, 3) = at(1, 3) = at(2, 3) = at(3, 3) = left[3];
+    }
+}
+
+template<int N>
+void add_idct_to_prediction(Span<i16> prediction, Coefficients coefficients, int x, int y)
+{
+    Coefficients idct_output;
+    short_idct4x4llm_c(coefficients, idct_output, 4 * sizeof(i16));
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-14.5 "Summation of Predictor and Residue"
+    for (int py = 0; py < 4; ++py) { // Loop over 4x4 pixels in subblock
+        for (int px = 0; px < 4; ++px) {
+            // sum with prediction
+            i16& p = prediction[(4 * y + py) * N + (4 * x + px)];
+            p += idct_output[py * 4 + px];
+            // p = clamp(p, 0, 255);
+        }
+    }
+}
+
+template<int N>
+void process_macroblock(Span<i16> output, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 truemotion_corner, Coefficients coefficients_array[])
+{
+    predict_macroblock<4 * N>(output, mode, mb_x, mb_y, left, above, truemotion_corner);
+
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-14.4 "Implementation of the DCT Inversion"
+    // Loop over the 4x4 subblocks
+    for (int y = 0, i = 0; y < N; ++y)
+        for (int x = 0; x < N; ++x, ++i)
+            add_idct_to_prediction<4 * N>(output, coefficients_array[i], x, y);
+}
+
+void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, int mb_x, int mb_y, ReadonlySpan<i16> predicted_y_left, ReadonlySpan<i16> predicted_y_above, i16 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
+{
+    // Loop over the 4x4 subblocks
+    for (int y = 0, i = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x, ++i) {
+            i16 corner = y_truemotion_corner;
+            if (x > 0 && y == 0)
+                corner = predicted_y_above[mb_x * 16 + 4 * x - 1];
+            else if (x > 0 && y > 0)
+                corner = y_output[(4 * y - 1) * 16 + 4 * x - 1];
+            else if (x == 0 && y > 0)
+                corner = predicted_y_left[4 * y - 1];
+
+            i16 left[4], above[8];
+            for (int i = 0; i < 4; ++i) {
+                if (x == 0)
+                    left[i] = predicted_y_left[4 * y + i];
+                else
+                    left[i] = y_output[(4 * y + i) * 16 + 4 * x - 1];
+            }
+            // Subblock prediction can read 8 pixels above the block.
+            // For rightmost subblocks, the right 4 pixels there aren't initialized yet, so those get the 4 pixels to the right above the macroblock.
+            // For the rightmost macroblock, there's no macroblock to its right, so there they get the rightmost pixel above.
+            // But in the 0th row, there's no pixel above, so there they become 127.
+            for (int i = 0; i < 8; ++i) {
+                if (x == 3 && i >= 4) {                 // rightmost subblock, 4 right pixels?
+                    if (mb_x == macroblock_width - 1) { // rightmost macroblock
+                        if (mb_y == 0) {                // topmost macroblock row
+                            above[i] = 127;
+                        } else {
+                            above[i] = predicted_y_above[mb_x * 16 + 4 * x + 3];
+                        }
+                    } else {
+                        above[i] = predicted_y_above[mb_x * 16 + 4 * x + i];
+                    }
+                } else if (y == 0) {
+                    above[i] = predicted_y_above[mb_x * 16 + 4 * x + i];
+                } else {
+                    above[i] = y_output[(4 * y - 1) * 16 + 4 * x + i];
+                }
+            }
+
+            predict_y_subblock(y_output, metadata.intra_b_modes[y * 4 + x], x, y, left, above, corner);
+
+            // Have to do IDCT summation here, since its results affect prediction of next subblock already.
+            add_idct_to_prediction<16>(y_output, coefficients_array[4 * y + x], x, y);
+        }
+    }
+}
+
+void convert_yuv_to_rgb(Bitmap& bitmap, int mb_x, int mb_y, ReadonlySpan<i16> y_data, ReadonlySpan<i16> u_data, ReadonlySpan<i16> v_data)
+{
+    // Convert YUV to RGB.
+    for (int y = 0; y < 16; ++y) {
+        for (int x = 0; x < 16; ++x) {
+            // "is then saturated to 8-bit unsigned range (using, say, the
+            //  clamp255 function defined above) before being stored as an 8-bit
+            //  unsigned pixel value."
+            u8 Y = clamp(y_data[y * 16 + x], 0, 255);
+
+            // FIXME: Could do nicer upsampling than just nearest neighbor
+            u8 U = clamp(u_data[(y / 2) * 8 + x / 2], 0, 255);
+            u8 V = clamp(v_data[(y / 2) * 8 + x / 2], 0, 255);
+
+            // XXX: These numbers are from the fixed-point values in libwebp's yuv.h. There's probably a better reference somewhere.
+            int r = 1.1655 * Y + 1.596 * V - 222.4;
+            int g = 1.1655 * Y - 0.3917 * U - 0.8129 * V + 136.0625;
+            int b = 1.1655 * Y + 2.0172 * U - 276.33;
+
+            bitmap.scanline(mb_y * 16 + y)[mb_x * 16 + x] = Color(clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)).value();
+        }
+    }
+}
+
 ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& header, ReadonlyBytes data, int macroblock_width, int macroblock_height, Vector<MacroblockMetadata> const& macroblock_metadata)
 {
     FixedMemoryStream memory_stream { data };
@@ -893,21 +1149,76 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
     CoefficientReadingContext coefficient_reading_context;
     TRY(coefficient_reading_context.initialize(macroblock_width));
 
+    Vector<i16> predicted_y_above;
+    TRY(predicted_y_above.try_resize(macroblock_width * 16));
+    for (size_t i = 0; i < predicted_y_above.size(); ++i)
+        predicted_y_above[i] = 127;
+
+    Vector<i16> predicted_u_above;
+    TRY(predicted_u_above.try_resize(macroblock_width * 8));
+    for (size_t i = 0; i < predicted_u_above.size(); ++i)
+        predicted_u_above[i] = 127;
+
+    Vector<i16> predicted_v_above;
+    TRY(predicted_v_above.try_resize(macroblock_width * 8));
+    for (size_t i = 0; i < predicted_v_above.size(); ++i)
+        predicted_v_above[i] = 127;
+
     for (int mb_y = 0, macroblock_index = 0; mb_y < macroblock_height; ++mb_y) {
         coefficient_reading_context.start_new_row();
+
+        i16 predicted_y_left[16] { 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129 };
+        i16 predicted_u_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
+        i16 predicted_v_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
+
+        // The spec doesn't say if this should be 127, 129, or something else.
+        // But ReconstructRow in frame_dec.c in libwebp suggests 129.
+        i16 y_truemotion_corner = 129;
+        i16 u_truemotion_corner = 129;
+        i16 v_truemotion_corner = 129;
 
         for (int mb_x = 0; mb_x < macroblock_width; ++mb_x, ++macroblock_index) {
             auto const& metadata = macroblock_metadata[macroblock_index];
 
             auto coefficients = TRY(read_macroblock_coefficients(decoder, header, coefficient_reading_context, metadata, mb_x));
 
-            // FIXME: Decode the rest of the duck.
-            (void)coefficients;
-            (void)bitmap;
+            i16 y_data[16 * 16] {};
+            if (metadata.intra_y_mode == B_PRED)
+                process_subblocks(y_data, metadata, mb_x, mb_y, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs, macroblock_width);
+            else
+                process_macroblock<4>(y_data, metadata.intra_y_mode, mb_x, mb_y, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs);
+
+            i16 u_data[8 * 8] {};
+            process_macroblock<2>(u_data, metadata.uv_mode, mb_x, mb_y, predicted_u_left, predicted_u_above, u_truemotion_corner, coefficients.u_coeffs);
+
+            i16 v_data[8 * 8] {};
+            process_macroblock<2>(v_data, metadata.uv_mode, mb_x, mb_y, predicted_v_left, predicted_v_above, v_truemotion_corner, coefficients.v_coeffs);
+
+            // FIXME: insert loop filtering here
+
+            convert_yuv_to_rgb(bitmap, mb_x, mb_y, y_data, u_data, v_data);
+
+            y_truemotion_corner = predicted_y_above[mb_x * 16 + 15];
+            for (int i = 0; i < 16; ++i)
+                predicted_y_left[i] = y_data[15 + i * 16];
+            for (int i = 0; i < 16; ++i)
+                predicted_y_above[mb_x * 16 + i] = y_data[15 * 16 + i];
+
+            u_truemotion_corner = predicted_u_above[mb_x * 8 + 7];
+            for (int i = 0; i < 8; ++i)
+                predicted_u_left[i] = u_data[7 + i * 8];
+            for (int i = 0; i < 8; ++i)
+                predicted_u_above[mb_x * 8 + i] = u_data[7 * 8 + i];
+
+            v_truemotion_corner = predicted_v_above[mb_x * 8 + 7];
+            for (int i = 0; i < 8; ++i)
+                predicted_v_left[i] = v_data[7 + i * 8];
+            for (int i = 0; i < 8; ++i)
+                predicted_v_above[mb_x * 8 + i] = v_data[7 * 8 + i];
         }
     }
 
-    return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
+    return {};
 }
 
 }
