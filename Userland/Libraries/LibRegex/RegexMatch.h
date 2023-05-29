@@ -164,7 +164,7 @@ public:
     }
 
     RegexStringView(String const& string)
-        : m_view(string.bytes_as_string_view())
+        : m_view(string.code_points())
     {
     }
 
