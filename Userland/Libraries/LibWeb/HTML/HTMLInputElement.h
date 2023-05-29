@@ -140,6 +140,7 @@ private:
     virtual bool is_html_input_element() const final { return true; }
 
     // ^DOM::EventTarget
+    virtual void did_lose_focus() override;
     virtual void did_receive_focus() override;
     virtual void legacy_pre_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior() override;
