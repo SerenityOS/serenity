@@ -73,16 +73,15 @@ TEST_CASE(allocating_memory_stream_offset_of_oob)
     AllocatingMemoryStream stream;
     // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
     //       So we have to assume some things about the behavior of this class:
-    //       - The chunk size is 4096 bytes.
     //       - A chunk is moved to the end when it's fully read from
     //       - A free chunk is used as-is, no new ones are allocated if one exists.
 
-    // First, fill exactly one chunk.
-    for (size_t i = 0; i < 256; ++i)
+    // First, fill exactly one chunk (in groups of 16 bytes).
+    for (size_t i = 0; i < AllocatingMemoryStream::CHUNK_SIZE / 16; ++i)
         MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
 
     // Then discard it all.
-    MUST(stream.discard(4096));
+    MUST(stream.discard(AllocatingMemoryStream::CHUNK_SIZE));
     // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
     MUST(stream.write_until_depleted("Well Hello Friends! :^)"sv.bytes()));
 
