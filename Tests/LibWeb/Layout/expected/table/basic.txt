@@ -17,7 +17,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           Box <thead> at (8,8) content-size 95.171875x19.46875 children: not-inline
             BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
               TextNode <#text>
-            TableRowBox <tr> at (8,8) content-size 95.171875x19.46875 children: not-inline
+            Box <tr> at (8,8) content-size 95.171875x19.46875 children: not-inline
               BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
                 TextNode <#text>
               TableCellBox <td> at (9,9) content-size 93.171875x17.46875 [BFC] children: inline
@@ -34,7 +34,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           Box <tbody> at (8,27.46875) content-size 95.171875x19.46875 children: not-inline
             BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
               TextNode <#text>
-            TableRowBox <tr> at (8,27.46875) content-size 95.171875x19.46875 children: not-inline
+            Box <tr> at (8,27.46875) content-size 95.171875x19.46875 children: not-inline
               BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
                 TextNode <#text>
               TableCellBox <td> at (9,28.46875) content-size 93.171875x17.46875 [BFC] children: inline
@@ -51,7 +51,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           Box <tfoot> at (8,46.9375) content-size 95.171875x19.46875 children: not-inline
             BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
               TextNode <#text>
-            TableRowBox <tr> at (8,46.9375) content-size 95.171875x19.46875 children: not-inline
+            Box <tr> at (8,46.9375) content-size 95.171875x19.46875 children: not-inline
               BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
                 TextNode <#text>
               TableCellBox <td> at (9,47.9375) content-size 93.171875x17.46875 [BFC] children: inline

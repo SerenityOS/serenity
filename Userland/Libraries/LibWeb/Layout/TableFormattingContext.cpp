@@ -10,7 +10,6 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
-#include <LibWeb/Layout/TableRowBox.h>
 
 struct GridPosition {
     size_t x;
@@ -47,6 +46,11 @@ static inline bool is_table_row_group(Box const& box)
     return display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group();
 }
 
+static inline bool is_table_row(Box const& box)
+{
+    return box.display().is_table_row();
+}
+
 template<typename Matcher, typename Callback>
 static void for_each_child_box_matching(Box const& parent, Matcher matcher, Callback callback)
 {
@@ -74,12 +78,12 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 
         for (auto* child = row.first_child(); child; child = child->next_sibling()) {
             if (is<TableCellBox>(*child)) {
-                Box* box = static_cast<Box*>(child);
+                Box const* box = static_cast<Box const*>(child);
                 if (x_current == x_width)
                     x_width++;
 
-                const size_t colspan = static_cast<TableCellBox*>(child)->colspan();
-                const size_t rowspan = static_cast<TableCellBox*>(child)->rowspan();
+                const size_t colspan = static_cast<TableCellBox const*>(child)->colspan();
+                const size_t rowspan = static_cast<TableCellBox const*>(child)->rowspan();
 
                 if (x_width < x_current + colspan)
                     x_width = x_current + colspan;
@@ -100,14 +104,14 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
     };
 
     for_each_child_box_matching(box, is_table_row_group, [&](auto& row_group_box) {
-        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            process_row(row);
+        for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row_box) {
+            process_row(row_box);
             return IterationDecision::Continue;
         });
     });
 
-    box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-        process_row(row);
+    for_each_child_box_matching(box, is_table_row, [&](auto& row_box) {
+        process_row(row_box);
         return IterationDecision::Continue;
     });
 
@@ -635,7 +639,7 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
         row_group_box_state.set_content_x(row_group_left_offset);
         row_group_box_state.set_content_y(row_group_top_offset);
 
-        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
+        for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row) {
             auto const& row_state = m_state.get(row);
             row_group_height += row_state.border_box_height();
             row_group_width = max(row_group_width, row_state.border_box_width());

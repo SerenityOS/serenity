@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       TableWrapper <(anonymous)> at (8,8) content-size 784x600 [BFC] children: not-inline
         Box <div.aligncenter.block-image> at (8,8) content-size 1200x600 [TFC] children: inline
-          TableRowBox <(anonymous)> at (8,8) content-size 1200x600 children: inline
+          Box <(anonymous)> at (8,8) content-size 1200x600 children: inline
             TableCellBox <(anonymous)> at (8,8) content-size 1200x600 [BFC] children: inline
               line 0 width: 1200, height: 600, bottom: 600, baseline: 600
                 frag 0 from ImageBox start: 0, length: 0, rect: [8,8 1200x600]

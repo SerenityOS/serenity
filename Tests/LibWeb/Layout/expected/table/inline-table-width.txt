@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TableWrapper <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-block [BFC] children: not-inline
           Box <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-table [TFC] children: not-inline
             Box <tbody> at (9,9) content-size 129.984375x38.9375 children: not-inline
-              TableRowBox <tr> at (9,9) content-size 129.984375x19.46875 children: not-inline
+              Box <tr> at (9,9) content-size 129.984375x19.46875 children: not-inline
                 TableCellBox <td> at (10,10) content-size 87.90625x17.46875 [BFC] children: inline
                   line 0 width: 15.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                     frag 0 from TextNode start: 0, length: 2, rect: [10,10 15.734375x17.46875]
@@ -18,7 +18,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                     frag 0 from TextNode start: 0, length: 4, rect: [99.90625,10 27.84375x17.46875]
                       "null"
                   TextNode <#text>
-              TableRowBox <tr> at (9,28.46875) content-size 129.984375x19.46875 children: not-inline
+              Box <tr> at (9,28.46875) content-size 129.984375x19.46875 children: not-inline
                 TableCellBox <td> at (10,29.46875) content-size 87.90625x17.46875 [BFC] children: inline
                   line 0 width: 87.90625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                     frag 0 from TextNode start: 0, length: 11, rect: [10,29.46875 87.90625x17.46875]
