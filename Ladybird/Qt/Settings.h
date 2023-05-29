@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/OwnPtr.h>
 #include <QPoint>
 #include <QSettings>
 #include <QSize>
@@ -15,7 +16,14 @@ namespace Ladybird {
 
 class Settings : public QObject {
 public:
-    Settings();
+    Settings(Settings const&) = delete;
+    Settings& operator=(Settings const&) = delete;
+
+    static Settings* the()
+    {
+        static Settings instance;
+        return &instance;
+    }
 
     Optional<QPoint> last_position();
     void set_last_position(QPoint const& last_position);
@@ -29,8 +37,11 @@ public:
     QString new_tab_page();
     void set_new_tab_page(QString const& page);
 
+protected:
+    Settings();
+
 private:
-    QSettings* m_qsettings;
+    OwnPtr<QSettings> m_qsettings;
 };
 
 }

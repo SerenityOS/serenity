@@ -27,7 +27,6 @@
 #include <QTabBar>
 
 namespace Ladybird {
-extern Settings* s_settings;
 
 static QIcon const& app_icon()
 {
@@ -356,7 +355,7 @@ BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJa
     });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
-        new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
+        new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
@@ -401,7 +400,7 @@ BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJa
         auto initial_url_string = qstring_from_ak_deprecated_string(initial_url->serialize());
         new_tab(initial_url_string, Web::HTML::ActivateTab::Yes);
     } else {
-        new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
+        new_tab(Settings::the()->new_tab_page(), Web::HTML::ActivateTab::Yes);
     }
 
     setCentralWidget(m_tabs_container);
@@ -696,9 +695,9 @@ bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
 
 void BrowserWindow::closeEvent(QCloseEvent* event)
 {
-    s_settings->set_last_position(pos());
-    s_settings->set_last_size(size());
-    s_settings->set_is_maximized(isMaximized());
+    Settings::the()->set_last_position(pos());
+    Settings::the()->set_last_size(size());
+    Settings::the()->set_is_maximized(isMaximized());
 
     QMainWindow::closeEvent(event);
 }
