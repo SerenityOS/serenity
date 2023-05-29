@@ -198,11 +198,12 @@ ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle
     if (m_chunks.size() == 0)
         return Optional<size_t> {};
 
-    // Ensure that we don't have to trim away more than one block.
+    // Ensure that we don't have empty chunks at the beginning of the stream. Our trimming implementation
+    // assumes this to be the case, since this should be held up by `cleanup_unused_chunks()` at all times.
     VERIFY(m_read_offset < CHUNK_SIZE);
-    VERIFY(m_chunks.size() * CHUNK_SIZE - m_write_offset < CHUNK_SIZE);
 
-    auto chunk_count = m_chunks.size();
+    auto empty_chunks_at_end = ((m_chunks.size() * CHUNK_SIZE - m_write_offset) / CHUNK_SIZE);
+    auto chunk_count = m_chunks.size() - empty_chunks_at_end;
     auto search_spans = TRY(FixedArray<ReadonlyBytes>::create(chunk_count));
 
     for (size_t i = 0; i < chunk_count; i++) {
