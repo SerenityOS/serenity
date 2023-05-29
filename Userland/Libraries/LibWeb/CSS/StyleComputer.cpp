@@ -1325,7 +1325,7 @@ void StyleComputer::ensure_animation_timer() const
                 m_active_animations.remove(key);
 
             for (auto* element : owning_elements_to_invalidate)
-                element->invalidate_style();
+                element->set_needs_style_update(true);
         });
     }
 
