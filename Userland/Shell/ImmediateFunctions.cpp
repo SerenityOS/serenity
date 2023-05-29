@@ -226,11 +226,16 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_regex_replace(AST::ImmediateExpressi
         return nullptr;
     }
 
-    Regex<PosixExtendedParser> re { TRY(pattern->resolve_as_list(this)).first().to_deprecated_string() };
+    Regex<ECMA262Parser> re { TRY(pattern->resolve_as_list(this)).first().to_deprecated_string() };
+    if (re.parser_result.error != regex::Error::NoError) {
+        raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Invalid regex pattern: {}", get_error_string(re.parser_result.error)), arguments[0]->position());
+        return nullptr;
+    }
+
     auto result = re.replace(
         TRY(value->resolve_as_list(this))[0],
         TRY(replacement->resolve_as_list(this))[0],
-        PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
+        ECMAScriptFlags::Global | ECMAScriptFlags::Multiline | ECMAScriptFlags::Unicode);
 
     return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), TRY(String::from_utf8(result)), AST::StringLiteral::EnclosureType::None);
 }
