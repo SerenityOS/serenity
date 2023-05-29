@@ -1011,6 +1011,7 @@ StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time 
             --iteration_count.value();
             changed_iteration = true;
         }
+        ++current_iteration;
         new_progress = 0;
     }
     progress = CSS::Percentage(new_progress * 100);
@@ -1112,6 +1113,13 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
     }
 }
 
+bool StyleComputer::Animation::is_animating_backwards() const
+{
+    return (direction == CSS::AnimationDirection::AlternateReverse && current_iteration % 2 == 1)
+        || (direction == CSS::AnimationDirection::Alternate && current_iteration % 2 == 0)
+        || direction == CSS::AnimationDirection::Reverse;
+}
+
 ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_properties, RuleCache const& rule_cache) const
 {
     if (remaining_delay.to_milliseconds() != 0) {
@@ -1126,8 +1134,11 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
 
     auto& keyframes = matching_keyframes.value()->keyframes_by_key;
 
-    auto key = static_cast<u64>(progress.value() * AnimationKeyFrameKeyScaleFactor);
-    auto matching_keyframe_it = keyframes.find_largest_not_above_iterator(key);
+    auto output_progress = compute_output_progress(progress.as_fraction()) * 100.f;
+    auto is_backwards = is_animating_backwards();
+
+    auto key = static_cast<u64>(output_progress * AnimationKeyFrameKeyScaleFactor);
+    auto matching_keyframe_it = is_backwards ? keyframes.find_smallest_not_below_iterator(key) : keyframes.find_largest_not_above_iterator(key);
     if (matching_keyframe_it.is_end()) {
         if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
             dbgln("    Did not find any start keyframe for the current state ({}) :(", key);
@@ -1141,21 +1152,22 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
     auto keyframe_start = matching_keyframe_it.key();
     auto keyframe_values = *matching_keyframe_it;
 
-    auto keyframe_end_it = ++matching_keyframe_it;
-    if (keyframe_end_it.is_end()) {
-        if constexpr (LIBWEB_CSS_ANIMATION_DEBUG) {
-            dbgln("    Did not find any end keyframe for the current state ({}) :(", key);
-            dbgln("    (have {} keyframes)", keyframes.size());
-            for (auto it = keyframes.begin(); it != keyframes.end(); ++it)
-                dbgln("        - {}", it.key());
-        }
-        return {};
-    }
+    auto initial_keyframe_it = matching_keyframe_it;
+    auto keyframe_end_it = is_backwards ? --matching_keyframe_it : ++matching_keyframe_it;
+    if (keyframe_end_it.is_end())
+        keyframe_end_it = initial_keyframe_it;
 
     auto keyframe_end = keyframe_end_it.key();
     auto keyframe_end_values = *keyframe_end_it;
 
-    auto progress_in_keyframe = (progress.value() * AnimationKeyFrameKeyScaleFactor - keyframe_start) / (keyframe_end - keyframe_start);
+    auto progress_in_keyframe = [&] {
+        if (keyframe_start == keyframe_end)
+            return is_backwards ? 1.f : 0.f;
+
+        return is_backwards
+            ? static_cast<float>(keyframe_start - key) / static_cast<float>(keyframe_start - keyframe_end)
+            : static_cast<float>(key - keyframe_start) / static_cast<float>(keyframe_end - keyframe_start);
+    }();
 
     auto valid_properties = 0;
     for (auto const& property : keyframe_values.resolved_properties) {
@@ -1210,7 +1222,6 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
         auto start = resolved_start_property.release_nonnull();
         auto end = resolved_end_property.release_nonnull();
 
-        // FIXME: This should be a function of the animation-timing-function.
         auto next_value = TRY(interpolate_property(*start, *end, progress_in_keyframe));
         dbgln_if(LIBWEB_CSS_ANIMATION_DEBUG, "Interpolated value for property {} at {}: {} -> {} = {}", string_from_property_id(property_id), progress_in_keyframe, start->to_string(), end->to_string(), next_value->to_string());
         style_properties.set_property(property_id, next_value);
@@ -1224,6 +1235,29 @@ ErrorOr<void> StyleComputer::Animation::collect_into(StyleProperties& style_prop
 bool StyleComputer::Animation::is_done() const
 {
     return progress.as_fraction() >= 0.9999f && iteration_count.has_value() && iteration_count.value() == 0;
+}
+
+float StyleComputer::Animation::compute_output_progress(float input_progress) const
+{
+    auto output_progress = input_progress;
+    switch (direction) {
+    case AnimationDirection::Alternate:
+        if (current_iteration % 2 == 0)
+            output_progress = 1.0f - output_progress;
+        break;
+    case AnimationDirection::AlternateReverse:
+        if (current_iteration % 2 == 1)
+            output_progress = 1.0f - output_progress;
+        break;
+    case AnimationDirection::Normal:
+        break;
+    case AnimationDirection::Reverse:
+        output_progress = 1.0f - output_progress;
+        break;
+    }
+
+    // FIXME: This should also be a function of the animation-timing-function, if not during the delay.
+    return output_progress;
 }
 
 void StyleComputer::ensure_animation_timer() const
@@ -1393,12 +1427,18 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                             fill_mode = *fill_mode_value;
                     }
 
+                    CSS::AnimationDirection direction { CSS::AnimationDirection::Normal };
+                    if (auto direction_property = style.maybe_null_property(PropertyID::AnimationDirection); direction_property && direction_property->is_identifier()) {
+                        if (auto direction_value = value_id_to_animation_direction(direction_property->to_identifier()); direction_value.has_value())
+                            direction = *direction_value;
+                    }
+
                     auto animation = make<Animation>(Animation {
                         .name = move(name),
                         .duration = duration,
                         .delay = delay,
                         .iteration_count = iteration_count,
-                        .direction = Animation::Direction::Normal,
+                        .direction = direction,
                         .fill_mode = fill_mode,
                         .owning_element = TRY(element.try_make_weak_ptr<DOM::Element>()),
                         .progress = CSS::Percentage(0),

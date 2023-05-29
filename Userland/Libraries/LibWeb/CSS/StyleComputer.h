@@ -201,6 +201,7 @@ private:
         CSS::Percentage progress { 0 };
         CSS::Time remaining_delay { 0, CSS::Time::Type::Ms };
         AnimationState current_state { AnimationState::Before };
+        size_t current_iteration { 1 };
 
         mutable AnimationStateSnapshot initial_state {};
         mutable OwnPtr<AnimationStateSnapshot> active_state_if_fill_forward {};
@@ -208,6 +209,10 @@ private:
         AnimationStepTransition step(CSS::Time const& time_step);
         ErrorOr<void> collect_into(StyleProperties&, RuleCache const&) const;
         bool is_done() const;
+
+    private:
+        float compute_output_progress(float input_progress) const;
+        bool is_animating_backwards() const;
     };
 
     mutable HashMap<AnimationKey, NonnullOwnPtr<Animation>> m_active_animations;
