@@ -420,7 +420,6 @@ set(SOURCES
     Layout/SVGSVGBox.cpp
     Layout/TableCellBox.cpp
     Layout/TableFormattingContext.cpp
-    Layout/TableRowBox.cpp
     Layout/TableWrapper.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
