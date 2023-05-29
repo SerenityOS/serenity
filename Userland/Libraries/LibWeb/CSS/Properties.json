@@ -1543,6 +1543,14 @@
       "unitless-length"
     ]
   },
+  "place-content": {
+    "inherited": false,
+    "initial": "normal",
+    "longhands": [
+      "align-content",
+      "justify-content"
+    ]
+  },
   "pointer-events": {
     "affects-layout": false,
     "inherited": true,

@@ -46,6 +46,7 @@
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
@@ -293,6 +294,12 @@ PercentageStyleValue const& StyleValue::as_percentage() const
 {
     VERIFY(is_percentage());
     return static_cast<PercentageStyleValue const&>(*this);
+}
+
+PlaceContentStyleValue const& StyleValue::as_place_content() const
+{
+    VERIFY(is_place_content());
+    return static_cast<PlaceContentStyleValue const&>(*this);
 }
 
 PositionStyleValue const& StyleValue::as_position() const

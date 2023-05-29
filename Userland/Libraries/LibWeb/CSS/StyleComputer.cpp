@@ -50,6 +50,7 @@
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
@@ -340,6 +341,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         style.set_property(CSS::PropertyID::OverflowX, value, declaration);
         style.set_property(CSS::PropertyID::OverflowY, value, declaration);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::PlaceContent) {
+        if (value.is_place_content()) {
+            auto const& place_content = value.as_place_content();
+            style.set_property(CSS::PropertyID::AlignContent, place_content.align_content());
+            style.set_property(CSS::PropertyID::JustifyContent, place_content.justify_content());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::AlignContent, value);
+        style.set_property(CSS::PropertyID::JustifyContent, value);
         return;
     }
 

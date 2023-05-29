@@ -135,6 +135,7 @@ class OverflowStyleValue;
 class Percentage;
 class PercentageOrCalculated;
 class PercentageStyleValue;
+class PlaceContentStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class RadialGradientStyleValue;
