@@ -297,11 +297,6 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
-
-        // FIXME: This should only fire when the input is "committed", whatever that means.
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
-        change_event->set_bubbles(true);
-        dispatch_event(change_event);
     });
 }
 
@@ -485,6 +480,17 @@ void HTMLInputElement::did_receive_focus()
     if (!m_text_node)
         return;
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
+}
+
+void HTMLInputElement::did_lose_focus()
+{
+    // The change event fires when the value is committed, if that makes sense for the control,
+    // or else when the control loses focus
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
+        change_event->set_bubbles(true);
+        dispatch_event(change_event);
+    });
 }
 
 void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
