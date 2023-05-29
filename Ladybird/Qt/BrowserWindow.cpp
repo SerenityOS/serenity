@@ -538,7 +538,7 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
         setWindowTitle(QString("%1 - Ladybird").arg(title));
 }
 
-void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
+void BrowserWindow::tab_favicon_changed(int index, QIcon const& icon)
 {
     m_tabs_container->setTabIcon(index, icon);
 }
