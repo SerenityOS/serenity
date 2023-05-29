@@ -2,7 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x315.40625 children: not-inline
       Box <div.grid-container> at (8,8) content-size 784x315.40625 [GFC] children: not-inline
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-one-one> at (401.46875,8) content-size 392x131.296875 [BFC] children: inline
           line 0 width: 319.171875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -18,7 +18,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 134, length: 22, rect: [401.46875,60 182.8125x17.46875]
               "at, consequat ut orci."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-one-two> at (401.46875,139.296875) content-size 392x184.109375 [BFC] children: inline
           line 0 width: 359.15625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -43,7 +43,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 260, length: 31, rect: [401.46875,243.296875 242.921875x17.46875]
               "bibendum nulla lectus ut felis."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-two> at (8,8) content-size 393.46875x315.40625 [BFC] children: inline
           line 0 width: 337.6875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -101,5 +101,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 771, length: 36, rect: [8,304 294.90625x17.46875]
               "cursus, vitae gravida mauris dictum."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>

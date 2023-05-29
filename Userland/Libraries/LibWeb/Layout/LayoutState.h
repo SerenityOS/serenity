@@ -112,15 +112,6 @@ struct LayoutState {
         CSSPixels border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
         CSSPixels border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
 
-        Optional<Painting::PaintableBox::OverflowData> overflow_data;
-
-        Painting::PaintableBox::OverflowData& ensure_overflow_data()
-        {
-            if (!overflow_data.has_value())
-                overflow_data = Painting::PaintableBox::OverflowData {};
-            return *overflow_data;
-        }
-
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
 
         void add_floating_descendant(Box const& box) { m_floating_descendants.set(&box); }
