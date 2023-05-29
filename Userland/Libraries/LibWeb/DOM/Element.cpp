@@ -51,7 +51,6 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
-#include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
@@ -324,7 +323,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProp
 
 JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
 {
-    if (display.is_table_inside())
+    if (display.is_table_inside() || display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
         return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
 
     if (display.is_list_item())
@@ -335,9 +334,6 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
 
     if (display.is_table_cell())
         return document.heap().allocate_without_realm<Layout::TableCellBox>(document, element, move(style));
-
-    if (display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
-        return document.heap().allocate_without_realm<Layout::TableRowGroupBox>(document, element, move(style));
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.

@@ -11,7 +11,6 @@
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 #include <LibWeb/Layout/TableRowBox.h>
-#include <LibWeb/Layout/TableRowGroupBox.h>
 
 struct GridPosition {
     size_t x;
@@ -41,6 +40,21 @@ TableFormattingContext::TableFormattingContext(LayoutState& state, Box const& ro
 }
 
 TableFormattingContext::~TableFormattingContext() = default;
+
+static inline bool is_table_row_group(Box const& box)
+{
+    auto const& display = box.display();
+    return display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group();
+}
+
+template<typename Matcher, typename Callback>
+static void for_each_child_box_matching(Box const& parent, Matcher matcher, Callback callback)
+{
+    parent.for_each_child_of_type<Box>([&](Box const& child_box) {
+        if (matcher(child_box))
+            callback(child_box);
+    });
+}
 
 void TableFormattingContext::calculate_row_column_grid(Box const& box)
 {
@@ -85,7 +99,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
         y_current++;
     };
 
-    box.template for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+    for_each_child_box_matching(box, is_table_row_group, [&](auto& row_group_box) {
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             process_row(row);
             return IterationDecision::Continue;
@@ -613,7 +627,7 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
 
     CSSPixels row_group_top_offset = table_state.border_top + table_state.padding_top;
     CSSPixels row_group_left_offset = table_state.border_left + table_state.padding_left;
-    table_box().for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+    for_each_child_box_matching(table_box(), is_table_row_group, [&](auto& row_group_box) {
         CSSPixels row_group_height = 0.0f;
         CSSPixels row_group_width = 0.0f;
 
