@@ -1263,20 +1263,20 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
         return {};
     };
 
-    DeprecatedString exec_filename;
+    StringView exec_filename;
 
     if (search_in_path == SearchInPath::Yes) {
-        auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename);
+        auto executable_or_error = resolve_executable_from_environment(filename);
 
-        if (!maybe_executable.has_value())
-            return ENOENT;
+        if (executable_or_error.is_error())
+            return executable_or_error.release_error();
 
-        exec_filename = maybe_executable.release_value();
+        exec_filename = executable_or_error.value();
     } else {
-        exec_filename = filename.to_deprecated_string();
+        exec_filename = filename;
     }
 
-    params.path = { exec_filename.characters(), exec_filename.length() };
+    params.path = { exec_filename.characters_without_null_termination(), exec_filename.length() };
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
@@ -1305,14 +1305,15 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
-            auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename_string);
+            auto executable_or_error = resolve_executable_from_environment(filename_string);
 
-            if (!maybe_executable.has_value()) {
-                errno_rollback.set_override_rollback_value(ENOENT);
-                return Error::from_errno(ENOENT);
+            if (executable_or_error.is_error()) {
+                errno_rollback.set_override_rollback_value(executable_or_error.error().code());
+                return executable_or_error.release_error();
             }
 
-            rc = ::execve(maybe_executable.release_value().characters(), argv.data(), envp.data());
+            DeprecatedString executable = executable_or_error.release_value().to_deprecated_string();
+            rc = ::execve(executable.characters(), argv.data(), envp.data());
 #    else
             rc = ::execvpe(filename_string.characters(), argv.data(), envp.data());
 #    endif
