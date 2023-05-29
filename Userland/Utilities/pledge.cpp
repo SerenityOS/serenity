@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 
 static ErrorOr<bool> is_dynamically_linked_executable(StringView filename)
 {
-    auto executable = TRY(FileSystem::resolve_executable_from_environment(filename));
+    auto executable = TRY(Core::System::resolve_executable_from_environment(filename));
     auto file = TRY(Core::MappedFile::map(executable));
     ELF::Image elf_image(file->bytes());
     return elf_image.is_dynamic();

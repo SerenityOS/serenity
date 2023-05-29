@@ -11,7 +11,6 @@
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/MessageBox.h>
@@ -38,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
 
-    auto executable_path = FileSystem::resolve_executable_from_environment(command[0], AT_EACCESS);
+    auto executable_path = Core::System::resolve_executable_from_environment(command[0], AT_EACCESS);
     if (executable_path.is_error()) {
         GUI::MessageBox::show_error(nullptr, DeprecatedString::formatted("Could not execute command {}: Command not found.", command[0]));
         return 127;

@@ -10,7 +10,6 @@
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -38,7 +37,7 @@ static ErrorOr<Vector<EngineDetails>> available_engines()
 {
     Vector<EngineDetails> available_engines;
     for (auto& engine : s_all_engines) {
-        auto path_or_error = FileSystem::resolve_executable_from_environment(engine.command);
+        auto path_or_error = Core::System::resolve_executable_from_environment(engine.command);
         if (path_or_error.is_error())
             continue;
 

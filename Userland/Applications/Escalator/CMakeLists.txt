@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Escalator ICON app-escalator)
-target_link_libraries(Escalator PRIVATE LibCore LibFileSystem LibDesktop LibGfx LibGUI LibMain)
+target_link_libraries(Escalator PRIVATE LibCore LibDesktop LibGfx LibGUI LibMain)

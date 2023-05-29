@@ -46,7 +46,7 @@ int main(int argc, char** argv, char** env)
 
     auto executable_path_or_error = arguments[0].contains('/')
         ? FileSystem::real_path(arguments[0])
-        : FileSystem::resolve_executable_from_environment(arguments[0]);
+        : Core::System::resolve_executable_from_environment(arguments[0]);
     if (executable_path_or_error.is_error()) {
         reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;

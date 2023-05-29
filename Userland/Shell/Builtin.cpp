@@ -375,7 +375,7 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
         }
 
         // check if its an executable in PATH
-        auto fullpath = FileSystem::resolve_executable_from_environment(command);
+        auto fullpath = Core::System::resolve_executable_from_environment(command);
         if (!fullpath.is_error()) {
             printf("%s is %s\n", command.characters(), escape_token(fullpath.release_value()).characters());
             continue;
@@ -1252,7 +1252,7 @@ ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
-    auto kill_path_or_error = FileSystem::resolve_executable_from_environment("kill"sv);
+    auto kill_path_or_error = Core::System::resolve_executable_from_environment("kill"sv);
     if (kill_path_or_error.is_error()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
