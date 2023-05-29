@@ -105,14 +105,17 @@ TEST_CASE(should_make_empty_optional_from_out_of_range_values)
     EXPECT(!addr.has_value());
 }
 
-TEST_CASE(should_compare)
+TEST_CASE(should_only_compare_bytes_from_address)
 {
     constexpr IPv6Address addr_a({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
     constexpr IPv6Address addr_b({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
+    constexpr IPv6Address addr_c({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
 
     static_assert(addr_a != addr_b);
     static_assert(addr_a == addr_a);
+    static_assert(addr_b == addr_c);
 
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
+    EXPECT(addr_b == addr_c);
 }
