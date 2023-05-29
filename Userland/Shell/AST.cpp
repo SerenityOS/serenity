@@ -1765,16 +1765,9 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
                             return Break;
                         }
                 } else {
-                    auto entry_result = ByteBuffer::create_uninitialized(line_end + ifs.length());
-                    if (entry_result.is_error()) {
-                        loop.quit(Break);
-                        notifier->set_enabled(false);
-                        return Break;
-                    }
-                    auto entry = entry_result.release_value();
-                    TRY(stream.read_until_filled(entry));
+                    auto str = TRY(String::from_stream(stream, line_end));
+                    TRY(stream.discard(ifs.length()));
 
-                    auto str = TRY(String::from_utf8(StringView(entry.data(), entry.size() - ifs.length())));
                     if (TRY(callback(make_ref_counted<StringValue>(move(str)))) == IterationDecision::Break) {
                         loop.quit(Break);
                         notifier->set_enabled(false);
