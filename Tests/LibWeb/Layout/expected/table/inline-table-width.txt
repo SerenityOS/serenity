@@ -6,7 +6,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <table> at (9,9) content-size 129.984375x38.9375 inline-block [BFC] children: not-inline
         TableWrapper <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-block [BFC] children: not-inline
           Box <(anonymous)> at (9,9) content-size 129.984375x38.9375 inline-table [TFC] children: not-inline
-            TableRowGroupBox <tbody> at (9,9) content-size 129.984375x38.9375 children: not-inline
+            Box <tbody> at (9,9) content-size 129.984375x38.9375 children: not-inline
               TableRowBox <tr> at (9,9) content-size 129.984375x19.46875 children: not-inline
                 TableCellBox <td> at (10,10) content-size 87.90625x17.46875 [BFC] children: inline
                   line 0 width: 15.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
