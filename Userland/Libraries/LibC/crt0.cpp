@@ -27,6 +27,8 @@ NAKED void _start(int, char**, char**)
 {
 #    if ARCH(AARCH64)
     asm(
+        "mov x29, 0\n"
+        "mov x30, 0\n"
         "bl _entry\n");
 #    else
     asm(
