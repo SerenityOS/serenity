@@ -1151,6 +1151,24 @@
       "image-rendering"
     ]
   },
+  "inset": {
+    "inherited": false,
+    "initial": "auto",
+    "longhands": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "max-values": 4,
+    "valid-types": [
+      "length",
+      "percentage"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ]
+  },
   "justify-content": {
     "inherited": false,
     "initial": "flex-start",

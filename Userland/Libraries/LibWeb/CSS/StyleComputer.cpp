@@ -516,6 +516,20 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Inset) {
+        if (value.is_value_list()) {
+            auto const& values_list = value.as_value_list();
+            assign_edge_values(PropertyID::Top, PropertyID::Right, PropertyID::Bottom, PropertyID::Left, values_list.values());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::Top, value, declaration);
+        style.set_property(CSS::PropertyID::Right, value, declaration);
+        style.set_property(CSS::PropertyID::Bottom, value, declaration);
+        style.set_property(CSS::PropertyID::Left, value, declaration);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Margin) {
         if (value.is_value_list()) {
             auto const& values_list = value.as_value_list();
