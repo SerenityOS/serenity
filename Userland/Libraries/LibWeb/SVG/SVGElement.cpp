@@ -1,13 +1,16 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Preston Taylor <95388976+PrestonLTaylor@users.noreply.github.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/DOMStringMap.h>
 #include <LibWeb/SVG/SVGElement.h>
+#include <LibWeb/SVG/SVGUseElement.h>
 
 namespace Web::SVG {
 
@@ -32,6 +35,58 @@ void SVGElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dataset);
+}
+
+void SVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+{
+    Base::parse_attribute(name, value);
+
+    update_use_elements_that_reference_this();
+}
+
+void SVGElement::inserted()
+{
+    Base::inserted();
+
+    update_use_elements_that_reference_this();
+}
+
+void SVGElement::children_changed()
+{
+    Base::children_changed();
+
+    update_use_elements_that_reference_this();
+}
+
+void SVGElement::update_use_elements_that_reference_this()
+{
+    if (is<SVGUseElement>(this)) {
+        return;
+    }
+
+    document().for_each_in_subtree_of_type<SVGUseElement>([this](SVGUseElement& use_element) {
+        use_element.svg_element_changed(*this);
+        return IterationDecision::Continue;
+    });
+}
+
+void SVGElement::removed_from(Node* parent)
+{
+    Base::removed_from(parent);
+
+    remove_from_use_element_that_reference_this();
+}
+
+void SVGElement::remove_from_use_element_that_reference_this()
+{
+    if (is<SVGUseElement>(this)) {
+        return;
+    }
+
+    document().for_each_in_subtree_of_type<SVGUseElement>([this](SVGUseElement& use_element) {
+        use_element.svg_element_removed(*this);
+        return IterationDecision::Continue;
+    });
 }
 
 }

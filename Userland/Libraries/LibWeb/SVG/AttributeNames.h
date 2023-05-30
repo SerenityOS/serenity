@@ -32,6 +32,7 @@ namespace Web::SVG::AttributeNames {
     E(gradientTransform)            \
     E(gradientUnits)                \
     E(height)                       \
+    E(href)                         \
     E(kernelMatrix)                 \
     E(kernelUnitLength)             \
     E(keyPoints)                    \
