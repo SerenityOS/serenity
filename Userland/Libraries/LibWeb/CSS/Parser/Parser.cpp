@@ -3439,15 +3439,28 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
     if (component_value.is_function()) {
         auto const& function = component_value.function();
 
-        if (function.name().equals_ignoring_ascii_case("calc"sv))
-            return parse_calculated_value(function.values());
-
         if (function.name().equals_ignoring_ascii_case("var"sv)) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
+
+        auto function_node = TRY(parse_a_calc_function_node(function));
+        if (!function_node)
+            return nullptr;
+
+        auto function_type = function_node->resolved_type().value();
+        return CalculatedStyleValue::create(function_node.release_nonnull(), function_type);
     }
 
+    return nullptr;
+}
+
+ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function const& function)
+{
+    if (function.name().equals_ignoring_ascii_case("calc"sv))
+        return TRY(parse_a_calculation(function.values()));
+
+    dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
 }
 
@@ -8068,19 +8081,14 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         // NOTE: All function tokens at this point should be math functions.
         else if (component_value.is_function()) {
             auto& function = component_value.function();
-            if (function.name().equals_ignoring_ascii_case("calc"sv)) {
-                auto leaf_calculation = TRY(parse_a_calculation(function.values()));
-                if (!leaf_calculation) {
-                    parsing_failed_for_child_node = true;
-                    return {};
-                }
-                node = leaf_calculation.release_nonnull();
-                return {};
-            } else {
-                // FIXME: Parse more math functions once we have them.
+            auto leaf_calculation = TRY(parse_a_calc_function_node(function));
+            if (!leaf_calculation) {
                 parsing_failed_for_child_node = true;
                 return {};
             }
+
+            node = leaf_calculation.release_nonnull();
+            return {};
         }
 
         // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.

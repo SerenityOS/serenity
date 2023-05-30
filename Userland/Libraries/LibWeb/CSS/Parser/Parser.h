@@ -289,6 +289,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_a_calc_function_node(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);
