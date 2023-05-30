@@ -340,7 +340,7 @@ char* strerror(int errnum)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strsignal.html
 char* strsignal(int signum)
 {
-    if (signum >= NSIG) {
+    if (signum <= 0 || signum >= NSIG || !sys_siglist[signum]) {
         dbgln("strsignal() missing string for signum={}", signum);
         return const_cast<char*>("Unknown signal");
     }
