@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,5 +66,5 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     if (displayed_at_least_one)
         outln();
 
-    return 0;
+    return matches.size() > 0 ? 0 : 1;
 }
