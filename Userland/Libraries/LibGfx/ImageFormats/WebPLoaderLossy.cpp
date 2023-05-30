@@ -1142,11 +1142,16 @@ void convert_yuv_to_rgb(Bitmap& bitmap, int mb_x, int mb_y, ReadonlySpan<i16> y_
     }
 }
 
-ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& header, ReadonlyBytes data, int macroblock_width, int macroblock_height, Vector<MacroblockMetadata> const& macroblock_metadata)
+ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& header, Vector<ReadonlyBytes> data_partitions, int macroblock_width, int macroblock_height, Vector<MacroblockMetadata> const& macroblock_metadata)
 {
-    FixedMemoryStream memory_stream { data };
-    BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
-    auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, data.size() * 8));
+
+    Vector<BooleanDecoder> streams;
+    for (auto data : data_partitions) {
+        auto memory_stream = make<FixedMemoryStream>(data);
+        auto bit_stream = make<BigEndianInputBitStream>(move(memory_stream));
+        auto decoder = TRY(BooleanDecoder::initialize(move(bit_stream), data.size() * 8));
+        TRY(streams.try_append(move(decoder)));
+    }
 
     CoefficientReadingContext coefficient_reading_context;
     TRY(coefficient_reading_context.initialize(macroblock_width));
@@ -1167,6 +1172,8 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
         predicted_v_above[i] = 127;
 
     for (int mb_y = 0, macroblock_index = 0; mb_y < macroblock_height; ++mb_y) {
+        BooleanDecoder& decoder = streams[mb_y % streams.size()];
+
         coefficient_reading_context.start_new_row();
 
         i16 predicted_y_left[16] { 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129 };
@@ -1223,6 +1230,40 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
     return {};
 }
 
+static ErrorOr<Vector<ReadonlyBytes>> split_data_partitions(ReadonlyBytes second_partition, u8 number_of_dct_partitions)
+{
+    Vector<ReadonlyBytes> data_partitions;
+    // https://datatracker.ietf.org/doc/html/rfc6386#section-9.5 "Token Partition and Partition Data Offsets"
+    // "If the number of data partitions is
+    //  greater than 1, the size of each partition (except the last) is
+    //  written in 3 bytes (24 bits).  The size of the last partition is the
+    //  remainder of the data not used by any of the previous partitions.
+    //  The partitioned data are consecutive in the bitstream, so the size
+    //  can also be used to calculate the offset of each partition."
+    // In practice, virtually all lossy webp files have a single data partition.
+    VERIFY(number_of_dct_partitions >= 1);
+    VERIFY(number_of_dct_partitions <= 8);
+
+    size_t sizes_size = (number_of_dct_partitions - 1) * 3;
+    if (second_partition.size() < sizes_size)
+        return Error::from_string_literal("WebPImageDecoderPlugin: not enough data for partition sizes");
+
+    ReadonlyBytes sizes = second_partition.slice(0, sizes_size);
+    ReadonlyBytes data = second_partition.slice(sizes_size);
+
+    for (int i = 0; i < number_of_dct_partitions - 1; ++i) {
+        u32 partition_size = sizes[0] | (sizes[1] << 8) | (sizes[2] << 16);
+        dbgln_if(WEBP_DEBUG, "partition_size {}", partition_size);
+        sizes = sizes.slice(3);
+        if (partition_size > data.size())
+            return Error::from_string_literal("WebPImageDecoderPlugin: not enough data for partition data");
+        TRY(data_partitions.try_append(data.slice(0, partition_size)));
+        data = data.slice(partition_size);
+    }
+    TRY(data_partitions.try_append(data));
+    return data_partitions;
+}
+
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
@@ -1245,13 +1286,11 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
 
     // Done with the first partition!
 
-    if (header.number_of_dct_partitions > 1)
-        return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps with more than one dct partition not yet implemented");
-
     auto bitmap_format = include_alpha_channel ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
     auto bitmap = TRY(Bitmap::create(bitmap_format, { macroblock_width * 16, macroblock_height * 16 }));
 
-    TRY(decode_VP8_image_data(*bitmap, header, vp8_header.second_partition, macroblock_width, macroblock_height, macroblock_metadata));
+    auto data_partitions = TRY(split_data_partitions(vp8_header.second_partition, header.number_of_dct_partitions));
+    TRY(decode_VP8_image_data(*bitmap, header, move(data_partitions), macroblock_width, macroblock_height, macroblock_metadata));
 
     auto width = static_cast<int>(vp8_header.width);
     auto height = static_cast<int>(vp8_header.height);
