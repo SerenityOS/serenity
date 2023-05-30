@@ -848,6 +848,15 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 {
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
+    JS::GCPtr<AbstractBrowsingContext> matching_name_in_tree = nullptr;
+    top_level_browsing_context().for_each_in_subtree([&](auto& context) {
+        if (context.name() == name) {
+            matching_name_in_tree = &context;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
 
     // 1. Let chosen be null.
     JS::GCPtr<AbstractBrowsingContext> chosen = nullptr;
@@ -878,15 +887,14 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
         chosen = &top_level_browsing_context();
     }
 
-    // FIXME: 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
-    //           whose name is the same as name, current is familiar with that browsing context, and the user agent
-    //           determines that the two browsing contexts are related enough that it is ok if they reach each other,
-    //           set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
-    //           should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
-    //           recently focused, or more closely related.
-    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
-        dbgln("FIXME: Find matching browser context for name {}", name);
-        chosen = this;
+    // 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
+    //    whose name is the same as name, current is familiar with that browsing context, and the user agent
+    //    determines that the two browsing contexts are related enough that it is ok if they reach each other,
+    //    set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
+    //    should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
+    //    recently focused, or more closely related.
+    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv) && matching_name_in_tree) {
+        chosen = matching_name_in_tree;
     } else {
         // 8. Otherwise, a new browsing context is being requested, and what happens depends on the user agent's
         //    configuration and abilities — it is determined by the rules given for the first applicable option from
