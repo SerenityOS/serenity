@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (is_ascii_alpha(strings[1][1])) {
             int value = getsignalbyname(&strings[1][1]);
-            if (value >= 0 && value < NSIG)
+            if (value > 0 && value < NSIG)
                 number = value;
         }
 
