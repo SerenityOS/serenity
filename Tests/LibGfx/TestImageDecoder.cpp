@@ -428,6 +428,26 @@ TEST_CASE(test_webp_lossy_4)
     EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x72, 0xc8, 0xf6, 255));
 }
 
+TEST_CASE(test_webp_lossy_4_with_partitions)
+{
+    // Same input file as in the previous test, but re-encoded to use 8 secondary partitions.
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("4-with-8-partitions.webp"sv)));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1024, 772));
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1024, 772));
+
+    EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x73, 0xc9, 0xf9, 255));
+}
+
 TEST_CASE(test_webp_extended_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
