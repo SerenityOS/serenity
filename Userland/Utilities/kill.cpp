@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (!number.has_value())
-            number = strings[1].substring_view(1, 1).to_uint();
+            number = strings[1].substring_view(1).to_uint();
 
         if (!number.has_value()) {
             warnln("'{}' is not a valid signal name or number", &strings[1][1]);
