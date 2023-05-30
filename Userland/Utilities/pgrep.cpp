@@ -27,6 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool case_insensitive = false;
     bool list_process_name = false;
     bool invert_match = false;
+    bool exact_match = false;
     HashTable<uid_t> uids_to_filter_by;
     StringView pattern;
 
@@ -60,12 +61,19 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         },
     });
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
+    args_parser.add_option(exact_match, "Select only processes whose names match the given pattern exactly", "exact", 'x');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
 
     PosixOptions options {};
     if (case_insensitive)
         options |= PosixFlags::Insensitive;
+
+    StringBuilder exact_pattern_builder;
+    if (exact_match) {
+        exact_pattern_builder.appendff("^({})$", pattern);
+        pattern = exact_pattern_builder.string_view();
+    }
 
     Regex<PosixExtended> re(pattern, options);
     if (re.parser_result.error != regex::Error::NoError) {
