@@ -70,8 +70,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     pid_t pid = pid_opt.value();
 
-    int rc = kill(pid, signum);
-    if (rc < 0)
-        perror("kill");
+    TRY(Core::System::kill(pid, signum));
     return 0;
 }
