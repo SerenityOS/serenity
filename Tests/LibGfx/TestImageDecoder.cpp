@@ -404,13 +404,13 @@ TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
     EXPECT_EQ(frame.image->get_pixel(355, 106), Gfx::Color(0, 0, 0, 0));
 }
 
-TEST_CASE(test_webp_lossy_5)
+TEST_CASE(test_webp_lossy_4)
 {
     // This is https://commons.wikimedia.org/wiki/File:Fr%C3%BChling_bl%C3%BChender_Kirschenbaum.jpg,
     // under the Creative Commons Attribution-Share Alike 3.0 Unported license. The image was re-encoded
     // as webp at https://developers.google.com/speed/webp/gallery1 and the webp version is from there.
     // No other changes have been made.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("5.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("4.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -419,13 +419,13 @@ TEST_CASE(test_webp_lossy_5)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1024, 752));
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1024, 772));
 
     auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1024, 752));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1024, 772));
 
     // This image tests macroblocks that have `skip_coefficients` set to true, and it test a boolean entropy decoder edge case.
-    EXPECT_EQ(frame.image->get_pixel(923, 576), Gfx::Color(0xab, 0x40, 0x14, 255));
+    EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x72, 0xc8, 0xf6, 255));
 }
 
 TEST_CASE(test_webp_extended_lossless)
