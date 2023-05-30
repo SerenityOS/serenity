@@ -421,7 +421,16 @@ Optional<Image::Symbol> Image::find_symbol(FlatPtr address, u32* out_offset) con
 NEVER_INLINE void Image::sort_symbols() const
 {
     m_sorted_symbols.ensure_capacity(symbol_count());
-    for_each_symbol([this](auto const& symbol) {
+    bool const is_aarch64 = header().e_machine == EM_AARCH64;
+    for_each_symbol([this, is_aarch64](auto const& symbol) {
+        // The AArch64 ABI marks the boundaries of literal pools in a function with $x/$d.
+        // https://github.com/ARM-software/abi-aa/blob/2023q1-release/aaelf64/aaelf64.rst#mapping-symbols
+        // Skip them so we don't accidentally print these instead of function names.
+        if (is_aarch64 && (symbol.name().starts_with("$x"sv) || symbol.name().starts_with("$d"sv)))
+            return;
+        // STT_SECTION has the same address as the first function in the section, but shows up as the empty string.
+        if (symbol.type() == STT_SECTION)
+            return;
         m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
     });
     quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
