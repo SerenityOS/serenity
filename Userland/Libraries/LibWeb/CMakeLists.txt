@@ -523,6 +523,7 @@ set(SOURCES
     SVG/SVGSVGElement.cpp
     SVG/SVGStopElement.cpp
     SVG/SVGTextContentElement.cpp
+    SVG/SVGUseElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
