@@ -28,10 +28,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto strings = arguments.strings;
 
     if (argc == 2 && strings[1] == "-l") {
-        for (size_t i = 0; i < NSIG; ++i) {
-            if (i && !(i % 5))
+        size_t valid_signal_count = 0;
+        for (size_t i = 1; i < NSIG; ++i) {
+            if (valid_signal_count && valid_signal_count % 5 == 0)
                 outln("");
-            out("{:2}) {:10}", i, getsignalname(i));
+            auto const* signal_name = getsignalname(i);
+            // This excludes SIGCANCEL, which is intended for internal use only
+            if (!signal_name)
+                continue;
+            valid_signal_count++;
+            out("{:2}) {:10}", i, signal_name);
         }
         outln("");
         return 0;
