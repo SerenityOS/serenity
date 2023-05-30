@@ -19,6 +19,8 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
     case CSS::ListStyleType::Square:
     case CSS::ListStyleType::Circle:
     case CSS::ListStyleType::Disc:
+    case CSS::ListStyleType::DisclosureClosed:
+    case CSS::ListStyleType::DisclosureOpen:
         break;
     case CSS::ListStyleType::Decimal:
         m_text = DeprecatedString::formatted("{}.", m_index);
