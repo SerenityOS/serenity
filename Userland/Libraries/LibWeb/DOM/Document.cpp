@@ -1679,6 +1679,11 @@ void Document::completely_finish_loading()
             container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
         });
     }
+
+    for (auto& document_observer : m_document_observers) {
+        if (document_observer->document_fully_loaded)
+            document_observer->document_fully_loaded();
+    }
 }
 
 DeprecatedString Document::cookie(Cookie::Source source)
