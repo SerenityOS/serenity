@@ -352,7 +352,37 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
 {
-    m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
+    // 10.3.6 Floating, replaced elements
+    auto& computed_values = box.computed_values();
+
+    auto zero_value = CSS::Length::make_px(0);
+    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
+    if (!available_space.width.is_definite())
+        width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
+
+    // 10.3.4 Block-level, replaced elements in normal flow
+    // The used value of 'width' is determined as for inline replaced elements. Then the rules for
+    // non-replaced block-level elements are applied to determine the margins.
+    auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
+    auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
+    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
+    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
+
+    // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
+    if (margin_left.is_auto())
+        margin_left = zero_value;
+    if (margin_right.is_auto())
+        margin_right = zero_value;
+
+    auto& box_state = m_state.get_mutable(box);
+    box_state.set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
+    box_state.margin_left = margin_left.to_px(box);
+    box_state.margin_right = margin_right.to_px(box);
+    box_state.border_left = computed_values.border_left().width;
+    box_state.border_right = computed_values.border_right().width;
+    box_state.padding_left = padding_left;
+    box_state.padding_right = padding_right;
 }
 
 CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(Box const& box, AvailableSpace const& available_space)
