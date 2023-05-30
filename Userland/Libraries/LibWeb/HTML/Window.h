@@ -184,6 +184,9 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomElementRegistry>> custom_elements();
 
+    HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
+    void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }
+
 private:
     explicit Window(JS::Realm&);
 
@@ -235,6 +238,9 @@ private:
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#user-activation-data-model
+    HighResolutionTime::DOMHighResTimeStamp m_last_activation_timestamp { NumericLimits<double>::max() };
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
