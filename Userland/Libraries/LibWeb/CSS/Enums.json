@@ -179,6 +179,8 @@
         "decimal",
         "decimal-leading-zero",
         "disc",
+        "disclosure-closed",
+        "disclosure-open",
         "lower-alpha",
         "lower-latin",
         "lower-roman",
