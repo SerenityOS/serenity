@@ -52,6 +52,11 @@ void Page::load_html(StringView html, const AK::URL& url)
     top_level_browsing_context().loader().load_html(html, url);
 }
 
+bool Page::has_ongoing_navigation() const
+{
+    return top_level_browsing_context().loader().is_pending();
+}
+
 Gfx::Palette Page::palette() const
 {
     return m_client.palette();

@@ -37,9 +37,16 @@ public:
 
     Type type() const { return m_type; }
 
-    bool is_loaded() const { return m_loaded; }
+    enum class State {
+        Pending,
+        Loaded,
+        Failed,
+    };
 
-    bool is_failed() const { return m_failed; }
+    bool is_pending() const { return m_state == State::Pending; }
+    bool is_loaded() const { return m_state == State::Loaded; }
+    bool is_failed() const { return m_state == State::Failed; }
+
     DeprecatedString const& error() const { return m_error; }
 
     bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
@@ -71,8 +78,7 @@ private:
     LoadRequest m_request;
     ByteBuffer m_encoded_data;
     Type m_type { Type::Generic };
-    bool m_loaded { false };
-    bool m_failed { false };
+    State m_state { State::Pending };
     DeprecatedString m_error;
     Optional<DeprecatedString> m_encoding;
 

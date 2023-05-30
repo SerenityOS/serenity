@@ -60,6 +60,8 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
+    bool has_ongoing_navigation() const;
+
     CSSPixelPoint device_to_css_point(DevicePixelPoint) const;
     DevicePixelPoint css_to_device_point(CSSPixelPoint) const;
     CSSPixelRect device_to_css_rect(DevicePixelRect) const;

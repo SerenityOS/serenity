@@ -33,8 +33,7 @@ Resource::Resource(Type type, Resource& resource)
     : m_request(resource.m_request)
     , m_encoded_data(move(resource.m_encoded_data))
     , m_type(type)
-    , m_loaded(resource.m_loaded)
-    , m_failed(resource.m_failed)
+    , m_state(resource.m_state)
     , m_error(move(resource.m_error))
     , m_encoding(move(resource.m_encoding))
     , m_mime_type(move(resource.m_mime_type))
@@ -89,12 +88,12 @@ static bool is_valid_encoding(StringView encoding)
 
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)
 {
-    VERIFY(!m_loaded);
+    VERIFY(m_state == State::Pending);
     // FIXME: Handle OOM failure.
     m_encoded_data = ByteBuffer::copy(data).release_value_but_fixme_should_propagate_errors();
     m_response_headers = headers.clone().release_value_but_fixme_should_propagate_errors();
     m_status_code = move(status_code);
-    m_loaded = true;
+    m_state = State::Loaded;
 
     auto content_type = headers.get("Content-Type");
 
@@ -136,7 +135,7 @@ void Resource::did_fail(Badge<ResourceLoader>, DeprecatedString const& error, Op
 {
     m_error = error;
     m_status_code = move(status_code);
-    m_failed = true;
+    m_state = State::Failed;
 
     for_each_client([](auto& client) {
         client.resource_did_fail();
