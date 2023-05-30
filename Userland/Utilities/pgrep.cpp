@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', nullptr);
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
+    args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
