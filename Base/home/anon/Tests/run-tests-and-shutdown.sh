@@ -5,7 +5,7 @@ echo "==== Running Tests on SerenityOS ===="
 
 export LLVM_PROFILE_FILE="$HOME/profiles/%p-profile.profraw"
 
-run-tests --show-progress=false
+run-tests --show-progress=false --unlink-coredumps
 fail_count=$?
 
 unset LLVM_PROFILE_FILE
