@@ -644,13 +644,28 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
     } else if (parameter.type->name() == "BufferSource") {
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    Optional<JS::Handle<JS::Object>> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    JS::Handle<JS::Object> @cpp_name@;
+)~~~");
+        }
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !(is<JS::TypedArrayBase>(@js_name@@js_suffix@.as_object()) || is<JS::ArrayBuffer>(@js_name@@js_suffix@.as_object()) || is<JS::DataView>(@js_name@@js_suffix@.as_object())))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@parameter.type.name@");
 
     // TODO: Should we make this a Variant?
-    auto @cpp_name@ = JS::make_handle(&@js_name@@js_suffix@.as_object());
+    @cpp_name@ = JS::make_handle(&@js_name@@js_suffix@.as_object());
 )~~~");
+        if (optional) {
+            scoped_generator.append(R"~~~(
+        }
+)~~~");
+        }
     } else if (parameter.type->name() == "any") {
         if (variadic) {
             scoped_generator.append(R"~~~(
