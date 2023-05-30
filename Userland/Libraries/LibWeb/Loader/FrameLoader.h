@@ -35,6 +35,8 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
+    bool is_pending() const { return resource()->is_pending(); }
+
     HTML::BrowsingContext& browsing_context() { return m_browsing_context; }
     HTML::BrowsingContext const& browsing_context() const { return m_browsing_context; }
 
