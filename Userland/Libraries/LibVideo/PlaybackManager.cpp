@@ -118,8 +118,13 @@ Duration PlaybackManager::duration()
         auto demuxer_locker = Threading::MutexLocker(m_demuxer_mutex);
         m_demuxer->duration();
     });
-    if (duration_result.is_error())
+    if (duration_result.is_error()) {
         dispatch_decoder_error(duration_result.release_error());
+        // FIXME: We should determine the last sample that the demuxer knows is available and
+        //        use that as the current duration. The duration may change if the demuxer doesn't
+        //        know there is a fixed duration.
+        return Duration::zero();
+    }
     return duration_result.release_value();
 }
 
