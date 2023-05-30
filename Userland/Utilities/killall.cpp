@@ -25,7 +25,8 @@ static ErrorOr<int> kill_all(StringView process_name, unsigned const signum)
 
     for (auto& process : all_processes.processes) {
         if (process.name == process_name) {
-            TRY(Core::System::kill(process.pid, signum));
+            if (auto maybe_error = Core::System::kill(process.pid, signum); maybe_error.is_error())
+                warnln("{}", maybe_error.release_error());
         }
     }
 
