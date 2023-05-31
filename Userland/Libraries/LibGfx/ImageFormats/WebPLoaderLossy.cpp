@@ -1051,7 +1051,7 @@ void add_idct_to_prediction(Span<i16> prediction, Coefficients coefficients, int
     for (int py = 0; py < 4; ++py) {
         for (int px = 0; px < 4; ++px) {
             i16& p = prediction[(4 * y + py) * N + (4 * x + px)];
-            p += idct_output[py * 4 + px];
+            p = clamp(p + idct_output[py * 4 + px], 0, 255);
         }
     }
 }
@@ -1123,11 +1123,11 @@ void convert_yuv_to_rgb(Bitmap& bitmap, int mb_x, int mb_y, ReadonlySpan<i16> y_
             // "is then saturated to 8-bit unsigned range (using, say, the
             //  clamp255 function defined above) before being stored as an 8-bit
             //  unsigned pixel value."
-            u8 Y = clamp(y_data[y * 16 + x], 0, 255);
+            u8 Y = y_data[y * 16 + x];
 
             // FIXME: Could do nicer upsampling than just nearest neighbor
-            u8 U = clamp(u_data[(y / 2) * 8 + x / 2], 0, 255);
-            u8 V = clamp(v_data[(y / 2) * 8 + x / 2], 0, 255);
+            u8 U = u_data[(y / 2) * 8 + x / 2];
+            u8 V = v_data[(y / 2) * 8 + x / 2];
 
             // XXX: These numbers are from the fixed-point values in libwebp's yuv.h. There's probably a better reference somewhere.
             int r = 1.1655 * Y + 1.596 * V - 222.4;
