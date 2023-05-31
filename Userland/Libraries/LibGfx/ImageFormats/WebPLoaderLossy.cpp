@@ -1068,7 +1068,7 @@ void process_macroblock(Span<i16> output, IntraMacroblockMode mode, int mb_x, in
             add_idct_to_prediction<4 * N>(output, coefficients_array[i], x, y);
 }
 
-void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, int mb_x, int mb_y, ReadonlySpan<i16> predicted_y_left, ReadonlySpan<i16> predicted_y_above, i16 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
+void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, int mb_x, ReadonlySpan<i16> predicted_y_left, ReadonlySpan<i16> predicted_y_above, i16 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
 {
     // Loop over the 4x4 subblocks
     for (int y = 0, i = 0; y < 4; ++y) {
@@ -1095,11 +1095,8 @@ void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, i
             for (int i = 0; i < 8; ++i) {
                 if (x == 3 && i >= 4) {                 // rightmost subblock, 4 right pixels?
                     if (mb_x == macroblock_width - 1) { // rightmost macroblock
-                        if (mb_y == 0) {                // topmost macroblock row
-                            above[i] = 127;
-                        } else {
-                            above[i] = predicted_y_above[mb_x * 16 + 4 * x + 3];
-                        }
+                        // predicted_y_above is initialized to 127 above the first row, so no need for an explicit branch for mb_y == 0.
+                        above[i] = predicted_y_above[mb_x * 16 + 4 * x + 3];
                     } else {
                         above[i] = predicted_y_above[mb_x * 16 + 4 * x + i];
                     }
@@ -1193,7 +1190,7 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
 
             i16 y_data[16 * 16] {};
             if (metadata.intra_y_mode == B_PRED)
-                process_subblocks(y_data, metadata, mb_x, mb_y, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs, macroblock_width);
+                process_subblocks(y_data, metadata, mb_x, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs, macroblock_width);
             else
                 process_macroblock<4>(y_data, metadata.intra_y_mode, mb_x, mb_y, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs);
 
