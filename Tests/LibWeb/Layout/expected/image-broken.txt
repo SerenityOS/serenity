@@ -1,0 +1,5 @@
+   BlockContainer <html> at (0,0) content-size 800x48 [BFC] children: not-inline
+     BlockContainer <body> at (8,8) content-size 784x32 children: inline
+       line 0 width: 16, height: 32, bottom: 32, baseline: 32
+         frag 0 from ImageBox start: 0, length: 0, rect: [8,8 16x32]
+       ImageBox <img> at (8,8) content-size 16x32 children: not-inline
