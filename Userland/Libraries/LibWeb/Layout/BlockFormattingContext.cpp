@@ -376,7 +376,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
         margin_right = zero_value;
 
     auto& box_state = m_state.get_mutable(box);
-    box_state.set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
+    box_state.set_content_width(compute_width_for_replaced_element(box, available_space));
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
     box_state.border_left = computed_values.border_left().width;
@@ -437,7 +437,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
     // Then work out what the height is, based on box type and CSS properties.
     CSSPixels height = 0;
     if (is<ReplacedBox>(box)) {
-        height = compute_height_for_replaced_element(m_state, verify_cast<ReplacedBox>(box), available_space);
+        height = compute_height_for_replaced_element(verify_cast<ReplacedBox>(box), available_space);
     } else {
         if (should_treat_height_as_auto(box, available_space)) {
             height = compute_auto_height_for_block_level_element(box, m_state.get(box).available_inner_space_or_constraints_from(available_space));
@@ -578,7 +578,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     if (is<ListItemMarkerBox>(box))
         return;
 
-    resolve_vertical_box_model_metrics(box, m_state);
+    resolve_vertical_box_model_metrics(box);
 
     if (box.is_floating()) {
         auto const y = m_y_offset_of_current_block_container.value();
@@ -695,11 +695,11 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     }
 }
 
-void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, LayoutState& state)
+void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box)
 {
-    auto& box_state = state.get_mutable(box);
+    auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = containing_block_width_for(box, state);
+    auto width_of_containing_block = containing_block_width_for(box);
 
     box_state.margin_top = computed_values.margin().top().to_px(box, width_of_containing_block);
     box_state.margin_bottom = computed_values.margin().bottom().to_px(box, width_of_containing_block);
@@ -880,7 +880,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     auto& box_state = m_state.get_mutable(box);
     CSSPixels width_of_containing_block = available_space.width.to_px();
 
-    resolve_vertical_box_model_metrics(box, m_state);
+    resolve_vertical_box_model_metrics(box);
 
     compute_width(box, available_space, layout_mode);
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));

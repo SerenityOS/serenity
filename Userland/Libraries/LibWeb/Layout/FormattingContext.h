@@ -50,8 +50,8 @@ public:
 
     static bool creates_block_formatting_context(Box const&);
 
-    static CSSPixels compute_width_for_replaced_element(LayoutState const&, ReplacedBox const&, AvailableSpace const&);
-    static CSSPixels compute_height_for_replaced_element(LayoutState const&, ReplacedBox const&, AvailableSpace const&);
+    CSSPixels compute_width_for_replaced_element(ReplacedBox const&, AvailableSpace const&) const;
+    CSSPixels compute_height_for_replaced_element(ReplacedBox const&, AvailableSpace const&) const;
 
     OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(LayoutState&, Box const& child_box);
 
@@ -70,17 +70,11 @@ public:
 
     virtual CSSPixels greatest_child_width(Box const&) const;
 
-    CSSPixels containing_block_width_for(Box const& box) const { return containing_block_width_for(box, m_state); }
-    CSSPixels containing_block_height_for(Box const& box) const { return containing_block_height_for(box, m_state); }
-
-    static CSSPixels containing_block_width_for(Box const&, LayoutState const&);
-    static CSSPixels containing_block_height_for(Box const&, LayoutState const&);
+    [[nodiscard]] CSSPixels containing_block_width_for(Box const&) const;
+    [[nodiscard]] CSSPixels containing_block_height_for(Box const&) const;
 
     [[nodiscard]] CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
     [[nodiscard]] CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&) const;
-
-    [[nodiscard]] static CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&, LayoutState const&);
-    [[nodiscard]] static CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&, LayoutState const&);
 
     virtual bool can_determine_size_of_child() const { return false; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) { }
@@ -108,8 +102,8 @@ protected:
         CSSPixels preferred_minimum_width { 0 };
     };
 
-    static CSSPixels tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&);
-    static CSSPixels tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&);
+    CSSPixels tentative_width_for_replaced_element(ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&) const;
+    CSSPixels tentative_height_for_replaced_element(ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&) const;
     CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
