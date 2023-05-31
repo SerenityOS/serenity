@@ -751,41 +751,74 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     return value_id_to_overflow(value->to_identifier());
 }
 
-Vector<ShadowData> StyleProperties::shadow(PropertyID property_id) const
+Vector<ShadowData> StyleProperties::shadow(PropertyID property_id, Layout::Node const& layout_node) const
 {
     auto value = property(property_id);
 
-    auto make_shadow_data = [](ShadowStyleValue const& value) {
-        return ShadowData { value.color(), value.offset_x(), value.offset_y(), value.blur_radius(), value.spread_distance(), value.placement() };
+    auto resolve_to_length = [&layout_node](NonnullRefPtr<StyleValue const> const& value) -> Optional<Length> {
+        if (value->is_length())
+            return value->as_length().length();
+        if (value->is_calculated())
+            return value->as_calculated().resolve_length(layout_node);
+        return {};
+    };
+
+    auto make_shadow_data = [resolve_to_length](ShadowStyleValue const& value) -> Optional<ShadowData> {
+        auto maybe_offset_x = resolve_to_length(value.offset_x());
+        if (!maybe_offset_x.has_value())
+            return {};
+        auto maybe_offset_y = resolve_to_length(value.offset_y());
+        if (!maybe_offset_y.has_value())
+            return {};
+        auto maybe_blur_radius = resolve_to_length(value.blur_radius());
+        if (!maybe_blur_radius.has_value())
+            return {};
+        auto maybe_spread_distance = resolve_to_length(value.spread_distance());
+        if (!maybe_spread_distance.has_value())
+            return {};
+        return ShadowData {
+            value.color(),
+            maybe_offset_x.release_value(),
+            maybe_offset_y.release_value(),
+            maybe_blur_radius.release_value(),
+            maybe_spread_distance.release_value(),
+            value.placement()
+        };
     };
 
     if (value->is_value_list()) {
-        auto& value_list = value->as_value_list();
+        auto const& value_list = value->as_value_list();
 
         Vector<ShadowData> shadow_data;
         shadow_data.ensure_capacity(value_list.size());
-        for (auto const& layer_value : value_list.values())
-            shadow_data.append(make_shadow_data(layer_value->as_shadow()));
+        for (auto const& layer_value : value_list.values()) {
+            auto maybe_shadow_data = make_shadow_data(layer_value->as_shadow());
+            if (!maybe_shadow_data.has_value())
+                return {};
+            shadow_data.append(maybe_shadow_data.release_value());
+        }
 
         return shadow_data;
     }
 
     if (value->is_shadow()) {
-        auto& box = value->as_shadow();
-        return { make_shadow_data(box) };
+        auto maybe_shadow_data = make_shadow_data(value->as_shadow());
+        if (!maybe_shadow_data.has_value())
+            return {};
+        return { maybe_shadow_data.release_value() };
     }
 
     return {};
 }
 
-Vector<ShadowData> StyleProperties::box_shadow() const
+Vector<ShadowData> StyleProperties::box_shadow(Layout::Node const& layout_node) const
 {
-    return shadow(PropertyID::BoxShadow);
+    return shadow(PropertyID::BoxShadow, layout_node);
 }
 
-Vector<ShadowData> StyleProperties::text_shadow() const
+Vector<ShadowData> StyleProperties::text_shadow(Layout::Node const& layout_node) const
 {
-    return shadow(PropertyID::TextShadow);
+    return shadow(PropertyID::TextShadow, layout_node);
 }
 
 Optional<CSS::BoxSizing> StyleProperties::box_sizing() const

@@ -64,7 +64,7 @@ public:
     Vector<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextDecorationStyle> text_decoration_style() const;
     Optional<CSS::TextTransform> text_transform() const;
-    Vector<CSS::ShadowData> text_shadow() const;
+    Vector<CSS::ShadowData> text_shadow(Layout::Node const&) const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::ListStylePosition> list_style_position() const;
     Optional<CSS::FlexDirection> flex_direction() const;
@@ -85,7 +85,7 @@ public:
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
-    Vector<CSS::ShadowData> box_shadow() const;
+    Vector<CSS::ShadowData> box_shadow(Layout::Node const&) const;
     Optional<CSS::BoxSizing> box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
@@ -141,7 +141,7 @@ private:
     };
     Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
-    Vector<CSS::ShadowData> shadow(CSS::PropertyID) const;
+    Vector<CSS::ShadowData> shadow(CSS::PropertyID, Layout::Node const&) const;
 
     mutable RefPtr<Gfx::Font const> m_font;
 };
