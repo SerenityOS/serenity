@@ -124,7 +124,7 @@ void Mixer::set_main_volume(double volume)
     else
         m_main_volume = volume;
 
-    m_config->write_num_entry("Master", "Volume", static_cast<int>(volume * 100));
+    m_config->write_num_entry("Master"_short_string, "Volume"_short_string, static_cast<int>(volume * 100));
     request_setting_sync();
 
     ConnectionFromClient::for_each([&](ConnectionFromClient& client) {
@@ -138,7 +138,7 @@ void Mixer::set_muted(bool muted)
         return;
     m_muted = muted;
 
-    m_config->write_bool_entry("Master", "Mute", m_muted);
+    m_config->write_bool_entry("Master"_short_string, "Mute"_short_string, m_muted);
     request_setting_sync();
 
     ConnectionFromClient::for_each([muted](ConnectionFromClient& client) {

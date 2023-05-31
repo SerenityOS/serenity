@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     if (f < WindowServer::mouse_accel_min || f > WindowServer::mouse_accel_max) {
         dbgln("Mouse.AccelerationFactor out of range resetting to 1.0");
         f = 1.0;
-        WindowServer::g_config->write_entry("Mouse", "AccelerationFactor", "1.0");
+        WindowServer::g_config->write_entry("Mouse"_short_string, TRY("AccelerationFactor"_string), "1.0");
     }
     screen_input.set_acceleration_factor(f);
     screen_input.set_scroll_step_size(WindowServer::g_config->read_num_entry("Mouse"sv, "ScrollStepSize"sv, 4));

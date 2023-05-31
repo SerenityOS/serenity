@@ -52,7 +52,7 @@ static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_
 
     auto groups = config_file.groups();
     quick_sort(groups, [](auto& a, auto& b) {
-        return a.to_lowercase() < b.to_lowercase();
+        return a.to_lowercase().release_value_but_fixme_should_propagate_errors() < b.to_lowercase().release_value_but_fixme_should_propagate_errors();
     });
 
     for (auto& component_name : groups) {
@@ -71,7 +71,7 @@ static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_
         else if (required)
             category = ComponentCategory ::Required;
 
-        components.append(ComponentData { component_name, move(description), category, user_selected, move(depends), false });
+        components.append(ComponentData { component_name.to_deprecated_string(), move(description), category, user_selected, move(depends), false });
     }
 
     return components;

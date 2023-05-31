@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto keymaps = DeprecatedString::join(',', mappings_vector);
-        mapper_config->write_entry("Mapping", "Keymaps", keymaps);
+        mapper_config->write_entry("Mapping"_short_string, "Keymaps"_short_string, keymaps);
         TRY(mapper_config->sync());
     }
 
@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!mapping.is_empty()) {
         if (keymaps_vector.is_empty()) {
             warnln("No keymaps configured - writing default configurations (en-us)");
-            mapper_config->write_entry("Mapping", "Keymaps", "en-us");
+            mapper_config->write_entry("Mapping"_short_string, "Keymaps"_short_string, "en-us");
             TRY(mapper_config->sync());
             keymaps_vector.append("en-us");
         }

@@ -796,7 +796,7 @@ bool Compositor::set_background_color(DeprecatedString const& background_color)
 
     m_custom_background_color = color;
 
-    g_config->write_entry("Background", "Color", background_color);
+    g_config->write_entry("Background"_string.release_value_but_fixme_should_propagate_errors(), "Color"_short_string, background_color);
     bool succeeded = !g_config->sync().is_error();
 
     if (succeeded) {
@@ -809,7 +809,7 @@ bool Compositor::set_background_color(DeprecatedString const& background_color)
 
 bool Compositor::set_wallpaper_mode(DeprecatedString const& mode)
 {
-    g_config->write_entry("Background", "Mode", mode);
+    g_config->write_entry("Background"_string.release_value_but_fixme_should_propagate_errors(), "Mode"_short_string, mode);
     bool succeeded = !g_config->sync().is_error();
 
     if (succeeded) {

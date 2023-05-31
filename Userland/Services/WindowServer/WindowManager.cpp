@@ -255,8 +255,8 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
     }
 
     if (save) {
-        g_config->write_num_entry("Workspaces", "Rows", window_stack_rows());
-        g_config->write_num_entry("Workspaces", "Columns", window_stack_columns());
+        g_config->write_num_entry("Workspaces"_string.release_value_but_fixme_should_propagate_errors(), "Rows"_short_string, window_stack_rows());
+        g_config->write_num_entry("Workspaces"_string.release_value_but_fixme_should_propagate_errors(), "Columns"_short_string, window_stack_columns());
         return !g_config->sync().is_error();
     }
     return true;
@@ -266,7 +266,7 @@ void WindowManager::set_acceleration_factor(double factor)
 {
     ScreenInput::the().set_acceleration_factor(factor);
     dbgln("Saving acceleration factor {} to config file at {}", factor, g_config->filename());
-    g_config->write_entry("Mouse", "AccelerationFactor", DeprecatedString::formatted("{}", factor));
+    g_config->write_entry("Mouse"_short_string, "AccelerationFactor"_string.release_value_but_fixme_should_propagate_errors(), DeprecatedString::formatted("{}", factor));
     sync_config_to_disk();
 }
 
@@ -274,7 +274,7 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
 {
     ScreenInput::the().set_scroll_step_size(step_size);
     dbgln("Saving scroll step size {} to config file at {}", step_size, g_config->filename());
-    g_config->write_entry("Mouse", "ScrollStepSize", DeprecatedString::number(step_size));
+    g_config->write_entry("Mouse"_short_string, "ScrollStepSize"_string.release_value_but_fixme_should_propagate_errors(), DeprecatedString::number(step_size));
     sync_config_to_disk();
 }
 
@@ -283,7 +283,7 @@ void WindowManager::set_double_click_speed(int speed)
     VERIFY(speed >= double_click_speed_min && speed <= double_click_speed_max);
     m_double_click_speed = speed;
     dbgln("Saving double-click speed {} to config file at {}", speed, g_config->filename());
-    g_config->write_entry("Input", "DoubleClickSpeed", DeprecatedString::number(speed));
+    g_config->write_entry("Input"_short_string, "DoubleClickSpeed"_string.release_value_but_fixme_should_propagate_errors(), DeprecatedString::number(speed));
     sync_config_to_disk();
 }
 
@@ -296,7 +296,7 @@ void WindowManager::set_mouse_buttons_switched(bool switched)
 {
     m_mouse_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, g_config->filename());
-    g_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
+    g_config->write_bool_entry("Mouse"_short_string, "ButtonsSwitched"_string.release_value_but_fixme_should_propagate_errors(), switched);
     sync_config_to_disk();
 }
 
@@ -309,7 +309,7 @@ void WindowManager::set_natural_scroll(bool inverted)
 {
     m_natural_scroll = inverted;
     dbgln("Saving scroll inverted state {} to config file at {}", inverted, g_config->filename());
-    g_config->write_bool_entry("Mouse", "NaturalScroll", inverted);
+    g_config->write_bool_entry("Mouse"_short_string, "NaturalScroll"_string.release_value_but_fixme_should_propagate_errors(), inverted);
     sync_config_to_disk();
 }
 
@@ -2164,13 +2164,13 @@ bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString t
     m_theme_overridden = false;
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
-    g_config->write_entry("Theme", "Name", theme_name);
+    g_config->write_entry("Theme"_short_string, "Name"_short_string, theme_name);
     if (color_scheme_path.has_value() && color_scheme_path.value() != "Custom"sv) {
-        g_config->write_bool_entry("Theme", "LoadCustomColorScheme", true);
-        g_config->write_entry("Theme", "CustomColorSchemePath", color_scheme_path.value());
+        g_config->write_bool_entry("Theme"_short_string, "LoadCustomColorScheme"_string.release_value_but_fixme_should_propagate_errors(), true);
+        g_config->write_entry("Theme"_short_string, "CustomColorSchemePath"_string.release_value_but_fixme_should_propagate_errors(), color_scheme_path.value());
         m_preferred_color_scheme = color_scheme_path.value();
     } else if (!color_scheme_path.has_value()) {
-        g_config->write_bool_entry("Theme", "LoadCustomColorScheme", false);
+        g_config->write_bool_entry("Theme"_short_string, "LoadCustomColorScheme"_string.release_value_but_fixme_should_propagate_errors(), false);
         g_config->remove_entry("Theme"sv, "CustomColorSchemePath"sv);
         m_preferred_color_scheme = OptionalNone();
     }
@@ -2367,7 +2367,7 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
     reload_cursor(m_zoom_cursor, "Zoom"sv);
 
     Compositor::the().invalidate_cursor();
-    g_config->write_entry("Mouse", "CursorTheme", theme_name);
+    g_config->write_entry("Mouse"_short_string, "CursorTheme"_string.release_value_but_fixme_should_propagate_errors(), theme_name);
     sync_config_to_disk();
 }
 
@@ -2376,7 +2376,7 @@ void WindowManager::set_cursor_highlight_radius(int radius)
     // TODO: Validate radius
     m_cursor_highlight_radius = radius;
     Compositor::the().invalidate_cursor();
-    g_config->write_num_entry("Mouse", "CursorHighlightRadius", radius);
+    g_config->write_num_entry("Mouse"_short_string, "CursorHighlightRadius"_string.release_value_but_fixme_should_propagate_errors(), radius);
     sync_config_to_disk();
 }
 
@@ -2384,7 +2384,7 @@ void WindowManager::set_cursor_highlight_color(Gfx::Color color)
 {
     m_cursor_highlight_color = color;
     Compositor::the().invalidate_cursor();
-    g_config->write_entry("Mouse", "CursorHighlightColor", color.to_deprecated_string());
+    g_config->write_entry("Mouse"_short_string, "CursorHighlightColor"_string.release_value_but_fixme_should_propagate_errors(), color.to_deprecated_string());
     sync_config_to_disk();
 }
 
@@ -2394,18 +2394,18 @@ void WindowManager::apply_system_effects(Vector<bool> effects, ShowGeometry geom
         return;
 
     m_system_effects = { effects, geometry, tile_window };
-    g_config->write_bool_entry("Effects", "AnimateMenus", m_system_effects.animate_menus());
-    g_config->write_bool_entry("Effects", "FlashMenus", m_system_effects.flash_menus());
-    g_config->write_bool_entry("Effects", "AnimateWindows", m_system_effects.animate_windows());
-    g_config->write_bool_entry("Effects", "SmoothScrolling", m_system_effects.smooth_scrolling());
-    g_config->write_bool_entry("Effects", "TabAccents", m_system_effects.tab_accents());
-    g_config->write_bool_entry("Effects", "SplitterKnurls", m_system_effects.splitter_knurls());
-    g_config->write_bool_entry("Effects", "Tooltips", m_system_effects.tooltips());
-    g_config->write_bool_entry("Effects", "MenuShadow", m_system_effects.menu_shadow());
-    g_config->write_bool_entry("Effects", "WindowShadow", m_system_effects.window_shadow());
-    g_config->write_bool_entry("Effects", "TooltipShadow", m_system_effects.tooltip_shadow());
-    g_config->write_entry("Effects", "ShowGeometry", ShowGeometryTools::enum_to_string(geometry));
-    g_config->write_entry("Effects", "TileWindow", TileWindowTools::enum_to_string(tile_window));
+    g_config->write_bool_entry("Effects"_short_string, "AnimateMenus"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.animate_menus());
+    g_config->write_bool_entry("Effects"_short_string, "FlashMenus"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.flash_menus());
+    g_config->write_bool_entry("Effects"_short_string, "AnimateWindows"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.animate_windows());
+    g_config->write_bool_entry("Effects"_short_string, "SmoothScrolling"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.smooth_scrolling());
+    g_config->write_bool_entry("Effects"_short_string, "TabAccents"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.tab_accents());
+    g_config->write_bool_entry("Effects"_short_string, "SplitterKnurls"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.splitter_knurls());
+    g_config->write_bool_entry("Effects"_short_string, "Tooltips"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.tooltips());
+    g_config->write_bool_entry("Effects"_short_string, "MenuShadow"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.menu_shadow());
+    g_config->write_bool_entry("Effects"_short_string, "WindowShadow"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.window_shadow());
+    g_config->write_bool_entry("Effects"_short_string, "TooltipShadow"_string.release_value_but_fixme_should_propagate_errors(), m_system_effects.tooltip_shadow());
+    g_config->write_entry("Effects"_short_string, "ShowGeometry"_string.release_value_but_fixme_should_propagate_errors(), ShowGeometryTools::enum_to_string(geometry));
+    g_config->write_entry("Effects"_short_string, "TileWindow"_string.release_value_but_fixme_should_propagate_errors(), TileWindowTools::enum_to_string(tile_window));
     sync_config_to_disk();
 }
 

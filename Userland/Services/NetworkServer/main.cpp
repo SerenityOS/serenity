@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
             return;
 
         InterfaceConfig config;
-        if (!groups.contains_slow(ifname)) {
+        if (!groups.contains_slow(String::from_deprecated_string(ifname).release_value_but_fixme_should_propagate_errors())) {
             dbgln("Config for interface {} doesn't exist, enabling DHCP for it", ifname);
             interfaces_with_dhcp_enabled.append(ifname);
         } else {

@@ -261,20 +261,20 @@ bool ScreenLayout::load_config(Core::ConfigFile const& config_file, DeprecatedSt
 
 bool ScreenLayout::save_config(Core::ConfigFile& config_file, bool sync) const
 {
-    config_file.write_num_entry("Screens", "MainScreen", main_screen_index);
+    config_file.write_num_entry("Screens"_short_string, "MainScreen"_string.release_value_but_fixme_should_propagate_errors(), main_screen_index);
 
     size_t index = 0;
     while (index < screens.size()) {
         auto& screen = screens[index];
-        auto group_name = DeprecatedString::formatted("Screen{}", index);
-        config_file.write_entry(group_name, "Mode", Screen::mode_to_string(screen.mode));
+        auto group_name = String::formatted("Screen{}", index).release_value_but_fixme_should_propagate_errors();
+        config_file.write_entry(group_name, "Mode"_short_string, Screen::mode_to_string(screen.mode));
         if (screen.mode == Screen::Mode::Device)
-            config_file.write_entry(group_name, "Device", screen.device.value());
-        config_file.write_num_entry(group_name, "Left", screen.location.x());
-        config_file.write_num_entry(group_name, "Top", screen.location.y());
-        config_file.write_num_entry(group_name, "Width", screen.resolution.width());
-        config_file.write_num_entry(group_name, "Height", screen.resolution.height());
-        config_file.write_num_entry(group_name, "ScaleFactor", screen.scale_factor);
+            config_file.write_entry(group_name, "Device"_short_string, screen.device.value());
+        config_file.write_num_entry(group_name, "Left"_short_string, screen.location.x());
+        config_file.write_num_entry(group_name, "Top"_short_string, screen.location.y());
+        config_file.write_num_entry(group_name, "Width"_short_string, screen.resolution.width());
+        config_file.write_num_entry(group_name, "Height"_short_string, screen.resolution.height());
+        config_file.write_num_entry(group_name, "ScaleFactor"_string.release_value_but_fixme_should_propagate_errors(), screen.scale_factor);
         index++;
     }
     // Prune screens no longer in the layout

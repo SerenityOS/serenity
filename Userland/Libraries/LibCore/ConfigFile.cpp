@@ -89,7 +89,7 @@ ErrorOr<void> ConfigFile::reparse()
     if (!m_file)
         return {};
 
-    HashMap<DeprecatedString, DeprecatedString>* current_group = nullptr;
+    HashMap<String, DeprecatedString>* current_group = nullptr;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(m_file->can_read_line())) {
@@ -113,7 +113,7 @@ ErrorOr<void> ConfigFile::reparse()
                 builder.append(line[i]);
                 ++i;
             }
-            current_group = &m_groups.ensure(builder.to_deprecated_string());
+            current_group = &m_groups.ensure(TRY(builder.to_string()));
             break;
         }
         default: { // Start of key
@@ -129,11 +129,11 @@ ErrorOr<void> ConfigFile::reparse()
                 ++i;
             }
             if (!current_group) {
-                // We're not in a group yet, create one with the name ""...
-                current_group = &m_groups.ensure("");
+                // We're not in a group yet, create one with an empty name...
+                current_group = &m_groups.ensure({});
             }
             auto value_string = value_builder.to_deprecated_string();
-            current_group->set(key_builder.to_deprecated_string(), value_string.trim_whitespace(TrimMode::Right));
+            current_group->set(TRY(key_builder.to_string()), value_string.trim_whitespace(TrimMode::Right));
         }
         }
     }
@@ -156,13 +156,13 @@ bool ConfigFile::read_bool_entry(StringView group, StringView key, bool default_
     return value == "1" || value.equals_ignoring_ascii_case("true"sv);
 }
 
-void ConfigFile::write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void ConfigFile::write_entry(String const& group, String const& key, DeprecatedString const& value)
 {
     m_groups.ensure(group).ensure(key) = value;
     m_dirty = true;
 }
 
-void ConfigFile::write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value)
+void ConfigFile::write_bool_entry(String const& group, String const& key, bool value)
 {
     write_entry(group, key, value ? "true" : "false");
 }
@@ -199,12 +199,12 @@ void ConfigFile::dump() const
     }
 }
 
-Vector<DeprecatedString> ConfigFile::groups() const
+Vector<String> ConfigFile::groups() const
 {
     return m_groups.keys();
 }
 
-Vector<DeprecatedString> ConfigFile::keys(StringView group) const
+Vector<String> ConfigFile::keys(StringView group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -225,7 +225,7 @@ bool ConfigFile::has_group(StringView group) const
     return m_groups.contains(group);
 }
 
-void ConfigFile::add_group(DeprecatedString const& group)
+void ConfigFile::add_group(String const& group)
 {
     m_groups.ensure(group);
     m_dirty = true;

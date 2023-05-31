@@ -107,7 +107,7 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
             continue;
         if (access(handler.characters(), X_OK) != 0)
             continue;
-        m_mime_handlers.set(key.to_lowercase(), handler);
+        m_mime_handlers.set(key.to_deprecated_string().to_lowercase(), handler);
     }
 
     for (auto key : cfg.keys("FileType"sv)) {
@@ -116,7 +116,7 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
             continue;
         if (access(handler.characters(), X_OK) != 0)
             continue;
-        m_file_handlers.set(key.to_lowercase(), handler);
+        m_file_handlers.set(key.to_deprecated_string().to_lowercase(), handler);
     }
 
     for (auto key : cfg.keys("Protocol"sv)) {
@@ -125,7 +125,7 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
             continue;
         if (access(handler.characters(), X_OK) != 0)
             continue;
-        m_protocol_handlers.set(key.to_lowercase(), handler);
+        m_protocol_handlers.set(key.to_deprecated_string().to_lowercase(), handler);
     }
 }
 

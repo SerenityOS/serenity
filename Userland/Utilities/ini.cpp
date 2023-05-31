@@ -15,8 +15,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
     StringView path;
-    DeprecatedString group;
-    DeprecatedString key;
+    StringView group;
+    StringView key;
     DeprecatedString value_to_write;
 
     Core::ArgsParser args_parser;
@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto config = TRY(Core::ConfigFile::open(path, value_to_write.is_null() ? Core::ConfigFile::AllowWriting::No : Core::ConfigFile::AllowWriting::Yes));
 
     if (!value_to_write.is_null()) {
-        config->write_entry(group, key, value_to_write);
+        config->write_entry(TRY(String::from_utf8(group)), TRY(String::from_utf8(key)), value_to_write);
         TRY(config->sync());
         return 0;
     }

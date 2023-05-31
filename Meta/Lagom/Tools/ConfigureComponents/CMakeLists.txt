@@ -2,4 +2,4 @@ set(SOURCES
     main.cpp
 )
 
-lagom_tool(ConfigureComponents)
+lagom_tool(ConfigureComponents LIBS LibUnicode)

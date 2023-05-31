@@ -49,7 +49,7 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
             for (auto& key : config->keys(group)) {
                 if (!new_config->has_key(group, key)) {
                     for_each_monitoring_connection(domain, nullptr, [&domain, &group, &key](ConnectionFromClient& connection) {
-                        connection.async_notify_removed_key(domain, group, key);
+                        connection.async_notify_removed_key(domain, group.to_deprecated_string(), key.to_deprecated_string());
                     });
                 }
             }
@@ -61,7 +61,7 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
                 auto new_value = new_config->read_entry(group, key);
                 if (old_value != new_value) {
                     for_each_monitoring_connection(domain, nullptr, [&domain, &group, &key, &new_value](ConnectionFromClient& connection) {
-                        connection.async_notify_changed_string_value(domain, group, key, new_value);
+                        connection.async_notify_changed_string_value(domain, group.to_deprecated_string(), key.to_deprecated_string(), new_value);
                     });
                 }
             }
@@ -140,7 +140,11 @@ Messages::ConfigServer::ListConfigKeysResponse ConnectionFromClient::list_config
     if (!validate_access(domain, group, ""))
         return Vector<DeprecatedString> {};
     auto& config = ensure_domain_config(domain);
-    return { config.keys(group) };
+
+    Vector<DeprecatedString> list;
+    for (auto const& key : config.keys(group))
+        list.append(key.to_deprecated_string());
+    return list;
 }
 
 Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_config_groups(DeprecatedString const& domain)
@@ -148,7 +152,11 @@ Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_conf
     if (!validate_access(domain, "", ""))
         return Vector<DeprecatedString> {};
     auto& config = ensure_domain_config(domain);
-    return { config.groups() };
+
+    Vector<DeprecatedString> list;
+    for (auto const& group : config.groups())
+        list.append(group.to_deprecated_string());
+    return list;
 }
 
 Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
@@ -213,7 +221,7 @@ void ConnectionFromClient::write_string_value(DeprecatedString const& domain, De
     if (config.has_key(group, key) && config.read_entry(group, key) == value)
         return;
 
-    config.write_entry(group, key, value);
+    config.write_entry(String::from_deprecated_string(group).release_value_but_fixme_should_propagate_errors(), String::from_deprecated_string(key).release_value_but_fixme_should_propagate_errors(), value);
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
@@ -232,7 +240,7 @@ void ConnectionFromClient::write_i32_value(DeprecatedString const& domain, Depre
     if (config.has_key(group, key) && config.read_num_entry(group, key) == value)
         return;
 
-    config.write_num_entry(group, key, value);
+    config.write_num_entry(String::from_deprecated_string(group).release_value_but_fixme_should_propagate_errors(), String::from_deprecated_string(key).release_value_but_fixme_should_propagate_errors(), value);
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
@@ -251,7 +259,7 @@ void ConnectionFromClient::write_u32_value(DeprecatedString const& domain, Depre
     if (config.has_key(group, key) && config.read_num_entry<u32>(group, key) == value)
         return;
 
-    config.write_num_entry(group, key, value);
+    config.write_num_entry(String::from_deprecated_string(group).release_value_but_fixme_should_propagate_errors(), String::from_deprecated_string(key).release_value_but_fixme_should_propagate_errors(), value);
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
@@ -270,7 +278,7 @@ void ConnectionFromClient::write_bool_value(DeprecatedString const& domain, Depr
     if (config.has_key(group, key) && config.read_bool_entry(group, key) == value)
         return;
 
-    config.write_bool_entry(group, key, value);
+    config.write_bool_entry(String::from_deprecated_string(group).release_value_but_fixme_should_propagate_errors(), String::from_deprecated_string(key).release_value_but_fixme_should_propagate_errors(), value);
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
@@ -324,7 +332,7 @@ void ConnectionFromClient::add_group_entry(DeprecatedString const& domain, Depre
     if (config.has_group(group))
         return;
 
-    config.add_group(group);
+    config.add_group(String::from_deprecated_string(group).release_value_but_fixme_should_propagate_errors());
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 

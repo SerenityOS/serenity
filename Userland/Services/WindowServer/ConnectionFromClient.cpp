@@ -977,9 +977,9 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
 
     WindowManager::the().invalidate_after_theme_or_font_change();
 
-    g_config->write_entry("Fonts", "Default", default_font_query);
-    g_config->write_entry("Fonts", "FixedWidth", fixed_width_font_query);
-    g_config->write_entry("Fonts", "WindowTitle", window_title_font_query);
+    g_config->write_entry("Fonts"_short_string, "Default"_short_string, default_font_query);
+    g_config->write_entry("Fonts"_short_string, "FixedWidth"_string.release_value_but_fixme_should_propagate_errors(), fixed_width_font_query);
+    g_config->write_entry("Fonts"_short_string, "WindowTitle"_string.release_value_but_fixme_should_propagate_errors(), window_title_font_query);
 
     return !g_config->sync().is_error();
 }

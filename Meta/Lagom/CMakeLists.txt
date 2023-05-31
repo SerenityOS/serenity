@@ -358,6 +358,10 @@ install(TARGETS LibTimeZone EXPORT LagomTargets)
 # This is used by the BindingsGenerator so needs to always be built.
 add_serenity_subdirectory(Userland/Libraries/LibIDL)
 
+# LibUnicode
+# This is used by the ConfigureComponents.
+add_serenity_subdirectory(Userland/Libraries/LibUnicode)
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
@@ -400,7 +404,6 @@ if (BUILD_LAGOM)
         TextCodec
         Threading
         TLS
-        Unicode
         Video
         Wasm
         WebSocket

@@ -14,6 +14,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 
@@ -37,8 +38,8 @@ public:
     bool has_group(StringView) const;
     bool has_key(StringView group, StringView key) const;
 
-    Vector<DeprecatedString> groups() const;
-    Vector<DeprecatedString> keys(StringView group) const;
+    Vector<String> groups() const;
+    Vector<String> keys(StringView group) const;
 
     size_t num_groups() const { return m_groups.size(); }
 
@@ -57,11 +58,11 @@ public:
             return read_entry(group, key).to_uint<T>().value_or(default_value);
     }
 
-    void write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);
-    void write_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool value);
+    void write_entry(String const& group, String const& key, DeprecatedString const& value);
+    void write_bool_entry(String const& group, String const& key, bool value);
 
     template<Integral T = int>
-    void write_num_entry(DeprecatedString const& group, DeprecatedString const& key, T value)
+    void write_num_entry(String const& group, String const& key, T value)
     {
         write_entry(group, key, DeprecatedString::number(value));
     }
@@ -72,7 +73,7 @@ public:
 
     ErrorOr<void> sync();
 
-    void add_group(DeprecatedString const& group);
+    void add_group(String const& group);
     void remove_group(StringView group);
     void remove_entry(StringView group, StringView key);
 
@@ -85,7 +86,7 @@ private:
 
     DeprecatedString m_filename;
     OwnPtr<InputBufferedFile> m_file;
-    HashMap<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> m_groups;
+    HashMap<String, HashMap<String, DeprecatedString>> m_groups;
     bool m_dirty { false };
 };
 
