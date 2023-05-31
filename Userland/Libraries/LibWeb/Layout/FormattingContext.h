@@ -116,6 +116,8 @@ protected:
     CSSPixels tentative_height_for_replaced_element(ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&) const;
     CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
+    [[nodiscard]] CSSPixelSize solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, ReplacedBox const&) const;
+
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
     void layout_absolutely_positioned_element(Box const&, AvailableSpace const&);
