@@ -888,7 +888,7 @@ ErrorOr<MacroblockCoefficients> read_macroblock_coefficients(BooleanDecoder& dec
 }
 
 template<int N>
-void predict_macroblock(Span<i16> prediction, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 truemotion_corner)
+void predict_macroblock(Bytes prediction, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlyBytes left, ReadonlyBytes above, u8 truemotion_corner)
 {
     // https://datatracker.ietf.org/doc/html/rfc6386#section-12.2 "Chroma Prediction"
     // (Also used for the DC_PRED, H_PRED, V_PRED, TM_PRED for luma prediction.)
@@ -908,7 +908,7 @@ void predict_macroblock(Span<i16> prediction, IntraMacroblockMode mode, int mb_x
                     sum += above[mb_x * N + i];
                 n += N;
             }
-            i16 average = (sum + n / 2) / n;
+            u8 average = (sum + n / 2) / n;
             for (size_t i = 0; i < N * N; ++i)
                 prediction[i] = average;
         }
@@ -928,21 +928,21 @@ void predict_macroblock(Span<i16> prediction, IntraMacroblockMode mode, int mb_x
     }
 }
 
-void predict_y_subblock(Span<i16> y_prediction, IntraBlockMode mode, int x, int y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 corner)
+void predict_y_subblock(Bytes y_prediction, IntraBlockMode mode, int x, int y, ReadonlyBytes left, ReadonlyBytes above, u8 corner)
 {
     // https://datatracker.ietf.org/doc/html/rfc6386#section-12.3 "Luma Prediction"
     // Roughly corresponds to "subblock_intra_predict()" in the spec.
-    auto weighted_average = [](i16 x, i16 y, i16 z) { return (x + 2 * y + z + 2) / 4; };
-    auto average = [](i16 x, i16 y) { return (x + y + 1) / 2; };
+    auto weighted_average = [](u8 x, u8 y, u8 z) { return (x + 2 * y + z + 2) / 4; };
+    auto average = [](u8 x, u8 y) { return (x + y + 1) / 2; };
 
-    auto at = [&y_prediction, y, x](int px, int py) -> i16& { return y_prediction[(4 * y + py) * 16 + 4 * x + px]; };
+    auto at = [&y_prediction, y, x](int px, int py) -> u8& { return y_prediction[(4 * y + py) * 16 + 4 * x + px]; };
 
     if (mode == B_DC_PRED) {
         // The spec text says this is like DC_PRED, but predict_dc_nxn() in the sample implementation doesn't do the "oob isn't read" part.
         int sum = 0, n = 8;
         for (int i = 0; i < 4; ++i)
             sum += left[i] + above[i];
-        i16 average = (sum + n / 2) / n;
+        u8 average = (sum + n / 2) / n;
         for (int py = 0; py < 4; ++py)
             for (int px = 0; px < 4; ++px)
                 y_prediction[(4 * y + py) * 16 + 4 * x + px] = average;
@@ -1042,22 +1042,23 @@ void predict_y_subblock(Span<i16> y_prediction, IntraBlockMode mode, int x, int 
 }
 
 template<int N>
-void add_idct_to_prediction(Span<i16> prediction, Coefficients coefficients, int x, int y)
+void add_idct_to_prediction(Bytes prediction, Coefficients coefficients, int x, int y)
 {
     Coefficients idct_output;
     short_idct4x4llm_c(coefficients, idct_output, 4 * sizeof(i16));
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-14.5 "Summation of Predictor and Residue"
+    // FIXME: Could omit the clamp() call if FrameHeader.clamping_type == ClampingSpecification::NoClampingNecessary.
     for (int py = 0; py < 4; ++py) {
         for (int px = 0; px < 4; ++px) {
-            i16& p = prediction[(4 * y + py) * N + (4 * x + px)];
+            u8& p = prediction[(4 * y + py) * N + (4 * x + px)];
             p = clamp(p + idct_output[py * 4 + px], 0, 255);
         }
     }
 }
 
 template<int N>
-void process_macroblock(Span<i16> output, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlySpan<i16> left, ReadonlySpan<i16> above, i16 truemotion_corner, Coefficients coefficients_array[])
+void process_macroblock(Bytes output, IntraMacroblockMode mode, int mb_x, int mb_y, ReadonlyBytes left, ReadonlyBytes above, u8 truemotion_corner, Coefficients coefficients_array[])
 {
     predict_macroblock<4 * N>(output, mode, mb_x, mb_y, left, above, truemotion_corner);
 
@@ -1068,12 +1069,12 @@ void process_macroblock(Span<i16> output, IntraMacroblockMode mode, int mb_x, in
             add_idct_to_prediction<4 * N>(output, coefficients_array[i], x, y);
 }
 
-void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, int mb_x, ReadonlySpan<i16> predicted_y_left, ReadonlySpan<i16> predicted_y_above, i16 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
+void process_subblocks(Bytes y_output, MacroblockMetadata const& metadata, int mb_x, ReadonlyBytes predicted_y_left, ReadonlyBytes predicted_y_above, u8 y_truemotion_corner, Coefficients coefficients_array[], int macroblock_width)
 {
     // Loop over the 4x4 subblocks
     for (int y = 0, i = 0; y < 4; ++y) {
         for (int x = 0; x < 4; ++x, ++i) {
-            i16 corner = y_truemotion_corner;
+            u8 corner = y_truemotion_corner;
             if (x > 0 && y == 0)
                 corner = predicted_y_above[mb_x * 16 + 4 * x - 1];
             else if (x > 0 && y > 0)
@@ -1081,7 +1082,7 @@ void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, i
             else if (x == 0 && y > 0)
                 corner = predicted_y_left[4 * y - 1];
 
-            i16 left[4], above[8];
+            u8 left[4], above[8];
             for (int i = 0; i < 4; ++i) {
                 if (x == 0)
                     left[i] = predicted_y_left[4 * y + i];
@@ -1115,14 +1116,10 @@ void process_subblocks(Span<i16> y_output, MacroblockMetadata const& metadata, i
     }
 }
 
-void convert_yuv_to_rgb(Bitmap& bitmap, int mb_x, int mb_y, ReadonlySpan<i16> y_data, ReadonlySpan<i16> u_data, ReadonlySpan<i16> v_data)
+void convert_yuv_to_rgb(Bitmap& bitmap, int mb_x, int mb_y, ReadonlyBytes y_data, ReadonlyBytes u_data, ReadonlyBytes v_data)
 {
-    // Convert YUV to RGB.
     for (int y = 0; y < 16; ++y) {
         for (int x = 0; x < 16; ++x) {
-            // "is then saturated to 8-bit unsigned range (using, say, the
-            //  clamp255 function defined above) before being stored as an 8-bit
-            //  unsigned pixel value."
             u8 Y = y_data[y * 16 + x];
 
             // FIXME: Could do nicer upsampling than just nearest neighbor
@@ -1153,17 +1150,17 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
     CoefficientReadingContext coefficient_reading_context;
     TRY(coefficient_reading_context.initialize(macroblock_width));
 
-    Vector<i16> predicted_y_above;
+    Vector<u8> predicted_y_above;
     TRY(predicted_y_above.try_resize(macroblock_width * 16));
     for (size_t i = 0; i < predicted_y_above.size(); ++i)
         predicted_y_above[i] = 127;
 
-    Vector<i16> predicted_u_above;
+    Vector<u8> predicted_u_above;
     TRY(predicted_u_above.try_resize(macroblock_width * 8));
     for (size_t i = 0; i < predicted_u_above.size(); ++i)
         predicted_u_above[i] = 127;
 
-    Vector<i16> predicted_v_above;
+    Vector<u8> predicted_v_above;
     TRY(predicted_v_above.try_resize(macroblock_width * 8));
     for (size_t i = 0; i < predicted_v_above.size(); ++i)
         predicted_v_above[i] = 127;
@@ -1173,31 +1170,31 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
 
         coefficient_reading_context.start_new_row();
 
-        i16 predicted_y_left[16] { 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129 };
-        i16 predicted_u_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
-        i16 predicted_v_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
+        u8 predicted_y_left[16] { 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129 };
+        u8 predicted_u_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
+        u8 predicted_v_left[8] { 129, 129, 129, 129, 129, 129, 129, 129 };
 
         // The spec doesn't say if this should be 127, 129, or something else.
         // But ReconstructRow in frame_dec.c in libwebp suggests 129.
-        i16 y_truemotion_corner = 129;
-        i16 u_truemotion_corner = 129;
-        i16 v_truemotion_corner = 129;
+        u8 y_truemotion_corner = 129;
+        u8 u_truemotion_corner = 129;
+        u8 v_truemotion_corner = 129;
 
         for (int mb_x = 0; mb_x < macroblock_width; ++mb_x, ++macroblock_index) {
             auto const& metadata = macroblock_metadata[macroblock_index];
 
             auto coefficients = TRY(read_macroblock_coefficients(decoder, header, coefficient_reading_context, metadata, mb_x));
 
-            i16 y_data[16 * 16] {};
+            u8 y_data[16 * 16] {};
             if (metadata.intra_y_mode == B_PRED)
                 process_subblocks(y_data, metadata, mb_x, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs, macroblock_width);
             else
                 process_macroblock<4>(y_data, metadata.intra_y_mode, mb_x, mb_y, predicted_y_left, predicted_y_above, y_truemotion_corner, coefficients.y_coeffs);
 
-            i16 u_data[8 * 8] {};
+            u8 u_data[8 * 8] {};
             process_macroblock<2>(u_data, metadata.uv_mode, mb_x, mb_y, predicted_u_left, predicted_u_above, u_truemotion_corner, coefficients.u_coeffs);
 
-            i16 v_data[8 * 8] {};
+            u8 v_data[8 * 8] {};
             process_macroblock<2>(v_data, metadata.uv_mode, mb_x, mb_y, predicted_v_left, predicted_v_above, v_truemotion_corner, coefficients.v_coeffs);
 
             // FIXME: insert loop filtering here
