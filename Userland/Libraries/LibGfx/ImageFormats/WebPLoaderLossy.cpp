@@ -121,16 +121,6 @@ ErrorOr<i8> read_signed_literal(BooleanDecoder& decoder, u8 n)
 #define B(prob) decoder.read_bool(prob)
 #define L_signed(n) read_signed_literal(decoder, n)
 
-// https://datatracker.ietf.org/doc/html/rfc6386#section-9.2 "Color Space and Pixel Type (Key Frames Only)"
-enum class ColorSpaceAndPixelType {
-    YUV = 0,
-    ReservedForFutureUse = 1,
-};
-enum class ClampingSpecification {
-    DecoderMustClampTo0To255 = 0,
-    NoClampingNecessary = 1,
-};
-
 // https://datatracker.ietf.org/doc/html/rfc6386#section-9.3 Segment-Based Adjustments"
 // https://datatracker.ietf.org/doc/html/rfc6386#section-19.2 "Frame Header"
 enum class SegmentFeatureMode {
@@ -179,6 +169,16 @@ ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder&,
 enum class FilterType {
     Normal = 0,
     Simple = 1,
+};
+
+// https://datatracker.ietf.org/doc/html/rfc6386#section-9.2 "Color Space and Pixel Type (Key Frames Only)"
+enum class ColorSpaceAndPixelType {
+    YUV = 0,
+    ReservedForFutureUse = 1,
+};
+enum class ClampingSpecification {
+    DecoderMustClampTo0To255 = 0,
+    NoClampingNecessary = 1,
 };
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-19.2 "Frame Header"
