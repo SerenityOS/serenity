@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,9 +72,57 @@ QString Settings::new_tab_page()
     return m_qsettings->value("new_tab_page", default_new_tab_url).toString();
 }
 
+Settings::EngineProvider Settings::search_engine()
+{
+    EngineProvider engine_provider;
+    engine_provider.name = m_qsettings->value("search_engine_name", "Google").toString();
+    engine_provider.url = m_qsettings->value("search_engine", "https://www.google.com/search?q={}").toString();
+    return engine_provider;
+}
+
+void Settings::set_search_engine(EngineProvider const& engine_provider)
+{
+    m_qsettings->setValue("search_engine_name", engine_provider.name);
+    m_qsettings->setValue("search_engine", engine_provider.url);
+}
+
+Settings::EngineProvider Settings::autocomplete_engine()
+{
+    EngineProvider engine_provider;
+    engine_provider.name = m_qsettings->value("autocomplete_engine_name", "Google").toString();
+    engine_provider.url = m_qsettings->value("autocomplete_engine", "https://www.google.com/complete/search?client=chrome&q={}").toString();
+    return engine_provider;
+}
+
+void Settings::set_autocomplete_engine(EngineProvider const& engine_provider)
+{
+    m_qsettings->setValue("autocomplete_engine_name", engine_provider.name);
+    m_qsettings->setValue("autocomplete_engine", engine_provider.url);
+}
+
 void Settings::set_new_tab_page(QString const& page)
 {
     m_qsettings->setValue("new_tab_page", page);
+}
+
+bool Settings::enable_autocomplete()
+{
+    return m_qsettings->value("enable_autocomplete", true).toBool();
+}
+
+void Settings::set_enable_autocomplete(bool enable)
+{
+    m_qsettings->setValue("enable_autocomplete", enable);
+}
+
+bool Settings::enable_search()
+{
+    return m_qsettings->value("enable_search", true).toBool();
+}
+
+void Settings::set_enable_search(bool enable)
+{
+    m_qsettings->setValue("enable_search", enable);
 }
 
 }

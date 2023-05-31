@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "AutoComplete.h"
+#include <AK/OwnPtr.h>
 #include <QLineEdit>
 
 namespace Ladybird {
@@ -20,6 +22,7 @@ private:
     virtual void focusOutEvent(QFocusEvent* event) override;
 
     void highlight_location();
+    AK::OwnPtr<AutoComplete> m_autocomplete;
 };
 
 }
