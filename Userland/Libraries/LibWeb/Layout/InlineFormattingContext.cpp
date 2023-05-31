@@ -41,7 +41,7 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     if (box_in_root_rect.x() >= space.left) {
@@ -321,7 +321,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
 bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     return space.left > 0 || space.right > 0;

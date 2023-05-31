@@ -752,7 +752,7 @@ BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floa
             // First, find the lowest margin box edge on this float side and calculate the Y offset just below it.
             CSSPixels clearance_y_in_root = 0;
             for (auto const& floating_box : float_side.current_boxes) {
-                auto floating_box_rect_in_root = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+                auto floating_box_rect_in_root = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root());
                 clearance_y_in_root = max(clearance_y_in_root, floating_box_rect_in_root.bottom());
             }
 
@@ -795,7 +795,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
 
     if ((!m_left_floats.current_boxes.is_empty() || !m_right_floats.current_boxes.is_empty())
         && creates_block_formatting_context(child_box)) {
-        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(child_box, root(), m_state);
+        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(child_box, root());
         auto space = space_used_by_floats(box_in_root_rect.y());
         available_width_within_containing_block -= space.left + space.right;
         x += space.left;
@@ -810,10 +810,10 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     box_state.set_content_offset({ x.value(), box_state.offset.y() });
 }
 
-static void measure_scrollable_overflow(LayoutState const& state, Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge)
+void BlockFormattingContext::measure_scrollable_overflow(Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge) const
 {
-    auto const& child_state = state.get(box);
-    auto child_rect = absolute_content_rect(box, state);
+    auto const& child_state = m_state.get(box);
+    auto child_rect = absolute_content_rect(box);
     child_rect.inflate(child_state.border_box_top(), child_state.border_box_right(), child_state.border_box_bottom(), child_state.border_box_left());
 
     bottom_edge = max(bottom_edge, child_rect.bottom() - 1);
@@ -833,7 +833,7 @@ static void measure_scrollable_overflow(LayoutState const& state, Box const& box
         }
     } else {
         box.for_each_child_of_type<Box>([&](Box const& child) {
-            measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+            measure_scrollable_overflow(child, bottom_edge, right_edge);
             return IterationDecision::Continue;
         });
     }
@@ -862,7 +862,7 @@ void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSp
 
     CSSPixels bottom_edge = 0;
     CSSPixels right_edge = 0;
-    measure_scrollable_overflow(m_state, viewport, bottom_edge, right_edge);
+    measure_scrollable_overflow(viewport, bottom_edge, right_edge);
 
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         // FIXME: Move overflow data to LayoutState!
@@ -906,7 +906,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 offset_from_edge = box_state.content_width() + box_state.margin_box_right();
         };
 
-        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+        auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root());
         CSSPixels y_in_root = box_in_root_rect.y();
         CSSPixels y = box_state.offset.y();
 
@@ -927,7 +927,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             // Walk all currently tracked floats on the side we're floating towards.
             // We're looking for the innermost preceding float that intersects vertically with `box`.
             for (auto& preceding_float : side_data.current_boxes.in_reverse()) {
-                auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float.box, root(), m_state);
+                auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float.box, root());
                 if (!preceding_float_rect.contains_vertically(y_in_root))
                     continue;
                 // We found a preceding float that intersects vertically with the current float.
@@ -1060,7 +1060,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root());
         if (rect.contains_vertically(y.value())) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
@@ -1079,7 +1079,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root());
         if (rect.contains_vertically(y.value())) {
             CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
             for (auto const* containing_block = floating_box.box->containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
@@ -1099,7 +1099,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
 FormattingContext::SpaceUsedByFloats BlockFormattingContext::intrusion_by_floats_into_box(Box const& box, CSSPixels y_in_box) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(box, root());
     CSSPixels y_in_root = box_in_root_rect.y() + y_in_box;
     auto space_used_by_floats_in_root = space_used_by_floats(y_in_root);
 

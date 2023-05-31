@@ -211,7 +211,7 @@ void LineBuilder::update_last_line()
                 fragment_baseline = CSSPixels(font_metrics.ascent) + half_leading;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
-                fragment_baseline = box_baseline(m_layout_state, box);
+                fragment_baseline = m_context.box_baseline(box);
             }
 
             // Remember the baseline used for this fragment. This will be used when painting the fragment.
