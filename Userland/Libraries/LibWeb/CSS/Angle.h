@@ -38,6 +38,18 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
+    int operator<=>(Angle const& other) const
+    {
+        auto this_degrees = to_degrees();
+        auto other_degrees = other.to_degrees();
+
+        if (this_degrees < other_degrees)
+            return -1;
+        if (this_degrees > other_degrees)
+            return 1;
+        return 0;
+    }
+
 private:
     StringView unit_name() const;
 

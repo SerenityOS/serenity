@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +30,18 @@ public:
     bool operator==(Resolution const& other) const
     {
         return m_type == other.m_type && m_value == other.m_value;
+    }
+
+    int operator<=>(Resolution const& other) const
+    {
+        auto this_dots_per_pixel = to_dots_per_pixel();
+        auto other_dots_per_pixel = other.to_dots_per_pixel();
+
+        if (this_dots_per_pixel < other_dots_per_pixel)
+            return -1;
+        if (this_dots_per_pixel > other_dots_per_pixel)
+            return 1;
+        return 0;
     }
 
 private:

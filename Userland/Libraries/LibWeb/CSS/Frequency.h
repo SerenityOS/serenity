@@ -35,6 +35,18 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
+    int operator<=>(Frequency const& other) const
+    {
+        auto this_hertz = to_hertz();
+        auto other_hertz = other.to_hertz();
+
+        if (this_hertz < other_hertz)
+            return -1;
+        if (this_hertz > other_hertz)
+            return 1;
+        return 0;
+    }
+
 private:
     StringView unit_name() const;
 

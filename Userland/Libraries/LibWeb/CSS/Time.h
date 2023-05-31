@@ -37,6 +37,18 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
+    int operator<=>(Time const& other) const
+    {
+        auto this_seconds = to_seconds();
+        auto other_seconds = other.to_seconds();
+
+        if (this_seconds < other_seconds)
+            return -1;
+        if (this_seconds > other_seconds)
+            return 1;
+        return 0;
+    }
+
 private:
     StringView unit_name() const;
 
