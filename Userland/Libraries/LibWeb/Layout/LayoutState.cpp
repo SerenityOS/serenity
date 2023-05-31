@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/LayoutState.h>
@@ -242,7 +243,7 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
     if (width < 0) {
         // Negative widths are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
-        dbgln("FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
         width = 0;
     }
     m_content_width = width;
@@ -253,7 +254,7 @@ void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
     if (height < 0) {
         // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
-        dbgln("FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
         height = 0;
     }
     m_content_height = height;
