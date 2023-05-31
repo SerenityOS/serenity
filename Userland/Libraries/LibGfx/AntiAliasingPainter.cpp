@@ -207,19 +207,6 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
     draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::No>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
-// FIXME: In the fill_paths() m_transform.translation() throws away any other transforms
-// this currently does not matter -- but may in future.
-
-void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::WindingRule rule)
-{
-    m_underlying_painter.antialiased_fill_path(path, color, rule, m_transform.translation());
-}
-
-void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
-{
-    m_underlying_painter.antialiased_fill_path(path, paint_style, rule, m_transform.translation());
-}
-
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
     FloatPoint cursor;

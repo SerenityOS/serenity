@@ -187,6 +187,8 @@ public:
 protected:
     friend GradientLine;
     friend AntiAliasingPainter;
+    template<unsigned SamplesPerPixel>
+    friend class EdgeFlagPathRasterizer;
 
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
     IntPoint to_physical(IntPoint p) const { return p.translated(translation()) * scale(); }
@@ -219,17 +221,6 @@ private:
     bool text_contains_bidirectional_text(Utf8View const&, TextDirection);
     template<typename DrawGlyphFunction>
     void do_draw_text(FloatRect const&, Utf8View const& text, Font const&, TextAlignment, TextElision, TextWrapping, DrawGlyphFunction);
-
-    void antialiased_fill_path(Path const&, Color, WindingRule rule, FloatPoint translation);
-    void antialiased_fill_path(Path const&, PaintStyle const& paint_style, WindingRule rule, FloatPoint translation);
-    enum class FillPathMode {
-        PlaceOnIntGrid,
-        AllowFloatingPoints,
-    };
-    template<typename T, typename TColorOrFunction>
-    void draw_scanline_for_fill_path(int y, T x_start, T x_end, TColorOrFunction color);
-    template<FillPathMode fill_path_mode, typename ColorOrFunction>
-    void fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {});
 };
 
 class PainterStateSaver {
