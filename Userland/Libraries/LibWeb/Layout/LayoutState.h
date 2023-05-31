@@ -173,13 +173,4 @@ struct LayoutState {
     LayoutState const& m_root;
 };
 
-CSSPixelRect absolute_content_rect(Box const&, LayoutState const&);
-CSSPixelRect margin_box_rect(Box const&, LayoutState const&);
-CSSPixelRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixelRect border_box_rect(Box const&, LayoutState const&);
-CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixelRect content_box_rect(Box const&, LayoutState const&);
-CSSPixelRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixels box_baseline(LayoutState const& state, Box const& box);
-
 }

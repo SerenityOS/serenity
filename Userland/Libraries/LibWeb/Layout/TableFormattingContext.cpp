@@ -476,7 +476,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
             independent_formatting_context->parent_context_did_dimension_child_root_box();
         }
 
-        cell.baseline = box_baseline(m_state, cell.box);
+        cell.baseline = box_baseline(cell.box);
 
         // Only cells spanning the current row exclusively are part of computing minimum height of a row,
         // as described in https://www.w3.org/TR/css-tables-3/#computing-the-table-height
@@ -554,7 +554,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
             independent_formatting_context->parent_context_did_dimension_child_root_box();
         }
 
-        cell.baseline = box_baseline(m_state, cell.box);
+        cell.baseline = box_baseline(cell.box);
 
         row.reference_height = max(row.reference_height, cell_state.border_box_height());
         row.baseline = max(row.baseline, cell.baseline);

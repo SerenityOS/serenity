@@ -355,7 +355,7 @@ CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_ro
     for (auto floating_box : m_state.get(root).floating_descendants()) {
         // NOTE: Floating box coordinates are relative to their own containing block,
         //       which may or may not be the BFC root.
-        auto margin_box = margin_box_rect_in_ancestor_coordinate_space(*floating_box, root, m_state);
+        auto margin_box = margin_box_rect_in_ancestor_coordinate_space(*floating_box, root);
         CSSPixels floating_box_bottom_margin_edge = margin_box.bottom();
         if (!bottom.has_value() || floating_box_bottom_margin_edge > bottom.value())
             bottom = floating_box_bottom_margin_edge;
@@ -913,15 +913,15 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 }
 
 // NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
-static CSSPixelRect content_box_rect_in_static_position_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+CSSPixelRect FormattingContext::content_box_rect_in_static_position_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
 {
-    auto rect = content_box_rect(box, state);
+    auto rect = content_box_rect(box);
     if (&box == &ancestor_box)
         return rect;
     for (auto const* current = box.parent(); current; current = current->parent()) {
         if (current == &ancestor_box)
             return rect;
-        auto const& current_state = state.get(static_cast<Box const&>(*current));
+        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
         rect.translate_by(current_state.offset);
     }
     // If we get here, ancestor_box was not an ancestor of `box`!
@@ -968,7 +968,7 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
         // We're among block siblings, Y can be calculated easily.
         y = m_state.get(box).margin_box_top();
     }
-    auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block(), m_state);
+    auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block());
     return offset_to_static_parent.location().translated(x, y);
 }
 
@@ -1488,6 +1488,125 @@ bool FormattingContext::can_skip_is_anonymous_text_run(Box& box)
             return true;
     }
     return false;
+}
+
+CSSPixelRect FormattingContext::absolute_content_rect(Box const& box) const
+{
+    auto const& box_state = m_state.get(box);
+    CSSPixelRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    for (auto* block = box.containing_block(); block; block = block->containing_block())
+        rect.translate_by(m_state.get(*block).offset);
+    return rect;
+}
+
+CSSPixels FormattingContext::box_baseline(Box const& box) const
+{
+    auto const& box_state = m_state.get(box);
+
+    // https://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align
+    auto const& vertical_align = box.computed_values().vertical_align();
+    if (vertical_align.has<CSS::VerticalAlign>()) {
+        switch (vertical_align.get<CSS::VerticalAlign>()) {
+        case CSS::VerticalAlign::Top:
+            // Top: Align the top of the aligned subtree with the top of the line box.
+            return box_state.border_box_top();
+        case CSS::VerticalAlign::Bottom:
+            // Bottom: Align the bottom of the aligned subtree with the bottom of the line box.
+            return box_state.content_height() + box_state.margin_box_top();
+        case CSS::VerticalAlign::TextTop:
+            // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
+            return box.computed_values().font_size();
+        case CSS::VerticalAlign::TextBottom:
+            // TextTop: Align the bottom of the box with the bottom of the parent's content area (see 10.6.1).
+            return box_state.content_height() - (box.containing_block()->font().pixel_metrics().descent * 2);
+        default:
+            break;
+        }
+    }
+
+    if (!box_state.line_boxes.is_empty())
+        return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
+    if (box.has_children() && !box.children_are_inline()) {
+        auto const* child_box = box.last_child_of_type<Box>();
+        VERIFY(child_box);
+        return box_baseline(*child_box);
+    }
+    return box_state.margin_box_height();
+}
+
+CSSPixelRect FormattingContext::margin_box_rect(Box const& box) const
+{
+    auto const& box_state = m_state.get(box);
+    return {
+        box_state.offset.translated(-box_state.margin_box_left(), -box_state.margin_box_top()),
+        {
+            box_state.margin_box_left() + box_state.content_width() + box_state.margin_box_right(),
+            box_state.margin_box_top() + box_state.content_height() + box_state.margin_box_bottom(),
+        },
+    };
+}
+
+CSSPixelRect FormattingContext::border_box_rect(Box const& box) const
+{
+    auto const& box_state = m_state.get(box);
+    return {
+        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
+        {
+            box_state.border_box_left() + box_state.content_width() + box_state.border_box_right(),
+            box_state.border_box_top() + box_state.content_height() + box_state.border_box_bottom(),
+        },
+    };
+}
+
+CSSPixelRect FormattingContext::border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
+{
+    auto rect = border_box_rect(box);
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
+        if (current == &ancestor_box)
+            return rect;
+        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
+    }
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
+}
+
+CSSPixelRect FormattingContext::content_box_rect(Box const& box) const
+{
+    auto const& box_state = m_state.get(box);
+    return CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+}
+
+CSSPixelRect FormattingContext::content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
+{
+    auto rect = content_box_rect(box);
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
+        if (current == &ancestor_box)
+            return rect;
+        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
+    }
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
+}
+
+CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box) const
+{
+    auto rect = margin_box_rect(box);
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
+        if (current == &ancestor_box)
+            return rect;
+        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
+    }
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
 }
 
 }

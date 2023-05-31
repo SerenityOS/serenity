@@ -72,6 +72,8 @@ private:
 
     void layout_list_item_marker(ListItemBox const&);
 
+    void measure_scrollable_overflow(Box const&, CSSPixels& bottom_edge, CSSPixels& right_edge) const;
+
     enum class DidIntroduceClearance {
         Yes,
         No,

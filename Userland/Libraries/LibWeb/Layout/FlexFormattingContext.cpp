@@ -2187,8 +2187,8 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
 
     auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };
 
-    auto absolute_position_of_flex_container = absolute_content_rect(flex_container(), m_state).location();
-    auto absolute_position_of_abspos_containing_block = absolute_content_rect(*box.containing_block(), m_state).location();
+    auto absolute_position_of_flex_container = absolute_content_rect(flex_container()).location();
+    auto absolute_position_of_abspos_containing_block = absolute_content_rect(*box.containing_block()).location();
     auto diff = absolute_position_of_flex_container - absolute_position_of_abspos_containing_block;
 
     return static_position_offset + diff;
