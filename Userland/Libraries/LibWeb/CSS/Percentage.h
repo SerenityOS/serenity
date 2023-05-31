@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,6 +37,15 @@ public:
     }
 
     bool operator==(Percentage const& other) const { return m_value == other.m_value; }
+
+    int operator<=>(Percentage const& other) const
+    {
+        if (m_value < other.m_value)
+            return -1;
+        if (m_value > other.m_value)
+            return 1;
+        return 0;
+    }
 
 private:
     double m_value;
