@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +37,23 @@ public:
 
     QString new_tab_page();
     void set_new_tab_page(QString const& page);
+
+    struct EngineProvider {
+        QString name;
+        QString url;
+    };
+
+    EngineProvider search_engine();
+    void set_search_engine(EngineProvider const& engine);
+
+    EngineProvider autocomplete_engine();
+    void set_autocomplete_engine(EngineProvider const& engine);
+
+    bool enable_autocomplete();
+    void set_enable_autocomplete(bool enable);
+
+    bool enable_search();
+    void set_enable_search(bool enable);
 
 protected:
     Settings();
