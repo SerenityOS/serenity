@@ -95,10 +95,32 @@ void TextEditor::create_actions()
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
-        m_go_to_line_action = Action::create(
-            "Go to Line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        m_go_to_line_or_column_action = Action::create(
+            "Go to Line/Column...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:"sv, "Go to Line"sv) == InputBox::ExecResult::OK) {
+                if (InputBox::show(window(), value, "Enter the line, or line:column:"sv, "Go to Line/Column"sv) == InputBox::ExecResult::OK) {
+                    // If there is a `:` in the string, the format is expected to be `line:column`. E.g: `123:45`
+                    if (value.contains(':')) {
+                        auto line_and_column_or_error = value.split(':');
+                        if (line_and_column_or_error.is_error()) {
+                            return;
+                        }
+
+                        auto line_and_column = line_and_column_or_error.value();
+                        if (line_and_column.size() != 2) {
+                            return;
+                        }
+
+                        auto line_target = AK::StringUtils::convert_to_uint(line_and_column.at(0));
+                        auto column_target = AK::StringUtils::convert_to_uint(line_and_column.at(1));
+                        if (line_target.has_value() && column_target.has_value()) {
+                            set_cursor_and_focus_line(line_target.value() - 1, column_target.value());
+                        }
+
+                        return;
+                    }
+
+                    // If there is no `:` in the string, we just treat the integer as the line
                     auto line_target = AK::StringUtils::convert_to_uint(value.bytes_as_string_view());
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -1965,7 +1987,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
         m_context_menu->add_action(insert_emoji_action());
         if (is_multi_line()) {
             m_context_menu->add_separator();
-            m_context_menu->add_action(go_to_line_action());
+            m_context_menu->add_action(go_to_line_or_column_action());
         }
         if (!m_custom_context_menu_actions.is_empty()) {
             m_context_menu->add_separator();
