@@ -6,6 +6,7 @@
  */
 
 #include "GeneratorUtil.h"
+#include <AK/CharacterTypes.h>
 #include <AK/GenericShorthands.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
@@ -15,6 +16,7 @@
 ErrorOr<void> replace_logical_aliases(JsonObject& properties);
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file);
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file);
+void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name = {}, Optional<StringView> value_getter = {});
 
 static bool type_name_is_enum(StringView type_name)
 {
@@ -170,6 +172,17 @@ enum class ValueType {
 };
 bool property_accepts_type(PropertyID, ValueType);
 bool property_accepts_identifier(PropertyID, ValueID);
+
+// These perform range-checking, but are also safe to call with properties that don't accept that type. (They'll just return false.)
+bool property_accepts_angle(PropertyID, Angle const&);
+bool property_accepts_frequency(PropertyID, Frequency const&);
+bool property_accepts_integer(PropertyID, i64 const&);
+bool property_accepts_length(PropertyID, Length const&);
+bool property_accepts_number(PropertyID, double const&);
+bool property_accepts_percentage(PropertyID, Percentage const&);
+bool property_accepts_resolution(PropertyID, Resolution const&);
+bool property_accepts_time(PropertyID, Time const&);
+
 Vector<PropertyID> longhands_for_shorthand(PropertyID);
 
 size_t property_maximum_value_count(PropertyID);
@@ -204,6 +217,90 @@ struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID>
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
+}
+
+void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name, Optional<StringView> value_getter)
+{
+    auto generator = parent_generator.fork();
+    generator.set("css_type_name", css_type_name);
+    generator.set("type_name", type_name);
+
+    generator.append(R"~~~(
+bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @type_name@ const& value)
+{
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, JsonValue const& value) {
+        VERIFY(value.is_object());
+        if (auto maybe_valid_types = value.as_object().get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
+            for (auto valid_type : maybe_valid_types->values()) {
+                auto type_and_range = valid_type.as_string().split_view(' ');
+                if (type_and_range.first() != css_type_name)
+                    continue;
+
+                auto property_generator = generator.fork();
+                property_generator.set("property_name:titlecase", title_casify(name));
+
+                property_generator.append(R"~~~(
+    case PropertyID::@property_name:titlecase@:
+        return )~~~");
+
+                if (type_and_range.size() > 1) {
+                    auto range = type_and_range[1];
+                    VERIFY(range.starts_with('[') && range.ends_with(']') && range.contains(','));
+                    auto comma_index = range.find(',').value();
+                    StringView min_value_string = range.substring_view(1, comma_index - 1);
+                    StringView max_value_string = range.substring_view(comma_index + 1, range.length() - comma_index - 2);
+
+                    // If the min/max value is infinite, we can just skip that side of the check.
+                    if (min_value_string == "-∞")
+                        min_value_string = {};
+                    if (max_value_string == "∞")
+                        max_value_string = {};
+
+                    auto output_check = [&](auto& value_string, StringView comparator) {
+                        if (value_getter.has_value()) {
+                            property_generator.set("value_number", value_string);
+                            property_generator.set("value_getter", value_getter.value());
+                            property_generator.set("comparator", comparator);
+                            property_generator.append("@value_getter@ @comparator@ @value_number@");
+                            return;
+                        }
+
+                        GenericLexer lexer { value_string };
+                        auto value_number = lexer.consume_until(is_ascii_alpha);
+                        auto value_unit = lexer.consume_while(is_ascii_alpha);
+                        if (value_unit.is_empty())
+                            value_unit = default_unit_name.value();
+                        VERIFY(lexer.is_eof());
+                        property_generator.set("value_number", value_number);
+                        property_generator.set("value_unit", title_casify(value_unit));
+                        property_generator.set("comparator", comparator);
+                        property_generator.append("value @comparator@ @type_name@(@value_number@, @type_name@::Type::@value_unit@)");
+                    };
+
+                    if (!min_value_string.is_empty())
+                        output_check(min_value_string, ">="sv);
+                    if (!min_value_string.is_empty() && !max_value_string.is_empty())
+                        property_generator.append(" && ");
+                    if (!max_value_string.is_empty())
+                        output_check(max_value_string, "<="sv);
+                    property_generator.appendln(";");
+                } else {
+                    property_generator.appendln("true;");
+                }
+                break;
+            }
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
+}
+)~~~");
 }
 
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file)
@@ -618,8 +715,18 @@ size_t property_maximum_value_count(PropertyID property_id)
     default:
         return 1;
     }
-}
+})~~~");
 
+    generate_bounds_checking_function(properties, generator, "angle"sv, "Angle"sv, "Deg"sv);
+    generate_bounds_checking_function(properties, generator, "frequency"sv, "Frequency"sv, "Hertz"sv);
+    generate_bounds_checking_function(properties, generator, "integer"sv, "i64"sv, {}, "value"sv);
+    generate_bounds_checking_function(properties, generator, "length"sv, "Length"sv, {}, "value.raw_value()"sv);
+    generate_bounds_checking_function(properties, generator, "number"sv, "double"sv, {}, "value"sv);
+    generate_bounds_checking_function(properties, generator, "percentage"sv, "Percentage"sv, {}, "value.value()"sv);
+    generate_bounds_checking_function(properties, generator, "resolution"sv, "Resolution"sv, "Dpi"sv);
+    generate_bounds_checking_function(properties, generator, "time"sv, "Time"sv, "S"sv);
+
+    generator.append(R"~~~(
 Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
 {
     switch (property_id) {
