@@ -5849,11 +5849,26 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
     auto transaction = tokens.begin_transaction();
 
     Optional<Color> color;
-    Optional<Length> offset_x;
-    Optional<Length> offset_y;
-    Optional<Length> blur_radius;
-    Optional<Length> spread_distance;
+    RefPtr<StyleValue> offset_x;
+    RefPtr<StyleValue> offset_y;
+    RefPtr<StyleValue> blur_radius;
+    RefPtr<StyleValue> spread_distance;
     Optional<ShadowPlacement> placement;
+
+    auto possibly_dynamic_length = [&](ComponentValue const& token) -> ErrorOr<RefPtr<StyleValue>> {
+        if (auto maybe_dynamic_value = TRY(parse_dynamic_value(token))) {
+            if (!maybe_dynamic_value->is_calculated())
+                return nullptr;
+            auto const& calculated_value = maybe_dynamic_value->as_calculated();
+            if (!calculated_value.resolves_to_length())
+                return nullptr;
+            return calculated_value;
+        }
+        auto maybe_length = parse_length(token);
+        if (!maybe_length.has_value())
+            return nullptr;
+        return LengthStyleValue::create(maybe_length.release_value());
+    };
 
     while (tokens.has_next_token()) {
         auto const& token = tokens.peek_token();
@@ -5866,38 +5881,38 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
             continue;
         }
 
-        if (auto maybe_offset_x = parse_length(token); maybe_offset_x.has_value()) {
+        if (auto maybe_offset_x = TRY(possibly_dynamic_length(token)); maybe_offset_x) {
             // horizontal offset
-            if (offset_x.has_value())
+            if (offset_x)
                 return nullptr;
-            offset_x = maybe_offset_x.release_value();
+            offset_x = maybe_offset_x;
             tokens.next_token();
 
             // vertical offset
             if (!tokens.has_next_token())
                 return nullptr;
-            auto maybe_offset_y = parse_length(tokens.peek_token());
-            if (!maybe_offset_y.has_value())
+            auto maybe_offset_y = TRY(possibly_dynamic_length(tokens.peek_token()));
+            if (!maybe_offset_y)
                 return nullptr;
-            offset_y = maybe_offset_y.release_value();
+            offset_y = maybe_offset_y;
             tokens.next_token();
 
             // blur radius (optional)
             if (!tokens.has_next_token())
                 break;
-            auto maybe_blur_radius = parse_length(tokens.peek_token());
-            if (!maybe_blur_radius.has_value())
+            auto maybe_blur_radius = TRY(possibly_dynamic_length(tokens.peek_token()));
+            if (!maybe_blur_radius)
                 continue;
-            blur_radius = maybe_blur_radius.release_value();
+            blur_radius = maybe_blur_radius;
             tokens.next_token();
 
             // spread distance (optional)
             if (!tokens.has_next_token())
                 break;
-            auto maybe_spread_distance = parse_length(tokens.peek_token());
-            if (!maybe_spread_distance.has_value())
+            auto maybe_spread_distance = TRY(possibly_dynamic_length(tokens.peek_token()));
+            if (!maybe_spread_distance)
                 continue;
-            spread_distance = maybe_spread_distance.release_value();
+            spread_distance = maybe_spread_distance;
             tokens.next_token();
 
             continue;
@@ -5923,21 +5938,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
         color = Color::NamedColor::Black;
 
     // x/y offsets are required
-    if (!offset_x.has_value() || !offset_y.has_value())
+    if (!offset_x || !offset_y)
         return nullptr;
 
     // Other lengths default to 0
-    if (!blur_radius.has_value())
-        blur_radius = Length::make_px(0);
-    if (!spread_distance.has_value())
-        spread_distance = Length::make_px(0);
+    if (!blur_radius)
+        blur_radius = TRY(LengthStyleValue::create(Length::make_px(0)));
+    if (!spread_distance)
+        spread_distance = TRY(LengthStyleValue::create(Length::make_px(0)));
 
     // Placement is outer by default
     if (!placement.has_value())
         placement = ShadowPlacement::Outer;
 
     transaction.commit();
-    return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
+    return ShadowStyleValue::create(color.release_value(), offset_x.release_nonnull(), offset_y.release_nonnull(), blur_radius.release_nonnull(), spread_distance.release_nonnull(), placement.release_value());
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> const& component_values)

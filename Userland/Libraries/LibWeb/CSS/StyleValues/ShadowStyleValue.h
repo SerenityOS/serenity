@@ -22,17 +22,23 @@ enum class ShadowPlacement {
 
 class ShadowStyleValue final : public StyleValueWithDefaultOperators<ShadowStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<ShadowStyleValue>> create(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    static ErrorOr<ValueComparingNonnullRefPtr<ShadowStyleValue>> create(
+        Color color,
+        ValueComparingNonnullRefPtr<StyleValue const> offset_x,
+        ValueComparingNonnullRefPtr<StyleValue const> offset_y,
+        ValueComparingNonnullRefPtr<StyleValue const> blur_radius,
+        ValueComparingNonnullRefPtr<StyleValue const> spread_distance,
+        ShadowPlacement placement)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) ShadowStyleValue(color, move(offset_x), move(offset_y), move(blur_radius), move(spread_distance), placement));
     }
     virtual ~ShadowStyleValue() override = default;
 
     Color color() const { return m_properties.color; }
-    Length const& offset_x() const { return m_properties.offset_x; }
-    Length const& offset_y() const { return m_properties.offset_y; }
-    Length const& blur_radius() const { return m_properties.blur_radius; }
-    Length const& spread_distance() const { return m_properties.spread_distance; }
+    ValueComparingNonnullRefPtr<StyleValue const> const& offset_x() const { return m_properties.offset_x; }
+    ValueComparingNonnullRefPtr<StyleValue const> const& offset_y() const { return m_properties.offset_y; }
+    ValueComparingNonnullRefPtr<StyleValue const> const& blur_radius() const { return m_properties.blur_radius; }
+    ValueComparingNonnullRefPtr<StyleValue const> const& spread_distance() const { return m_properties.spread_distance; }
     ShadowPlacement placement() const { return m_properties.placement; }
 
     virtual ErrorOr<String> to_string() const override;
@@ -40,9 +46,22 @@ public:
     bool properties_equal(ShadowStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    explicit ShadowStyleValue(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    ShadowStyleValue(
+        Color color,
+        ValueComparingNonnullRefPtr<StyleValue const> offset_x,
+        ValueComparingNonnullRefPtr<StyleValue const> offset_y,
+        ValueComparingNonnullRefPtr<StyleValue const> blur_radius,
+        ValueComparingNonnullRefPtr<StyleValue const> spread_distance,
+        ShadowPlacement placement)
         : StyleValueWithDefaultOperators(Type::Shadow)
-        , m_properties { .color = color, .offset_x = offset_x, .offset_y = offset_y, .blur_radius = blur_radius, .spread_distance = spread_distance, .placement = placement }
+        , m_properties {
+            .color = color,
+            .offset_x = move(offset_x),
+            .offset_y = move(offset_y),
+            .blur_radius = move(blur_radius),
+            .spread_distance = move(spread_distance),
+            .placement = placement
+        }
     {
     }
 
@@ -50,10 +69,10 @@ private:
 
     struct Properties {
         Color color;
-        Length offset_x;
-        Length offset_y;
-        Length blur_radius;
-        Length spread_distance;
+        ValueComparingNonnullRefPtr<StyleValue const> offset_x;
+        ValueComparingNonnullRefPtr<StyleValue const> offset_y;
+        ValueComparingNonnullRefPtr<StyleValue const> blur_radius;
+        ValueComparingNonnullRefPtr<StyleValue const> spread_distance;
         ShadowPlacement placement;
         bool operator==(Properties const&) const = default;
     } m_properties;
