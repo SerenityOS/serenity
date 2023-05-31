@@ -321,31 +321,34 @@ void MainWidget::set_path(DeprecatedString path)
 
 void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto theme = Core::ConfigFile::open(filename.to_deprecated_string(), move(file)).release_value_but_fixme_should_propagate_errors();
+    auto save_result = [&]() -> ErrorOr<void> {
+        auto theme = TRY(Core::ConfigFile::open(filename.to_deprecated_string(), move(file)));
 
-#define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments"_string.release_value_but_fixme_should_propagate_errors(), String::from_utf8(to_string(Gfx::AlignmentRole::role)).release_value_but_fixme_should_propagate_errors(), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
-    ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
+#define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry(TRY("Alignments"_string), TRY(String::from_utf8(to_string(Gfx::AlignmentRole::role))), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
+        ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
 #undef __ENUMERATE_ALIGNMENT_ROLE
 
-#define __ENUMERATE_COLOR_ROLE(role) theme->write_entry("Colors"_short_string, String::from_utf8(to_string(Gfx::ColorRole::role)).release_value_but_fixme_should_propagate_errors(), m_current_palette.color(Gfx::ColorRole::role).to_deprecated_string());
-    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#define __ENUMERATE_COLOR_ROLE(role) theme->write_entry("Colors"_short_string, TRY(String::from_utf8(to_string(Gfx::ColorRole::role))), m_current_palette.color(Gfx::ColorRole::role).to_deprecated_string());
+        ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
-#define __ENUMERATE_FLAG_ROLE(role) theme->write_bool_entry("Flags"_short_string, String::from_utf8(to_string(Gfx::FlagRole::role)).release_value_but_fixme_should_propagate_errors(), m_current_palette.flag(Gfx::FlagRole::role));
-    ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
+#define __ENUMERATE_FLAG_ROLE(role) theme->write_bool_entry("Flags"_short_string, TRY(String::from_utf8(to_string(Gfx::FlagRole::role))), m_current_palette.flag(Gfx::FlagRole::role));
+        ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
 #undef __ENUMERATE_FLAG_ROLE
 
-#define __ENUMERATE_METRIC_ROLE(role) theme->write_num_entry("Metrics"_short_string, String::from_utf8(to_string(Gfx::MetricRole::role)).release_value_but_fixme_should_propagate_errors(), m_current_palette.metric(Gfx::MetricRole::role));
-    ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
+#define __ENUMERATE_METRIC_ROLE(role) theme->write_num_entry("Metrics"_short_string, TRY(String::from_utf8(to_string(Gfx::MetricRole::role))), m_current_palette.metric(Gfx::MetricRole::role));
+        ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
 
-#define __ENUMERATE_PATH_ROLE(role) theme->write_entry("Paths"_short_string, String::from_utf8(to_string(Gfx::PathRole::role)).release_value_but_fixme_should_propagate_errors(), m_current_palette.path(Gfx::PathRole::role));
-    ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
+#define __ENUMERATE_PATH_ROLE(role) theme->write_entry("Paths"_short_string, TRY(String::from_utf8(to_string(Gfx::PathRole::role))), m_current_palette.path(Gfx::PathRole::role));
+        ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
-    auto sync_result = theme->sync();
-    if (sync_result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
+        return theme->sync();
+    }();
+
+    if (save_result.is_error()) {
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", save_result.error()));
     } else {
         m_last_modified_time = MonotonicTime::now();
         set_path(filename.to_deprecated_string());
