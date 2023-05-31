@@ -924,7 +924,7 @@ void predict_macroblock(Span<i16> prediction, IntraMacroblockMode mode, int mb_x
         VERIFY(mode == TM_PRED);
         for (int y = 0; y < N; ++y)
             for (int x = 0; x < N; ++x)
-                prediction[y * N + x] = left[y] + above[mb_x * N + x] - truemotion_corner;
+                prediction[y * N + x] = clamp(left[y] + above[mb_x * N + x] - truemotion_corner, 0, 255);
     }
 }
 
