@@ -200,7 +200,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(m_editor->paste_action()));
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(m_editor->select_all_action()));
-    TRY(edit_menu->try_add_action(m_editor->go_to_line_action()));
+    TRY(edit_menu->try_add_action(m_editor->go_to_line_or_column_action()));
     TRY(edit_menu->try_add_separator());
 
     auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
