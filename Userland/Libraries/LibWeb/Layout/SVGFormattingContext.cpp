@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
@@ -162,7 +163,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 // FIXME: This should allow just one of width or height to be specified.
                 // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.
                 if (!svg_box_state.has_definite_width() || !svg_box_state.has_definite_height()) {
-                    dbgln("FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
+                    dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
                 }
 
                 auto view_box = maybe_view_box.value();
