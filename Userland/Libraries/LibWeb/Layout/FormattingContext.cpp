@@ -256,12 +256,12 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
     };
 }
 
-static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSSPixels input_width, CSSPixels input_height, ReplacedBox const& box)
+CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, ReplacedBox const& box) const
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
     auto const& containing_block = *box.non_anyonymous_containing_block();
-    auto const& containing_block_state = state.get(containing_block);
+    auto const& containing_block_state = m_state.get(containing_block);
     auto width_of_containing_block = containing_block_state.content_width();
     auto height_of_containing_block = containing_block_state.content_height();
 
@@ -446,7 +446,7 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(ReplacedBox cons
     if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
         CSSPixels w = used_width;
         CSSPixels h = tentative_height_for_replaced_element(box, computed_height, available_space);
-        used_width = solve_replaced_size_constraint(m_state, w, h, box).width();
+        used_width = solve_replaced_size_constraint(w, h, box).width();
         return used_width;
     }
 
@@ -521,7 +521,7 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(ReplacedBox con
     if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_aspect_ratio()) {
         CSSPixels w = tentative_width_for_replaced_element(box, computed_width, available_space);
         CSSPixels h = used_height;
-        used_height = solve_replaced_size_constraint(m_state, w, h, box).height();
+        used_height = solve_replaced_size_constraint(w, h, box).height();
         return used_height;
     }
 
