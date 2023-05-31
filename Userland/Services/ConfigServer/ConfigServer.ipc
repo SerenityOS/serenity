@@ -4,8 +4,8 @@ endpoint ConfigServer
 
     monitor_domain(DeprecatedString domain) =|
 
-    list_config_groups(DeprecatedString domain) => (Vector<DeprecatedString> groups)
-    list_config_keys(DeprecatedString domain, DeprecatedString group) => (Vector<DeprecatedString> keys)
+    list_config_groups(DeprecatedString domain) => (Vector<String> groups)
+    list_config_keys(DeprecatedString domain, DeprecatedString group) => (Vector<String> keys)
 
     read_string_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<DeprecatedString> value)
     read_i32_value(DeprecatedString domain, DeprecatedString group, DeprecatedString key) => (Optional<i32> value)

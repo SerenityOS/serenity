@@ -138,25 +138,17 @@ void ConnectionFromClient::sync_dirty_domains_to_disk()
 Messages::ConfigServer::ListConfigKeysResponse ConnectionFromClient::list_config_keys(DeprecatedString const& domain, DeprecatedString const& group)
 {
     if (!validate_access(domain, group, ""))
-        return Vector<DeprecatedString> {};
+        return Vector<String> {};
     auto& config = ensure_domain_config(domain);
-
-    Vector<DeprecatedString> list;
-    for (auto const& key : config.keys(group))
-        list.append(key.to_deprecated_string());
-    return list;
+    return { config.keys(group) };
 }
 
 Messages::ConfigServer::ListConfigGroupsResponse ConnectionFromClient::list_config_groups(DeprecatedString const& domain)
 {
     if (!validate_access(domain, "", ""))
-        return Vector<DeprecatedString> {};
+        return Vector<String> {};
     auto& config = ensure_domain_config(domain);
-
-    Vector<DeprecatedString> list;
-    for (auto const& group : config.groups())
-        list.append(group.to_deprecated_string());
-    return list;
+    return { config.groups() };
 }
 
 Messages::ConfigServer::ReadStringValueResponse ConnectionFromClient::read_string_value(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)

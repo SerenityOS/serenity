@@ -23,8 +23,8 @@ public:
     void pledge_domains(Vector<DeprecatedString> const&);
     void monitor_domain(DeprecatedString const&);
 
-    Vector<DeprecatedString> list_groups(StringView domain);
-    Vector<DeprecatedString> list_keys(StringView domain, StringView group);
+    Vector<String> list_groups(StringView domain);
+    Vector<String> list_keys(StringView domain, StringView group);
 
     DeprecatedString read_string(StringView domain, StringView group, StringView key, StringView fallback);
     i32 read_i32(StringView domain, StringView group, StringView key, i32 fallback);
@@ -56,12 +56,12 @@ private:
     void notify_added_group(DeprecatedString const& domain, DeprecatedString const& group) override;
 };
 
-inline Vector<DeprecatedString> list_groups(StringView domain)
+inline Vector<String> list_groups(StringView domain)
 {
     return Client::the().list_groups(domain);
 }
 
-inline Vector<DeprecatedString> list_keys(StringView domain, StringView group)
+inline Vector<String> list_keys(StringView domain, StringView group)
 {
     return Client::the().list_keys(domain, group);
 }

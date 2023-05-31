@@ -147,16 +147,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(load_autoplay_allowlist());
 
     for (auto& group : Config::list_groups("Browser"sv)) {
-        if (!group.starts_with("Proxy:"sv))
+        if (!group.starts_with_bytes("Proxy:"sv))
             continue;
 
         for (auto& key : Config::list_keys("Browser"sv, group)) {
-            auto proxy_spec = group.substring_view(6);
+            auto proxy_spec = group.bytes_as_string_view().substring_view(6);
             auto existing_proxy = Browser::g_proxies.find(proxy_spec);
             if (existing_proxy.is_end())
                 Browser::g_proxies.append(proxy_spec);
 
-            Browser::g_proxy_mappings.set(key, existing_proxy.index());
+            Browser::g_proxy_mappings.set(key.to_deprecated_string(), existing_proxy.index());
         }
     }
 

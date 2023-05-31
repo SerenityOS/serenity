@@ -29,12 +29,12 @@ void Client::monitor_domain(DeprecatedString const& domain)
     async_monitor_domain(domain);
 }
 
-Vector<DeprecatedString> Client::list_keys(StringView domain, StringView group)
+Vector<String> Client::list_keys(StringView domain, StringView group)
 {
     return list_config_keys(domain, group);
 }
 
-Vector<DeprecatedString> Client::list_groups(StringView domain)
+Vector<String> Client::list_groups(StringView domain)
 {
     return list_config_groups(domain);
 }
