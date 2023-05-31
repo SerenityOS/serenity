@@ -523,8 +523,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         if (box_shadow_layers.is_empty())
             return nullptr;
 
-        auto make_box_shadow_style_value = [](ShadowData const& data) {
-            return ShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
+        auto make_box_shadow_style_value = [](ShadowData const& data) -> ErrorOr<NonnullRefPtr<ShadowStyleValue>> {
+            auto offset_x = TRY(LengthStyleValue::create(data.offset_x));
+            auto offset_y = TRY(LengthStyleValue::create(data.offset_y));
+            auto blur_radius = TRY(LengthStyleValue::create(data.blur_radius));
+            auto spread_distance = TRY(LengthStyleValue::create(data.spread_distance));
+            return ShadowStyleValue::create(data.color, offset_x, offset_y, blur_radius, spread_distance, data.placement);
         };
 
         if (box_shadow_layers.size() == 1)
