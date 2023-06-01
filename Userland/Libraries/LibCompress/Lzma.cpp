@@ -998,10 +998,10 @@ ErrorOr<void> LzmaCompressor::encode_once()
         m_rep2 + normalized_to_real_match_distance_offset,
         m_rep3 + normalized_to_real_match_distance_offset,
     };
-    auto existing_distance_results = TRY(m_dictionary->find_copy_in_seekback(existing_distances, m_dictionary->used_space(), normalized_to_real_match_length_offset));
+    auto existing_distance_result = m_dictionary->find_copy_in_seekback(existing_distances, m_dictionary->used_space(), normalized_to_real_match_length_offset);
 
-    if (existing_distance_results.size() > 0) {
-        auto selected_match = existing_distance_results[0];
+    if (existing_distance_result.has_value()) {
+        auto selected_match = existing_distance_result.release_value();
         TRY(encode_existing_match(selected_match.distance, selected_match.length));
         return {};
     }

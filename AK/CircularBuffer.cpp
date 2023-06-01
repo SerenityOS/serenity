@@ -375,7 +375,7 @@ ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_
     return matches;
 }
 
-ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_copy_in_seekback(Vector<size_t> const& distances, size_t maximum_length, size_t minimum_length) const
+Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in_seekback(ReadonlySpan<size_t> distances, size_t maximum_length, size_t minimum_length) const
 {
     VERIFY(minimum_length > 0);
 
@@ -384,55 +384,42 @@ ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_
         maximum_length = m_used_space;
 
     if (maximum_length < minimum_length)
-        return Vector<Match> {};
+        return Optional<Match> {};
 
-    Vector<Match> matches;
+    Optional<Match> best_match;
 
-    // Verify all hints that we have.
-    for (auto const& distance : distances) {
+    for (auto distance : distances) {
+        // Discard distances outside the valid range.
+        if (distance > search_limit() || distance <= 0)
+            continue;
+
         // TODO: This does not yet support looping repetitions.
         if (distance < minimum_length)
             continue;
 
-        auto needle_offset = (capacity() + m_reading_head) % capacity();
-        auto haystack_offset = (capacity() + m_reading_head - distance) % capacity();
+        auto current_match_length = 0ul;
 
-        for (size_t i = 0; i < minimum_length; i++) {
-            if (m_buffer[needle_offset] != m_buffer[haystack_offset])
+        while (current_match_length < maximum_length) {
+            auto haystack = next_search_span(distance - current_match_length).trim(maximum_length - current_match_length);
+            auto needle = next_read_span(current_match_length).trim(maximum_length - current_match_length);
+
+            auto submatch_length = haystack.matching_prefix_length(needle);
+
+            if (submatch_length == 0)
                 break;
 
-            needle_offset = (needle_offset + 1) % capacity();
-            haystack_offset = (haystack_offset + 1) % capacity();
-
-            if (i + 1 == minimum_length)
-                TRY(matches.try_empend(distance, minimum_length));
-        }
-    }
-
-    // From now on, all matches that we have stored have at least a length of `minimum_length` and they all refer to the same value.
-    // For the remaining part, we will keep checking the next byte incrementally and keep eliminating matches until we eliminated all of them.
-    Vector<Match> next_matches;
-
-    for (size_t offset = minimum_length; offset < maximum_length; offset++) {
-        auto needle_data = m_buffer[(capacity() + m_reading_head + offset) % capacity()];
-
-        for (auto const& match : matches) {
-            auto haystack_data = m_buffer[(capacity() + m_reading_head - match.distance + offset) % capacity()];
-
-            if (haystack_data != needle_data)
-                continue;
-
-            TRY(next_matches.try_empend(match.distance, match.length + 1));
+            current_match_length += submatch_length;
         }
 
-        if (next_matches.size() == 0)
-            return matches;
+        // Discard matches that don't reach the minimum length.
+        if (current_match_length < minimum_length)
+            continue;
 
-        swap(matches, next_matches);
-        next_matches.clear_with_capacity();
+        if (!best_match.has_value() || best_match->length < current_match_length)
+            best_match = Match { distance, current_match_length };
     }
 
-    return matches;
+    return best_match;
 }
 
 }

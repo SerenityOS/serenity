@@ -411,25 +411,23 @@ TEST_CASE(find_copy_in_seekback)
     }
 
     {
-        // Find the largest matches with a length between 1 and 2 (selected "AB", everything smaller gets eliminated).
-        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 6ul, 9ul }, 2, 1));
-        EXPECT_EQ(matches.size(), 2ul);
-        EXPECT_EQ(matches[0].distance, 6ul);
-        EXPECT_EQ(matches[0].length, 2ul);
-        EXPECT_EQ(matches[1].distance, 9ul);
-        EXPECT_EQ(matches[1].length, 2ul);
+        // Find the largest match with a length between 1 and 2 (selected "AB", everything smaller gets eliminated).
+        // Since we have a tie, the first qualified match is preferred.
+        auto match = buffer.find_copy_in_seekback(Vector<size_t> { 6ul, 9ul }, 2, 1);
+        EXPECT_EQ(match.value().distance, 6ul);
+        EXPECT_EQ(match.value().length, 2ul);
     }
 
     {
         // Check that we don't find anything for hints before the valid range.
-        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 0ul }, 2, 1));
-        EXPECT_EQ(matches.size(), 0ul);
+        auto match = buffer.find_copy_in_seekback(Vector<size_t> { 0ul }, 2, 1);
+        EXPECT(!match.has_value());
     }
 
     {
         // Check that we don't find anything for hints after the valid range.
-        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 12ul }, 2, 1));
-        EXPECT_EQ(matches.size(), 0ul);
+        auto match = buffer.find_copy_in_seekback(Vector<size_t> { 12ul }, 2, 1);
+        EXPECT(!match.has_value());
     }
 
     {

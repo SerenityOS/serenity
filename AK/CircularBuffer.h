@@ -75,7 +75,7 @@ public:
     /// Supplying any hints will only consider those distances, in case existing offsets need to be validated.
     /// Note that, since we only start searching at the read head, the length between read head and write head is excluded from the distance.
     ErrorOr<Vector<Match>> find_copy_in_seekback(size_t maximum_length, size_t minimum_length = 2) const;
-    ErrorOr<Vector<Match>> find_copy_in_seekback(Vector<size_t> const& distances, size_t maximum_length, size_t minimum_length = 2) const;
+    Optional<Match> find_copy_in_seekback(ReadonlySpan<size_t> distances, size_t maximum_length, size_t minimum_length = 2) const;
 
 private:
     // Note: This function has a similar purpose as next_seekback_span, but they differ in their reference point.
