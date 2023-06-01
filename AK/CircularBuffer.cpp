@@ -97,9 +97,20 @@ Bytes CircularBuffer::next_write_span()
     return m_buffer.span().slice(m_reading_head + m_used_space, capacity() - (m_reading_head + m_used_space));
 }
 
-ReadonlyBytes CircularBuffer::next_read_span() const
+ReadonlyBytes CircularBuffer::next_read_span(size_t offset) const
 {
-    return m_buffer.span().slice(m_reading_head, min(capacity() - m_reading_head, m_used_space));
+    auto reading_head = m_reading_head;
+    auto used_space = m_used_space;
+
+    if (offset > 0) {
+        if (offset >= used_space)
+            return Bytes {};
+
+        reading_head = (reading_head + offset) % capacity();
+        used_space -= offset;
+    }
+
+    return m_buffer.span().slice(reading_head, min(capacity() - reading_head, used_space));
 }
 
 ReadonlyBytes CircularBuffer::next_read_span_with_seekback(size_t distance) const

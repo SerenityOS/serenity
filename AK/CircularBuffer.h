@@ -50,7 +50,7 @@ protected:
     [[nodiscard]] bool is_wrapping_around() const;
 
     [[nodiscard]] Bytes next_write_span();
-    [[nodiscard]] ReadonlyBytes next_read_span() const;
+    [[nodiscard]] ReadonlyBytes next_read_span(size_t offset = 0) const;
     [[nodiscard]] ReadonlyBytes next_read_span_with_seekback(size_t distance) const;
 
     ByteBuffer m_buffer {};
