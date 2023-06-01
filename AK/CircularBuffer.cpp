@@ -272,7 +272,7 @@ ErrorOr<SearchableCircularBuffer> SearchableCircularBuffer::create_initialized(B
     return circular_buffer;
 }
 
-ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_copy_in_seekback(size_t maximum_length, size_t minimum_length, Optional<Vector<size_t> const&> distance_hints) const
+ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_copy_in_seekback(size_t maximum_length, size_t minimum_length) const
 {
     VERIFY(minimum_length > 0);
 
@@ -285,67 +285,104 @@ ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_
 
     Vector<Match> matches;
 
-    if (distance_hints.has_value()) {
-        // If we have any hints, verify and use those.
-        for (auto const& distance : distance_hints.value()) {
-            // TODO: This does not yet support looping repetitions.
-            if (distance < minimum_length)
-                continue;
+    // Use memmem to find the initial matches.
+    // Note: We have the read head as our reference point, but `next_read_span_with_seekback` isn't aware of that and continues to use the write head.
+    //       Therefore, we need to make sure to slice off the extraneous bytes from the end of the span and shift the returned distances by the correct amount.
+    size_t haystack_offset_from_start = 0;
+    Vector<ReadonlyBytes, 2> haystack;
+    haystack.append(next_read_span_with_seekback(m_seekback_limit));
+    if (haystack[0].size() < m_seekback_limit - used_space())
+        haystack.append(next_read_span_with_seekback(m_seekback_limit - haystack[0].size()));
 
-            auto needle_offset = (capacity() + m_reading_head) % capacity();
-            auto haystack_offset = (capacity() + m_reading_head - distance) % capacity();
+    haystack.last() = haystack.last().trim(haystack.last().size() - used_space());
 
-            for (size_t i = 0; i < minimum_length; i++) {
-                if (m_buffer[needle_offset] != m_buffer[haystack_offset])
-                    break;
+    auto needle = next_read_span().trim(minimum_length);
 
-                needle_offset = (needle_offset + 1) % capacity();
-                haystack_offset = (haystack_offset + 1) % capacity();
+    auto memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
+    while (memmem_match.has_value()) {
+        auto match_offset = memmem_match.release_value();
 
-                if (i + 1 == minimum_length)
-                    TRY(matches.try_empend(distance, minimum_length));
+        // Add the match to the list of matches to work with.
+        TRY(matches.try_empend(m_seekback_limit - used_space() - haystack_offset_from_start - match_offset, minimum_length));
+
+        auto size_to_discard = match_offset + 1;
+
+        // Trim away the already processed bytes from the haystack.
+        haystack_offset_from_start += size_to_discard;
+        while (size_to_discard > 0) {
+            if (haystack[0].size() < size_to_discard) {
+                size_to_discard -= haystack[0].size();
+                haystack.remove(0);
+            } else {
+                haystack[0] = haystack[0].slice(size_to_discard);
+                break;
             }
         }
-    } else {
-        // Otherwise, use memmem to find the initial matches.
-        // Note: We have the read head as our reference point, but `next_read_span_with_seekback` isn't aware of that and continues to use the write head.
-        //       Therefore, we need to make sure to slice off the extraneous bytes from the end of the span and shift the returned distances by the correct amount.
-        size_t haystack_offset_from_start = 0;
-        Vector<ReadonlyBytes, 2> haystack;
-        haystack.append(next_read_span_with_seekback(m_seekback_limit));
-        if (haystack[0].size() < m_seekback_limit - used_space())
-            haystack.append(next_read_span_with_seekback(m_seekback_limit - haystack[0].size()));
 
-        haystack.last() = haystack.last().trim(haystack.last().size() - used_space());
+        if (haystack.size() == 0)
+            break;
 
-        auto needle = next_read_span().trim(minimum_length);
+        // Try and find the next match.
+        memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
+    }
 
-        auto memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
-        while (memmem_match.has_value()) {
-            auto match_offset = memmem_match.release_value();
+    // From now on, all matches that we have stored have at least a length of `minimum_length` and they all refer to the same value.
+    // For the remaining part, we will keep checking the next byte incrementally and keep eliminating matches until we eliminated all of them.
+    Vector<Match> next_matches;
 
-            // Add the match to the list of matches to work with.
-            TRY(matches.try_empend(m_seekback_limit - used_space() - haystack_offset_from_start - match_offset, minimum_length));
+    for (size_t offset = minimum_length; offset < maximum_length; offset++) {
+        auto needle_data = m_buffer[(capacity() + m_reading_head + offset) % capacity()];
 
-            auto size_to_discard = match_offset + 1;
+        for (auto const& match : matches) {
+            auto haystack_data = m_buffer[(capacity() + m_reading_head - match.distance + offset) % capacity()];
 
-            // Trim away the already processed bytes from the haystack.
-            haystack_offset_from_start += size_to_discard;
-            while (size_to_discard > 0) {
-                if (haystack[0].size() < size_to_discard) {
-                    size_to_discard -= haystack[0].size();
-                    haystack.remove(0);
-                } else {
-                    haystack[0] = haystack[0].slice(size_to_discard);
-                    break;
-                }
-            }
+            if (haystack_data != needle_data)
+                continue;
 
-            if (haystack.size() == 0)
+            TRY(next_matches.try_empend(match.distance, match.length + 1));
+        }
+
+        if (next_matches.size() == 0)
+            return matches;
+
+        swap(matches, next_matches);
+        next_matches.clear_with_capacity();
+    }
+
+    return matches;
+}
+
+ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_copy_in_seekback(Vector<size_t> const& distances, size_t maximum_length, size_t minimum_length) const
+{
+    VERIFY(minimum_length > 0);
+
+    // Clip the maximum length to the amount of data that we actually store.
+    if (maximum_length > m_used_space)
+        maximum_length = m_used_space;
+
+    if (maximum_length < minimum_length)
+        return Vector<Match> {};
+
+    Vector<Match> matches;
+
+    // Verify all hints that we have.
+    for (auto const& distance : distances) {
+        // TODO: This does not yet support looping repetitions.
+        if (distance < minimum_length)
+            continue;
+
+        auto needle_offset = (capacity() + m_reading_head) % capacity();
+        auto haystack_offset = (capacity() + m_reading_head - distance) % capacity();
+
+        for (size_t i = 0; i < minimum_length; i++) {
+            if (m_buffer[needle_offset] != m_buffer[haystack_offset])
                 break;
 
-            // Try and find the next match.
-            memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
+            needle_offset = (needle_offset + 1) % capacity();
+            haystack_offset = (haystack_offset + 1) % capacity();
+
+            if (i + 1 == minimum_length)
+                TRY(matches.try_empend(distance, minimum_length));
         }
     }
 

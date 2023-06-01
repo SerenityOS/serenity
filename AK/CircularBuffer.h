@@ -72,7 +72,8 @@ public:
     /// This searches the seekback buffer (between read head and limit) for occurrences where it matches the next `length` bytes from the read buffer.
     /// Supplying any hints will only consider those distances, in case existing offsets need to be validated.
     /// Note that, since we only start searching at the read head, the length between read head and write head is excluded from the distance.
-    ErrorOr<Vector<Match>> find_copy_in_seekback(size_t maximum_length, size_t minimum_length = 2, Optional<Vector<size_t> const&> distance_hints = {}) const;
+    ErrorOr<Vector<Match>> find_copy_in_seekback(size_t maximum_length, size_t minimum_length = 2) const;
+    ErrorOr<Vector<Match>> find_copy_in_seekback(Vector<size_t> const& distances, size_t maximum_length, size_t minimum_length = 2) const;
 
 private:
     SearchableCircularBuffer(ByteBuffer);

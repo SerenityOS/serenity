@@ -992,13 +992,13 @@ ErrorOr<void> LzmaCompressor::encode_match_type(MatchType match_type)
 ErrorOr<void> LzmaCompressor::encode_once()
 {
     // Check if any of our existing match distances are currently usable.
-    Vector<size_t> const existing_distance_hints {
+    Vector<size_t> const existing_distances {
         m_rep0 + normalized_to_real_match_distance_offset,
         m_rep1 + normalized_to_real_match_distance_offset,
         m_rep2 + normalized_to_real_match_distance_offset,
         m_rep3 + normalized_to_real_match_distance_offset,
     };
-    auto existing_distance_results = TRY(m_dictionary->find_copy_in_seekback(m_dictionary->used_space(), normalized_to_real_match_length_offset, existing_distance_hints));
+    auto existing_distance_results = TRY(m_dictionary->find_copy_in_seekback(existing_distances, m_dictionary->used_space(), normalized_to_real_match_length_offset));
 
     if (existing_distance_results.size() > 0) {
         auto selected_match = existing_distance_results[0];

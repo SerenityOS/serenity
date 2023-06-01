@@ -412,7 +412,7 @@ TEST_CASE(find_copy_in_seekback)
 
     {
         // Find the largest matches with a length between 1 and 2 (selected "AB", everything smaller gets eliminated).
-        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 6ul, 9ul }));
+        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 6ul, 9ul }, 2, 1));
         EXPECT_EQ(matches.size(), 2ul);
         EXPECT_EQ(matches[0].distance, 6ul);
         EXPECT_EQ(matches[0].length, 2ul);
@@ -422,13 +422,13 @@ TEST_CASE(find_copy_in_seekback)
 
     {
         // Check that we don't find anything for hints before the valid range.
-        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 0ul }));
+        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 0ul }, 2, 1));
         EXPECT_EQ(matches.size(), 0ul);
     }
 
     {
         // Check that we don't find anything for hints after the valid range.
-        auto matches = MUST(buffer.find_copy_in_seekback(2, 1, Vector<size_t> { 12ul }));
+        auto matches = MUST(buffer.find_copy_in_seekback(Vector<size_t> { 12ul }, 2, 1));
         EXPECT_EQ(matches.size(), 0ul);
     }
 
