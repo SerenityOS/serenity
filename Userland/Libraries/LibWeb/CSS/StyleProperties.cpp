@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
@@ -244,13 +245,12 @@ Optional<int> StyleProperties::z_index() const
     auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
-    if (value->is_number() && value->as_number().has_integer()) {
+    if (value->is_integer()) {
         // Clamp z-index to the range of a signed 32-bit integer for consistency with other engines.
-        // NOTE: Casting between 32-bit float and 32-bit integer is finicky here, since INT32_MAX is not representable as a 32-bit float!
-        auto integer = value->as_number().integer();
-        if (integer >= static_cast<float>(NumericLimits<int>::max()))
+        auto integer = value->as_integer().integer();
+        if (integer >= NumericLimits<int>::max())
             return NumericLimits<int>::max();
-        if (integer <= static_cast<float>(NumericLimits<int>::min()))
+        if (integer <= NumericLimits<int>::min())
             return NumericLimits<int>::min();
         return static_cast<int>(integer);
     }
@@ -362,9 +362,9 @@ float StyleProperties::flex_shrink() const
 int StyleProperties::order() const
 {
     auto value = property(CSS::PropertyID::Order);
-    if (!value->is_number() || !value->as_number().has_integer())
+    if (!value->is_integer())
         return 0;
-    return value->as_number().integer();
+    return value->as_integer().integer();
 }
 
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const

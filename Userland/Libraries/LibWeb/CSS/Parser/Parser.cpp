@@ -62,6 +62,7 @@
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
@@ -3811,13 +3812,23 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dimension_value(ComponentValue const& 
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_numeric_value(ComponentValue const& component_value)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_integer_value(TokenStream<ComponentValue>& tokens)
 {
-    if (component_value.is(Token::Type::Number)) {
-        auto const& number = component_value.token();
-        if (number.number().is_integer())
-            return NumberStyleValue::create_integer(number.to_integer());
-        return NumberStyleValue::create_float(number.number_value());
+    auto peek_token = tokens.peek_token();
+    if (peek_token.is(Token::Type::Number) && peek_token.token().number().is_integer()) {
+        (void)tokens.next_token();
+        return IntegerStyleValue::create(peek_token.token().number().integer_value());
+    }
+
+    return nullptr;
+}
+
+ErrorOr<RefPtr<StyleValue>> Parser::parse_number_value(TokenStream<ComponentValue>& tokens)
+{
+    auto peek_token = tokens.peek_token();
+    if (peek_token.is(Token::Type::Number)) {
+        (void)tokens.next_token();
+        return NumberStyleValue::create_float(peek_token.token().number().value());
     }
 
     return nullptr;
@@ -6313,7 +6324,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 if (maybe_calc_value && maybe_calc_value->resolves_to_number()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
-                    auto number = TRY(parse_numeric_value(value));
+                    // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
+                    argument_tokens.reconsume_current_input_token();
+                    auto number = TRY(parse_number_value(argument_tokens));
                     if (!number)
                         return nullptr;
                     values.append(number.release_nonnull());
@@ -7436,11 +7449,14 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     bool property_accepts_numeric = property_accepting_integer.has_value() || property_accepting_number.has_value();
 
     if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
-        auto numeric = TRY(parse_numeric_value(peek_token));
-        (void)tokens.next_token();
-        if (numeric->as_number().has_integer() && property_accepting_integer.has_value())
-            return PropertyAndValue { *property_accepting_integer, numeric };
-        return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), numeric };
+        if (property_accepting_integer.has_value()) {
+            if (auto integer = TRY(parse_integer_value(tokens)))
+                return PropertyAndValue { *property_accepting_integer, integer };
+        }
+        if (property_accepting_number.has_value()) {
+            if (auto number = TRY(parse_number_value(tokens)))
+                return PropertyAndValue { *property_accepting_number, number };
+        }
     }
 
     if (peek_token.is(Token::Type::Percentage)) {

@@ -295,7 +295,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
     computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).value());
-    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->as_number().integer());
+    computed_values.set_font_weight(round_to<int>(computed_style.property(CSS::PropertyID::FontWeight)->as_number().number()));
     m_line_height = computed_style.line_height(*this);
 
     computed_values.set_vertical_align(computed_style.vertical_align());

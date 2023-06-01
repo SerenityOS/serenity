@@ -40,6 +40,7 @@
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
@@ -248,6 +249,12 @@ InitialStyleValue const& StyleValue::as_initial() const
     return static_cast<InitialStyleValue const&>(*this);
 }
 
+IntegerStyleValue const& StyleValue::as_integer() const
+{
+    VERIFY(is_integer());
+    return static_cast<IntegerStyleValue const&>(*this);
+}
+
 LengthStyleValue const& StyleValue::as_length() const
 {
     VERIFY(is_length());
@@ -409,8 +416,8 @@ int StyleValue::to_font_weight() const
             return Gfx::FontWeight::Regular;
         }
     }
-    if (is_number() && as_number().has_integer()) {
-        return as_number().integer();
+    if (is_number()) {
+        return round_to<int>(as_number().number());
     }
     if (is_calculated()) {
         auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();
