@@ -22,7 +22,7 @@ const TreeIndex MACROBLOCK_SEGMENT_TREE[2 * (4 - 1)] = {
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-8.2 "Tree Coding Example"
 // Repeated in https://datatracker.ietf.org/doc/html/rfc6386#section-11.2 "Luma Modes"
-enum IntraMacroblockMode {
+enum IntraMacroblockMode : u8 {
     DC_PRED,               /* predict DC using row above and column to the left */
     V_PRED,                /* predict rows using row above */
     H_PRED,                /* predict columns using column to the left */
@@ -45,7 +45,7 @@ static TreeIndex constexpr KEYFRAME_YMODE_TREE[2 * (num_ymodes - 1)] = {
 static Prob constexpr KEYFRAME_YMODE_PROBABILITIES[num_ymodes - 1] = { 145, 156, 163, 128 };
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-11.2 "Luma Modes"
-enum IntraBlockMode {
+enum IntraBlockMode : u8 {
     B_DC_PRED, /* predict DC using row above and column
                   to the left */
     B_TM_PRED, /* propagate second differences a la
