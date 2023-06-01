@@ -1214,7 +1214,7 @@ void LzmaDecompressor::close()
 
 ErrorOr<NonnullOwnPtr<LzmaCompressor>> LzmaCompressor::create_container(MaybeOwned<Stream> stream, LzmaCompressorOptions const& options)
 {
-    auto dictionary = TRY(try_make<CircularBuffer>(TRY(CircularBuffer::create_empty(options.dictionary_size + largest_real_match_length))));
+    auto dictionary = TRY(try_make<SearchableCircularBuffer>(TRY(SearchableCircularBuffer::create_empty(options.dictionary_size + largest_real_match_length))));
 
     // "The LZMA Decoder uses (1 << (lc + lp)) tables with CProb values, where each table contains 0x300 CProb values."
     auto literal_probabilities = TRY(FixedArray<Probability>::create(literal_probability_table_size * (1 << (options.literal_context_bits + options.literal_position_bits))));
@@ -1227,7 +1227,7 @@ ErrorOr<NonnullOwnPtr<LzmaCompressor>> LzmaCompressor::create_container(MaybeOwn
     return compressor;
 }
 
-LzmaCompressor::LzmaCompressor(MaybeOwned<AK::Stream> stream, Compress::LzmaCompressorOptions options, MaybeOwned<CircularBuffer> dictionary, FixedArray<Compress::LzmaState::Probability> literal_probabilities)
+LzmaCompressor::LzmaCompressor(MaybeOwned<AK::Stream> stream, Compress::LzmaCompressorOptions options, MaybeOwned<SearchableCircularBuffer> dictionary, FixedArray<Compress::LzmaState::Probability> literal_probabilities)
     : LzmaState(move(literal_probabilities))
     , m_stream(move(stream))
     , m_options(move(options))

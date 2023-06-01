@@ -35,15 +35,6 @@ public:
 
     ErrorOr<size_t> copy_from_seekback(size_t distance, size_t length);
 
-    struct Match {
-        size_t distance;
-        size_t length;
-    };
-    /// This searches the seekback buffer (between read head and limit) for occurrences where it matches the next `length` bytes from the read buffer.
-    /// Supplying any hints will only consider those distances, in case existing offsets need to be validated.
-    /// Note that, since we only start searching at the read head, the length between read head and write head is excluded from the distance.
-    ErrorOr<Vector<Match>> find_copy_in_seekback(size_t maximum_length, size_t minimum_length = 2, Optional<Vector<size_t> const&> distance_hints = {}) const;
-
     [[nodiscard]] size_t empty_space() const;
     [[nodiscard]] size_t used_space() const;
     [[nodiscard]] size_t capacity() const;
@@ -53,7 +44,7 @@ public:
 
     void clear();
 
-private:
+protected:
     CircularBuffer(ByteBuffer);
 
     [[nodiscard]] bool is_wrapping_around() const;
@@ -67,6 +58,24 @@ private:
     size_t m_reading_head {};
     size_t m_used_space {};
     size_t m_seekback_limit {};
+};
+
+class SearchableCircularBuffer : public CircularBuffer {
+public:
+    static ErrorOr<SearchableCircularBuffer> create_empty(size_t size);
+    static ErrorOr<SearchableCircularBuffer> create_initialized(ByteBuffer);
+
+    struct Match {
+        size_t distance;
+        size_t length;
+    };
+    /// This searches the seekback buffer (between read head and limit) for occurrences where it matches the next `length` bytes from the read buffer.
+    /// Supplying any hints will only consider those distances, in case existing offsets need to be validated.
+    /// Note that, since we only start searching at the read head, the length between read head and write head is excluded from the distance.
+    ErrorOr<Vector<Match>> find_copy_in_seekback(size_t maximum_length, size_t minimum_length = 2, Optional<Vector<size_t> const&> distance_hints = {}) const;
+
+private:
+    SearchableCircularBuffer(ByteBuffer);
 };
 
 }

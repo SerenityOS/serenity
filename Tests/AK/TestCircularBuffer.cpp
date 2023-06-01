@@ -335,7 +335,7 @@ TEST_CASE(find_copy_in_seekback)
     auto needle = "ABCD"sv.bytes();
 
     // Set up the buffer for testing.
-    auto buffer = MUST(CircularBuffer::create_empty(haystack.size() + needle.size()));
+    auto buffer = MUST(SearchableCircularBuffer::create_empty(haystack.size() + needle.size()));
     auto written_haystack_bytes = buffer.write(haystack);
     VERIFY(written_haystack_bytes == haystack.size());
     MUST(buffer.discard(haystack.size()));

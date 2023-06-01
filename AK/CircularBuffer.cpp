@@ -249,7 +249,30 @@ ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t lengt
     return length - remaining_length;
 }
 
-ErrorOr<Vector<CircularBuffer::Match>> CircularBuffer::find_copy_in_seekback(size_t maximum_length, size_t minimum_length, Optional<Vector<size_t> const&> distance_hints) const
+SearchableCircularBuffer::SearchableCircularBuffer(ByteBuffer buffer)
+    : CircularBuffer(move(buffer))
+{
+}
+
+ErrorOr<SearchableCircularBuffer> SearchableCircularBuffer::create_empty(size_t size)
+{
+    auto temporary_buffer = TRY(ByteBuffer::create_uninitialized(size));
+
+    SearchableCircularBuffer circular_buffer { move(temporary_buffer) };
+
+    return circular_buffer;
+}
+
+ErrorOr<SearchableCircularBuffer> SearchableCircularBuffer::create_initialized(ByteBuffer buffer)
+{
+    SearchableCircularBuffer circular_buffer { move(buffer) };
+
+    circular_buffer.m_used_space = circular_buffer.m_buffer.size();
+
+    return circular_buffer;
+}
+
+ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_copy_in_seekback(size_t maximum_length, size_t minimum_length, Optional<Vector<size_t> const&> distance_hints) const
 {
     VERIFY(minimum_length > 0);
 
