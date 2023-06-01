@@ -609,7 +609,7 @@ i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantizat
     //  can be found in related lookup functions in dixie.c (Section 20.4)."
     // Apparently spec writing became too much work at this point. In section 20.4, in dequant_init():
     // * For y2, the output (!) of dc_qlookup is multiplied by 2, the output of ac_qlookup is multiplied by 155 / 100
-    // * Also for y2, ac_qlookup is at least 8 for lower table entries (XXX!)
+    // * Also for y2, ac_qlookup is at least 8 for lower table entries
     // * For uv, the dc_qlookup index is clamped to 117 (instead of 127 for everything else)
     //   (or, alternatively, the value is clamped to 132 at most)
 
@@ -646,7 +646,7 @@ i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantizat
         if (is_dc)
             dequantization_factor *= 2;
         else
-            dequantization_factor = (dequantization_factor * 155) / 100;
+            dequantization_factor = max((dequantization_factor * 155) / 100, 8);
     }
 
     return dequantization_factor * value;
