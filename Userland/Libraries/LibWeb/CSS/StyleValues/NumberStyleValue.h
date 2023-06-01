@@ -15,25 +15,25 @@ namespace Web::CSS {
 
 class NumberStyleValue : public StyleValueWithDefaultOperators<NumberStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<NumberStyleValue>> create(float value)
+    static ErrorOr<ValueComparingNonnullRefPtr<NumberStyleValue>> create(double value)
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) NumberStyleValue(value));
     }
 
-    float number() const { return m_value; }
+    double number() const { return m_value; }
 
     virtual ErrorOr<String> to_string() const override;
 
     bool properties_equal(NumberStyleValue const& other) const { return m_value == other.m_value; }
 
 private:
-    explicit NumberStyleValue(float value)
+    explicit NumberStyleValue(double value)
         : StyleValueWithDefaultOperators(Type::Number)
         , m_value(value)
     {
     }
 
-    float m_value { 0 };
+    double m_value { 0 };
 };
 
 }
