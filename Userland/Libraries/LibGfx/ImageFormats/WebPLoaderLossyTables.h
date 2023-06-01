@@ -633,9 +633,9 @@ static int constexpr ac_qlookup[] = {
 // clang-format on
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-14.3 "Implementation of the WHT Inversion"
-inline void vp8_short_inv_walsh4x4_c(i16* input, i16* output)
+inline void vp8_short_inv_walsh4x4_c(i16 const* input, i16* output)
 {
-    i16* ip = input;
+    i16 const* ip = input;
     i16* op = output;
 
     for (int i = 0; i < 4; i++) {
@@ -675,12 +675,12 @@ inline void vp8_short_inv_walsh4x4_c(i16* input, i16* output)
 }
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-14.4 "Implementation of the DCT Inversion"
-inline void short_idct4x4llm_c(i16* input, i16* output, int pitch)
+inline void short_idct4x4llm_c(i16 const* input, i16* output, int pitch)
 {
     static constexpr int cospi8sqrt2minus1 = 20091;
     static constexpr int sinpi8sqrt2 = 35468;
 
-    i16* ip = input;
+    i16 const* ip = input;
     i16* op = output;
     int shortpitch = pitch >> 1;
 
