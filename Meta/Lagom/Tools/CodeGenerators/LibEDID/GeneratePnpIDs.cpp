@@ -221,7 +221,7 @@ static ErrorOr<void> generate_source(Core::File& file, HashMap<DeprecatedString,
     SourceGenerator generator { builder };
 
     generator.append(R"~~~(
-#include "PnpIDs.h"
+#include <LibEDID/PnpIDs.h>
 
 namespace PnpIDs {
 
