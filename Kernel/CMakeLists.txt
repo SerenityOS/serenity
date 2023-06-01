@@ -755,3 +755,8 @@ serenity_install_sources(Kernel)
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_subdirectory(Prekernel)
 endif()
+
+# FIXME: Unify both prekernels, at least in CMake.
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/RPi/Prekernel)
+endif()
