@@ -1,5 +1,3 @@
-#include <AK/Platform.h>
-
 ENTRY(init)
 
 #define PF_X 0x1
