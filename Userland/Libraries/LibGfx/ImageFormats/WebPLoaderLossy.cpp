@@ -405,7 +405,7 @@ ErrorOr<u8> tree_decode(BooleanDecoder& decoder, ReadonlySpan<TreeIndex> tree, R
 struct MacroblockMetadata {
     // https://datatracker.ietf.org/doc/html/rfc6386#section-10 "Segment-Based Feature Adjustments"
     // Read only if `update_mb_segmentation_map` is set.
-    int segment_id { 0 }; // 0, 1, 2, or 3. Fits in two bits.
+    u8 segment_id { 0 }; // 0, 1, 2, or 3. Fits in two bits.
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-11.1 "mb_skip_coeff"
     bool skip_coefficients { false };
