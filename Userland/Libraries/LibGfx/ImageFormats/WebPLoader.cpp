@@ -592,8 +592,6 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
 
     Painter painter(*context.bitmap);
 
-    // FIXME: Honor context.animation_header_chunk_data.loop_count.
-
     for (size_t i = start_frame; i <= frame_index; ++i) {
         dbgln_if(WEBP_DEBUG, "drawing frame {} to produce frame {}", i, frame_index);
 
