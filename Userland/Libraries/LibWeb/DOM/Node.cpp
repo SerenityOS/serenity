@@ -201,7 +201,8 @@ void Node::set_text_content(DeprecatedString const& content)
 
     // Otherwise, do nothing.
 
-    set_needs_style_update(true);
+    document().invalidate_style();
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
