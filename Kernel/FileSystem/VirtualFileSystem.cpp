@@ -806,7 +806,7 @@ ErrorOr<void> VirtualFileSystem::link(Credentials const& credentials, StringView
 ErrorOr<void> VirtualFileSystem::unlink(Credentials const& credentials, StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody = TRY(resolve_path(credentials, path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
+    auto custody = TRY(resolve_path(credentials, path, base, &parent_custody, O_WRONLY | O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL));
     auto& inode = custody->inode();
 
     if (inode.is_directory())
@@ -875,7 +875,7 @@ ErrorOr<void> VirtualFileSystem::symlink(Credentials const& credentials, StringV
 ErrorOr<void> VirtualFileSystem::rmdir(Credentials const& credentials, StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody = TRY(resolve_path(credentials, path, base, &parent_custody));
+    auto custody = TRY(resolve_path(credentials, path, base, &parent_custody, O_CREAT));
     auto& inode = custody->inode();
 
     auto last_component = KLexicalPath::basename(path);

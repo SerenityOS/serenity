@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& target_account = account_or_error.value();
 
     if (remove_home)
-        TRY(Core::System::unveil(target_account.home_directory(), "r"sv));
+        TRY(Core::System::unveil(target_account.home_directory(), "c"sv));
 
     TRY(Core::System::unveil(nullptr, nullptr));
 
