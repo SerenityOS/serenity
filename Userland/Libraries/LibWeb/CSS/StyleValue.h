@@ -117,6 +117,7 @@ public:
         Image,
         Inherit,
         Initial,
+        Integer,
         Length,
         LinearGradient,
         ListStyle,
@@ -172,6 +173,7 @@ public:
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
+    bool is_integer() const { return type() == Type::Integer; }
     bool is_length() const { return type() == Type::Length; }
     bool is_linear_gradient() const { return type() == Type::LinearGradient; }
     bool is_list_style() const { return type() == Type::ListStyle; }
@@ -226,6 +228,7 @@ public:
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
     InitialStyleValue const& as_initial() const;
+    IntegerStyleValue const& as_integer() const;
     LengthStyleValue const& as_length() const;
     LinearGradientStyleValue const& as_linear_gradient() const;
     ListStyleStyleValue const& as_list_style() const;
@@ -277,6 +280,7 @@ public:
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
     InitialStyleValue& as_initial() { return const_cast<InitialStyleValue&>(const_cast<StyleValue const&>(*this).as_initial()); }
+    IntegerStyleValue& as_integer() { return const_cast<IntegerStyleValue&>(const_cast<StyleValue const&>(*this).as_integer()); }
     LengthStyleValue& as_length() { return const_cast<LengthStyleValue&>(const_cast<StyleValue const&>(*this).as_length()); }
     LinearGradientStyleValue& as_linear_gradient() { return const_cast<LinearGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_linear_gradient()); }
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }

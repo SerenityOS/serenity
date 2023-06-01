@@ -117,6 +117,7 @@ class IdentifierStyleValue;
 class ImageStyleValue;
 class InheritStyleValue;
 class InitialStyleValue;
+class IntegerStyleValue;
 class Length;
 class LengthBox;
 class LengthOrCalculated;
