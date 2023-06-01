@@ -55,6 +55,23 @@ UART0 (the one that SerenityOS uses) is used for bluetooth on these models, so f
 dtoverlay=disable-bt
 ```
 
+It is possible to use an Arduino to perform UART-to-Serial conversion duties with a script such as:
+
+```c++
+void setup() {
+    // Check against baud rate in Kernel/Arch/aarch64/RPi/UART.h
+    Serial.begin(115200);
+}
+
+void loop() {
+    int const input = Serial.read();
+    if (input > 0)
+        Serial.write(input);
+}
+```
+
+Then connect the Arduino to your computer via USB (using the Arduino IDE Serial Monitor works just fine), and RPi TX -> Arduino RX. Additionally, connect Ground between both boards, otherwise there will be no visible output. **Important: Never connect Ardunio Uno TX to RPi RX!** The two boards use different logic levels (5V vs. 3.3V) and such a connection can destroy your Raspberry Pi. There is no use in connecting the Pi in this way, so just leave off this connection.
+
 ### Step 2: Mount SD Card
 
 If you use a Raspberry Pi 4, and your serenity kernel is called `kernel8.img`
