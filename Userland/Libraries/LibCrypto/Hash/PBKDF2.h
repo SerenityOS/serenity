@@ -15,7 +15,7 @@ namespace Crypto::Hash {
 class PBKDF2 {
 public:
     template<typename PRF>
-    static ErrorOr<Bytes> derive_key(ReadonlyBytes password, ReadonlyBytes salt, u32 iterations, u32 key_length_bytes)
+    static ErrorOr<ByteBuffer> derive_key(ReadonlyBytes password, ReadonlyBytes salt, u32 iterations, u32 key_length_bytes)
     requires requires(PRF t) {
                  t.digest_size();
              }
