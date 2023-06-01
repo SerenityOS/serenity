@@ -911,6 +911,18 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
 // https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
 void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 {
+    // AD-HOC: The spec tells us to use the "flex container’s inner main size" in this algorithm,
+    //         but that doesn't work when we're sizing under a max-content constraint.
+    //         In that case, there is effectively infinite size available in the main axis,
+    //         but the inner main size has not been assigned yet.
+    //         We solve this by calculating our own "available main size" here, which is essentially
+    //         infinity under max-content, 0 under min-content, and the inner main size otherwise.
+    CSSPixels available_main_size;
+    if (m_available_space_for_items->main.is_intrinsic_sizing_constraint())
+        available_main_size = m_available_space_for_items->main.to_px();
+    else
+        available_main_size = inner_main_size(flex_container());
+
     // 1. Determine the used flex factor.
 
     // Sum the outer hypothetical main sizes of all items on the line.
@@ -927,7 +939,9 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         }
         // CSS-FLEXBOX-2: Account for gap between flex items.
         sum += main_gap() * (line.items.size() - 1);
-        if (sum < inner_main_size(flex_container()))
+        // AD-HOC: Note that we're using our own "available main size" explained above
+        //         instead of the flex container’s inner main size.
+        if (sum < available_main_size)
             return FlexFactor::FlexGrowFactor;
         return FlexFactor::FlexShrinkFactor;
     }();
@@ -973,7 +987,10 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         }
         // CSS-FLEXBOX-2: Account for gap between flex items.
         sum += main_gap() * (line.items.size() - 1);
-        return inner_main_size(flex_container()) - sum;
+
+        // AD-HOC: Note that we're using our own "available main size" explained above
+        //         instead of the flex container’s inner main size.
+        return available_main_size - sum;
     };
     auto const initial_free_space = calculate_remaining_free_space();
 
@@ -1100,6 +1117,11 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
     // NOTE: Calculate the remaining free space once again here, since it's needed later when aligning items.
     line.remaining_free_space = calculate_remaining_free_space();
+
+    // AD-HOC: Due to the way we calculate the remaining free space, it can be infinite when sizing
+    //         under a max-content constraint. In that case, we can simply set it to zero here.
+    if (!isfinite(line.remaining_free_space.value()))
+        line.remaining_free_space = 0;
 
     // 6. Set each item’s used main size to its target main size.
     for (auto& item : line.items) {
