@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
@@ -534,9 +535,9 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     case PropertyID::FlexDirection:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_direction()));
     case PropertyID::FlexGrow:
-        return NumberStyleValue::create_float(layout_node.computed_values().flex_grow());
+        return NumberStyleValue::create(layout_node.computed_values().flex_grow());
     case PropertyID::FlexShrink:
-        return NumberStyleValue::create_float(layout_node.computed_values().flex_shrink());
+        return NumberStyleValue::create(layout_node.computed_values().flex_shrink());
     case PropertyID::FlexWrap:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case PropertyID::Float:
@@ -554,7 +555,7 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         VERIFY_NOT_REACHED();
     }
     case PropertyID::FontWeight:
-        return NumberStyleValue::create_integer(layout_node.computed_values().font_weight());
+        return NumberStyleValue::create(layout_node.computed_values().font_weight());
     case PropertyID::GridArea: {
         auto maybe_grid_row_start = property(PropertyID::GridRowStart);
         auto maybe_grid_column_start = property(PropertyID::GridColumnStart);
@@ -682,9 +683,9 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     case PropertyID::MinWidth:
         return style_value_for_size(layout_node.computed_values().min_width());
     case PropertyID::Opacity:
-        return NumberStyleValue::create_float(layout_node.computed_values().opacity());
+        return NumberStyleValue::create(layout_node.computed_values().opacity());
     case PropertyID::Order:
-        return NumberStyleValue::create_integer(layout_node.computed_values().order());
+        return IntegerStyleValue::create(layout_node.computed_values().order());
     case PropertyID::OverflowX:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_x()));
     case PropertyID::OverflowY:
@@ -753,12 +754,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
 
         StyleValueVector parameters;
         TRY(parameters.try_ensure_capacity(6));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.a())));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.b())));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.c())));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.d())));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.e())));
-        parameters.unchecked_append(TRY(NumberStyleValue::create_float(affine_matrix.f())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.a())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.b())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.c())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.d())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.e())));
+        parameters.unchecked_append(TRY(NumberStyleValue::create(affine_matrix.f())));
 
         NonnullRefPtr<StyleValue> matrix_function = TRY(TransformationStyleValue::create(TransformFunction::Matrix, move(parameters)));
         // Elsewhere we always store the transform property's value as a StyleValueList of TransformationStyleValues,
@@ -779,7 +780,7 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         auto maybe_z_index = layout_node.computed_values().z_index();
         if (!maybe_z_index.has_value())
             return nullptr;
-        return NumberStyleValue::create_integer(maybe_z_index.release_value());
+        return IntegerStyleValue::create(maybe_z_index.release_value());
     }
     case PropertyID::Invalid:
         return IdentifierStyleValue::create(ValueID::Invalid);

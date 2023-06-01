@@ -13,10 +13,7 @@ namespace Web::CSS {
 
 ErrorOr<String> NumberStyleValue::to_string() const
 {
-    return m_value.visit(
-        [](auto value) {
-            return String::formatted("{}", value);
-        });
+    return String::number(m_value);
 }
 
 }
