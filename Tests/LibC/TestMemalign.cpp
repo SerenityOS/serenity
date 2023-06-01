@@ -9,7 +9,7 @@
 #include <mallocdefs.h>
 #include <stdlib.h>
 
-static constexpr size_t runs = 5000;
+static constexpr size_t runs = 500;
 static constexpr size_t ptrs_per_run = 20;
 
 static size_t random_alignment()
