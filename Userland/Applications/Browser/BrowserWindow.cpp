@@ -15,6 +15,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
@@ -131,7 +132,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, action.is_checked());
     };
 
-    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, true);
+    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, Browser::default_show_bookmarks_bar);
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
@@ -288,7 +289,7 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv)).release_value_but_fixme_should_propagate_errors();
+            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
@@ -310,7 +311,7 @@ void BrowserWindow::build_menus()
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme"_string.release_value_but_fixme_should_propagate_errors());
     color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
-        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
+        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
         m_color_scheme_actions.set_exclusive(true);
 
         auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {

@@ -12,6 +12,7 @@
 #include <Applications/Browser/Database.h>
 #include <Applications/Browser/Tab.h>
 #include <Applications/Browser/WindowActions.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileWatcher.h>
@@ -134,11 +135,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
 
-    Browser::g_home_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "file:///res/html/misc/welcome.html"sv);
-    Browser::g_new_tab_url = Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, "file:///res/html/misc/new-tab.html"sv);
-    Browser::g_search_engine = Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, {});
-    Browser::g_content_filters_enabled = Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, true);
-    Browser::g_autoplay_allowed_on_all_websites = Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, false);
+    Browser::g_home_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url);
+    Browser::g_new_tab_url = Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, Browser::default_new_tab_url);
+    Browser::g_search_engine = Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, Browser::default_search_engine);
+    Browser::g_content_filters_enabled = Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, Browser::default_enable_content_filters);
+    Browser::g_autoplay_allowed_on_all_websites = Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, Browser::default_allow_autoplay_on_all_websites);
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 

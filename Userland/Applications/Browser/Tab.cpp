@@ -21,6 +21,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -124,7 +125,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
 
-    auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
+    auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
 
     content_filters_changed();

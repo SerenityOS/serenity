@@ -9,6 +9,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
 #include <Applications/BrowserSettings/ContentFilterSettingsWidgetGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/CheckBox.h>
@@ -17,8 +18,6 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
-
-static constexpr bool s_default_enable_content_filtering = true;
 
 ErrorOr<String> DomainListModel::filter_list_file_path() const
 {
@@ -126,7 +125,7 @@ ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget:
     TRY(widget->load_from_gml(content_filter_settings_widget_gml));
 
     widget->m_enable_content_filtering_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("enable_content_filtering_checkbox");
-    widget->m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, s_default_enable_content_filtering), GUI::AllowCallback::No);
+    widget->m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, Browser::default_enable_content_filters), GUI::AllowCallback::No);
     widget->m_enable_content_filtering_checkbox->on_checked = [widget](auto) {
         widget->set_modified(true);
     };
@@ -174,5 +173,5 @@ void ContentFilterSettingsWidget::apply_settings()
 void ContentFilterSettingsWidget::reset_default_values()
 {
     m_domain_list_model->reset_default_values();
-    m_enable_content_filtering_checkbox->set_checked(s_default_enable_content_filtering);
+    m_enable_content_filtering_checkbox->set_checked(Browser::default_enable_content_filters);
 }
