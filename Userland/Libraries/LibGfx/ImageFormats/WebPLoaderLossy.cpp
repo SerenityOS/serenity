@@ -613,7 +613,7 @@ i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantizat
     // * For uv, the dc_qlookup index is clamped to 117 (instead of 127 for everything else)
     //   (or, alternatively, the value is clamped to 132 at most)
 
-    u8 y_ac_base = quantization_indices.y_ac;
+    int y_ac_base = quantization_indices.y_ac;
     if (segmentation.update_macroblock_segmentation_map) {
         if (segmentation.segment_feature_mode == SegmentFeatureMode::DeltaValueMode)
             y_ac_base += segmentation.quantizer_update_value[segment_id];
