@@ -965,17 +965,14 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
 
         for (int row = first_row; row < last_row; ++row) {
             for (int x = 0; x < (last_column - first_column); ++x) {
-                u8 alpha = color_for_format(src_format, src[x]).alpha();
-                if (alpha == 0xff) {
-                    auto color = filter(Color::from_argb(src[x]));
-                    if (color.alpha() == 0xff)
-                        dst[x] = color.value();
-                    else
-                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
-                } else if (!alpha)
+                auto source_color = color_for_format(src_format, src[x]);
+                if (source_color.alpha() == 0)
                     continue;
+                auto filtered_color = filter(source_color);
+                if (filtered_color.alpha() == 0xff)
+                    dst[x] = filtered_color.value();
                 else
-                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
             }
             dst += dst_skip;
             src += src_skip;
@@ -984,17 +981,14 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
         for (int row = first_row; row < last_row; ++row) {
             ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x < (last_column - first_column); ++x) {
-                u8 alpha = color_for_format(src_format, src[x / s]).alpha();
-                if (alpha == 0xff) {
-                    auto color = filter(color_for_format(src_format, src[x / s]));
-                    if (color.alpha() == 0xff)
-                        dst[x] = color.value();
-                    else
-                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
-                } else if (!alpha)
+                auto source_color = color_for_format(src_format, src[x / s]);
+                if (source_color.alpha() == 0)
                     continue;
+                auto filtered_color = filter(source_color);
+                if (filtered_color.alpha() == 0xff)
+                    dst[x] = filtered_color.value();
                 else
-                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x / s]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
             }
             dst += dst_skip;
         }
