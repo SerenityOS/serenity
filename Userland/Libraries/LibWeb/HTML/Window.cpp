@@ -621,7 +621,23 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Window::session_storage()
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
 bool Window::has_transient_activation() const
 {
-    // FIXME: Implement this.
+    // The transient activation duration is expected be at most a few seconds, so that the user can possibly
+    // perceive the link between an interaction with the page and the page calling the activation-gated API.
+    auto transient_activation_duration = 5;
+
+    // When the current high resolution time given W
+    auto unsafe_shared_time = HighResolutionTime::unsafe_shared_current_time();
+    auto current_time = HighResolutionTime::relative_high_resolution_time(unsafe_shared_time, realm().global_object());
+
+    // is greater than or equal to the last activation timestamp in W
+    if (current_time >= m_last_activation_timestamp) {
+        // and less than the last activation timestamp in W plus the transient activation duration
+        if (current_time < m_last_activation_timestamp + transient_activation_duration) {
+            // then W is said to have transient activation.
+            return true;
+        }
+    }
+
     return false;
 }
 
