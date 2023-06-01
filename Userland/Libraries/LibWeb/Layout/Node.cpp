@@ -11,7 +11,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
@@ -295,7 +295,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
     computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).value());
-    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->as_numeric().integer());
+    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->as_number().integer());
     m_line_height = computed_style.line_height(*this);
 
     computed_values.set_vertical_align(computed_style.vertical_align());
@@ -676,8 +676,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-    if (stroke_width->is_numeric())
-        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_numeric().number()));
+    if (stroke_width->is_number())
+        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_number().number()));
     else if (stroke_width->is_length())
         computed_values.set_stroke_width(stroke_width->as_length().length());
     else if (stroke_width->is_percentage())

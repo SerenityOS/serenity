@@ -43,7 +43,7 @@
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
@@ -278,10 +278,10 @@ ListStyleStyleValue const& StyleValue::as_list_style() const
     return static_cast<ListStyleStyleValue const&>(*this);
 }
 
-NumericStyleValue const& StyleValue::as_numeric() const
+NumberStyleValue const& StyleValue::as_number() const
 {
-    VERIFY(is_numeric());
-    return static_cast<NumericStyleValue const&>(*this);
+    VERIFY(is_number());
+    return static_cast<NumberStyleValue const&>(*this);
 }
 
 OverflowStyleValue const& StyleValue::as_overflow() const
@@ -409,8 +409,8 @@ int StyleValue::to_font_weight() const
             return Gfx::FontWeight::Regular;
         }
     }
-    if (is_numeric() && as_numeric().has_integer()) {
-        return as_numeric().integer();
+    if (is_number() && as_number().has_integer()) {
+        return as_number().integer();
     }
     if (is_calculated()) {
         auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();

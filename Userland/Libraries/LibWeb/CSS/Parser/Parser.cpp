@@ -65,7 +65,7 @@
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
@@ -3816,8 +3816,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_numeric_value(ComponentValue const& co
     if (component_value.is(Token::Type::Number)) {
         auto const& number = component_value.token();
         if (number.number().is_integer())
-            return NumericStyleValue::create_integer(number.to_integer());
-        return NumericStyleValue::create_float(number.number_value());
+            return NumberStyleValue::create_integer(number.to_integer());
+        return NumberStyleValue::create_float(number.number_value());
     }
 
     return nullptr;
@@ -5500,16 +5500,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
             // https://github.com/w3c/csswg-drafts/issues/5742
             // (flex-basis takes `<length>`, not `<number>`, so the 0 is a Length.)
             auto flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
-            auto one = TRY(NumericStyleValue::create_integer(1));
+            auto one = TRY(NumberStyleValue::create_integer(1));
             return FlexStyleValue::create(*value, one, flex_basis);
         }
         case PropertyID::FlexBasis: {
-            auto one = TRY(NumericStyleValue::create_integer(1));
+            auto one = TRY(NumberStyleValue::create_integer(1));
             return FlexStyleValue::create(one, one, *value);
         }
         case PropertyID::Flex: {
             if (value->is_identifier() && value->to_identifier() == ValueID::None) {
-                auto zero = TRY(NumericStyleValue::create_integer(0));
+                auto zero = TRY(NumberStyleValue::create_integer(0));
                 return FlexStyleValue::create(zero, zero, TRY(IdentifierStyleValue::create(ValueID::Auto)));
             }
             break;
@@ -7438,7 +7438,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
         auto numeric = TRY(parse_numeric_value(peek_token));
         (void)tokens.next_token();
-        if (numeric->as_numeric().has_integer() && property_accepting_integer.has_value())
+        if (numeric->as_number().has_integer() && property_accepting_integer.has_value())
             return PropertyAndValue { *property_accepting_integer, numeric };
         return PropertyAndValue { property_accepting_integer.value_or(property_accepting_number.value()), numeric };
     }
