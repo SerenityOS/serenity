@@ -270,14 +270,14 @@ public:
         return jpeg_stream;
     }
 
-    ErrorOr<u8> read_u8()
+    ALWAYS_INLINE ErrorOr<u8> read_u8()
     {
         if (m_byte_offset == m_current_size)
             TRY(refill_buffer());
         return m_buffer[m_byte_offset++];
     }
 
-    ErrorOr<u16> read_u16()
+    ALWAYS_INLINE ErrorOr<u16> read_u16()
     {
         if (m_saved_marker.has_value())
             return m_saved_marker.release_value();
@@ -285,7 +285,7 @@ public:
         return (static_cast<u16>(TRY(read_u8())) << 8) | TRY(read_u8());
     }
 
-    ErrorOr<void> discard(u64 bytes)
+    ALWAYS_INLINE ErrorOr<void> discard(u64 bytes)
     {
         auto const discarded_from_buffer = min(m_current_size - m_byte_offset, bytes);
         m_byte_offset += discarded_from_buffer;
@@ -347,7 +347,7 @@ private:
 
 class HuffmanStream {
 public:
-    ErrorOr<u8> next_symbol(HuffmanTable const& table)
+    ALWAYS_INLINE ErrorOr<u8> next_symbol(HuffmanTable const& table)
     {
         u16 const code = TRY(peek_bits(HuffmanTable::maximum_bits_per_code));
 
@@ -357,7 +357,7 @@ public:
         return symbol_and_size.symbol;
     }
 
-    ErrorOr<u16> read_bits(u8 count = 1)
+    ALWAYS_INLINE ErrorOr<u16> read_bits(u8 count = 1)
     {
         if (count > NumericLimits<u16>::digits()) {
             dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
@@ -369,7 +369,7 @@ public:
         return value;
     }
 
-    ErrorOr<u16> peek_bits(u8 count)
+    ALWAYS_INLINE ErrorOr<u16> peek_bits(u8 count)
     {
         if (count == 0)
             return 0;
@@ -382,7 +382,7 @@ public:
         return static_cast<u16>((m_bit_reservoir >> (bits_in_reservoir - m_bit_offset - count)) & mask);
     }
 
-    ErrorOr<void> discard_bits(u8 count)
+    ALWAYS_INLINE ErrorOr<void> discard_bits(u8 count)
     {
         m_bit_offset += count;
 
@@ -409,7 +409,7 @@ public:
     }
 
 private:
-    ErrorOr<void> refill_reservoir()
+    ALWAYS_INLINE ErrorOr<void> refill_reservoir()
     {
         auto const bytes_needed = m_bit_offset / bits_per_byte;
 
