@@ -621,7 +621,7 @@ i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantizat
             y_ac_base = segmentation.quantizer_update_value[segment_id];
     }
 
-    u8 dequantization_index;
+    int dequantization_index;
     if (index.is_y2())
         dequantization_index = y_ac_base + (is_dc ? quantization_indices.y2_dc_delta : quantization_indices.y2_ac_delta);
     else if (index.is_u() || index.is_v())
@@ -631,9 +631,9 @@ i16 dequantize_value(i16 value, bool is_dc, QuantizationIndices const& quantizat
 
     // clamp index
     if ((index.is_u() || index.is_v()) && is_dc)
-        dequantization_index = min(dequantization_index, 117);
+        dequantization_index = clamp(dequantization_index, 0, 117);
     else
-        dequantization_index = min(dequantization_index, 127);
+        dequantization_index = clamp(dequantization_index, 0, 127);
 
     // "the multiplies are computed and stored using 16-bit signed integers."
     i16 dequantization_factor;
