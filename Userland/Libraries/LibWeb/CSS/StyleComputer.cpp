@@ -45,6 +45,7 @@
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
@@ -1081,13 +1082,15 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
 
         return ColorStyleValue::create(color);
     }
+    case StyleValue::Type::Integer:
+        return IntegerStyleValue::create(interpolate_raw(from.as_integer().integer(), to.as_integer().integer()));
     case StyleValue::Type::Length: {
         auto& from_length = from.as_length().length();
         auto& to_length = to.as_length().length();
         return LengthStyleValue::create(Length(interpolate_raw(from_length.raw_value(), to_length.raw_value()), from_length.type()));
     }
     case StyleValue::Type::Number:
-        return NumberStyleValue::create_float(interpolate_raw(from.as_number().number(), to.as_number().number()));
+        return NumberStyleValue::create(interpolate_raw(from.as_number().number(), to.as_number().number()));
     case StyleValue::Type::Percentage:
         return PercentageStyleValue::create(Percentage(interpolate_raw(from.as_percentage().percentage().value(), to.as_percentage().percentage().value())));
     case StyleValue::Type::Position: {
@@ -1929,7 +1932,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontCache::the().set(font_selector, *found_font);
 
     style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors(), nullptr);
-    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
 
     style.set_computed_font(found_font.release_nonnull());
 

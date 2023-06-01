@@ -3828,7 +3828,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_number_value(TokenStream<ComponentValu
     auto peek_token = tokens.peek_token();
     if (peek_token.is(Token::Type::Number)) {
         (void)tokens.next_token();
-        return NumberStyleValue::create_float(peek_token.token().number().value());
+        return NumberStyleValue::create(peek_token.token().number().value());
     }
 
     return nullptr;
@@ -5511,16 +5511,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
             // https://github.com/w3c/csswg-drafts/issues/5742
             // (flex-basis takes `<length>`, not `<number>`, so the 0 is a Length.)
             auto flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
-            auto one = TRY(NumberStyleValue::create_integer(1));
+            auto one = TRY(NumberStyleValue::create(1));
             return FlexStyleValue::create(*value, one, flex_basis);
         }
         case PropertyID::FlexBasis: {
-            auto one = TRY(NumberStyleValue::create_integer(1));
+            auto one = TRY(NumberStyleValue::create(1));
             return FlexStyleValue::create(one, one, *value);
         }
         case PropertyID::Flex: {
             if (value->is_identifier() && value->to_identifier() == ValueID::None) {
-                auto zero = TRY(NumberStyleValue::create_integer(0));
+                auto zero = TRY(NumberStyleValue::create(0));
                 return FlexStyleValue::create(zero, zero, TRY(IdentifierStyleValue::create(ValueID::Auto)));
             }
             break;
