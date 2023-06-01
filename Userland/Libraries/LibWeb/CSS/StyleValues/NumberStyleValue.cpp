@@ -7,11 +7,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NumericStyleValue.h"
+#include "NumberStyleValue.h"
 
 namespace Web::CSS {
 
-ErrorOr<String> NumericStyleValue::to_string() const
+ErrorOr<String> NumberStyleValue::to_string() const
 {
     return m_value.visit(
         [](auto value) {

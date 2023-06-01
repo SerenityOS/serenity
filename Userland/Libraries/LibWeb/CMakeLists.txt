@@ -99,7 +99,7 @@ set(SOURCES
     CSS/StyleValues/LengthStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
     CSS/StyleValues/ListStyleStyleValue.cpp
-    CSS/StyleValues/NumericStyleValue.cpp
+    CSS/StyleValues/NumberStyleValue.cpp
     CSS/StyleValues/OverflowStyleValue.cpp
     CSS/StyleValues/PlaceContentStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp

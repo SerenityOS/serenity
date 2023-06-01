@@ -120,7 +120,7 @@ public:
         Length,
         LinearGradient,
         ListStyle,
-        Numeric,
+        Number,
         Overflow,
         Percentage,
         PlaceContent,
@@ -175,7 +175,7 @@ public:
     bool is_length() const { return type() == Type::Length; }
     bool is_linear_gradient() const { return type() == Type::LinearGradient; }
     bool is_list_style() const { return type() == Type::ListStyle; }
-    bool is_numeric() const { return type() == Type::Numeric; }
+    bool is_number() const { return type() == Type::Number; }
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_place_content() const { return type() == Type::PlaceContent; }
@@ -229,7 +229,7 @@ public:
     LengthStyleValue const& as_length() const;
     LinearGradientStyleValue const& as_linear_gradient() const;
     ListStyleStyleValue const& as_list_style() const;
-    NumericStyleValue const& as_numeric() const;
+    NumberStyleValue const& as_number() const;
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
     PlaceContentStyleValue const& as_place_content() const;
@@ -280,7 +280,7 @@ public:
     LengthStyleValue& as_length() { return const_cast<LengthStyleValue&>(const_cast<StyleValue const&>(*this).as_length()); }
     LinearGradientStyleValue& as_linear_gradient() { return const_cast<LinearGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_linear_gradient()); }
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
-    NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
+    NumberStyleValue& as_number() { return const_cast<NumberStyleValue&>(const_cast<StyleValue const&>(*this).as_number()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PlaceContentStyleValue& as_place_content() { return const_cast<PlaceContentStyleValue&>(const_cast<StyleValue const&>(*this).as_place_content()); }

@@ -47,7 +47,7 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
@@ -1086,8 +1086,8 @@ static ErrorOr<NonnullRefPtr<StyleValue>> interpolate_property(StyleValue const&
         auto& to_length = to.as_length().length();
         return LengthStyleValue::create(Length(interpolate_raw(from_length.raw_value(), to_length.raw_value()), from_length.type()));
     }
-    case StyleValue::Type::Numeric:
-        return NumericStyleValue::create_float(interpolate_raw(from.as_numeric().number(), to.as_numeric().number()));
+    case StyleValue::Type::Number:
+        return NumberStyleValue::create_float(interpolate_raw(from.as_number().number(), to.as_number().number()));
     case StyleValue::Type::Percentage:
         return PercentageStyleValue::create(Percentage(interpolate_raw(from.as_percentage().percentage().value(), to.as_percentage().percentage().value())));
     case StyleValue::Type::Position: {
@@ -1447,8 +1447,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                     if (auto iteration_count_value = style.maybe_null_property(PropertyID::AnimationIterationCount); iteration_count_value) {
                         if (iteration_count_value->is_identifier() && iteration_count_value->to_identifier() == ValueID::Infinite)
                             iteration_count = {};
-                        else if (iteration_count_value->is_numeric())
-                            iteration_count = static_cast<size_t>(iteration_count_value->as_numeric().number());
+                        else if (iteration_count_value->is_number())
+                            iteration_count = static_cast<size_t>(iteration_count_value->as_number().number());
                     }
 
                     CSS::AnimationFillMode fill_mode { CSS::AnimationFillMode::None };
@@ -1929,7 +1929,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontCache::the().set(font_selector, *found_font);
 
     style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors(), nullptr);
-    style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create_integer(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
 
     style.set_computed_font(found_font.release_nonnull());
 

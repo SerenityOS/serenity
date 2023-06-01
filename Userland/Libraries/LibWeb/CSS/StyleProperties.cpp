@@ -16,7 +16,7 @@
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -179,8 +179,8 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length
             return line_height_length.to_px(viewport_rect, font_metrics, root_font_metrics);
     }
 
-    if (line_height->is_numeric())
-        return Length(line_height->as_numeric().number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
+    if (line_height->is_number())
+        return Length(line_height->as_number().number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -209,8 +209,8 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
             return line_height_length.to_px(layout_node);
     }
 
-    if (line_height->is_numeric())
-        return Length(line_height->as_numeric().number(), Length::Type::Em).to_px(layout_node);
+    if (line_height->is_number())
+        return Length(line_height->as_number().number(), Length::Type::Em).to_px(layout_node);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -244,10 +244,10 @@ Optional<int> StyleProperties::z_index() const
     auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
-    if (value->is_numeric() && value->as_numeric().has_integer()) {
+    if (value->is_number() && value->as_number().has_integer()) {
         // Clamp z-index to the range of a signed 32-bit integer for consistency with other engines.
         // NOTE: Casting between 32-bit float and 32-bit integer is finicky here, since INT32_MAX is not representable as a 32-bit float!
-        auto integer = value->as_numeric().integer();
+        auto integer = value->as_number().integer();
         if (integer >= static_cast<float>(NumericLimits<int>::max()))
             return NumericLimits<int>::max();
         if (integer <= static_cast<float>(NumericLimits<int>::min()))
@@ -261,8 +261,8 @@ static float resolve_opacity_value(CSS::StyleValue const& value)
 {
     float unclamped_opacity = 1.0f;
 
-    if (value.is_numeric()) {
-        unclamped_opacity = value.as_numeric().number();
+    if (value.is_number()) {
+        unclamped_opacity = value.as_number().number();
     } else if (value.is_calculated()) {
         auto& calculated = value.as_calculated();
         if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
@@ -346,25 +346,25 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
 float StyleProperties::flex_grow() const
 {
     auto value = property(CSS::PropertyID::FlexGrow);
-    if (!value->is_numeric())
+    if (!value->is_number())
         return 0;
-    return value->as_numeric().number();
+    return value->as_number().number();
 }
 
 float StyleProperties::flex_shrink() const
 {
     auto value = property(CSS::PropertyID::FlexShrink);
-    if (!value->is_numeric())
+    if (!value->is_number())
         return 1;
-    return value->as_numeric().number();
+    return value->as_number().number();
 }
 
 int StyleProperties::order() const
 {
     auto value = property(CSS::PropertyID::Order);
-    if (!value->is_numeric() || !value->as_numeric().has_integer())
+    if (!value->is_number() || !value->as_number().has_integer())
         return 0;
-    return value->as_numeric().integer();
+    return value->as_number().integer();
 }
 
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
@@ -426,8 +426,8 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
                 values.append({ transformation_value->as_length().length() });
             } else if (transformation_value->is_percentage()) {
                 values.append({ transformation_value->as_percentage().percentage() });
-            } else if (transformation_value->is_numeric()) {
-                values.append({ transformation_value->as_numeric().number() });
+            } else if (transformation_value->is_number()) {
+                values.append({ transformation_value->as_number().number() });
             } else if (transformation_value->is_angle()) {
                 values.append({ transformation_value->as_angle().angle() });
             } else {

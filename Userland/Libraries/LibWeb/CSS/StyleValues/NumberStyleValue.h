@@ -13,16 +13,16 @@
 
 namespace Web::CSS {
 
-class NumericStyleValue : public StyleValueWithDefaultOperators<NumericStyleValue> {
+class NumberStyleValue : public StyleValueWithDefaultOperators<NumberStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<NumericStyleValue>> create_float(float value)
+    static ErrorOr<ValueComparingNonnullRefPtr<NumberStyleValue>> create_float(float value)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) NumberStyleValue(value));
     }
 
-    static ErrorOr<ValueComparingNonnullRefPtr<NumericStyleValue>> create_integer(i64 value)
+    static ErrorOr<ValueComparingNonnullRefPtr<NumberStyleValue>> create_integer(i64 value)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) NumericStyleValue(value));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) NumberStyleValue(value));
     }
 
     float number() const
@@ -37,11 +37,11 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(NumericStyleValue const& other) const { return m_value == other.m_value; }
+    bool properties_equal(NumberStyleValue const& other) const { return m_value == other.m_value; }
 
 private:
-    explicit NumericStyleValue(Variant<float, i64> value)
-        : StyleValueWithDefaultOperators(Type::Numeric)
+    explicit NumberStyleValue(Variant<float, i64> value)
+        : StyleValueWithDefaultOperators(Type::Number)
         , m_value(move(value))
     {
     }
