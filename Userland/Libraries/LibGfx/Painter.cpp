@@ -1430,6 +1430,10 @@ FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Font const& f
 
         FloatRect rect(point.x(), point.y(), scaled_width, scaled_height);
         draw_scaled_bitmap(rect.to_rounded<int>(), *glyph.bitmap(), glyph.bitmap()->rect(), 1.0f, ScalingMode::BilinearBlend);
+    } else if (color.alpha() != 255) {
+        blit_filtered(glyph_position.blit_position, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
+            return pixel.multiply(color);
+        });
     } else {
         blit_filtered(glyph_position.blit_position, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
             return color.with_alpha(pixel.alpha());
