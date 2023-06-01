@@ -9,6 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -37,7 +38,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         m_destination_path = builder.to_deprecated_string();
     }
 
-    auto close_on_finish = Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, false);
+    auto close_on_finish = Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, Browser::default_close_download_widget_on_finish);
 
     m_elapsed_timer.start();
     m_download = Web::ResourceLoader::the().connector().start_request("GET", url);

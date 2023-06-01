@@ -7,18 +7,12 @@
 
 #include "BrowserSettingsWidget.h"
 #include <Applications/BrowserSettings/BrowserSettingsWidgetGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
-
-static DeprecatedString default_homepage_url = "file:///res/html/misc/welcome.html";
-static DeprecatedString default_new_tab_url = "file:///res/html/misc/new-tab.html";
-static DeprecatedString default_search_engine = "";
-static DeprecatedString default_color_scheme = "auto";
-static bool default_show_bookmarks_bar = true;
-static bool default_auto_close_download_windows = false;
 
 struct ColorScheme {
     DeprecatedString title;
@@ -71,22 +65,22 @@ ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
 ErrorOr<void> BrowserSettingsWidget::setup()
 {
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
-    m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, default_homepage_url), GUI::AllowCallback::No);
+    m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url), GUI::AllowCallback::No);
     m_homepage_url_textbox->on_change = [&]() { set_modified(true); };
 
     m_new_tab_url_textbox = find_descendant_of_type_named<GUI::TextBox>("new_tab_url_textbox");
-    m_new_tab_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, default_new_tab_url), GUI::AllowCallback::No);
+    m_new_tab_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, Browser::default_new_tab_url), GUI::AllowCallback::No);
     m_new_tab_url_textbox->on_change = [&]() { set_modified(true); };
 
     m_color_scheme_combobox = find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combobox");
     m_color_scheme_combobox->set_only_allow_values_from_model(true);
     m_color_scheme_combobox->set_model(adopt_ref(*new ColorSchemeModel()));
     m_color_scheme_combobox->set_selected_index(0, GUI::AllowCallback::No);
-    set_color_scheme(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, default_color_scheme));
+    set_color_scheme(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_color_scheme_combobox->on_change = [&](auto, auto) { set_modified(true); };
 
     m_show_bookmarks_bar_checkbox = find_descendant_of_type_named<GUI::CheckBox>("show_bookmarks_bar_checkbox");
-    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, default_show_bookmarks_bar), GUI::AllowCallback::No);
+    m_show_bookmarks_bar_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, Browser::default_show_bookmarks_bar), GUI::AllowCallback::No);
     m_show_bookmarks_bar_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     m_enable_search_engine_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_search_engine_checkbox");
@@ -120,10 +114,10 @@ ErrorOr<void> BrowserSettingsWidget::setup()
         m_custom_search_engine_group->set_enabled(m_is_custom_search_engine);
         set_modified(true);
     };
-    set_search_engine_url(Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, default_search_engine));
+    set_search_engine_url(Config::read_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, Browser::default_search_engine));
 
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
-    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, default_auto_close_download_windows), GUI::AllowCallback::No);
+    m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, Browser::default_close_download_widget_on_finish), GUI::AllowCallback::No);
     m_auto_close_download_windows_checkbox->on_checked = [&](auto) { set_modified(true); };
 
     return {};
@@ -218,10 +212,10 @@ void BrowserSettingsWidget::apply_settings()
 
 void BrowserSettingsWidget::reset_default_values()
 {
-    m_homepage_url_textbox->set_text(default_homepage_url);
-    m_new_tab_url_textbox->set_text(default_new_tab_url);
-    m_show_bookmarks_bar_checkbox->set_checked(default_show_bookmarks_bar);
-    set_color_scheme(default_color_scheme);
-    m_auto_close_download_windows_checkbox->set_checked(default_auto_close_download_windows);
-    set_search_engine_url(default_search_engine);
+    m_homepage_url_textbox->set_text(Browser::default_homepage_url);
+    m_new_tab_url_textbox->set_text(Browser::default_new_tab_url);
+    m_show_bookmarks_bar_checkbox->set_checked(Browser::default_show_bookmarks_bar);
+    set_color_scheme(Browser::default_color_scheme);
+    m_auto_close_download_windows_checkbox->set_checked(Browser::default_close_download_widget_on_finish);
+    set_search_engine_url(Browser::default_search_engine);
 }
