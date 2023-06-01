@@ -986,6 +986,10 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
 
 void ConnectionFromClient::set_system_effects(Vector<bool> const& effects, u8 geometry, u8 tile_window)
 {
+    if (effects.size() != to_underlying(Effects::__Count) || geometry >= to_underlying(ShowGeometry::__Count) || tile_window >= to_underlying(TileWindow::__Count)) {
+        did_misbehave("SetSystemEffects: Bad values");
+        return;
+    }
     WindowManager::the().apply_system_effects(effects, static_cast<ShowGeometry>(geometry), static_cast<TileWindow>(tile_window));
     ConnectionFromClient::for_each_client([&](auto& client) {
         client.async_update_system_effects(effects);
