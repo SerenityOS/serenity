@@ -51,7 +51,7 @@ protected:
 
     [[nodiscard]] Bytes next_write_span();
     [[nodiscard]] ReadonlyBytes next_read_span(size_t offset = 0) const;
-    [[nodiscard]] ReadonlyBytes next_read_span_with_seekback(size_t distance) const;
+    [[nodiscard]] ReadonlyBytes next_seekback_span(size_t distance) const;
 
     ByteBuffer m_buffer {};
 
@@ -65,6 +65,8 @@ public:
     static ErrorOr<SearchableCircularBuffer> create_empty(size_t size);
     static ErrorOr<SearchableCircularBuffer> create_initialized(ByteBuffer);
 
+    [[nodiscard]] size_t search_limit() const;
+
     struct Match {
         size_t distance;
         size_t length;
@@ -76,6 +78,10 @@ public:
     ErrorOr<Vector<Match>> find_copy_in_seekback(Vector<size_t> const& distances, size_t maximum_length, size_t minimum_length = 2) const;
 
 private:
+    // Note: This function has a similar purpose as next_seekback_span, but they differ in their reference point.
+    //       Seekback operations start counting their distance at the write head, while search operations start counting their distance at the read head.
+    [[nodiscard]] ReadonlyBytes next_search_span(size_t distance) const;
+
     SearchableCircularBuffer(ByteBuffer);
 };
 

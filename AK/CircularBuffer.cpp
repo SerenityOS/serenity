@@ -53,6 +53,11 @@ size_t CircularBuffer::seekback_limit() const
     return m_seekback_limit;
 }
 
+size_t SearchableCircularBuffer::search_limit() const
+{
+    return m_seekback_limit - m_used_space;
+}
+
 bool CircularBuffer::is_wrapping_around() const
 {
     return capacity() <= m_reading_head + m_used_space;
@@ -113,13 +118,24 @@ ReadonlyBytes CircularBuffer::next_read_span(size_t offset) const
     return m_buffer.span().slice(reading_head, min(capacity() - reading_head, used_space));
 }
 
-ReadonlyBytes CircularBuffer::next_read_span_with_seekback(size_t distance) const
+ReadonlyBytes CircularBuffer::next_seekback_span(size_t distance) const
 {
     VERIFY(m_seekback_limit <= capacity());
     VERIFY(distance <= m_seekback_limit);
 
     // Note: We are adding the capacity once here to ensure that we can wrap around the negative space by using modulo.
     auto read_offset = (capacity() + m_reading_head + m_used_space - distance) % capacity();
+
+    return m_buffer.span().slice(read_offset, min(capacity() - read_offset, distance));
+}
+
+ReadonlyBytes SearchableCircularBuffer::next_search_span(size_t distance) const
+{
+    VERIFY(search_limit() <= capacity());
+    VERIFY(distance <= search_limit());
+
+    // Note: We are adding the capacity once here to ensure that we can wrap around the negative space by using modulo.
+    auto read_offset = (capacity() + m_reading_head - distance) % capacity();
 
     return m_buffer.span().slice(read_offset, min(capacity() - read_offset, distance));
 }
@@ -178,7 +194,7 @@ ErrorOr<Bytes> CircularBuffer::read_with_seekback(Bytes bytes, size_t distance)
     auto remaining = bytes.size();
 
     while (remaining > 0) {
-        auto const next_span = next_read_span_with_seekback(distance);
+        auto const next_span = next_seekback_span(distance);
         if (next_span.size() == 0)
             break;
 
@@ -244,7 +260,7 @@ ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t lengt
         if (empty_space() == 0)
             break;
 
-        auto next_span = next_read_span_with_seekback(distance);
+        auto next_span = next_seekback_span(distance);
         if (next_span.size() == 0)
             break;
 
@@ -297,15 +313,11 @@ ErrorOr<Vector<SearchableCircularBuffer::Match>> SearchableCircularBuffer::find_
     Vector<Match> matches;
 
     // Use memmem to find the initial matches.
-    // Note: We have the read head as our reference point, but `next_read_span_with_seekback` isn't aware of that and continues to use the write head.
-    //       Therefore, we need to make sure to slice off the extraneous bytes from the end of the span and shift the returned distances by the correct amount.
     size_t haystack_offset_from_start = 0;
     Vector<ReadonlyBytes, 2> haystack;
-    haystack.append(next_read_span_with_seekback(m_seekback_limit));
-    if (haystack[0].size() < m_seekback_limit - used_space())
-        haystack.append(next_read_span_with_seekback(m_seekback_limit - haystack[0].size()));
-
-    haystack.last() = haystack.last().trim(haystack.last().size() - used_space());
+    haystack.append(next_search_span(search_limit()));
+    if (haystack[0].size() < search_limit())
+        haystack.append(next_search_span(search_limit() - haystack[0].size()));
 
     auto needle = next_read_span().trim(minimum_length);
 
