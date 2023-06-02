@@ -3457,12 +3457,18 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_min_function(Function const& func
             return nullptr;
         }
 
+        auto parameter_type = calculation_node->resolved_type();
+        if (!parameter_type.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for min() parameter #{}"sv, calculated_parameters.size() + 1);
+            return nullptr;
+        }
+
         if (first) {
-            type = calculation_node->resolved_type().value();
+            type = parameter_type.value();
             first = false;
         }
 
-        if (calculation_node->resolved_type().value() != type) {
+        if (parameter_type != type) {
             dbgln_if(CSS_PARSER_DEBUG, "min() parameters must all be of the same type"sv);
             return nullptr;
         }
@@ -3496,12 +3502,18 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_max_function(Function const& func
             return nullptr;
         }
 
+        auto parameter_type = calculation_node->resolved_type();
+        if (!parameter_type.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for max() parameter #{}"sv, calculated_parameters.size() + 1);
+            return nullptr;
+        }
+
         if (first) {
-            type = calculation_node->resolved_type().value();
+            type = parameter_type.value();
             first = false;
         }
 
-        if (calculation_node->resolved_type().value() != type) {
+        if (parameter_type != type) {
             dbgln_if(CSS_PARSER_DEBUG, "max() parameters must all be of the same type"sv);
             return nullptr;
         }
@@ -3535,12 +3547,18 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_clamp_function(Function const& fu
             return nullptr;
         }
 
+        auto parameter_type = calculation_node->resolved_type();
+        if (!parameter_type.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Failed to resolve type for clamp() parameter #{}"sv, calculated_parameters.size() + 1);
+            return nullptr;
+        }
+
         if (first) {
-            type = calculation_node->resolved_type().value();
+            type = parameter_type.value();
             first = false;
         }
 
-        if (calculation_node->resolved_type().value() != type) {
+        if (parameter_type != type) {
             dbgln_if(CSS_PARSER_DEBUG, "clamp() parameters must all be of same type"sv);
             return nullptr;
         }
@@ -3565,8 +3583,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
         if (!function_node)
             return nullptr;
 
-        auto function_type = function_node->resolved_type().value();
-        return CalculatedStyleValue::create(function_node.release_nonnull(), function_type);
+        auto function_type = function_node->resolved_type();
+        if (!function_type.has_value())
+            return nullptr;
+
+        return CalculatedStyleValue::create(function_node.release_nonnull(), function_type.release_value());
     }
 
     return nullptr;
