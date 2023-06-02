@@ -50,7 +50,8 @@
     "inherited": false,
     "initial": "none",
     "valid-types": [
-      "string", "custom-ident"
+      "string",
+      "custom-ident"
     ],
     "valid-identifiers": [
       "none"
@@ -794,13 +795,6 @@
       "number [0,∞]"
     ]
   },
-  "order": {
-    "inherited": false,
-    "initial": "0",
-    "valid-types": [
-      "integer [-∞,∞]"
-    ]
-  },
   "flex-wrap": {
     "inherited": false,
     "initial": "nowrap",
@@ -1410,6 +1404,13 @@
     "valid-types": [
       "number [-∞,∞]",
       "percentage [-∞,∞]"
+    ]
+  },
+  "order": {
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "integer [-∞,∞]"
     ]
   },
   "outline": {
