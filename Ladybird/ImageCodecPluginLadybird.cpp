@@ -21,21 +21,14 @@ Optional<Web::Platform::DecodedImage> ImageCodecPluginLadybird::decode_image(Rea
         return {};
     }
 
-    bool had_errors = false;
     Vector<Web::Platform::Frame> frames;
     for (size_t i = 0; i < decoder->frame_count(); ++i) {
         auto frame_or_error = decoder->frame(i);
-        if (frame_or_error.is_error()) {
-            frames.append({ {}, 0 });
-            had_errors = true;
-        } else {
-            auto frame = frame_or_error.release_value();
-            frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
-        }
+        if (frame_or_error.is_error())
+            return {};
+        auto frame = frame_or_error.release_value();
+        frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
     }
-
-    if (had_errors)
-        return {};
 
     return Web::Platform::DecodedImage {
         decoder->is_animated(),
