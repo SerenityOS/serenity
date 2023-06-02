@@ -5941,6 +5941,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
                 return nullptr;
             continue;
         }
+
+        return nullptr;
     }
 
     if (!current_name_parts.is_empty()) {
