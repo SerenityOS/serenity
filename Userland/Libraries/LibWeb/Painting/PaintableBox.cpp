@@ -169,7 +169,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Overlay && should_clip_rect)
         context.painter().restore();
 
-    if (phase == PaintPhase::Overlay && layout_box().dom_node() && layout_box().document().inspected_node() == layout_box().dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_box().document().inspected_layout_node() == &layout_box()) {
         auto content_rect = absolute_rect();
 
         auto margin_box = box_model().margin_box();
@@ -511,7 +511,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
 
-        if (text_node.document().inspected_node() == &text_node.dom_node())
+        if (text_node.document().inspected_layout_node() == &text_node)
             context.painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Magenta);
 
         auto text = text_node.text_for_rendering();

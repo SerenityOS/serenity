@@ -444,7 +444,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
     top_context.for_each_in_inclusive_subtree([&](auto& ctx) {
         if (ctx.active_document() != nullptr) {
-            ctx.active_document()->set_inspected_node(nullptr);
+            ctx.active_document()->set_inspected_node(nullptr, {});
         }
         return IterationDecision::Continue;
     });
@@ -455,8 +455,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         return { false, "", "", "", "" };
     }
 
-    // FIXME: Pass the pseudo-element here.
-    node->document().set_inspected_node(node);
+    node->document().set_inspected_node(node, pseudo_element);
 
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);

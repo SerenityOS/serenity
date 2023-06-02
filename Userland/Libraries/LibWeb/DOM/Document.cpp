@@ -985,18 +985,29 @@ Layout::Viewport* Document::layout_node()
     return static_cast<Layout::Viewport*>(Node::layout_node());
 }
 
-void Document::set_inspected_node(Node* node)
+void Document::set_inspected_node(Node* node, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    if (m_inspected_node.ptr() == node)
+    if (m_inspected_node.ptr() == node && m_inspected_pseudo_element == pseudo_element)
         return;
 
-    if (m_inspected_node && m_inspected_node->layout_node())
-        m_inspected_node->layout_node()->set_needs_display();
+    if (auto layout_node = inspected_layout_node())
+        layout_node->set_needs_display();
 
     m_inspected_node = node;
+    m_inspected_pseudo_element = pseudo_element;
 
-    if (m_inspected_node && m_inspected_node->layout_node())
-        m_inspected_node->layout_node()->set_needs_display();
+    if (auto layout_node = inspected_layout_node())
+        layout_node->set_needs_display();
+}
+
+Layout::Node* Document::inspected_layout_node()
+{
+    if (!m_inspected_node)
+        return nullptr;
+    if (!m_inspected_pseudo_element.has_value() || !m_inspected_node->is_element())
+        return m_inspected_node->layout_node();
+    auto& element = static_cast<Element&>(*m_inspected_node);
+    return element.get_pseudo_element_node(m_inspected_pseudo_element.value());
 }
 
 static Node* find_common_ancestor(Node* a, Node* b)
