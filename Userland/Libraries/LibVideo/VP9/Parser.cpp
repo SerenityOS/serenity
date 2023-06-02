@@ -593,7 +593,8 @@ void Parser::setup_past_independence()
 
 DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
-    auto decoder = TRY_READ(BooleanDecoder::initialize_vp9(MaybeOwned(frame_context.bit_stream), frame_context.header_size_in_bytes));
+    auto decoder = TRY(frame_context.create_range_decoder(frame_context.header_size_in_bytes));
+
     frame_context.transform_mode = TRY(read_tx_mode(decoder, frame_context));
     if (frame_context.transform_mode == TransformMode::Select)
         TRY(tx_mode_probs(decoder));
@@ -610,7 +611,7 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
         TRY(read_partition_probs(decoder));
         TRY(mv_probs(decoder, frame_context));
     }
-    TRY_READ(decoder.finish_decode_vp9());
+    TRY_READ(decoder.finish_decode());
     return {};
 }
 
@@ -938,7 +939,6 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto above_segmentation_ids_for_tile = safe_slice(above_segmentation_ids.span(), columns_start, columns_end - columns_start);
 
             tile_workloads[tile_col].append(TRY(TileContext::try_create(frame_context, tile_size, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile)));
-            TRY_READ(frame_context.bit_stream.discard(tile_size));
         }
     }
 
@@ -1002,7 +1002,7 @@ DecoderErrorOr<void> Parser::decode_tile(TileContext& tile_context)
             TRY(decode_partition(tile_context, row, col, Block_64x64));
         }
     }
-    TRY_READ(tile_context.decoder.finish_decode_vp9());
+    TRY_READ(tile_context.decoder.finish_decode());
     return {};
 }
 

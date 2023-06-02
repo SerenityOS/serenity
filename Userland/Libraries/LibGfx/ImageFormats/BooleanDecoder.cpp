@@ -6,58 +6,88 @@
  */
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/Debug.h>
+#include <AK/Endian.h>
 
 #include "BooleanDecoder.h"
 
 namespace Gfx {
 
-ErrorOr<BooleanDecoder> BooleanDecoder::initialize(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
+// 9.2.1 Initialization process for Boolean decoder
+ErrorOr<BooleanDecoder> BooleanDecoder::initialize(ReadonlyBytes data)
 {
-    VERIFY(bit_stream->is_aligned_to_byte_boundary());
-    auto value = TRY(bit_stream->read_value<u8>());
-    u8 range = 255;
-    u64 bits_left = (8 * size_in_bytes) - 8;
-    return BooleanDecoder { move(bit_stream), value, range, bits_left };
-}
+    if (data.size() == 0)
+        return Error::from_string_literal("Size of decoder range cannot be zero");
 
-/* 9.2.1 */
-ErrorOr<BooleanDecoder> BooleanDecoder::initialize_vp9(MaybeOwned<BigEndianInputBitStream> bit_stream, size_t size_in_bytes)
-{
-    BooleanDecoder decoder = TRY(initialize(move(bit_stream), size_in_bytes));
-    if (TRY(decoder.read_bool(128)))
-        return Error::from_string_literal("Range decoder marker was non-zero");
+    // NOTE: This implementation is shared between VP8 and VP9. Therefore, we do not check the
+    //       marker bit at the start of the range decode that is required in the VP9 specification.
+    //       This is instead handled by the function that instantiates all range decoders for the
+    //       VP9 decoder.
+
+    // NOTE: As noted below in fill_reservoir(), we read in multi-byte-sized chunks,
+    //       so here we will deviate from the standard to count in bytes rather than bits.
+    auto decoder = BooleanDecoder { data.data(), data.size() };
+    TRY(decoder.fill_reservoir());
     return decoder;
 }
 
-/* 9.2.2 */
+// Instead of filling the value field one bit at a time as the spec suggests, we store the
+// data to be read in a reservoir of greater than one byte. This allows us to read out data
+// for the entire reservoir at once, avoiding a lot of branch misses in read_bool().
+ErrorOr<void> BooleanDecoder::fill_reservoir()
+{
+    if (m_value_bits_left > 8)
+        return {};
+
+    if (m_bytes_left == 0)
+        return Error::from_string_literal("Range decoder is out of data");
+
+    // Read the data into the most significant bits of a variable.
+    auto read_size = min<size_t>(reserve_bytes, m_bytes_left);
+    ValueType read_value = 0;
+    memcpy(&read_value, m_data, read_size);
+    read_value = AK::convert_between_host_and_big_endian(read_value);
+
+    // Skip the number of bytes read in the data.
+    m_data += read_size;
+    m_bytes_left -= read_size;
+
+    // Shift the value that was read to be less significant than the least significant bit available in the reservoir.
+    read_value >>= m_value_bits_left;
+    m_value |= read_value;
+    m_value_bits_left += read_size * 8;
+    return {};
+}
+
+// 9.2.2 Boolean decoding process
 ErrorOr<bool> BooleanDecoder::read_bool(u8 probability)
 {
     auto split = 1u + (((m_range - 1u) * probability) >> 8u);
+    // The actual value being read resides in the most significant 8 bits
+    // of the value field, so we shift the split into that range for comparison.
+    auto split_shifted = static_cast<ValueType>(split) << reserve_bits;
     bool return_bool;
 
-    if (m_value < split) {
+    if (m_value < split_shifted) {
         m_range = split;
         return_bool = false;
     } else {
         m_range -= split;
-        m_value -= split;
+        m_value -= split_shifted;
         return_bool = true;
     }
 
-    if (m_range < 128) {
-        u8 bits_to_shift_into_range = count_leading_zeroes(m_range);
+    u8 bits_to_shift_into_range = count_leading_zeroes(m_range) - ((sizeof(m_range) - 1) * 8);
+    m_range <<= bits_to_shift_into_range;
+    m_value <<= bits_to_shift_into_range;
+    m_value_bits_left -= bits_to_shift_into_range;
 
-        if (bits_to_shift_into_range > m_bits_left)
-            return Error::from_string_literal("Range decoder is out of data");
-
-        m_range <<= bits_to_shift_into_range;
-        m_value = (m_value << bits_to_shift_into_range) | TRY(m_bit_stream->read_bits<u8>(bits_to_shift_into_range));
-        m_bits_left -= bits_to_shift_into_range;
-    }
+    TRY(fill_reservoir());
 
     return return_bool;
 }
 
+// 9.2.4 Parsing process for read_literal
 ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
 {
     u8 return_value = 0;
@@ -67,20 +97,34 @@ ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
     return return_value;
 }
 
-/* 9.2.3 */
-ErrorOr<void> BooleanDecoder::finish_decode_vp9()
+ErrorOr<void> BooleanDecoder::finish_decode()
 {
-    while (m_bits_left > 0) {
-        auto padding_read_size = min(m_bits_left, 64);
-        auto padding_bits = TRY(m_bit_stream->read_bits(padding_read_size));
-        m_bits_left -= padding_read_size;
+#if VPX_DEBUG
+    // 9.2.3 Exit process for Boolean decoder
+    //
+    // This process is invoked when the function exit_bool( ) is called from the syntax structure.
+    //
+    // The padding syntax element is read using the f(BoolMaxBits) parsing process.
+    //
+    // It is a requirement of bitstream conformance that padding is equal to 0.
+    //
+    // NOTE: This requirement holds up for all of our WebP lossy test inputs, as well.
+    bool padding_good = true;
 
-        if (padding_bits != 0)
-            return Error::from_string_literal("Range decoder has non-zero padding element");
+    if (m_value != 0)
+        padding_good = false;
+
+    while (m_bytes_left > 0) {
+        if (*m_data != 0)
+            padding_good = false;
+        m_data++;
+        m_bytes_left--;
     }
 
-    // FIXME: It is a requirement of bitstream conformance that enough padding bits are inserted to ensure that the final coded byte of a frame is not equal to a superframe marker.
-    //  A byte b is equal to a superframe marker if and only if (b & 0xe0)is equal to 0xc0, i.e. if the most significant 3 bits are equal to 0b110.
+    if (!padding_good)
+        return Error::from_string_literal("Range decoder padding was non-zero");
+#endif
+
     return {};
 }
 

@@ -57,6 +57,21 @@ public:
     NonnullOwnPtr<FixedMemoryStream> stream;
     BigEndianInputBitStream bit_stream;
 
+    DecoderErrorOr<BooleanDecoder> create_range_decoder(size_t size)
+    {
+        ReadonlyBytes stream_data = static_cast<FixedMemoryStream const&>(*stream).bytes();
+        auto compressed_header_data = ReadonlyBytes(stream_data.data() + stream->offset(), size);
+
+        // 9.2.1: The Boolean decoding process specified in section 9.2.2 is invoked to read a marker syntax element from the
+        //        bitstream. It is a requirement of bitstream conformance that the value read is equal to 0.
+        auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize(compressed_header_data));
+        if (DECODER_TRY(DecoderErrorCategory::Corrupted, decoder.read_bool(128)))
+            return DecoderError::corrupted("Range decoder marker was non-zero"sv);
+
+        DECODER_TRY(DecoderErrorCategory::Corrupted, bit_stream.discard(size));
+        return decoder;
+    }
+
     NonnullOwnPtr<SyntaxElementCounter> counter;
 
     u8 profile { 0 };
@@ -228,12 +243,9 @@ public:
         auto height = rows_end - rows_start;
         auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, height, width);
 
-        auto bit_stream = DECODER_TRY_ALLOC(try_make<BigEndianInputBitStream>(DECODER_TRY_ALLOC(try_make<FixedMemoryStream>(*frame_context.stream))));
-        auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize_vp9(move(bit_stream), tile_size));
-
         return TileContext {
             frame_context,
-            move(decoder),
+            TRY(frame_context.create_range_decoder(tile_size)),
             DECODER_TRY_ALLOC(try_make<SyntaxElementCounter>()),
             rows_start,
             rows_end,

@@ -1141,9 +1141,7 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
 
     Vector<BooleanDecoder> streams;
     for (auto data : data_partitions) {
-        auto memory_stream = make<FixedMemoryStream>(data);
-        auto bit_stream = make<BigEndianInputBitStream>(move(memory_stream));
-        auto decoder = TRY(BooleanDecoder::initialize(move(bit_stream), data.size() * 8));
+        auto decoder = TRY(BooleanDecoder::initialize(data));
         TRY(streams.try_append(move(decoder)));
     }
 
@@ -1221,6 +1219,9 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
         }
     }
 
+    for (auto& decoder : streams)
+        TRY(decoder.finish_decode());
+
     return {};
 }
 
@@ -1263,9 +1264,7 @@ static ErrorOr<Vector<ReadonlyBytes>> split_data_partitions(ReadonlyBytes second
 ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& vp8_header, bool include_alpha_channel)
 {
     // The first partition stores header, per-segment state, and macroblock metadata.
-    FixedMemoryStream memory_stream { vp8_header.first_partition };
-    BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
-    auto decoder = TRY(BooleanDecoder::initialize(MaybeOwned { bit_stream }, vp8_header.first_partition.size() * 8));
+    auto decoder = TRY(BooleanDecoder::initialize(vp8_header.first_partition));
 
     auto header = TRY(decode_VP8_frame_header(decoder));
 
@@ -1278,6 +1277,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8_contents(VP8Header const& v
 
     auto macroblock_metadata = TRY(decode_VP8_macroblock_metadata(decoder, header, macroblock_width, macroblock_height));
 
+    TRY(decoder.finish_decode());
     // Done with the first partition!
 
     auto bitmap_format = include_alpha_channel ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
