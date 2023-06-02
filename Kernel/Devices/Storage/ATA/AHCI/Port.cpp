@@ -12,7 +12,7 @@
 #include <Kernel/Devices/Storage/ATA/AHCI/Port.h>
 #include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/ATA/Definitions.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>

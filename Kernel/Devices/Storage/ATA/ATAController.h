@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Devices/Storage/StorageController.h>
+#include <Kernel/Devices/Storage/Controller.h>
 #include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel {

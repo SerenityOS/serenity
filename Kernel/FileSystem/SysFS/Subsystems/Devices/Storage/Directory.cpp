@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>

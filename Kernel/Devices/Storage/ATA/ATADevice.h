@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/Storage/ATA/ATAController.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 

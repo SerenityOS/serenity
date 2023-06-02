@@ -30,7 +30,7 @@
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>

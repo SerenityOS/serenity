@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/Library/KString.h>
 

@@ -8,8 +8,8 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/Storage/Controller.h>
 #include <Kernel/Devices/Storage/DiskPartition.h>
-#include <Kernel/Devices/Storage/StorageController.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 

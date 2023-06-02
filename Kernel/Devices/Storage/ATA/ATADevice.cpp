@@ -6,7 +6,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Devices/Storage/ATA/ATADevice.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

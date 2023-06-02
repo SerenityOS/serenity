@@ -24,10 +24,10 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Controller.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/SD/PCISDHostController.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/Panic.h>

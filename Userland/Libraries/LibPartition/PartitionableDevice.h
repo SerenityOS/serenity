@@ -9,7 +9,7 @@
 #include <AK/Noncopyable.h>
 
 #ifdef KERNEL
-#    include <Kernel/Devices/Storage/StorageDevice.h>
+#    include <Kernel/Devices/Storage/Device.h>
 #else
 #    include <AK/MaybeOwned.h>
 #    include <LibCore/File.h>

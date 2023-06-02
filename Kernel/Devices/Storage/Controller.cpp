@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/Storage/StorageController.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Controller.h>
+#include <Kernel/Devices/Storage/Management.h>
 
 namespace Kernel {
 

@@ -9,8 +9,8 @@
 #include <AK/Function.h>
 #include <AK/Result.h>
 #include <AK/Types.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/Devices/Storage/SD/Registers.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {

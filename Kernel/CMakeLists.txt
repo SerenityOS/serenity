@@ -111,9 +111,9 @@ set(KERNEL_SOURCES
     Devices/Storage/SD/SDHostController.cpp
     Devices/Storage/SD/SDMemoryCard.cpp
     Devices/Storage/DiskPartition.cpp
-    Devices/Storage/StorageController.cpp
-    Devices/Storage/StorageDevice.cpp
-    Devices/Storage/StorageManagement.cpp
+    Devices/Storage/Controller.cpp
+    Devices/Storage/Device.cpp
+    Devices/Storage/Management.cpp
     SanCov.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp

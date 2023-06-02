@@ -13,8 +13,8 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 

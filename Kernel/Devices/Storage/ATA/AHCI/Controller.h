@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Definitions.h>
 #include <Kernel/Devices/Storage/ATA/ATAController.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

@@ -6,9 +6,9 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeNameSpace.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
 
 namespace Kernel {
 

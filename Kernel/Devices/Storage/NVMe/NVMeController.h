@@ -11,10 +11,10 @@
 #include <AK/Tuple.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Devices/Storage/Controller.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeDefinitions.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeNameSpace.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeQueue.h>
-#include <Kernel/Devices/Storage/StorageController.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>

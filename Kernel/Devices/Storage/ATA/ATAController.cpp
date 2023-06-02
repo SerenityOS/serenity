@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/Storage/ATA/ATAController.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Management.h>
 
 namespace Kernel {
 

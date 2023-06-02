@@ -9,9 +9,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeDefinitions.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeQueue.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>

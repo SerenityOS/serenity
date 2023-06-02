@@ -9,7 +9,7 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Port.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/Device.h>
 #include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>

@@ -8,8 +8,8 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/Storage/Device.h>
+#include <Kernel/Devices/Storage/Management.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
