@@ -155,7 +155,7 @@ target_link_libraries(watch PRIVATE LibFileSystem)
 target_link_libraries(wsctl PRIVATE LibGUI LibIPC)
 target_link_libraries(xml PRIVATE LibFileSystem LibXML)
 target_link_libraries(xzcat PRIVATE LibCompress)
-target_link_libraries(zip PRIVATE LibArchive LibCompress LibCrypto LibFileSystem)
+target_link_libraries(zip PRIVATE LibArchive LibFileSystem)
 
 # FIXME: Link this file into headless-browser without compiling it again.
 target_sources(headless-browser PRIVATE "${SerenityOS_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp")
