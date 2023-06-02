@@ -31,6 +31,8 @@ Optional<Web::Platform::DecodedImage> ImageCodecPluginSerenity::decode_image(Rea
     decoded_image.is_animated = result.is_animated;
     decoded_image.loop_count = result.loop_count;
     for (auto const& frame : result.frames) {
+        if (!frame.bitmap)
+            return {};
         decoded_image.frames.empend(move(frame.bitmap), frame.duration);
     }
 
