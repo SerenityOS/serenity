@@ -18,8 +18,6 @@
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 
-#define JPEG_INVALID 0X0000
-
 // These names are defined in B.1.1.3 - Marker assignments
 
 #define JPEG_APPN0 0XFFE0
@@ -807,18 +805,20 @@ static inline bool is_supported_marker(Marker const marker)
 static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
 {
     u16 marker = TRY(stream.read_value<BigEndian<u16>>());
+
+    if (marker == 0xFFFF) {
+        u8 next { 0xFF };
+
+        while (next == 0xFF)
+            next = TRY(stream.read_value<u8>());
+
+        marker = 0xFF00 | next;
+    }
+
     if (is_supported_marker(marker))
         return marker;
-    if (marker != 0xFFFF)
-        return JPEG_INVALID;
-    u8 next;
-    do {
-        next = TRY(stream.read_value<u8>());
-        if (next == 0x00)
-            return JPEG_INVALID;
-    } while (next == 0xFF);
-    marker = 0xFF00 | (u16)next;
-    return is_supported_marker(marker) ? marker : JPEG_INVALID;
+
+    return Error::from_string_literal("Reached an unsupported marker");
 }
 
 static ErrorOr<u16> read_effective_chunk_size(Stream& stream)
@@ -1765,7 +1765,6 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
             context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
 
         switch (marker) {
-        case JPEG_INVALID:
         case JPEG_RST0:
         case JPEG_RST1:
         case JPEG_RST2:
