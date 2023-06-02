@@ -1757,6 +1757,28 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     // FIXME: Should be based on "user's default font size"
     float font_size_in_px = 16;
 
+    auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
+    Gfx::FontPixelMetrics font_pixel_metrics;
+    if (parent_element && parent_element->computed_css_values())
+        font_pixel_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
+    else
+        font_pixel_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
+    auto parent_font_size = [&]() -> CSSPixels {
+        if (!parent_element || !parent_element->computed_css_values())
+            return font_size_in_px;
+        auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
+        if (value->is_length()) {
+            auto length = value->as_length().length();
+            auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
+            if (length.is_absolute() || length.is_relative()) {
+                Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
+                return length.to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
+            }
+        }
+        return font_size_in_px;
+    };
+    Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
+
     if (font_size->is_identifier()) {
         // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
         AK::HashMap<Web::CSS::ValueID, float> absolute_size_mapping = {
@@ -1787,25 +1809,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         font_size_in_px *= multiplier;
 
     } else {
-        Gfx::FontPixelMetrics font_pixel_metrics;
-        if (parent_element && parent_element->computed_css_values())
-            font_pixel_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
-        else
-            font_pixel_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
-
-        auto parent_font_size = [&]() -> CSSPixels {
-            if (!parent_element || !parent_element->computed_css_values())
-                return font_size_in_px;
-            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
-            if (value->is_length()) {
-                auto length = value->as_length().length();
-                auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
-                if (length.is_absolute() || length.is_relative()) {
-                    Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
-                    return length.to_px(viewport_rect(), font_metrics, m_root_element_font_metrics);
-                }
-            }
-            return font_size_in_px;
+        Length::ResolutionContext const length_resolution_context {
+            .viewport_rect = viewport_rect(),
+            .font_metrics = font_metrics,
+            .root_font_metrics = m_root_element_font_metrics,
         };
 
         Optional<Length> maybe_length;
@@ -1815,15 +1822,11 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->as_length().length();
-
         } else if (font_size->is_calculated()) {
-            // FIXME: Support font-size: calc(...)
-            //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
+            maybe_length = font_size->as_calculated().resolve_length(length_resolution_context);
         }
         if (maybe_length.has_value()) {
-            auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
-            Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
-            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, m_root_element_font_metrics).value();
+            auto px = maybe_length.value().to_px(length_resolution_context).value();
             if (px != 0)
                 font_size_in_px = px;
         }
