@@ -7589,19 +7589,20 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
 
     if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
         if (property_accepting_integer.has_value()) {
-            if (auto integer = TRY(parse_integer_value(tokens)))
+            if (auto integer = TRY(parse_integer_value(tokens)); integer && property_accepts_integer(*property_accepting_integer, integer->as_integer().integer()))
                 return PropertyAndValue { *property_accepting_integer, integer };
         }
         if (property_accepting_number.has_value()) {
-            if (auto number = TRY(parse_number_value(tokens)))
+            if (auto number = TRY(parse_number_value(tokens)); number && property_accepts_number(*property_accepting_number, number->as_number().number()))
                 return PropertyAndValue { *property_accepting_number, number };
         }
     }
 
     if (peek_token.is(Token::Type::Percentage)) {
-        if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value()) {
+        auto percentage = Percentage(peek_token.token().percentage());
+        if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value() && property_accepts_percentage(*property, percentage)) {
             (void)tokens.next_token();
-            return PropertyAndValue { *property, TRY(PercentageStyleValue::create(Percentage(peek_token.token().percentage()))) };
+            return PropertyAndValue { *property, TRY(PercentageStyleValue::create(percentage)) };
         }
     }
 
@@ -7635,24 +7636,29 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
             (void)tokens.next_token();
             auto dimension = maybe_dimension.release_value();
             if (dimension.is_angle()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
-                    return PropertyAndValue { *property, TRY(AngleStyleValue::create(dimension.angle())) };
+                auto angle = dimension.angle();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle))
+                    return PropertyAndValue { *property, TRY(AngleStyleValue::create(angle)) };
             }
             if (dimension.is_frequency()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
-                    return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(dimension.frequency())) };
+                auto frequency = dimension.frequency();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value() && property_accepts_frequency(*property, frequency))
+                    return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(frequency)) };
             }
             if (dimension.is_length()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
-                    return PropertyAndValue { *property, TRY(LengthStyleValue::create(dimension.length())) };
+                auto length = dimension.length();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value() && property_accepts_length(*property, length))
+                    return PropertyAndValue { *property, TRY(LengthStyleValue::create(length)) };
             }
             if (dimension.is_resolution()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value())
-                    return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(dimension.resolution())) };
+                auto resolution = dimension.resolution();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value() && property_accepts_resolution(*property, resolution))
+                    return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(resolution)) };
             }
             if (dimension.is_time()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
-                    return PropertyAndValue { *property, TRY(TimeStyleValue::create(dimension.time())) };
+                auto time = dimension.time();
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value() && property_accepts_time(*property, time))
+                    return PropertyAndValue { *property, TRY(TimeStyleValue::create(time)) };
             }
         }
     }
