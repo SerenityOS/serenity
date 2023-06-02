@@ -170,18 +170,22 @@ void LineBuilder::update_last_line()
 
     CSSPixels excess_horizontal_space = m_available_width_for_current_line - line_box.width();
 
-    switch (text_align) {
-    case CSS::TextAlign::Center:
-    case CSS::TextAlign::LibwebCenter:
-        x_offset += excess_horizontal_space / 2;
-        break;
-    case CSS::TextAlign::Right:
-        x_offset += excess_horizontal_space;
-        break;
-    case CSS::TextAlign::Left:
-    case CSS::TextAlign::Justify:
-    default:
-        break;
+    // If (after justification, if any) the inline contents of a line box are too long to fit within it,
+    // then the contents are start-aligned: any content that doesn't fit overflows the line box’s end edge.
+    if (excess_horizontal_space > 0) {
+        switch (text_align) {
+        case CSS::TextAlign::Center:
+        case CSS::TextAlign::LibwebCenter:
+            x_offset += excess_horizontal_space / 2;
+            break;
+        case CSS::TextAlign::Right:
+            x_offset += excess_horizontal_space;
+            break;
+        case CSS::TextAlign::Left:
+        case CSS::TextAlign::Justify:
+        default:
+            break;
+        }
     }
 
     auto strut_baseline = [&] {
