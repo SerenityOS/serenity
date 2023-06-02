@@ -312,6 +312,11 @@ public:
         return m_saved_marker;
     }
 
+    u64 byte_offset() const
+    {
+        return m_byte_offset;
+    }
+
 private:
     JPEGStream(NonnullOwnPtr<Stream> stream, Vector<u8> buffer)
         : m_stream(move(stream))
@@ -342,116 +347,127 @@ private:
 
 class HuffmanStream {
 public:
-    static ErrorOr<HuffmanStream> create(JPEGStream& stream)
-    {
-        HuffmanStream huffman {};
-
-        u8 last_byte {};
-        u8 current_byte = TRY(stream.read_u8());
-
-        for (;;) {
-            last_byte = current_byte;
-            current_byte = TRY(stream.read_u8());
-
-            if (last_byte == 0xFF) {
-                if (current_byte == 0xFF)
-                    continue;
-                if (current_byte == 0x00) {
-                    current_byte = TRY(stream.read_u8());
-                    huffman.m_stream.append(last_byte);
-                    continue;
-                }
-                Marker marker = 0xFF00 | current_byte;
-                if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
-                    huffman.m_stream.append(marker);
-                    current_byte = TRY(stream.read_u8());
-                    continue;
-                }
-
-                // Note: The only way to know that we reached the end of a segment is to read
-                //       the marker of the following one. So we store it for later use.
-                stream.saved_marker({}) = marker;
-                return huffman;
-            }
-
-            huffman.m_stream.append(last_byte);
-        }
-
-        VERIFY_NOT_REACHED();
-    }
-
     ErrorOr<u8> next_symbol(HuffmanTable const& table)
     {
-        u16 const code = peek_bits(HuffmanTable::maximum_bits_per_code);
+        u16 const code = TRY(peek_bits(HuffmanTable::maximum_bits_per_code));
 
         auto const symbol_and_size = TRY(table.symbol_from_code(code));
 
-        discard_bits(symbol_and_size.size);
+        TRY(discard_bits(symbol_and_size.size));
         return symbol_and_size.symbol;
     }
 
     ErrorOr<u16> read_bits(u8 count = 1)
     {
-
         if (count > NumericLimits<u16>::digits()) {
             dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
             return Error::from_string_literal("Reading too much huffman bits at once");
         }
 
-        u16 const value = peek_bits(count);
-        discard_bits(count);
+        u16 const value = TRY(peek_bits(count));
+        TRY(discard_bits(count));
         return value;
     }
 
-    u16 peek_bits(u8 count) const
+    ErrorOr<u16> peek_bits(u8 count)
     {
-        using BufferType = u32;
+        if (count == 0)
+            return 0;
 
-        constexpr static auto max = NumericLimits<BufferType>::max();
+        if (count + m_bit_offset > bits_in_reservoir)
+            TRY(refill_reservoir());
 
-        auto const mask = max >> (8 + m_bit_offset);
+        auto const mask = NumericLimits<u16>::max() >> (NumericLimits<u16>::digits() - count);
 
-        BufferType msb_buffer {};
-        if (m_byte_offset + 0 < m_stream.size())
-            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 0]) << (2 * 8));
-        if (m_byte_offset + 1 < m_stream.size())
-            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 1]) << (1 * 8));
-        if (m_byte_offset + 2 < m_stream.size())
-            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 2]) << (0 * 8));
-
-        return (mask & msb_buffer) >> (3 * 8 - m_bit_offset - count);
+        return static_cast<u16>((m_bit_reservoir >> (bits_in_reservoir - m_bit_offset - count)) & mask);
     }
 
-    void discard_bits(u8 count)
+    ErrorOr<void> discard_bits(u8 count)
     {
         m_bit_offset += count;
-        auto const carry = m_bit_offset / 8;
-        m_bit_offset -= 8 * carry;
-        m_byte_offset += carry;
-    }
 
-    void advance_to_byte_boundary()
-    {
-        if (m_bit_offset > 0) {
-            m_bit_offset = 0;
-            m_byte_offset++;
+        if (m_bit_offset > bits_in_reservoir) {
+            // FIXME: I can't find a test case for that so let's leave it for later
+            //        instead of inserting an hard-to-find bug.
+            TODO();
         }
+
+        return {};
     }
 
-    void skip_byte()
+    ErrorOr<void> advance_to_byte_boundary()
     {
-        m_byte_offset++;
+        if (auto remainder = m_bit_offset % 8; remainder != 0)
+            TRY(discard_bits(bits_per_byte - remainder));
+
+        return {};
     }
 
-    u64 byte_offset() const
+    HuffmanStream(JPEGStream& stream)
+        : jpeg_stream(stream)
     {
-        return m_byte_offset;
     }
 
 private:
-    Vector<u8> m_stream;
-    u8 m_bit_offset { 0 };
-    u64 m_byte_offset { 0 };
+    ErrorOr<void> refill_reservoir()
+    {
+        auto const bytes_needed = m_bit_offset / bits_per_byte;
+
+        u8 bytes_added {};
+
+        auto const append_byte = [&](u8 byte) {
+            m_last_byte_was_ff = false;
+            m_bit_reservoir <<= 8;
+            m_bit_reservoir |= byte;
+            m_bit_offset -= 8;
+            bytes_added++;
+        };
+
+        do {
+            // Note: We fake zeroes when we have reached another segment
+            //       It allows us to continue peeking seamlessly.
+            u8 const next_byte = jpeg_stream.saved_marker({}).has_value() ? 0 : TRY(jpeg_stream.read_u8());
+
+            if (m_last_byte_was_ff) {
+                if (next_byte == 0xFF)
+                    continue;
+
+                if (next_byte == 0x00) {
+                    append_byte(0xFF);
+                    continue;
+                }
+
+                Marker const marker = 0xFF00 | next_byte;
+                if (marker < JPEG_RST0 || marker > JPEG_RST7) {
+                    // Note: The only way to know that we reached the end of a segment is to read
+                    //       the marker of the following one. So we store it for later use.
+                    jpeg_stream.saved_marker({}) = marker;
+                    m_last_byte_was_ff = false;
+                    continue;
+                }
+            }
+
+            if (next_byte == 0xFF) {
+                m_last_byte_was_ff = true;
+                continue;
+            }
+
+            append_byte(next_byte);
+        } while (bytes_added < bytes_needed);
+
+        return {};
+    }
+
+    JPEGStream& jpeg_stream;
+
+    using Reservoir = u64;
+    static constexpr auto bits_per_byte = 8;
+    static constexpr auto bits_in_reservoir = sizeof(Reservoir) * bits_per_byte;
+
+    Reservoir m_bit_reservoir {};
+    u8 m_bit_offset { bits_in_reservoir };
+
+    bool m_last_byte_was_ff { false };
 };
 
 struct ICCMultiChunkState {
@@ -460,6 +476,11 @@ struct ICCMultiChunkState {
 };
 
 struct Scan {
+    Scan(HuffmanStream stream)
+        : huffman_stream(stream)
+    {
+    }
+
     // B.2.3 - Scan header syntax
     Vector<ScanComponent, 4> components;
 
@@ -834,17 +855,17 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
 
                     // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
                     //  the 0th bit of the next byte.
-                    huffman_stream.advance_to_byte_boundary();
+                    TRY(huffman_stream.advance_to_byte_boundary());
 
                     // Skip the restart marker (RSTn).
-                    huffman_stream.skip_byte();
+                    TRY(huffman_stream.discard_bits(8));
                 }
             }
 
             if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}: {}", i, result.error());
-                    dbgln("Huffman stream byte offset {}", huffman_stream.byte_offset());
+                    dbgln("Huffman stream byte offset {}", context.stream.byte_offset());
                 }
                 return result.release_error();
             }
@@ -936,7 +957,7 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
     u8 const component_count = TRY(stream.read_u8());
 
-    Scan current_scan;
+    Scan current_scan(HuffmanStream { context.stream });
 
     Optional<u8> last_read;
     u8 component_read = 0;
@@ -991,7 +1012,6 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
 
-    current_scan.huffman_stream = TRY(HuffmanStream::create(stream));
     context.current_scan = move(current_scan);
 
     return {};
