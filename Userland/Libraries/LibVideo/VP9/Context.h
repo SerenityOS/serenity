@@ -65,7 +65,7 @@ public:
         // 9.2.1: The Boolean decoding process specified in section 9.2.2 is invoked to read a marker syntax element from the
         //        bitstream. It is a requirement of bitstream conformance that the value read is equal to 0.
         auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize(compressed_header_data));
-        if (DECODER_TRY(DecoderErrorCategory::Corrupted, decoder.read_bool(128)))
+        if (decoder.read_bool(128))
             return DecoderError::corrupted("Range decoder marker was non-zero"sv);
 
         DECODER_TRY(DecoderErrorCategory::Corrupted, bit_stream.discard(size));

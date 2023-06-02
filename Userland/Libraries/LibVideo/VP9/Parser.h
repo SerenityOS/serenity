@@ -71,23 +71,23 @@ private:
 
     /* (6.3) Compressed Header Syntax */
     DecoderErrorOr<void> compressed_header(FrameContext&);
-    DecoderErrorOr<TransformMode> read_tx_mode(BooleanDecoder&, FrameContext const&);
-    DecoderErrorOr<void> tx_mode_probs(BooleanDecoder&);
-    DecoderErrorOr<u8> diff_update_prob(BooleanDecoder&, u8 prob);
-    DecoderErrorOr<u8> decode_term_subexp(BooleanDecoder&);
+    TransformMode read_tx_mode(BooleanDecoder&, FrameContext const&);
+    void tx_mode_probs(BooleanDecoder&);
+    u8 diff_update_prob(BooleanDecoder&, u8 prob);
+    u8 decode_term_subexp(BooleanDecoder&);
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    DecoderErrorOr<void> read_coef_probs(BooleanDecoder&, TransformMode);
-    DecoderErrorOr<void> read_skip_prob(BooleanDecoder&);
-    DecoderErrorOr<void> read_inter_mode_probs(BooleanDecoder&);
-    DecoderErrorOr<void> read_interp_filter_probs(BooleanDecoder&);
-    DecoderErrorOr<void> read_is_inter_probs(BooleanDecoder&);
-    DecoderErrorOr<void> frame_reference_mode(FrameContext&, BooleanDecoder&);
-    DecoderErrorOr<void> frame_reference_mode_probs(BooleanDecoder&, FrameContext const&);
-    DecoderErrorOr<void> read_y_mode_probs(BooleanDecoder&);
-    DecoderErrorOr<void> read_partition_probs(BooleanDecoder&);
-    DecoderErrorOr<void> mv_probs(BooleanDecoder&, FrameContext const&);
-    DecoderErrorOr<u8> update_mv_prob(BooleanDecoder&, u8 prob);
+    void read_coef_probs(BooleanDecoder&, TransformMode);
+    void read_skip_prob(BooleanDecoder&);
+    void read_inter_mode_probs(BooleanDecoder&);
+    void read_interp_filter_probs(BooleanDecoder&);
+    void read_is_inter_probs(BooleanDecoder&);
+    void frame_reference_mode(FrameContext&, BooleanDecoder&);
+    void frame_reference_mode_probs(BooleanDecoder&, FrameContext const&);
+    void read_y_mode_probs(BooleanDecoder&);
+    void read_partition_probs(BooleanDecoder&);
+    void mv_probs(BooleanDecoder&, FrameContext const&);
+    u8 update_mv_prob(BooleanDecoder&, u8 prob);
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
@@ -95,24 +95,24 @@ private:
     void clear_left_context(TileContext&);
     DecoderErrorOr<void> decode_partition(TileContext&, u32 row, u32 column, BlockSubsize subsize);
     DecoderErrorOr<void> decode_block(TileContext&, u32 row, u32 column, BlockSubsize subsize);
-    DecoderErrorOr<void> mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> intra_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> set_intra_segment_id(BlockContext&);
-    DecoderErrorOr<bool> read_should_skip_residuals(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<TransformSize> read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
-    DecoderErrorOr<void> inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> set_inter_segment_id(BlockContext&);
+    void mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    void intra_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    void set_intra_segment_id(BlockContext&);
+    bool read_should_skip_residuals(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    TransformSize read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
+    void inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    void set_inter_segment_id(BlockContext&);
     u8 get_segment_id(BlockContext const&);
-    DecoderErrorOr<bool> read_is_inter(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> intra_block_mode_info(BlockContext&);
-    DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
-    DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
-    DecoderErrorOr<i32> read_single_motion_vector_component(BooleanDecoder&, SyntaxElementCounter&, u8 component, bool use_high_precision);
+    bool read_is_inter(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    void intra_block_mode_info(BlockContext&);
+    void inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    void read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    MotionVectorPair get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
+    MotionVector read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
+    i32 read_single_motion_vector_component(BooleanDecoder&, SyntaxElementCounter&, u8 component, bool use_high_precision);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
-    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet, Array<u8, 1024> token_cache);
-    DecoderErrorOr<i32> read_coef(BooleanDecoder&, u8 bit_depth, Token token);
+    bool tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet, Array<u8, 1024> token_cache);
+    i32 read_coef(BooleanDecoder&, u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
     MotionVectorPair find_reference_motion_vectors(BlockContext&, ReferenceFrameType, i32 block);

@@ -107,11 +107,11 @@ ErrorOr<VP8Header> decode_webp_chunk_VP8_header(ReadonlyBytes vp8_data)
 namespace {
 
 // Reads n bits followed by a sign bit (0: positive, 1: negative).
-ErrorOr<i8> read_signed_literal(BooleanDecoder& decoder, u8 n)
+i8 read_signed_literal(BooleanDecoder& decoder, u8 n)
 {
     VERIFY(n <= 7);
-    i8 i = TRY(decoder.read_literal(n));
-    if (TRY(decoder.read_literal(1)))
+    i8 i = decoder.read_literal(n);
+    if (decoder.read_literal(1))
         i = -i;
     return i;
 }
@@ -139,7 +139,7 @@ struct Segmentation {
 
     u8 macroblock_segment_tree_probabilities[3] = { 255, 255, 255 };
 };
-ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder&);
+Segmentation decode_VP8_frame_header_segmentation(BooleanDecoder&);
 
 // Also https://datatracker.ietf.org/doc/html/rfc6386#section-9.6 "Dequantization Indices"
 struct QuantizationIndices {
@@ -152,14 +152,14 @@ struct QuantizationIndices {
     i8 uv_dc_delta { 0 };
     i8 uv_ac_delta { 0 };
 };
-ErrorOr<QuantizationIndices> decode_VP8_frame_header_quantization_indices(BooleanDecoder&);
+QuantizationIndices decode_VP8_frame_header_quantization_indices(BooleanDecoder&);
 
 struct LoopFilterAdjustment {
     bool enable_loop_filter_adjustment { false };
     i8 ref_frame_delta[4] {};
     i8 mb_mode_delta[4] {};
 };
-ErrorOr<LoopFilterAdjustment> decode_VP8_frame_header_loop_filter_adjustment(BooleanDecoder&);
+LoopFilterAdjustment decode_VP8_frame_header_loop_filter_adjustment(BooleanDecoder&);
 
 using CoefficientProbabilities = Prob[4][8][3][num_dct_tokens - 1];
 ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder&, CoefficientProbabilities);
@@ -210,42 +210,42 @@ ErrorOr<FrameHeader> decode_VP8_frame_header(BooleanDecoder& decoder)
     FrameHeader header;
 
     // In the VP8 spec, this is in an `if (key_frames)`, but webp files only have key frames.
-    header.color_space = ColorSpaceAndPixelType { TRY(L(1)) };
-    header.clamping_type = ClampingSpecification { TRY(L(1)) };
+    header.color_space = ColorSpaceAndPixelType { L(1) };
+    header.clamping_type = ClampingSpecification { L(1) };
     dbgln_if(WEBP_DEBUG, "color_space {} clamping_type {}", (int)header.color_space, (int)header.clamping_type);
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-9.3 "Segment-Based Adjustments"
-    header.is_segmentation_enabled = TRY(L(1));
+    header.is_segmentation_enabled = L(1);
     dbgln_if(WEBP_DEBUG, "segmentation_enabled {}", header.is_segmentation_enabled);
 
     if (header.is_segmentation_enabled)
-        header.segmentation = TRY(decode_VP8_frame_header_segmentation(decoder));
+        header.segmentation = decode_VP8_frame_header_segmentation(decoder);
 
-    header.filter_type = FilterType { TRY(L(1)) };
-    header.loop_filter_level = TRY(L(6));
-    header.sharpness_level = TRY(L(3));
+    header.filter_type = FilterType { L(1) };
+    header.loop_filter_level = L(6);
+    header.sharpness_level = L(3);
     dbgln_if(WEBP_DEBUG, "filter_type {} loop_filter_level {} sharpness_level {}", (int)header.filter_type, header.loop_filter_level, header.sharpness_level);
 
-    header.loop_filter_adjustment = TRY(decode_VP8_frame_header_loop_filter_adjustment(decoder));
+    header.loop_filter_adjustment = decode_VP8_frame_header_loop_filter_adjustment(decoder);
 
-    u8 log2_nbr_of_dct_partitions = TRY(L(2));
+    u8 log2_nbr_of_dct_partitions = L(2);
     dbgln_if(WEBP_DEBUG, "log2_nbr_of_dct_partitions {}", log2_nbr_of_dct_partitions);
     header.number_of_dct_partitions = 1 << log2_nbr_of_dct_partitions;
 
-    header.quantization_indices = TRY(decode_VP8_frame_header_quantization_indices(decoder));
+    header.quantization_indices = decode_VP8_frame_header_quantization_indices(decoder);
 
     // In the VP8 spec, this is in an `if (key_frames)` followed by a lengthy `else`, but webp files only have key frames.
-    u8 refresh_entropy_probs = TRY(L(1)); // Has no effect in webp files.
+    u8 refresh_entropy_probs = L(1); // Has no effect in webp files.
     dbgln_if(WEBP_DEBUG, "refresh_entropy_probs {}", refresh_entropy_probs);
 
     memcpy(header.coefficient_probabilities, DEFAULT_COEFFICIENT_PROBABILITIES, sizeof(header.coefficient_probabilities));
     TRY(decode_VP8_frame_header_coefficient_probabilities(decoder, header.coefficient_probabilities));
 
     // https://datatracker.ietf.org/doc/html/rfc6386#section-9.11 "Remaining Frame Header Data (Key Frame)"
-    header.enable_skipping_of_macroblocks_containing_only_zero_coefficients = TRY(L(1));
+    header.enable_skipping_of_macroblocks_containing_only_zero_coefficients = L(1);
     dbgln_if(WEBP_DEBUG, "mb_no_skip_coeff {}", header.enable_skipping_of_macroblocks_containing_only_zero_coefficients);
     if (header.enable_skipping_of_macroblocks_containing_only_zero_coefficients) {
-        header.probability_skip_false = TRY(L(8));
+        header.probability_skip_false = L(8);
         dbgln_if(WEBP_DEBUG, "prob_skip_false {}", header.probability_skip_false);
     }
 
@@ -254,35 +254,35 @@ ErrorOr<FrameHeader> decode_VP8_frame_header(BooleanDecoder& decoder)
     return header;
 }
 
-ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decoder)
+Segmentation decode_VP8_frame_header_segmentation(BooleanDecoder& decoder)
 {
     // Corresponds to "update_segmentation()" in section 19.2 of the spec.
     Segmentation segmentation;
 
-    segmentation.update_macroblock_segmentation_map = TRY(L(1));
-    u8 update_segment_feature_data = TRY(L(1));
+    segmentation.update_macroblock_segmentation_map = L(1);
+    u8 update_segment_feature_data = L(1);
 
     dbgln_if(WEBP_DEBUG, "update_mb_segmentation_map {} update_segment_feature_data {}",
         segmentation.update_macroblock_segmentation_map, update_segment_feature_data);
 
     if (update_segment_feature_data) {
-        segmentation.segment_feature_mode = static_cast<SegmentFeatureMode>(TRY(L(1)));
+        segmentation.segment_feature_mode = static_cast<SegmentFeatureMode>(L(1));
         dbgln_if(WEBP_DEBUG, "segment_feature_mode {}", (int)segmentation.segment_feature_mode);
 
         for (int i = 0; i < 4; ++i) {
-            u8 quantizer_update = TRY(L(1));
+            u8 quantizer_update = L(1);
             dbgln_if(WEBP_DEBUG, "quantizer_update {}", quantizer_update);
             if (quantizer_update) {
-                i8 quantizer_update_value = TRY(L_signed(7));
+                i8 quantizer_update_value = L_signed(7);
                 dbgln_if(WEBP_DEBUG, "quantizer_update_value {}", quantizer_update_value);
                 segmentation.quantizer_update_value[i] = quantizer_update_value;
             }
         }
         for (int i = 0; i < 4; ++i) {
-            u8 loop_filter_update = TRY(L(1));
+            u8 loop_filter_update = L(1);
             dbgln_if(WEBP_DEBUG, "loop_filter_update {}", loop_filter_update);
             if (loop_filter_update) {
-                i8 loop_filter_update_value = TRY(L_signed(6));
+                i8 loop_filter_update_value = L_signed(6);
                 dbgln_if(WEBP_DEBUG, "loop_filter_update_value {}", loop_filter_update_value);
                 segmentation.loop_filter_update_value[i] = loop_filter_update_value;
             }
@@ -292,10 +292,10 @@ ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decod
     if (segmentation.update_macroblock_segmentation_map) {
         // This reads mb_segment_tree_probs for https://datatracker.ietf.org/doc/html/rfc6386#section-10.
         for (int i = 0; i < 3; ++i) {
-            u8 segment_prob_update = TRY(L(1));
+            u8 segment_prob_update = L(1);
             dbgln_if(WEBP_DEBUG, "segment_prob_update {}", segment_prob_update);
             if (segment_prob_update) {
-                u8 segment_prob = TRY(L(8));
+                u8 segment_prob = L(8);
                 dbgln_if(WEBP_DEBUG, "segment_prob {}", segment_prob);
                 segmentation.macroblock_segment_tree_probabilities[i] = segment_prob;
             }
@@ -305,7 +305,7 @@ ErrorOr<Segmentation> decode_VP8_frame_header_segmentation(BooleanDecoder& decod
     return segmentation;
 }
 
-ErrorOr<QuantizationIndices> decode_VP8_frame_header_quantization_indices(BooleanDecoder& decoder)
+QuantizationIndices decode_VP8_frame_header_quantization_indices(BooleanDecoder& decoder)
 {
     // Corresponds to "quant_indices()" in section 19.2 of the spec.
     QuantizationIndices quantization_indices;
@@ -314,52 +314,51 @@ ErrorOr<QuantizationIndices> decode_VP8_frame_header_quantization_indices(Boolea
     //  Y-plane AC coefficients, called yac_qi.  It is always coded and acts
     //  as a baseline for the other 5 quantization indices, each of which is
     //  represented by a delta from this baseline index."
-    quantization_indices.y_ac = TRY(L(7));
+    quantization_indices.y_ac = L(7);
     dbgln_if(WEBP_DEBUG, "y_ac_qi {}", quantization_indices.y_ac);
 
-    auto read_delta = [&decoder](StringView name, i8* destination) -> ErrorOr<void> {
-        u8 is_present = TRY(L(1));
+    auto read_delta = [&decoder](StringView name, i8* destination) -> void {
+        u8 is_present = L(1);
         dbgln_if(WEBP_DEBUG, "{}_present {}", name, is_present);
         if (is_present) {
-            i8 delta = TRY(L_signed(4));
+            i8 delta = L_signed(4);
             dbgln_if(WEBP_DEBUG, "{} {}", name, delta);
             *destination = delta;
         }
-        return {};
     };
-    TRY(read_delta("y_dc_delta"sv, &quantization_indices.y_dc_delta));
-    TRY(read_delta("y2_dc_delta"sv, &quantization_indices.y2_dc_delta));
-    TRY(read_delta("y2_ac_delta"sv, &quantization_indices.y2_ac_delta));
-    TRY(read_delta("uv_dc_delta"sv, &quantization_indices.uv_dc_delta));
-    TRY(read_delta("uv_ac_delta"sv, &quantization_indices.uv_ac_delta));
+    read_delta("y_dc_delta"sv, &quantization_indices.y_dc_delta);
+    read_delta("y2_dc_delta"sv, &quantization_indices.y2_dc_delta);
+    read_delta("y2_ac_delta"sv, &quantization_indices.y2_ac_delta);
+    read_delta("uv_dc_delta"sv, &quantization_indices.uv_dc_delta);
+    read_delta("uv_ac_delta"sv, &quantization_indices.uv_ac_delta);
 
     return quantization_indices;
 }
 
-ErrorOr<LoopFilterAdjustment> decode_VP8_frame_header_loop_filter_adjustment(BooleanDecoder& decoder)
+LoopFilterAdjustment decode_VP8_frame_header_loop_filter_adjustment(BooleanDecoder& decoder)
 {
     // Corresponds to "mb_lf_adjustments()" in section 19.2 of the spec.
     LoopFilterAdjustment adjustment;
 
-    adjustment.enable_loop_filter_adjustment = TRY(L(1));
+    adjustment.enable_loop_filter_adjustment = L(1);
     if (adjustment.enable_loop_filter_adjustment) {
-        u8 mode_ref_lf_delta_update = TRY(L(1));
+        u8 mode_ref_lf_delta_update = L(1);
         dbgln_if(WEBP_DEBUG, "mode_ref_lf_delta_update {}", mode_ref_lf_delta_update);
         if (mode_ref_lf_delta_update) {
             for (int i = 0; i < 4; ++i) {
-                u8 ref_frame_delta_update_flag = TRY(L(1));
+                u8 ref_frame_delta_update_flag = L(1);
                 dbgln_if(WEBP_DEBUG, "ref_frame_delta_update_flag {}", ref_frame_delta_update_flag);
                 if (ref_frame_delta_update_flag) {
-                    i8 delta = TRY(L_signed(6));
+                    i8 delta = L_signed(6);
                     dbgln_if(WEBP_DEBUG, "delta {}", delta);
                     adjustment.ref_frame_delta[i] = delta;
                 }
             }
             for (int i = 0; i < 4; ++i) {
-                u8 mb_mode_delta_update_flag = TRY(L(1));
+                u8 mb_mode_delta_update_flag = L(1);
                 dbgln_if(WEBP_DEBUG, "mb_mode_delta_update_flag {}", mb_mode_delta_update_flag);
                 if (mb_mode_delta_update_flag) {
-                    i8 delta = TRY(L_signed(6));
+                    i8 delta = L_signed(6);
                     dbgln_if(WEBP_DEBUG, "delta {}", delta);
                     adjustment.mb_mode_delta[i] = delta;
                 }
@@ -379,8 +378,8 @@ ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder& 
                 for (int l = 0; l < 11; l++) {
                     // token_prob_update() says L(1) and L(8), but it's actually B(p) and L(8).
                     // https://datatracker.ietf.org/doc/html/rfc6386#section-13.4 "Token Probability Updates" describes it correctly.
-                    if (TRY(B(COEFFICIENT_UPDATE_PROBABILITIES[i][j][k][l])))
-                        coefficient_probabilities[i][j][k][l] = TRY(L(8));
+                    if (B(COEFFICIENT_UPDATE_PROBABILITIES[i][j][k][l]))
+                        coefficient_probabilities[i][j][k][l] = L(8);
                 }
             }
         }
@@ -390,11 +389,11 @@ ErrorOr<void> decode_VP8_frame_header_coefficient_probabilities(BooleanDecoder& 
 }
 
 // https://datatracker.ietf.org/doc/html/rfc6386#section-8.1 "Tree Coding Implementation"
-ErrorOr<u8> tree_decode(BooleanDecoder& decoder, ReadonlySpan<TreeIndex> tree, ReadonlyBytes probabilities, TreeIndex initial_i = 0)
+u8 tree_decode(BooleanDecoder& decoder, ReadonlySpan<TreeIndex> tree, ReadonlyBytes probabilities, TreeIndex initial_i = 0)
 {
     TreeIndex i = initial_i;
     while (true) {
-        u8 b = TRY(B(probabilities[i >> 1]));
+        u8 b = B(probabilities[i >> 1]);
         i = tree[i + b];
         if (i <= 0)
             return -i;
@@ -454,12 +453,12 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
             MacroblockMetadata metadata;
 
             if (header.segmentation.update_macroblock_segmentation_map)
-                metadata.segment_id = TRY(tree_decode(decoder, MACROBLOCK_SEGMENT_TREE, header.segmentation.macroblock_segment_tree_probabilities));
+                metadata.segment_id = tree_decode(decoder, MACROBLOCK_SEGMENT_TREE, header.segmentation.macroblock_segment_tree_probabilities);
 
             if (header.enable_skipping_of_macroblocks_containing_only_zero_coefficients)
-                metadata.skip_coefficients = TRY(B(header.probability_skip_false));
+                metadata.skip_coefficients = B(header.probability_skip_false);
 
-            int intra_y_mode = TRY(tree_decode(decoder, KEYFRAME_YMODE_TREE, KEYFRAME_YMODE_PROBABILITIES));
+            int intra_y_mode = tree_decode(decoder, KEYFRAME_YMODE_TREE, KEYFRAME_YMODE_PROBABILITIES);
             metadata.intra_y_mode = (IntraMacroblockMode)intra_y_mode;
 
             // "If the Ymode is B_PRED, it is followed by a (tree-coded) mode for each of the 16 Y subblocks."
@@ -472,7 +471,7 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
                         int A = above[mb_x * 4 + x];
                         int L = left[y];
 
-                        auto intra_b_mode = static_cast<IntraBlockMode>(TRY(tree_decode(decoder, BLOCK_MODE_TREE, KEYFRAME_BLOCK_MODE_PROBABILITIES[A][L])));
+                        auto intra_b_mode = static_cast<IntraBlockMode>(tree_decode(decoder, BLOCK_MODE_TREE, KEYFRAME_BLOCK_MODE_PROBABILITIES[A][L]));
                         metadata.intra_b_modes[y * 4 + x] = intra_b_mode;
 
                         above[mb_x * 4 + x] = intra_b_mode;
@@ -489,7 +488,7 @@ ErrorOr<Vector<MacroblockMetadata>> decode_VP8_macroblock_metadata(BooleanDecode
                 }
             }
 
-            metadata.uv_mode = (IntraMacroblockMode)TRY(tree_decode(decoder, UV_MODE_TREE, KEYFRAME_UV_MODE_PROBABILITIES));
+            metadata.uv_mode = (IntraMacroblockMode)tree_decode(decoder, UV_MODE_TREE, KEYFRAME_UV_MODE_PROBABILITIES);
 
             TRY(macroblock_metadata.try_append(metadata));
         }
@@ -557,7 +556,7 @@ int plane_index(CoefficientBlockIndex index, bool have_y2)
     return 3;
 }
 
-ErrorOr<i16> coefficient_value_for_token(BooleanDecoder& decoder, u8 token)
+i16 coefficient_value_for_token(BooleanDecoder& decoder, u8 token)
 {
     // Implements the second half of https://datatracker.ietf.org/doc/html/rfc6386#section-13.2 "Coding of Individual Coefficient Values"
     i16 v = static_cast<i16>(token); // For DCT_0 to DCT4
@@ -578,13 +577,13 @@ ErrorOr<i16> coefficient_value_for_token(BooleanDecoder& decoder, u8 token)
 
         // This loop corresponds to `DCTextra` in the spec in section 13.2.
         for (int i = 0; i < bits[token - dct_cat1]; ++i)
-            v = (v << 1) | TRY(decoder.read_bool(Pcats[token - dct_cat1][i]));
+            v = (v << 1) | decoder.read_bool(Pcats[token - dct_cat1][i]);
 
         v += starts[token - dct_cat1];
     }
 
     if (v) {
-        if (TRY(decoder.read_bool(128)))
+        if (decoder.read_bool(128))
             v = -v;
     }
 
@@ -720,7 +719,7 @@ struct CoefficientReadingContext {
 using Coefficients = i16[16];
 
 // Returns if any non-zero coefficients were read.
-ErrorOr<bool> read_coefficent_block(BooleanDecoder& decoder, Coefficients out_coefficients, CoefficientBlockIndex block_index, CoefficientReadingContext& coefficient_reading_context, int mb_x, bool have_y2, int segment_id, FrameHeader const& header)
+bool read_coefficent_block(BooleanDecoder& decoder, Coefficients out_coefficients, CoefficientBlockIndex block_index, CoefficientReadingContext& coefficient_reading_context, int mb_x, bool have_y2, int segment_id, FrameHeader const& header)
 {
     // Corresponds to `residual_block()` in https://datatracker.ietf.org/doc/html/rfc6386#section-19.3,
     // but also does dequantization of the stored values.
@@ -788,11 +787,11 @@ ErrorOr<bool> read_coefficent_block(BooleanDecoder& decoder, Coefficients out_co
         //  However, if the preceding coefficient is a DCT_0, decoding will skip
         //  the first branch, since it is not possible for dct_eob to follow a
         //  DCT_0."
-        u8 token = TRY(tree_decode(decoder, COEFFICIENT_TREE, header.coefficient_probabilities[plane][band][tricky], last_decoded_value == DCT_0 ? 2 : 0));
+        u8 token = tree_decode(decoder, COEFFICIENT_TREE, header.coefficient_probabilities[plane][band][tricky], last_decoded_value == DCT_0 ? 2 : 0);
         if (token == dct_eob)
             break;
 
-        i16 v = TRY(coefficient_value_for_token(decoder, token));
+        i16 v = coefficient_value_for_token(decoder, token);
 
         if (v) {
             // Subblock has non-0 coefficients. Store that, so that `tricky` on the next subblock is initialized correctly.
@@ -817,7 +816,7 @@ struct MacroblockCoefficients {
     Coefficients v_coeffs[4] {};
 };
 
-ErrorOr<MacroblockCoefficients> read_macroblock_coefficients(BooleanDecoder& decoder, FrameHeader const& header, CoefficientReadingContext& coefficient_reading_context, MacroblockMetadata const& metadata, int mb_x)
+MacroblockCoefficients read_macroblock_coefficients(BooleanDecoder& decoder, FrameHeader const& header, CoefficientReadingContext& coefficient_reading_context, MacroblockMetadata const& metadata, int mb_x)
 {
     // Corresponds to `residual_data()` in https://datatracker.ietf.org/doc/html/rfc6386#section-19.3,
     // but also does the inverse walsh-hadamard transform if a Y2 block is present.
@@ -865,7 +864,7 @@ ErrorOr<MacroblockCoefficients> read_macroblock_coefficients(BooleanDecoder& dec
                 to_read = coefficients.v_coeffs[i - 21];
             else // Y
                 to_read = coefficients.y_coeffs[i - 1];
-            subblock_has_nonzero_coefficients = TRY(read_coefficent_block(decoder, to_read, block_index, coefficient_reading_context, mb_x, have_y2, metadata.segment_id, header));
+            subblock_has_nonzero_coefficients = read_coefficent_block(decoder, to_read, block_index, coefficient_reading_context, mb_x, have_y2, metadata.segment_id, header);
         }
 
         coefficient_reading_context.update(block_index, mb_x, subblock_has_nonzero_coefficients);
@@ -1181,7 +1180,7 @@ ErrorOr<void> decode_VP8_image_data(Gfx::Bitmap& bitmap, FrameHeader const& head
         for (int mb_x = 0; mb_x < macroblock_width; ++mb_x, ++macroblock_index) {
             auto const& metadata = macroblock_metadata[macroblock_index];
 
-            auto coefficients = TRY(read_macroblock_coefficients(decoder, header, coefficient_reading_context, metadata, mb_x));
+            auto coefficients = read_macroblock_coefficients(decoder, header, coefficient_reading_context, metadata, mb_x);
 
             u8 y_data[16 * 16] {};
             if (metadata.intra_y_mode == B_PRED)

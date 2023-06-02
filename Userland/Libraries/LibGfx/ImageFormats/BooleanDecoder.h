@@ -20,8 +20,8 @@ public:
     static ErrorOr<BooleanDecoder> initialize(ReadonlyBytes data);
 
     /* (9.2) */
-    ErrorOr<bool> read_bool(u8 probability);
-    ErrorOr<u8> read_literal(u8 bits);
+    bool read_bool(u8 probability);
+    u8 read_literal(u8 bits);
 
     ErrorOr<void> finish_decode();
 
@@ -37,12 +37,14 @@ private:
         , m_value(static_cast<ValueType>(*data) << reserve_bits)
         , m_value_bits_left(8)
     {
+        fill_reservoir();
     }
 
-    ErrorOr<void> fill_reservoir();
+    void fill_reservoir();
 
     u8 const* m_data;
     size_t m_bytes_left { 0 };
+    bool m_overread { false };
     // This value will never exceed 255. If this is a u8, the compiler will generate a truncation in read_bool().
     u32 m_range { 0 };
     ValueType m_value { 0 };
