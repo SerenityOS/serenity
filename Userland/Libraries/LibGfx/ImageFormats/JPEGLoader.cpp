@@ -515,7 +515,7 @@ struct JPEGLoadingContext {
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
 
-    Scan current_scan;
+    Optional<Scan> current_scan {};
 
     Vector<Component, 4> components;
     RefPtr<Gfx::Bitmap> bitmap;
@@ -568,12 +568,12 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     }
 
     auto& dc_table = maybe_table.value();
-    auto& scan = context.current_scan;
+    auto& scan = *context.current_scan;
 
     auto* select_component = get_component(macroblock, scan_component.component.index);
     auto& coefficient = select_component[0];
 
-    if (context.current_scan.successive_approximation_high > 0) {
+    if (scan.successive_approximation_high > 0) {
         TRY(refine_coefficient(scan, coefficient));
         return {};
     }
@@ -644,7 +644,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
     auto& ac_table = maybe_table.value();
     auto* select_component = get_component(macroblock, scan_component.component.index);
 
-    auto& scan = context.current_scan;
+    auto& scan = *context.current_scan;
 
     // Compute the AC coefficients.
 
@@ -755,12 +755,12 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  */
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
-    for (auto const& scan_component : context.current_scan.components) {
+    for (auto const& scan_component : context.current_scan->components) {
         for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
                 // A.2.3 - Interleaved order
                 u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
-                if (!context.current_scan.are_components_interleaved()) {
+                if (!context.current_scan->are_components_interleaved()) {
                     macroblock_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
 
                     // A.2.4 Completion of partial MCU
@@ -777,14 +777,14 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
 
                 Macroblock& block = macroblocks[macroblock_index];
 
-                if (context.current_scan.spectral_selection_start == 0)
+                if (context.current_scan->spectral_selection_start == 0)
                     TRY(add_dc(context, block, scan_component));
-                if (context.current_scan.spectral_selection_end != 0)
+                if (context.current_scan->spectral_selection_end != 0)
                     TRY(add_ac(context, block, scan_component));
 
                 // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
-                if (context.current_scan.end_of_bands_run_count > 0) {
-                    --context.current_scan.end_of_bands_run_count;
+                if (context.current_scan->end_of_bands_run_count > 0) {
+                    --context.current_scan->end_of_bands_run_count;
                     continue;
                 }
             }
@@ -809,7 +809,7 @@ static bool is_dct_based(StartOfFrame::FrameType frame_type)
 static void reset_decoder(JPEGLoadingContext& context)
 {
     // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
-    context.current_scan.end_of_bands_run_count = 0;
+    context.current_scan->end_of_bands_run_count = 0;
 
     // E.2.4 Control procedure for decoding a restart interval
     if (is_dct_based(context.frame.type)) {
@@ -826,7 +826,7 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
 
-            auto& huffman_stream = context.current_scan.huffman_stream;
+            auto& huffman_stream = context.current_scan->huffman_stream;
 
             if (context.dc_restart_interval > 0) {
                 if (i != 0 && i % (context.dc_restart_interval * context.vsample_factor * context.hsample_factor) == 0) {
