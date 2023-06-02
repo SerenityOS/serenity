@@ -256,36 +256,121 @@ private:
     Array<u16, 1 << bits_per_cached_code> lookup_table {};
 };
 
+class HuffmanStream;
+
+class JPEGStream {
+public:
+    static ErrorOr<JPEGStream> create(NonnullOwnPtr<Stream> stream)
+    {
+        Vector<u8> buffer;
+        TRY(buffer.try_resize(buffer_size));
+        JPEGStream jpeg_stream { move(stream), move(buffer) };
+
+        TRY(jpeg_stream.refill_buffer());
+        return jpeg_stream;
+    }
+
+    ErrorOr<u8> read_u8()
+    {
+        if (m_byte_offset == m_current_size)
+            TRY(refill_buffer());
+        return m_buffer[m_byte_offset++];
+    }
+
+    ErrorOr<u16> read_u16()
+    {
+        if (m_saved_marker.has_value())
+            return m_saved_marker.release_value();
+
+        return (static_cast<u16>(TRY(read_u8())) << 8) | TRY(read_u8());
+    }
+
+    ErrorOr<void> discard(u64 bytes)
+    {
+        auto const discarded_from_buffer = min(m_current_size - m_byte_offset, bytes);
+        m_byte_offset += discarded_from_buffer;
+
+        if (discarded_from_buffer < bytes)
+            TRY(m_stream->discard(bytes - discarded_from_buffer));
+
+        return {};
+    }
+
+    ErrorOr<void> read_until_filled(Bytes bytes)
+    {
+        auto const copied = m_buffer.span().slice(m_byte_offset).copy_trimmed_to(bytes);
+        m_byte_offset += copied;
+
+        if (copied < bytes.size())
+            TRY(m_stream->read_until_filled(bytes.slice(copied)));
+
+        return {};
+    }
+
+    Optional<u16>& saved_marker(Badge<HuffmanStream>)
+    {
+        return m_saved_marker;
+    }
+
+private:
+    JPEGStream(NonnullOwnPtr<Stream> stream, Vector<u8> buffer)
+        : m_stream(move(stream))
+        , m_buffer(move(buffer))
+    {
+    }
+
+    ErrorOr<void> refill_buffer()
+    {
+        VERIFY(m_byte_offset == m_current_size);
+
+        m_current_size = TRY(m_stream->read_some(m_buffer.span())).size();
+        m_byte_offset = 0;
+
+        return {};
+    }
+
+    static constexpr auto buffer_size = 4096;
+
+    NonnullOwnPtr<Stream> m_stream;
+
+    Optional<u16> m_saved_marker {};
+
+    Vector<u8> m_buffer {};
+    u64 m_byte_offset { buffer_size };
+    u64 m_current_size { buffer_size };
+};
+
 class HuffmanStream {
 public:
-    static ErrorOr<HuffmanStream> create(SeekableStream& stream)
+    static ErrorOr<HuffmanStream> create(JPEGStream& stream)
     {
         HuffmanStream huffman {};
 
         u8 last_byte {};
-        u8 current_byte = TRY(stream.read_value<u8>());
+        u8 current_byte = TRY(stream.read_u8());
 
         for (;;) {
             last_byte = current_byte;
-            current_byte = TRY(stream.read_value<u8>());
+            current_byte = TRY(stream.read_u8());
 
             if (last_byte == 0xFF) {
                 if (current_byte == 0xFF)
                     continue;
                 if (current_byte == 0x00) {
-                    current_byte = TRY(stream.read_value<u8>());
+                    current_byte = TRY(stream.read_u8());
                     huffman.m_stream.append(last_byte);
                     continue;
                 }
                 Marker marker = 0xFF00 | current_byte;
                 if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
                     huffman.m_stream.append(marker);
-                    current_byte = TRY(stream.read_value<u8>());
+                    current_byte = TRY(stream.read_u8());
                     continue;
                 }
 
-                // Rollback the marker we just read
-                TRY(stream.seek(-2, AK::SeekMode::FromCurrentPosition));
+                // Note: The only way to know that we reached the end of a segment is to read
+                //       the marker of the following one. So we store it for later use.
+                stream.saved_marker({}) = marker;
                 return huffman;
             }
 
@@ -403,6 +488,17 @@ enum class ColorTransform {
 };
 
 struct JPEGLoadingContext {
+    JPEGLoadingContext(JPEGStream jpeg_stream)
+        : stream(move(jpeg_stream))
+    {
+    }
+
+    static ErrorOr<NonnullOwnPtr<JPEGLoadingContext>> create(NonnullOwnPtr<Stream> stream)
+    {
+        auto jpeg_stream = TRY(JPEGStream::create(move(stream)));
+        return make<JPEGLoadingContext>(move(jpeg_stream));
+    }
+
     enum State {
         NotDecoded = 0,
         Error,
@@ -428,7 +524,7 @@ struct JPEGLoadingContext {
     HashMap<u8, HuffmanTable> ac_tables;
     Array<i16, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
-    OwnPtr<FixedMemoryStream> stream;
+    JPEGStream stream;
 
     Optional<ColorTransform> color_transform {};
 
@@ -802,15 +898,15 @@ static inline bool is_supported_marker(Marker const marker)
     return false;
 }
 
-static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(JPEGStream& stream)
 {
-    u16 marker = TRY(stream.read_value<BigEndian<u16>>());
+    u16 marker = TRY(stream.read_u16());
 
     if (marker == 0xFFFF) {
         u8 next { 0xFF };
 
         while (next == 0xFF)
-            next = TRY(stream.read_value<u8>());
+            next = TRY(stream.read_u8());
 
         marker = 0xFF00 | next;
     }
@@ -821,16 +917,16 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
     return Error::from_string_literal("Reached an unsupported marker");
 }
 
-static ErrorOr<u16> read_effective_chunk_size(Stream& stream)
+static ErrorOr<u16> read_effective_chunk_size(JPEGStream& stream)
 {
     // The stored chunk size includes the size of `stored_size` itself.
-    u16 const stored_size = TRY(stream.read_value<BigEndian<u16>>());
+    u16 const stored_size = TRY(stream.read_u16());
     if (stored_size < 2)
         return Error::from_string_literal("Stored chunk size is too small");
     return stored_size - 2;
 }
 
-static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& context)
 {
     // B.2.3 - Scan header syntax
 
@@ -838,7 +934,7 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
         return Error::from_string_literal("SOS found before reading a SOF");
 
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
-    u8 const component_count = TRY(stream.read_value<u8>());
+    u8 const component_count = TRY(stream.read_u8());
 
     Scan current_scan;
 
@@ -851,12 +947,12 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
             break;
 
         if (!last_read.has_value())
-            last_read = TRY(stream.read_value<u8>());
+            last_read = TRY(stream.read_u8());
 
         if (component.id != *last_read)
             continue;
 
-        u8 table_ids = TRY(stream.read_value<u8>());
+        u8 const table_ids = TRY(stream.read_u8());
 
         current_scan.components.empend(component, static_cast<u8>(table_ids >> 4), static_cast<u8>(table_ids & 0x0F));
 
@@ -874,9 +970,9 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
         dbgln(builder.string_view());
     }
 
-    current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
-    current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
-    auto const successive_approximation = TRY(stream.read_value<u8>());
+    current_scan.spectral_selection_start = TRY(stream.read_u8());
+    current_scan.spectral_selection_end = TRY(stream.read_u8());
+    auto const successive_approximation = TRY(stream.read_u8());
     current_scan.successive_approximation_high = successive_approximation >> 4;
     current_scan.successive_approximation_low = successive_approximation & 0x0F;
 
@@ -895,13 +991,13 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
 
-    current_scan.huffman_stream = TRY(HuffmanStream::create(*context.stream));
+    current_scan.huffman_stream = TRY(HuffmanStream::create(stream));
     context.current_scan = move(current_scan);
 
     return {};
 }
 
-static ErrorOr<void> read_restart_interval(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_restart_interval(JPEGStream& stream, JPEGLoadingContext& context)
 {
     // B.2.4.4 - Restart interval definition syntax
     u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
@@ -909,11 +1005,11 @@ static ErrorOr<void> read_restart_interval(Stream& stream, JPEGLoadingContext& c
         dbgln_if(JPEG_DEBUG, "Malformed DRI marker found!");
         return Error::from_string_literal("Malformed DRI marker found");
     }
-    context.dc_restart_interval = TRY(stream.read_value<BigEndian<u16>>());
+    context.dc_restart_interval = TRY(stream.read_u16());
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& context)
 {
     // B.2.4.2 - Huffman table-specification syntax
 
@@ -921,7 +1017,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
 
     while (bytes_to_read > 0) {
         HuffmanTable table;
-        u8 const table_info = TRY(stream.read_value<u8>());
+        u8 const table_info = TRY(stream.read_u8());
         u8 const table_type = table_info >> 4;
         u8 const table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
@@ -943,7 +1039,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
         for (int i = 0; i < 16; i++) {
             if (i == HuffmanTable::bits_per_cached_code)
                 table.first_non_cached_code_index = total_codes;
-            u8 count = TRY(stream.read_value<u8>());
+            u8 const count = TRY(stream.read_u8());
             total_codes += count;
             table.code_counts[i] = count;
         }
@@ -953,7 +1049,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
 
         // Read symbols. Read X bytes, where X is the sum of the counts of codes read in the previous step.
         for (u32 i = 0; i < total_codes; i++) {
-            u8 symbol = TRY(stream.read_value<u8>());
+            u8 symbol = TRY(stream.read_u8());
             table.symbols.append(symbol);
         }
 
@@ -972,14 +1068,14 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
     return {};
 }
 
-static ErrorOr<void> read_icc_profile(Stream& stream, JPEGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
 {
     // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, page 5, "JFIF".
     if (bytes_to_read <= 2)
         return Error::from_string_literal("icc marker too small");
 
-    auto chunk_sequence_number = TRY(stream.read_value<u8>()); // 1-based
-    auto number_of_chunks = TRY(stream.read_value<u8>());
+    auto chunk_sequence_number = TRY(stream.read_u8()); // 1-based
+    auto number_of_chunks = TRY(stream.read_u8());
     bytes_to_read -= 2;
 
     if (!context.icc_multi_chunk_state.has_value())
@@ -1031,7 +1127,7 @@ static ErrorOr<void> read_icc_profile(Stream& stream, JPEGLoadingContext& contex
     return {};
 }
 
-static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] JPEGLoadingContext& context, int bytes_to_read)
 {
     // The App 14 segment is application specific in the first JPEG standard.
     // However, the Adobe implementation is globally accepted and the value of the color transform
@@ -1048,10 +1144,10 @@ static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGL
     if (bytes_to_read < 6)
         return Error::from_string_literal("App14 segment too small");
 
-    [[maybe_unused]] auto const version = TRY(stream.read_value<u8>());
-    [[maybe_unused]] u16 const flag0 = TRY(stream.read_value<BigEndian<u16>>());
-    [[maybe_unused]] u16 const flag1 = TRY(stream.read_value<BigEndian<u16>>());
-    auto const color_transform = TRY(stream.read_value<u8>());
+    [[maybe_unused]] auto const version = TRY(stream.read_u8());
+    [[maybe_unused]] u16 const flag0 = TRY(stream.read_u16());
+    [[maybe_unused]] u16 const flag1 = TRY(stream.read_u16());
+    auto const color_transform = TRY(stream.read_u8());
 
     if (bytes_to_read > 6) {
         dbgln_if(JPEG_DEBUG, "Unread bytes in App14 segment: {}", bytes_to_read - 6);
@@ -1075,7 +1171,7 @@ static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGL
     return {};
 }
 
-static ErrorOr<void> read_app_marker(Stream& stream, JPEGLoadingContext& context, int app_marker_number)
+static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     // B.2.4.6 - Application data syntax
 
@@ -1088,7 +1184,7 @@ static ErrorOr<void> read_app_marker(Stream& stream, JPEGLoadingContext& context
             return {};
         }
 
-        auto c = TRY(stream.read_value<char>());
+        auto c = TRY(stream.read_u8());
         bytes_to_read--;
 
         if (c == '\0')
@@ -1154,7 +1250,7 @@ static ErrorOr<void> ensure_standard_precision(StartOfFrame const& frame)
     return Error::from_string_literal("Unsupported SOF precision.");
 }
 
-static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext& context)
 {
     if (context.state == JPEGLoadingContext::FrameDecoded) {
         dbgln_if(JPEG_DEBUG, "SOF repeated!");
@@ -1163,12 +1259,12 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
 
     [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
 
-    context.frame.precision = TRY(stream.read_value<u8>());
+    context.frame.precision = TRY(stream.read_u8());
 
     TRY(ensure_standard_precision(context.frame));
 
-    context.frame.height = TRY(stream.read_value<BigEndian<u16>>());
-    context.frame.width = TRY(stream.read_value<BigEndian<u16>>());
+    context.frame.height = TRY(stream.read_u16());
+    context.frame.width = TRY(stream.read_u16());
     if (!context.frame.width || !context.frame.height) {
         dbgln_if(JPEG_DEBUG, "ERROR! Image height: {}, Image width: {}!", context.frame.height, context.frame.width);
         return Error::from_string_literal("Image frame height of width null");
@@ -1181,7 +1277,7 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
 
     set_macroblock_metadata(context);
 
-    auto component_count = TRY(stream.read_value<u8>());
+    auto component_count = TRY(stream.read_u8());
     if (component_count != 1 && component_count != 3 && component_count != 4) {
         dbgln_if(JPEG_DEBUG, "Unsupported number of components in SOF: {}!", component_count);
         return Error::from_string_literal("Unsupported number of components in SOF");
@@ -1189,10 +1285,10 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
 
     for (u8 i = 0; i < component_count; i++) {
         Component component;
-        component.id = TRY(stream.read_value<u8>());
+        component.id = TRY(stream.read_u8());
         component.index = i;
 
-        u8 subsample_factors = TRY(stream.read_value<u8>());
+        u8 subsample_factors = TRY(stream.read_u8());
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
 
@@ -1214,7 +1310,7 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
             }
         }
 
-        component.quantization_table_id = TRY(stream.read_value<u8>());
+        component.quantization_table_id = TRY(stream.read_u8());
 
         context.components.append(move(component));
     }
@@ -1222,14 +1318,14 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(JPEGStream& stream, JPEGLoadingContext& context)
 {
     // B.2.4.1 - Quantization table-specification syntax
 
     u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     while (bytes_to_read > 0) {
-        u8 const info_byte = TRY(stream.read_value<u8>());
+        u8 const info_byte = TRY(stream.read_u8());
         u8 const element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
             dbgln_if(JPEG_DEBUG, "Unsupported unit hint in quantization table: {}!", element_unit_hint);
@@ -1251,9 +1347,9 @@ static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext&
 
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0)
-                table[zigzag_map[i]] = TRY(stream.read_value<u8>());
+                table[zigzag_map[i]] = TRY(stream.read_u8());
             else
-                table[zigzag_map[i]] = TRY(stream.read_value<BigEndian<u16>>());
+                table[zigzag_map[i]] = TRY(stream.read_u16());
         }
 
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
@@ -1266,9 +1362,9 @@ static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext&
     return {};
 }
 
-static ErrorOr<void> skip_segment(Stream& stream)
+static ErrorOr<void> skip_segment(JPEGStream& stream)
 {
-    u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    u16 bytes_to_skip = TRY(stream.read_u16()) - 2;
     TRY(stream.discard(bytes_to_skip));
     return {};
 }
@@ -1712,7 +1808,7 @@ static bool is_miscellaneous_or_table_marker(Marker const marker)
     return is_misc || is_table;
 }
 
-static ErrorOr<void> handle_miscellaneous_or_table(Stream& stream, JPEGLoadingContext& context, Marker const marker)
+static ErrorOr<void> handle_miscellaneous_or_table(JPEGStream& stream, JPEGLoadingContext& context, Marker const marker)
 {
     if (is_app_marker(marker)) {
         TRY(read_app_marker(stream, context, marker - JPEG_APPN0));
@@ -1745,7 +1841,7 @@ static ErrorOr<void> handle_miscellaneous_or_table(Stream& stream, JPEGLoadingCo
     return {};
 }
 
-static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> parse_header(JPEGStream& stream, JPEGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPEG_SOI) {
@@ -1798,7 +1894,7 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
 static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
     if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
-        if (auto result = parse_header(*context.stream, context); result.is_error()) {
+        if (auto result = parse_header(context.stream, context); result.is_error()) {
             context.state = JPEGLoadingContext::State::Error;
             return result.release_error();
         }
@@ -1825,12 +1921,12 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
     Vector<Macroblock> macroblocks;
     TRY(macroblocks.try_resize(context.mblock_meta.padded_total));
 
-    Marker marker = TRY(read_marker_at_cursor(*context.stream));
+    Marker marker = TRY(read_marker_at_cursor(context.stream));
     while (true) {
         if (is_miscellaneous_or_table_marker(marker)) {
-            TRY(handle_miscellaneous_or_table(*context.stream, context, marker));
+            TRY(handle_miscellaneous_or_table(context.stream, context, marker));
         } else if (marker == JPEG_SOS) {
-            TRY(read_start_of_scan(*context.stream, context));
+            TRY(read_start_of_scan(context.stream, context));
             TRY(decode_huffman_stream(context, macroblocks));
         } else if (marker == JPEG_EOI) {
             return macroblocks;
@@ -1839,7 +1935,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
             return Error::from_string_literal("Unexpected marker");
         }
 
-        marker = TRY(read_marker_at_cursor(*context.stream));
+        marker = TRY(read_marker_at_cursor(context.stream));
     }
 }
 
@@ -1851,14 +1947,12 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     inverse_dct(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
     TRY(compose_bitmap(context, macroblocks));
-    context.stream.clear();
     return {};
 }
 
 JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
 {
-    m_context = make<JPEGLoadingContext>();
-    m_context->stream = move(stream);
+    m_context = JPEGLoadingContext::create(move(stream)).release_value_but_fixme_should_propagate_errors();
 }
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
