@@ -363,6 +363,7 @@ class HTMLSlotElement;
 class HTMLSourceElement;
 class HTMLSpanElement;
 class HTMLStyleElement;
+class HTMLSummaryElement;
 class HTMLTableCaptionElement;
 class HTMLTableCellElement;
 class HTMLTableColElement;

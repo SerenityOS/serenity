@@ -305,6 +305,7 @@ set(SOURCES
     HTML/HTMLSourceElement.cpp
     HTML/HTMLSpanElement.cpp
     HTML/HTMLStyleElement.cpp
+    HTML/HTMLSummaryElement.cpp
     HTML/HTMLTableCaptionElement.cpp
     HTML/HTMLTableCellElement.cpp
     HTML/HTMLTableColElement.cpp
