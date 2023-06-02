@@ -1232,9 +1232,8 @@
   "list-style-position": {
     "inherited": true,
     "initial": "outside",
-    "valid-identifiers": [
-      "inside",
-      "outside"
+    "valid-types": [
+      "list-style-position"
     ]
   },
   "list-style-type": {

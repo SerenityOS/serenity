@@ -572,6 +572,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         const_cast<CSS::AbstractImageStyleValue&>(*m_list_style_image).load_any_resources(document());
     }
 
+    if (auto list_style_position = computed_style.list_style_position(); list_style_position.has_value())
+        computed_values.set_list_style_position(list_style_position.value());
+
     // FIXME: The default text decoration color value is `currentcolor`, but since we can't resolve that easily,
     //        we just manually grab the value from `color`. This makes it dependent on `color` being
     //        specified first, so it's far from ideal.

@@ -63,6 +63,7 @@ public:
     Optional<CSS::TextTransform> text_transform() const;
     Vector<CSS::ShadowData> text_shadow() const;
     Optional<CSS::ListStyleType> list_style_type() const;
+    Optional<CSS::ListStylePosition> list_style_position() const;
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
     Optional<CSS::FlexBasisData> flex_basis() const;

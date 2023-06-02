@@ -15,7 +15,7 @@ class ListItemMarkerBox final : public Box {
     JS_CELL(ListItemMarkerBox, Box);
 
 public:
-    explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index, NonnullRefPtr<CSS::StyleProperties>);
+    explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, CSS::ListStylePosition, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;
 
     DeprecatedString const& text() const { return m_text; }
@@ -23,12 +23,14 @@ public:
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
     CSS::ListStyleType list_style_type() const { return m_list_style_type; }
+    CSS::ListStylePosition list_style_position() const { return m_list_style_position; }
 
 private:
     virtual bool is_list_item_marker_box() const final { return true; }
     virtual bool can_have_children() const override { return false; }
 
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
+    CSS::ListStylePosition m_list_style_position { CSS::ListStylePosition::Outside };
     size_t m_index;
 
     DeprecatedString m_text {};

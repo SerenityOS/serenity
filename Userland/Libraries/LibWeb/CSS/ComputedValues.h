@@ -46,6 +46,7 @@ public:
     static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
+    static CSS::ListStylePosition list_style_position() { return CSS::ListStylePosition::Outside; }
     static CSS::Visibility visibility() { return CSS::Visibility::Visible; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
@@ -288,6 +289,7 @@ public:
     Vector<BackgroundLayerData> const& background_layers() const { return m_noninherited.background_layers; }
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
+    CSS::ListStylePosition list_style_position() const { return m_inherited.list_style_position; }
 
     Optional<SVGPaint> const& fill() const { return m_inherited.fill; }
     Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
@@ -327,6 +329,7 @@ protected:
         CSS::LengthPercentage text_indent { InitialValues::text_indent() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
+        CSS::ListStylePosition list_style_position { InitialValues::list_style_position() };
         CSS::Visibility visibility { InitialValues::visibility() };
 
         Optional<SVGPaint> fill;
@@ -448,6 +451,7 @@ public:
     void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }
     void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
+    void set_list_style_position(CSS::ListStylePosition value) { m_inherited.list_style_position = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
     void set_backdrop_filter(CSS::BackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
     void set_border_bottom_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_left_radius = move(value); }
