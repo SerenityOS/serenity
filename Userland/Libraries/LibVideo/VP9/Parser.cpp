@@ -595,79 +595,78 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
     auto decoder = TRY(frame_context.create_range_decoder(frame_context.header_size_in_bytes));
 
-    frame_context.transform_mode = TRY(read_tx_mode(decoder, frame_context));
+    frame_context.transform_mode = read_tx_mode(decoder, frame_context);
     if (frame_context.transform_mode == TransformMode::Select)
-        TRY(tx_mode_probs(decoder));
-    TRY(read_coef_probs(decoder, frame_context.transform_mode));
-    TRY(read_skip_prob(decoder));
+        tx_mode_probs(decoder);
+    read_coef_probs(decoder, frame_context.transform_mode);
+    read_skip_prob(decoder);
     if (frame_context.is_inter_predicted()) {
-        TRY(read_inter_mode_probs(decoder));
+        read_inter_mode_probs(decoder);
         if (frame_context.interpolation_filter == Switchable)
-            TRY(read_interp_filter_probs(decoder));
-        TRY(read_is_inter_probs(decoder));
-        TRY(frame_reference_mode(frame_context, decoder));
-        TRY(frame_reference_mode_probs(decoder, frame_context));
-        TRY(read_y_mode_probs(decoder));
-        TRY(read_partition_probs(decoder));
-        TRY(mv_probs(decoder, frame_context));
+            read_interp_filter_probs(decoder);
+        read_is_inter_probs(decoder);
+        frame_reference_mode(frame_context, decoder);
+        frame_reference_mode_probs(decoder, frame_context);
+        read_y_mode_probs(decoder);
+        read_partition_probs(decoder);
+        mv_probs(decoder, frame_context);
     }
     TRY_READ(decoder.finish_decode());
     return {};
 }
 
-DecoderErrorOr<TransformMode> Parser::read_tx_mode(BooleanDecoder& decoder, FrameContext const& frame_context)
+TransformMode Parser::read_tx_mode(BooleanDecoder& decoder, FrameContext const& frame_context)
 {
     if (frame_context.lossless) {
         return TransformMode::Only_4x4;
     }
 
-    auto tx_mode = TRY_READ(decoder.read_literal(2));
+    auto tx_mode = decoder.read_literal(2);
     if (tx_mode == to_underlying(TransformMode::Allow_32x32))
-        tx_mode += TRY_READ(decoder.read_literal(1));
+        tx_mode += decoder.read_literal(1);
     return static_cast<TransformMode>(tx_mode);
 }
 
-DecoderErrorOr<void> Parser::tx_mode_probs(BooleanDecoder& decoder)
+void Parser::tx_mode_probs(BooleanDecoder& decoder)
 {
     auto& tx_probs = m_probability_tables->tx_probs();
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 3; j++)
-            tx_probs[Transform_8x8][i][j] = TRY(diff_update_prob(decoder, tx_probs[Transform_8x8][i][j]));
+            tx_probs[Transform_8x8][i][j] = diff_update_prob(decoder, tx_probs[Transform_8x8][i][j]);
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 2; j++)
-            tx_probs[Transform_16x16][i][j] = TRY(diff_update_prob(decoder, tx_probs[Transform_16x16][i][j]));
+            tx_probs[Transform_16x16][i][j] = diff_update_prob(decoder, tx_probs[Transform_16x16][i][j]);
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 1; j++)
-            tx_probs[Transform_32x32][i][j] = TRY(diff_update_prob(decoder, tx_probs[Transform_32x32][i][j]));
+            tx_probs[Transform_32x32][i][j] = diff_update_prob(decoder, tx_probs[Transform_32x32][i][j]);
     }
-    return {};
 }
 
-DecoderErrorOr<u8> Parser::diff_update_prob(BooleanDecoder& decoder, u8 prob)
+u8 Parser::diff_update_prob(BooleanDecoder& decoder, u8 prob)
 {
-    auto update_prob = TRY_READ(decoder.read_bool(252));
+    auto update_prob = decoder.read_bool(252);
     if (update_prob) {
-        auto delta_prob = TRY(decode_term_subexp(decoder));
+        auto delta_prob = decode_term_subexp(decoder);
         prob = inv_remap_prob(delta_prob, prob);
     }
     return prob;
 }
 
-DecoderErrorOr<u8> Parser::decode_term_subexp(BooleanDecoder& decoder)
+u8 Parser::decode_term_subexp(BooleanDecoder& decoder)
 {
-    if (TRY_READ(decoder.read_literal(1)) == 0)
-        return TRY_READ(decoder.read_literal(4));
-    if (TRY_READ(decoder.read_literal(1)) == 0)
-        return TRY_READ(decoder.read_literal(4)) + 16;
-    if (TRY_READ(decoder.read_literal(1)) == 0)
-        return TRY_READ(decoder.read_literal(5)) + 32;
+    if (decoder.read_literal(1) == 0)
+        return decoder.read_literal(4);
+    if (decoder.read_literal(1) == 0)
+        return decoder.read_literal(4) + 16;
+    if (decoder.read_literal(1) == 0)
+        return decoder.read_literal(5) + 32;
 
-    auto v = TRY_READ(decoder.read_literal(7));
+    auto v = decoder.read_literal(7);
     if (v < 65)
         return v + 64;
-    return (v << 1u) - 1 + TRY_READ(decoder.read_literal(1));
+    return (v << 1u) - 1 + decoder.read_literal(1);
 }
 
 u8 Parser::inv_remap_prob(u8 delta_prob, u8 prob)
@@ -688,11 +687,11 @@ u8 Parser::inv_recenter_nonneg(u8 v, u8 m)
     return m + (v >> 1u);
 }
 
-DecoderErrorOr<void> Parser::read_coef_probs(BooleanDecoder& decoder, TransformMode transform_mode)
+void Parser::read_coef_probs(BooleanDecoder& decoder, TransformMode transform_mode)
 {
     auto max_tx_size = tx_mode_to_biggest_tx_size[to_underlying(transform_mode)];
     for (u8 transform_size = 0; transform_size <= max_tx_size; transform_size++) {
-        auto update_probs = TRY_READ(decoder.read_literal(1));
+        auto update_probs = decoder.read_literal(1);
         if (update_probs == 1) {
             for (auto i = 0; i < 2; i++) {
                 for (auto j = 0; j < 2; j++) {
@@ -701,7 +700,7 @@ DecoderErrorOr<void> Parser::read_coef_probs(BooleanDecoder& decoder, TransformM
                         for (auto l = 0; l < max_l; l++) {
                             for (auto m = 0; m < 3; m++) {
                                 auto& prob = m_probability_tables->coef_probs()[transform_size][i][j][k][l][m];
-                                prob = TRY(diff_update_prob(decoder, prob));
+                                prob = diff_update_prob(decoder, prob);
                             }
                         }
                     }
@@ -709,39 +708,34 @@ DecoderErrorOr<void> Parser::read_coef_probs(BooleanDecoder& decoder, TransformM
             }
         }
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_skip_prob(BooleanDecoder& decoder)
+void Parser::read_skip_prob(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < SKIP_CONTEXTS; i++)
-        m_probability_tables->skip_prob()[i] = TRY(diff_update_prob(decoder, m_probability_tables->skip_prob()[i]));
-    return {};
+        m_probability_tables->skip_prob()[i] = diff_update_prob(decoder, m_probability_tables->skip_prob()[i]);
 }
 
-DecoderErrorOr<void> Parser::read_inter_mode_probs(BooleanDecoder& decoder)
+void Parser::read_inter_mode_probs(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < INTER_MODE_CONTEXTS; i++) {
         for (auto j = 0; j < INTER_MODES - 1; j++)
-            m_probability_tables->inter_mode_probs()[i][j] = TRY(diff_update_prob(decoder, m_probability_tables->inter_mode_probs()[i][j]));
+            m_probability_tables->inter_mode_probs()[i][j] = diff_update_prob(decoder, m_probability_tables->inter_mode_probs()[i][j]);
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_interp_filter_probs(BooleanDecoder& decoder)
+void Parser::read_interp_filter_probs(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < INTERP_FILTER_CONTEXTS; i++) {
         for (auto j = 0; j < SWITCHABLE_FILTERS - 1; j++)
-            m_probability_tables->interp_filter_probs()[i][j] = TRY(diff_update_prob(decoder, m_probability_tables->interp_filter_probs()[i][j]));
+            m_probability_tables->interp_filter_probs()[i][j] = diff_update_prob(decoder, m_probability_tables->interp_filter_probs()[i][j]);
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_is_inter_probs(BooleanDecoder& decoder)
+void Parser::read_is_inter_probs(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < IS_INTER_CONTEXTS; i++)
-        m_probability_tables->is_inter_prob()[i] = TRY(diff_update_prob(decoder, m_probability_tables->is_inter_prob()[i]));
-    return {};
+        m_probability_tables->is_inter_prob()[i] = diff_update_prob(decoder, m_probability_tables->is_inter_prob()[i]);
 }
 
 static void setup_compound_reference_mode(FrameContext& frame_context)
@@ -762,7 +756,7 @@ static void setup_compound_reference_mode(FrameContext& frame_context)
     frame_context.variable_reference_types = variable_references;
 }
 
-DecoderErrorOr<void> Parser::frame_reference_mode(FrameContext& frame_context, BooleanDecoder& decoder)
+void Parser::frame_reference_mode(FrameContext& frame_context, BooleanDecoder& decoder)
 {
     auto compound_reference_allowed = false;
     for (size_t i = 2; i <= REFS_PER_FRAME; i++) {
@@ -771,11 +765,11 @@ DecoderErrorOr<void> Parser::frame_reference_mode(FrameContext& frame_context, B
     }
     ReferenceMode reference_mode;
     if (compound_reference_allowed) {
-        auto non_single_reference = TRY_READ(decoder.read_literal(1));
+        auto non_single_reference = decoder.read_literal(1);
         if (non_single_reference == 0) {
             reference_mode = SingleReference;
         } else {
-            auto reference_select = TRY_READ(decoder.read_literal(1));
+            auto reference_select = decoder.read_literal(1);
             if (reference_select == 0)
                 reference_mode = CompoundReference;
             else
@@ -787,74 +781,70 @@ DecoderErrorOr<void> Parser::frame_reference_mode(FrameContext& frame_context, B
     frame_context.reference_mode = reference_mode;
     if (reference_mode != SingleReference)
         setup_compound_reference_mode(frame_context);
-    return {};
 }
 
-DecoderErrorOr<void> Parser::frame_reference_mode_probs(BooleanDecoder& decoder, FrameContext const& frame_context)
+void Parser::frame_reference_mode_probs(BooleanDecoder& decoder, FrameContext const& frame_context)
 {
     if (frame_context.reference_mode == ReferenceModeSelect) {
         for (auto i = 0; i < COMP_MODE_CONTEXTS; i++) {
             auto& comp_mode_prob = m_probability_tables->comp_mode_prob();
-            comp_mode_prob[i] = TRY(diff_update_prob(decoder, comp_mode_prob[i]));
+            comp_mode_prob[i] = diff_update_prob(decoder, comp_mode_prob[i]);
         }
     }
     if (frame_context.reference_mode != CompoundReference) {
         for (auto i = 0; i < REF_CONTEXTS; i++) {
             auto& single_ref_prob = m_probability_tables->single_ref_prob();
-            single_ref_prob[i][0] = TRY(diff_update_prob(decoder, single_ref_prob[i][0]));
-            single_ref_prob[i][1] = TRY(diff_update_prob(decoder, single_ref_prob[i][1]));
+            single_ref_prob[i][0] = diff_update_prob(decoder, single_ref_prob[i][0]);
+            single_ref_prob[i][1] = diff_update_prob(decoder, single_ref_prob[i][1]);
         }
     }
     if (frame_context.reference_mode != SingleReference) {
         for (auto i = 0; i < REF_CONTEXTS; i++) {
             auto& comp_ref_prob = m_probability_tables->comp_ref_prob();
-            comp_ref_prob[i] = TRY(diff_update_prob(decoder, comp_ref_prob[i]));
+            comp_ref_prob[i] = diff_update_prob(decoder, comp_ref_prob[i]);
         }
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_y_mode_probs(BooleanDecoder& decoder)
+void Parser::read_y_mode_probs(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < BLOCK_SIZE_GROUPS; i++) {
         for (auto j = 0; j < INTRA_MODES - 1; j++) {
             auto& y_mode_probs = m_probability_tables->y_mode_probs();
-            y_mode_probs[i][j] = TRY(diff_update_prob(decoder, y_mode_probs[i][j]));
+            y_mode_probs[i][j] = diff_update_prob(decoder, y_mode_probs[i][j]);
         }
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_partition_probs(BooleanDecoder& decoder)
+void Parser::read_partition_probs(BooleanDecoder& decoder)
 {
     for (auto i = 0; i < PARTITION_CONTEXTS; i++) {
         for (auto j = 0; j < PARTITION_TYPES - 1; j++) {
             auto& partition_probs = m_probability_tables->partition_probs();
-            partition_probs[i][j] = TRY(diff_update_prob(decoder, partition_probs[i][j]));
+            partition_probs[i][j] = diff_update_prob(decoder, partition_probs[i][j]);
         }
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::mv_probs(BooleanDecoder& decoder, FrameContext const& frame_context)
+void Parser::mv_probs(BooleanDecoder& decoder, FrameContext const& frame_context)
 {
     for (auto j = 0; j < MV_JOINTS - 1; j++) {
         auto& mv_joint_probs = m_probability_tables->mv_joint_probs();
-        mv_joint_probs[j] = TRY(update_mv_prob(decoder, mv_joint_probs[j]));
+        mv_joint_probs[j] = update_mv_prob(decoder, mv_joint_probs[j]);
     }
 
     for (auto i = 0; i < 2; i++) {
         auto& mv_sign_prob = m_probability_tables->mv_sign_prob();
-        mv_sign_prob[i] = TRY(update_mv_prob(decoder, mv_sign_prob[i]));
+        mv_sign_prob[i] = update_mv_prob(decoder, mv_sign_prob[i]);
         for (auto j = 0; j < MV_CLASSES - 1; j++) {
             auto& mv_class_probs = m_probability_tables->mv_class_probs();
-            mv_class_probs[i][j] = TRY(update_mv_prob(decoder, mv_class_probs[i][j]));
+            mv_class_probs[i][j] = update_mv_prob(decoder, mv_class_probs[i][j]);
         }
         auto& mv_class0_bit_prob = m_probability_tables->mv_class0_bit_prob();
-        mv_class0_bit_prob[i] = TRY(update_mv_prob(decoder, mv_class0_bit_prob[i]));
+        mv_class0_bit_prob[i] = update_mv_prob(decoder, mv_class0_bit_prob[i]);
         for (auto j = 0; j < MV_OFFSET_BITS; j++) {
             auto& mv_bits_prob = m_probability_tables->mv_bits_prob();
-            mv_bits_prob[i][j] = TRY(update_mv_prob(decoder, mv_bits_prob[i][j]));
+            mv_bits_prob[i][j] = update_mv_prob(decoder, mv_bits_prob[i][j]);
         }
     }
 
@@ -862,12 +852,12 @@ DecoderErrorOr<void> Parser::mv_probs(BooleanDecoder& decoder, FrameContext cons
         for (auto j = 0; j < CLASS0_SIZE; j++) {
             for (auto k = 0; k < MV_FR_SIZE - 1; k++) {
                 auto& mv_class0_fr_probs = m_probability_tables->mv_class0_fr_probs();
-                mv_class0_fr_probs[i][j][k] = TRY(update_mv_prob(decoder, mv_class0_fr_probs[i][j][k]));
+                mv_class0_fr_probs[i][j][k] = update_mv_prob(decoder, mv_class0_fr_probs[i][j][k]);
             }
         }
         for (auto k = 0; k < MV_FR_SIZE - 1; k++) {
             auto& mv_fr_probs = m_probability_tables->mv_fr_probs();
-            mv_fr_probs[i][k] = TRY(update_mv_prob(decoder, mv_fr_probs[i][k]));
+            mv_fr_probs[i][k] = update_mv_prob(decoder, mv_fr_probs[i][k]);
         }
     }
 
@@ -875,18 +865,16 @@ DecoderErrorOr<void> Parser::mv_probs(BooleanDecoder& decoder, FrameContext cons
         for (auto i = 0; i < 2; i++) {
             auto& mv_class0_hp_prob = m_probability_tables->mv_class0_hp_prob();
             auto& mv_hp_prob = m_probability_tables->mv_hp_prob();
-            mv_class0_hp_prob[i] = TRY(update_mv_prob(decoder, mv_class0_hp_prob[i]));
-            mv_hp_prob[i] = TRY(update_mv_prob(decoder, mv_hp_prob[i]));
+            mv_class0_hp_prob[i] = update_mv_prob(decoder, mv_class0_hp_prob[i]);
+            mv_hp_prob[i] = update_mv_prob(decoder, mv_hp_prob[i]);
         }
     }
-
-    return {};
 }
 
-DecoderErrorOr<u8> Parser::update_mv_prob(BooleanDecoder& decoder, u8 prob)
+u8 Parser::update_mv_prob(BooleanDecoder& decoder, u8 prob)
 {
-    if (TRY_READ(decoder.read_bool(252))) {
-        return (TRY_READ(decoder.read_literal(7)) << 1u) | 1u;
+    if (decoder.read_bool(252)) {
+        return (decoder.read_literal(7) << 1u) | 1u;
     }
     return prob;
 }
@@ -1024,7 +1012,7 @@ DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row
     bool has_cols = (column + half_block_8x8) < tile_context.frame_context.columns();
     u32 row_in_tile = row - tile_context.rows_start;
     u32 column_in_tile = column - tile_context.columns_start;
-    auto partition = TRY_READ(TreeParser::parse_partition(tile_context.decoder, *m_probability_tables, *tile_context.counter, has_rows, has_cols, subsize, num_8x8, tile_context.above_partition_context, tile_context.left_partition_context.span(), row_in_tile, column_in_tile, !tile_context.frame_context.is_inter_predicted()));
+    auto partition = TreeParser::parse_partition(tile_context.decoder, *m_probability_tables, *tile_context.counter, has_rows, has_cols, subsize, num_8x8, tile_context.above_partition_context, tile_context.left_partition_context.span(), row_in_tile, column_in_tile, !tile_context.frame_context.is_inter_predicted());
 
     auto child_subsize = subsize_lookup[partition][subsize];
     if (child_subsize < Block_8x8 || partition == PartitionNone) {
@@ -1066,7 +1054,7 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
     auto left_context = column > tile_context.columns_start ? tile_context.frame_block_contexts().at(row, column - 1) : FrameBlockContext();
     auto block_context = BlockContext::create(tile_context, row, column, subsize);
 
-    TRY(mode_info(block_context, above_context, left_context));
+    mode_info(block_context, above_context, left_context);
     auto had_residual_tokens = TRY(residual(block_context, above_context.is_available, left_context.is_available));
     if (block_context.is_inter_predicted() && subsize >= Block_8x8 && !had_residual_tokens)
         block_context.should_skip_residuals = true;
@@ -1081,33 +1069,32 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
     return {};
 }
 
-DecoderErrorOr<void> Parser::mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+void Parser::mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (block_context.frame_context.is_inter_predicted())
-        TRY(inter_frame_mode_info(block_context, above_context, left_context));
+        inter_frame_mode_info(block_context, above_context, left_context);
     else
-        TRY(intra_frame_mode_info(block_context, above_context, left_context));
-    return {};
+        intra_frame_mode_info(block_context, above_context, left_context);
 }
 
-DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+void Parser::intra_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     block_context.reference_frame_types = { ReferenceFrameType::None, ReferenceFrameType::None };
     VERIFY(!block_context.is_inter_predicted());
-    TRY(set_intra_segment_id(block_context));
-    block_context.should_skip_residuals = TRY(read_should_skip_residuals(block_context, above_context, left_context));
-    block_context.transform_size = TRY(read_tx_size(block_context, above_context, left_context, true));
+    set_intra_segment_id(block_context);
+    block_context.should_skip_residuals = read_should_skip_residuals(block_context, above_context, left_context);
+    block_context.transform_size = read_tx_size(block_context, above_context, left_context, true);
     // FIXME: This if statement is also present in parse_default_intra_mode. The selection of parameters for
     //        the probability table lookup should be inlined here.
     if (block_context.size >= Block_8x8) {
-        auto mode = TRY_READ(TreeParser::parse_default_intra_mode(block_context.decoder, *m_probability_tables, block_context.size, above_context, left_context, block_context.sub_block_prediction_modes, 0, 0));
+        auto mode = TreeParser::parse_default_intra_mode(block_context.decoder, *m_probability_tables, block_context.size, above_context, left_context, block_context.sub_block_prediction_modes, 0, 0);
         for (auto& block_sub_mode : block_context.sub_block_prediction_modes)
             block_sub_mode = mode;
     } else {
         auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
         for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
             for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
-                auto sub_mode = TRY_READ(TreeParser::parse_default_intra_mode(block_context.decoder, *m_probability_tables, block_context.size, above_context, left_context, block_context.sub_block_prediction_modes, idx, idy));
+                auto sub_mode = TreeParser::parse_default_intra_mode(block_context.decoder, *m_probability_tables, block_context.size, above_context, left_context, block_context.sub_block_prediction_modes, idx, idy);
 
                 for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
                     for (auto x = 0; x < size_in_sub_blocks.width(); x++) {
@@ -1118,71 +1105,68 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, 
             }
         }
     }
-    block_context.uv_prediction_mode = TRY_READ(TreeParser::parse_default_uv_mode(block_context.decoder, *m_probability_tables, block_context.y_prediction_mode()));
-    return {};
+    block_context.uv_prediction_mode = TreeParser::parse_default_uv_mode(block_context.decoder, *m_probability_tables, block_context.y_prediction_mode());
 }
 
-DecoderErrorOr<void> Parser::set_intra_segment_id(BlockContext& block_context)
+void Parser::set_intra_segment_id(BlockContext& block_context)
 {
     if (block_context.frame_context.segmentation_enabled && block_context.frame_context.use_full_segment_id_tree)
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities));
+        block_context.segment_id = TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities);
     else
         block_context.segment_id = 0;
-    return {};
 }
 
-DecoderErrorOr<bool> Parser::read_should_skip_residuals(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+bool Parser::read_should_skip_residuals(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (block_context.get_segment_feature(SegmentFeature::SkipResidualsOverride).enabled)
         return true;
-    return TRY_READ(TreeParser::parse_skip(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
+    return TreeParser::parse_skip(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context);
 }
 
-DecoderErrorOr<TransformSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
+TransformSize Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
 {
     auto max_tx_size = max_txsize_lookup[block_context.size];
     if (allow_select && block_context.frame_context.transform_mode == TransformMode::Select && block_context.size >= Block_8x8)
-        return (TRY_READ(TreeParser::parse_tx_size(block_context.decoder, *m_probability_tables, block_context.counter, max_tx_size, above_context, left_context)));
+        return (TreeParser::parse_tx_size(block_context.decoder, *m_probability_tables, block_context.counter, max_tx_size, above_context, left_context));
     return min(max_tx_size, tx_mode_to_biggest_tx_size[to_underlying(block_context.frame_context.transform_mode)]);
 }
 
-DecoderErrorOr<void> Parser::inter_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+void Parser::inter_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(set_inter_segment_id(block_context));
-    block_context.should_skip_residuals = TRY(read_should_skip_residuals(block_context, above_context, left_context));
-    auto is_inter = TRY(read_is_inter(block_context, above_context, left_context));
-    block_context.transform_size = TRY(read_tx_size(block_context, above_context, left_context, !block_context.should_skip_residuals || !is_inter));
+    set_inter_segment_id(block_context);
+    block_context.should_skip_residuals = read_should_skip_residuals(block_context, above_context, left_context);
+    auto is_inter = read_is_inter(block_context, above_context, left_context);
+    block_context.transform_size = read_tx_size(block_context, above_context, left_context, !block_context.should_skip_residuals || !is_inter);
     if (is_inter) {
-        TRY(inter_block_mode_info(block_context, above_context, left_context));
+        inter_block_mode_info(block_context, above_context, left_context);
     } else {
-        TRY(intra_block_mode_info(block_context));
+        intra_block_mode_info(block_context);
     }
-    return {};
 }
 
-DecoderErrorOr<void> Parser::set_inter_segment_id(BlockContext& block_context)
+void Parser::set_inter_segment_id(BlockContext& block_context)
 {
     if (!block_context.frame_context.segmentation_enabled) {
         block_context.segment_id = 0;
-        return {};
+        return;
     }
     auto predicted_segment_id = get_segment_id(block_context);
     if (!block_context.frame_context.use_full_segment_id_tree) {
         block_context.segment_id = predicted_segment_id;
-        return {};
+        return;
     }
     if (!block_context.frame_context.use_predicted_segment_id_tree) {
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities));
-        return {};
+        block_context.segment_id = TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities);
+        return;
     }
 
     auto above_segmentation_id = block_context.tile_context.above_segmentation_ids[block_context.row - block_context.tile_context.rows_start];
     auto left_segmentation_id = block_context.tile_context.left_segmentation_ids[block_context.column - block_context.tile_context.columns_start];
-    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(block_context.decoder, block_context.frame_context.predicted_segment_id_tree_probabilities, above_segmentation_id, left_segmentation_id));
+    auto seg_id_predicted = TreeParser::parse_segment_id_predicted(block_context.decoder, block_context.frame_context.predicted_segment_id_tree_probabilities, above_segmentation_id, left_segmentation_id);
     if (seg_id_predicted)
         block_context.segment_id = predicted_segment_id;
     else
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities));
+        block_context.segment_id = TreeParser::parse_segment_id(block_context.decoder, block_context.frame_context.full_segment_id_tree_probabilities);
 
     // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
     // This is taken care of by the slicing in BlockContext.
@@ -1190,7 +1174,6 @@ DecoderErrorOr<void> Parser::set_inter_segment_id(BlockContext& block_context)
     // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
     // This is taken care of by the slicing in BlockContext.
     block_context.left_segmentation_ids.fill(seg_id_predicted);
-    return {};
 }
 
 u8 Parser::get_segment_id(BlockContext const& block_context)
@@ -1208,28 +1191,28 @@ u8 Parser::get_segment_id(BlockContext const& block_context)
     return segment;
 }
 
-DecoderErrorOr<bool> Parser::read_is_inter(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+bool Parser::read_is_inter(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     auto reference_frame_override_feature = block_context.get_segment_feature(SegmentFeature::ReferenceFrameOverride);
     if (reference_frame_override_feature.enabled)
         return reference_frame_override_feature.value != ReferenceFrameType::None;
-    return TRY_READ(TreeParser::parse_block_is_inter_predicted(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
+    return TreeParser::parse_block_is_inter_predicted(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context);
 }
 
-DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
+void Parser::intra_block_mode_info(BlockContext& block_context)
 {
     block_context.reference_frame_types = { ReferenceFrameType::None, ReferenceFrameType::None };
     VERIFY(!block_context.is_inter_predicted());
     auto& sub_modes = block_context.sub_block_prediction_modes;
     if (block_context.size >= Block_8x8) {
-        auto mode = TRY_READ(TreeParser::parse_intra_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.size));
+        auto mode = TreeParser::parse_intra_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.size);
         for (auto& block_sub_mode : sub_modes)
             block_sub_mode = mode;
     } else {
         auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
         for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
             for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
-                auto sub_intra_mode = TRY_READ(TreeParser::parse_sub_intra_mode(block_context.decoder, *m_probability_tables, block_context.counter));
+                auto sub_intra_mode = TreeParser::parse_sub_intra_mode(block_context.decoder, *m_probability_tables, block_context.counter);
                 for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
                     for (auto x = 0; x < size_in_sub_blocks.width(); x++)
                         sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
@@ -1237,15 +1220,14 @@ DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
             }
         }
     }
-    block_context.uv_prediction_mode = TRY_READ(TreeParser::parse_uv_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.y_prediction_mode()));
-    return {};
+    block_context.uv_prediction_mode = TreeParser::parse_uv_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.y_prediction_mode());
 }
 
 static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, ReferenceIndex);
 
-DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+void Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(read_ref_frames(block_context, above_context, left_context));
+    read_ref_frames(block_context, above_context, left_context);
     VERIFY(block_context.is_inter_predicted());
 
     BlockMotionVectorCandidates motion_vector_candidates;
@@ -1259,23 +1241,23 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
     if (block_context.get_segment_feature(SegmentFeature::SkipResidualsOverride).enabled) {
         block_context.y_prediction_mode() = PredictionMode::ZeroMv;
     } else if (block_context.size >= Block_8x8) {
-        block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.mode_context[block_context.reference_frame_types.primary]));
+        block_context.y_prediction_mode() = TreeParser::parse_inter_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.mode_context[block_context.reference_frame_types.primary]);
     }
     if (block_context.frame_context.interpolation_filter == Switchable)
-        block_context.interpolation_filter = TRY_READ(TreeParser::parse_interpolation_filter(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
+        block_context.interpolation_filter = TreeParser::parse_interpolation_filter(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context);
     else
         block_context.interpolation_filter = block_context.frame_context.interpolation_filter;
     if (block_context.size < Block_8x8) {
         auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
         for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
             for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
-                block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.mode_context[block_context.reference_frame_types.primary]));
+                block_context.y_prediction_mode() = TreeParser::parse_inter_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.mode_context[block_context.reference_frame_types.primary]);
                 if (block_context.y_prediction_mode() == PredictionMode::NearestMv || block_context.y_prediction_mode() == PredictionMode::NearMv) {
                     select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Primary);
                     if (block_context.is_compound())
                         select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Secondary);
                 }
-                auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
+                auto new_motion_vector_pair = get_motion_vector(block_context, motion_vector_candidates);
                 for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
                     for (auto x = 0; x < size_in_sub_blocks.width(); x++) {
                         auto sub_block_index = (idy + y) * 2 + idx + x;
@@ -1284,26 +1266,25 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
                 }
             }
         }
-        return {};
+        return;
     }
-    auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
+    auto new_motion_vector_pair = get_motion_vector(block_context, motion_vector_candidates);
     for (auto block = 0; block < 4; block++)
         block_context.sub_block_motion_vectors[block] = new_motion_vector_pair;
-    return {};
 }
 
-DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
+void Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     auto reference_frame_override_feature = block_context.get_segment_feature(SegmentFeature::ReferenceFrameOverride);
     if (reference_frame_override_feature.enabled) {
         block_context.reference_frame_types = { static_cast<ReferenceFrameType>(reference_frame_override_feature.value), ReferenceFrameType::None };
-        return {};
+        return;
     }
 
     ReferenceMode compound_mode = block_context.frame_context.reference_mode;
     auto fixed_reference = block_context.frame_context.fixed_reference_type;
     if (compound_mode == ReferenceModeSelect)
-        compound_mode = TRY_READ(TreeParser::parse_comp_mode(block_context.decoder, *m_probability_tables, block_context.counter, fixed_reference, above_context, left_context));
+        compound_mode = TreeParser::parse_comp_mode(block_context.decoder, *m_probability_tables, block_context.counter, fixed_reference, above_context, left_context);
     if (compound_mode == CompoundReference) {
         auto variable_references = block_context.frame_context.variable_reference_types;
 
@@ -1312,32 +1293,31 @@ DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameB
         if (block_context.frame_context.reference_frame_sign_biases[fixed_reference])
             swap(fixed_reference_index, variable_reference_index);
 
-        auto variable_reference_selection = TRY_READ(TreeParser::parse_comp_ref(block_context.decoder, *m_probability_tables, block_context.counter, fixed_reference, variable_references, variable_reference_index, above_context, left_context));
+        auto variable_reference_selection = TreeParser::parse_comp_ref(block_context.decoder, *m_probability_tables, block_context.counter, fixed_reference, variable_references, variable_reference_index, above_context, left_context);
 
         block_context.reference_frame_types[fixed_reference_index] = fixed_reference;
         block_context.reference_frame_types[variable_reference_index] = variable_references[variable_reference_selection];
-        return {};
+        return;
     }
 
     // FIXME: Maybe consolidate this into a tree. Context is different between part 1 and 2 but still, it would look nice here.
     ReferenceFrameType primary_type = ReferenceFrameType::LastFrame;
-    auto single_ref_p1 = TRY_READ(TreeParser::parse_single_ref_part_1(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
+    auto single_ref_p1 = TreeParser::parse_single_ref_part_1(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context);
     if (single_ref_p1) {
-        auto single_ref_p2 = TRY_READ(TreeParser::parse_single_ref_part_2(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
+        auto single_ref_p2 = TreeParser::parse_single_ref_part_2(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context);
         primary_type = single_ref_p2 ? ReferenceFrameType::AltRefFrame : ReferenceFrameType::GoldenFrame;
     }
     block_context.reference_frame_types = { primary_type, ReferenceFrameType::None };
-    return {};
 }
 
 // assign_mv( isCompound ) in the spec.
-DecoderErrorOr<MotionVectorPair> Parser::get_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates)
+MotionVectorPair Parser::get_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates)
 {
     MotionVectorPair result;
-    auto read_one = [&](ReferenceIndex index) -> DecoderErrorOr<void> {
+    auto read_one = [&](ReferenceIndex index) -> void {
         switch (block_context.y_prediction_mode()) {
         case PredictionMode::NewMv:
-            result[index] = TRY(read_motion_vector(block_context, candidates, index));
+            result[index] = read_motion_vector(block_context, candidates, index);
             break;
         case PredictionMode::NearestMv:
             result[index] = candidates[index].nearest_vector;
@@ -1349,11 +1329,11 @@ DecoderErrorOr<MotionVectorPair> Parser::get_motion_vector(BlockContext const& b
             result[index] = {};
             break;
         }
-        return {};
+        return;
     };
-    TRY(read_one(ReferenceIndex::Primary));
+    read_one(ReferenceIndex::Primary);
     if (block_context.is_compound())
-        TRY(read_one(ReferenceIndex::Secondary));
+        read_one(ReferenceIndex::Secondary);
     return result;
 }
 
@@ -1364,39 +1344,39 @@ static bool should_use_high_precision_motion_vector(MotionVector const& delta_ve
 }
 
 // read_mv( ref ) in the spec.
-DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, ReferenceIndex reference_index)
+MotionVector Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, ReferenceIndex reference_index)
 {
     auto use_high_precision = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
     MotionVector delta_vector;
-    auto joint = TRY_READ(TreeParser::parse_motion_vector_joint(block_context.decoder, *m_probability_tables, block_context.counter));
+    auto joint = TreeParser::parse_motion_vector_joint(block_context.decoder, *m_probability_tables, block_context.counter);
     if ((joint & MotionVectorNonZeroRow) != 0)
-        delta_vector.set_row(TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 0, use_high_precision)));
+        delta_vector.set_row(read_single_motion_vector_component(block_context.decoder, block_context.counter, 0, use_high_precision));
     if ((joint & MotionVectorNonZeroColumn) != 0)
-        delta_vector.set_column(TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 1, use_high_precision)));
+        delta_vector.set_column(read_single_motion_vector_component(block_context.decoder, block_context.counter, 1, use_high_precision));
 
     return candidates[reference_index].best_vector + delta_vector;
 }
 
 // read_mv_component( comp ) in the spec.
-DecoderErrorOr<i32> Parser::read_single_motion_vector_component(BooleanDecoder& decoder, SyntaxElementCounter& counter, u8 component, bool use_high_precision)
+i32 Parser::read_single_motion_vector_component(BooleanDecoder& decoder, SyntaxElementCounter& counter, u8 component, bool use_high_precision)
 {
-    auto mv_sign = TRY_READ(TreeParser::parse_motion_vector_sign(decoder, *m_probability_tables, counter, component));
-    auto mv_class = TRY_READ(TreeParser::parse_motion_vector_class(decoder, *m_probability_tables, counter, component));
+    auto mv_sign = TreeParser::parse_motion_vector_sign(decoder, *m_probability_tables, counter, component);
+    auto mv_class = TreeParser::parse_motion_vector_class(decoder, *m_probability_tables, counter, component);
     u32 magnitude;
     if (mv_class == MvClass0) {
-        auto mv_class0_bit = TRY_READ(TreeParser::parse_motion_vector_class0_bit(decoder, *m_probability_tables, counter, component));
-        auto mv_class0_fr = TRY_READ(TreeParser::parse_motion_vector_class0_fr(decoder, *m_probability_tables, counter, component, mv_class0_bit));
-        auto mv_class0_hp = TRY_READ(TreeParser::parse_motion_vector_class0_hp(decoder, *m_probability_tables, counter, component, use_high_precision));
+        auto mv_class0_bit = TreeParser::parse_motion_vector_class0_bit(decoder, *m_probability_tables, counter, component);
+        auto mv_class0_fr = TreeParser::parse_motion_vector_class0_fr(decoder, *m_probability_tables, counter, component, mv_class0_bit);
+        auto mv_class0_hp = TreeParser::parse_motion_vector_class0_hp(decoder, *m_probability_tables, counter, component, use_high_precision);
         magnitude = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
     } else {
         u32 bits = 0;
         for (u8 i = 0; i < mv_class; i++) {
-            auto mv_bit = TRY_READ(TreeParser::parse_motion_vector_bit(decoder, *m_probability_tables, counter, component, i));
+            auto mv_bit = TreeParser::parse_motion_vector_bit(decoder, *m_probability_tables, counter, component, i);
             bits |= mv_bit << i;
         }
         magnitude = CLASS0_SIZE << (mv_class + 2);
-        auto mv_fr = TRY_READ(TreeParser::parse_motion_vector_fr(decoder, *m_probability_tables, counter, component));
-        auto mv_hp = TRY_READ(TreeParser::parse_motion_vector_hp(decoder, *m_probability_tables, counter, component, use_high_precision));
+        auto mv_fr = TreeParser::parse_motion_vector_fr(decoder, *m_probability_tables, counter, component);
+        auto mv_hp = TreeParser::parse_motion_vector_hp(decoder, *m_probability_tables, counter, component, use_high_precision);
         magnitude += ((bits << 3) | (mv_fr << 1) | mv_hp) + 1;
     }
     return (mv_sign ? -1 : 1) * static_cast<i32>(magnitude);
@@ -1462,7 +1442,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                         TRY(m_decoder.predict_intra(plane, block_context, transform_x_in_px, transform_y_in_px, has_block_left || x > 0, has_block_above || y > 0, (x + transform_size_in_sub_blocks) < block_size_in_sub_blocks.width(), transform_size, sub_block_index));
                     if (!block_context.should_skip_residuals) {
                         auto transform_set = select_transform_type(block_context, plane, transform_size, sub_block_index);
-                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, x, y, transform_size, transform_set, token_cache));
+                        sub_block_had_non_zero_tokens = tokens(block_context, plane, x, y, transform_size, transform_set, token_cache);
                         block_had_non_zero_tokens = block_had_non_zero_tokens || sub_block_had_non_zero_tokens;
                         TRY(m_decoder.reconstruct(plane, block_context, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
                     }
@@ -1514,7 +1494,7 @@ static u16 const* get_scan(TransformSize transform_size, TransformSet transform_
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 sub_block_column, u32 sub_block_row, TransformSize transform_size, TransformSet transform_set, Array<u8, 1024> token_cache)
+bool Parser::tokens(BlockContext& block_context, size_t plane, u32 sub_block_column, u32 sub_block_row, TransformSize transform_size, TransformSet transform_set, Array<u8, 1024> token_cache)
 {
     block_context.residual_tokens.fill(0);
 
@@ -1532,10 +1512,10 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
         else
             tokens_context = TreeParser::get_context_for_other_tokens(token_cache, transform_size, transform_set, plane, token_position, block_context.is_inter_predicted(), band);
 
-        if (check_for_more_coefficients && !TRY_READ(TreeParser::parse_more_coefficients(block_context.decoder, *m_probability_tables, block_context.counter, tokens_context)))
+        if (check_for_more_coefficients && !TreeParser::parse_more_coefficients(block_context.decoder, *m_probability_tables, block_context.counter, tokens_context))
             break;
 
-        auto token = TRY_READ(TreeParser::parse_token(block_context.decoder, *m_probability_tables, block_context.counter, tokens_context));
+        auto token = TreeParser::parse_token(block_context.decoder, *m_probability_tables, block_context.counter, tokens_context);
         token_cache[token_position] = energy_class[token];
 
         i32 coef;
@@ -1543,7 +1523,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
             coef = 0;
             check_for_more_coefficients = false;
         } else {
-            coef = TRY(read_coef(block_context.decoder, block_context.frame_context.color_config.bit_depth, token));
+            coef = read_coef(block_context.decoder, block_context.frame_context.color_config.bit_depth, token);
             check_for_more_coefficients = true;
         }
         block_context.residual_tokens[token_position] = coef;
@@ -1552,22 +1532,22 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
     return coef_index > 0;
 }
 
-DecoderErrorOr<i32> Parser::read_coef(BooleanDecoder& decoder, u8 bit_depth, Token token)
+i32 Parser::read_coef(BooleanDecoder& decoder, u8 bit_depth, Token token)
 {
     auto cat = extra_bits[token][0];
     auto num_extra = extra_bits[token][1];
     i32 coef = extra_bits[token][2];
     if (token == DctValCat6) {
         for (size_t e = 0; e < (u8)(bit_depth - 8); e++) {
-            auto high_bit = TRY_READ(decoder.read_bool(255));
+            auto high_bit = decoder.read_bool(255);
             coef += high_bit << (5 + bit_depth - e);
         }
     }
     for (size_t e = 0; e < num_extra; e++) {
-        auto coef_bit = TRY_READ(decoder.read_bool(cat_probs[cat][e]));
+        auto coef_bit = decoder.read_bool(cat_probs[cat][e]);
         coef += coef_bit << (num_extra - 1 - e);
     }
-    bool sign_bit = TRY_READ(decoder.read_literal(1));
+    bool sign_bit = decoder.read_literal(1);
     coef = sign_bit ? -coef : coef;
     return coef;
 }

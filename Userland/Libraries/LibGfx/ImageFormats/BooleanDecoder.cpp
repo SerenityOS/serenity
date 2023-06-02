@@ -26,21 +26,25 @@ ErrorOr<BooleanDecoder> BooleanDecoder::initialize(ReadonlyBytes data)
 
     // NOTE: As noted below in fill_reservoir(), we read in multi-byte-sized chunks,
     //       so here we will deviate from the standard to count in bytes rather than bits.
-    auto decoder = BooleanDecoder { data.data(), data.size() };
-    TRY(decoder.fill_reservoir());
-    return decoder;
+    return BooleanDecoder { data.data(), data.size() };
 }
 
 // Instead of filling the value field one bit at a time as the spec suggests, we store the
 // data to be read in a reservoir of greater than one byte. This allows us to read out data
 // for the entire reservoir at once, avoiding a lot of branch misses in read_bool().
-ErrorOr<void> BooleanDecoder::fill_reservoir()
+void BooleanDecoder::fill_reservoir()
 {
     if (m_value_bits_left > 8)
-        return {};
+        return;
 
-    if (m_bytes_left == 0)
-        return Error::from_string_literal("Range decoder is out of data");
+    // Defer errors until the decode is finalized, so the work to check for errors and return them only has
+    // to be done once. Not refilling the reservoir here will only result in reading out all zeroes until
+    // the range decode is finished.
+    if (m_bytes_left == 0) {
+        dbgln_if(VPX_DEBUG, "BooleanDecoder has read past the end of the coded range");
+        m_overread = true;
+        return;
+    }
 
     // Read the data into the most significant bits of a variable.
     auto read_size = min<size_t>(reserve_bytes, m_bytes_left);
@@ -56,11 +60,10 @@ ErrorOr<void> BooleanDecoder::fill_reservoir()
     read_value >>= m_value_bits_left;
     m_value |= read_value;
     m_value_bits_left += read_size * 8;
-    return {};
 }
 
 // 9.2.2 Boolean decoding process
-ErrorOr<bool> BooleanDecoder::read_bool(u8 probability)
+bool BooleanDecoder::read_bool(u8 probability)
 {
     auto split = 1u + (((m_range - 1u) * probability) >> 8u);
     // The actual value being read resides in the most significant 8 bits
@@ -82,23 +85,26 @@ ErrorOr<bool> BooleanDecoder::read_bool(u8 probability)
     m_value <<= bits_to_shift_into_range;
     m_value_bits_left -= bits_to_shift_into_range;
 
-    TRY(fill_reservoir());
+    fill_reservoir();
 
     return return_bool;
 }
 
 // 9.2.4 Parsing process for read_literal
-ErrorOr<u8> BooleanDecoder::read_literal(u8 bits)
+u8 BooleanDecoder::read_literal(u8 bits)
 {
     u8 return_value = 0;
     for (size_t i = 0; i < bits; i++) {
-        return_value = (2 * return_value) + TRY(read_bool(128));
+        return_value = (2 * return_value) + read_bool(128);
     }
     return return_value;
 }
 
 ErrorOr<void> BooleanDecoder::finish_decode()
 {
+    if (m_overread)
+        return Error::from_string_literal("Range decoder was read past the end of its data");
+
 #if VPX_DEBUG
     // 9.2.3 Exit process for Boolean decoder
     //
