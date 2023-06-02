@@ -999,6 +999,9 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
 
     marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1).value());
 
+    if (marker.list_style_type() == CSS::ListStyleType::DisclosureClosed || marker.list_style_type() == CSS::ListStyleType::DisclosureOpen)
+        marker_state.set_content_width(marker_state.content_height());
+
     auto final_marker_width = marker_state.content_width() + default_marker_width;
 
     if (marker.list_style_position() == CSS::ListStylePosition::Inside) {
