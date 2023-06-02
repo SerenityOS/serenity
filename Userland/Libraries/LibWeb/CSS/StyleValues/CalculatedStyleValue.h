@@ -50,17 +50,17 @@ public:
             : m_value(move(value))
         {
         }
-        void add(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        void subtract(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
-        void multiply_by(CalculationResult const& other, Layout::Node const*);
-        void divide_by(CalculationResult const& other, Layout::Node const*);
+        void add(CalculationResult const& other, Optional<Length::ResolutionContext const&>, PercentageBasis const& percentage_basis);
+        void subtract(CalculationResult const& other, Optional<Length::ResolutionContext const&>, PercentageBasis const& percentage_basis);
+        void multiply_by(CalculationResult const& other, Optional<Length::ResolutionContext const&>);
+        void divide_by(CalculationResult const& other, Optional<Length::ResolutionContext const&>);
         void negate();
         void invert();
 
         Value const& value() const { return m_value; }
 
     private:
-        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
+        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Optional<Length::ResolutionContext const&>, PercentageBasis const& percentage_basis);
         Value m_value;
     };
 
@@ -82,6 +82,7 @@ public:
     Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
 
     bool resolves_to_length() const { return m_resolved_type == ResolvedType::Length; }
+    [[nodiscard]] Optional<Length> resolve_length(Length::ResolutionContext const&) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
 
@@ -155,7 +156,7 @@ public:
     virtual ErrorOr<String> to_string() const = 0;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const = 0;
     virtual bool contains_percentage() const = 0;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const = 0;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const = 0;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) { return {}; }
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const = 0;
@@ -175,7 +176,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
 
@@ -192,7 +193,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -210,7 +211,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -228,7 +229,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -246,7 +247,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -264,7 +265,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -282,7 +283,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
@@ -300,7 +301,7 @@ public:
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual bool contains_percentage() const override;
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override;
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;

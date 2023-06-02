@@ -24,13 +24,13 @@ static bool is_dimension(CalculatedStyleValue::ResolvedType type)
         && type != CalculatedStyleValue::ResolvedType::Percentage;
 }
 
-static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Layout::Node const* layout_node)
+static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Optional<Length::ResolutionContext const&> context)
 {
     return value.visit(
         [](Number const& number) { return number.value(); },
         [](Angle const& angle) { return angle.to_degrees(); },
         [](Frequency const& frequency) { return frequency.to_hertz(); },
-        [layout_node](Length const& length) { return length.to_px(*layout_node).value(); },
+        [&context](Length const& length) { return length.to_px(*context).value(); },
         [](Percentage const& percentage) { return percentage.value(); },
         [](Time const& time) { return time.to_seconds(); });
 };
@@ -76,7 +76,7 @@ bool NumericCalculationNode::contains_percentage() const
     return m_value.has<Percentage>();
 }
 
-CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const
+CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const
 {
     return m_value;
 }
@@ -164,17 +164,17 @@ bool SumCalculationNode::contains_percentage() const
     return false;
 }
 
-CalculatedStyleValue::CalculationResult SumCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult SumCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     Optional<CalculatedStyleValue::CalculationResult> total;
 
     for (auto& additional_product : m_values) {
-        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
+        auto additional_value = additional_product->resolve(context, percentage_basis);
         if (!total.has_value()) {
             total = additional_value;
             continue;
         }
-        total->add(additional_value, layout_node, percentage_basis);
+        total->add(additional_value, context, percentage_basis);
     }
 
     return total.value();
@@ -266,17 +266,17 @@ bool ProductCalculationNode::contains_percentage() const
     return false;
 }
 
-CalculatedStyleValue::CalculationResult ProductCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult ProductCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     Optional<CalculatedStyleValue::CalculationResult> total;
 
     for (auto& additional_product : m_values) {
-        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
+        auto additional_value = additional_product->resolve(context, percentage_basis);
         if (!total.has_value()) {
             total = additional_value;
             continue;
         }
-        total->multiply_by(additional_value, layout_node);
+        total->multiply_by(additional_value, context);
     }
 
     return total.value();
@@ -328,9 +328,9 @@ bool NegateCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
-CalculatedStyleValue::CalculationResult NegateCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult NegateCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto child_value = m_value->resolve(layout_node, percentage_basis);
+    auto child_value = m_value->resolve(context, percentage_basis);
     child_value.negate();
     return child_value;
 }
@@ -380,9 +380,9 @@ bool InvertCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
-CalculatedStyleValue::CalculationResult InvertCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult InvertCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto child_value = m_value->resolve(layout_node, percentage_basis);
+    auto child_value = m_value->resolve(context, percentage_basis);
     child_value.invert();
     return child_value;
 }
@@ -443,14 +443,14 @@ bool MinCalculationNode::contains_percentage() const
     return false;
 }
 
-CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult MinCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    CalculatedStyleValue::CalculationResult smallest_node = m_values.first()->resolve(layout_node, percentage_basis);
-    auto smallest_value = resolve_value(smallest_node.value(), layout_node);
+    CalculatedStyleValue::CalculationResult smallest_node = m_values.first()->resolve(context, percentage_basis);
+    auto smallest_value = resolve_value(smallest_node.value(), context);
 
     for (size_t i = 1; i < m_values.size(); i++) {
-        auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
-        auto child_value = resolve_value(child_resolved.value(), layout_node);
+        auto child_resolved = m_values[i]->resolve(context, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value(), context);
 
         if (child_value < smallest_value) {
             smallest_value = child_value;
@@ -521,14 +521,14 @@ bool MaxCalculationNode::contains_percentage() const
     return false;
 }
 
-CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    CalculatedStyleValue::CalculationResult largest_node = m_values.first()->resolve(layout_node, percentage_basis);
-    auto largest_value = resolve_value(largest_node.value(), layout_node);
+    CalculatedStyleValue::CalculationResult largest_node = m_values.first()->resolve(context, percentage_basis);
+    auto largest_value = resolve_value(largest_node.value(), context);
 
     for (size_t i = 1; i < m_values.size(); i++) {
-        auto child_resolved = m_values[i]->resolve(layout_node, percentage_basis);
-        auto child_value = resolve_value(child_resolved.value(), layout_node);
+        auto child_resolved = m_values[i]->resolve(context, percentage_basis);
+        auto child_value = resolve_value(child_resolved.value(), context);
 
         if (child_value > largest_value) {
             largest_value = child_value;
@@ -596,15 +596,15 @@ bool ClampCalculationNode::contains_percentage() const
     return m_min_value->contains_percentage() || m_center_value->contains_percentage() || m_max_value->contains_percentage();
 }
 
-CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
-    auto min_node = m_min_value->resolve(layout_node, percentage_basis);
-    auto center_node = m_center_value->resolve(layout_node, percentage_basis);
-    auto max_node = m_max_value->resolve(layout_node, percentage_basis);
+    auto min_node = m_min_value->resolve(context, percentage_basis);
+    auto center_node = m_center_value->resolve(context, percentage_basis);
+    auto max_node = m_max_value->resolve(context, percentage_basis);
 
-    auto min_value = resolve_value(min_node.value(), layout_node);
-    auto center_value = resolve_value(center_node.value(), layout_node);
-    auto max_value = resolve_value(max_node.value(), layout_node);
+    auto min_value = resolve_value(min_node.value(), context);
+    auto center_value = resolve_value(center_node.value(), context);
+    auto max_value = resolve_value(max_node.value(), context);
 
     // NOTE: The value should be returned as "max(MIN, min(VAL, MAX))"
     auto chosen_value = max(min_value, min(center_value, max_value));
@@ -639,17 +639,17 @@ ErrorOr<void> ClampCalculationNode::dump(StringBuilder& builder, int indent) con
     return {};
 }
 
-void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
-    add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
+    add_or_subtract_internal(SumOperation::Add, other, context, percentage_basis);
 }
 
-void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::subtract(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
-    add_or_subtract_internal(SumOperation::Subtract, other, layout_node, percentage_basis);
+    add_or_subtract_internal(SumOperation::Subtract, other, context, percentage_basis);
 }
 
-void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
+void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperation op, CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
 {
     // We know from validation when resolving the type, that "both sides have the same type, or that one side is a <number> and the other is an <integer>".
     // Though, having the same type may mean that one side is a <dimension> and the other a <percentage>.
@@ -701,9 +701,9 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
             }
         },
         [&](Length const& length) {
-            auto this_px = length.to_px(*layout_node);
+            auto this_px = length.to_px(*context);
             if (other.m_value.has<Length>()) {
-                auto other_px = other.m_value.get<Length>().to_px(*layout_node);
+                auto other_px = other.m_value.get<Length>().to_px(*context);
                 if (op == SumOperation::Add)
                     m_value = Length::make_px(this_px + other_px);
                 else
@@ -711,7 +711,7 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
             } else {
                 VERIFY(percentage_basis.has<Length>());
 
-                auto other_px = percentage_basis.get<Length>().percentage_of(other.m_value.get<Percentage>()).to_px(*layout_node);
+                auto other_px = percentage_basis.get<Length>().percentage_of(other.m_value.get<Percentage>()).to_px(*context);
                 if (op == SumOperation::Add)
                     m_value = Length::make_px(this_px + other_px);
                 else
@@ -748,18 +748,18 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
             // Other side isn't a percentage, so the easiest way to handle it without duplicating all the logic, is just to swap `this` and `other`.
             CalculationResult new_value = other;
             if (op == SumOperation::Add) {
-                new_value.add(*this, layout_node, percentage_basis);
+                new_value.add(*this, context, percentage_basis);
             } else {
                 // Turn 'this - other' into '-other + this', as 'A + B == B + A', but 'A - B != B - A'
-                new_value.multiply_by({ Number { Number::Type::Integer, -1.0f } }, layout_node);
-                new_value.add(*this, layout_node, percentage_basis);
+                new_value.multiply_by({ Number { Number::Type::Integer, -1.0f } }, context);
+                new_value.add(*this, context, percentage_basis);
             }
 
             *this = new_value;
         });
 }
 
-void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Layout::Node const* layout_node)
+void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult const& other, Optional<Length::ResolutionContext const&> context)
 {
     // We know from validation when resolving the type, that at least one side must be a <number> or <integer>.
     // Both of these are represented as a double.
@@ -773,7 +773,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             } else {
                 // Avoid duplicating all the logic by swapping `this` and `other`.
                 CalculationResult new_value = other;
-                new_value.multiply_by(*this, layout_node);
+                new_value.multiply_by(*this, context);
                 *this = new_value;
             }
         },
@@ -784,8 +784,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
-            VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) * static_cast<double>(other.m_value.get<Number>().value()));
+            m_value = Length::make_px(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value()));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
@@ -795,7 +794,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
         });
 }
 
-void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const& other, Layout::Node const* layout_node)
+void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const& other, Optional<Length::ResolutionContext const&> context)
 {
     // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
     // Both of these are represented as a Number.
@@ -817,8 +816,7 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
             m_value = Frequency::make_hertz(frequency.to_hertz() / denominator);
         },
         [&](Length const& length) {
-            VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) / static_cast<double>(denominator));
+            m_value = Length::make_px(length.to_px(*context) / static_cast<double>(denominator));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() / denominator);
@@ -891,7 +889,7 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
 
 Optional<Angle> CalculatedStyleValue::resolve_angle() const
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
 
     if (result.value().has<Angle>())
         return result.value().get<Angle>();
@@ -900,7 +898,7 @@ Optional<Angle> CalculatedStyleValue::resolve_angle() const
 
 Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
 {
-    auto result = m_calculation->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve({}, percentage_basis);
 
     return result.value().visit(
         [&](Angle const& angle) -> Optional<Angle> {
@@ -916,7 +914,7 @@ Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& perc
 
 Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
 
     if (result.value().has<Frequency>())
         return result.value().get<Frequency>();
@@ -925,7 +923,7 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
 
 Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
 {
-    auto result = m_calculation->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve({}, percentage_basis);
 
     return result.value().visit(
         [&](Frequency const& frequency) -> Optional<Frequency> {
@@ -939,18 +937,23 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency
         });
 }
 
-Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
+Optional<Length> CalculatedStyleValue::resolve_length(Length::ResolutionContext const& context) const
 {
-    auto result = m_calculation->resolve(&layout_node, {});
+    auto result = m_calculation->resolve(context, {});
 
     if (result.value().has<Length>())
         return result.value().get<Length>();
     return {};
 }
 
+Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
+{
+    return resolve_length(Length::ResolutionContext::for_layout_node(layout_node));
+}
+
 Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
-    auto result = m_calculation->resolve(&layout_node, percentage_basis);
+    auto result = m_calculation->resolve(Length::ResolutionContext::for_layout_node(layout_node), percentage_basis);
 
     return result.value().visit(
         [&](Length const& length) -> Optional<Length> {
@@ -966,7 +969,7 @@ Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node co
 
 Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
     if (result.value().has<Percentage>())
         return result.value().get<Percentage>();
     return {};
@@ -974,7 +977,7 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 
 Optional<Time> CalculatedStyleValue::resolve_time() const
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
 
     if (result.value().has<Time>())
         return result.value().get<Time>();
@@ -983,7 +986,7 @@ Optional<Time> CalculatedStyleValue::resolve_time() const
 
 Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
 {
-    auto result = m_calculation->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve({}, percentage_basis);
 
     return result.value().visit(
         [&](Time const& time) -> Optional<Time> {
@@ -996,7 +999,7 @@ Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percent
 
 Optional<double> CalculatedStyleValue::resolve_number() const
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
     if (result.value().has<Number>())
         return result.value().get<Number>().value();
     return {};
@@ -1004,7 +1007,7 @@ Optional<double> CalculatedStyleValue::resolve_number() const
 
 Optional<i64> CalculatedStyleValue::resolve_integer()
 {
-    auto result = m_calculation->resolve(nullptr, {});
+    auto result = m_calculation->resolve({}, {});
     if (result.value().has<Number>())
         return result.value().get<Number>().integer_value();
     return {};
