@@ -33,8 +33,9 @@ void Viewport::build_stacking_context_tree_if_needed()
 
 void Viewport::build_stacking_context_tree()
 {
-    const_cast<Painting::PaintableBox*>(paintable_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
+    const_cast<Painting::PaintableBox*>(paintable_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr, 0));
 
+    size_t index_in_tree_order = 1;
     for_each_in_subtree_of_type<Box>([&](Box& box) {
         if (!box.paintable_box())
             return IterationDecision::Continue;
@@ -45,7 +46,7 @@ void Viewport::build_stacking_context_tree()
         }
         auto* parent_context = const_cast<Painting::PaintableBox*>(box.paintable_box())->enclosing_stacking_context();
         VERIFY(parent_context);
-        const_cast<Painting::PaintableBox*>(box.paintable_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
+        const_cast<Painting::PaintableBox*>(box.paintable_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context, index_in_tree_order++));
         return IterationDecision::Continue;
     });
 
