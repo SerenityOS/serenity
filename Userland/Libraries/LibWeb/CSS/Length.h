@@ -9,6 +9,7 @@
 
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
 
@@ -155,6 +156,16 @@ public:
 
     Type type() const { return m_type; }
     double raw_value() const { return m_value; }
+
+    struct ResolutionContext {
+        [[nodiscard]] static Length::ResolutionContext for_layout_node(Layout::Node const&);
+
+        CSSPixelRect viewport_rect;
+        FontMetrics font_metrics;
+        FontMetrics root_font_metrics;
+    };
+
+    [[nodiscard]] CSSPixels to_px(ResolutionContext const&) const;
 
     CSSPixels to_px(Layout::Node const&) const;
 

@@ -8022,7 +8022,7 @@ public:
     virtual ErrorOr<String> to_string() const override { VERIFY_NOT_REACHED(); }
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override { VERIFY_NOT_REACHED(); }
     virtual bool contains_percentage() const override { VERIFY_NOT_REACHED(); }
-    virtual CalculatedStyleValue::CalculationResult resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const override { VERIFY_NOT_REACHED(); }
+    virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override { VERIFY_NOT_REACHED(); }
 
     virtual ErrorOr<void> dump(StringBuilder& builder, int indent) const override
     {
