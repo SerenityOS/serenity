@@ -39,7 +39,7 @@ GridSize::~GridSize() = default;
 bool GridSize::is_auto(Layout::AvailableSize const& available_size) const
 {
     if (m_type == Type::LengthPercentage) {
-        if (m_length_percentage.is_percentage())
+        if (m_length_percentage.contains_percentage())
             return !available_size.is_definite();
         return m_length_percentage.is_auto();
     }
@@ -50,7 +50,7 @@ bool GridSize::is_auto(Layout::AvailableSize const& available_size) const
 bool GridSize::is_fixed(Layout::AvailableSize const& available_size) const
 {
     if (m_type == Type::LengthPercentage) {
-        if (m_length_percentage.is_percentage())
+        if (m_length_percentage.contains_percentage())
             return available_size.is_definite();
         return !m_length_percentage.is_auto();
     }
