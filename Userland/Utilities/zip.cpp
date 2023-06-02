@@ -36,21 +36,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    DeprecatedString zip_file_path { zip_path };
-    if (FileSystem::exists(zip_file_path)) {
+    if (FileSystem::exists(zip_path)) {
         if (force) {
-            outln("{} already exists, overwriting...", zip_file_path);
+            outln("{} already exists, overwriting...", zip_path);
         } else {
-            warnln("{} already exists, aborting!", zip_file_path);
+            warnln("{} already exists, aborting!", zip_path);
             return 1;
         }
     }
 
-    outln("Archive: {}", zip_file_path);
-    auto file_stream = TRY(Core::File::open(zip_file_path, Core::File::OpenMode::Write));
+    outln("Archive: {}", zip_path);
+    auto file_stream = TRY(Core::File::open(zip_path, Core::File::OpenMode::Write));
     Archive::ZipOutputStream zip_stream(move(file_stream));
 
-    auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
+    auto add_file = [&](StringView path) -> ErrorOr<void> {
         auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
 
         auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
@@ -67,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return {};
     };
 
-    auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
+    auto add_directory = [&](StringView path, auto handle_directory) -> ErrorOr<void> {
         auto canonicalized_path = TRY(String::formatted("{}/", LexicalPath::canonicalized_path(path)));
 
         auto stat = TRY(Core::System::stat(path));
