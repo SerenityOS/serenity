@@ -259,6 +259,11 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                     if (max_value_string == "∞")
                         max_value_string = {};
 
+                    if (min_value_string.is_empty() && max_value_string.is_empty()) {
+                        property_generator.appendln("true;");
+                        break;
+                    }
+
                     auto output_check = [&](auto& value_string, StringView comparator) {
                         if (value_getter.has_value()) {
                             property_generator.set("value_number", value_string);
