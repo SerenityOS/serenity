@@ -250,7 +250,13 @@ void Editor::add_to_history(DeprecatedString const& line)
 
 ErrorOr<Vector<Editor::HistoryEntry>> Editor::try_load_history(StringView path)
 {
-    auto history_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto history_file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
+
+    // We ignore "No such file or directory" errors, as that is just equivalent to an empty history.
+    if (history_file_or_error.is_error() && history_file_or_error.error().is_errno() && history_file_or_error.error().code() == ENOENT)
+        return Vector<Editor::HistoryEntry> {};
+
+    auto history_file = history_file_or_error.release_value();
     auto data = TRY(history_file->read_until_eof());
     auto hist = StringView { data };
     Vector<HistoryEntry> history;
