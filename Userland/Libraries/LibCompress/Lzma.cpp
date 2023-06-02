@@ -1007,17 +1007,17 @@ ErrorOr<void> LzmaCompressor::encode_once()
     }
 
     // If we weren't able to find any viable existing offsets, we now have to search the rest of the dictionary for possible new offsets.
-    auto new_distance_results = TRY(m_dictionary->find_copy_in_seekback(m_dictionary->used_space(), normalized_to_real_match_length_offset));
+    auto new_distance_result = m_dictionary->find_copy_in_seekback(m_dictionary->used_space(), normalized_to_real_match_length_offset);
 
-    if (new_distance_results.size() > 0) {
-        auto selected_match = new_distance_results[0];
+    if (new_distance_result.has_value()) {
+        auto selected_match = new_distance_result.release_value();
         TRY(encode_new_match(selected_match.distance, selected_match.length));
         return {};
     }
 
     // If we weren't able to find any matches, we don't have any other choice than to encode the next byte as a literal.
     u8 next_byte { 0 };
-    m_dictionary->read({ &next_byte, sizeof(next_byte) });
+    TRY(m_dictionary->read({ &next_byte, sizeof(next_byte) }));
     TRY(encode_literal(next_byte));
     return {};
 }
