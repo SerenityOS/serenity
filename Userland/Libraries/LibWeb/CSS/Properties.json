@@ -113,7 +113,7 @@
     "inherited": false,
     "initial": "0s",
     "valid-types": [
-      "time"
+      "time [-∞,∞]"
     ]
   },
   "animation-fill-mode": {
@@ -211,8 +211,8 @@
     "initial": "0% 0%",
     "max-values": 4,
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "bottom",
@@ -234,8 +234,8 @@
     "affects-layout": false,
     "initial": "0%",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "center",
@@ -248,8 +248,8 @@
     "affects-layout": false,
     "initial": "0%",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "center",
@@ -488,7 +488,7 @@
     "inherited": true,
     "initial": "0",
     "valid-types": [
-      "length"
+      "length [0,∞]"
     ],
     "quirks": [
       "unitless-length"
@@ -585,8 +585,8 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -737,8 +737,8 @@
     "inherited": true,
     "initial": "1",
     "valid-types": [
-      "number",
-      "percentage"
+      "number [-∞,∞]",
+      "percentage [-∞,∞]"
     ]
   },
   "flex": {
@@ -798,7 +798,7 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "integer"
+      "integer [-∞,∞]"
     ]
   },
   "flex-wrap": {
@@ -1162,8 +1162,8 @@
     ],
     "max-values": 4,
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1180,8 +1180,8 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1194,8 +1194,8 @@
     "inherited": true,
     "initial": "normal",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "normal"
@@ -1262,8 +1262,8 @@
     ],
     "max-values": 4,
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1276,8 +1276,8 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1290,8 +1290,8 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1304,8 +1304,8 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1318,8 +1318,8 @@
     "inherited": false,
     "initial": "0",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1408,8 +1408,8 @@
     "inherited": false,
     "initial": "1",
     "valid-types": [
-      "number",
-      "percentage"
+      "number [-∞,∞]",
+      "percentage [-∞,∞]"
     ]
   },
   "outline": {
@@ -1570,8 +1570,8 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1607,8 +1607,8 @@
     "inherited": true,
     "initial": "1",
     "valid-types": [
-      "number",
-      "percentage"
+      "number [-∞,∞]",
+      "percentage [-∞,∞]"
     ]
   },
   "stop-color": {
@@ -1624,8 +1624,8 @@
     "inherited": false,
     "initial": "1",
     "valid-types": [
-      "number",
-      "percentage"
+      "number [-∞,∞]",
+      "percentage [-∞,∞]"
     ]
   },
   "stroke-width": {
@@ -1686,8 +1686,8 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto",
@@ -1698,8 +1698,8 @@
     "inherited": true,
     "initial": "0",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "quirks": [
       "unitless-length"
@@ -1731,8 +1731,8 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
@@ -1752,8 +1752,8 @@
     "initial": "50% 50%",
     "max-values": 3,
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "bottom",
@@ -1779,8 +1779,8 @@
     "inherited": false,
     "initial": "baseline",
     "valid-types": [
-      "length",
-      "percentage",
+      "length [-∞,∞]",
+      "percentage [-∞,∞]",
       "vertical-align"
     ],
     "quirks": [
@@ -1822,8 +1822,8 @@
     "inherited": true,
     "initial": "normal",
     "valid-types": [
-      "length",
-      "percentage"
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
     ],
     "valid-identifiers": [
       "normal"
@@ -1847,7 +1847,7 @@
     "inherited": false,
     "initial": "auto",
     "valid-types": [
-      "integer"
+      "integer [-∞,∞]"
     ],
     "valid-identifiers": [
       "auto"
