@@ -19,6 +19,8 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
                 All other TARGETs: $NAME run [TARGET] [KERNEL_CMD_LINE]
                     Runs the built image in QEMU, and optionally passes the
                     KERNEL_CMD_LINE to the Kernel
+    upload:     TARGET aarch64: $NAME upload aarch64 [SERIAL_PORT]
+                    Uploads a built Kernel via serial to a system running the Prekernel.
     gdb:        Same as run, but also starts a gdb remote session.
                 TARGET lagom: $NAME gdb lagom LAGOM_EXECUTABLE [-ex 'any gdb command']...
                     Passes through '-ex' commands to gdb
@@ -405,6 +407,23 @@ run_gdb() {
     fi
 }
 
+run_serial_uploader() {
+    PYTHON_VERSION=$(python3 --version)
+    if python3 -c 'import serial' && false; then
+        >&2 echo "Your $PYTHON_VERSION seems to be missing the pyserial library; install it with 'python3 -m pip install pyserial'."
+        exit 1
+    fi
+
+    if [ -n "$1" ]; then
+        SERIAL_DEVICE="$1"; shift
+    else
+        # Most people will have one USB serial interface they use for this purpose, so this is an appropriate default.
+        SERIAL_DEVICE=/dev/ttyUSB0
+    fi
+
+    python3 "$(get_top_dir)/Meta/upload_to_serial.py" "$BUILD_DIR/Kernel/kernel8.img" "$SERIAL_DEVICE"
+}
+
 build_and_run_lagom_target() {
     local run_target="${1}"
     local lagom_target="${CMD_ARGS[0]}"
@@ -423,7 +442,7 @@ build_and_run_lagom_target() {
     LAGOM_TARGET="${lagom_target}" LAGOM_ARGS="${lagom_args[*]}" build_target "${run_target}"
 }
 
-if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
+if [[ "$CMD" =~ ^(build|install|image|copy-src|run|upload|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
     [ "$TARGET" = "lagom" ] || ensure_toolchain
@@ -464,6 +483,17 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
                     export SERENITY_KERNEL_CMDLINE="${CMD_ARGS[0]}"
                 fi
                 build_target run
+            fi
+            ;;
+        upload)
+            if [ "$TARGET" = "aarch64" ]; then
+                build_target
+                build_target install
+                # No need to build boot drive, only the kernel is uploaded anyways.
+                run_serial_uploader "$@"
+            else
+                >&2 echo "Command upload can only be used with the aarch64 TARGET."
+                usage
             fi
             ;;
         gdb)

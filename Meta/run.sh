@@ -325,9 +325,23 @@ if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ]; then
 fi
 
 if [ "$SERENITY_ARCH" = "aarch64" ]; then
-    SERENITY_KERNEL_AND_INITRD="
-    -kernel Kernel/Kernel
-    "
+    if [ "$SERENITY_RUN" = "prekernel-rpi" ]; then
+        SERENITY_KERNEL_AND_INITRD="
+        -device loader,file=Kernel/Arch/aarch64/RPi/Prekernel/kernel8.img,addr=0x80000,cpu-num=0
+        "
+    elif [ "$SERENITY_RUN" = "prekernel" ]; then
+        SERENITY_KERNEL_AND_INITRD="
+        -kernel Kernel/Arch/aarch64/RPi/Prekernel/Prekernel
+        "
+    elif [ "$SERENITY_RUN" = "rpi" ]; then
+        SERENITY_KERNEL_AND_INITRD="
+        -device loader,file=Kernel/kernel8.img,addr=0x80000,cpu-num=0
+        "
+    else
+        SERENITY_KERNEL_AND_INITRD="
+        -kernel Kernel/Kernel
+        "
+    fi
 else
     SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Prekernel/Prekernel
