@@ -15,6 +15,7 @@
 #include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/DateTime.h>
 #include <string.h>
 
 namespace Archive {
@@ -271,9 +272,20 @@ private:
 
 class ZipOutputStream {
 public:
+    struct MemberInformation {
+        float compression_ratio;
+        size_t compressed_size;
+    };
+
     ZipOutputStream(NonnullOwnPtr<Stream>);
 
     ErrorOr<void> add_member(ZipMember const&);
+    ErrorOr<MemberInformation> add_member_from_stream(StringView, Stream&, Optional<Core::DateTime> const& = {});
+
+    // NOTE: This does not add any of the files within the directory,
+    //       it just adds an entry for it.
+    ErrorOr<void> add_directory(StringView, Optional<Core::DateTime> const& = {});
+
     ErrorOr<void> finish();
 
 private:
