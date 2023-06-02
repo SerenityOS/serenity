@@ -10,6 +10,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibIPC/ConnectionToServer.h>
@@ -20,6 +21,10 @@ static constexpr auto SPICE_DEVICE = "/dev/hvc0p1"sv;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    if (!FileSystem::exists(SPICE_DEVICE)) {
+        return Error::from_string_literal("Failed to find spice device file!");
+    }
+
     // We use the application to be able to easily write to the user's clipboard.
     auto app = TRY(GUI::Application::create(arguments));
 
