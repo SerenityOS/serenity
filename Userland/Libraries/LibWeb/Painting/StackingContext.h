@@ -15,7 +15,7 @@ namespace Web::Painting {
 
 class StackingContext {
 public:
-    StackingContext(Layout::Box&, StackingContext* parent);
+    StackingContext(Layout::Box&, StackingContext* parent, size_t index_in_tree_order);
 
     StackingContext* parent() { return m_parent; }
     StackingContext const* parent() const { return m_parent; }
@@ -47,6 +47,7 @@ private:
     Gfx::FloatPoint m_transform_origin;
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
+    size_t m_index_in_tree_order { 0 };
 
     void paint_internal(PaintContext&) const;
     Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;

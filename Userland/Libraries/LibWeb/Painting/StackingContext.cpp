@@ -28,11 +28,12 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
         paintable->paint(context, phase);
 }
 
-StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
+StackingContext::StackingContext(Layout::Box& box, StackingContext* parent, size_t index_in_tree_order)
     : m_box(box)
     , m_transform(combine_transformations(m_box->computed_values().transformations()))
     , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
+    , m_index_in_tree_order(index_in_tree_order)
 {
     VERIFY(m_parent != this);
     if (m_parent)
@@ -45,7 +46,7 @@ void StackingContext::sort()
         auto a_z_index = a->m_box->computed_values().z_index().value_or(0);
         auto b_z_index = b->m_box->computed_values().z_index().value_or(0);
         if (a_z_index == b_z_index)
-            return a->m_box->is_before(b->m_box);
+            return a->m_index_in_tree_order < b->m_index_in_tree_order;
         return a_z_index < b_z_index;
     });
 
