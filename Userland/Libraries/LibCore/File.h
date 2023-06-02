@@ -31,6 +31,7 @@ public:
         MustBeNew = 16,
         KeepOnExec = 32,
         Nonblocking = 64,
+        DontCreate = 128,
     };
 
     enum class ShouldCloseFileDescriptor {
