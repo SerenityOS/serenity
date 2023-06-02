@@ -136,9 +136,11 @@ public:
     Node* hovered_node() { return m_hovered_node.ptr(); }
     Node const* hovered_node() const { return m_hovered_node.ptr(); }
 
-    void set_inspected_node(Node*);
+    void set_inspected_node(Node*, Optional<CSS::Selector::PseudoElement>);
     Node* inspected_node() { return m_inspected_node.ptr(); }
     Node const* inspected_node() const { return m_inspected_node.ptr(); }
+    Layout::Node* inspected_layout_node();
+    Layout::Node const* inspected_layout_node() const { return const_cast<Document*>(this)->inspected_layout_node(); }
 
     Element* document_element();
     Element const* document_element() const;
@@ -494,6 +496,7 @@ private:
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
     JS::GCPtr<Node> m_hovered_node;
     JS::GCPtr<Node> m_inspected_node;
+    Optional<CSS::Selector::PseudoElement> m_inspected_pseudo_element;
     JS::GCPtr<Node> m_active_favicon;
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;

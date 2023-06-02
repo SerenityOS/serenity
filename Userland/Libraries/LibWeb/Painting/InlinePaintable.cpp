@@ -114,9 +114,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    // FIXME: We check for a non-null dom_node(), since pseudo-elements have a null one and were getting
-    //        highlighted incorrectly. A better solution will be needed if we want to inspect them too.
-    if (phase == PaintPhase::Overlay && layout_node().dom_node() && layout_node().document().inspected_node() == layout_node().dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.
