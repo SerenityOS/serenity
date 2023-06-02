@@ -6,6 +6,8 @@
  */
 
 #include <LibArchive/Zip.h>
+#include <LibCompress/Deflate.h>
+#include <LibCrypto/Checksum/CRC32.h>
 
 namespace Archive {
 
@@ -136,6 +138,62 @@ ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
         .compressed_data = member.compressed_data.data(),
     };
     return local_file_header.write(*m_stream);
+}
+
+ErrorOr<ZipOutputStream::MemberInformation> ZipOutputStream::add_member_from_stream(StringView path, Stream& stream, Optional<Core::DateTime> const& modification_time)
+{
+    auto buffer = TRY(stream.read_until_eof());
+
+    Archive::ZipMember member {};
+    member.name = TRY(String::from_utf8(path));
+
+    if (modification_time.has_value()) {
+        member.modification_date = to_packed_dos_date(modification_time->year(), modification_time->month(), modification_time->day());
+        member.modification_time = to_packed_dos_time(modification_time->hour(), modification_time->minute(), modification_time->second());
+    }
+
+    auto deflate_buffer = Compress::DeflateCompressor::compress_all(buffer);
+    auto compression_ratio = 1.f;
+    auto compressed_size = buffer.size();
+
+    if (!deflate_buffer.is_error() && deflate_buffer.value().size() < buffer.size()) {
+        member.compressed_data = deflate_buffer.value().bytes();
+        member.compression_method = Archive::ZipCompressionMethod::Deflate;
+
+        compression_ratio = static_cast<float>(deflate_buffer.value().size()) / static_cast<float>(buffer.size());
+        compressed_size = member.compressed_data.size();
+    } else {
+        member.compressed_data = buffer.bytes();
+        member.compression_method = Archive::ZipCompressionMethod::Store;
+    }
+
+    member.uncompressed_size = buffer.size();
+
+    Crypto::Checksum::CRC32 checksum { buffer.bytes() };
+    member.crc32 = checksum.digest();
+    member.is_directory = false;
+
+    TRY(add_member(member));
+
+    return MemberInformation { compression_ratio, compressed_size };
+}
+
+ErrorOr<void> ZipOutputStream::add_directory(StringView name, Optional<Core::DateTime> const& modification_time)
+{
+    Archive::ZipMember member {};
+    member.name = TRY(String::from_utf8(name));
+    member.compressed_data = {};
+    member.compression_method = Archive::ZipCompressionMethod::Store;
+    member.uncompressed_size = 0;
+    member.crc32 = 0;
+    member.is_directory = true;
+
+    if (modification_time.has_value()) {
+        member.modification_date = to_packed_dos_date(modification_time->year(), modification_time->month(), modification_time->day());
+        member.modification_time = to_packed_dos_time(modification_time->hour(), modification_time->minute(), modification_time->second());
+    }
+
+    return add_member(member);
 }
 
 ErrorOr<void> ZipOutputStream::finish()
