@@ -7612,12 +7612,18 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
 
     if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
         if (property_accepting_integer.has_value()) {
-            if (auto integer = TRY(parse_integer_value(tokens)); integer && property_accepts_integer(*property_accepting_integer, integer->as_integer().integer()))
+            auto transaction = tokens.begin_transaction();
+            if (auto integer = TRY(parse_integer_value(tokens)); integer && property_accepts_integer(*property_accepting_integer, integer->as_integer().integer())) {
+                transaction.commit();
                 return PropertyAndValue { *property_accepting_integer, integer };
+            }
         }
         if (property_accepting_number.has_value()) {
-            if (auto number = TRY(parse_number_value(tokens)); number && property_accepts_number(*property_accepting_number, number->as_number().number()))
+            auto transaction = tokens.begin_transaction();
+            if (auto number = TRY(parse_number_value(tokens)); number && property_accepts_number(*property_accepting_number, number->as_number().number())) {
+                transaction.commit();
                 return PropertyAndValue { *property_accepting_number, number };
+            }
         }
     }
 
@@ -7655,33 +7661,44 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         || any_property_accepts_type(property_ids, ValueType::Time).has_value();
 
     if (property_accepts_dimension) {
+        auto transaction = tokens.begin_transaction();
         if (auto maybe_dimension = parse_dimension(peek_token); maybe_dimension.has_value()) {
             (void)tokens.next_token();
             auto dimension = maybe_dimension.release_value();
             if (dimension.is_angle()) {
                 auto angle = dimension.angle();
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle))
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle)) {
+                    transaction.commit();
                     return PropertyAndValue { *property, TRY(AngleStyleValue::create(angle)) };
+                }
             }
             if (dimension.is_frequency()) {
                 auto frequency = dimension.frequency();
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value() && property_accepts_frequency(*property, frequency))
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value() && property_accepts_frequency(*property, frequency)) {
+                    transaction.commit();
                     return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(frequency)) };
+                }
             }
             if (dimension.is_length()) {
                 auto length = dimension.length();
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value() && property_accepts_length(*property, length))
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value() && property_accepts_length(*property, length)) {
+                    transaction.commit();
                     return PropertyAndValue { *property, TRY(LengthStyleValue::create(length)) };
+                }
             }
             if (dimension.is_resolution()) {
                 auto resolution = dimension.resolution();
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value() && property_accepts_resolution(*property, resolution))
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value() && property_accepts_resolution(*property, resolution)) {
+                    transaction.commit();
                     return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(resolution)) };
+                }
             }
             if (dimension.is_time()) {
                 auto time = dimension.time();
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value() && property_accepts_time(*property, time))
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value() && property_accepts_time(*property, time)) {
+                    transaction.commit();
                     return PropertyAndValue { *property, TRY(TimeStyleValue::create(time)) };
+                }
             }
         }
     }
