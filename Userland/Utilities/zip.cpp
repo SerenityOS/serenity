@@ -4,16 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DOSPackedTime.h>
 #include <AK/LexicalPath.h>
 #include <LibArchive/Zip.h>
-#include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
-#include <LibCrypto/Checksum/CRC32.h>
 #include <LibFileSystem/FileSystem.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -54,52 +51,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Archive::ZipOutputStream zip_stream(move(file_stream));
 
     auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
-        auto canonicalized_path = LexicalPath::canonicalized_path(path);
-        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
-        auto file_buffer = TRY(file->read_until_eof());
-        Archive::ZipMember member {};
-        member.name = TRY(String::from_deprecated_string(canonicalized_path));
+        auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
 
+        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto stat = TRY(Core::System::fstat(file->fd()));
         auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
-        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
-        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
 
-        auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
-        if (!deflate_buffer.is_error() && deflate_buffer.value().size() < file_buffer.size()) {
-            member.compressed_data = deflate_buffer.value().bytes();
-            member.compression_method = Archive::ZipCompressionMethod::Deflate;
-            auto compression_ratio = (double)deflate_buffer.value().size() / file_buffer.size();
-            outln("  adding: {} (deflated {}%)", canonicalized_path, (int)(compression_ratio * 100));
+        auto information = TRY(zip_stream.add_member_from_stream(canonicalized_path, *file, date));
+        if (information.compression_ratio < 1.f) {
+            outln("  adding: {} (deflated {}%)", canonicalized_path, (int)(information.compression_ratio * 100));
         } else {
-            member.compressed_data = file_buffer.bytes();
-            member.compression_method = Archive::ZipCompressionMethod::Store;
-            outln("  adding: {} (stored 0%)", canonicalized_path);
+            outln("  adding: {} (stored)", canonicalized_path);
         }
-        member.uncompressed_size = file_buffer.size();
-        Crypto::Checksum::CRC32 checksum { file_buffer.bytes() };
-        member.crc32 = checksum.digest();
-        member.is_directory = false;
-        return zip_stream.add_member(member);
+
+        return {};
     };
 
     auto add_directory = [&](DeprecatedString path, auto handle_directory) -> ErrorOr<void> {
-        auto canonicalized_path = DeprecatedString::formatted("{}/", LexicalPath::canonicalized_path(path));
-        Archive::ZipMember member {};
-        member.name = TRY(String::from_deprecated_string(canonicalized_path));
-        member.compressed_data = {};
-        member.compression_method = Archive::ZipCompressionMethod::Store;
-        member.uncompressed_size = 0;
-        member.crc32 = 0;
-        member.is_directory = true;
+        auto canonicalized_path = TRY(String::formatted("{}/", LexicalPath::canonicalized_path(path)));
 
-        auto stat = TRY(Core::System::stat(canonicalized_path));
+        auto stat = TRY(Core::System::stat(path));
         auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
-        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
-        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
-
-        TRY(zip_stream.add_member(member));
-        outln("  adding: {} (stored 0%)", canonicalized_path);
+        TRY(zip_stream.add_directory(canonicalized_path, date));
 
         if (!recurse)
             return {};
