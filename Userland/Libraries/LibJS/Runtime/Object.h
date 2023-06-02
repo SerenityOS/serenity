@@ -36,7 +36,7 @@ struct PrivateElement {
 
     PrivateName key;
     Kind kind { Kind::Field };
-    Value value;
+    Handle<Value> value;
 };
 
 class Object : public Cell {
