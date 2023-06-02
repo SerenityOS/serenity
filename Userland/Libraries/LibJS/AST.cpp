@@ -1735,13 +1735,13 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
         switch (kind()) {
         case Kind::Method:
             set_function_name();
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Method, method_value } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Method, make_handle(method_value) } };
         case Kind::Getter:
             set_function_name("get");
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), &method_function, nullptr) } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, make_handle(Value(Accessor::create(interpreter.vm(), &method_function, nullptr))) } };
         case Kind::Setter:
             set_function_name("set");
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), nullptr, &method_function) } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, make_handle(Value(Accessor::create(interpreter.vm(), nullptr, &method_function))) } };
         default:
             VERIFY_NOT_REACHED();
         }
@@ -2043,11 +2043,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
                 if (existing.key == private_element.key) {
                     VERIFY(existing.kind == PrivateElement::Kind::Accessor);
                     VERIFY(private_element.kind == PrivateElement::Kind::Accessor);
-                    auto& accessor = private_element.value.as_accessor();
+                    auto& accessor = private_element.value.value().as_accessor();
                     if (!accessor.getter())
-                        existing.value.as_accessor().set_setter(accessor.setter());
+                        existing.value.value().as_accessor().set_setter(accessor.setter());
                     else
-                        existing.value.as_accessor().set_getter(accessor.getter());
+                        existing.value.value().as_accessor().set_getter(accessor.getter());
                     added_to_existing = true;
                 }
             }
