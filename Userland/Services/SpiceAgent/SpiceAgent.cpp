@@ -15,7 +15,7 @@ namespace SpiceAgent {
 
 ErrorOr<NonnullOwnPtr<SpiceAgent>> SpiceAgent::create(StringView device_path)
 {
-    auto device = TRY(Core::File::open(device_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Nonblocking));
+    auto device = TRY(Core::File::open(device_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::DontCreate | Core::File::OpenMode::Nonblocking));
     return try_make<SpiceAgent>(move(device), Vector { Capability::ClipboardByDemand });
 }
 
