@@ -470,6 +470,10 @@
 #    cmakedefine01 UTF8_DEBUG
 #endif
 
+#ifndef VPX_DEBUG
+#    cmakedefine01 VPX_DEBUG
+#endif
+
 #ifndef WASI_DEBUG
 #    cmakedefine01 WASI_DEBUG
 #endif
