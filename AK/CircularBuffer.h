@@ -31,7 +31,7 @@ public:
 
     /// Compared to `read()`, this starts reading from an offset that is `distance` bytes
     /// before the current write pointer and allows for reading already-read data.
-    ErrorOr<Bytes> read_with_seekback(Bytes bytes, size_t distance);
+    ErrorOr<Bytes> read_with_seekback(Bytes bytes, size_t distance) const;
 
     ErrorOr<size_t> copy_from_seekback(size_t distance, size_t length);
 

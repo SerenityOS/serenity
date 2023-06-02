@@ -186,7 +186,7 @@ Bytes CircularBuffer::read(Bytes bytes)
     return bytes.trim(bytes.size() - remaining);
 }
 
-ErrorOr<Bytes> CircularBuffer::read_with_seekback(Bytes bytes, size_t distance)
+ErrorOr<Bytes> CircularBuffer::read_with_seekback(Bytes bytes, size_t distance) const
 {
     if (distance > m_seekback_limit)
         return Error::from_string_literal("Tried a seekback read beyond the seekback limit");
