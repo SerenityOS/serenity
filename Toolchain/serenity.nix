@@ -18,6 +18,8 @@ stdenv.mkDerivation {
     ninja
     patch
     pkg-config
+    qt6.qtbase
+    qt6.qtsvg
     rsync
     texinfo
     unzip
