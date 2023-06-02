@@ -100,14 +100,6 @@ ErrorOr<void> ATAPort::detect_connected_devices()
     return {};
 }
 
-LockRefPtr<StorageDevice> ATAPort::connected_device(size_t device_index) const
-{
-    MutexLocker locker(m_lock);
-    if (m_ata_devices.size() > device_index)
-        return m_ata_devices[device_index];
-    return {};
-}
-
 ErrorOr<void> ATAPort::start_request(ATADevice const& associated_device, AsyncBlockDeviceRequest& request)
 {
     MutexLocker locker(m_lock);

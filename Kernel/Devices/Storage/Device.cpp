@@ -46,6 +46,7 @@ ErrorOr<void> StorageDevice::after_inserting()
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
     after_inserting_add_to_device_management();
+    StorageManagement::the().attach_new_device({}, *this);
     return {};
 }
 

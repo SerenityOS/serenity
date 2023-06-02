@@ -50,8 +50,6 @@ public:
     };
 
 public:
-    LockRefPtr<StorageDevice> connected_device(size_t device_index) const;
-
     virtual ~ATAPort() = default;
 
     virtual ErrorOr<void> disable() = 0;

@@ -30,10 +30,8 @@ public:
 
     virtual StringView device_name() const override { return "AHCI"sv; }
 
-    virtual LockRefPtr<StorageDevice> device(u32 index) const override;
     virtual ErrorOr<void> reset() override;
     virtual ErrorOr<void> shutdown() override;
-    virtual size_t devices_count() const override;
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
@@ -47,7 +45,6 @@ private:
     ErrorOr<void> initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
-    LockRefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
     ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> map_default_hba_region(PCI::DeviceIdentifier const&);

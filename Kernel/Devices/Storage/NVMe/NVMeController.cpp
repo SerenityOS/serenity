@@ -226,16 +226,6 @@ UNMAP_AFTER_INIT Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespac
     return Tuple<u64, u8>(namespace_size, lba_size);
 }
 
-LockRefPtr<StorageDevice> NVMeController::device(u32 index) const
-{
-    return m_namespaces.at(index);
-}
-
-size_t NVMeController::devices_count() const
-{
-    return m_device_count;
-}
-
 ErrorOr<void> NVMeController::reset()
 {
     TRY(reset_controller());

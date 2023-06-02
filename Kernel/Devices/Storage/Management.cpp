@@ -81,11 +81,6 @@ u32 StorageManagement::generate_relative_sd_controller_id(Badge<SDHostController
     return controller_id;
 }
 
-void StorageManagement::remove_device(StorageDevice& device)
-{
-    m_storage_devices.remove(device);
-}
-
 UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pio, bool nvme_poll)
 {
     VERIFY(m_controllers.is_empty());
@@ -162,35 +157,40 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
     }
 }
 
-UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
+void StorageManagement::attach_new_device(Badge<StorageDevice>, StorageDevice& device)
 {
-    VERIFY(!m_controllers.is_empty());
-    for (auto& controller : m_controllers) {
-        for (size_t device_index = 0; device_index < controller->devices_count(); device_index++) {
-            auto device = controller->device(device_index);
-            if (device.is_null())
-                continue;
-            m_storage_devices.append(device.release_nonnull());
-        }
-    }
+    m_storage_devices.with([&](auto& list) {
+        list.append(device);
+    });
+}
+
+void StorageManagement::remove_device_after_hotplug_event(NonnullRefPtr<StorageDevice> device)
+{
+    NonnullRefPtr<StorageDevice> to_be_removed_device = move(device);
+    to_be_removed_device->prepare_for_unplug();
+    m_storage_devices.with([&](auto& list) {
+        list.remove(device);
+    });
 }
 
 UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() const
 {
-    dbgln("StorageManagement: Detected {} storage devices", m_storage_devices.size_slow());
-    for (auto const& storage_device : m_storage_devices) {
-        auto const& partitions = storage_device.partitions();
-        if (partitions.is_empty()) {
-            dbgln("  Device: block{}:{} (no partitions)", storage_device.major(), storage_device.minor());
-        } else {
-            dbgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
-            unsigned partition_number = 1;
-            for (auto const& partition : partitions) {
-                dbgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
-                partition_number++;
+    m_storage_devices.with([&](auto& list) {
+        dbgln("StorageManagement: Detected {} storage devices", list.size_slow());
+        for (auto const& storage_device : list) {
+            auto const& partitions = storage_device.partitions();
+            if (partitions.is_empty()) {
+                dbgln("  Device: block{}:{} (no partitions)", storage_device.major(), storage_device.minor());
+            } else {
+                dbgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
+                unsigned partition_number = 1;
+                for (auto const& partition : partitions) {
+                    dbgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
+                    partition_number++;
+                }
             }
         }
-    }
+    });
 }
 
 UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice& device) const
@@ -207,9 +207,17 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManage
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
-    VERIFY(!m_storage_devices.is_empty());
-    for (auto& device : m_storage_devices) {
-        auto partition_table_or_error = try_to_initialize_partition_table(device);
+    // FIXME: Find a way to not allocate memory in this method!
+    // We must defer enumeration after the spinlock scope due to the possibility
+    // of running into disk access.
+    Vector<NonnullRefPtr<StorageDevice>> devices;
+    m_storage_devices.with([&](auto& list) {
+        for (auto& device : list) {
+            devices.append(device);
+        }
+    });
+    for (auto& device : devices) {
+        auto partition_table_or_error = try_to_initialize_partition_table(*device);
         if (partition_table_or_error.is_error())
             continue;
         auto partition_table = partition_table_or_error.release_value();
@@ -217,8 +225,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
             auto partition_metadata = partition_table->partition(partition_index);
             if (!partition_metadata.has_value())
                 continue;
-            auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata.value());
-            device.add_partition(disk_partition);
+            auto disk_partition = DiskPartition::create(*device, generate_partition_minor_number(), partition_metadata.value());
+            device->add_partition(disk_partition);
         }
     }
 }
@@ -294,18 +302,20 @@ UNMAP_AFTER_INIT void StorageManagement::determine_hardware_relative_boot_device
 
     RefPtr<StorageDevice> chosen_storage_device;
 
-    for (auto& storage_device : m_storage_devices) {
-        if (!filter_device_callback(storage_device))
-            continue;
-        auto storage_device_lun = storage_device.logical_unit_number_address();
-        if (storage_device.parent_controller_hardware_relative_id() == address_parameters[0]
-            && storage_device_lun.target_id == address_parameters[1]
-            && storage_device_lun.disk_id == address_parameters[2]) {
-            m_boot_block_device = storage_device;
-            chosen_storage_device = storage_device;
-            break;
+    m_storage_devices.with([&](auto& list) {
+        for (auto& storage_device : list) {
+            if (!filter_device_callback(storage_device))
+                continue;
+            auto storage_device_lun = storage_device.logical_unit_number_address();
+            if (storage_device.parent_controller_hardware_relative_id() == address_parameters[0]
+                && storage_device_lun.target_id == address_parameters[1]
+                && storage_device_lun.disk_id == address_parameters[2]) {
+                m_boot_block_device = storage_device;
+                chosen_storage_device = storage_device;
+                break;
+            }
         }
-    }
+    });
 
     if (chosen_storage_device)
         resolve_partition_from_boot_device_parameter(*chosen_storage_device, relative_hardware_prefix);
@@ -352,16 +362,18 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_logical_unit
 
     RefPtr<StorageDevice> chosen_storage_device;
 
-    for (auto& storage_device : m_storage_devices) {
-        auto storage_device_lun = storage_device.logical_unit_number_address();
-        if (storage_device_lun.controller_id == address_parameters[0]
-            && storage_device_lun.target_id == address_parameters[1]
-            && storage_device_lun.disk_id == address_parameters[2]) {
-            m_boot_block_device = storage_device;
-            chosen_storage_device = storage_device;
-            break;
+    m_storage_devices.with([&](auto& list) {
+        for (auto& storage_device : list) {
+            auto storage_device_lun = storage_device.logical_unit_number_address();
+            if (storage_device_lun.controller_id == address_parameters[0]
+                && storage_device_lun.target_id == address_parameters[1]
+                && storage_device_lun.disk_id == address_parameters[2]) {
+                m_boot_block_device = storage_device;
+                chosen_storage_device = storage_device;
+                break;
+            }
         }
-    }
+    });
 
     if (chosen_storage_device)
         resolve_partition_from_boot_device_parameter(*chosen_storage_device, logical_unit_number_device_prefix);
@@ -405,21 +417,22 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
-    VERIFY(!m_storage_devices.is_empty());
     VERIFY(m_boot_argument.starts_with(partition_uuid_prefix));
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()), UUID::Endianness::Mixed);
 
-    for (auto& storage_device : m_storage_devices) {
-        for (auto& partition : storage_device.partitions()) {
-            if (partition->metadata().unique_guid().is_zero())
-                continue;
-            if (partition->metadata().unique_guid() == partition_uuid) {
-                m_boot_block_device = partition;
-                break;
+    m_storage_devices.with([&](auto& list) {
+        for (auto& storage_device : list) {
+            for (auto& partition : storage_device.partitions()) {
+                if (partition->metadata().unique_guid().is_zero())
+                    continue;
+                if (partition->metadata().unique_guid() == partition_uuid) {
+                    m_boot_block_device = partition;
+                    break;
+                }
             }
         }
-    }
+    });
 }
 
 LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
@@ -489,7 +502,6 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     }
 #endif
 
-    enumerate_storage_devices();
     enumerate_disk_partitions();
 
     determine_boot_device();

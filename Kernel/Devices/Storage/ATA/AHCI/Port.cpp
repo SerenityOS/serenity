@@ -81,16 +81,9 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) && m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
         clear_sata_error_register();
         if ((m_port_registers.ssts & 0xf) != 3 && m_connected_device) {
-            m_connected_device->prepare_for_unplug();
-            StorageManagement::the().remove_device(*m_connected_device);
-            auto work_item_creation_result = g_io_work->try_queue([this]() {
-                m_connected_device.clear();
-            });
-            if (work_item_creation_result.is_error()) {
-                auto current_request = m_current_request;
-                m_current_request.clear();
-                current_request->complete(AsyncDeviceRequest::OutOfMemory);
-            }
+            auto device_to_be_removed = m_connected_device;
+            m_connected_device.clear();
+            StorageManagement::the().remove_device_after_hotplug_event(*device_to_be_removed);
         } else {
             auto work_item_creation_result = g_io_work->try_queue([this]() {
                 reset();

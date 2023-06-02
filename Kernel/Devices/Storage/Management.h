@@ -34,17 +34,17 @@ public:
 
     static MinorNumber generate_partition_minor_number();
 
+    void attach_new_device(Badge<StorageDevice>, StorageDevice&);
+    void remove_device_after_hotplug_event(NonnullRefPtr<StorageDevice>);
+
     static u32 generate_controller_id();
 
     static u32 generate_relative_nvme_controller_id(Badge<NVMeController>);
     static u32 generate_relative_ata_controller_id(Badge<ATAController>);
     static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
-    void remove_device(StorageDevice&);
-
 private:
     void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
-    void enumerate_storage_devices();
     void enumerate_disk_partitions();
 
     void determine_boot_device();
@@ -69,7 +69,7 @@ private:
     StringView m_boot_argument;
     LockWeakPtr<BlockDevice> m_boot_block_device;
     Vector<NonnullRefPtr<StorageController>> m_controllers;
-    IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
+    SpinlockProtected<IntrusiveList<&StorageDevice::m_list_node>, LockRank::None> m_storage_devices;
 };
 
 }
