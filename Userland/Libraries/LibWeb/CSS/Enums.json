@@ -190,6 +190,10 @@
         "upper-latin",
         "upper-roman"
     ],
+    "list-style-position": [
+        "inside",
+        "outside"
+    ],
     "overflow": [
         "auto",
         "clip",

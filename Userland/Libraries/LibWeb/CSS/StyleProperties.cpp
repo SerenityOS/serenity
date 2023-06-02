@@ -711,6 +711,12 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
     return value_id_to_list_style_type(value->to_identifier());
 }
 
+Optional<CSS::ListStylePosition> StyleProperties::list_style_position() const
+{
+    auto value = property(CSS::PropertyID::ListStylePosition);
+    return value_id_to_list_style_position(value->to_identifier());
+}
+
 Optional<CSS::Overflow> StyleProperties::overflow_x() const
 {
     return overflow(CSS::PropertyID::OverflowX);
