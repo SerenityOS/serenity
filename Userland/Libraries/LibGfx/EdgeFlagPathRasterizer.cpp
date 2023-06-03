@@ -230,6 +230,9 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
         current_edge = current_edge->next_edge;
     }
 
+    if (prev_edge)
+        prev_edge->next_edge = nullptr;
+
     m_edge_table[scanline] = nullptr;
     return active_edges;
 }
