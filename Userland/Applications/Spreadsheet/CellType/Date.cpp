@@ -39,10 +39,10 @@ JS::ThrowCompletionOr<JS::Value> DateCell::js_value(Cell& cell, CellTypeMetadata
     return JS::Value(value / 1000); // Turn it to seconds
 }
 
-DeprecatedString DateCell::metadata_hint(MetadataName metadata) const
+String DateCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Format)
-        return "Date format string as supported by `strftime'";
+        return "Date format string as supported by `strftime'"_string;
     return {};
 }
 

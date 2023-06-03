@@ -30,12 +30,12 @@ JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, CellTypeMeta
     return cell.js_data();
 }
 
-DeprecatedString IdentityCell::metadata_hint(MetadataName metadata) const
+String IdentityCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Length)
-        return "Ignored";
+        return "Ignored"_string;
     if (metadata == MetadataName::Format)
-        return "JavaScript expression, `value' refers to the cell's value";
+        return "JavaScript expression, `value' refers to the cell's value"_string;
 
     return {};
 }
