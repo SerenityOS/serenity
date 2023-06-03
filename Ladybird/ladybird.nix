@@ -7,11 +7,11 @@ pkgs.mkShell.override
   name = "ladybird";
 
   nativeBuildInputs = with pkgs; [
-    pkgconfig
     ccache
     cmake
-    ninja
     libxcrypt
+    ninja
+    pkgconfig
     qt6.qtbase
     qt6.qtbase.dev
     qt6.qttools
