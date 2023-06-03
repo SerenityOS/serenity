@@ -12,14 +12,17 @@
 #include <LibGUI/Window.h>
 
 class MailSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(MailSettingsWidget)
+    C_OBJECT_ABSTRACT(MailSettingsWidget)
 
 public:
+    static ErrorOr<NonnullRefPtr<MailSettingsWidget>> try_create();
+
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    MailSettingsWidget();
+    MailSettingsWidget() = default;
+    ErrorOr<void> setup();
 
     DeprecatedString m_server;
     DeprecatedString m_port;
