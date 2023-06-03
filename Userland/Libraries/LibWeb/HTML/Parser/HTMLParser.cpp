@@ -2375,9 +2375,9 @@ void HTMLParser::handle_text(HTMLToken& token)
             if (script_nesting_level() != 0) {
                 // Set the parser pause flag to true,
                 m_parser_pause_flag = true;
-                // FIXME: and abort the processing of any nested invocations of the tokenizer, yielding control back to the caller.
-                //        (Tokenization will resume when the caller returns to the "outer" tree construction stage.)
-                TODO();
+                // and abort the processing of any nested invocations of the tokenizer, yielding control back to the caller.
+                // (Tokenization will resume when the caller returns to the "outer" tree construction stage.)
+                return;
             }
 
             // Otherwise:
@@ -2395,11 +2395,11 @@ void HTMLParser::handle_text(HTMLToken& token)
 
                     // 5. If the parser's Document has a style sheet that is blocking scripts
                     //    or the script's ready to be parser-executed is false:
-                    if (m_document->has_a_style_sheet_that_is_blocking_scripts() || script->is_ready_to_be_parser_executed() == false) {
+                    if (m_document->has_a_style_sheet_that_is_blocking_scripts() || the_script->is_ready_to_be_parser_executed() == false) {
                         // spin the event loop until the parser's Document has no style sheet that is blocking scripts
                         // and the script's ready to be parser-executed becomes true.
                         main_thread_event_loop().spin_until([&] {
-                            return !m_document->has_a_style_sheet_that_is_blocking_scripts() && script->is_ready_to_be_parser_executed();
+                            return !m_document->has_a_style_sheet_that_is_blocking_scripts() && the_script->is_ready_to_be_parser_executed();
                         });
                     }
 
