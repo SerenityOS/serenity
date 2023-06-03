@@ -67,7 +67,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
     for (auto const& category : s_emoji_groups) {
         auto name = Unicode::emoji_group_to_string(category.group);
-        auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
+        DeprecatedString tooltip = name;
 
         auto set_filter_action = Action::create_checkable(
             category.representative_emoji,
