@@ -414,9 +414,8 @@ char* getenv(char const* name)
         size_t varLength = eq - decl;
         if (vl != varLength)
             continue;
-        if (strncmp(decl, name, varLength) == 0) {
+        if (strncmp(decl, name, varLength) == 0)
             return eq + 1;
-        }
     }
     return nullptr;
 }
@@ -493,22 +492,23 @@ int serenity_putenv(char const* new_var, size_t length)
 int putenv(char* new_var)
 {
     char* new_eq = strchr(new_var, '=');
-
     if (!new_eq)
         return unsetenv(new_var);
 
-    auto new_var_len = new_eq - new_var;
+    auto new_var_name_len = new_eq - new_var;
     int environ_size = 0;
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
-        char* old_eq = strchr(old_var, '=');
-        VERIFY(old_eq);
-        auto old_var_len = old_eq - old_var;
+        auto old_var_name_max_length = strnlen(old_var, new_var_name_len);
+        char* old_eq = static_cast<char*>(memchr(old_var, '=', old_var_name_max_length + 1));
+        if (!old_eq)
+            continue; // possibly freed or overwritten value
 
-        if (new_var_len != old_var_len)
+        auto old_var_name_len = old_eq - old_var;
+        if (new_var_name_len != old_var_name_len)
             continue; // can't match
 
-        if (strncmp(new_var, old_var, new_var_len) == 0) {
+        if (strncmp(new_var, old_var, new_var_name_len) == 0) {
             free_environment_variable_if_needed(old_var);
             environ[environ_size] = new_var;
             return 0;
@@ -523,9 +523,8 @@ int putenv(char* new_var)
         return -1;
     }
 
-    for (int i = 0; environ[i]; ++i) {
+    for (int i = 0; environ[i]; ++i)
         new_environ[i] = environ[i];
-    }
 
     new_environ[environ_size] = new_var;
     new_environ[environ_size + 1] = nullptr;
