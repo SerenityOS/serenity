@@ -468,7 +468,9 @@ void Tab::focus_location_editor()
 
 void Tab::navigate(QString url, LoadType load_type)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
+    if (url.startsWith("/"))
+        url = "file://" + url;
+    else if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
         url = "https://" + url;
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     view().load(ak_deprecated_string_from_qstring(url));
