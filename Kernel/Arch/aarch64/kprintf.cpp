@@ -6,7 +6,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
+#include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/kstdio.h>
 
 // FIXME: Merge the code in this file with Kernel/kprintf.cpp once the proper abstractions are in place.
