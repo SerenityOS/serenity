@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Maxwell Trussell <maxtrussell@gmail.com>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,10 +60,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     for (auto& process : matched_processes) {
-        if (echo) {
+        auto result = Core::System::kill(process.pid, signal);
+        if (result.is_error())
+            warnln("Killing pid {} failed. {}", process.pid, result.release_error());
+        else if (echo)
             outln("{} killed (pid {})", process.name, process.pid);
-        }
-        kill(process.pid, signal);
     }
     return 0;
 }
