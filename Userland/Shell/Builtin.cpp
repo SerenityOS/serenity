@@ -1328,6 +1328,8 @@ ErrorOr<bool> Shell::run_builtin(const AST::Command& command, Vector<NonnullRefP
 
     if (name == ":"sv)
         name = "noop"sv;
+    else if (m_in_posix_mode && name == "."sv)
+        name = "source"sv;
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin, _mode)                        \
     if (name == #builtin) {                                              \
@@ -1921,7 +1923,7 @@ ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
 
 bool Shell::has_builtin(StringView name) const
 {
-    if (name == ":"sv)
+    if (name == ":"sv || (m_in_posix_mode && name == "."sv))
         return true;
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin, mode)                            \
