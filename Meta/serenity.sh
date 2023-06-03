@@ -303,10 +303,16 @@ build_cmake() {
 
 build_toolchain() {
     echo "build_toolchain: $TOOLCHAIN_DIR"
+
     if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildClang.sh )
     else
-        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildGNU.sh )
+        (
+            # HACK: ISL's configure fails with "Link Time Optimisation is not supported" if CC is
+            #       Homebrew Clang due to incompatibility with Xcode's ranlib.
+            [ "$(uname -s)" = "Darwin" ] && unset CC CXX
+            cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildGNU.sh
+        )
     fi
 }
 
