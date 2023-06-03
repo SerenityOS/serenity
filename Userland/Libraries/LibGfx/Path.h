@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Line.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 
@@ -208,16 +209,8 @@ public:
     void close();
     void close_all_subpaths();
 
-    struct SplitLineSegment {
-        FloatPoint from, to;
-        float inverse_slope;
-        float x_of_minimum_y;
-        float maximum_y;
-        float minimum_y;
-        float x;
-    };
-
     Vector<NonnullRefPtr<Segment const>> const& segments() const { return m_segments; }
+
     auto& split_lines() const
     {
         if (!m_split_lines.has_value()) {
@@ -270,7 +263,7 @@ private:
 
     Vector<NonnullRefPtr<Segment const>> m_segments {};
 
-    Optional<Vector<SplitLineSegment>> m_split_lines {};
+    Optional<Vector<FloatLine>> m_split_lines {};
     Optional<Gfx::FloatRect> m_bounding_box;
 };
 

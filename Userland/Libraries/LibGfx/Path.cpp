@@ -239,52 +239,38 @@ DeprecatedString Path::to_deprecated_string() const
 
 void Path::segmentize_path()
 {
-    Vector<SplitLineSegment> segments;
+    Vector<FloatLine> segments;
     float min_x = 0;
     float min_y = 0;
     float max_x = 0;
     float max_y = 0;
 
+    bool first = true;
     auto add_point_to_bbox = [&](Gfx::FloatPoint point) {
         float x = point.x();
         float y = point.y();
-        min_x = min(min_x, x);
-        min_y = min(min_y, y);
-        max_x = max(max_x, x);
-        max_y = max(max_y, y);
+        if (first) {
+            min_x = max_x = x;
+            min_y = max_y = y;
+            first = false;
+        } else {
+            min_x = min(min_x, x);
+            min_y = min(min_y, y);
+            max_x = max(max_x, x);
+            max_y = max(max_y, y);
+        }
     };
 
     auto add_line = [&](auto const& p0, auto const& p1) {
-        float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
-        auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
-        if (p0.y() < p1.y()) {
-            swap(ymin, ymax);
-            swap(x_of_ymin, x_of_ymax);
-        }
-
-        segments.append({ FloatPoint(p0.x(), p0.y()),
-            FloatPoint(p1.x(), p1.y()),
-            slope == 0 ? 0 : 1 / slope,
-            x_of_ymin,
-            ymax, ymin, x_of_ymax });
-
+        segments.append({ p0, p1 });
         add_point_to_bbox(p1);
     };
 
     FloatPoint cursor { 0, 0 };
-    bool first = true;
-
     for (auto& segment : m_segments) {
         switch (segment->type()) {
         case Segment::Type::MoveTo:
-            if (first) {
-                min_x = segment->point().x();
-                min_y = segment->point().y();
-                max_x = segment->point().x();
-                max_y = segment->point().y();
-            } else {
-                add_point_to_bbox(segment->point());
-            }
+            add_point_to_bbox(segment->point());
             cursor = segment->point();
             break;
         case Segment::Type::LineTo: {
@@ -324,11 +310,6 @@ void Path::segmentize_path()
 
         first = false;
     }
-
-    // sort segments by ymax
-    quick_sort(segments, [](auto const& line0, auto const& line1) {
-        return line1.maximum_y < line0.maximum_y;
-    });
 
     m_split_lines = move(segments);
     m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };

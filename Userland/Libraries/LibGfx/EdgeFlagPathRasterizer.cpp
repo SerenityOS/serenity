@@ -30,15 +30,13 @@
 
 namespace Gfx {
 
-static Vector<Detail::Edge> prepare_edges(ReadonlySpan<Path::SplitLineSegment> lines, unsigned samples_per_pixel, FloatPoint origin)
+static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigned samples_per_pixel, FloatPoint origin)
 {
-    // FIXME: split_lines() gives similar information, but the form it's in is not that useful (and is const anyway).
     Vector<Detail::Edge> edges;
     edges.ensure_capacity(lines.size());
-
     for (auto& line : lines) {
-        auto p0 = line.from - origin;
-        auto p1 = line.to - origin;
+        auto p0 = line.a() - origin;
+        auto p1 = line.b() - origin;
 
         p0.scale_by(1, samples_per_pixel);
         p1.scale_by(1, samples_per_pixel);
