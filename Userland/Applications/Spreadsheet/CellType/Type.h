@@ -37,7 +37,7 @@ public:
 
     virtual JS::ThrowCompletionOr<DeprecatedString> display(Cell&, CellTypeMetadata const&) const = 0;
     virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, CellTypeMetadata const&) const = 0;
-    virtual DeprecatedString metadata_hint(MetadataName) const { return {}; }
+    virtual String metadata_hint(MetadataName) const { return {}; }
     virtual ~CellType() = default;
 
     DeprecatedString const& name() const { return m_name; }

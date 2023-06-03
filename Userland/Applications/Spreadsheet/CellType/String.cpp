@@ -32,10 +32,10 @@ JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, CellTypeMetada
     return JS::PrimitiveString::create(vm, string);
 }
 
-DeprecatedString StringCell::metadata_hint(MetadataName metadata) const
+String StringCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Format)
-        return "Ignored";
+        return "Ignored"_string;
     return {};
 }
 

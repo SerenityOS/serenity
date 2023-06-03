@@ -43,10 +43,10 @@ JS::ThrowCompletionOr<JS::Value> NumericCell::js_value(Cell& cell, CellTypeMetad
     });
 }
 
-DeprecatedString NumericCell::metadata_hint(MetadataName metadata) const
+String NumericCell::metadata_hint(MetadataName metadata) const
 {
     if (metadata == MetadataName::Format)
-        return "Format string as accepted by `printf', all numeric formats refer to the same value (the cell's value)";
+        return "Format string as accepted by `printf', all numeric formats refer to the same value (the cell's value)"_string;
 
     return {};
 }
