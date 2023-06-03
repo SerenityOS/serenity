@@ -23,7 +23,7 @@ public:
         Trailing,
     };
 
-    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom, Type type)
+    LineBoxFragment(Node const& layout_node, unsigned start, unsigned length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom, Type type)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -36,8 +36,8 @@ public:
     }
 
     Node const& layout_node() const { return m_layout_node; }
-    int start() const { return m_start; }
-    int length() const { return m_length; }
+    unsigned start() const { return m_start; }
+    unsigned length() const { return m_length; }
     CSSPixelRect const absolute_rect() const;
     Type type() const { return m_type; }
 
@@ -73,7 +73,7 @@ public:
     bool is_justifiable_whitespace() const;
     StringView text() const;
 
-    int text_index_at(CSSPixels x) const;
+    unsigned text_index_at(CSSPixels x) const;
 
     CSSPixelRect selection_rect(Gfx::Font const&) const;
 
@@ -81,8 +81,8 @@ public:
 
 private:
     JS::NonnullGCPtr<Node const> m_layout_node;
-    int m_start { 0 };
-    int m_length { 0 };
+    unsigned m_start { 0 };
+    unsigned m_length { 0 };
     CSSPixelPoint m_offset;
     CSSPixelSize m_size;
     CSSPixels m_border_box_top { 0 };

@@ -42,7 +42,7 @@ CSSPixelRect const LineBoxFragment::absolute_rect() const
     return rect;
 }
 
-int LineBoxFragment::text_index_at(CSSPixels x) const
+unsigned LineBoxFragment::text_index_at(CSSPixels x) const
 {
     if (!is<TextNode>(layout_node()))
         return 0;
@@ -88,9 +88,8 @@ CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
     if (!range)
         return {};
 
-    // FIXME: m_start and m_length should be unsigned and then we won't need these casts.
-    auto const start_index = static_cast<unsigned>(m_start);
-    auto const end_index = static_cast<unsigned>(m_start) + static_cast<unsigned>(m_length);
+    auto const start_index = m_start;
+    auto const end_index = m_start + m_length;
     auto text = this->text();
 
     if (layout_node().selection_state() == Node::SelectionState::StartAndEnd) {

@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, CSSPixels border_box_top, CSSPixels border_box_bottom, LineBoxFragment::Type fragment_type)
+void LineBox::add_fragment(Node const& layout_node, unsigned start, unsigned length, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, CSSPixels border_box_top, CSSPixels border_box_bottom, LineBoxFragment::Type fragment_type)
 {
     bool text_align_is_justify = layout_node.computed_values().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
