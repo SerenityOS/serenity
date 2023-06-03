@@ -14,6 +14,7 @@ pkgs.mkShell.override
     pkgconfig
     qt6.qtbase
     qt6.qtbase.dev
+    qt6.qtsvg
     qt6.qttools
     qt6.qtwayland
     qt6.qtwayland.dev
