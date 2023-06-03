@@ -84,7 +84,7 @@ public:
     DeprecatedString text() const { return m_text; }
     void set_text(DeprecatedString);
 
-    DeprecatedString tooltip() const { return m_tooltip.value_or(m_text); }
+    DeprecatedString tooltip() const;
     void set_tooltip(DeprecatedString);
 
     Optional<String> status_tip() const;

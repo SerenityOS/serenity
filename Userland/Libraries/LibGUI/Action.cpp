@@ -297,6 +297,11 @@ void Action::set_text(DeprecatedString text)
     });
 }
 
+DeprecatedString Action::tooltip() const
+{
+    return m_tooltip.value_or_lazy_evaluated([this] { return Gfx::parse_ampersand_string(m_text); });
+}
+
 void Action::set_tooltip(DeprecatedString tooltip)
 {
     if (m_tooltip == tooltip)
