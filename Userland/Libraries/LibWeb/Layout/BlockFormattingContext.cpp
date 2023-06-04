@@ -1066,7 +1066,7 @@ FormattingContext::SpaceUsedByFloats BlockFormattingContext::intrusion_by_floats
     CSSPixels y_in_root = box_in_root_rect.y() + y_in_box;
     auto space_used_by_floats_in_root = space_used_by_floats(y_in_root);
 
-    auto left_intrusion = max(CSSPixels(0), space_used_by_floats_in_root.left - box_in_root_rect.x());
+    auto left_intrusion = max(CSSPixels(0), space_used_by_floats_in_root.left - max(CSSPixels(0), box_in_root_rect.x()));
 
     CSSPixels offset_from_containing_block_chain_margins_between_here_and_root = 0;
     for (auto const* containing_block = static_cast<Box const*>(&box); containing_block && containing_block != &root(); containing_block = containing_block->containing_block()) {
