@@ -90,9 +90,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    statusbar.set_text(0, "Score: 0");
-    statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
-    statusbar.set_text(2, "Time: 00:00:00");
+    statusbar.set_text(0, TRY("Score: 0"_string));
+    statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score())));
+    statusbar.set_text(2, TRY("Time: 00:00:00"_string));
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     game.on_score_update = [&](uint32_t score) {
-        statusbar.set_text(0, DeprecatedString::formatted("Score: {}", score));
+        statusbar.set_text(0, String::formatted("Score: {}", score).release_value_but_fixme_should_propagate_errors());
     };
 
     uint64_t seconds_elapsed = 0;
@@ -118,13 +118,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         uint64_t minutes = (seconds_elapsed / 60) % 60;
         uint64_t seconds = seconds_elapsed % 60;
 
-        statusbar.set_text(2, DeprecatedString::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds));
+        statusbar.set_text(2, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds).release_value_but_fixme_should_propagate_errors());
     }));
 
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
         timer->start();
-        statusbar.set_text(2, "Time: 00:00:00");
+        statusbar.set_text(2, "Time: 00:00:00"_string.release_value_but_fixme_should_propagate_errors());
     };
     game.on_game_end = [&](Solitaire::GameOverReason reason, uint32_t score) {
         if (timer->is_active())
@@ -133,16 +133,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (reason == Solitaire::GameOverReason::Victory) {
             if (seconds_elapsed >= 30) {
                 uint32_t bonus = (20'000 / seconds_elapsed) * 35;
-                statusbar.set_text(0, DeprecatedString::formatted("Score: {} (Bonus: {})", score, bonus));
+                statusbar.set_text(0, String::formatted("Score: {} (Bonus: {})", score, bonus).release_value_but_fixme_should_propagate_errors());
                 score += bonus;
             }
 
             if (score > high_score()) {
                 update_high_score(score);
-                statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", score));
+                statusbar.set_text(1, String::formatted("High Score: {}", score).release_value_but_fixme_should_propagate_errors());
             }
         }
-        statusbar.set_text(2, "Timer starts after your first move");
+        statusbar.set_text(2, "Timer starts after your first move"_string.release_value_but_fixme_should_propagate_errors());
     };
 
     auto confirm_end_current_game = [&]() {
@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!confirm_end_current_game())
             return;
 
-        statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
+        statusbar.set_text(1, String::formatted("High Score: {}", high_score()).release_value_but_fixme_should_propagate_errors());
         game.setup(mode);
     });
     single_card_draw_action->set_checked(mode == Solitaire::Mode::SingleCardDraw);
@@ -188,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!confirm_end_current_game())
             return;
 
-        statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
+        statusbar.set_text(1, String::formatted("High Score: {}", high_score()).release_value_but_fixme_should_propagate_errors());
         game.setup(mode);
     });
     three_card_draw_action->set_checked(mode == Solitaire::Mode::ThreeCardDraw);

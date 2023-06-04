@@ -127,19 +127,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto reset_statistic_status = [&]() {
         switch (statistic_display) {
         case StatisticDisplay::HighScore:
-            statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score()));
+            statusbar.set_text(1, String::formatted("High Score: {}", high_score()).release_value_but_fixme_should_propagate_errors());
             break;
         case StatisticDisplay::BestTime:
-            statusbar.set_text(1, DeprecatedString::formatted("Best Time: {}", format_seconds(best_time())));
+            statusbar.set_text(1, String::formatted("Best Time: {}", format_seconds(best_time())).release_value_but_fixme_should_propagate_errors());
             break;
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
-    statusbar.set_text(0, "Score: 0");
+    statusbar.set_text(0, TRY("Score: 0"_string));
     reset_statistic_status();
-    statusbar.set_text(2, "Time: 00:00:00");
+    statusbar.set_text(2, TRY("Time: 00:00:00"_string));
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -153,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     game.on_score_update = [&](uint32_t score) {
-        statusbar.set_text(0, DeprecatedString::formatted("Score: {}", score));
+        statusbar.set_text(0, String::formatted("Score: {}", score).release_value_but_fixme_should_propagate_errors());
     };
 
     uint64_t seconds_elapsed = 0;
@@ -161,13 +161,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
-        statusbar.set_text(2, DeprecatedString::formatted("Time: {}", format_seconds(seconds_elapsed)));
+        statusbar.set_text(2, String::formatted("Time: {}", format_seconds(seconds_elapsed)).release_value_but_fixme_should_propagate_errors());
     }));
 
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
         timer->start();
-        statusbar.set_text(2, "Time: 00:00:00");
+        statusbar.set_text(2, "Time: 00:00:00"_string.release_value_but_fixme_should_propagate_errors());
     };
     game.on_game_end = [&](Spider::GameOverReason reason, uint32_t score) {
         auto game_was_in_progress = timer->is_active();
@@ -192,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             reset_statistic_status();
         }
-        statusbar.set_text(2, "Timer starts after your first move");
+        statusbar.set_text(2, "Timer starts after your first move"_string.release_value_but_fixme_should_propagate_errors());
     };
 
     auto confirm_end_current_game = [&]() {

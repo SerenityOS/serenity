@@ -1135,7 +1135,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     };
 
     directory_view->on_status_message = [&](StringView message) {
-        statusbar.set_text(message);
+        statusbar.set_text(String::from_utf8(message).release_value_but_fixme_should_propagate_errors());
     };
 
     directory_view->on_thumbnail_progress = [&](int done, int total) {

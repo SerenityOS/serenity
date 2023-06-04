@@ -251,7 +251,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 builder.appendff(", Duration: {} ms", end - start);
             }
         }
-        statusbar->set_text(builder.to_deprecated_string());
+        statusbar->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
     };
     timeline_view->on_selection_change = [&] { statusbar_update(); };
     flamegraph_view->on_hover_change = [&] { statusbar_update(); };

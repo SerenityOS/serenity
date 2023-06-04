@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto update = [&]() {
         board_view->set_board(&game.board());
         board_view->update();
-        statusbar->set_text(DeprecatedString::formatted("Score: {}", game.score()));
+        statusbar->set_text(String::formatted("Score: {}", game.score()).release_value_but_fixme_should_propagate_errors());
     };
 
     update();

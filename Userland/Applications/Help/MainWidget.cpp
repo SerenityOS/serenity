@@ -134,7 +134,7 @@ MainWidget::MainWidget()
     };
     m_web_view->on_link_hover = [this](URL const& url) {
         if (url.is_valid())
-            m_statusbar->set_text(url.to_deprecated_string());
+            m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
         else
             m_statusbar->set_text({});
     };

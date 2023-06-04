@@ -105,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto update = [&]() {
         board_widget->update();
-        statusbar->set_text(DeprecatedString::formatted("Moves remaining: {}", ai_moves - moves_made));
+        statusbar->set_text(String::formatted("Moves remaining: {}", ai_moves - moves_made).release_value_but_fixme_should_propagate_errors());
     };
 
     update();

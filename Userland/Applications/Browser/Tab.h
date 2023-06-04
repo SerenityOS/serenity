@@ -111,7 +111,7 @@ private:
     void update_bookmark_button(StringView url);
     void start_download(const URL& url);
     void view_source(const URL& url, DeprecatedString const& source);
-    void update_status(Optional<DeprecatedString> text_override = {}, i32 count_waiting = 0);
+    void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
     enum class MayAppendTLD {

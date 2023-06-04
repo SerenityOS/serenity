@@ -291,8 +291,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
-        statusbar->set_text(0, DeprecatedString::formatted("Processes: {}", process_count));
-        statusbar->set_text(1, DeprecatedString::formatted("Threads: {}", thread_count));
+        statusbar->set_text(0, String::formatted("Processes: {}", process_count).release_value_but_fixme_should_propagate_errors());
+        statusbar->set_text(1, String::formatted("Threads: {}", thread_count).release_value_but_fixme_should_propagate_errors());
     };
 
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
@@ -605,7 +605,7 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
             sum_cpu += cpus[i]->total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();
-        statusbar->set_text(2, DeprecatedString::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));
+        statusbar->set_text(2, String::formatted("CPU usage: {}%", (int)roundf(cpu_usage)).release_value_but_fixme_should_propagate_errors());
     };
 
     auto& memory_graph = *graphs_container.find_descendant_of_type_named<SystemMonitor::GraphWidget>("memory_graph");

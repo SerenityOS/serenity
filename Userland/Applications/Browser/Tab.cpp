@@ -91,7 +91,7 @@ void Tab::view_source(const URL& url, DeprecatedString const& source)
     window->show();
 }
 
-void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_waiting)
+void Tab::update_status(Optional<String> text_override, i32 count_waiting)
 {
     if (text_override.has_value()) {
         m_statusbar->set_text(*text_override);
@@ -99,7 +99,7 @@ void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_wait
     }
 
     if (m_loaded) {
-        m_statusbar->set_text("");
+        m_statusbar->set_text({});
         return;
     }
 
@@ -107,10 +107,10 @@ void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_wait
 
     if (count_waiting == 0) {
         // ex: "Loading google.com"
-        m_statusbar->set_text(DeprecatedString::formatted("Loading {}", m_navigating_url->host()));
+        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->host()).release_value_but_fixme_should_propagate_errors());
     } else {
         // ex: "google.com is waiting on 5 resources"
-        m_statusbar->set_text(DeprecatedString::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv));
+        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv).release_value_but_fixme_should_propagate_errors());
     }
 }
 
@@ -509,7 +509,7 @@ Tab::Tab(BrowserWindow& window)
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     view().on_link_hover = [this](auto& url) {
-        update_status(url.to_deprecated_string());
+        update_status(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
     };
 
     view().on_link_unhover = [this]() {
@@ -704,7 +704,7 @@ void Tab::did_become_active()
     };
 
     BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {
-        m_statusbar->set_text(url);
+        m_statusbar->set_text(String::from_deprecated_string(url).release_value_but_fixme_should_propagate_errors());
     };
 
     BookmarksBarWidget::the().on_bookmark_change = [this]() {

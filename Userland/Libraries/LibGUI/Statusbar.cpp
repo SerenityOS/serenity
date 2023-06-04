@@ -25,7 +25,7 @@ Statusbar::Statusbar(int count)
     m_corner = add<ResizeCorner>();
     set_segment_count(count);
 
-    REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
+    REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_INT_PROPERTY("segment_count", segment_count, set_segment_count);
 }
 
@@ -100,19 +100,19 @@ void Statusbar::update_segment(size_t index)
     }
 }
 
-DeprecatedString Statusbar::text(size_t index) const
+String Statusbar::text(size_t index) const
 {
-    return m_segments[index]->text().to_deprecated_string();
+    return m_segments[index]->text();
 }
 
-void Statusbar::set_text(DeprecatedString text)
+void Statusbar::set_text(String text)
 {
     set_text(0, move(text));
 }
 
-void Statusbar::set_text(size_t index, DeprecatedString text)
+void Statusbar::set_text(size_t index, String text)
 {
-    m_segments[index]->m_restored_text = String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors();
+    m_segments[index]->m_restored_text = move(text);
     update_segment(index);
 }
 
