@@ -138,6 +138,9 @@ MainWidget::MainWidget()
         else
             m_statusbar->set_text({});
     };
+    m_web_view->on_link_unhover = [this] {
+        m_statusbar->set_text({});
+    };
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
         m_history.go_back();
