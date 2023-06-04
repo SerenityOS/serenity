@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 
-    game.on_status_change = [&](const AK::StringView& status) {
+    game.on_status_change = [&](String const& status) {
         statusbar.set_override_text(status);
     };
 

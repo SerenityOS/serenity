@@ -89,7 +89,7 @@ public:
     DeprecatedString tooltip() const { return m_tooltip.value_or(m_text); }
     void set_tooltip(DeprecatedString);
 
-    DeprecatedString status_tip() const;
+    Optional<String> status_tip() const;
     void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
 
     Shortcut const& shortcut() const { return m_shortcut; }

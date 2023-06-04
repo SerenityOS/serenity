@@ -116,12 +116,9 @@ void Statusbar::set_text(size_t index, String text)
     update_segment(index);
 }
 
-void Statusbar::set_override_text(DeprecatedString override_text)
+void Statusbar::set_override_text(Optional<String> override_text)
 {
-    if (override_text.is_null())
-        m_segments[0]->m_override_text = {};
-    else
-        m_segments[0]->m_override_text = String::from_deprecated_string(override_text).release_value_but_fixme_should_propagate_errors();
+    m_segments[0]->m_override_text = move(override_text);
     update_segment(0);
 }
 

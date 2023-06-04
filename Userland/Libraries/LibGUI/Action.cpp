@@ -315,12 +315,15 @@ void Action::set_tooltip(DeprecatedString tooltip)
     });
 }
 
-DeprecatedString Action::status_tip() const
+Optional<String> Action::status_tip() const
 {
     if (!m_status_tip.is_empty())
-        return m_status_tip.to_deprecated_string();
+        return m_status_tip;
 
-    return Gfx::parse_ampersand_string(m_text);
+    auto maybe_parsed_action_text = String::from_deprecated_string(Gfx::parse_ampersand_string(m_text));
+    if (maybe_parsed_action_text.is_error())
+        return {};
+    return maybe_parsed_action_text.release_value();
 }
 
 }

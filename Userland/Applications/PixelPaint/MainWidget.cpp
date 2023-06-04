@@ -1433,7 +1433,7 @@ void MainWidget::update_status_bar(DeprecatedString appended_text)
         builder.append(" "sv);
         builder.append(appended_text);
     }
-    m_statusbar->set_override_text(builder.to_deprecated_string());
+    m_statusbar->set_override_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 }
