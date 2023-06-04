@@ -230,10 +230,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
     } else {
         // b. Else let relativeContentType be set to contentType and run the substeps below:
 
-        // FIXME: 1. If relativeContentType contains any characters outside the range of U+0020 to U+007E, then set relativeContentType to the empty string and return from these substeps.
-
-        // 2. Convert every character in relativeContentType to ASCII lowercase.
-        relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(content_type.value()));
+        // 1. If relativeContentType contains any characters outside the range of U+0020 to U+007E, then set relativeContentType to the empty string and return from these substeps.
+        //    NOTE: contentType is set to empty string at declaration.
+        if (is_basic_latin(content_type.value())) {
+            // 2. Convert every character in relativeContentType to ASCII lowercase.
+            relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(content_type.value()));
+        }
     }
 
     // 4. Let span be max((relativeEnd - relativeStart), 0).
