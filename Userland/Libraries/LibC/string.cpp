@@ -175,9 +175,10 @@ void* memmove(void* dest, void const* src, size_t n)
     return dest;
 }
 
-void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
+// https://linux.die.net/man/3/memmem (GNU extension)
+void* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
-    return AK::memmem(haystack, haystack_length, needle, needle_length);
+    return const_cast<void*>(AK::memmem(haystack, haystack_length, needle, needle_length));
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcpy.html

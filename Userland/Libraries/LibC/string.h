@@ -28,7 +28,7 @@ int timingsafe_memcmp(void const*, void const*, size_t);
 void* memcpy(void*, void const*, size_t);
 void* memmove(void*, void const*, size_t);
 void* memchr(void const*, int c, size_t);
-void const* memmem(void const* haystack, size_t, void const* needle, size_t);
+void* memmem(void const* haystack, size_t, void const* needle, size_t);
 
 void* memset(void*, int, size_t);
 void explicit_bzero(void*, size_t) __attribute__((nonnull(1)));
