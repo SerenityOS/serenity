@@ -16,7 +16,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -61,10 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&statusbar](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        statusbar.set_override_text(action.status_tip());
     };
 
     app->on_action_leave = [&statusbar](GUI::Action&) {

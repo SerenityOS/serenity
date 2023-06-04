@@ -649,10 +649,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        statusbar.set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {

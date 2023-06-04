@@ -66,10 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     app->on_action_enter = [&](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        statusbar.set_override_text(action.status_tip());
     };
 
     app->on_action_leave = [&](GUI::Action&) {

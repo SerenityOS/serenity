@@ -250,10 +250,7 @@ ErrorOr<void> MainWidget::setup()
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0,000  Col 000"sv) + font().max_glyph_width());
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
