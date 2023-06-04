@@ -74,6 +74,8 @@ protected:
     explicit Resource(Type, LoadRequest const&);
     Resource(Type, Resource&);
 
+    LoadRequest request() const { return m_request; }
+
 private:
     LoadRequest m_request;
     ByteBuffer m_encoded_data;

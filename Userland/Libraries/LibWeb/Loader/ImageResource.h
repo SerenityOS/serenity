@@ -48,6 +48,8 @@ private:
     explicit ImageResource(Resource&);
 
     void decode_if_needed() const;
+    void decode_svg_image() const;
+    void decode_image() const;
 
     mutable bool m_animated { false };
     mutable int m_loop_count { 0 };

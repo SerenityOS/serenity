@@ -6,8 +6,10 @@
 
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Loader/ImageResource.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
+#include <LibWeb/SVG/SVGDecodedImageData.h>
 
 namespace Web {
 
@@ -47,9 +49,48 @@ void ImageResource::decode_if_needed() const
     if (!m_decoded_frames.is_empty())
         return;
 
-    auto image = Platform::ImageCodecPlugin::the().decode_image(encoded_data());
-    m_has_attempted_decode = true;
+    bool is_svg_image = mime_type().starts_with("image/svg+xml"sv) || url().basename().ends_with(".svg"sv);
+    if (is_svg_image) {
+        decode_svg_image();
+    } else {
+        decode_image();
+    }
 
+    m_has_attempted_decode = true;
+}
+
+void ImageResource::decode_svg_image() const
+{
+    auto page = request().page();
+    if (!page.has_value())
+        return;
+
+    auto svg_or_error = SVG::SVGDecodedImageData::create(page.value(), url(), encoded_data());
+    if (svg_or_error.is_error()) {
+        dbgln("Could not decode svg image resource {}", url());
+        return;
+    }
+
+    auto svg = svg_or_error.release_value();
+    m_loop_count = svg->loop_count();
+    m_animated = svg->is_animated();
+    m_decoded_frames.resize(svg->frame_count());
+    for (size_t i = 0; i < m_decoded_frames.size(); ++i) {
+        auto& frame = m_decoded_frames[i];
+        // FIXME: Decide on what to do when there is no intrinsic width or height
+        auto width = svg->intrinsic_width();
+        auto height = svg->intrinsic_height();
+        if (width.has_value() && height.has_value()) {
+            auto bitmap = svg->bitmap(i, { static_cast<int>(width->value()), static_cast<int>(height->value()) });
+            frame.bitmap = bitmap->clone().release_value_but_fixme_should_propagate_errors();
+        }
+        frame.duration = svg->frame_duration(i);
+    }
+}
+
+void ImageResource::decode_image() const
+{
+    auto image = Platform::ImageCodecPlugin::the().decode_image(encoded_data());
     if (!image.has_value()) {
         dbgln("Could not decode image resource {}", url());
         return;
