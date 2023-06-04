@@ -318,7 +318,7 @@ void Action::set_tooltip(DeprecatedString tooltip)
 DeprecatedString Action::status_tip() const
 {
     if (!m_status_tip.is_empty())
-        return m_status_tip;
+        return m_status_tip.to_deprecated_string();
 
     return Gfx::parse_ampersand_string(m_text);
 }

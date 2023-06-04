@@ -455,7 +455,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
             refresh_timer->restart(seconds * 1000);
         });
-        action->set_status_tip(DeprecatedString::formatted("Refresh every {} seconds", seconds));
+        action->set_status_tip(TRY(String::formatted("Refresh every {} seconds", seconds)));
         action->set_checked(frequency == seconds);
         frequency_action_group.add_action(*action);
         TRY(frequency_menu->try_add_action(*action));

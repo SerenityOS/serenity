@@ -323,12 +323,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
-    m_page_view_mode_single->set_status_tip("Show single page at a time");
+    m_page_view_mode_single->set_status_tip("Show single page at a time"_string.release_value_but_fixme_should_propagate_errors());
 
     m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
-    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time");
+    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string.release_value_but_fixme_should_propagate_errors());
 
     if (m_viewer->page_view_mode() == PDFViewer::PageViewMode::Single) {
         m_page_view_mode_single->set_checked(true);

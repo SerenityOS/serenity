@@ -176,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         game.setup(mode);
     });
     single_card_draw_action->set_checked(mode == Solitaire::Mode::SingleCardDraw);
-    single_card_draw_action->set_status_tip("Draw one card at a time");
+    single_card_draw_action->set_status_tip(TRY("Draw one card at a time"_string));
     draw_setting_actions.add_action(single_card_draw_action);
 
     auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw", [&](auto&) {
@@ -189,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         game.setup(mode);
     });
     three_card_draw_action->set_checked(mode == Solitaire::Mode::ThreeCardDraw);
-    three_card_draw_action->set_status_tip("Draw three cards at a time");
+    three_card_draw_action->set_status_tip(TRY("Draw three cards at a time"_string));
     draw_setting_actions.add_action(three_card_draw_action);
 
     game.set_auto_collect(Config::read_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, false));
@@ -199,7 +199,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_bool("Solitaire"sv, "Settings"sv, "AutoCollect"sv, checked);
     });
     toggle_auto_collect_action->set_checked(game.is_auto_collecting());
-    toggle_auto_collect_action->set_status_tip("Auto-collect to foundation piles");
+    toggle_auto_collect_action->set_status_tip(TRY("Auto-collect to foundation piles"_string));
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 

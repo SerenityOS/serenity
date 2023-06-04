@@ -317,7 +317,7 @@ MainWidget::MainWidget()
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
     m_open_folder_action->set_enabled(!m_path.is_empty());
-    m_open_folder_action->set_status_tip("Open the current file location in File Manager");
+    m_open_folder_action->set_status_tip("Open the current file location in File Manager"_string.release_value_but_fixme_should_propagate_errors());
 
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
@@ -557,8 +557,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_visualize_trailing_whitespace_action->set_checked(true);
-    m_visualize_trailing_whitespace_action->set_status_tip("Visualize trailing whitespace");
-    m_visualize_leading_whitespace_action->set_status_tip("Visualize leading whitespace");
+    m_visualize_trailing_whitespace_action->set_status_tip(TRY("Visualize trailing whitespace"_string));
+    m_visualize_leading_whitespace_action->set_status_tip(TRY("Visualize leading whitespace"_string));
 
     TRY(view_menu->try_add_action(*m_visualize_trailing_whitespace_action));
     TRY(view_menu->try_add_action(*m_visualize_leading_whitespace_action));
@@ -568,7 +568,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_cursor_line_highlighting_action->set_checked(true);
-    m_cursor_line_highlighting_action->set_status_tip("Highlight the current line");
+    m_cursor_line_highlighting_action->set_status_tip(TRY("Highlight the current line"_string));
 
     TRY(view_menu->try_add_action(*m_cursor_line_highlighting_action));
 
@@ -581,7 +581,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_relative_line_number_action->set_checked(show_relative_line_number);
     m_editor->set_relative_line_number(show_relative_line_number);
 
-    m_relative_line_number_action->set_status_tip("Set relative line number");
+    m_relative_line_number_action->set_status_tip(TRY("Set relative line number"_string));
 
     TRY(view_menu->try_add_action(*m_relative_line_number_action));
 
