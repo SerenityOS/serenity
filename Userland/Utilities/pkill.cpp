@@ -28,6 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool display_number_of_matches;
     bool case_insensitive = false;
     bool echo = false;
+    bool exact_match = false;
     StringView pattern;
     HashTable<uid_t> uids_to_filter_by;
     int signal = SIGTERM;
@@ -61,6 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return true;
         },
     });
+    args_parser.add_option(exact_match, "Select only processes whose names match the given pattern exactly", "exact", 'x');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
 
@@ -69,6 +71,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     PosixOptions options {};
     if (case_insensitive) {
         options |= PosixFlags::Insensitive;
+    }
+
+    StringBuilder exact_pattern_builder;
+    if (exact_match) {
+        exact_pattern_builder.appendff("^({})$", pattern);
+        pattern = exact_pattern_builder.string_view();
     }
 
     Regex<PosixExtended> re(pattern, options);
