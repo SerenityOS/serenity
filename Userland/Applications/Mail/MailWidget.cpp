@@ -55,9 +55,9 @@ MailWidget::MailWidget()
 
     m_web_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
-            m_statusbar->set_text(url.to_deprecated_string());
+            m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
         else
-            m_statusbar->set_text("");
+            m_statusbar->set_text({});
     };
 
     m_link_context_menu = GUI::Menu::construct();

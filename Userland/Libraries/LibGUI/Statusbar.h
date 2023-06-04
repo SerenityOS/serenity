@@ -19,9 +19,9 @@ class Statusbar : public Widget {
 public:
     virtual ~Statusbar() override = default;
 
-    DeprecatedString text(size_t index = 0) const;
-    void set_text(DeprecatedString);
-    void set_text(size_t index, DeprecatedString);
+    String text(size_t index = 0) const;
+    void set_text(String);
+    void set_text(size_t index, String);
     void set_override_text(DeprecatedString);
 
     class Segment final : public Button {

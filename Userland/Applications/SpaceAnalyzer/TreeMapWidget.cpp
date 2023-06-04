@@ -394,7 +394,7 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 
 ErrorOr<void> TreeMapWidget::analyze(GUI::Statusbar& statusbar)
 {
-    statusbar.set_text("");
+    statusbar.set_text({});
     auto progress_window = TRY(ProgressWindow::try_create("Space Analyzer"sv));
     progress_window->show();
 
@@ -431,9 +431,9 @@ ErrorOr<void> TreeMapWidget::analyze(GUI::Statusbar& statusbar)
             builder.append(')');
             first = false;
         }
-        statusbar.set_text(builder.to_deprecated_string());
+        statusbar.set_text(TRY(builder.to_string()));
     } else {
-        statusbar.set_text("No errors");
+        statusbar.set_text(TRY("No errors"_string));
     }
 
     m_tree = move(tree);

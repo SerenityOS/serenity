@@ -84,8 +84,8 @@ int GoToOffsetDialog::calculate_new_offset(int input_offset)
 void GoToOffsetDialog::update_statusbar()
 {
     auto new_offset = calculate_new_offset(process_input());
-    m_statusbar->set_text(0, DeprecatedString::formatted("HEX: {:#08X}", new_offset));
-    m_statusbar->set_text(1, DeprecatedString::formatted("DEC: {}", new_offset));
+    m_statusbar->set_text(0, String::formatted("HEX: {:#08X}", new_offset).release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(1, String::formatted("DEC: {}", new_offset).release_value_but_fixme_should_propagate_errors());
 }
 
 GoToOffsetDialog::GoToOffsetDialog()

@@ -62,15 +62,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
-    statusbar.set_text(0, "Score: 0"sv);
-    statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", high_score));
+    statusbar.set_text(0, TRY("Score: 0"_string));
+    statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score)));
 
     game.on_score_update = [&](auto score) {
-        statusbar.set_text(0, DeprecatedString::formatted("Score: {}", score));
+        statusbar.set_text(0, String::formatted("Score: {}", score).release_value_but_fixme_should_propagate_errors());
         if (score <= high_score)
             return false;
 
-        statusbar.set_text(1, DeprecatedString::formatted("High Score: {}", score));
+        statusbar.set_text(1, String::formatted("High Score: {}", score).release_value_but_fixme_should_propagate_errors());
         Config::write_u32("Snake"sv, "Snake"sv, "HighScore"sv, score);
 
         high_score = score;

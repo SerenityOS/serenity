@@ -1615,9 +1615,9 @@ void HackStudioWidget::update_statusbar()
         builder.appendff("Selected: {:'d} {} ({:'d} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
-    m_statusbar->set_text(0, builder.to_deprecated_string());
-    m_statusbar->set_text(1, Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText)));
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+    m_statusbar->set_text(0, builder.to_string().release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(1, String::from_utf8(Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText))).release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(2, String::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()).release_value_but_fixme_should_propagate_errors());
 }
 
 void HackStudioWidget::handle_external_file_deletion(DeprecatedString const& filepath)

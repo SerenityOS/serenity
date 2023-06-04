@@ -179,5 +179,5 @@ void CharacterMapWidget::update_statusbar()
     builder.appendff("U+{:04X}", code_point);
     if (auto display_name = Unicode::code_point_display_name(code_point); display_name.has_value())
         builder.appendff(" - {}", display_name.value());
-    m_statusbar->set_text(builder.to_deprecated_string());
+    m_statusbar->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }

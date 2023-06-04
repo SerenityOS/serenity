@@ -130,9 +130,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     game.on_message = [&](auto message) {
         if (!message.has_value())
-            statusbar.set_text("");
+            statusbar.set_text({});
         else
-            statusbar.set_text(*message);
+            statusbar.set_text(String::from_utf8(*message).release_value_but_fixme_should_propagate_errors());
     };
 
     window->show();

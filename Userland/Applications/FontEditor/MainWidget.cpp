@@ -963,7 +963,7 @@ void MainWidget::update_statusbar()
         else if (Gfx::Emoji::emoji_for_code_point(glyph))
             TRY(builder.try_appendff(" [emoji]"));
 
-        m_statusbar->set_text(0, builder.to_deprecated_string());
+        m_statusbar->set_text(0, TRY(builder.to_string()));
 
         builder.clear();
 
@@ -972,7 +972,7 @@ void MainWidget::update_statusbar()
             TRY(builder.try_appendff("{} glyphs selected", selection.size()));
         else
             TRY(builder.try_appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last));
-        m_statusbar->set_text(1, builder.to_deprecated_string());
+        m_statusbar->set_text(1, TRY(builder.to_string()));
 
         return {};
     }();
