@@ -122,6 +122,9 @@ void LayoutState::commit()
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
             paintable_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
+            if (used_values.override_borders_data().has_value()) {
+                paintable_box.set_override_borders_data(used_values.override_borders_data().value());
+            }
 
             if (is<Layout::BlockContainer>(box)) {
                 for (auto& line_box : used_values.line_boxes) {

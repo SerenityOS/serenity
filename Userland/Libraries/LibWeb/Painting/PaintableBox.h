@@ -123,6 +123,8 @@ public:
 
     bool is_out_of_view(PaintContext&) const;
 
+    void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 
@@ -161,6 +163,8 @@ private:
 
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
+
+    Optional<BordersData> m_override_borders_data;
 };
 
 class PaintableWithLines final : public PaintableBox {
