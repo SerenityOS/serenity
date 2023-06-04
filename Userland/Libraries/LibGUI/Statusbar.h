@@ -22,7 +22,7 @@ public:
     String text(size_t index = 0) const;
     void set_text(String);
     void set_text(size_t index, String);
-    void set_override_text(DeprecatedString);
+    void set_override_text(Optional<String>);
 
     class Segment final : public Button {
         C_OBJECT(Segment)
