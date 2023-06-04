@@ -37,7 +37,6 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font/Font.h>
-#include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/SyntaxHighlighter.h>
@@ -236,10 +235,7 @@ MainWidget::MainWidget()
     m_statusbar->segment(2).set_menu(m_line_column_statusbar_menu);
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {

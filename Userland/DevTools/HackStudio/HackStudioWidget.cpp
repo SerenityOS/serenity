@@ -156,10 +156,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->update_statusbar();
 
     GUI::Application::the()->on_action_enter = [widget](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        widget->m_statusbar->set_override_text(move(text));
+        widget->m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [widget](GUI::Action&) {
