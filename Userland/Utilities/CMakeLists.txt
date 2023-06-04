@@ -8,7 +8,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     adjtime aplay abench asctl bt checksum chres cksum copy fortune gunzip gzip init install keymap lsirq lsof lspci lzcat man mknod mktemp
-    nc netstat notify ntpquery open passwd pls printf pro shot strings tar tt unzip wallpaper xzcat zip
+    nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
@@ -122,6 +122,7 @@ target_link_libraries(open PRIVATE LibDesktop LibFileSystem)
 target_link_libraries(passwd PRIVATE LibCrypt)
 target_link_libraries(paste PRIVATE LibGUI)
 target_link_libraries(pgrep PRIVATE LibRegex)
+target_link_libraries(pixelflut PRIVATE LibImageDecoderClient LibIPC LibGfx)
 target_link_libraries(pkill PRIVATE LibRegex)
 target_link_libraries(pls PRIVATE LibCrypt)
 target_link_libraries(pro PRIVATE LibFileSystem LibProtocol LibHTTP)
