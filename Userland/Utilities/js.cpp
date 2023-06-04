@@ -598,6 +598,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
+    bool disable_debug_printing = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
 
@@ -613,33 +614,38 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
+    args_parser.add_option(disable_debug_printing, "Disable debug output", "disable-debug-output", {});
     args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script");
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     bool syntax_highlight = !disable_syntax_highlight;
 
+    AK::set_debug_enabled(!disable_debug_printing);
     s_history_path = TRY(String::formatted("{}/.js-history", Core::StandardPaths::home_directory()));
 
     g_vm = TRY(JS::VM::create());
     g_vm->enable_default_host_import_module_dynamically_hook();
 
-    // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
-    // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
-    // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
-    // might want to revisit at a later point and disable warnings for promises created this way.
-    g_vm->on_promise_unhandled_rejection = [](auto& promise) {
-        warn("WARNING: A promise was rejected without any handlers");
-        warn(" (result: ");
-        (void)print(promise.result(), PrintTarget::StandardError);
-        warnln(")");
-    };
-    g_vm->on_promise_rejection_handled = [](auto& promise) {
-        warn("WARNING: A handler was added to an already rejected promise");
-        warn(" (result: ");
-        (void)print(promise.result(), PrintTarget::StandardError);
-        warnln(")");
-    };
+    if (!disable_debug_printing) {
+        // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
+        // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
+        // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
+        // might want to revisit at a later point and disable warnings for promises created this way.
+        g_vm->on_promise_unhandled_rejection = [](auto& promise) {
+            warn("WARNING: A promise was rejected without any handlers");
+            warn(" (result: ");
+            (void)print(promise.result(), PrintTarget::StandardError);
+            warnln(")");
+        };
+        g_vm->on_promise_rejection_handled = [](auto& promise) {
+            warn("WARNING: A handler was added to an already rejected promise");
+            warn(" (result: ");
+            (void)print(promise.result(), PrintTarget::StandardError);
+            warnln(")");
+        };
+    }
+
     OwnPtr<JS::Interpreter> interpreter;
 
     // FIXME: Figure out some way to interrupt the interpreter now that vm.exception() is gone.
