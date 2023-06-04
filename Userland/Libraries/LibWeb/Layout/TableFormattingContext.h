@@ -39,6 +39,7 @@ private:
     void distribute_height_to_rows();
     void position_row_boxes(CSSPixels&);
     void position_cell_boxes();
+    void border_conflict_resolution();
 
     CSSPixels m_table_height { 0 };
     CSSPixels m_automatic_content_height { 0 };
@@ -80,6 +81,25 @@ private:
     };
 
     CSSPixels compute_row_content_height(Cell const& cell) const;
+
+    enum class ConflictingEdge {
+        Top,
+        Right,
+        Bottom,
+        Left,
+    };
+
+    class BorderConflictFinder {
+    public:
+        BorderConflictFinder(TableFormattingContext const* context);
+        Vector<Node const*> conflicting_elements(Cell const&, ConflictingEdge) const;
+
+    private:
+        void collect_conflicting_col_elements();
+
+        Vector<Node const*> m_col_elements_by_index;
+        TableFormattingContext const* m_context;
+    };
 
     Vector<Cell> m_cells;
     Vector<Column> m_columns;

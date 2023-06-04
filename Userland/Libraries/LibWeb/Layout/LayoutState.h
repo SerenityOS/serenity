@@ -117,6 +117,9 @@ struct LayoutState {
         void add_floating_descendant(Box const& box) { m_floating_descendants.set(&box); }
         auto const& floating_descendants() const { return m_floating_descendants; }
 
+        void set_override_borders_data(Painting::BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+        auto const& override_borders_data() const { return m_override_borders_data; }
+
     private:
         AvailableSize available_width_inside() const;
         AvailableSize available_height_inside() const;
@@ -130,6 +133,8 @@ struct LayoutState {
         bool m_has_definite_height { false };
 
         HashTable<JS::GCPtr<Box const>> m_floating_descendants;
+
+        Optional<Painting::BordersData> m_override_borders_data;
     };
 
     void commit();
