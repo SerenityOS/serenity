@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(display_number_of_matches, "Display the number of matching processes", "count", 'c');
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
+    args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
     args_parser.add_option(signal, "Signal number to send", "signal", 's', "number");
     args_parser.add_option(Core::ArgsParser::Option {
