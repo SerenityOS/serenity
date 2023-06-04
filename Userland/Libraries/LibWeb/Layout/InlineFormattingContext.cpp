@@ -51,7 +51,7 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
     }
     // The left edge of the containing block is to the left of the rightmost left-side float.
     // We adjust the inline content insertion point by the overlap between the containing block and the float.
-    return space.left - box_in_root_rect.x();
+    return space.left - max(CSSPixels(0), box_in_root_rect.x());
 }
 
 CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
