@@ -230,6 +230,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff(" {}table-box{}", table_color_on, color_off);
         if (box.display().is_table_row_group())
             builder.appendff(" {}table-row-group{}", table_color_on, color_off);
+        if (box.display().is_table_column_group())
+            builder.appendff(" {}table-column-group{}", table_color_on, color_off);
         if (box.display().is_table_header_group())
             builder.appendff(" {}table-header-group{}", table_color_on, color_off);
         if (box.display().is_table_footer_group())
