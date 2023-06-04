@@ -7,6 +7,7 @@
 
 #include <AK/Format.h>
 #include <AK/Vector.h>
+#include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
@@ -20,6 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio proc rpath"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -27,13 +29,38 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool case_insensitive = false;
     bool echo = false;
     StringView pattern;
+    HashTable<uid_t> uids_to_filter_by;
     int signal = SIGTERM;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(display_number_of_matches, "Print the number of matching processes", "count", 'c');
+    args_parser.add_option(display_number_of_matches, "Display the number of matching processes", "count", 'c');
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
     args_parser.add_option(signal, "Signal number to send", "signal", 's', "number");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Select only processes whose UID is in the given comma-separated list. Login name or numerical user ID may be used",
+        .long_name = "uid",
+        .short_name = 'U',
+        .value_name = "uid-list",
+        .accept_value = [&uids_to_filter_by](StringView comma_separated_users) {
+            for (auto user_string : comma_separated_users.split_view(',')) {
+                auto maybe_uid = user_string.to_uint<uid_t>();
+                if (maybe_uid.has_value()) {
+                    uids_to_filter_by.set(maybe_uid.value());
+                } else {
+                    auto maybe_account = Core::Account::from_name(user_string, Core::Account::Read::PasswdOnly);
+                    if (maybe_account.is_error()) {
+                        warnln("Could not find user '{}': {}", user_string, maybe_account.error());
+                        return false;
+                    }
+                    uids_to_filter_by.set(maybe_account.release_value().uid());
+                }
+            }
+
+            return true;
+        },
+    });
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
 
@@ -53,6 +80,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     for (auto& process : all_processes.processes) {
         auto result = re.match(process.name, PosixFlags::Global);
         if (result.success) {
+            if (!uids_to_filter_by.is_empty() && !uids_to_filter_by.contains(process.uid))
+                continue;
+
             matched_processes.append(process);
         }
     }
