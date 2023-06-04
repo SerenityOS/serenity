@@ -562,7 +562,7 @@ Tab::Tab(BrowserWindow& window)
             }
         },
         this);
-    take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
+    take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"_string.release_value_but_fixme_should_propagate_errors());
 
     auto take_full_screenshot_action = GUI::Action::create(
         "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
@@ -572,7 +572,7 @@ Tab::Tab(BrowserWindow& window)
             }
         },
         this);
-    take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
+    take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"_string.release_value_but_fixme_should_propagate_errors());
 
     m_page_context_menu = GUI::Menu::construct();
     m_page_context_menu->add_action(window.go_back_action());
