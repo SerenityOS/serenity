@@ -374,7 +374,7 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(ReplacedBox co
     auto height_of_containing_block = CSS::Length::make_px(containing_block_height_for(box));
     auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
-    CSSPixels used_width = computed_width.to_px(box, available_space.width.to_px());
+    CSSPixels used_width = calculate_inner_width(box, available_space.width, computed_width).to_px(box);
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
     // then that intrinsic width is the used value of 'width'.
@@ -497,7 +497,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(ReplacedBox c
         return 150;
 
     // FIXME: Handle cases when available_space is not definite.
-    return computed_height.to_px(box, available_space.height.to_px_or_zero());
+    return calculate_inner_height(box, available_space.height, computed_height).to_px(box);
 }
 
 CSSPixels FormattingContext::compute_height_for_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space) const
