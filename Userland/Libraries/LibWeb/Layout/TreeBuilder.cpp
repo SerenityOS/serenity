@@ -382,7 +382,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     // Children of a table-column-group which are not a table-column.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumnGroup>(root, [&](Box& table_column_group) {
         table_column_group.for_each_child([&](auto& child) {
-            if (child.display().is_table_column())
+            if (!child.display().is_table_column())
                 to_remove.append(child);
         });
     });
