@@ -126,6 +126,8 @@ int memcmp(void const* v1, void const* v2, size_t n)
     return 0;
 }
 
+// Not in POSIX, originated in BSD
+// https://man.openbsd.org/timingsafe_memcmp.3
 int timingsafe_memcmp(void const* b1, void const* b2, size_t len)
 {
     return AK::timing_safe_compare(b1, b2, len) ? 1 : 0;
@@ -201,6 +203,8 @@ char* strncpy(char* dest, char const* src, size_t n)
     return dest;
 }
 
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.openbsd.org/strlcpy.3
 size_t strlcpy(char* dest, char const* src, size_t n)
 {
     size_t i;
@@ -232,6 +236,7 @@ char* index(char const* str, int c)
     return strchr(str, c);
 }
 
+// https://linux.die.net/man/3/strchrnul (GNU extension)
 char* strchrnul(char const* str, int c)
 {
     char ch = c;
@@ -485,6 +490,8 @@ char* strsep(char** str, char const* delim)
     return begin;
 }
 
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.openbsd.org/explicit_bzero.3
 void explicit_bzero(void* ptr, size_t size)
 {
     secure_zero(ptr, size);
