@@ -23,12 +23,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    bool display_number_of_matches;
     bool case_insensitive = false;
     bool echo = false;
     StringView pattern;
     int signal = SIGTERM;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(display_number_of_matches, "Print the number of matching processes", "count", 'c');
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
     args_parser.add_option(signal, "Signal number to send", "signal", 's', "number");
@@ -55,10 +57,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
-    if (matched_processes.is_empty()) {
-        return 1;
-    }
-
     for (auto& process : matched_processes) {
         auto result = Core::System::kill(process.pid, signal);
         if (result.is_error())
@@ -66,5 +64,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         else if (echo)
             outln("{} killed (pid {})", process.name, process.pid);
     }
-    return 0;
+
+    if (display_number_of_matches)
+        outln("{}", matched_processes.size());
+
+    return matched_processes.is_empty() ? 1 : 0;
 }
