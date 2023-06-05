@@ -296,7 +296,14 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     auto resolved_box_shadow_data = resolve_box_shadow_data();
     if (resolved_box_shadow_data.is_empty())
         return;
-    Painting::paint_box_shadow(context, absolute_border_box_rect(), normalized_border_radii_data(), resolved_box_shadow_data);
+    auto borders_data = BordersData {
+        .top = computed_values().border_top(),
+        .right = computed_values().border_right(),
+        .bottom = computed_values().border_bottom(),
+        .left = computed_values().border_left(),
+    };
+    Painting::paint_box_shadow(context, absolute_border_box_rect(), absolute_padding_box_rect(),
+        borders_data, normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const

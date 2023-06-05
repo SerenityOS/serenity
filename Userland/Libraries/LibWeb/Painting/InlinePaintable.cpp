@@ -69,7 +69,17 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                         layer.spread_distance.to_px(layout_node()),
                         layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
                 }
-                paint_box_shadow(context, absolute_fragment_rect, border_radii_data, resolved_box_shadow_data);
+                auto borders_data = BordersData {
+                    .top = computed_values().border_top(),
+                    .right = computed_values().border_right(),
+                    .bottom = computed_values().border_bottom(),
+                    .left = computed_values().border_left(),
+                };
+                auto absolute_fragment_rect_bordered = absolute_fragment_rect.inflated(
+                    borders_data.top.width, borders_data.right.width,
+                    borders_data.bottom.width, borders_data.left.width);
+                paint_box_shadow(context, absolute_fragment_rect_bordered, absolute_fragment_rect,
+                    borders_data, border_radii_data, resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;

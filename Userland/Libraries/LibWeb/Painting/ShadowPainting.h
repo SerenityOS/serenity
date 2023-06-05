@@ -26,7 +26,13 @@ struct ShadowData {
     ShadowPlacement placement;
 };
 
-void paint_box_shadow(PaintContext&, CSSPixelRect const&, BorderRadiiData const&, Vector<ShadowData> const&);
+void paint_box_shadow(
+    PaintContext&,
+    CSSPixelRect const& bordered_content_rect,
+    CSSPixelRect const& borderless_content_rect,
+    BordersData const& borders_data,
+    BorderRadiiData const&,
+    Vector<ShadowData> const&);
 void paint_text_shadow(PaintContext&, Layout::LineBoxFragment const&, Vector<ShadowData> const&);
 
 }
