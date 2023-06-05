@@ -17,7 +17,6 @@
 
 namespace Gfx {
 
-template<AntiAliasingPainter::FixmeEnableHacksForBetterPathPainting path_hacks>
 void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color, LineLengthMode line_length_mode)
 {
     // FIXME: Implement this :P
@@ -54,15 +53,6 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     if (mapped_from.x() == mapped_to.x()) {
         auto start_point = (mapped_from.y() < mapped_to.y() ? mapped_from : mapped_to).translated(-int_thickness / 2, 0);
         return fill_rect(Gfx::FloatRect(start_point, { thickness, length }), color);
-    }
-
-    if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
-        // FIXME: SVG stoke_path() hack:
-        // When painting stokes SVG asks for many very short lines...
-        // These look better just painted as dots/AA rectangles
-        // (Technically this should be rotated or a circle, but that currently gives worse results)
-        if (distance < 1.0f)
-            return fill_rect(Gfx::FloatRect::centered_at(mapped_from, { thickness, thickness }), color);
     }
 
     // The painting only works for the positive XY quadrant (because that is easier).
@@ -148,11 +138,6 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     }
 }
 
-void AntiAliasingPainter::draw_line_for_path(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
-{
-    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::Yes>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
-}
-
 void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
 {
     // AA circles don't really work below a radius of 2px.
@@ -204,86 +189,13 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 {
     if (style == Painter::LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
-    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::No>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
+    draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
-    FloatPoint cursor;
-    bool previous_was_line = false;
-    FloatLine last_line;
-    Optional<FloatLine> first_line;
-
-    for (auto& segment : path.segments()) {
-        switch (segment->type()) {
-        case Segment::Type::Invalid:
-            VERIFY_NOT_REACHED();
-        case Segment::Type::MoveTo:
-            cursor = segment->point();
-            break;
-        case Segment::Type::LineTo:
-            draw_line(cursor, segment->point(), color, thickness);
-            if (thickness > 1) {
-                if (!first_line.has_value())
-                    first_line = FloatLine(cursor, segment->point());
-                if (previous_was_line)
-                    stroke_segment_intersection(cursor, segment->point(), last_line, color, thickness);
-                last_line.set_a(cursor);
-                last_line.set_b(segment->point());
-            }
-            cursor = segment->point();
-            break;
-        case Segment::Type::QuadraticBezierCurveTo: {
-            auto through = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
-            draw_quadratic_bezier_curve(through, cursor, segment->point(), color, thickness);
-            cursor = segment->point();
-            break;
-        }
-        case Segment::Type::CubicBezierCurveTo: {
-            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
-            auto through_0 = curve.through_0();
-            auto through_1 = curve.through_1();
-            draw_cubic_bezier_curve(through_0, through_1, cursor, segment->point(), color, thickness);
-            cursor = segment->point();
-            break;
-        }
-        case Segment::Type::EllipticalArcTo:
-            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
-            draw_elliptical_arc(cursor, segment->point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
-            cursor = segment->point();
-            break;
-        }
-
-        previous_was_line = segment->type() == Segment::Type::LineTo;
-    }
-
-    // Check if the figure was started and closed as line at the same position.
-    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first()->point() == cursor
-        && (path.segments().first()->type() == Segment::Type::LineTo
-            || (path.segments().first()->type() == Segment::Type::MoveTo && path.segments()[1]->type() == Segment::Type::LineTo))) {
-        stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
-    }
-}
-
-void AntiAliasingPainter::draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
-{
-    Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint fp1, FloatPoint fp2) {
-        draw_line_for_path(fp1, fp2, color, thickness, style);
-    });
-}
-
-void AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint control_point, FloatPoint p1, FloatPoint p2, Color color, float thickness, Painter::LineStyle style)
-{
-    Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint fp1, FloatPoint fp2) {
-        draw_line_for_path(fp1, fp2, color, thickness, style);
-    });
-}
-
-void AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Color color, float thickness, Painter::LineStyle style)
-{
-    Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint fp1, FloatPoint fp2) {
-        draw_line_for_path(fp1, fp2, color, thickness, style);
-    });
+    // FIXME: Cache this? Probably at a higher level such as in LibWeb?
+    fill_path(path.stroke_to_fill(thickness), color);
 }
 
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)
@@ -675,79 +587,6 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
         fill_corner(bottom_left_corner, bounding_rect.bottom_left().moved_up(1), bottom_left);
     if (bottom_right)
         fill_corner(bottom_right_corner, bounding_rect.bottom_right().translated(-1), bottom_right);
-}
-
-void AntiAliasingPainter::stroke_segment_intersection(FloatPoint current_line_a, FloatPoint current_line_b, FloatLine const& previous_line, Color color, float thickness)
-{
-    // FIXME: This is currently drawn in slightly the wrong place most of the time.
-    // FIXME: This is sometimes drawn when the intersection would not be visible anyway.
-
-    // Starting point of the current line is where the last line ended... this is an intersection.
-    auto intersection = current_line_a;
-
-    // If both are straight lines we can simply draw a rectangle at the intersection (or nothing).
-    auto current_vertical = current_line_a.x() == current_line_b.x();
-    auto current_horizontal = current_line_a.y() == current_line_b.y();
-    auto previous_vertical = previous_line.a().x() == previous_line.b().x();
-    auto previous_horizontal = previous_line.a().y() == previous_line.b().y();
-    if (previous_horizontal && current_horizontal)
-        return;
-    if (previous_vertical && current_vertical)
-        return;
-    if ((previous_horizontal || previous_vertical) && (current_horizontal || current_vertical)) {
-        intersection = m_transform.map(current_line_a);
-        // Note: int_thickness used here to match behavior of draw_line()
-        int int_thickness = AK::ceil(thickness);
-        return fill_rect(FloatRect(intersection, { thickness, thickness }).translated(-int_thickness / 2), color);
-    }
-
-    auto previous_line_a = previous_line.a();
-    float scale_to_move_current = (thickness / 2) / intersection.distance_from(current_line_b);
-    float scale_to_move_previous = (thickness / 2) / intersection.distance_from(previous_line_a);
-
-    // Move the point on the line by half of the thickness.
-    float offset_current_edge_x = scale_to_move_current * (current_line_b.x() - intersection.x());
-    float offset_current_edge_y = scale_to_move_current * (current_line_b.y() - intersection.y());
-    float offset_prev_edge_x = scale_to_move_previous * (previous_line_a.x() - intersection.x());
-    float offset_prev_edge_y = scale_to_move_previous * (previous_line_a.y() - intersection.y());
-
-    // Rotate the point by 90 and 270 degrees to get the points for both edges.
-    FloatPoint current_rotated_90deg(-offset_current_edge_y, offset_current_edge_x);
-    FloatPoint previous_rotated_90deg(-offset_prev_edge_y, offset_prev_edge_x);
-    auto current_rotated_270deg = intersection - current_rotated_90deg;
-    auto previous_rotated_270deg = intersection - previous_rotated_90deg;
-
-    // Translate coordinates to the intersection point.
-    current_rotated_90deg += intersection;
-    previous_rotated_90deg += intersection;
-
-    FloatLine outer_line_current_90(current_rotated_90deg, current_line_b - (intersection - current_rotated_90deg));
-    FloatLine outer_line_current_270(current_rotated_270deg, current_line_b - (intersection - current_rotated_270deg));
-    FloatLine outer_line_prev_270(previous_rotated_270deg, previous_line_a - (intersection - previous_rotated_270deg));
-    FloatLine outer_line_prev_90(previous_rotated_90deg, previous_line_a - (intersection - previous_rotated_90deg));
-
-    auto edge_spike_90 = outer_line_current_90.intersected(outer_line_prev_270);
-    Optional<FloatPoint> edge_spike_270;
-
-    if (edge_spike_90.has_value()) {
-        edge_spike_270 = intersection + (intersection - *edge_spike_90);
-    } else {
-        edge_spike_270 = outer_line_current_270.intersected(outer_line_prev_90);
-        if (edge_spike_270.has_value())
-            edge_spike_90 = intersection + (intersection - *edge_spike_270);
-    }
-
-    Path intersection_edge_path;
-    intersection_edge_path.move_to(current_rotated_90deg);
-    if (edge_spike_90.has_value())
-        intersection_edge_path.line_to(*edge_spike_90);
-    intersection_edge_path.line_to(previous_rotated_270deg);
-    intersection_edge_path.line_to(current_rotated_270deg);
-    if (edge_spike_270.has_value())
-        intersection_edge_path.line_to(*edge_spike_270);
-    intersection_edge_path.line_to(previous_rotated_90deg);
-    intersection_edge_path.close();
-    fill_path(intersection_edge_path, color);
 }
 
 }
