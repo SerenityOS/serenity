@@ -32,15 +32,11 @@ public:
     {
         draw_line(line.a(), line.b(), color, thickness, style, alternate_color, line_length_mode);
     }
-    void draw_line_for_path(FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
 
     void fill_path(Path const&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
     void fill_path(Path const&, PaintStyle const& paint_style, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
 
     void stroke_path(Path const&, Color, float thickness);
-    void draw_quadratic_bezier_curve(FloatPoint control_point, FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
-    void draw_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint, FloatPoint, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
-    void draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
 
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint delta) { m_transform.translate(delta); }
@@ -90,19 +86,10 @@ private:
         }
     };
 
-    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
+    Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color alternate_color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
 
+    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle, Color, LineLengthMode);
     void draw_dotted_line(IntPoint, IntPoint, Gfx::Color, int thickness);
-
-    enum class FixmeEnableHacksForBetterPathPainting {
-        Yes,
-        No,
-    };
-
-    template<FixmeEnableHacksForBetterPathPainting path_hacks>
-    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
-
-    void stroke_segment_intersection(FloatPoint current_line_a, FloatPoint current_line_b, FloatLine const& previous_line, Color, float thickness);
 
     Painter& m_underlying_painter;
     AffineTransform m_transform;
