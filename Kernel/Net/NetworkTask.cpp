@@ -485,19 +485,19 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             send_delayed_tcp_ack(*socket);
             socket->set_state(TCPSocket::State::Closed);
-            socket->set_error(TCPSocket::Error::FINDuringConnect);
+            socket->set_so_error(ECONNREFUSED);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
             socket->set_state(TCPSocket::State::Closed);
-            socket->set_error(TCPSocket::Error::RSTDuringConnect);
+            socket->set_so_error(ECONNREFUSED);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         default:
             dbgln("handle_tcp: unexpected flags in SynSent state ({:x})", tcp_packet.flags());
             (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
+            socket->set_so_error(ECONNREFUSED);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         }

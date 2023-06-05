@@ -108,6 +108,14 @@ public:
 
     bool wants_timestamp() const { return m_timestamp; }
 
+    Error set_so_error(ErrnoCode error_code)
+    {
+        m_so_error.with([&error_code](auto& so_error) {
+            so_error = error_code;
+        });
+        return Error::from_errno(error_code);
+    }
+
 protected:
     Socket(int domain, int type, int protocol);
 
@@ -124,14 +132,6 @@ protected:
     Role m_role { Role::None };
 
     SpinlockProtected<Optional<ErrnoCode>, LockRank::None>& so_error() { return m_so_error; }
-
-    Error set_so_error(ErrnoCode error_code)
-    {
-        m_so_error.with([&error_code](auto& so_error) {
-            so_error = error_code;
-        });
-        return Error::from_errno(error_code);
-    }
 
     Error set_so_error(Error error)
     {

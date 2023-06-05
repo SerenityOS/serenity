@@ -76,6 +76,7 @@ void TCPSocket::set_state(State new_state)
     }
 
     if (new_state == State::Closed) {
+        set_role(Role::None);
         closing_sockets().with_exclusive([&](auto& table) {
             table.remove(tuple());
         });
@@ -474,14 +475,11 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
             return set_so_error(EINTR);
         locker.lock();
         VERIFY(setup_state() == SetupState::Completed);
-        if (has_error()) { // TODO: check unblock_flags
-            set_role(Role::None);
-            if (error() == TCPSocket::Error::RetransmitTimeout)
-                return set_so_error(ETIMEDOUT);
-            else
-                return set_so_error(ECONNREFUSED);
-        }
-        return {};
+        return so_error().with([](auto& error) -> ErrorOr<void> {
+            if (error.has_value())
+                return Error::from_errno(error.value());
+            return {};
+        });
     }
 
     return set_so_error(EINPROGRESS);
@@ -599,7 +597,7 @@ void TCPSocket::retransmit_packets()
 
     if (m_retransmit_attempts > maximum_retransmits) {
         set_state(TCPSocket::State::Closed);
-        set_error(TCPSocket::Error::RetransmitTimeout);
+        set_so_error(ETIMEDOUT);
         set_setup_state(Socket::SetupState::Completed);
         return;
     }

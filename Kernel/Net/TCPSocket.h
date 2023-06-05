@@ -92,38 +92,10 @@ public:
         }
     }
 
-    enum class Error {
-        None,
-        FINDuringConnect,
-        RSTDuringConnect,
-        UnexpectedFlagsDuringConnect,
-        RetransmitTimeout,
-    };
-
-    static StringView to_string(Error error)
-    {
-        switch (error) {
-        case Error::None:
-            return "None"sv;
-        case Error::FINDuringConnect:
-            return "FINDuringConnect"sv;
-        case Error::RSTDuringConnect:
-            return "RSTDuringConnect"sv;
-        case Error::UnexpectedFlagsDuringConnect:
-            return "UnexpectedFlagsDuringConnect"sv;
-        default:
-            return "Invalid"sv;
-        }
-    }
-
     State state() const { return m_state; }
     void set_state(State state);
 
     Direction direction() const { return m_direction; }
-
-    bool has_error() const { return m_error != Error::None; }
-    Error error() const { return m_error; }
-    void set_error(Error error) { m_error = error; }
 
     void set_ack_number(u32 n) { m_ack_number = n; }
     void set_sequence_number(u32 n) { m_sequence_number = n; }
@@ -188,7 +160,6 @@ private:
     LockWeakPtr<TCPSocket> m_originator;
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
-    Error m_error { Error::None };
     SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
