@@ -248,6 +248,8 @@ public:
 
     DeprecatedString to_deprecated_string() const;
 
+    Path stroke_to_fill(float thickness) const;
+
 private:
     void invalidate_split_lines()
     {
