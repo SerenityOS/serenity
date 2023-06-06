@@ -306,7 +306,7 @@ Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<Com
             if (next.is(Token::Type::EndOfFile))
                 return {};
 
-            if (next.is(Token::Type::Delim) && next.token().delim() == '|') {
+            if (next.is_delim('|')) {
                 tokens.next_token();
                 return Selector::Combinator::Column;
             }
@@ -369,7 +369,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         }
 
         auto const& delim_second_part = attribute_tokens.next_token();
-        if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == '=')) {
+        if (!delim_second_part.is_delim('=')) {
             dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
             return ParseError::SyntaxError;
         }
@@ -1055,7 +1055,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<ComponentValue>& 
             }
             if (first_delim == '<') {
                 auto& second = tokens.peek_token();
-                if (second.is(Token::Type::Delim) && second.token().delim() == '=') {
+                if (second.is_delim('=')) {
                     tokens.next_token();
                     transaction.commit();
                     return MediaFeature::Comparison::LessThanOrEqual;
@@ -1065,7 +1065,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<ComponentValue>& 
             }
             if (first_delim == '>') {
                 auto& second = tokens.peek_token();
-                if (second.is(Token::Type::Delim) && second.token().delim() == '=') {
+                if (second.is_delim('=')) {
                     tokens.next_token();
                     transaction.commit();
                     return MediaFeature::Comparison::GreaterThanOrEqual;
@@ -1754,7 +1754,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_style_blocks_contents(TokenStream<
         }
 
         // <delim-token> with a value of "&" (U+0026 AMPERSAND)
-        if (token.is(Token::Type::Delim) && token.token().delim() == '&') {
+        if (token.is_delim('&')) {
             // Reconsume the current input token.
             tokens.reconsume_current_input_token();
 
@@ -1983,7 +1983,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
             Optional<size_t> bang_index;
             for (size_t i = important_index.value() - 1; i > 0; i--) {
                 auto value = declaration_values[i];
-                if (value.is(Token::Type::Delim) && value.token().delim() == '!') {
+                if (value.is_delim('!')) {
                     bang_index = i;
                     break;
                 }
@@ -3681,7 +3681,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
         auto solidus = tokens.next_token();
         tokens.skip_whitespace();
         auto second_number = tokens.next_token();
-        if (solidus.is(Token::Type::Delim) && solidus.token().delim() == '/'
+        if (solidus.is_delim('/')
             && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
             // Two-value ratio
             two_value_transaction.commit();
@@ -3715,10 +3715,6 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
     // 2. Then, parse that string according to the spec algorithm.
     // Step 2 is performed by calling the other parse_unicode_range() overload.
 
-    auto is_question_mark = [](ComponentValue const& component_value) {
-        return component_value.is(Token::Type::Delim) && component_value.token().delim() == '?';
-    };
-
     auto is_ending_token = [](ComponentValue const& component_value) {
         return component_value.is(Token::Type::EndOfFile)
             || component_value.is(Token::Type::Comma)
@@ -3746,15 +3742,15 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
 
     //  u '+' <ident-token> '?'* |
     //  u '+' '?'+
-    if (second_token.is(Token::Type::Delim) && second_token.token().delim() == '+') {
+    if (second_token.is_delim('+')) {
         auto local_transaction = tokens.begin_transaction();
         StringBuilder string_builder;
         string_builder.append(second_token.token().representation());
 
         auto const& third_token = tokens.next_token();
-        if (third_token.is(Token::Type::Ident) || is_question_mark(third_token)) {
+        if (third_token.is(Token::Type::Ident) || third_token.is_delim('?')) {
             string_builder.append(third_token.token().representation());
-            while (is_question_mark(tokens.peek_token()))
+            while (tokens.peek_token().is_delim('?'))
                 string_builder.append(tokens.next_token().token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
@@ -3766,7 +3762,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
         auto local_transaction = tokens.begin_transaction();
         StringBuilder string_builder;
         string_builder.append(second_token.token().representation());
-        while (is_question_mark(tokens.peek_token()))
+        while (tokens.peek_token().is_delim('?'))
             string_builder.append(tokens.next_token().token().representation());
         if (is_ending_token(tokens.peek_token()))
             return create_unicode_range(string_builder.string_view(), local_transaction);
@@ -3784,9 +3780,9 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             return create_unicode_range(string_builder.string_view(), local_transaction);
 
         auto const& third_token = tokens.next_token();
-        if (is_question_mark(third_token)) {
+        if (third_token.is_delim('?')) {
             string_builder.append(third_token.token().representation());
-            while (is_question_mark(tokens.peek_token()))
+            while (tokens.peek_token().is_delim('?'))
                 string_builder.append(tokens.next_token().token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
@@ -4045,7 +4041,7 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
     tokens.skip_whitespace();
     auto const& alpha_separator = tokens.peek_token();
     bool has_comma = alpha_separator.is(Token::Type::Comma);
-    bool has_slash = alpha_separator.is(Token::Type::Delim) && alpha_separator.token().delim() == '/';
+    bool has_slash = alpha_separator.is_delim('/');
     if (legacy_syntax ? has_comma : has_slash) {
         tokens.next_token();
 
@@ -4582,7 +4578,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
                 // Attempt to parse `/ <background-size>`
                 auto transaction = tokens.begin_transaction();
                 auto& maybe_slash = tokens.next_token();
-                if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == '/') {
+                if (maybe_slash.is_delim('/')) {
                     if (auto maybe_background_size = TRY(parse_single_background_size_value(tokens))) {
                         transaction.commit();
                         background_size = maybe_background_size.release_nonnull();
@@ -5105,7 +5101,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_shorthand_value(Vector<C
     bool reading_vertical = false;
 
     for (auto const& value : component_values) {
-        if (value.is(Token::Type::Delim) && value.token().delim() == '/') {
+        if (value.is_delim('/')) {
             if (reading_vertical || horizontal_radii.is_empty())
                 return nullptr;
 
@@ -5278,7 +5274,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto& next = tokens.peek_token();
-        if (next.is(Token::Type::Delim) && next.token().delim() == '/') {
+        if (next.is_delim('/')) {
             if (in_alt_text || content_values.is_empty())
                 return nullptr;
             in_alt_text = true;
@@ -5836,8 +5832,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
             font_size = value.release_nonnull();
 
             // Consume `/ line-height` if present
-            auto maybe_solidus = tokens.peek_token();
-            if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
+            if (tokens.peek_token().is_delim('/')) {
                 (void)tokens.next_token();
                 auto maybe_line_height = TRY(parse_css_value_for_property(PropertyID::LineHeight, tokens));
                 if (!maybe_line_height)
@@ -7078,7 +7073,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list_shorthand_value(V
 
     int forward_slash_index = -1;
     for (size_t x = 0; x < component_values.size(); x++) {
-        if (component_values[x].is_token() && component_values[x].token().is(Token::Type::Delim) && component_values[x].token().delim() == "/"sv) {
+        if (component_values[x].is_delim('/')) {
             forward_slash_index = x;
             break;
         }
@@ -7777,9 +7772,6 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_dashndash = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("-n-"sv);
     };
-    auto is_delim = [](ComponentValue const& value, u32 delim) -> bool {
-        return value.is(Token::Type::Delim) && value.token().delim() == delim;
-    };
     auto is_sign = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Delim) && (value.token().delim() == '+' || value.token().delim() == '-');
     };
@@ -7897,7 +7889,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             auto const& third_value = values.next_token();
 
             if (is_sign(second_value) && is_signless_integer(third_value)) {
-                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                int b = third_value.token().to_integer() * (second_value.is_delim('+') ? 1 : -1);
                 child_transaction.commit();
                 return Selector::SimpleSelector::ANPlusBPattern { a, b };
             }
@@ -7963,7 +7955,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             auto const& third_value = values.next_token();
 
             if (is_sign(second_value) && is_signless_integer(third_value)) {
-                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                int b = third_value.token().to_integer() * (second_value.is_delim('+') ? 1 : -1);
                 child_transaction.commit();
                 return Selector::SimpleSelector::ANPlusBPattern { -1, b };
             }
@@ -7994,7 +7986,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† <ndashdigit-ident>
     // In all of these cases, the + is optional, and has no effect.
     // So, we just skip the +, and carry on.
-    if (!is_delim(first_value, '+')) {
+    if (!first_value.is_delim('+')) {
         values.reconsume_current_input_token();
         // We do *not* skip whitespace here.
     }
@@ -8021,7 +8013,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             auto const& third_value = values.next_token();
 
             if (is_sign(second_value) && is_signless_integer(third_value)) {
-                int b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
+                int b = third_value.token().to_integer() * (second_value.is_delim('+') ? 1 : -1);
                 child_transaction.commit();
                 return Selector::SimpleSelector::ANPlusBPattern { 1, b };
             }
