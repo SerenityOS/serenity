@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, Srikavin Ramkumar <me@srikavin.me>
@@ -60,7 +60,7 @@ void HTMLLinkElement::inserted()
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
         request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
-        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     } else if (m_relationship & Relationship::DNSPrefetch) {
         ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
@@ -111,6 +111,8 @@ void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
         if (
+            // AD-HOC: When the rel attribute changes
+            name == AttributeNames::rel ||
             // - When the href attribute of the link element of an external resource link that is already browsing-context connected is changed.
             name == AttributeNames::href ||
             // - When the disabled attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
@@ -128,15 +130,20 @@ void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
 void HTMLLinkElement::resource_did_fail()
 {
     dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did fail. URL: {}", resource()->url());
+    if (m_relationship & Relationship::Preload) {
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+    }
 }
 
 void HTMLLinkElement::resource_did_load()
 {
     VERIFY(resource());
-    VERIFY(m_relationship & (Relationship::Icon));
     if (m_relationship & Relationship::Icon) {
         resource_did_load_favicon();
         m_document_load_event_delayer.clear();
+    }
+    if (m_relationship & Relationship::Preload) {
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
     }
 }
 
