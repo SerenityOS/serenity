@@ -1663,8 +1663,10 @@
     "affects-layout": false,
     "inherited": true,
     "initial": "none",
+    "__comment": "FIXME: Use `paint` as the type, once we have a PaintStyleValue and generic parsing for it.",
     "valid-types": [
-      "color"
+      "color",
+      "url"
     ],
     "valid-identifiers": [
       "none"
