@@ -1265,6 +1265,22 @@
       "unitless-length"
     ]
   },
+  "margin-block-start": {
+    "logical-alias-for": [
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left"
+    ]
+  },
+  "margin-block-end": {
+    "logical-alias-for": [
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left"
+    ]
+  },
   "margin-bottom": {
     "inherited": false,
     "initial": "0",
@@ -1277,6 +1293,22 @@
     ],
     "quirks": [
       "unitless-length"
+    ]
+  },
+  "margin-inline-start": {
+    "logical-alias-for": [
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left"
+    ]
+  },
+  "margin-inline-end": {
+    "logical-alias-for": [
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left"
     ]
   },
   "margin-left": {
@@ -1503,6 +1535,22 @@
       "unitless-length"
     ]
   },
+  "padding-block-start": {
+    "logical-alias-for": [
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left"
+    ]
+  },
+  "padding-block-end": {
+    "logical-alias-for": [
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left"
+    ]
+  },
   "padding-bottom": {
     "inherited": false,
     "initial": "0",
@@ -1512,6 +1560,22 @@
     ],
     "quirks": [
       "unitless-length"
+    ]
+  },
+  "padding-inline-start": {
+    "logical-alias-for": [
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left"
+    ]
+  },
+  "padding-inline-end": {
+    "logical-alias-for": [
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left"
     ]
   },
   "padding-left": {
