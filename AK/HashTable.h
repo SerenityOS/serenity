@@ -8,7 +8,9 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/CopyMethod.h>
 #include <AK/Error.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -430,6 +432,24 @@ public:
         for (auto& value : *this)
             list.unchecked_append(value);
         return list;
+    }
+
+    template<typename NewT = T, typename NewTraitsForT = TraitsForT, bool NewIsOrdered = IsOrdered, typename Cloner = CloneCaller<T>>
+    ErrorOr<HashTable<NewT, NewTraitsForT, NewIsOrdered>> clone(Cloner cloner = {}) const
+    requires(IsCloner<Cloner, T>)
+    {
+        HashTable<NewT, NewTraitsForT, NewIsOrdered> hash_table_clone;
+        for (auto const& item : *this) {
+            // FIXME: Reduce the number of moves by constructing directly into the final bucket
+            if constexpr (FallibleFunction<Cloner, T const&>) {
+                T copied_item { TRY(cloner(item)) };
+                TRY(hash_table_clone.template try_set<T>(move(copied_item)));
+            } else {
+                T copied_item { item };
+                TRY(hash_table_clone.template try_set<T>(move(copied_item)));
+            }
+        }
+        return hash_table_clone;
     }
 
 private:
