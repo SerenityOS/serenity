@@ -240,8 +240,10 @@ if [ -z "$SERENITY_QEMU_DISPLAY_DEVICE" ]; then
     fi
 fi
 
-# NVME is enabled by default; disable by setting SERENITY_NVME_ENABLE=0
-if [ -z "${SERENITY_NVME_ENABLE}" ] || [ "${SERENITY_NVME_ENABLE}" -eq 1 ]; then
+if [ "$SERENITY_ARCH" = 'aarch64' ]; then
+    SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},if=sd,format=raw"
+elif [ -z "${SERENITY_NVME_ENABLE}" ] || [ "${SERENITY_NVME_ENABLE}" -eq 1 ]; then
+    # NVME is enabled by default; disable by setting SERENITY_NVME_ENABLE=0
     SERENITY_BOOT_DRIVE="-drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk,if=none,id=disk"
     SERENITY_BOOT_DRIVE="${SERENITY_BOOT_DRIVE} -device i82801b11-bridge,id=bridge4 -device sdhci-pci,bus=bridge4"
     SERENITY_BOOT_DRIVE="${SERENITY_BOOT_DRIVE} -device nvme,serial=deadbeef,drive=disk,bus=bridge4,logical_block_size=4096,physical_block_size=4096"
@@ -294,7 +296,6 @@ if [ -z "$SERENITY_MACHINE" ]; then
         SERENITY_MACHINE="
         -M raspi3b
         -serial stdio
-        -drive file=${SERENITY_DISK_IMAGE},if=sd,format=raw
         "
     else
         SERENITY_MACHINE="
@@ -513,10 +514,10 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
       "$SERENITY_QEMU_BIN" \
             $SERENITY_EXTRA_QEMU_ARGS \
             $SERENITY_VIRT_TECH_ARG \
+            $SERENITY_BOOT_DRIVE \
             -M raspi3b \
             -d guest_errors \
             -no-reboot \
-            -drive file=${SERENITY_DISK_IMAGE},if=sd,format=raw \
             -nographic \
             -monitor none \
             -display none \
