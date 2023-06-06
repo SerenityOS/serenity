@@ -850,7 +850,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 
     // Copy the subimage data into the main image according to the pass pattern
     for (int y = 0, dy = adam7_starty[pass]; y < subimage_context.height && dy < context.height; ++y, dy += adam7_stepy[pass]) {
-        for (int x = 0, dx = adam7_startx[pass]; x < subimage_context.width && dy < context.width; ++x, dx += adam7_stepx[pass]) {
+        for (int x = 0, dx = adam7_startx[pass]; x < subimage_context.width && dx < context.width; ++x, dx += adam7_stepx[pass]) {
             context.bitmap->set_pixel(dx, dy, subimage_context.bitmap->get_pixel(x, y));
         }
     }
