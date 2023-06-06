@@ -198,6 +198,12 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
     fill_path(path.stroke_to_fill(thickness), color);
 }
 
+void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, float thickness)
+{
+    // FIXME: Cache this? Probably at a higher level such as in LibWeb?
+    fill_path(path.stroke_to_fill(thickness), paint_style);
+}
+
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)
 {
     // Draw the integer part of the rectangle:
