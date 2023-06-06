@@ -487,6 +487,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     // FIXME: This will need to become smarter when we implement the :has() selector.
     invalidate_style();
+
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
