@@ -1336,8 +1336,10 @@
     ]
   },
   "max-inline-size": {
-    "logical-alias-for": "max-width",
-    "__comment": "Also a logical alias for max-height",
+    "logical-alias-for": [
+      "max-width",
+      "max-height"
+    ],
     "initial": "none"
   },
   "max-width": {
@@ -1373,8 +1375,10 @@
     ]
   },
   "min-inline-size": {
-    "logical-alias-for": "min-width",
-    "__comment": "Also a logical alias for min-height",
+    "logical-alias-for": [
+      "min-width",
+      "min-height"
+    ],
     "initial": "0"
   },
   "min-width": {
@@ -1767,7 +1771,7 @@
     "inherited": false,
     "initial": "0s",
     "valid-types": [
-        "time"
+      "time"
     ]
   },
   "user-select": {
