@@ -1762,7 +1762,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
                 TRY(Node::append_without_space(total_accumulated_text, after->computed_values().content().data));
 
             // iii. For each child node of the current node:
-            element->for_each_child([&total_accumulated_text, current_node, target, &document, visited_nodes](
+            element->for_each_child([&total_accumulated_text, current_node, target, &document, &visited_nodes](
                                         DOM::Node const& child_node) mutable {
                 if (visited_nodes.contains(child_node.id()))
                     return;
