@@ -502,7 +502,7 @@ int putenv(char* new_var)
         auto old_var_name_max_length = strnlen(old_var, new_var_name_len);
         char* old_eq = static_cast<char*>(memchr(old_var, '=', old_var_name_max_length + 1));
         if (!old_eq)
-            continue; // possibly freed or overwritten value
+            continue; // name is longer, or possibly freed or overwritten value
 
         auto old_var_name_len = old_eq - old_var;
         if (new_var_name_len != old_var_name_len)
