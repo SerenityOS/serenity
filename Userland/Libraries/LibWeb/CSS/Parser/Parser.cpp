@@ -7453,6 +7453,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError ::SyntaxError;
     case PropertyID::Fill:
+    case PropertyID::Stroke:
         if (component_values.size() == 1) {
             if (auto parsed_url = FIXME_TRY(parse_url_value(component_values.first())))
                 return parsed_url.release_nonnull();

@@ -681,9 +681,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_fill(fill->to_color(*this));
     else if (fill->is_url())
         computed_values.set_fill(fill->as_url().url());
-    // TODO: Allow url()s for strokes
-    if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke->has_color())
+    auto stroke = computed_style.property(CSS::PropertyID::Stroke);
+    if (stroke->has_color())
         computed_values.set_stroke(stroke->to_color(*this));
+    else if (stroke->is_url())
+        computed_values.set_stroke(stroke->as_url().url());
     if (auto stop_color = computed_style.property(CSS::PropertyID::StopColor); stop_color->has_color())
         computed_values.set_stop_color(stop_color->to_color(*this));
     auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);

@@ -40,21 +40,32 @@ void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, Deprec
     }
 }
 
-Optional<Gfx::PaintStyle const&> SVGGraphicsElement::fill_paint_style(SVGPaintContext const& paint_context) const
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::svg_paint_computed_value_to_gfx_paint_style(SVGPaintContext const& paint_context, Optional<CSS::SVGPaint> const& paint_value) const
 {
     // FIXME: This entire function is an ad-hoc hack:
-    if (!layout_node())
+    if (!paint_value.has_value() || !paint_value->is_url())
         return {};
-    auto& fill = layout_node()->computed_values().fill();
-    if (!fill.has_value() || !fill->is_url())
-        return {};
-    auto& url = fill->as_url();
+    auto& url = paint_value->as_url();
     auto gradient = document().get_element_by_id(url.fragment());
     if (!gradient)
         return {};
     if (is<SVG::SVGGradientElement>(*gradient))
         return static_cast<SVG::SVGGradientElement const&>(*gradient).to_gfx_paint_style(paint_context);
     return {};
+}
+
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::fill_paint_style(SVGPaintContext const& paint_context) const
+{
+    if (!layout_node())
+        return {};
+    return svg_paint_computed_value_to_gfx_paint_style(paint_context, layout_node()->computed_values().fill());
+}
+
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::stroke_paint_style(SVGPaintContext const& paint_context) const
+{
+    if (!layout_node())
+        return {};
+    return svg_paint_computed_value_to_gfx_paint_style(paint_context, layout_node()->computed_values().stroke());
 }
 
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
