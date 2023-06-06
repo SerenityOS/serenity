@@ -140,6 +140,8 @@ class PlaceContentStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class RadialGradientStyleValue;
+class Ratio;
+class RatioStyleValue;
 class RectStyleValue;
 class Resolution;
 class ResolutionStyleValue;

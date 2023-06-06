@@ -20,7 +20,7 @@ void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& 
 
 static bool type_name_is_enum(StringView type_name)
 {
-    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "percentage"sv, "ratio"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -167,6 +167,7 @@ enum class ValueType {
     Paint,
     Percentage,
     Position,
+    Ratio,
     Rect,
     Resolution,
     String,
@@ -612,6 +613,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     property_generator.appendln("        case ValueType::Number:");
                 } else if (type_name == "percentage") {
                     property_generator.appendln("        case ValueType::Percentage:");
+                } else if (type_name == "ratio") {
+                    property_generator.appendln("        case ValueType::Ratio:");
                 } else if (type_name == "rect") {
                     property_generator.appendln("        case ValueType::Rect:");
                 } else if (type_name == "resolution") {

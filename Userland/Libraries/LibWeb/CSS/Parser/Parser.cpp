@@ -72,6 +72,7 @@
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -4387,6 +4388,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_color_value(ComponentValue const& comp
     return nullptr;
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_ratio_value(TokenStream<ComponentValue>& tokens)
+{
+    if (auto ratio = parse_ratio(tokens); ratio.has_value())
+        return RatioStyleValue::create(ratio.release_value());
+    return nullptr;
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
@@ -7624,6 +7632,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
             (void)tokens.next_token();
             return PropertyAndValue { *property, maybe_image };
         }
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Ratio); property.has_value()) {
+        if (auto maybe_ratio = TRY(parse_ratio_value(tokens)))
+            return PropertyAndValue { *property, maybe_ratio };
     }
 
     auto property_accepting_integer = any_property_accepts_type(property_ids, ValueType::Integer);
