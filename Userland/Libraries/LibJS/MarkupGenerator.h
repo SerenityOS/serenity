@@ -33,7 +33,7 @@ private:
         ObjectType,
     };
 
-    static ErrorOr<void> value_to_html(Value, StringBuilder& output_html, HashTable<Object*> seen_objects = {});
+    static ErrorOr<void> value_to_html(Value, StringBuilder& output_html, HashTable<Object*>& seen_objects);
     static ErrorOr<void> array_to_html(Array const&, StringBuilder& output_html, HashTable<Object*>&);
     static ErrorOr<void> object_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
     static ErrorOr<void> function_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);

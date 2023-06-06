@@ -32,7 +32,8 @@ ErrorOr<String> MarkupGenerator::html_from_source(StringView source)
 ErrorOr<String> MarkupGenerator::html_from_value(Value value)
 {
     StringBuilder output_html;
-    TRY(value_to_html(value, output_html));
+    HashTable<Object*> seen_objects;
+    TRY(value_to_html(value, output_html, seen_objects));
     return output_html.to_string();
 }
 
@@ -43,7 +44,7 @@ ErrorOr<String> MarkupGenerator::html_from_error(Error const& object, bool in_pr
     return output_html.to_string();
 }
 
-ErrorOr<void> MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
+ErrorOr<void> MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*>& seen_objects)
 {
     if (value.is_empty()) {
         TRY(output_html.try_append("&lt;empty&gt;"sv));
