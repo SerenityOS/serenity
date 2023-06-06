@@ -176,18 +176,6 @@ static ErrorOr<void> create_bitmap(TContext& context)
 }
 
 template<typename TContext>
-static void set_pixels(TContext& context, Vector<Gfx::Color> const& color_data)
-{
-    size_t index = 0;
-    for (size_t y = 0; y < context.height; ++y) {
-        for (size_t x = 0; x < context.width; ++x) {
-            context.bitmap->set_pixel(x, y, color_data.at(index));
-            index++;
-        }
-    }
-}
-
-template<typename TContext>
 static ErrorOr<void> decode(TContext& context)
 {
     if (context.state >= TContext::State::Decoded)
