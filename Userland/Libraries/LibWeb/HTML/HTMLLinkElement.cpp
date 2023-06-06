@@ -79,6 +79,8 @@ bool HTMLLinkElement::has_loaded_icon() const
 
 void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
+    HTMLElement::parse_attribute(name, value);
+
     // 4.6.7 Link types - https://html.spec.whatwg.org/multipage/links.html#linkTypes
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
