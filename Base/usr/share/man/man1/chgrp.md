@@ -1,12 +1,12 @@
 ## Name
 
-chgrp - change group ownership of file
+chgrp - change group ownership of files
 
 ## Synopsis
 
 ```**sh
-$ chgrp <gid> <path>
-$ chgrp <name> <path>
+$ chgrp <gid> <path...>
+$ chgrp <name> <path...>
 ```
 
 ## Description
