@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -77,14 +78,37 @@ int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     return clock_settime(CLOCK_REALTIME, &ts);
 }
 
-int utimes(char const* pathname, const struct timeval times[2])
+int utimes(char const* pathname, struct timeval const times[2])
 {
-    if (!times) {
+    if (!times)
         return utime(pathname, nullptr);
-    }
     // FIXME: implement support for tv_usec in the utime (or a new) syscall
     utimbuf buf = { times[0].tv_sec, times[1].tv_sec };
     return utime(pathname, &buf);
+}
+
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.netbsd.org/NetBSD-6.0/lutimes.2
+int lutimes(char const* pathname, struct timeval const times[2])
+{
+    if (!times)
+        return utimensat(AT_FDCWD, pathname, nullptr, AT_SYMLINK_NOFOLLOW);
+    timespec ts[2];
+    TIMEVAL_TO_TIMESPEC(&times[0], &ts[0]);
+    TIMEVAL_TO_TIMESPEC(&times[1], &ts[1]);
+    return utimensat(AT_FDCWD, pathname, ts, AT_SYMLINK_NOFOLLOW);
+}
+
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.netbsd.org/NetBSD-6.0/futimes.2
+int futimes(int fd, struct timeval const times[2])
+{
+    if (!times)
+        return utimensat(fd, nullptr, nullptr, 0);
+    timespec ts[2];
+    TIMEVAL_TO_TIMESPEC(&times[0], &ts[0]);
+    TIMEVAL_TO_TIMESPEC(&times[1], &ts[1]);
+    return utimensat(fd, nullptr, ts, 0);
 }
 
 char* ctime(time_t const* t)
