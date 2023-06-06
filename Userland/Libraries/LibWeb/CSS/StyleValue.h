@@ -127,6 +127,7 @@ public:
         PlaceContent,
         Position,
         RadialGradient,
+        Ratio,
         Rect,
         Resolution,
         Shadow,
@@ -183,6 +184,7 @@ public:
     bool is_place_content() const { return type() == Type::PlaceContent; }
     bool is_position() const { return type() == Type::Position; }
     bool is_radial_gradient() const { return type() == Type::RadialGradient; }
+    bool is_ratio() const { return type() == Type::Ratio; }
     bool is_rect() const { return type() == Type::Rect; }
     bool is_resolution() const { return type() == Type::Resolution; }
     bool is_shadow() const { return type() == Type::Shadow; }
@@ -238,6 +240,7 @@ public:
     PlaceContentStyleValue const& as_place_content() const;
     PositionStyleValue const& as_position() const;
     RadialGradientStyleValue const& as_radial_gradient() const;
+    RatioStyleValue const& as_ratio() const;
     RectStyleValue const& as_rect() const;
     ResolutionStyleValue const& as_resolution() const;
     ShadowStyleValue const& as_shadow() const;
@@ -290,6 +293,7 @@ public:
     PlaceContentStyleValue& as_place_content() { return const_cast<PlaceContentStyleValue&>(const_cast<StyleValue const&>(*this).as_place_content()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     RadialGradientStyleValue& as_radial_gradient() { return const_cast<RadialGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_radial_gradient()); }
+    RatioStyleValue& as_ratio() { return const_cast<RatioStyleValue&>(const_cast<StyleValue const&>(*this).as_ratio()); }
     RectStyleValue& as_rect() { return const_cast<RectStyleValue&>(const_cast<StyleValue const&>(*this).as_rect()); }
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     ShadowStyleValue& as_shadow() { return const_cast<ShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_shadow()); }

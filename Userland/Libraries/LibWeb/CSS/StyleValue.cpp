@@ -50,6 +50,7 @@
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -319,6 +320,12 @@ RadialGradientStyleValue const& StyleValue::as_radial_gradient() const
 {
     VERIFY(is_radial_gradient());
     return static_cast<RadialGradientStyleValue const&>(*this);
+}
+
+RatioStyleValue const& StyleValue::as_ratio() const
+{
+    VERIFY(is_ratio());
+    return static_cast<RatioStyleValue const&>(*this);
 }
 
 RectStyleValue const& StyleValue::as_rect() const
