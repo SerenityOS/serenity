@@ -14,6 +14,7 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
+#include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Print.h>
@@ -599,6 +600,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
     bool disable_debug_printing = false;
+    bool use_test262_global = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
 
@@ -616,6 +618,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
     args_parser.add_option(disable_debug_printing, "Disable debug output", "disable-debug-output", {});
     args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script");
+    args_parser.add_option(use_test262_global, "Use test262 global ($262)", "use-test262-global", {});
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -863,7 +866,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(repl(*interpreter));
         s_editor->save_history(s_history_path.to_deprecated_string());
     } else {
-        interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
+        if (use_test262_global) {
+            interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*g_vm);
+        } else {
+            interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
+        }
+
         auto& console_object = *interpreter->realm().intrinsics().console_object();
         ReplConsoleClient console_client(console_object.console());
         console_object.console().set_client(console_client);
