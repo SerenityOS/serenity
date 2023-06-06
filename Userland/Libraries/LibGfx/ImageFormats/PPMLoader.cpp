@@ -12,9 +12,9 @@ namespace Gfx {
 
 ErrorOr<void> read_image_data(PPMLoadingContext& context)
 {
-    Vector<Gfx::Color> color_data;
     auto const context_size = context.width * context.height;
-    color_data.resize(context_size);
+
+    TRY(create_bitmap(context));
 
     auto& stream = *context.stream;
 
@@ -32,7 +32,7 @@ ErrorOr<void> read_image_data(PPMLoadingContext& context)
             Color color { static_cast<u8>(red), static_cast<u8>(green), static_cast<u8>(blue) };
             if (context.format_details.max_val < 255)
                 color = adjust_color(context.format_details.max_val, color);
-            color_data[i] = color;
+            context.bitmap->set_pixel(i % context.width, i / context.width, color);
         }
     } else if (context.type == PPMLoadingContext::Type::RAWBITS) {
         for (u64 i = 0; i < context_size; ++i) {
@@ -41,13 +41,9 @@ ErrorOr<void> read_image_data(PPMLoadingContext& context)
 
             TRY(stream.read_until_filled(buffer));
 
-            color_data[i] = { pixel[0], pixel[1], pixel[2] };
+            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel[0], pixel[1], pixel[2] });
         }
     }
-
-    TRY(create_bitmap(context));
-
-    set_pixels(context, color_data);
 
     context.state = PPMLoadingContext::State::Bitmap;
     return {};

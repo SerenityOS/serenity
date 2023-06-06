@@ -10,28 +10,12 @@
 
 namespace Gfx {
 
-static void set_adjusted_pixels(PGMLoadingContext& context, Vector<Gfx::Color> const& color_data)
-{
-    size_t index = 0;
-    for (size_t y = 0; y < context.height; ++y) {
-        for (size_t x = 0; x < context.width; ++x) {
-            Color color = color_data.at(index);
-            if (context.format_details.max_val < 255) {
-                color = adjust_color(context.format_details.max_val, color);
-            }
-            context.bitmap->set_pixel(x, y, color);
-            ++index;
-        }
-    }
-}
-
 ErrorOr<void> read_image_data(PGMLoadingContext& context)
 {
-    auto& stream = *context.stream;
-    Vector<Gfx::Color> color_data;
-    auto const context_size = context.width * context.height;
+    TRY(create_bitmap(context));
 
-    color_data.resize(context_size);
+    auto& stream = *context.stream;
+    auto const context_size = context.width * context.height;
 
     if (context.type == PGMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
@@ -39,18 +23,18 @@ ErrorOr<void> read_image_data(PGMLoadingContext& context)
 
             TRY(read_whitespace(context));
 
-            color_data[i] = { static_cast<u8>(value), static_cast<u8>(value), static_cast<u8>(value) };
+            Color color { static_cast<u8>(value), static_cast<u8>(value), static_cast<u8>(value) };
+            if (context.format_details.max_val < 255)
+                color = adjust_color(context.format_details.max_val, color);
+
+            context.bitmap->set_pixel(i % context.width, i / context.width, color);
         }
     } else if (context.type == PGMLoadingContext::Type::RAWBITS) {
         for (u64 i = 0; i < context_size; ++i) {
             auto const pixel = TRY(stream.read_value<u8>());
-            color_data[i] = { pixel, pixel, pixel };
+            context.bitmap->set_pixel(i % context.width, i / context.width, { pixel, pixel, pixel });
         }
     }
-
-    TRY(create_bitmap(context));
-
-    set_adjusted_pixels(context, color_data);
 
     context.state = PGMLoadingContext::State::Bitmap;
     return {};
