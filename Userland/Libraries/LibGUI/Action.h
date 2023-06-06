@@ -134,7 +134,7 @@ public:
     ActionGroup const* group() const { return m_action_group.ptr(); }
     void set_group(Badge<ActionGroup>, ActionGroup*);
 
-    HashTable<MenuItem*> menu_items() const { return m_menu_items; }
+    HashTable<MenuItem*> const& menu_items() const { return m_menu_items; }
 
 private:
     Action(DeprecatedString, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
