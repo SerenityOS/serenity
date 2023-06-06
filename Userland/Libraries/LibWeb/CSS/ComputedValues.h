@@ -227,7 +227,7 @@ public:
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
-    Vector<ShadowData> const& text_shadow() const { return m_noninherited.text_shadow; }
+    Vector<ShadowData> const& text_shadow() const { return m_inherited.text_shadow; }
     CSS::Position position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
@@ -339,6 +339,8 @@ protected:
         float fill_opacity { InitialValues::fill_opacity() };
         float stroke_opacity { InitialValues::stroke_opacity() };
         Optional<LengthPercentage> stroke_width;
+
+        Vector<ShadowData> text_shadow;
     } m_inherited;
 
     struct {
@@ -352,7 +354,6 @@ protected:
         CSS::LengthPercentage text_decoration_thickness { InitialValues::text_decoration_thickness() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         Color text_decoration_color { InitialValues::color() };
-        Vector<ShadowData> text_shadow {};
         CSS::Position position { InitialValues::position() };
         CSS::Size width { InitialValues::width() };
         CSS::Size min_width { InitialValues::min_width() };
@@ -438,7 +439,7 @@ public:
     void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }
     void set_text_decoration_color(Color value) { m_noninherited.text_decoration_color = value; }
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
-    void set_text_shadow(Vector<ShadowData>&& value) { m_noninherited.text_shadow = move(value); }
+    void set_text_shadow(Vector<ShadowData>&& value) { m_inherited.text_shadow = move(value); }
     void set_text_indent(CSS::LengthPercentage value) { m_inherited.text_indent = move(value); }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
