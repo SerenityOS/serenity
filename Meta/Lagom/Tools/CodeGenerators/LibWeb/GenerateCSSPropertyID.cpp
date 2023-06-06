@@ -56,9 +56,12 @@ ErrorOr<void> replace_logical_aliases(JsonObject& properties)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         const auto& value_as_object = value.as_object();
-        const auto logical_alias_for = value_as_object.get_deprecated_string("logical-alias-for"sv);
+        const auto logical_alias_for = value_as_object.get_array("logical-alias-for"sv);
         if (logical_alias_for.has_value()) {
-            logical_aliases.set(name, logical_alias_for.value());
+            auto const& aliased_properties = logical_alias_for.value();
+            for (auto const& aliased_property : aliased_properties.values()) {
+                logical_aliases.set(name, aliased_property.to_deprecated_string());
+            }
         }
     });
 
