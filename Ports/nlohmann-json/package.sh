@@ -7,6 +7,7 @@ files="https://github.com/nlohmann/json/archive/refs/tags/v${version}.tar.gz jso
 useconfigure='true'
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    "-DCMAKE_INSTALL_DATADIR=${SERENITY_INSTALL_ROOT}/usr/local/lib"
     "-DJSON_BuildTests=OFF"
 )
 
