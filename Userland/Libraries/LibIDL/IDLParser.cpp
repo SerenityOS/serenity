@@ -942,21 +942,23 @@ Interface& Parser::parse()
     top_level_resolved_imports().set(this_module, &interface);
 
     Vector<Interface&> imports;
-    HashTable<DeprecatedString> required_imported_paths;
-    while (lexer.consume_specific("#import")) {
-        consume_whitespace();
-        assert_specific('<');
-        auto path = lexer.consume_until('>');
-        lexer.ignore();
-        auto maybe_interface = resolve_import(path);
-        if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value().required_imported_paths)
-                required_imported_paths.set(entry);
-            imports.append(maybe_interface.release_value());
+    {
+        HashTable<DeprecatedString> required_imported_paths;
+        while (lexer.consume_specific("#import")) {
+            consume_whitespace();
+            assert_specific('<');
+            auto path = lexer.consume_until('>');
+            lexer.ignore();
+            auto maybe_interface = resolve_import(path);
+            if (maybe_interface.has_value()) {
+                for (auto& entry : maybe_interface.value().required_imported_paths)
+                    required_imported_paths.set(entry);
+                imports.append(maybe_interface.release_value());
+            }
+            consume_whitespace();
         }
-        consume_whitespace();
+        interface.required_imported_paths = move(required_imported_paths);
     }
-    interface.required_imported_paths = required_imported_paths;
 
     parse_non_interface_entities(true, interface);
 
