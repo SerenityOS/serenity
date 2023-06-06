@@ -283,6 +283,34 @@ static bool contains(Edge a, Edge b)
 
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration)
 {
+    auto map_logical_property_to_real_property = [](PropertyID property_id) -> Optional<PropertyID> {
+        // FIXME: Honor writing-mode, direction and text-orientation.
+        switch (property_id) {
+        case PropertyID::MarginBlockStart:
+            return PropertyID::MarginTop;
+        case PropertyID::MarginBlockEnd:
+            return PropertyID::MarginBottom;
+        case PropertyID::MarginInlineStart:
+            return PropertyID::MarginLeft;
+        case PropertyID::MarginInlineEnd:
+            return PropertyID::MarginRight;
+        case PropertyID::PaddingBlockStart:
+            return PropertyID::PaddingTop;
+        case PropertyID::PaddingBlockEnd:
+            return PropertyID::PaddingBottom;
+        case PropertyID::PaddingInlineStart:
+            return PropertyID::PaddingLeft;
+        case PropertyID::PaddingInlineEnd:
+            return PropertyID::PaddingRight;
+        default:
+            return {};
+        }
+    };
+
+    auto real_property_id = map_logical_property_to_real_property(property_id);
+    if (real_property_id.has_value())
+        return set_property_expanding_shorthands(style, real_property_id.value(), value, document, declaration);
+
     if (value.is_composite()) {
         auto& composite_value = value.as_composite();
         auto& properties = composite_value.sub_properties();
