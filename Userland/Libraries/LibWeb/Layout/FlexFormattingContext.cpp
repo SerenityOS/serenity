@@ -1461,6 +1461,8 @@ CSS::AlignItems FlexFormattingContext::alignment_for_item(Box const& box) const
         return CSS::AlignItems::Center;
     case CSS::AlignSelf::Baseline:
         return CSS::AlignItems::Baseline;
+    case CSS::AlignSelf::Start:
+        return CSS::AlignItems::Start;
     case CSS::AlignSelf::Stretch:
         return CSS::AlignItems::Stretch;
     case CSS::AlignSelf::Safe:
@@ -1482,10 +1484,12 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
                 //  Fallthrough
+            case CSS::AlignItems::Start:
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
                 item.cross_offset = -half_line_size + item.margins.cross_before + item.borders.cross_before + item.padding.cross_before;
                 break;
+            case CSS::AlignItems::End:
             case CSS::AlignItems::FlexEnd:
                 item.cross_offset = half_line_size - item.cross_size.value() - item.margins.cross_after - item.borders.cross_after - item.padding.cross_after;
                 break;
@@ -2136,10 +2140,12 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::AlignItems::Baseline:
         // FIXME: Implement this
         //  Fallthrough
+    case CSS::AlignItems::Start:
     case CSS::AlignItems::FlexStart:
     case CSS::AlignItems::Stretch:
         cross_offset = -half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
         break;
+    case CSS::AlignItems::End:
     case CSS::AlignItems::FlexEnd:
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
