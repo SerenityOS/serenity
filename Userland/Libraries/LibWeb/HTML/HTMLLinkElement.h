@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, Srikavin Ramkumar <me@srikavin.me>
@@ -127,7 +127,6 @@ private:
         };
     };
 
-    RefPtr<Resource> m_preload_resource;
     JS::GCPtr<CSS::CSSStyleSheet> m_loaded_style_sheet;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
