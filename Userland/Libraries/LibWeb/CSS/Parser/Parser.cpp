@@ -3669,30 +3669,45 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
     auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
 
-    // `<ratio> = <number [0,∞]> [ / <number [0,∞]> ]?`
-    // FIXME: I think either part is allowed to be calc(), which makes everything complicated.
-    auto first_number = tokens.next_token();
-    if (!first_number.is(Token::Type::Number) || first_number.token().number_value() < 0)
+    auto read_number_value = [this](ComponentValue const& component_value) -> Optional<float> {
+        if (component_value.is(Token::Type::Number)) {
+            return component_value.token().number_value();
+        } else if (component_value.is_function()) {
+            auto maybe_calc = parse_dynamic_value(component_value).release_value_but_fixme_should_propagate_errors();
+            if (!maybe_calc || !maybe_calc->is_calculated() || !maybe_calc->as_calculated().resolves_to_number())
+                return {};
+            if (auto resolved_number = maybe_calc->as_calculated().resolve_number(); resolved_number.has_value() && resolved_number.value() >= 0) {
+                return resolved_number.value();
+            }
+        }
         return {};
+    };
+
+    // `<ratio> = <number [0,∞]> [ / <number [0,∞]> ]?`
+    auto maybe_numerator = read_number_value(tokens.next_token());
+    if (!maybe_numerator.has_value() || maybe_numerator.value() < 0)
+        return {};
+    auto numerator = maybe_numerator.value();
 
     {
         auto two_value_transaction = tokens.begin_transaction();
         tokens.skip_whitespace();
         auto solidus = tokens.next_token();
         tokens.skip_whitespace();
-        auto second_number = tokens.next_token();
-        if (solidus.is_delim('/')
-            && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
+        auto maybe_denominator = read_number_value(tokens.next_token());
+
+        if (solidus.is_delim('/') && maybe_denominator.has_value() && maybe_denominator.value() >= 0) {
+            auto denominator = maybe_denominator.value();
             // Two-value ratio
             two_value_transaction.commit();
             transaction.commit();
-            return Ratio { static_cast<float>(first_number.token().number_value()), static_cast<float>(second_number.token().number_value()) };
+            return Ratio { numerator, denominator };
         }
     }
 
     // Single-value ratio
     transaction.commit();
-    return Ratio { static_cast<float>(first_number.token().number_value()) };
+    return Ratio { numerator };
 }
 
 // https://www.w3.org/TR/css-syntax-3/#urange-syntax
