@@ -149,17 +149,17 @@ public:
     HTML::HTMLHeadElement* head();
     HTML::HTMLElement* body();
 
-    const HTML::HTMLHtmlElement* html_element() const
+    HTML::HTMLHtmlElement const* html_element() const
     {
         return const_cast<Document*>(this)->html_element();
     }
 
-    const HTML::HTMLHeadElement* head() const
+    HTML::HTMLHeadElement const* head() const
     {
         return const_cast<Document*>(this)->head();
     }
 
-    const HTML::HTMLElement* body() const
+    HTML::HTMLElement const* body() const
     {
         return const_cast<Document*>(this)->body();
     }
