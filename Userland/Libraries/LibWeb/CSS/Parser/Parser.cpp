@@ -5669,8 +5669,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
         case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
-            // (flex-basis takes `<length>`, not `<number>`, so the 0 is a Length.)
-            auto flex_basis = TRY(LengthStyleValue::create(Length::make_px(0)));
+            auto flex_basis = TRY(PercentageStyleValue::create(Percentage(0)));
             auto one = TRY(NumberStyleValue::create(1));
             return FlexStyleValue::create(*value, one, flex_basis);
         }
@@ -5732,8 +5731,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
         flex_grow = TRY(property_initial_value(m_context.realm(), PropertyID::FlexGrow));
     if (!flex_shrink)
         flex_shrink = TRY(property_initial_value(m_context.realm(), PropertyID::FlexShrink));
-    if (!flex_basis)
-        flex_basis = TRY(property_initial_value(m_context.realm(), PropertyID::FlexBasis));
+    if (!flex_basis) {
+        // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
+        // https://github.com/w3c/csswg-drafts/issues/5742
+        flex_basis = TRY(PercentageStyleValue::create(Percentage(0)));
+    }
 
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
