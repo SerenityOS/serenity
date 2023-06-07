@@ -1409,11 +1409,11 @@ ErrorOr<void> Editor::refresh_display()
     }
 
     auto apply_styles = [&, empty_styles = HashMap<u32, Style> {}](size_t i) -> ErrorOr<void> {
-        auto ends = m_current_spans.m_spans_ending.get(i).value_or(empty_styles);
-        auto starts = m_current_spans.m_spans_starting.get(i).value_or(empty_styles);
+        auto& ends = m_current_spans.m_spans_ending.get(i).value_or<>(empty_styles);
+        auto& starts = m_current_spans.m_spans_starting.get(i).value_or<>(empty_styles);
 
-        auto anchored_ends = m_current_spans.m_anchored_spans_ending.get(i).value_or(empty_styles);
-        auto anchored_starts = m_current_spans.m_anchored_spans_starting.get(i).value_or(empty_styles);
+        auto& anchored_ends = m_current_spans.m_anchored_spans_ending.get(i).value_or<>(empty_styles);
+        auto& anchored_starts = m_current_spans.m_anchored_spans_starting.get(i).value_or<>(empty_styles);
 
         if (ends.size() || anchored_ends.size()) {
             Style style;
