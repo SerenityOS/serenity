@@ -315,7 +315,6 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
         -device ich9-ahci,bus=bridge3
         -chardev stdio,id=stdout,mux=on
-        $SERENITY_BOOT_DRIVE
         "
     fi
 fi
@@ -340,6 +339,7 @@ fi
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 $SERENITY_MACHINE
+$SERENITY_BOOT_DRIVE
 -cpu $SERENITY_QEMU_CPU
 -name SerenityOS
 -d guest_errors
