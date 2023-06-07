@@ -630,6 +630,7 @@ WebPImageDecoderPlugin::~WebPImageDecoderPlugin() = default;
 bool WebPImageDecoderPlugin::set_error(ErrorOr<void> const& error_or)
 {
     if (error_or.is_error()) {
+        dbgln("WebPLoadingContext error: {}", error_or.error());
         m_context->state = WebPLoadingContext::State::Error;
         return true;
     }
