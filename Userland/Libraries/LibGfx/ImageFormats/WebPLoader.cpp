@@ -236,27 +236,99 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
 
     size_t pixel_count = bitmap.width() * bitmap.height();
 
+    auto alpha = TRY(ByteBuffer::create_uninitialized(pixel_count));
+
     if (compression_method == 0) {
         // "Raw data: consists of a byte sequence of length width * height, containing all the 8-bit transparency values in scan order."
         if (alpha_data.size() < pixel_count)
             return Error::from_string_literal("WebPImageDecoderPlugin: uncompressed ALPH data too small");
+        memcpy(alpha.data(), alpha_data.data(), pixel_count);
+    } else {
+        // "Lossless format compression: the byte sequence is a compressed image-stream (as described in the WebP Lossless Bitstream Format)
+        //  of implicit dimension width x height. That is, this image-stream does NOT contain any headers describing the image dimension.
+        //  Once the image-stream is decoded into ARGB color values, following the process described in the lossless format specification,
+        //  the transparency information must be extracted from the green channel of the ARGB quadruplet."
+        VP8LHeader vp8l_header { static_cast<u16>(bitmap.width()), static_cast<u16>(bitmap.height()), /*is_alpha_used=*/false, alpha_data };
+        auto lossless_bitmap = TRY(decode_webp_chunk_VP8L_contents(vp8l_header));
+
+        if (pixel_count != static_cast<size_t>(lossless_bitmap->width() * lossless_bitmap->height()))
+            return Error::from_string_literal("WebPImageDecoderPlugin: decompressed ALPH dimensions don't match VP8 dimensions");
+
         for (size_t i = 0; i < pixel_count; ++i)
-            bitmap.begin()[i] = alpha_data[i] << 24 | (bitmap.begin()[i] & 0xffffff);
-        return {};
+            alpha[i] = (lossless_bitmap->begin()[i] & 0xff00) >> 8;
     }
 
-    // "Lossless format compression: the byte sequence is a compressed image-stream (as described in the WebP Lossless Bitstream Format)
-    //  of implicit dimension width x height. That is, this image-stream does NOT contain any headers describing the image dimension.
-    //  Once the image-stream is decoded into ARGB color values, following the process described in the lossless format specification,
-    //  the transparency information must be extracted from the green channel of the ARGB quadruplet."
-    VP8LHeader vp8l_header { static_cast<u16>(bitmap.width()), static_cast<u16>(bitmap.height()), /*is_alpha_used=*/false, alpha_data };
-    auto lossless_bitmap = TRY(decode_webp_chunk_VP8L_contents(vp8l_header));
+    // "For each pixel, filtering is performed using the following calculations. Assume the alpha values surrounding the current X position are labeled as:
+    //
+    //  C | B |
+    // ---+---+
+    //  A | X |
+    // [...]
+    //
+    // The final value is derived by adding the decompressed value X to the predictor and using modulo-256 arithmetic"
 
-    if (pixel_count != static_cast<size_t>(lossless_bitmap->width() * lossless_bitmap->height()))
-        return Error::from_string_literal("WebPImageDecoderPlugin: decompressed ALPH dimensions don't match VP8 dimensions");
+    switch (filtering_method) {
+    case 0:
+        // Method 0: predictor = 0
+        // Nothing to do.
+        break;
+    case 1:
+        // "Method 1: predictor = A"
+        // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
+        //  For horizontal or gradient filtering methods, the left-most pixels at location (0, y) are predicted using the location (0, y-1) just above."
+        // FIXME: This branch is untested.
+        for (int y = 1; y < bitmap.height(); ++y)
+            alpha[y * bitmap.width()] += alpha[(y - 1) * bitmap.width()];
+        for (int y = 0; y < bitmap.height(); ++y) {
+            for (int x = 1; x < bitmap.width(); ++x) {
+                u8 A = alpha[y * bitmap.width() + (x - 1)];
+                alpha[y * bitmap.width() + x] += A;
+            }
+        }
+        break;
+    case 2:
+        // "Method 2: predictor = B"
+        // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
+        //  For vertical or gradient filtering methods, the top-most pixels at location (x, 0) are predicted using the location (x-1, 0) on the left."
+        // FIXME: This branch is untested.
+        for (int x = 1; x < bitmap.width(); ++x)
+            alpha[x] += alpha[x - 1];
+        for (int y = 1; y < bitmap.height(); ++y) {
+            for (int x = 0; x < bitmap.width(); ++x) {
+                u8 B = alpha[(y - 1) * bitmap.width() + x];
+                alpha[y * bitmap.width() + x] += B;
+            }
+        }
+        break;
+    case 3:
+        // "Method 3: predictor = clip(A + B - C)"
+        //  where clip(v) is equal to:
+        //  * 0 if v < 0
+        //  * 255 if v > 255
+        //  * v otherwise"
+        // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
+        //  For horizontal or gradient filtering methods, the left-most pixels at location (0, y) are predicted using the location (0, y-1) just above.
+        //  For vertical or gradient filtering methods, the top-most pixels at location (x, 0) are predicted using the location (x-1, 0) on the left."
+        for (int x = 1; x < bitmap.width(); ++x)
+            alpha[x] += alpha[x - 1];
+        for (int y = 1; y < bitmap.height(); ++y)
+            alpha[y * bitmap.width()] += alpha[(y - 1) * bitmap.width()];
+        for (int y = 1; y < bitmap.height(); ++y) {
+            for (int x = 1; x < bitmap.width(); ++x) {
+                u8 A = alpha[y * bitmap.width() + (x - 1)];
+                u8 B = alpha[(y - 1) * bitmap.width() + x];
+                u8 C = alpha[(y - 1) * bitmap.width() + (x - 1)];
+                alpha[y * bitmap.width() + x] += clamp(A + B - C, 0, 255);
+            }
+        }
+
+        break;
+    default:
+        return Error::from_string_literal("WebPImageDecoderPlugin: uncompressed ALPH invalid filtering method");
+    }
 
     for (size_t i = 0; i < pixel_count; ++i)
-        bitmap.begin()[i] = (lossless_bitmap->begin()[i] & 0xff00) << 16 | (bitmap.begin()[i] & 0xffffff);
+        bitmap.begin()[i] = alpha[i] << 24 | (bitmap.begin()[i] & 0xffffff);
 
     return {};
 }
