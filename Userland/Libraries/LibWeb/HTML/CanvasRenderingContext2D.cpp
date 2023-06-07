@@ -74,11 +74,10 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
         auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-        auto color_fill = drawing_state.fill_style.as_color();
-        if (color_fill.has_value()) {
-            painter.fill_rect(rect, *color_fill);
+        if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
+            painter.fill_rect(rect, *color);
         } else {
-            // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support FillPath yet.
+            // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support PaintStyle yet.
             painter.underlying_painter().fill_rect(rect.to_rounded<int>(), *drawing_state.fill_style.to_gfx_paint_style());
         }
         return rect;
