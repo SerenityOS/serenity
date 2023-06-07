@@ -610,16 +610,21 @@ Element const* Document::document_element() const
     return first_child_of_type<Element>();
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#the-html-element-2
 HTML::HTMLHtmlElement* Document::html_element()
 {
+    // The html element of a document is its document element, if it's an html element, and null otherwise.
     auto* html = document_element();
     if (is<HTML::HTMLHtmlElement>(html))
         return verify_cast<HTML::HTMLHtmlElement>(html);
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#the-head-element-2
 HTML::HTMLHeadElement* Document::head()
 {
+    // The head element of a document is the first head element that is a child of the html element, if there is one,
+    // or null otherwise.
     auto* html = html_element();
     if (!html)
         return nullptr;
