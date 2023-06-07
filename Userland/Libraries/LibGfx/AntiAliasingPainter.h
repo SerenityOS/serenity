@@ -36,6 +36,7 @@ public:
     void fill_path(Path const&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
     void fill_path(Path const&, PaintStyle const& paint_style, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
 
+    void stroke_path(Path const&, StrokeProperties const&);
     void stroke_path(Path const&, Color, float thickness);
 
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }

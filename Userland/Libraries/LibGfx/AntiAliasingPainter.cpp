@@ -12,6 +12,7 @@
 
 #include <AK/Function.h>
 #include <AK/NumericLimits.h>
+#include <AK/Tuple.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Line.h>
 
@@ -194,8 +195,15 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
+    StrokeProperties stroke_properties(thickness, color);
+    stroke_path(path, stroke_properties);
+}
+
+void AntiAliasingPainter::stroke_path(Path const& path, StrokeProperties const& stroke_properties)
+{
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness), color);
+    // Probably it makes sense to cache stroke_to_fill inside Path
+    fill_path(path.stroke_to_fill(stroke_properties), stroke_properties.stroke);
 }
 
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)
