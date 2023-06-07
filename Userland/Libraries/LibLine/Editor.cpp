@@ -582,11 +582,11 @@ void Editor::initialize()
 
     if (m_configuration.m_signal_mode == Configuration::WithSignalHandlers) {
         m_signal_handlers.append(Core::EventLoop::register_signal(SIGINT, [this](int) {
-            interrupted().release_value_but_fixme_should_propagate_errors();
+            Core::EventLoop::current().deferred_invoke([this] { interrupted().release_value_but_fixme_should_propagate_errors(); });
         }));
 
         m_signal_handlers.append(Core::EventLoop::register_signal(SIGWINCH, [this](int) {
-            resized().release_value_but_fixme_should_propagate_errors();
+            Core::EventLoop::current().deferred_invoke([this] { resized().release_value_but_fixme_should_propagate_errors(); });
         }));
     }
 
