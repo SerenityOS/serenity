@@ -428,14 +428,10 @@ Tab::Tab(BrowserWindow& window)
         view().on_link_click(href, "_blank", 0);
     };
 
-    view().on_title_change = [this](auto& title) {
-        if (title.is_null()) {
-            m_history.update_title(url().to_deprecated_string());
-            m_title = url().to_deprecated_string();
-        } else {
-            m_history.update_title(title);
-            m_title = title;
-        }
+    view().on_title_change = [this](auto const& title) {
+        m_history.update_title(title);
+        m_title = title;
+
         if (on_title_change)
             on_title_change(m_title);
     };
