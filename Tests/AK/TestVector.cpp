@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -623,4 +624,275 @@ TEST_CASE(uses_inline_capacity_when_constructed_from_span)
 
     for (auto& el : v)
         EXPECT(is_inline_element(el, v));
+}
+
+TEST_CASE(vector_clone_pod)
+{
+    Vector<int> vec1;
+    vec1.empend(42);
+    vec1.empend(1337);
+    vec1.empend(123456789);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+
+    Vector<int> vec2 = TRY_OR_FAIL(vec1.clone());
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[0], 42);
+    EXPECT_EQ(vec2[1], 1337);
+    EXPECT_EQ(vec2[2], 123456789);
+}
+
+template<bool CanClone, bool CanCopyConstruct = true>
+class ObservableConstructor {
+public:
+    ObservableConstructor(int value)
+        : m_value(value)
+    {
+    }
+    ObservableConstructor(ObservableConstructor const& other)
+    requires(CanCopyConstruct)
+        : m_value(other.m_value)
+    {
+        s_observed_copy_constructs += 1;
+    }
+    ObservableConstructor(ObservableConstructor&& other)
+        : m_value(other.m_value)
+    {
+        s_observed_move_constructs += 1;
+    }
+
+    int value() const { return m_value; }
+
+    ErrorOr<ObservableConstructor> clone() const
+    requires(CanClone)
+    {
+        s_observed_clones += 1;
+        return { ObservableConstructor { m_value } };
+    }
+
+    static int observed_copy_constructs() { return s_observed_copy_constructs; }
+    static int observed_move_constructs() { return s_observed_move_constructs; }
+    static int observed_clones() { return s_observed_clones; }
+
+private:
+    int m_value;
+
+    static int s_observed_copy_constructs;
+    static int s_observed_move_constructs;
+    static int s_observed_clones;
+};
+
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_copy_constructs = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_move_constructs = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_clones = 0;
+
+static_assert(HasFallibleClone<ObservableConstructor<true, true>>);
+static_assert(!HasFallibleClone<ObservableConstructor<false, true>>);
+static_assert(HasFallibleClone<ObservableConstructor<true, false>>);
+static_assert(!HasFallibleClone<ObservableConstructor<false, false>>);
+
+TEST_CASE(vector_clone_copy_construct)
+{
+    auto old_copies = ObservableConstructor<false>::observed_copy_constructs();
+    auto old_moves = ObservableConstructor<false>::observed_move_constructs();
+    auto old_clones = ObservableConstructor<false>::observed_clones();
+
+    Vector<ObservableConstructor<false>> vec1;
+    vec1.empend(42);
+    vec1.empend(1337);
+    vec1.empend(123456789);
+    EXPECT_EQ(ObservableConstructor<false>::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+
+    Vector<ObservableConstructor<false>> vec2 = TRY_OR_FAIL(vec1.clone());
+    EXPECT_EQ(ObservableConstructor<false>::observed_copy_constructs() - old_copies, 3);
+    EXPECT_EQ(ObservableConstructor<false>::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[0].value(), 42);
+    EXPECT_EQ(vec2[1].value(), 1337);
+    EXPECT_EQ(vec2[2].value(), 123456789);
+}
+
+TEST_CASE(vector_clone_call)
+{
+    auto old_copies = ObservableConstructor<true>::observed_copy_constructs();
+    auto old_moves = ObservableConstructor<true>::observed_move_constructs();
+    auto old_clones = ObservableConstructor<true>::observed_clones();
+
+    Vector<ObservableConstructor<true>> vec1;
+    vec1.empend(42);
+    vec1.empend(1337);
+    vec1.empend(123456789);
+    EXPECT_EQ(ObservableConstructor<true>::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(ObservableConstructor<true>::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(ObservableConstructor<true>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+
+    Vector<ObservableConstructor<true>> vec2 = TRY_OR_FAIL(vec1.clone());
+    EXPECT_EQ(ObservableConstructor<true>::observed_copy_constructs() - old_copies, 0);
+    // Two moves per item: One during ObservableConstructor<true>::clone() into ErrorOr, the other into the
+    EXPECT_EQ(ObservableConstructor<true>::observed_move_constructs() - old_moves, 6);
+    EXPECT_EQ(ObservableConstructor<true>::observed_clones() - old_clones, 3);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[0].value(), 42);
+    EXPECT_EQ(vec2[1].value(), 1337);
+    EXPECT_EQ(vec2[2].value(), 123456789);
+}
+
+TEST_CASE(vector_clone_lambda_pseudo_clone)
+{
+    auto old_copies = ObservableConstructor<false>::observed_copy_constructs();
+    auto old_moves = ObservableConstructor<false>::observed_move_constructs();
+    auto old_clones = ObservableConstructor<false>::observed_clones();
+
+    Vector<ObservableConstructor<false>> vec1;
+    vec1.empend(42);
+    vec1.empend(1337);
+    vec1.empend(123456789);
+    EXPECT_EQ(ObservableConstructor<false>::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+
+    Vector<ObservableConstructor<false>> vec2 = TRY_OR_FAIL(vec1.clone(
+        [](ObservableConstructor<false> const& source) -> ErrorOr<ObservableConstructor<false>> {
+            return ObservableConstructor<false>(source.value() + 1);
+        }));
+    EXPECT_EQ(ObservableConstructor<false>::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(ObservableConstructor<false>::observed_move_constructs() - old_moves, 6);
+    EXPECT_EQ(ObservableConstructor<false>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[0].value(), 43);
+    EXPECT_EQ(vec2[1].value(), 1338);
+    EXPECT_EQ(vec2[2].value(), 123456790);
+}
+
+class FailingClone {
+public:
+    FailingClone(int value)
+        : m_value(value)
+    {
+    }
+    FailingClone(FailingClone const&) = delete;
+    FailingClone(FailingClone&&) = default;
+
+    int value() const { return m_value; }
+
+    ErrorOr<FailingClone> clone() const
+    {
+        return Error::from_errno(EBUSY);
+    }
+
+private:
+    int m_value;
+};
+
+static_assert(HasFallibleClone<FailingClone>);
+
+TEST_CASE(vector_clone_fallible_error)
+{
+    Vector<FailingClone> vec1;
+    vec1.empend(42);
+    vec1.empend(1337);
+    vec1.empend(123456789);
+
+    auto vec2_or_error = vec1.clone();
+    EXPECT(vec2_or_error.is_error());
+    EXPECT_EQ(vec2_or_error.error().code(), EBUSY);
+}
+
+static_assert(HasFallibleClone<Vector<ObservableConstructor<true>>>);
+static_assert(HasFallibleClone<Vector<ObservableConstructor<false>>>);
+
+TEST_CASE(vector_clone_fallible_recursive)
+{
+    auto old_copies = ObservableConstructor<true>::observed_copy_constructs();
+    auto old_moves = ObservableConstructor<true>::observed_move_constructs();
+    auto old_clones = ObservableConstructor<true>::observed_clones();
+
+    Vector<Vector<ObservableConstructor<true>>> vec1;
+    vec1.empend();
+    vec1.last().empend(42);
+    vec1.last().empend(43);
+    vec1.last().empend(44);
+    vec1.empend();
+    vec1.last().empend(1337);
+    vec1.last().empend(1338);
+    vec1.last().empend(1339);
+    vec1.empend();
+    vec1.last().empend(123456789);
+    vec1.last().empend(123456790);
+    vec1.last().empend(123456791);
+    EXPECT_EQ(ObservableConstructor<true>::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(ObservableConstructor<true>::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(ObservableConstructor<true>::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec1[1][2].value(), 1339);
+
+    Vector<Vector<ObservableConstructor<true>>> vec2 = TRY_OR_FAIL(vec1.clone());
+    EXPECT_EQ(ObservableConstructor<true>::observed_copy_constructs() - old_copies, 0);
+    // Two moves per item: One during ObservableConstructor<true>::clone() into ErrorOr, the other into the
+    EXPECT_EQ(ObservableConstructor<true>::observed_move_constructs() - old_moves, 2 * 9);
+    EXPECT_EQ(ObservableConstructor<true>::observed_clones() - old_clones, 9);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec1[1][2].value(), 1339);
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[1][2].value(), 1339);
+    EXPECT_EQ(vec2[2][1].value(), 123456790);
+}
+
+using Noncopyable = ObservableConstructor<true, false>;
+static_assert(HasFallibleClone<Noncopyable>);
+static_assert(HasFallibleClone<Vector<Noncopyable>>);
+
+TEST_CASE(vector_clone_fallible_recursive_template_arg_change)
+{
+    auto old_copies = Noncopyable::observed_copy_constructs();
+    auto old_moves = Noncopyable::observed_move_constructs();
+    auto old_clones = Noncopyable::observed_clones();
+
+    Vector<Vector<Noncopyable>> vec1;
+    vec1.empend();
+    vec1.last().empend(42);
+    vec1.last().empend(43);
+    vec1.last().empend(44);
+    vec1.empend();
+    vec1.last().empend(1337);
+    vec1.last().empend(1338);
+    vec1.last().empend(1339);
+    vec1.empend();
+    vec1.last().empend(123456789);
+    vec1.last().empend(123456790);
+    vec1.last().empend(123456791);
+    EXPECT_EQ(Noncopyable::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(Noncopyable::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(Noncopyable::observed_clones() - old_clones, 0);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec1[1][2].value(), 1339);
+
+    // TODO: Ideally, some templating magic would by itself figure out the correct template args to source_item.clone<>().
+    auto vec2 = TRY_OR_FAIL((vec1.clone<Vector<Noncopyable, 1>>(
+        [](Vector<Noncopyable> const& source_item) -> ErrorOr<Vector<Noncopyable, 1>> {
+            return source_item.clone<Noncopyable, 1>();
+        })));
+    static_assert(IsSame<decltype(vec2), Vector<Vector<Noncopyable, 1>, 0>>);
+
+    EXPECT_EQ(Noncopyable::observed_copy_constructs() - old_copies, 0);
+    // Two moves per item: One during Noncopyable::clone() into ErrorOr, the other when moving from inline=0 to inline=10
+    EXPECT_EQ(Noncopyable::observed_move_constructs() - old_moves, 2 * 9);
+    EXPECT_EQ(Noncopyable::observed_clones() - old_clones, 9);
+    EXPECT_EQ(vec1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec1[1][2].value(), 1339);
+    EXPECT_EQ(vec2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(vec2[1][2].value(), 1339);
+    EXPECT_EQ(vec2[2][1].value(), 123456790);
 }

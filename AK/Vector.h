@@ -8,8 +8,10 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/CopyMethod.h>
 #include <AK/Error.h>
 #include <AK/Find.h>
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Iterator.h>
 #include <AK/Optional.h>
@@ -44,6 +46,10 @@ struct CanBePlacedInsideVectorHelper<StorageType, false> {
 template<typename T, size_t inline_capacity>
 requires(!IsRvalueReference<T>) class Vector {
 private:
+    template<typename T2, size_t inline_capacity2>
+    requires(!IsRvalueReference<T2>)
+    friend class Vector;
+
     static constexpr bool contains_reference = IsLvalueReference<T>;
     using StorageType = Conditional<contains_reference, RawPtr<RemoveReference<T>>, T>;
 
@@ -809,6 +815,25 @@ public:
     {
         for (size_t i = 0; i < size() / 2; ++i)
             AK::swap(at(i), at(size() - i - 1));
+    }
+
+    // FIXME: Is there a way to "automatically" call clone<…>() with a specified pack of arbitrary parameters?
+    template<typename NewT = T, size_t new_inline_capacity = inline_capacity, typename Cloner = CloneCaller<T>>
+    ErrorOr<Vector<NewT, new_inline_capacity>> clone(Cloner cloner = {}) const
+    requires(IsCloner<Cloner, T>)
+    {
+        using CopyHelper = FallibleCopyHelper<T, NewT, Cloner>;
+        CopyHelper copy_helper { move(cloner) };
+        Vector<NewT, new_inline_capacity> vector_clone;
+        TRY(vector_clone.try_ensure_capacity(size()));
+        for (size_t i = 0; i < size(); ++i) {
+            if constexpr (FallibleFunction<CopyHelper, NewT*, T const*>)
+                TRY(copy_helper(vector_clone.slot(i), slot(i)));
+            else
+                copy_helper(vector_clone.slot(i), slot(i));
+            ++vector_clone.m_size;
+        }
+        return vector_clone;
     }
 
 private:
