@@ -147,6 +147,7 @@ public:
 
     HTML::HTMLHtmlElement* html_element();
     HTML::HTMLHeadElement* head();
+    JS::GCPtr<HTML::HTMLTitleElement> title_element();
     HTML::HTMLElement* body();
 
     HTML::HTMLHtmlElement const* html_element() const
@@ -157,6 +158,11 @@ public:
     HTML::HTMLHeadElement const* head() const
     {
         return const_cast<Document*>(this)->head();
+    }
+
+    JS::GCPtr<HTML::HTMLTitleElement const> title_element() const
+    {
+        return const_cast<Document*>(this)->title_element();
     }
 
     HTML::HTMLElement const* body() const
