@@ -7,6 +7,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
+#include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
@@ -58,6 +59,34 @@ static void for_each_child_box_matching(Box const& parent, Matcher matcher, Call
         if (matcher(child_box))
             callback(child_box);
     });
+}
+
+CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS::CaptionSide phase)
+{
+    CSSPixels caption_height = 0;
+    for (auto* child = table_box().first_child(); child; child = child->next_sibling()) {
+        if (!child->display().is_table_caption() || child->computed_values().caption_side() != phase) {
+            continue;
+        }
+        // The caption boxes are principal block-level boxes that retain their own content, padding, margin, and border areas,
+        // and are rendered as normal block boxes inside the table wrapper box, as described in https://www.w3.org/TR/CSS22/tables.html#model
+        auto caption_context = make<BlockFormattingContext>(m_state, *verify_cast<BlockContainer>(child), this);
+        caption_context->run(table_box(), layout_mode, *m_available_space);
+        VERIFY(child->is_box());
+        auto const& child_box = static_cast<Box const&>(*child);
+        // FIXME: Since caption only has inline children, BlockFormattingContext doesn't resolve the vertical metrics.
+        //        We need to do it manually here.
+        caption_context->resolve_vertical_box_model_metrics(child_box);
+        auto const& caption_state = m_state.get(child_box);
+        if (phase == CSS::CaptionSide::Top) {
+            m_state.get_mutable(table_box()).set_content_y(caption_state.margin_box_height());
+        } else {
+            m_state.get_mutable(child_box).set_content_y(
+                m_state.get(table_box()).margin_box_height() + caption_state.margin_box_top());
+        }
+        caption_height += caption_state.margin_box_height();
+    }
+    return caption_height;
 }
 
 void TableFormattingContext::calculate_row_column_grid(Box const& box)
@@ -224,6 +253,21 @@ void TableFormattingContext::compute_table_measures()
     }
 }
 
+CSSPixels TableFormattingContext::compute_capmin()
+{
+    // The caption width minimum (CAPMIN) is the largest of the table captions min-content contribution:
+    // https://drafts.csswg.org/css-tables-3/#computing-the-table-width
+    CSSPixels capmin = 0;
+    for (auto* child = table_box().first_child(); child; child = child->next_sibling()) {
+        if (!child->display().is_table_caption()) {
+            continue;
+        }
+        VERIFY(child->is_box());
+        capmin = max(calculate_min_content_width(static_cast<Box const&>(*child)), capmin);
+    }
+    return capmin;
+}
+
 void TableFormattingContext::compute_table_width()
 {
     // https://drafts.csswg.org/css-tables-3/#computing-the-table-width
@@ -253,7 +297,7 @@ void TableFormattingContext::compute_table_width()
     }
 
     // The used min-width of a table is the greater of the resolved min-width, CAPMIN, and GRIDMIN.
-    auto used_min_width = grid_min;
+    auto used_min_width = max(grid_min, compute_capmin());
     if (!computed_values.min_width().is_auto()) {
         used_min_width = max(used_min_width, computed_values.min_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
@@ -616,7 +660,7 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
 {
     auto const& table_state = m_state.get(table_box());
 
-    CSSPixels row_top_offset = table_state.border_top + table_state.padding_top;
+    CSSPixels row_top_offset = table_state.offset.y() + table_state.padding_top;
     CSSPixels row_left_offset = table_state.border_left + table_state.padding_left;
     for (size_t y = 0; y < m_rows.size(); y++) {
         auto& row = m_rows[y];
@@ -655,7 +699,7 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
         row_group_top_offset += row_group_height;
     });
 
-    total_content_height = max(row_top_offset, row_group_top_offset) - table_state.border_top - table_state.padding_top;
+    total_content_height = max(row_top_offset, row_group_top_offset) - table_state.offset.y() - table_state.padding_top;
 }
 
 void TableFormattingContext::position_cell_boxes()
@@ -727,6 +771,8 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
 {
     m_available_space = available_space;
 
+    auto total_captions_height = run_caption_layout(layout_mode, CSS::CaptionSide::Top);
+
     CSSPixels total_content_height = 0;
 
     // Determine the number of rows/columns the table requires.
@@ -754,6 +800,13 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     position_cell_boxes();
 
     m_state.get_mutable(table_box()).set_content_height(total_content_height);
+
+    total_captions_height += run_caption_layout(layout_mode, CSS::CaptionSide::Bottom);
+
+    // Table captions are positioned between the table margins and its borders (outside the grid box borders) as described in
+    // https://www.w3.org/TR/css-tables-3/#bounding-box-assignment
+    // A visual representation of this model can be found at https://www.w3.org/TR/css-tables-3/images/table_container.png
+    m_state.get_mutable(table_box()).margin_bottom += total_captions_height;
 
     // FIXME: This is a total hack, we should respect the 'height' property.
     m_automatic_content_height = total_content_height;

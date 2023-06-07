@@ -373,6 +373,12 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
     return value_id_to_image_rendering(value->to_identifier());
 }
 
+Optional<CSS::CaptionSide> StyleProperties::caption_side() const
+{
+    auto value = property(CSS::PropertyID::CaptionSide);
+    return value_id_to_caption_side(value->to_identifier());
+}
+
 CSS::Clip StyleProperties::clip() const
 {
     auto value = property(CSS::PropertyID::Clip);

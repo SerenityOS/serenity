@@ -52,6 +52,8 @@ public:
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
+    void resolve_vertical_box_model_metrics(Box const&);
+
 private:
     CSSPixels compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
 
@@ -66,7 +68,6 @@ private:
     void layout_block_level_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
     void layout_inline_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
 
-    void resolve_vertical_box_model_metrics(Box const&);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const&);
     void place_block_level_element_in_normal_flow_vertically(Box const&, CSSPixels y);
 

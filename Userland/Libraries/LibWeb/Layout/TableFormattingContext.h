@@ -28,6 +28,8 @@ public:
     }
 
 private:
+    CSSPixels run_caption_layout(LayoutMode, CSS::CaptionSide);
+    CSSPixels compute_capmin();
     void calculate_row_column_grid(Box const&);
     void compute_table_measures();
     void compute_table_width();
