@@ -47,6 +47,9 @@ GOOD_PRAGMA_ONCE_PATTERN = re.compile('(^|\\S\n\n)#pragma once(\n\n\\S.|$)')
 # LibC is supposed to be a system library; don't mention the directory.
 BAD_INCLUDE_LIBC = re.compile("# *include <LibC/")
 
+# Serenity C++ code must not use LibC's or libc++'s complex number implementation.
+BAD_INCLUDE_COMPLEX = re.compile("# *include <c[c]?omplex")
+
 # Make sure that all includes are either system includes or immediately resolvable local includes
 ANY_INCLUDE_PATTERN = re.compile('^ *# *include\\b.*[>"](?!\\)).*$', re.M)
 SYSTEM_INCLUDE_PATTERN = re.compile("^ *# *include *<([^>]+)>(?: /[*/].*)?$")
@@ -98,6 +101,7 @@ def run():
     errors_include_libc = []
     errors_include_weird_format = []
     errors_include_missing_local = []
+    errors_include_bad_complex = []
 
     for filename in find_files_here_or_argv():
         with open(filename, "r") as f:
@@ -121,6 +125,8 @@ def run():
         if not is_in_prefix_list(filename, LIBC_CHECK_EXCLUDES):
             if BAD_INCLUDE_LIBC.search(file_content):
                 errors_include_libc.append(filename)
+        if BAD_INCLUDE_COMPLEX.search(file_content):
+            errors_include_bad_complex.append(filename)
         if not is_in_prefix_list(filename, INCLUDE_CHECK_EXCLUDES):
             file_directory = pathlib.Path(filename).parent
             for include_line in ANY_INCLUDE_PATTERN.findall(file_content):
@@ -171,6 +177,12 @@ def run():
         print(
             "Files that #include a missing local file:",
             " ".join(errors_include_missing_local),
+        )
+        have_errors = True
+    if errors_include_bad_complex:
+        print(
+             "Files that include a non-AK complex header:",
+             " ".join(errors_include_bad_complex),
         )
         have_errors = True
 
