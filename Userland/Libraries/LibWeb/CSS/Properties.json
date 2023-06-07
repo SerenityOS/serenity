@@ -1265,6 +1265,12 @@
       "unitless-length"
     ]
   },
+  "margin-block": {
+    "logical-alias-for": [
+      "margin"
+    ],
+    "max-values": 2
+  },
   "margin-block-start": {
     "logical-alias-for": [
       "margin-top",
@@ -1294,6 +1300,12 @@
     "quirks": [
       "unitless-length"
     ]
+  },
+  "margin-inline": {
+    "logical-alias-for": [
+      "margin"
+    ],
+    "max-values": 2
   },
   "margin-inline-start": {
     "logical-alias-for": [
@@ -1535,6 +1547,12 @@
       "unitless-length"
     ]
   },
+  "padding-block": {
+    "logical-alias-for": [
+      "padding"
+    ],
+    "max-values": 2
+  },
   "padding-block-start": {
     "logical-alias-for": [
       "padding-top",
@@ -1561,6 +1579,12 @@
     "quirks": [
       "unitless-length"
     ]
+  },
+  "padding-inline": {
+    "logical-alias-for": [
+      "padding"
+    ],
+    "max-values": 2
   },
   "padding-inline-start": {
     "logical-alias-for": [
