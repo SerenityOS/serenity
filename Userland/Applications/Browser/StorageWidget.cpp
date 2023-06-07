@@ -109,7 +109,7 @@ void StorageWidget::clear_cookies()
 
 void StorageWidget::set_local_storage_entries(OrderedHashMap<DeprecatedString, DeprecatedString> entries)
 {
-    m_local_storage_model->set_items(entries);
+    m_local_storage_model->set_items(move(entries));
 }
 
 void StorageWidget::clear_local_storage_entries()
@@ -119,7 +119,7 @@ void StorageWidget::clear_local_storage_entries()
 
 void StorageWidget::set_session_storage_entries(OrderedHashMap<DeprecatedString, DeprecatedString> entries)
 {
-    m_session_storage_model->set_items(entries);
+    m_session_storage_model->set_items(move(entries));
 }
 
 void StorageWidget::clear_session_storage_entries()
