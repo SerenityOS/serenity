@@ -245,27 +245,6 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
         return {};
     }
 
-#if 0
-    dbgln("writing compressed alpha channel to alph.webp");
-    u32 size0 = 1 + 4 + alpha_data.size(); // 1 byte 0x2f, 4 byte width/height, data. doesn't include size of VP8L chunk size field.
-    u32 size = strlen("WEBP") + strlen("VP8L") + sizeof(u32) + size0; // Doesn't include size of "RIFF" and file size field (but does include size of VP8L chunk size field)
-    FILE* f = fopen("alph.webp", "wb");
-    fwrite("RIFF", 1, 4, f);
-    fwrite(&size, 4, 1, f);
-    fwrite("WEBP", 1, 4, f);
-    fwrite("VP8L", 1, 4, f);
-
-    fwrite(&size0, 4, 1, f);
-    u8 signature = 0x2f;
-    fwrite(&signature, 1, 1, f);
-    u32 header_stuff = (bitmap.width() - 1) | ((bitmap.height() - 1) << 14);
-    fwrite(&header_stuff, 4, 1, f);
-
-    fwrite(alpha_data.data(), 1, alpha_data.size(), f);
-
-    fclose(f);
-#endif
-
     // "Lossless format compression: the byte sequence is a compressed image-stream (as described in the WebP Lossless Bitstream Format)
     //  of implicit dimension width x height. That is, this image-stream does NOT contain any headers describing the image dimension.
     //  Once the image-stream is decoded into ARGB color values, following the process described in the lossless format specification,
