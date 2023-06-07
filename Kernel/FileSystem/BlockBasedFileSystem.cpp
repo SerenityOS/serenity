@@ -207,11 +207,9 @@ ErrorOr<void> BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t cou
 
 ErrorOr<void> BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, UserOrKernelBuffer const& buffer)
 {
-    auto current = buffer;
-    for (auto block = index.value(); block < (index.value() + count); block++) {
-        TRY(raw_write(block, current));
-        current = current.offset(logical_block_size());
-    }
+    auto base_offset = index.value() * m_logical_block_size;
+    auto nwritten = TRY(file_description().write(base_offset, buffer, count * m_logical_block_size));
+    VERIFY(nwritten == count * m_logical_block_size);
     return {};
 }
 
@@ -219,6 +217,7 @@ ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned coun
 {
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
+    // FIXME: Do a single write to the underlying device
     for (unsigned i = 0; i < count; ++i) {
         TRY(write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache));
     }
@@ -262,6 +261,7 @@ ErrorOr<void> BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count
     if (count == 1)
         return read_block(index, &buffer, block_size(), 0, allow_cache);
     auto out = buffer;
+    // FIXME: Do a single read from the underlying device
     for (unsigned i = 0; i < count; ++i) {
         TRY(read_block(BlockIndex { index.value() + i }, &out, block_size(), 0, allow_cache));
         out = out.offset(block_size());
