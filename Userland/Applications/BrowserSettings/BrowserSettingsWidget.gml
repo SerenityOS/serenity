@@ -129,7 +129,7 @@
             }
 
             @GUI::CheckBox {
-                text: "Search using '?' in the URL box"
+                text: "Search in the URL box"
                 name: "enable_search_engine_checkbox"
             }
         }

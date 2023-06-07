@@ -35,6 +35,7 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
+#include <LibPublicSuffix/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -51,9 +52,6 @@ Tab::~Tab()
 
 URL url_from_user_input(DeprecatedString const& input)
 {
-    if (input.starts_with('?') && !g_search_engine.is_empty())
-        return URL(g_search_engine.replace("{}"sv, URL::percent_encode(input.substring_view(1)), ReplaceMode::FirstOnly));
-
     URL url_with_http_schema = URL(DeprecatedString::formatted("https://{}", input));
     if (url_with_http_schema.is_valid() && url_with_http_schema.port().has_value())
         return url_with_http_schema;
@@ -169,7 +167,7 @@ Tab::Tab(BrowserWindow& window)
     toolbar.add_action(window.reload_action());
 
     m_location_box = toolbar.add<GUI::UrlBox>();
-    m_location_box->set_placeholder("Address"sv);
+    m_location_box->set_placeholder("Search or enter address"sv);
 
     m_location_box->on_return_pressed = [this] {
         auto url = url_from_location_bar();
@@ -647,11 +645,6 @@ void Tab::update_reset_zoom_button()
 
 Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
 {
-    if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
-        GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching."sv, "No search engine selected"sv, GUI::MessageBox::Type::Information);
-        return {};
-    }
-
     DeprecatedString text = m_location_box->text();
 
     StringBuilder builder;
@@ -664,8 +657,17 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
     }
     auto final_text = builder.to_deprecated_string();
 
-    auto url = url_from_user_input(final_text);
-    return url;
+    auto error_or_absolute_url = PublicSuffix::absolute_url(final_text);
+    if (error_or_absolute_url.is_error()) {
+        if (g_search_engine.is_empty()) {
+            GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching."sv, "No search engine selected"sv, GUI::MessageBox::Type::Information);
+            return {};
+        }
+
+        return URL(g_search_engine.replace("{}"sv, URL::percent_encode(final_text), ReplaceMode::FirstOnly));
+    }
+
+    return URL(error_or_absolute_url.release_value());
 }
 
 void Tab::load(const URL& url, LoadType load_type)

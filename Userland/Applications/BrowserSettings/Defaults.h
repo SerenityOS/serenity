@@ -12,7 +12,7 @@ namespace Browser {
 
 static constexpr StringView default_homepage_url = "file:///res/html/misc/welcome.html"sv;
 static constexpr StringView default_new_tab_url = "file:///res/html/misc/new-tab.html"sv;
-static constexpr StringView default_search_engine = ""sv;
+static constexpr StringView default_search_engine = "https://www.google.com/search?q={}"sv;
 static constexpr StringView default_color_scheme = "auto"sv;
 static constexpr bool default_enable_content_filters = true;
 static constexpr bool default_show_bookmarks_bar = true;
