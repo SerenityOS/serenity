@@ -265,11 +265,17 @@ static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
     return Gfx::Painter::WindingRule::Nonzero;
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule_value)
 {
     draw_clipped([&](auto& painter) {
         path.close_all_subpaths();
-        painter.fill_path(path, *drawing_state().fill_style.to_gfx_paint_style(), parse_fill_rule(fill_rule));
+        auto& drawing_state = this->drawing_state();
+        auto fill_rule = parse_fill_rule(fill_rule_value);
+        if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
+            painter.fill_path(path, *color, fill_rule);
+        } else {
+            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), fill_rule);
+        }
         return path.bounding_box();
     });
 }
