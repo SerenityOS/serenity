@@ -266,12 +266,12 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
     // [...]
     //
     // The final value is derived by adding the decompressed value X to the predictor and using modulo-256 arithmetic"
-
     switch (filtering_method) {
     case 0:
-        // Method 0: predictor = 0
+        // "Method 0: predictor = 0"
         // Nothing to do.
         break;
+
     case 1:
         // "Method 1: predictor = A"
         // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
@@ -286,6 +286,7 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
             }
         }
         break;
+
     case 2:
         // "Method 2: predictor = B"
         // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
@@ -300,6 +301,7 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
             }
         }
         break;
+
     case 3:
         // "Method 3: predictor = clip(A + B - C)"
         //  where clip(v) is equal to:
@@ -321,8 +323,8 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
                 alpha[y * bitmap.width() + x] += clamp(A + B - C, 0, 255);
             }
         }
-
         break;
+
     default:
         return Error::from_string_literal("WebPImageDecoderPlugin: uncompressed ALPH invalid filtering method");
     }
