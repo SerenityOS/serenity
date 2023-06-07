@@ -520,6 +520,19 @@ ErrorOr<void> Ext2FSInode::compute_block_list_with_exclusive_locking()
     return {};
 }
 
+static size_t number_of_consecutive_blocks(Vector<BlockBasedFileSystem::BlockIndex> block_list, BlockBasedFileSystem::BlockIndex logical_start, BlockBasedFileSystem::BlockIndex logical_end)
+{
+    auto current_logical = logical_start;
+    auto current_physical = block_list[current_logical.value()];
+    size_t n = 1;
+    while (current_logical.value() + 1 < block_list.size() && block_list[current_logical.value() + 1] == current_physical.value() + 1 && current_logical < logical_end) {
+        n += 1;
+        current_logical.value() += 1;
+        current_physical.value() += 1;
+    }
+    return n;
+}
+
 ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
 {
     VERIFY(m_inode_lock.is_locked());
@@ -575,6 +588,18 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
         if (block_index.value() == 0) {
             // This is a hole, act as if it's filled with zeroes.
             TRY(buffer_offset.memset(0, num_bytes_to_copy));
+        } else if (offset_into_block == 0 && bi != last_block_logical_index) {
+            auto n_readable = number_of_consecutive_blocks(m_block_list, bi, last_block_logical_index);
+            if (static_cast<off_t>(n_readable * block_size) > remaining_count)
+                n_readable -= 1;
+            if (auto result = fs().read_blocks(block_index, n_readable, buffer_offset, allow_cache); result.is_error()) {
+                dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read blocks {}-{} (index {}f)", identifier(), block_index.value(), block_index.value() + n_readable, bi);
+                return result.release_error();
+            }
+            remaining_count -= n_readable * block_size;
+            nread += n_readable * block_size;
+            bi = bi.value() + n_readable - 1; // 1 is added at the end of the loop;
+            continue;
         } else {
             if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
                 dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
