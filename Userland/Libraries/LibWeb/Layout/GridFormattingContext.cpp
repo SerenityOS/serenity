@@ -1367,14 +1367,35 @@ void GridFormattingContext::resolve_grid_item_widths()
         box_state.border_left = border_left;
         box_state.border_right = border_right;
 
-        auto const& computed_width = item.box().computed_values().width();
+        auto const& computed_values = item.box().computed_values();
+        auto const& computed_width = computed_values.width();
+
+        auto try_compute_width = [&](CSSPixels a_width) {
+            CSSPixels width = a_width;
+            auto underflow_px = containing_block_width - width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
+            if (computed_values.margin().left().is_auto() && computed_values.margin().right().is_auto()) {
+                auto half_of_the_underflow = underflow_px / 2;
+                box_state.margin_left = half_of_the_underflow;
+                box_state.margin_right = half_of_the_underflow;
+            } else if (computed_values.margin().left().is_auto()) {
+                box_state.margin_left = underflow_px;
+            } else if (computed_values.margin().right().is_auto()) {
+                box_state.margin_right = underflow_px;
+            } else if (computed_values.width().is_auto()) {
+                width += underflow_px;
+            }
+
+            return width;
+        };
+
         CSSPixels used_width;
-        if (computed_width.is_auto())
-            used_width = (containing_block_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right);
-        else if (computed_width.is_fit_content())
-            used_width = calculate_fit_content_width(item.box(), get_available_space_for_item(item));
-        else
-            used_width = computed_width.to_px(grid_container(), containing_block_width);
+        if (computed_width.is_auto()) {
+            used_width = try_compute_width(calculate_fit_content_width(item.box(), get_available_space_for_item(item)));
+        } else if (computed_width.is_fit_content()) {
+            used_width = try_compute_width(calculate_fit_content_width(item.box(), get_available_space_for_item(item)));
+        } else {
+            used_width = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
+        }
         box_state.set_content_width(used_width);
     }
 }
@@ -1435,6 +1456,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         box_state.padding_bottom = computed_values.padding().bottom().to_px(grid_container(), 0);
         box_state.padding_left = computed_values.padding().left().to_px(grid_container(), 0);
 
+        box_state.margin_top = computed_values.margin().top().to_px(grid_container(), 0);
+        box_state.margin_right = computed_values.margin().right().to_px(grid_container(), 0);
+        box_state.margin_bottom = computed_values.margin().bottom().to_px(grid_container(), 0);
+        box_state.margin_left = computed_values.margin().left().to_px(grid_container(), 0);
+
         box_state.border_top = computed_values.border_top().width;
         box_state.border_right = computed_values.border_right().width;
         box_state.border_bottom = computed_values.border_bottom().width;
@@ -1476,7 +1502,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             y_end += m_grid_rows_and_gaps[i].base_size;
         }
 
-        child_box_state.offset = { x_start + child_box_state.border_left + child_box_state.padding_left, y_start + child_box_state.border_top + child_box_state.padding_top };
+        child_box_state.offset = {
+            x_start + child_box_state.border_left + child_box_state.padding_left + child_box_state.margin_left,
+            y_start + child_box_state.border_top + child_box_state.padding_top + child_box_state.margin_top
+        };
 
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
         if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
