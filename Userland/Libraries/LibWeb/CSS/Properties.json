@@ -1099,7 +1099,7 @@
   },
   "grid-template-columns": {
     "inherited": false,
-    "initial": "auto",
+    "initial": "none",
     "max-values": 4,
     "valid-identifiers": [
       "auto"
@@ -1112,7 +1112,7 @@
   },
   "grid-template-rows": {
     "inherited": false,
-    "initial": "auto",
+    "initial": "none",
     "max-values": 4,
     "valid-identifiers": [
       "auto"

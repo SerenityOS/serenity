@@ -6856,6 +6856,13 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
 {
+    if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
+        auto ident = TRY(parse_identifier_value(component_values.first()));
+        if (ident && ident->to_identifier() == ValueID::None) {
+            return GridTrackSizeListStyleValue::make_none();
+        }
+    }
+
     Vector<CSS::ExplicitGridTrack> track_list;
     Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;

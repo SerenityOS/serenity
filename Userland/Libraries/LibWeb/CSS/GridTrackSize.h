@@ -91,7 +91,7 @@ public:
     GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names);
     GridTrackSizeList();
 
-    static GridTrackSizeList make_auto();
+    static GridTrackSizeList make_none();
 
     Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
     Vector<Vector<String>> line_names() const { return m_line_names; }
