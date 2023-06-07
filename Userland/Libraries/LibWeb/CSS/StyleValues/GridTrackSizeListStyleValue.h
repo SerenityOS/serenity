@@ -20,6 +20,7 @@ public:
     virtual ~GridTrackSizeListStyleValue() override = default;
 
     static ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> make_auto();
+    static ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> make_none();
 
     CSS::GridTrackSizeList grid_track_size_list() const { return m_grid_track_size_list; }
 

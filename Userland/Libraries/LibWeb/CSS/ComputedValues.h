@@ -77,8 +77,8 @@ public:
     static CSS::Size height() { return CSS::Size::make_auto(); }
     static CSS::Size min_height() { return CSS::Size::make_auto(); }
     static CSS::Size max_height() { return CSS::Size::make_none(); }
-    static CSS::GridTrackSizeList grid_template_columns() { return CSS::GridTrackSizeList::make_auto(); }
-    static CSS::GridTrackSizeList grid_template_rows() { return CSS::GridTrackSizeList::make_auto(); }
+    static CSS::GridTrackSizeList grid_template_columns() { return CSS::GridTrackSizeList::make_none(); }
+    static CSS::GridTrackSizeList grid_template_rows() { return CSS::GridTrackSizeList::make_none(); }
     static CSS::GridTrackPlacement grid_column_end() { return CSS::GridTrackPlacement::make_auto(); }
     static CSS::GridTrackPlacement grid_column_start() { return CSS::GridTrackPlacement::make_auto(); }
     static CSS::GridTrackPlacement grid_row_end() { return CSS::GridTrackPlacement::make_auto(); }
