@@ -394,7 +394,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     case Type::ProcessDirectory: {
@@ -408,7 +411,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     case Type::ProcessSubdirectory: {
@@ -422,7 +428,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     }
