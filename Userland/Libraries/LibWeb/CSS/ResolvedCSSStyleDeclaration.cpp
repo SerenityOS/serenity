@@ -523,6 +523,9 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     }
     case PropertyID::BoxSizing:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().box_sizing()));
+    case PropertyID::CaptionSide: {
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().caption_side()));
+    }
     case PropertyID::Clear:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().clear()));
     case PropertyID::Clip:

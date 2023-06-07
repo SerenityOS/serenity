@@ -533,6 +533,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (float_.has_value())
         computed_values.set_float(float_.value());
 
+    auto caption_side = computed_style.caption_side();
+    if (caption_side.has_value())
+        computed_values.set_caption_side(caption_side.value());
+
     auto clear = computed_style.clear();
     if (clear.has_value())
         computed_values.set_clear(clear.value());
