@@ -23,7 +23,7 @@
 
 static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
 {
-    char const* argv[] = { "sh", "--skip-shellrc", "-c", command.characters(), nullptr };
+    char const* argv[] = { "Shell", "-c", command.characters(), nullptr };
 
     auto stdout_pipe = TRY(Core::System::pipe2(O_CLOEXEC));
 
@@ -31,7 +31,7 @@ static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
     posix_spawn_file_actions_init(&action);
     posix_spawn_file_actions_adddup2(&action, stdout_pipe[0], STDIN_FILENO);
 
-    pid_t pid = TRY(Core::System::posix_spawnp("sh"sv, &action, nullptr, const_cast<char**>(argv), environ));
+    pid_t pid = TRY(Core::System::posix_spawnp("/bin/Shell"sv, &action, nullptr, const_cast<char**>(argv), environ));
     posix_spawn_file_actions_destroy(&action);
 
     TRY(Core::System::dup2(stdout_pipe[1], STDOUT_FILENO));
