@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto output_file = TRY(Core::File::open_file_or_standard_stream(output_path, Core::File::OpenMode::Write));
 
     IDL::Parser parser(path, data, import_base_path);
-    auto& interface = parser.parse();
+    auto& interface = *TRY(parser.parse());
 
     if (IDL::libweb_interface_namespaces.span().contains_slow(namespace_)) {
         StringBuilder builder;

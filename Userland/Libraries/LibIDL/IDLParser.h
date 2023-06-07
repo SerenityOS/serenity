@@ -18,7 +18,9 @@ namespace IDL {
 class Parser {
 public:
     Parser(DeprecatedString filename, StringView contents, DeprecatedString import_base_path);
-    Interface& parse();
+    // FIXME: Should return ErrorOr<NonnullRefPtr<Interface>> or something.
+    // However, `Interface` is not sharable yet.
+    ErrorOr<Interface*> parse();
 
     Vector<DeprecatedString> imported_files() const;
 
@@ -38,25 +40,25 @@ private:
     Optional<Interface&> resolve_import(auto path);
 
     HashMap<DeprecatedString, DeprecatedString> parse_extended_attributes();
-    void parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_interface(Interface&);
-    void parse_namespace(Interface&);
-    void parse_non_interface_entities(bool allow_interface, Interface&);
-    void parse_enumeration(Interface&);
-    void parse_typedef(Interface&);
-    void parse_interface_mixin(Interface&);
-    void parse_dictionary(Interface&);
-    void parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_iterable(Interface&);
-    Function parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&, IsSpecialOperation is_special_operation = IsSpecialOperation::No);
+    ErrorOr<void> parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_interface(Interface&);
+    ErrorOr<void> parse_namespace(Interface&);
+    ErrorOr<void> parse_non_interface_entities(bool allow_interface, Interface&);
+    ErrorOr<void> parse_enumeration(Interface&);
+    ErrorOr<void> parse_typedef(Interface&);
+    ErrorOr<void> parse_interface_mixin(Interface&);
+    ErrorOr<void> parse_dictionary(Interface&);
+    ErrorOr<void> parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
+    ErrorOr<void> parse_iterable(Interface&);
+    ErrorOr<Function> parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&, IsSpecialOperation is_special_operation = IsSpecialOperation::No);
     Vector<Parameter> parse_parameters();
     NonnullRefPtr<Type const> parse_type();
-    void parse_constant(Interface&);
+    ErrorOr<void> parse_constant(Interface&);
 
     DeprecatedString import_base_path;
     DeprecatedString filename;

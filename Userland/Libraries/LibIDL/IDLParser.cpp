@@ -160,11 +160,13 @@ Optional<Interface&> Parser::resolve_import(auto path)
     auto data_or_error = file_or_error.value()->read_until_eof();
     if (data_or_error.is_error())
         report_parsing_error(DeprecatedString::formatted("Failed to read {}: {}", real_path, data_or_error.error()), filename, input, lexer.tell());
-    auto& result = Parser(this, real_path, data_or_error.value(), import_base_path).parse();
+    auto interface_or_error = Parser(this, real_path, data_or_error.value(), import_base_path).parse();
     import_stack.remove(real_path);
+    if (interface_or_error.is_error())
+        return {};
 
-    top_level_resolved_imports().set(real_path, &result);
-    return result;
+    top_level_resolved_imports().set(real_path, interface_or_error.value());
+    return *interface_or_error.value();
 }
 
 NonnullRefPtr<Type const> Parser::parse_type()
@@ -230,7 +232,7 @@ NonnullRefPtr<Type const> Parser::parse_type()
     return adopt_ref(*new Type(builder.to_deprecated_string(), nullable));
 }
 
-void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     bool inherit = lexer.consume_specific("inherit");
     if (inherit)
@@ -264,9 +266,10 @@ void Parser::parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extend
         move(setter_callback_name),
     };
     interface.attributes.append(move(attribute));
+    return {};
 }
 
-void Parser::parse_constant(Interface& interface)
+ErrorOr<void> Parser::parse_constant(Interface& interface)
 {
     lexer.consume_specific("const");
     consume_whitespace();
@@ -287,6 +290,7 @@ void Parser::parse_constant(Interface& interface)
         move(value),
     };
     interface.constants.append(move(constant));
+    return {};
 }
 
 Vector<Parameter> Parser::parse_parameters()
@@ -338,7 +342,7 @@ Vector<Parameter> Parser::parse_parameters()
     return parameters;
 }
 
-Function Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
+ErrorOr<Function> Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface, IsSpecialOperation is_special_operation)
 {
     bool static_ = false;
     if (lexer.consume_specific("static")) {
@@ -361,15 +365,15 @@ Function Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& ext
     // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
     if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
         if (!static_)
-            interface.functions.append(function);
+            interface.functions.empend(TRY(function.clone()));
         else
-            interface.static_functions.append(function);
+            interface.static_functions.empend(TRY(function.clone()));
     }
 
     return function;
 }
 
-void Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("constructor"sv);
     consume_whitespace();
@@ -380,22 +384,24 @@ void Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& exte
     assert_specific(';');
 
     interface.constructors.append(Constructor { interface.name, move(parameters), move(extended_attributes) });
+    return {};
 }
 
-void Parser::parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("stringifier"sv);
     consume_whitespace();
     interface.has_stringifier = true;
     if (lexer.next_is("attribute"sv) || lexer.next_is("inherit"sv) || lexer.next_is("readonly"sv)) {
-        parse_attribute(extended_attributes, interface);
+        TRY(parse_attribute(extended_attributes, interface));
         interface.stringifier_attribute = interface.attributes.last().name;
     } else {
         assert_specific(';');
     }
+    return {};
 }
 
-void Parser::parse_iterable(Interface& interface)
+ErrorOr<void> Parser::parse_iterable(Interface& interface)
 {
     assert_string("iterable"sv);
     assert_specific('<');
@@ -416,13 +422,14 @@ void Parser::parse_iterable(Interface& interface)
     }
     assert_specific('>');
     assert_specific(';');
+    return {};
 }
 
-void Parser::parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("getter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = TRY(parse_function(extended_attributes, interface, IsSpecialOperation::Yes));
 
     if (function.parameters.size() != 1)
         report_parsing_error(DeprecatedString::formatted("Named/indexed property getters must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
@@ -450,13 +457,14 @@ void Parser::parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_
     } else {
         report_parsing_error(DeprecatedString::formatted("Named/indexed property getter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
+    return {};
 }
 
-void Parser::parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("setter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = TRY(parse_function(extended_attributes, interface, IsSpecialOperation::Yes));
 
     if (function.parameters.size() != 2)
         report_parsing_error(DeprecatedString::formatted("Named/indexed property setters must have only 2 parameters, got {} parameter(s).", function.parameters.size()), filename, input, lexer.tell());
@@ -490,13 +498,14 @@ void Parser::parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_
     } else {
         report_parsing_error(DeprecatedString::formatted("Named/indexed property setter's identifier's type must be either 'DOMString' or 'unsigned long', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
+    return {};
 }
 
-void Parser::parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("deleter"sv);
     consume_whitespace();
-    auto function = parse_function(extended_attributes, interface, IsSpecialOperation::Yes);
+    auto function = TRY(parse_function(extended_attributes, interface, IsSpecialOperation::Yes));
 
     if (function.parameters.size() != 1)
         report_parsing_error(DeprecatedString::formatted("Named property deleter must have only 1 parameter, got {} parameters.", function.parameters.size()), filename, input, lexer.tell());
@@ -522,9 +531,10 @@ void Parser::parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended
     } else {
         report_parsing_error(DeprecatedString::formatted("Named property deleter's identifier's type must be 'DOMString', got '{}'.", identifier.type->name()), filename, input, lexer.tell());
     }
+    return {};
 }
 
-void Parser::parse_interface(Interface& interface)
+ErrorOr<void> Parser::parse_interface(Interface& interface)
 {
     consume_whitespace();
     interface.name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
@@ -554,46 +564,46 @@ void Parser::parse_interface(Interface& interface)
         }
 
         if (lexer.next_is("constructor")) {
-            parse_constructor(extended_attributes, interface);
+            TRY(parse_constructor(extended_attributes, interface));
             continue;
         }
 
         if (lexer.next_is("const")) {
-            parse_constant(interface);
+            TRY(parse_constant(interface));
             continue;
         }
 
         if (lexer.next_is("stringifier")) {
-            parse_stringifier(extended_attributes, interface);
+            TRY(parse_stringifier(extended_attributes, interface));
             continue;
         }
 
         if (lexer.next_is("iterable")) {
-            parse_iterable(interface);
+            TRY(parse_iterable(interface));
             continue;
         }
 
         if (lexer.next_is("inherit") || lexer.next_is("readonly") || lexer.next_is("attribute")) {
-            parse_attribute(extended_attributes, interface);
+            TRY(parse_attribute(extended_attributes, interface));
             continue;
         }
 
         if (lexer.next_is("getter")) {
-            parse_getter(extended_attributes, interface);
+            TRY(parse_getter(extended_attributes, interface));
             continue;
         }
 
         if (lexer.next_is("setter")) {
-            parse_setter(extended_attributes, interface);
+            TRY(parse_setter(extended_attributes, interface));
             continue;
         }
 
         if (lexer.next_is("deleter")) {
-            parse_deleter(extended_attributes, interface);
+            TRY(parse_deleter(extended_attributes, interface));
             continue;
         }
 
-        parse_function(extended_attributes, interface);
+        TRY(parse_function(extended_attributes, interface));
     }
 
     if (auto legacy_namespace = interface.extended_attributes.get("LegacyNamespace"sv); legacy_namespace.has_value())
@@ -606,9 +616,10 @@ void Parser::parse_interface(Interface& interface)
     interface.prototype_base_class = DeprecatedString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
     interface.global_mixin_class = DeprecatedString::formatted("{}GlobalMixin", interface.name);
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_namespace(Interface& interface)
+ErrorOr<void> Parser::parse_namespace(Interface& interface)
 {
     consume_whitespace();
 
@@ -628,14 +639,15 @@ void Parser::parse_namespace(Interface& interface)
         }
 
         HashMap<DeprecatedString, DeprecatedString> extended_attributes;
-        parse_function(extended_attributes, interface);
+        TRY(parse_function(extended_attributes, interface));
     }
 
     interface.namespace_class = DeprecatedString::formatted("{}Namespace", interface.name);
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_enumeration(Interface& interface)
+ErrorOr<void> Parser::parse_enumeration(Interface& interface)
 {
     assert_string("enum"sv);
     consume_whitespace();
@@ -683,9 +695,10 @@ void Parser::parse_enumeration(Interface& interface)
 
     interface.enumerations.set(name, move(enumeration));
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_typedef(Interface& interface)
+ErrorOr<void> Parser::parse_typedef(Interface& interface)
 {
     assert_string("typedef"sv);
     consume_whitespace();
@@ -702,9 +715,10 @@ void Parser::parse_typedef(Interface& interface)
 
     interface.typedefs.set(name, Typedef { move(extended_attributes), move(type) });
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_dictionary(Interface& interface)
+ErrorOr<void> Parser::parse_dictionary(Interface& interface)
 {
     assert_string("dictionary"sv);
     consume_whitespace();
@@ -775,9 +789,10 @@ void Parser::parse_dictionary(Interface& interface)
 
     interface.dictionaries.set(name, move(dictionary));
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_interface_mixin(Interface& interface)
+ErrorOr<void> Parser::parse_interface_mixin(Interface& interface)
 {
     auto mixin_interface_ptr = make<Interface>();
     auto& mixin_interface = *mixin_interface_ptr;
@@ -790,15 +805,16 @@ void Parser::parse_interface_mixin(Interface& interface)
     assert_string("mixin"sv);
     auto offset = lexer.tell();
 
-    parse_interface(mixin_interface);
+    TRY(parse_interface(mixin_interface));
     if (!mixin_interface.parent_name.is_empty())
         report_parsing_error("Mixin interfaces are not allowed to have inherited parents"sv, filename, input, offset);
 
     auto name = mixin_interface.name;
     interface.mixins.set(move(name), &mixin_interface);
+    return {};
 }
 
-void Parser::parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
+ErrorOr<void> Parser::parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("callback"sv);
     consume_whitespace();
@@ -819,9 +835,10 @@ void Parser::parse_callback_function(HashMap<DeprecatedString, DeprecatedString>
 
     interface.callback_functions.set(name, CallbackFunction { move(return_type), move(parameters), extended_attributes.contains("LegacyTreatNonObjectAsNull") });
     consume_whitespace();
+    return {};
 }
 
-void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
+ErrorOr<void> Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
     consume_whitespace();
 
@@ -830,15 +847,15 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
         if (lexer.consume_specific('['))
             extended_attributes = parse_extended_attributes();
         if (lexer.next_is("dictionary")) {
-            parse_dictionary(interface);
+            TRY(parse_dictionary(interface));
         } else if (lexer.next_is("enum")) {
-            parse_enumeration(interface);
+            TRY(parse_enumeration(interface));
         } else if (lexer.next_is("typedef")) {
-            parse_typedef(interface);
+            TRY(parse_typedef(interface));
         } else if (lexer.next_is("interface mixin")) {
-            parse_interface_mixin(interface);
+            TRY(parse_interface_mixin(interface));
         } else if (lexer.next_is("callback")) {
-            parse_callback_function(extended_attributes, interface);
+            TRY(parse_callback_function(extended_attributes, interface));
         } else if ((allow_interface && !lexer.next_is("interface") && !lexer.next_is("namespace")) || !allow_interface) {
             auto current_offset = lexer.tell();
             auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
@@ -860,6 +877,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
     }
 
     consume_whitespace();
+    return {};
 }
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_);
@@ -926,7 +944,7 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
     resolve_parameters_typedefs(interface, function.parameters);
 }
 
-Interface& Parser::parse()
+ErrorOr<Interface*> Parser::parse()
 {
     auto this_module_or_error = FileSystem::real_path(filename);
     if (this_module_or_error.is_error()) {
@@ -960,28 +978,28 @@ Interface& Parser::parse()
         interface.required_imported_paths = move(required_imported_paths);
     }
 
-    parse_non_interface_entities(true, interface);
+    TRY(parse_non_interface_entities(true, interface));
 
     if (lexer.consume_specific("interface"))
-        parse_interface(interface);
+        TRY(parse_interface(interface));
     else if (lexer.consume_specific("namespace"))
-        parse_namespace(interface);
+        TRY(parse_namespace(interface));
 
-    parse_non_interface_entities(false, interface);
+    TRY(parse_non_interface_entities(false, interface));
 
     for (auto& import : imports) {
         // FIXME: Instead of copying every imported entity into the current interface, query imports directly
         for (auto& dictionary : import.dictionaries)
-            interface.dictionaries.set(dictionary.key, dictionary.value);
+            interface.dictionaries.set(dictionary.key, TRY(dictionary.value.clone()));
 
         for (auto& enumeration : import.enumerations) {
-            auto enumeration_copy = enumeration.value;
+            auto enumeration_copy = TRY(enumeration.value.clone());
             enumeration_copy.is_original_definition = false;
             interface.enumerations.set(enumeration.key, move(enumeration_copy));
         }
 
         for (auto& typedef_ : import.typedefs)
-            interface.typedefs.set(typedef_.key, typedef_.value);
+            interface.typedefs.set(typedef_.key, TRY(typedef_.value.clone()));
 
         for (auto& mixin : import.mixins) {
             if (auto it = interface.mixins.find(mixin.key); it != interface.mixins.end() && it->value != mixin.value)
@@ -990,7 +1008,7 @@ Interface& Parser::parse()
         }
 
         for (auto& callback_function : import.callback_functions)
-            interface.callback_functions.set(callback_function.key, callback_function.value);
+            interface.callback_functions.set(callback_function.key, TRY(callback_function.value.clone()));
     }
 
     // Resolve mixins
@@ -1001,10 +1019,10 @@ Interface& Parser::parse()
                 report_parsing_error(DeprecatedString::formatted("Mixin '{}' was never defined", entry), filename, input, lexer.tell());
 
             auto& mixin = mixin_it->value;
-            interface.attributes.extend(mixin->attributes);
-            interface.constants.extend(mixin->constants);
-            interface.functions.extend(mixin->functions);
-            interface.static_functions.extend(mixin->static_functions);
+            interface.attributes.extend(TRY(mixin->attributes.clone()));
+            interface.constants.extend(TRY(mixin->constants.clone()));
+            interface.functions.extend(TRY(mixin->functions.clone()));
+            interface.static_functions.extend(TRY(mixin->static_functions.clone()));
             if (interface.has_stringifier && mixin->has_stringifier)
                 report_parsing_error(DeprecatedString::formatted("Both interface '{}' and mixin '{}' have defined stringifier attributes", interface.name, mixin->name), filename, input, lexer.tell());
 
@@ -1086,7 +1104,7 @@ Interface& Parser::parse()
     if (top_level_parser() == this)
         VERIFY(import_stack.is_empty());
 
-    return interface;
+    return &interface;
 }
 
 Parser::Parser(DeprecatedString filename, StringView contents, DeprecatedString import_base_path)

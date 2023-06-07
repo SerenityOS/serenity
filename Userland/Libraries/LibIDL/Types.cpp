@@ -293,6 +293,98 @@ bool Type::is_json(Interface const& interface) const
     return false;
 }
 
+ErrorOr<Parameter> Parameter::clone() const
+{
+    return Parameter {
+        this->type,
+        this->name,
+        this->optional,
+        this->optional_default_value,
+        TRY(this->extended_attributes.clone()),
+        this->variadic,
+    };
+}
+
+ErrorOr<Function> Function::clone() const
+{
+    return Function {
+        this->return_type,
+        this->name,
+        TRY(this->parameters.clone()),
+        TRY(this->extended_attributes.clone()),
+        this->overload_index,
+        this->is_overloaded,
+    };
+}
+
+ErrorOr<Constructor> Constructor::clone() const
+{
+    return Constructor {
+        this->name,
+        TRY(this->parameters.clone()),
+        TRY(this->extended_attributes.clone()),
+    };
+}
+
+ErrorOr<Attribute> Attribute::clone() const
+{
+    return Attribute {
+        this->inherit,
+        this->readonly,
+        this->type,
+        this->name,
+        TRY(this->extended_attributes.clone()),
+        this->getter_callback_name,
+        this->setter_callback_name,
+    };
+}
+
+ErrorOr<DictionaryMember> DictionaryMember::clone() const
+{
+    return DictionaryMember {
+        this->required,
+        this->type,
+        this->name,
+        TRY(this->extended_attributes.clone()),
+        this->default_value,
+    };
+}
+
+ErrorOr<Dictionary> Dictionary::clone() const
+{
+    return Dictionary {
+        this->parent_name,
+        TRY(this->members.clone()),
+    };
+}
+
+ErrorOr<Typedef> Typedef::clone() const
+{
+    return Typedef {
+        TRY(this->extended_attributes.clone()),
+        this->type,
+    };
+}
+
+ErrorOr<Enumeration> Enumeration::clone() const
+{
+    return Enumeration {
+        TRY(this->values.clone()),
+        TRY(this->translated_cpp_names.clone()),
+        this->first_member,
+        this->is_original_definition,
+    };
+}
+
+ErrorOr<CallbackFunction> CallbackFunction::clone() const
+{
+    return CallbackFunction {
+        this->return_type,
+        TRY(this->parameters.clone()),
+        this->is_legacy_treat_non_object_as_null,
+    };
+}
+
 // https://webidl.spec.whatwg.org/#dfn-distinguishing-argument-index
 int EffectiveOverloadSet::distinguishing_argument_index()
 {

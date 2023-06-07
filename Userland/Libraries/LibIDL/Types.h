@@ -144,6 +144,15 @@ private:
     bool m_nullable { false };
 };
 
+struct DummyNoncopyable {
+    AK_MAKE_NONCOPYABLE(DummyNoncopyable);
+
+public:
+    DummyNoncopyable() = default;
+    DummyNoncopyable(DummyNoncopyable&&) = default;
+    DummyNoncopyable& operator=(DummyNoncopyable&&) = default;
+};
+
 struct Parameter {
     NonnullRefPtr<Type const> type;
     DeprecatedString name;
@@ -151,6 +160,9 @@ struct Parameter {
     Optional<DeprecatedString> optional_default_value;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     bool variadic { false };
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<Parameter> clone() const;
 };
 
 struct Function {
@@ -160,16 +172,20 @@ struct Function {
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     size_t overload_index { 0 };
     bool is_overloaded { false };
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
 
     size_t shortest_length() const { return get_function_shortest_length(*this); }
+    ErrorOr<Function> clone() const;
 };
 
 struct Constructor {
     DeprecatedString name;
     Vector<Parameter> parameters;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
 
     size_t shortest_length() const { return get_function_shortest_length(*this); }
+    ErrorOr<Constructor> clone() const;
 };
 
 struct Constant {
@@ -188,6 +204,9 @@ struct Attribute {
     // Added for convenience after parsing
     DeprecatedString getter_callback_name;
     DeprecatedString setter_callback_name;
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<Attribute> clone() const;
 };
 
 struct DictionaryMember {
@@ -196,16 +215,25 @@ struct DictionaryMember {
     DeprecatedString name;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     Optional<DeprecatedString> default_value;
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<DictionaryMember> clone() const;
 };
 
 struct Dictionary {
     DeprecatedString parent_name;
     Vector<DictionaryMember> members;
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<Dictionary> clone() const;
 };
 
 struct Typedef {
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     NonnullRefPtr<Type const> type;
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<Typedef> clone() const;
 };
 
 struct Enumeration {
@@ -213,12 +241,18 @@ struct Enumeration {
     OrderedHashMap<DeprecatedString, DeprecatedString> translated_cpp_names;
     DeprecatedString first_member;
     bool is_original_definition { true };
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<Enumeration> clone() const;
 };
 
 struct CallbackFunction {
     NonnullRefPtr<Type const> return_type;
     Vector<Parameter> parameters;
     bool is_legacy_treat_non_object_as_null { false };
+    [[no_unique_address]] DummyNoncopyable m_dummy {};
+
+    ErrorOr<CallbackFunction> clone() const;
 };
 
 class ParameterizedType : public Type {
