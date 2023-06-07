@@ -1774,4 +1774,16 @@ HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properti
     return m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())];
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-scroll
+void Element::scroll(double x, double y)
+{
+    dbgln("FIXME: Implement Element::scroll(x: {}, y: {}", x, y);
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-scroll
+void Element::scroll(HTML::ScrollToOptions const&)
+{
+    dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
+}
+
 }

@@ -79,6 +79,11 @@ interface Element : Node {
 
     undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
 
+    undefined scroll(optional ScrollToOptions options = {});
+    undefined scroll(unrestricted double x, unrestricted double y);
+    [ImplementedAs=scroll] undefined scrollTo(optional ScrollToOptions options = {});
+    [ImplementedAs=scroll] undefined scrollTo(unrestricted double x, unrestricted double y);
+
 };
 
 dictionary ShadowRootInit {
