@@ -199,11 +199,9 @@ ErrorOr<void> BlockBasedFileSystem::raw_write(BlockIndex index, UserOrKernelBuff
 
 ErrorOr<void> BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
 {
-    auto current = buffer;
-    for (auto block = index.value(); block < (index.value() + count); block++) {
-        TRY(raw_read(BlockIndex { block }, current));
-        current = current.offset(logical_block_size());
-    }
+    auto base_offset = index.value() * m_logical_block_size;
+    auto nread = TRY(file_description().read(buffer, base_offset, count * m_logical_block_size));
+    VERIFY(nread == count * m_logical_block_size);
     return {};
 }
 
