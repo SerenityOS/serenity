@@ -1,0 +1,71 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x69.875 children: not-inline
+      Box <div.grid> at (8,8) content-size 784x69.875 [GFC] children: not-inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.a> at (8,8) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,8 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.c> at (204,8) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 8.890625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [204,8 8.890625x17.46875]
+              "c"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.b> at (400,8) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 9.46875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [400,8 9.46875x17.46875]
+              "b"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.b> at (400,25.46875) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 9.46875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [400,25.46875 9.46875x17.46875]
+              "b"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.d> at (596,25.46875) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 7.859375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [596,25.46875 7.859375x17.46875]
+              "d"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.c> at (204,42.9375) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 8.890625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [204,42.9375 8.890625x17.46875]
+              "c"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.d> at (596,42.9375) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 7.859375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [596,42.9375 7.859375x17.46875]
+              "d"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.e> at (8,60.40625) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 8.71875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,60.40625 8.71875x17.46875]
+              "e"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+        BlockContainer <div.f> at (204,60.40625) content-size 196x17.46875 [BFC] children: inline
+          line 0 width: 6.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [204,60.40625 6.4375x17.46875]
+              "f"
+          TextNode <#text>
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,77.875) content-size 784x0 children: inline
+        TextNode <#text>

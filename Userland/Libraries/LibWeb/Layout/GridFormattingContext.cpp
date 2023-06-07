@@ -344,7 +344,14 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
 
 void GridFormattingContext::place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
 {
-    int column_start = child_box.computed_values().grid_column_start().raw_value() - 1;
+    int column_start;
+    if (child_box.computed_values().grid_column_start().raw_value() > 0) {
+        column_start = child_box.computed_values().grid_column_start().raw_value() - 1;
+    } else {
+        // NOTE: Negative indexes count from the end side of the explicit grid
+        column_start = m_explicit_columns_line_count + child_box.computed_values().grid_column_start().raw_value();
+    }
+
     int column_end = child_box.computed_values().grid_column_end().raw_value() - 1;
 
     // https://www.w3.org/TR/css-grid-2/#line-placement
@@ -485,33 +492,39 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
     else if (child_box.computed_values().grid_row_end().is_span())
         row_span = child_box.computed_values().grid_row_end().raw_value();
     auto found_unoccupied_area = false;
-    for (size_t row_index = auto_placement_cursor_y; row_index < m_occupation_grid.row_count(); row_index++) {
-        for (size_t column_index = auto_placement_cursor_x; column_index < m_occupation_grid.column_count(); column_index++) {
-            if (column_span + column_index <= m_occupation_grid.column_count()) {
+
+    while (true) {
+        while (auto_placement_cursor_x <= m_occupation_grid.max_column_index()) {
+            if (auto_placement_cursor_x + column_span <= m_occupation_grid.max_column_index() + 1) {
                 auto found_all_available = true;
                 for (int span_index = 0; span_index < column_span; span_index++) {
-                    if (m_occupation_grid.is_occupied(column_index + span_index, row_index))
+                    if (m_occupation_grid.is_occupied(auto_placement_cursor_x + span_index, auto_placement_cursor_y))
                         found_all_available = false;
                 }
                 if (found_all_available) {
                     found_unoccupied_area = true;
-                    column_start = column_index;
-                    row_start = row_index;
-                    goto finish;
+                    column_start = auto_placement_cursor_x;
+                    row_start = auto_placement_cursor_y;
+                    break;
                 }
             }
-        }
-        auto_placement_cursor_x = 0;
-        auto_placement_cursor_y++;
-    }
-finish:
 
-    // 4.1.2.2. If a non-overlapping position was found in the previous step, set the item's row-start
-    // and column-start lines to the cursor's position. Otherwise, increment the auto-placement cursor's
-    // row position (creating new rows in the implicit grid as necessary), set its column position to the
-    // start-most column line in the implicit grid, and return to the previous step.
-    if (!found_unoccupied_area) {
-        row_start = m_occupation_grid.row_count();
+            auto_placement_cursor_x++;
+        }
+
+        if (found_unoccupied_area) {
+            break;
+        }
+
+        // 4.1.2.2. If a non-overlapping position was found in the previous step, set the item's row-start
+        // and column-start lines to the cursor's position. Otherwise, increment the auto-placement cursor's
+        // row position (creating new rows in the implicit grid as necessary), set its column position to the
+        // start-most column line in the implicit grid, and return to the previous step.
+        if (!found_unoccupied_area) {
+            auto_placement_cursor_x = m_occupation_grid.min_column_index();
+            auto_placement_cursor_y++;
+            row_start = auto_placement_cursor_y;
+        }
     }
 
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
@@ -554,11 +567,21 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpac
 void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(AvailableSpace const& available_space)
 {
     auto const& grid_computed_values = grid_container().computed_values();
-    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_columns().track_list(), m_grid_columns);
-    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_rows().track_list(), m_grid_rows);
 
     auto const& grid_auto_columns = grid_computed_values.grid_auto_columns().track_list();
     size_t implicit_column_index = 0;
+    // NOTE: If there are implicit tracks created by items with negative indexes they should prepend explicitly defined tracks
+    auto negative_index_implied_column_tracks_count = abs(m_occupation_grid.min_column_index());
+    for (int column_index = 0; column_index < negative_index_implied_column_tracks_count; column_index++) {
+        if (grid_auto_columns.size() > 0) {
+            auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
+            m_grid_columns.append(TemporaryTrack(size.grid_size()));
+        } else {
+            m_grid_columns.append(TemporaryTrack());
+        }
+        implicit_column_index++;
+    }
+    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_columns().track_list(), m_grid_columns);
     for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++) {
         if (grid_auto_columns.size() > 0) {
             auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
@@ -571,6 +594,18 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
 
     auto const& grid_auto_rows = grid_computed_values.grid_auto_rows().track_list();
     size_t implicit_row_index = 0;
+    // NOTE: If there are implicit tracks created by items with negative indexes they should prepend explicitly defined tracks
+    auto negative_index_implied_row_tracks_count = abs(m_occupation_grid.min_row_index());
+    for (int row_index = 0; row_index < negative_index_implied_row_tracks_count; row_index++) {
+        if (grid_auto_rows.size() > 0) {
+            auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
+            m_grid_rows.append(TemporaryTrack(size.grid_size()));
+        } else {
+            m_grid_rows.append(TemporaryTrack());
+        }
+        implicit_row_index++;
+    }
+    initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_rows().track_list(), m_grid_rows);
     for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++) {
         if (grid_auto_rows.size() > 0) {
             auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
@@ -1313,6 +1348,12 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
 
         // FIXME: 4.2. For dense packing:
     }
+
+    // NOTE: When final implicit grid sizes are known, we can offset their positions so leftmost grid track has 0 index.
+    for (auto& item : m_grid_items) {
+        item.set_raw_row(item.raw_row() - m_occupation_grid.min_row_index());
+        item.set_raw_column(item.raw_column() - m_occupation_grid.min_column_index());
+    }
 }
 
 void GridFormattingContext::determine_grid_container_height()
@@ -1368,6 +1409,12 @@ void GridFormattingContext::resolve_grid_item_heights()
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
+
+    auto const& grid_computed_values = grid_container().computed_values();
+
+    // NOTE: We store explicit grid sizes to later use in determining the position of items with negative index.
+    m_explicit_columns_line_count = get_count_of_tracks(grid_computed_values.grid_template_columns().track_list(), available_space) + 1;
+    m_explicit_rows_line_count = get_count_of_tracks(grid_computed_values.grid_template_rows().track_list(), available_space) + 1;
 
     place_grid_items(available_space);
 
@@ -1566,33 +1613,31 @@ int GridFormattingContext::get_line_index_by_line_name(String const& needle, CSS
     return -1;
 }
 
-void OccupationGrid::set_occupied(size_t column_start, size_t column_end, size_t row_start, size_t row_end)
+void OccupationGrid::set_occupied(int column_start, int column_end, int row_start, int row_end)
 {
-    for (size_t row = row_start; row < row_end; row++) {
-        for (size_t column = column_start; column < column_end; column++) {
-            set_occupied(column, row);
+    for (int row_index = row_start; row_index < row_end; row_index++) {
+        for (int column_index = column_start; column_index < column_end; column_index++) {
+            m_min_column_index = min(m_min_column_index, column_index);
+            m_max_column_index = max(m_max_column_index, column_index);
+            m_min_row_index = min(m_min_row_index, row_index);
+            m_max_row_index = max(m_max_row_index, row_index);
+
+            m_occupation_grid.set(GridPosition { .row = row_index, .column = column_index });
         }
     }
 }
 
-void OccupationGrid::set_occupied(size_t column_index, size_t row_index)
-{
-    m_columns_count = max(m_columns_count, column_index + 1);
-    m_rows_count = max(m_rows_count, row_index + 1);
-    m_occupation_grid.try_set(GridPosition { .row = row_index, .column = column_index }).release_value_but_fixme_should_propagate_errors();
-}
-
-bool OccupationGrid::is_occupied(size_t column_index, size_t row_index) const
+bool OccupationGrid::is_occupied(int column_index, int row_index) const
 {
     return m_occupation_grid.contains(GridPosition { row_index, column_index });
 }
 
-size_t GridItem::gap_adjusted_row(Box const& grid_box) const
+int GridItem::gap_adjusted_row(Box const& grid_box) const
 {
     return grid_box.computed_values().row_gap().is_auto() ? m_row : m_row * 2;
 }
 
-size_t GridItem::gap_adjusted_column(Box const& grid_box) const
+int GridItem::gap_adjusted_column(Box const& grid_box) const
 {
     return grid_box.computed_values().column_gap().is_auto() ? m_column : m_column * 2;
 }
