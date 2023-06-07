@@ -173,7 +173,7 @@ public:
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     DeprecatedString title() const;
-    void set_title(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_title(DeprecatedString const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
