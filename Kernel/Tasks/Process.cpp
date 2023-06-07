@@ -291,7 +291,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> n
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
 
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -308,11 +308,12 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> n
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
+    , m_creation_time(creation_time)
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
