@@ -631,6 +631,21 @@ HTML::HTMLHeadElement* Document::head()
     return html->first_child_of_type<HTML::HTMLHeadElement>();
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#the-title-element-2
+JS::GCPtr<HTML::HTMLTitleElement> Document::title_element()
+{
+    // The title element of a document is the first title element in the document (in tree order), if there is one, or
+    // null otherwise.
+    JS::GCPtr<HTML::HTMLTitleElement> title_element = nullptr;
+
+    for_each_in_subtree_of_type<HTML::HTMLTitleElement>([&](auto& title_element_in_tree) {
+        title_element = title_element_in_tree;
+        return IterationDecision::Break;
+    });
+
+    return title_element;
+}
+
 HTML::HTMLElement* Document::body()
 {
     auto* html = html_element();
