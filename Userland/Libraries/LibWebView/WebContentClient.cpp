@@ -95,7 +95,12 @@ void WebContentClient::did_change_title(DeprecatedString const& title)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeTitle! title={}", title);
 
-    if (m_view.on_title_change)
+    if (!m_view.on_title_change)
+        return;
+
+    if (title.is_empty())
+        m_view.on_title_change(m_view.url().to_deprecated_string());
+    else
         m_view.on_title_change(title);
 }
 

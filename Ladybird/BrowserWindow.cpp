@@ -516,15 +516,9 @@ int BrowserWindow::tab_index(Tab* tab)
 
 void BrowserWindow::tab_title_changed(int index, QString const& title)
 {
-    if (title.isEmpty()) {
-        m_tabs_container->setTabText(index, "...");
-        if (m_tabs_container->currentIndex() == index)
-            setWindowTitle("Ladybird");
-    } else {
-        m_tabs_container->setTabText(index, title);
-        if (m_tabs_container->currentIndex() == index)
-            setWindowTitle(QString("%1 - Ladybird").arg(title));
-    }
+    m_tabs_container->setTabText(index, title);
+    if (m_tabs_container->currentIndex() == index)
+        setWindowTitle(QString("%1 - Ladybird").arg(title));
 }
 
 void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
