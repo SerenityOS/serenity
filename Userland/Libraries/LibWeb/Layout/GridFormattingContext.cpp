@@ -1418,6 +1418,38 @@ void GridFormattingContext::resolve_grid_item_heights()
     }
 }
 
+void GridFormattingContext::resolve_items_box_metrics(GridDimension const dimension)
+{
+    for (auto& item : m_grid_items) {
+        auto& box_state = m_state.get_mutable(item.box());
+        auto& computed_values = item.box().computed_values();
+
+        if (dimension == GridDimension::Column) {
+            CSSPixels containing_block_width = containing_block_size_for_item(item, GridDimension::Column);
+
+            box_state.padding_right = computed_values.padding().right().to_px(grid_container(), containing_block_width);
+            box_state.padding_left = computed_values.padding().left().to_px(grid_container(), containing_block_width);
+
+            box_state.margin_right = computed_values.margin().right().to_px(grid_container(), containing_block_width);
+            box_state.margin_left = computed_values.margin().left().to_px(grid_container(), containing_block_width);
+
+            box_state.border_right = computed_values.border_right().width;
+            box_state.border_left = computed_values.border_left().width;
+        } else {
+            CSSPixels containing_block_height = containing_block_size_for_item(item, GridDimension::Row);
+
+            box_state.padding_top = computed_values.padding().top().to_px(grid_container(), containing_block_height);
+            box_state.padding_bottom = computed_values.padding().bottom().to_px(grid_container(), containing_block_height);
+
+            box_state.margin_top = computed_values.margin().top().to_px(grid_container(), containing_block_height);
+            box_state.margin_bottom = computed_values.margin().bottom().to_px(grid_container(), containing_block_height);
+
+            box_state.border_top = computed_values.border_top().width;
+            box_state.border_bottom = computed_values.border_bottom().width;
+        }
+    }
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
@@ -1447,33 +1479,27 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             box_state.set_indefinite_content_width();
         if (!computed_values.height().is_length())
             box_state.set_indefinite_content_height();
-
-        // NOTE: It is ok to use 0 containing block size to resolve paddings on the first pass when grid areas sizes
-        // are not known yet.
-        // FIXME: Do second pass of tracks layout to resolve percentage paddings
-        box_state.padding_top = computed_values.padding().top().to_px(grid_container(), 0);
-        box_state.padding_right = computed_values.padding().right().to_px(grid_container(), 0);
-        box_state.padding_bottom = computed_values.padding().bottom().to_px(grid_container(), 0);
-        box_state.padding_left = computed_values.padding().left().to_px(grid_container(), 0);
-
-        box_state.margin_top = computed_values.margin().top().to_px(grid_container(), 0);
-        box_state.margin_right = computed_values.margin().right().to_px(grid_container(), 0);
-        box_state.margin_bottom = computed_values.margin().bottom().to_px(grid_container(), 0);
-        box_state.margin_left = computed_values.margin().left().to_px(grid_container(), 0);
-
-        box_state.border_top = computed_values.border_top().width;
-        box_state.border_right = computed_values.border_right().width;
-        box_state.border_bottom = computed_values.border_bottom().width;
-        box_state.border_left = computed_values.border_left().width;
     }
 
+    // Do the first pass of resolving grid items box metrics to compute values that are independent of a track width
+    resolve_items_box_metrics(GridDimension::Column);
+
     run_track_sizing(available_space, GridDimension::Column);
+
+    // Do the second pass of resolving box metrics to compute values that depend on a track width
+    resolve_items_box_metrics(GridDimension::Column);
 
     // Once the sizes of column tracks, which determine the widths of the grid areas forming the containing blocks
     // for grid items, ara calculated, it becomes possible to determine the final widths of the grid items.
     resolve_grid_item_widths();
 
+    // Do the first pass of resolving grid items box metrics to compute values that are independent of a track height
+    resolve_items_box_metrics(GridDimension::Row);
+
     run_track_sizing(available_space, GridDimension::Row);
+
+    // Do the second pass of resolving box metrics to compute values that depend on a track height
+    resolve_items_box_metrics(GridDimension::Row);
 
     resolve_grid_item_heights();
 
