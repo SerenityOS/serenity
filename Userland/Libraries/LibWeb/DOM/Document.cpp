@@ -79,6 +79,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -680,52 +681,87 @@ WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#document.title
 DeprecatedString Document::title() const
 {
-    auto* head_element = head();
-    if (!head_element)
-        return {};
+    auto value = DeprecatedString::empty();
 
-    auto* title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
-    if (!title_element)
-        return {};
-
-    auto raw_title = title_element->text_content();
-
-    StringBuilder builder;
-    bool last_was_space = false;
-    for (auto code_point : Utf8View(raw_title)) {
-        if (is_ascii_space(code_point)) {
-            last_was_space = true;
-        } else {
-            if (last_was_space && !builder.is_empty())
-                builder.append(' ');
-            builder.append_code_point(code_point);
-            last_was_space = false;
-        }
+    // 1. If the document element is an SVG svg element, then let value be the child text content of the first SVG title
+    //    element that is a child of the document element.
+    if (auto const* document_element = this->document_element(); document_element && is<SVG::SVGElement>(document_element)) {
+        // FIXME: Implement the SVG title element and get its child text content.
     }
-    return builder.to_deprecated_string();
+
+    // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
+    //    is null.
+    else if (auto title_element = this->title_element()) {
+        value = title_element->text_content();
+    }
+
+    // 3. Strip and collapse ASCII whitespace in value.
+    auto title = Infra::strip_and_collapse_whitespace(value).release_value_but_fixme_should_propagate_errors();
+
+    // 4. Return value.
+    return title.to_deprecated_string();
 }
 
-void Document::set_title(DeprecatedString const& title)
+// https://html.spec.whatwg.org/multipage/dom.html#document.title
+WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
 {
-    auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
-    if (!head_element)
-        return;
+    auto* document_element = this->document_element();
 
-    JS::GCPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
-    if (!title_element) {
-        title_element = &static_cast<HTML::HTMLTitleElement&>(*DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors());
-        MUST(head_element->append_child(*title_element));
+    // -> If the document element is an SVG svg element
+    if (is<SVG::SVGElement>(document_element)) {
+        // FIXME: 1. If there is an SVG title element that is a child of the document element, let element be the first such
+        //           element.
+        // FIXME: 2. Otherwise:
+        //            1. Let element be the result of creating an element given the document element's node document, title,
+        //               and the SVG namespace.
+        //            2. Insert element as the first child of the document element.
+        // FIXME: 3. String replace all with the given value within element.
     }
 
-    title_element->remove_all_children(true);
-    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title).release_allocated_value_but_fixme_should_propagate_errors()));
+    // -> If the document element is in the HTML namespace
+    else if (document_element && document_element->namespace_() == Namespace::HTML) {
+        auto title_element = this->title_element();
+        auto* head_element = this->head();
+
+        // 1. If the title element is null and the head element is null, then return.
+        if (title_element == nullptr && head_element == nullptr)
+            return {};
+
+        JS::GCPtr<Element> element;
+
+        // 2. If the title element is non-null, let element be the title element.
+        if (title_element) {
+            element = title_element;
+        }
+        // 3. Otherwise:
+        else {
+            // 1. Let element be the result of creating an element given the document element's node document, title,
+            //    and the HTML namespace.
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML));
+
+            // 2. Append element to the head element.
+            TRY(head_element->append_child(*element));
+        }
+
+        // 4. String replace all with the given value within element.
+        element->string_replace_all(title);
+    }
+
+    // -> Otherwise
+    else {
+        // Do nothing.
+        return {};
+    }
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
             page->client().page_did_change_title(title);
     }
+
+    return {};
 }
 
 void Document::tear_down_layout_tree()
