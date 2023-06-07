@@ -95,26 +95,22 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
-    draw_clipped([&](auto& painter) {
-        auto& drawing_state = this->drawing_state();
+    auto& drawing_state = this->drawing_state();
 
-        auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-        // We could remove the rounding here, but the lines look better when they have whole number pixel endpoints.
-        auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_rounded<float>();
-        auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_rounded<float>();
-        auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_rounded<float>();
-        auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_rounded<float>();
+    // We could remove the rounding here, but the lines look better when they have whole number pixel endpoints.
+    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_rounded<float>();
+    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_rounded<float>();
+    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_rounded<float>();
+    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_rounded<float>();
 
-        Gfx::Path path;
-        path.move_to(top_left);
-        path.line_to(top_right);
-        path.line_to(bottom_right);
-        path.line_to(bottom_left);
-        path.line_to(top_left);
-        painter.stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
+    Gfx::Path path;
+    path.move_to(top_left);
+    path.line_to(top_right);
+    path.line_to(bottom_right);
+    path.line_to(bottom_left);
+    path.line_to(top_left);
 
-        return rect;
-    });
+    stroke_internal(path);
 }
 
 // 4.12.5.1.14 Drawing images, https://html.spec.whatwg.org/multipage/canvas.html#drawing-images
@@ -237,8 +233,11 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
-
-        painter.stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
+        if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
+            painter.stroke_path(path, *color, drawing_state.line_width);
+        } else {
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width);
+        }
         return path.bounding_box();
     });
 }
