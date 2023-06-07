@@ -68,10 +68,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = maybe_file.release_value();
 
         int line_number = start_number - increment; // so the line number can start at 1 when added below
-        int previous_character = 0;
+        Optional<u8> previous_character;
         u8 next_character;
         for (Bytes bytes = TRY(file->read_some({ &next_character, 1 })); bytes.size() != 0; bytes = TRY(file->read_some(bytes))) {
-            if (previous_character == 0 || previous_character == '\n') {
+            if (!previous_character.has_value() || previous_character == '\n') {
                 if (next_character == '\n' && number_style != NumberAllLines) {
                     // Skip printing line count on empty lines.
                     outln();
@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             previous_character = next_character;
         }
 
-        if (previous_character != '\n')
+        if (previous_character.has_value() && previous_character != '\n')
             outln(); // for cases where files have no trailing newline
     }
     return 0;
