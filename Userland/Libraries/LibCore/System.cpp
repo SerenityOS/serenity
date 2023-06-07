@@ -1263,14 +1263,15 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
     };
 
     StringView exec_filename;
-
+    String resolved_executable_path;
     if (search_in_path == SearchInPath::Yes) {
         auto executable_or_error = resolve_executable_from_environment(filename);
 
         if (executable_or_error.is_error())
             return executable_or_error.release_error();
 
-        exec_filename = executable_or_error.value();
+        resolved_executable_path = executable_or_error.release_value();
+        exec_filename = resolved_executable_path;
     } else {
         exec_filename = filename;
     }
