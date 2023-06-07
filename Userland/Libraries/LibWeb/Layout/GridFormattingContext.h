@@ -252,10 +252,14 @@ private:
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
 
+    template<typename Match>
+    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+
+    template<typename Match>
+    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+
     void initialize_track_sizes(AvailableSpace const&, GridDimension const);
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
-    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
-    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
     void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const&, GridDimension const, size_t span);
     void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
     void maximize_tracks(AvailableSpace const&, GridDimension const);
