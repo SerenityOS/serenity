@@ -99,10 +99,10 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     with_protected_data([&](auto& my_protected_data) {
         child->with_mutable_protected_data([&](auto& child_protected_data) {
-            child_protected_data.promises = my_protected_data.promises.load();
-            child_protected_data.execpromises = my_protected_data.execpromises.load();
-            child_protected_data.has_promises = my_protected_data.has_promises.load();
-            child_protected_data.has_execpromises = my_protected_data.has_execpromises.load();
+            child_protected_data.promises = my_protected_data.promises;
+            child_protected_data.execpromises = my_protected_data.execpromises;
+            child_protected_data.has_promises = my_protected_data.has_promises;
+            child_protected_data.has_execpromises = my_protected_data.has_execpromises;
             child_protected_data.credentials = my_protected_data.credentials;
             child_protected_data.umask = my_protected_data.umask;
             child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;

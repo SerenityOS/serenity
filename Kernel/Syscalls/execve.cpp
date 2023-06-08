@@ -712,8 +712,8 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     // NOTE: Be careful to not trigger any page faults below!
 
     with_mutable_protected_data([&](auto& protected_data) {
-        protected_data.promises = protected_data.execpromises.load();
-        protected_data.has_promises = protected_data.has_execpromises.load();
+        protected_data.promises = protected_data.execpromises;
+        protected_data.has_promises = protected_data.has_execpromises;
 
         protected_data.execpromises = 0;
         protected_data.has_execpromises = false;
