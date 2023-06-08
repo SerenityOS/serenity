@@ -162,6 +162,7 @@ set(SOURCES
     DOM/ShadowRoot.cpp
     DOM/StaticNodeList.cpp
     DOM/StaticRange.cpp
+    DOM/StyleElementUtils.cpp
     DOM/Text.cpp
     DOM/Text.idl
     DOM/TreeWalker.cpp

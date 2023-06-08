@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/StyleElementUtils.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -21,8 +22,6 @@ public:
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
 
-    void update_a_style_block();
-
     CSS::CSSStyleSheet* sheet();
     CSS::CSSStyleSheet const* sheet() const;
 
@@ -32,8 +31,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    // https://www.w3.org/TR/cssom/#associated-css-style-sheet
-    JS::GCPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
+    DOM::StyleElementUtils m_style_element_utils;
 };
 
 }
