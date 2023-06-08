@@ -477,7 +477,7 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
         }
     }
 
-    Path tmp_path;
+    Path stroked_path;
     // 3. For each subpath of path:
     for (auto& subpath : segments) {
         // Let positions be the dash positions for the subpath.
@@ -500,8 +500,8 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
             while (subpath[line_index + 1].get<1>() - start < 1e-6f)
                 line_index++;
 
-            Vector<FloatPoint> extruded_in;
-            Vector<FloatPoint> extruded_out;
+            Vector<NonnullRefPtr<Segment const>> out_path;
+            Vector<NonnullRefPtr<Segment const>> in_path;
 
             {
                 // Add the first line
@@ -513,8 +513,23 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
                 FloatVector2 AB_normal = { -AB.y(), AB.x() };
                 AB_normal.normalize();
                 AB_normal *= stroke_properties.stroke_width / 2;
-                extruded_out.append(A + AB * t + AB_normal);
-                extruded_in.append(A + AB * t - AB_normal);
+                FloatPoint out = A + AB * t + AB_normal;
+                FloatPoint in = A + AB * t - AB_normal;
+                out_path.append(adopt_ref(*new MoveSegment(out)));
+                switch (stroke_properties.stroke_linecap) {
+                case StrokeProperties::StrokeLinecap::Butt:
+                    in_path.append(adopt_ref(*new LineSegment(out)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Round:
+                    in_path.append(adopt_ref(*new EllipticalArcSegment(out, A + AB * t, { stroke_properties.stroke_width / 2, stroke_properties.stroke_width / 2 }, atan2(AB.x(), AB.y()), 0, AK::Pi<float>, false, false)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Square:
+                    in_path.append(adopt_ref(*new LineSegment(out)));
+                    in_path.append(adopt_ref(*new LineSegment(out - AB * stroke_properties.stroke_width / 2)));
+                    in_path.append(adopt_ref(*new LineSegment(in - AB * stroke_properties.stroke_width / 2)));
+                    break;
+                }
+                in_path.append(adopt_ref(*new LineSegment(in)));
             }
 
             while (line_index + 1 < line_count and subpath[line_index + 1].get<1>() - end < 1e-6f) {
@@ -555,8 +570,8 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
 
                 FloatPoint out = P + AB * t1;
                 FloatPoint in = R + AB * t2;
-                extruded_out.append(out);
-                extruded_in.append(in);
+                out_path.append(adopt_ref(*new LineSegment(out)));
+                in_path.append(adopt_ref(*new LineSegment(in)));
 
                 line_index++;
             }
@@ -571,24 +586,34 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
                 FloatVector2 AB_normal = { -AB.y(), AB.x() };
                 AB_normal.normalize();
                 AB_normal *= stroke_properties.stroke_width / 2;
-                extruded_out.append(A + AB * t + AB_normal);
-                extruded_in.append(A + AB * t - AB_normal);
+
+                FloatPoint out = A + AB * t + AB_normal;
+                FloatPoint in = A + AB * t - AB_normal;
+                out_path.append(adopt_ref(*new LineSegment(out)));
+                switch (stroke_properties.stroke_linecap) {
+                case StrokeProperties::StrokeLinecap::Butt:
+                    out_path.append(adopt_ref(*new LineSegment(in)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Round:
+                    out_path.append(adopt_ref(*new EllipticalArcSegment(in, A + AB * t, { stroke_properties.stroke_width / 2, stroke_properties.stroke_width / 2 }, atan2(AB.x(), AB.y()), 0, -AK::Pi<float>, false, true)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Square:
+                    out_path.append(adopt_ref(*new LineSegment(out + AB * stroke_properties.stroke_width / 2)));
+                    out_path.append(adopt_ref(*new LineSegment(in + AB * stroke_properties.stroke_width / 2)));
+                    out_path.append(adopt_ref(*new LineSegment(in)));
+                    break;
+                }
             }
             start_index = line_index - 1;
 
-            tmp_path.move_to(extruded_out[0]);
-            for (size_t i = 1; i < extruded_out.size(); i++) {
-                tmp_path.line_to(extruded_out[i]);
+            for (size_t i = 0; i < out_path.size(); i++) {
+                stroked_path.m_segments.append(out_path[i]);
             }
-            // FIXME: this is dependent on linecap
-            tmp_path.line_to(extruded_in[extruded_in.size() - 1]);
-            for (int i = extruded_in.size() - 2; i >= 0; i--) {
-                tmp_path.line_to(extruded_in[i]);
+            for (int i = in_path.size() - 1; i >= 0; i--) {
+                stroked_path.m_segments.append(in_path[i]);
             }
-            // FIXME: this is dependent on linecap
-            tmp_path.close();
         }
     }
-    return tmp_path;
+    return stroked_path;
 }
 }
