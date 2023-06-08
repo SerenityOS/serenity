@@ -181,7 +181,7 @@ static bool build_video_document(DOM::Document& document)
 bool parse_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto& mime_type = document.content_type();
-    if (mime_type == "text/html" || mime_type == "image/svg+xml") {
+    if (mime_type == "text/html") {
         auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
         parser->run(document.url());
         return true;
