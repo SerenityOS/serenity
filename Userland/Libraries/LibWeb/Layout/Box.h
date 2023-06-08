@@ -28,13 +28,18 @@ public:
 
     bool is_body() const;
 
-    virtual Optional<CSSPixels> intrinsic_width() const { return {}; }
-    virtual Optional<CSSPixels> intrinsic_height() const { return {}; }
-    virtual Optional<float> intrinsic_aspect_ratio() const { return {}; }
+    // https://www.w3.org/TR/css-images-3/#natural-dimensions
+    Optional<CSSPixels> natural_width() const { return m_natural_width; }
+    Optional<CSSPixels> natural_height() const { return m_natural_height; }
+    Optional<float> natural_aspect_ratio() const { return m_natural_aspect_ratio; }
 
-    bool has_intrinsic_width() const { return intrinsic_width().has_value(); }
-    bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
-    bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
+    bool has_natural_width() const { return natural_width().has_value(); }
+    bool has_natural_height() const { return natural_height().has_value(); }
+    bool has_natural_aspect_ratio() const { return natural_aspect_ratio().has_value(); }
+
+    void set_natural_width(Optional<CSSPixels> width) { m_natural_width = width; }
+    void set_natural_height(Optional<CSSPixels> height) { m_natural_height = height; }
+    void set_natural_aspect_ratio(Optional<float> ratio) { m_natural_aspect_ratio = ratio; }
 
     virtual ~Box() override;
 
@@ -56,6 +61,10 @@ private:
     virtual bool is_box() const final { return true; }
 
     CSSPixelPoint m_scroll_offset;
+
+    Optional<CSSPixels> m_natural_width;
+    Optional<CSSPixels> m_natural_height;
+    Optional<float> m_natural_aspect_ratio;
 };
 
 template<>

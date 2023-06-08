@@ -48,15 +48,15 @@ int VideoBox::preferred_height() const
 void VideoBox::prepare_for_replaced_layout()
 {
     auto width = static_cast<float>(dom_node().video_width());
-    set_intrinsic_width(width);
+    set_natural_width(width);
 
     auto height = static_cast<float>(dom_node().video_height());
-    set_intrinsic_height(height);
+    set_natural_height(height);
 
     if (width != 0 && height != 0)
-        set_intrinsic_aspect_ratio(width / height);
+        set_natural_aspect_ratio(width / height);
     else
-        set_intrinsic_aspect_ratio({});
+        set_natural_aspect_ratio({});
 }
 
 void VideoBox::browsing_context_did_set_viewport_rect(CSSPixelRect const&)

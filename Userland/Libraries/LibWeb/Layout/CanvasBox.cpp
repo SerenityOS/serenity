@@ -19,8 +19,8 @@ CanvasBox::~CanvasBox() = default;
 
 void CanvasBox::prepare_for_replaced_layout()
 {
-    set_intrinsic_width(dom_node().width());
-    set_intrinsic_height(dom_node().height());
+    set_natural_width(dom_node().width());
+    set_natural_height(dom_node().height());
 }
 
 JS::GCPtr<Painting::Paintable> CanvasBox::create_paintable() const
