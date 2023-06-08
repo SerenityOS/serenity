@@ -12,13 +12,17 @@
 #include <LibGfx/Font/BitmapFont.h>
 
 class NewFontDialog final : public GUI::WizardDialog {
-    C_OBJECT(NewFontDialog);
+    C_OBJECT_ABSTRACT(NewFontDialog);
 
 public:
+    static ErrorOr<NonnullRefPtr<NewFontDialog>> create(GUI::Window* parent_window);
+
     ErrorOr<NonnullRefPtr<Gfx::BitmapFont>> create_font();
 
 private:
-    NewFontDialog(GUI::Window* parent_window);
+    explicit NewFontDialog(GUI::Window* parent_window);
+
+    virtual ErrorOr<void> build() override;
 
     void save_metadata();
 
@@ -51,6 +55,6 @@ private:
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
     RefPtr<GUI::CheckBox> m_fixed_width_checkbox;
 
-    Vector<DeprecatedString> m_font_weight_list;
-    Vector<DeprecatedString> m_font_slope_list;
+    Vector<String> m_font_weight_list;
+    Vector<String> m_font_slope_list;
 };

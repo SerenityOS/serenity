@@ -15,18 +15,22 @@
 DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     : GUI::WizardDialog(parent_window)
 {
+    set_title("Demo Wizard");
+    build().release_value_but_fixme_should_propagate_errors();
+
     // Create the front cover
-    m_front_page = GUI::CoverWizardPage::try_create().release_value_but_fixme_should_propagate_errors();
-    m_front_page->set_header_text("Welcome to the SerenityOS demo wizard!");
-    m_front_page->set_body_text("This wizard demonstrates the amazing wizardry\ncapabilities of LibGUI :^)");
+    m_front_page = GUI::CoverWizardPage::create(
+        "Welcome to the SerenityOS demo wizard!"sv,
+        "This wizard demonstrates the amazing wizardry\ncapabilities of LibGUI :^)"sv)
+                       .release_value_but_fixme_should_propagate_errors();
     m_front_page->on_next_page = [&]() {
         return m_page_1;
     };
 
     // Create Page 1
-    m_page_1 = GUI::WizardPage::try_create(
-        "Installation location",
-        "Choose where Demo Application is installed on your computer.")
+    m_page_1 = GUI::WizardPage::create(
+        "Installation location"sv,
+        "Choose where Demo Application is installed on your computer."sv)
                    .release_value_but_fixme_should_propagate_errors();
     m_page_1->body_widget().load_from_gml(demo_wizard_page_1_gml).release_value_but_fixme_should_propagate_errors();
     m_page_1_location_text_box = m_page_1->body_widget().find_descendant_of_type_named<GUI::TextBox>("page_1_location_text_box");
@@ -35,9 +39,9 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     };
 
     // Create Page 2 with a progress bar :^)
-    m_page_2 = GUI::WizardPage::try_create(
-        "Installation in progress...",
-        "Please wait. Do not turn off your computer.")
+    m_page_2 = GUI::WizardPage::create(
+        "Installation in progress..."sv,
+        "Please wait. Do not turn off your computer."sv)
                    .release_value_but_fixme_should_propagate_errors();
     m_page_2->body_widget().load_from_gml(demo_wizard_page_2_gml).release_value_but_fixme_should_propagate_errors();
     m_page_2_progressbar = m_page_2->body_widget().find_descendant_of_type_named<GUI::Progressbar>("page_2_progressbar");
@@ -66,9 +70,10 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     // Don't set a on_next_page handler for page 2 as we automatically navigate to the final page on progress completion
 
     // Create the back cover
-    m_back_page = GUI::CoverWizardPage::try_create().release_value_but_fixme_should_propagate_errors();
-    m_back_page->set_header_text("Wizard complete.");
-    m_back_page->set_body_text("That concludes the SerenityOS demo wizard :^)");
+    m_back_page = GUI::CoverWizardPage::create(
+        "Wizard complete."sv,
+        "That concludes the SerenityOS demo wizard :^)"sv)
+                      .release_value_but_fixme_should_propagate_errors();
     m_back_page->set_is_final_page(true);
 
     push_page(*m_front_page);
