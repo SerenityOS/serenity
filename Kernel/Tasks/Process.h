@@ -120,10 +120,10 @@ class Process final
         RefPtr<TTY> tty;
         bool dumpable { false };
         bool executable_is_setid { false };
-        Atomic<bool> has_promises { false };
-        Atomic<u32> promises { 0 };
-        Atomic<bool> has_execpromises { false };
-        Atomic<u32> execpromises { 0 };
+        bool has_promises { false };
+        u32 promises { 0 };
+        bool has_execpromises { false };
+        u32 execpromises { 0 };
         mode_t umask { 022 };
         VirtualAddress signal_trampoline;
         Atomic<u32> thread_count { 0 };
@@ -520,7 +520,7 @@ public:
 
     bool has_promises() const
     {
-        return with_protected_data([](auto& protected_data) { return protected_data.has_promises.load(); });
+        return with_protected_data([](auto& protected_data) { return protected_data.has_promises; });
     }
     bool has_promised(Pledge pledge) const
     {
