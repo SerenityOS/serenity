@@ -23,9 +23,9 @@ ImageBox::~ImageBox() = default;
 
 void ImageBox::prepare_for_replaced_layout()
 {
-    set_intrinsic_width(m_image_provider.intrinsic_width());
-    set_intrinsic_height(m_image_provider.intrinsic_height());
-    set_intrinsic_aspect_ratio(m_image_provider.intrinsic_aspect_ratio());
+    set_natural_width(m_image_provider.intrinsic_width());
+    set_natural_height(m_image_provider.intrinsic_height());
+    set_natural_aspect_ratio(m_image_provider.intrinsic_aspect_ratio());
 
     if (renders_as_alt_text()) {
         auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());
@@ -37,11 +37,11 @@ void ImageBox::prepare_for_replaced_layout()
             m_cached_alt_text_width = font.width(alt);
         alt_text_width = m_cached_alt_text_width.value();
 
-        set_intrinsic_width(alt_text_width + 16);
-        set_intrinsic_height(font.pixel_size() + 16);
+        set_natural_width(alt_text_width + 16);
+        set_natural_height(font.pixel_size() + 16);
     }
 
-    if (!has_intrinsic_width() && !has_intrinsic_height()) {
+    if (!has_natural_width() && !has_natural_height()) {
         // FIXME: Do something.
     }
 }

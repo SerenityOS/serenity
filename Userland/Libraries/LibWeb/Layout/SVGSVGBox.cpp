@@ -31,15 +31,15 @@ void SVGSVGBox::prepare_for_replaced_layout()
     // 'auto' and percentage lengths must not be used to determine an intrinsic width or intrinsic height.
     auto const& computed_width = computed_values().width();
     if (computed_width.is_length() && !computed_width.contains_percentage()) {
-        set_intrinsic_width(computed_width.to_px(*this, 0));
+        set_natural_width(computed_width.to_px(*this, 0));
     }
 
     auto const& computed_height = computed_values().height();
     if (computed_height.is_length() && !computed_height.contains_percentage()) {
-        set_intrinsic_height(computed_height.to_px(*this, 0));
+        set_natural_height(computed_height.to_px(*this, 0));
     }
 
-    set_intrinsic_aspect_ratio(calculate_intrinsic_aspect_ratio());
+    set_natural_aspect_ratio(calculate_intrinsic_aspect_ratio());
 }
 
 Optional<float> SVGSVGBox::calculate_intrinsic_aspect_ratio() const

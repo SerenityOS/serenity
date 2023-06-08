@@ -12,7 +12,7 @@ namespace Web::Layout {
 Progress::Progress(DOM::Document& document, HTML::HTMLProgressElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LabelableNode(document, element, move(style))
 {
-    set_intrinsic_height(12);
+    set_natural_height(12);
 }
 
 Progress::~Progress() = default;

@@ -16,8 +16,8 @@ namespace Web::Layout {
 CheckBox::CheckBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : FormAssociatedLabelableNode(document, element, move(style))
 {
-    set_intrinsic_width(13);
-    set_intrinsic_height(13);
+    set_natural_width(13);
+    set_natural_height(13);
 }
 
 CheckBox::~CheckBox() = default;
