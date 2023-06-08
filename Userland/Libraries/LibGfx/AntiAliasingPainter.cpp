@@ -12,6 +12,7 @@
 
 #include <AK/Function.h>
 #include <AK/NumericLimits.h>
+#include <AK/Tuple.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Line.h>
 
@@ -194,14 +195,26 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
 {
+    StrokeProperties stroke_properties(thickness);
+    stroke_path(path, color, stroke_properties);
+}
+
+void AntiAliasingPainter::stroke_path(Path const& path, Color color, StrokeProperties const& stroke_properties)
+{
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness), color);
+    fill_path(path.stroke_to_fill(stroke_properties), color);
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, float thickness)
 {
+    StrokeProperties stroke_properties(thickness);
+    stroke_path(path, paint_style, stroke_properties);
+}
+
+void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, StrokeProperties const& stroke_properties)
+{
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness), paint_style);
+    fill_path(path.stroke_to_fill(stroke_properties), paint_style);
 }
 
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)

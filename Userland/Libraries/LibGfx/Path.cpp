@@ -393,136 +393,227 @@ private:
     ReadonlySpan<T> m_span;
 };
 
-Path Path::stroke_to_fill(float thickness) const
+Vector<Tuple<float, float>> Path::compute_dash_positions(float path_length, StrokeProperties const& stroke_properties) const
 {
-    // Note: This convolves a polygon with the path using the algorithm described
-    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
+    // https://www.w3.org/TR/svg-strokes/#StrokeShape
+
+    // FIXME: what about dashadjust???
+    // FIXME: what about dashcorner???
+
+    // Let pathlength be the length of the subpath.
+    float pathlength = path_length;
+    // Let dashes be the list of values of ‘stroke-dasharray’ on the element, converted to user
+    // units, repeated if necessary so that it has an even number of elements; if the property
+    // has the value none, then the list has a single value 0.
+    // FIXME: Convert to user units
+    Vector<float> dashes = stroke_properties.stroke_dasharray.size() > 0 ? stroke_properties.stroke_dasharray : (Vector<float>) { 0 };
+    // Let count be the number of values in dashes.
+    size_t count = dashes.size();
+    // Let sum be the sum of the values in dashes.
+    float sum = 0;
+    for (float t : dashes)
+        sum += t;
+    // If sum = 0, then return a sequence with the single pair <0, pathlength>.
+    if (sum == 0) {
+        return { { 0, pathlength } };
+    }
+    // Let positions be an empty sequence.
+    Vector<Tuple<float, float>> positions;
+    // Let offset be the value of the ‘stroke-dashoffset’ property on the element.
+    float offset = stroke_properties.stroke_dashoffset;
+    // If offset is negative, then set offset to sum − abs(offset).
+    if (offset < 0)
+        offset = sum + offset;
+    // Set offset to offset mod sum.
+    offset = fmod(offset, sum);
+    // Let index be the smallest integer such that sum(dashesi, 0 ≤ i ≤ index) ≥ offset.
+    size_t index = 0;
+    float local_sum = dashes[0];
+    // NOTE: The condition index < dashes.size()-1 is not really needed.
+    while (local_sum < offset and index < dashes.size() - 1) {
+        local_sum += dashes[++index];
+    }
+    // Let dashlength be min(sum(dashesi, 0 ≤ i ≤ index) − offset, pathlength).
+    float dashlength = min(local_sum - offset, pathlength);
+    // If index mod 2 = 0, then append to positions the pair <0, dashlength>.
+    if (index % 2 == 0)
+        positions.append({ 0, dashlength });
+    // Let position be dashlength.
+    float position = dashlength;
+    // While position < pathlength:
+    while (position < pathlength) {
+        // Set index to (index + 1) mod count.
+        index = (index + 1) % count;
+        // Let dashlength be min(dashesindex, pathlength − position).
+        dashlength = min(dashes[index], pathlength - position);
+        // If index mod 2 = 0, then append to positions the pair <position, position + dashlength>.
+        if (index % 2 == 0)
+            positions.append({ position, position + dashlength });
+        // Set position to position + dashlength.
+        position += dashlength;
+    }
+    // Return positions.
+    return positions;
+}
+
+Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
+{
+    // https://www.w3.org/TR/svg-strokes/#StrokeShape
 
     auto& lines = split_lines();
     if (lines.is_empty())
         return Path {};
 
     // Paths can be disconnected, which a pain to deal with, so split it up.
-    Vector<Vector<FloatPoint>> segments;
-    segments.append({ lines.first().a() });
+    Vector<Vector<Tuple<FloatPoint, float>>> segments;
+    segments.append({ { lines.first().a(), 0 } });
     for (auto& line : lines) {
-        if (line.a() == segments.last().last()) {
-            segments.last().append(line.b());
+        if (line.a() == line.b()) // Remove 0 size lines. Probably not correct according to spec...
+            continue;
+        if (line.a() == segments.last().last().get<0>()) {
+            segments.last().append({ line.b(), segments.last().last().get<1>() + line.length() });
         } else {
-            segments.append({ line.a(), line.b() });
+            segments.append({ { line.a(), 0 }, { line.b(), line.length() } });
         }
     }
 
-    // Note: This is the same as the tolerance from bezier curve splitting.
-    constexpr auto flatness = 0.015f;
-    auto pen_vertex_count = max(
-        static_cast<int>(ceilf(AK::Pi<float> / acosf(1 - (2 * flatness) / thickness))), 4);
-    if (pen_vertex_count % 2 == 1)
-        pen_vertex_count += 1;
+    Path stroked_path;
+    // 3. For each subpath of path:
+    for (auto& subpath : segments) {
+        // Let positions be the dash positions for the subpath.
+        float path_length = subpath.last().get<1>();
+        Vector<Tuple<float, float>> positions = compute_dash_positions(path_length, stroke_properties);
+        // NOTE: positions are guaranteed to be in ascending order
+        size_t start_index = 0;
+        size_t line_count = subpath.size() - 1;
+        // For each pair <start, end> in positions:
+        for (auto p : positions) {
+            float start = p.get<0>();
+            float end = min(p.get<1>(), path_length);
+            // Let dash be the shape that includes, for all distances between start and end along
+            // the subpath, all points that lie on the line perpendicular to the subpath at that
+            // distance and which are within distance ‘stroke-width’ of the point on the subpath at
+            // that position.
+            VERIFY(start - path_length < 1e-6f);
+            VERIFY(end - path_length < 1e-6f);
+            size_t line_index = start_index;
+            while (subpath[line_index + 1].get<1>() - start < 1e-6f)
+                line_index++;
 
-    Vector<FloatPoint, 128> pen_vertices;
-    pen_vertices.ensure_capacity(pen_vertex_count);
+            Vector<NonnullRefPtr<Segment const>> out_path;
+            Vector<NonnullRefPtr<Segment const>> in_path;
 
-    // Generate vertices for the pen (going counterclockwise). The pen does not necessarily need
-    // to be a circle (or an approximation of one), but other shapes are untested.
-    float theta = 0;
-    float theta_delta = (AK::Pi<float> * 2) / pen_vertex_count;
-    for (int i = 0; i < pen_vertex_count; i++) {
-        float sin_theta;
-        float cos_theta;
-        AK::sincos(theta, sin_theta, cos_theta);
-        pen_vertices.unchecked_append({ cos_theta * thickness / 2, sin_theta * thickness / 2 });
-        theta -= theta_delta;
-    }
-
-    auto wrapping_index = [](auto& vertices, auto index) {
-        return vertices[(index + vertices.size()) % vertices.size()];
-    };
-
-    auto angle_between = [](auto p1, auto p2) {
-        auto delta = p2 - p1;
-        return atan2f(delta.y(), delta.x());
-    };
-
-    struct ActiveRange {
-        float start;
-        float end;
-
-        bool in_range(float angle) const
-        {
-            // Note: Since active ranges go counterclockwise start > end unless we wrap around at 180 degrees
-            return ((angle <= start && angle >= end)
-                || (start < end && angle <= start)
-                || (start < end && angle >= end));
-        }
-    };
-
-    Vector<ActiveRange, 128> active_ranges;
-    active_ranges.ensure_capacity(pen_vertices.size());
-    for (auto i = 0; i < pen_vertex_count; i++) {
-        active_ranges.unchecked_append({ angle_between(wrapping_index(pen_vertices, i - 1), pen_vertices[i]),
-            angle_between(pen_vertices[i], wrapping_index(pen_vertices, i + 1)) });
-    }
-
-    auto clockwise = [](float current_angle, float target_angle) {
-        if (target_angle < 0)
-            target_angle += AK::Pi<float> * 2;
-        if (current_angle < 0)
-            current_angle += AK::Pi<float> * 2;
-        if (target_angle < current_angle)
-            target_angle += AK::Pi<float> * 2;
-        return (target_angle - current_angle) <= AK::Pi<float>;
-    };
-
-    Path convolution;
-    for (auto& segment : segments) {
-        RoundTrip<FloatPoint> shape { segment };
-
-        bool first = true;
-        auto add_vertex = [&](auto v) {
-            if (first) {
-                convolution.move_to(v);
-                first = false;
-            } else {
-                convolution.line_to(v);
+            {
+                // Add the first line
+                float t = start - subpath[line_index].get<1>();
+                FloatPoint A = subpath[line_index].get<0>();
+                FloatPoint B = subpath[line_index + 1].get<0>();
+                FloatVector2 AB = { B.x() - A.x(), B.y() - A.y() };
+                AB.normalize();
+                FloatVector2 AB_normal = { -AB.y(), AB.x() };
+                AB_normal.normalize();
+                AB_normal *= stroke_properties.stroke_width / 2;
+                FloatPoint out = A + AB * t + AB_normal;
+                FloatPoint in = A + AB * t - AB_normal;
+                out_path.append(adopt_ref(*new MoveSegment(out)));
+                switch (stroke_properties.stroke_linecap) {
+                case StrokeProperties::StrokeLinecap::Butt:
+                    in_path.append(adopt_ref(*new LineSegment(out)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Round:
+                    in_path.append(adopt_ref(*new EllipticalArcSegment(out, A + AB * t, { stroke_properties.stroke_width / 2, stroke_properties.stroke_width / 2 }, atan2(AB.x(), AB.y()), 0, AK::Pi<float>, false, false)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Square:
+                    in_path.append(adopt_ref(*new LineSegment(out)));
+                    in_path.append(adopt_ref(*new LineSegment(out - AB * stroke_properties.stroke_width / 2)));
+                    in_path.append(adopt_ref(*new LineSegment(in - AB * stroke_properties.stroke_width / 2)));
+                    break;
+                }
+                in_path.append(adopt_ref(*new LineSegment(in)));
             }
-        };
 
-        auto shape_idx = 0u;
+            while (line_index + 1 < line_count and subpath[line_index + 1].get<1>() - end < 1e-6f) {
+                // Add offseted line to path
 
-        auto slope = [&] {
-            return angle_between(shape[shape_idx], shape[shape_idx + 1]);
-        };
+                // FIXME: We need an algorithm for loop removal.
+                // There is one in
+                // Tiller, W.; Hanson, E.G. (1984). Offsets of Two-Dimensional Profiles. , 4(9), 0–46.
+                // doi:10.1109/mcg.1984.275995
+                // FIXME: We need a method to know when we change segment to act upon linejoin.
+                // Alternatively we could use linejoin on every one of these small joins and it
+                // would be correct. However I believe it is very computationally expensive.
+                FloatPoint A = subpath[line_index].get<0>();
+                FloatPoint B = subpath[line_index + 1].get<0>();
+                FloatPoint C = subpath[line_index + 2].get<0>();
 
-        auto start_slope = slope();
-        // Note: At least one range must be active.
-        auto active = *active_ranges.find_first_index_if([&](auto& range) {
-            return range.in_range(start_slope);
-        });
+                FloatVector2 AB = { B.x() - A.x(), B.y() - A.y() };
+                FloatVector2 BC = { C.x() - B.x(), C.y() - B.y() };
 
-        while (shape_idx < shape.size()) {
-            add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = slope();
-            auto range = active_ranges[active];
-            if (range.in_range(slope_now)) {
-                shape_idx++;
-            } else {
-                if (clockwise(slope_now, range.end)) {
-                    if (active == static_cast<size_t>(pen_vertex_count - 1))
-                        active = 0;
-                    else
-                        active++;
-                } else {
-                    if (active == 0)
-                        active = pen_vertex_count - 1;
-                    else
-                        active--;
+                FloatVector2 AB_normal = { -AB.y(), AB.x() };
+                AB_normal.normalize();
+                AB_normal *= stroke_properties.stroke_width / 2;
+                FloatVector2 BC_normal = { -BC.y(), BC.x() };
+                BC_normal.normalize();
+                BC_normal *= stroke_properties.stroke_width / 2;
+
+                FloatPoint P = A + AB_normal;
+                FloatPoint Q = B + BC_normal;
+                FloatVector2 PQ = { Q.x() - P.x(), Q.y() - P.y() };
+
+                FloatPoint R = A - AB_normal;
+                FloatPoint S = B - BC_normal;
+                FloatVector2 RS = { S.x() - R.x(), S.y() - R.y() };
+
+                float divisor = BC_normal.dot(AB);
+                float t1 = AK::fabs<float>(divisor) < 0.001f ? 1 : BC_normal.dot(PQ) / divisor;
+                float t2 = AK::fabs<float>(divisor) < 0.001f ? 1 : BC_normal.dot(RS) / divisor;
+
+                FloatPoint out = P + AB * t1;
+                FloatPoint in = R + AB * t2;
+                out_path.append(adopt_ref(*new LineSegment(out)));
+                in_path.append(adopt_ref(*new LineSegment(in)));
+
+                line_index++;
+            }
+
+            {
+                // Add the last line
+                float t = end - subpath[line_index].get<1>();
+                FloatPoint A = subpath[line_index].get<0>();
+                FloatPoint B = subpath[line_index + 1].get<0>();
+                FloatVector2 AB = { B.x() - A.x(), B.y() - A.y() };
+                AB.normalize();
+                FloatVector2 AB_normal = { -AB.y(), AB.x() };
+                AB_normal.normalize();
+                AB_normal *= stroke_properties.stroke_width / 2;
+
+                FloatPoint out = A + AB * t + AB_normal;
+                FloatPoint in = A + AB * t - AB_normal;
+                out_path.append(adopt_ref(*new LineSegment(out)));
+                switch (stroke_properties.stroke_linecap) {
+                case StrokeProperties::StrokeLinecap::Butt:
+                    out_path.append(adopt_ref(*new LineSegment(in)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Round:
+                    out_path.append(adopt_ref(*new EllipticalArcSegment(in, A + AB * t, { stroke_properties.stroke_width / 2, stroke_properties.stroke_width / 2 }, atan2(AB.x(), AB.y()), 0, -AK::Pi<float>, false, true)));
+                    break;
+                case StrokeProperties::StrokeLinecap::Square:
+                    out_path.append(adopt_ref(*new LineSegment(out + AB * stroke_properties.stroke_width / 2)));
+                    out_path.append(adopt_ref(*new LineSegment(in + AB * stroke_properties.stroke_width / 2)));
+                    out_path.append(adopt_ref(*new LineSegment(in)));
+                    break;
                 }
             }
+            start_index = line_index - 1;
+
+            for (size_t i = 0; i < out_path.size(); i++) {
+                stroked_path.m_segments.append(out_path[i]);
+            }
+            for (int i = in_path.size() - 1; i >= 0; i--) {
+                stroked_path.m_segments.append(in_path[i]);
+            }
         }
     }
-
-    return convolution;
+    return stroked_path;
 }
-
 }
