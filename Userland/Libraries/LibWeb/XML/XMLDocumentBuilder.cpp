@@ -14,8 +14,6 @@ inline namespace {
 extern char const* s_xhtml_unified_dtd;
 }
 
-static DeprecatedFlyString s_html_namespace = "http://www.w3.org/1999/xhtml";
-
 namespace Web {
 
 ErrorOr<DeprecatedString> resolve_xml_resource(XML::SystemID const&, Optional<XML::PublicID> const& public_id)
@@ -58,13 +56,23 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
 
     // FIXME: This should not live here at all.
     if (auto it = attributes.find("xmlns"); it != attributes.end()) {
-        if (name == HTML::TagNames::html && it->value != s_html_namespace) {
+        if (name == HTML::TagNames::html && it->value != Namespace::HTML) {
             m_has_error = true;
             return;
         }
+
+        if (name == HTML::TagNames::svg) {
+            if (it->value != Namespace::SVG) {
+                m_has_error = true;
+                return;
+            }
+
+            m_namespace = Namespace::SVG;
+        }
     }
 
-    auto node = DOM::create_element(m_document, name, s_html_namespace).release_value_but_fixme_should_propagate_errors();
+    auto node = DOM::create_element(m_document, name, m_namespace).release_value_but_fixme_should_propagate_errors();
+
     // When an XML parser with XML scripting support enabled creates a script element,
     // it must have its parser document set and its "force async" flag must be unset.
     // FIXME: If the parser was created as part of the XML fragment parsing algorithm, then the element must be marked as "already started" also.

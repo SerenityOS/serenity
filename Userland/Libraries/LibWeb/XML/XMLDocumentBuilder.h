@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/Namespace.h>
 #include <LibXML/Parser/Parser.h>
 
 namespace Web {
@@ -41,6 +42,7 @@ private:
     XMLScriptingSupport m_scripting_support { XMLScriptingSupport::Enabled };
     bool m_has_error { false };
     StringBuilder text_builder;
+    DeprecatedFlyString m_namespace { Namespace::HTML };
 };
 
 }
