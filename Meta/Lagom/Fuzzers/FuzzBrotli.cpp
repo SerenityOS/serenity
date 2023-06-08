@@ -12,7 +12,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     FixedMemoryStream bufstream { { data, size } };
 
-    auto brotli_stream = Compress::BrotliDecompressionStream { bufstream };
+    auto brotli_stream = Compress::BrotliDecompressionStream { MaybeOwned<Stream> { bufstream } };
 
     (void)brotli_stream.read_until_eof();
     return 0;

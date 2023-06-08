@@ -24,7 +24,7 @@ static void run_test(StringView const file_name)
     DeprecatedString path_compressed = DeprecatedString::formatted("{}.br", path);
 
     auto file = MUST(Core::File::open(path_compressed, Core::File::OpenMode::Read));
-    auto brotli_stream = Compress::BrotliDecompressionStream { *file };
+    auto brotli_stream = Compress::BrotliDecompressionStream { MaybeOwned<Stream> { *file } };
     auto data = MUST(brotli_stream.read_until_eof());
 
     EXPECT_EQ(data, cmp_data);
@@ -97,7 +97,7 @@ TEST_CASE(brotli_decompress_zero_one_bin)
     DeprecatedString path_compressed = DeprecatedString::formatted("{}.br", path);
 
     auto file = MUST(Core::File::open(path_compressed, Core::File::OpenMode::Read));
-    auto brotli_stream = Compress::BrotliDecompressionStream { *file };
+    auto brotli_stream = Compress::BrotliDecompressionStream { MaybeOwned<Stream> { *file } };
 
     u8 buffer_raw[4096];
     Bytes buffer { buffer_raw, 4096 };

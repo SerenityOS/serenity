@@ -28,8 +28,8 @@ ErrorOr<size_t> Brotli::CanonicalCode::read_symbol(LittleEndianInputBitStream& i
     return Error::from_string_literal("no matching code found");
 }
 
-BrotliDecompressionStream::BrotliDecompressionStream(Stream& stream)
-    : m_input_stream(MaybeOwned(stream))
+BrotliDecompressionStream::BrotliDecompressionStream(MaybeOwned<Stream> stream)
+    : m_input_stream(move(stream))
 {
 }
 

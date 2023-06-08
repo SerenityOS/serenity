@@ -111,7 +111,7 @@ public:
     };
 
 public:
-    BrotliDecompressionStream(Stream&);
+    BrotliDecompressionStream(MaybeOwned<Stream>);
 
     ErrorOr<Bytes> read_some(Bytes output_buffer) override;
     ErrorOr<size_t> write_some(ReadonlyBytes bytes) override { return m_input_stream.write_some(bytes); }
