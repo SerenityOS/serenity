@@ -124,6 +124,10 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
 endif()
 
+if (ENABLE_LAGOM_MOLD)
+    add_link_options(-fuse-ld=mold)
+endif()
+
 if (ENABLE_FUZZERS)
     add_compile_options(-fno-omit-frame-pointer)
 endif()
