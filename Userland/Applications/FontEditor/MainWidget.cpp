@@ -1045,7 +1045,7 @@ ErrorOr<void> MainWidget::cut_selected_glyphs()
 void MainWidget::paste_glyphs()
 {
     auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("glyph/"sv))
+    if (!mime_type.starts_with("glyph/x-fonteditor"sv))
         return;
 
     auto glyph_count = metadata.get("count").value().to_uint().value_or(0);
