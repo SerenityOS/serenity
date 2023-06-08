@@ -933,41 +933,46 @@ void MainWidget::update_statusbar()
     if (!m_statusbar->is_visible())
         return;
 
-    auto glyph = m_glyph_map_widget->active_glyph();
-    StringBuilder builder;
-    builder.appendff("U+{:04X} (", glyph);
+    auto format_statusbar = [this]() -> ErrorOr<void> {
+        auto glyph = m_glyph_map_widget->active_glyph();
+        StringBuilder builder;
 
-    if (auto abbreviation = Unicode::code_point_abbreviation(glyph); abbreviation.has_value()) {
-        builder.append(*abbreviation);
-    } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
-        // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
-        // For now, replace RTL glyphs with U+FFFD, the replacement character.
-        builder.append_code_point(0xFFFD);
-    } else {
-        builder.append_code_point(glyph);
-    }
+        TRY(builder.try_appendff("U+{:04X} (", glyph));
+        if (auto abbreviation = Unicode::code_point_abbreviation(glyph); abbreviation.has_value())
+            TRY(builder.try_append(*abbreviation));
+        // FIXME: Bidirectional text cannot currently be isolated; for now, replace RTL glyphs with U+FFFD.
+        else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL)
+            TRY(builder.try_append_code_point(0xFFFD));
+        else
+            TRY(builder.try_append_code_point(glyph));
 
-    builder.append(')');
+        builder.append(')');
 
-    auto glyph_name = Unicode::code_point_display_name(glyph);
-    if (glyph_name.has_value()) {
-        builder.appendff(" {}", glyph_name.value());
-    }
+        auto glyph_name = Unicode::code_point_display_name(glyph);
+        if (glyph_name.has_value())
+            TRY(builder.try_appendff(" {}", glyph_name.value()));
 
-    if (m_font->contains_raw_glyph(glyph))
-        builder.appendff(" [{}x{}]", m_font->raw_glyph_width(glyph), m_font->glyph_height());
-    else if (Gfx::Emoji::emoji_for_code_point(glyph))
-        builder.appendff(" [emoji]");
-    m_statusbar->set_text(builder.to_deprecated_string());
+        if (m_font->contains_raw_glyph(glyph))
+            TRY(builder.try_appendff(" [{}x{}]", m_font->raw_glyph_width(glyph), m_font->glyph_height()));
+        else if (Gfx::Emoji::emoji_for_code_point(glyph))
+            TRY(builder.try_appendff(" [emoji]"));
 
-    builder.clear();
+        m_statusbar->set_text(0, builder.to_deprecated_string());
 
-    auto selection = m_glyph_map_widget->selection().normalized();
-    if (selection.size() > 1)
-        builder.appendff("{} glyphs selected", selection.size());
-    else
-        builder.appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last);
-    m_statusbar->set_text(1, builder.to_deprecated_string());
+        builder.clear();
+
+        auto selection = m_glyph_map_widget->selection().normalized();
+        if (selection.size() > 1)
+            TRY(builder.try_appendff("{} glyphs selected", selection.size()));
+        else
+            TRY(builder.try_appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last));
+        m_statusbar->set_text(1, builder.to_deprecated_string());
+
+        return {};
+    }();
+
+    if (format_statusbar.is_error())
+        warnln("Formatting status bar failed");
 }
 
 void MainWidget::update_preview()
