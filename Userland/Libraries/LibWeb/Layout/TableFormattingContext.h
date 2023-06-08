@@ -12,6 +12,11 @@
 
 namespace Web::Layout {
 
+enum class TableDimension {
+    Row,
+    Column
+};
+
 class TableFormattingContext final : public FormattingContext {
 public:
     explicit TableFormattingContext(LayoutState&, Box const&, FormattingContext* parent);
@@ -31,6 +36,8 @@ private:
     CSSPixels run_caption_layout(LayoutMode, CSS::CaptionSide);
     CSSPixels compute_capmin();
     void calculate_row_column_grid(Box const&);
+    void compute_cell_measures(AvailableSpace const& available_space);
+    template<class RowOrColumn>
     void compute_table_measures();
     void compute_table_width();
     void distribute_width_to_columns();
@@ -46,17 +53,17 @@ private:
 
     Optional<AvailableSpace> m_available_space;
 
-    enum class ColumnType {
+    enum class SizeType {
         Percent,
         Pixel,
         Auto
     };
 
     struct Column {
-        ColumnType type { ColumnType::Auto };
+        SizeType type { SizeType::Auto };
         CSSPixels left_offset { 0 };
-        CSSPixels min_width { 0 };
-        CSSPixels max_width { 0 };
+        CSSPixels min_size { 0 };
+        CSSPixels max_size { 0 };
         CSSPixels used_width { 0 };
         double percentage_width { 0 };
     };
@@ -67,6 +74,10 @@ private:
         CSSPixels reference_height { 0 };
         CSSPixels final_height { 0 };
         CSSPixels baseline { 0 };
+        SizeType type { SizeType::Auto };
+        CSSPixels min_size { 0 };
+        CSSPixels max_size { 0 };
+        double percentage_height { 0 };
     };
 
     struct Cell {
@@ -78,7 +89,26 @@ private:
         CSSPixels baseline { 0 };
         CSSPixels min_width { 0 };
         CSSPixels max_width { 0 };
+        CSSPixels min_height { 0 };
+        CSSPixels max_height { 0 };
     };
+
+    // Accessors to enable direction-agnostic table measurement.
+
+    template<class RowOrColumn>
+    static size_t cell_span(Cell const& cell);
+
+    template<class RowOrColumn>
+    static size_t cell_index(Cell const& cell);
+
+    template<class RowOrColumn>
+    static CSSPixels cell_min_size(Cell const& cell);
+
+    template<class RowOrColumn>
+    static CSSPixels cell_max_size(Cell const& cell);
+
+    template<class RowOrColumn>
+    Vector<RowOrColumn>& table_rows_or_columns();
 
     CSSPixels compute_row_content_height(Cell const& cell) const;
 
