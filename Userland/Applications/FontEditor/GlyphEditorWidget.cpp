@@ -105,9 +105,8 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 
 void GlyphEditorWidget::mouseup_event(GUI::MouseEvent&)
 {
-    if (!m_is_clicking_valid_cell)
-        return;
     m_is_clicking_valid_cell = false;
+    m_is_altering_glyph = false;
 }
 
 void GlyphEditorWidget::mousemove_event(GUI::MouseEvent& event)
@@ -145,8 +144,9 @@ void GlyphEditorWidget::draw_at_mouse(GUI::MouseEvent const& event)
         return;
     if (bitmap.bit_at(x, y) == set)
         return;
-    if (on_undo_event && event.type() == GUI::MouseEvent::MouseDown)
+    if (on_undo_event && !m_is_altering_glyph)
         on_undo_event("Paint Glyph"sv);
+    m_is_altering_glyph = true;
     bitmap.set_bit_at(x, y, set);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
@@ -155,14 +155,16 @@ void GlyphEditorWidget::draw_at_mouse(GUI::MouseEvent const& event)
 
 void GlyphEditorWidget::move_at_mouse(GUI::MouseEvent const& event)
 {
-    if (on_undo_event && event.type() == GUI::MouseEvent::MouseDown)
-        on_undo_event("Move Glyph"sv);
-
     int x_delta = ((event.x() - 1) / m_scale) - m_scaled_offset_x;
     int y_delta = ((event.y() - 1) / m_scale) - m_scaled_offset_y;
+    if (x_delta == 0 && y_delta == 0 && !m_is_altering_glyph)
+        return;
     auto bitmap = m_font->raw_glyph(m_glyph).glyph_bitmap();
     if (abs(x_delta) > bitmap.width() || abs(y_delta) > bitmap.height())
         return;
+    if (on_undo_event && !m_is_altering_glyph)
+        on_undo_event("Move Glyph"sv);
+    m_is_altering_glyph = true;
     for (int x = 0; x < bitmap.width(); x++) {
         for (int y = 0; y < bitmap.height(); y++) {
             int movable_x = Gfx::GlyphBitmap::max_width() + x - x_delta;

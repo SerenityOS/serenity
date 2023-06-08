@@ -63,6 +63,7 @@ private:
     u8 m_movable_bits[Gfx::GlyphBitmap::max_width() * 3][Gfx::GlyphBitmap::max_height() * 3] {};
     Mode m_mode { Paint };
     bool m_is_clicking_valid_cell { false };
+    bool m_is_altering_glyph { false };
 };
 
 }
