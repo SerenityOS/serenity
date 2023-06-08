@@ -287,6 +287,60 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
     // 2. Let already serialized be an empty array.
     HashTable<PropertyID> already_serialized;
 
+    // NOTE: The spec treats custom properties the same as any other property, and expects the above loop to handle them.
+    //       However, our implementation separates them from regular properties, so we need to handle them separately here.
+    // FIXME: Is the relative order of custom properties and regular properties supposed to be preserved?
+    for (auto& declaration : m_custom_properties) {
+        // 1. Let property be declaration’s property name.
+        auto const& property = declaration.key;
+
+        // 2. If property is in already serialized, continue with the steps labeled declaration loop.
+        // NOTE: It is never in already serialized, as there are no shorthands for custom properties.
+
+        // 3. If property maps to one or more shorthand properties, let shorthands be an array of those shorthand properties, in preferred order.
+        // NOTE: There are no shorthands for custom properties.
+
+        // 4. Shorthand loop: For each shorthand in shorthands, follow these substeps: ...
+        // NOTE: There are no shorthands for custom properties.
+
+        // 5. Let value be the result of invoking serialize a CSS value of declaration.
+        auto value = declaration.value.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+
+        // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
+        //    and the important flag set if declaration has its important flag set.
+        // NOTE: We have to inline this here as the actual implementation does not accept custom properties.
+        DeprecatedString serialized_declaration = [&] {
+            // https://www.w3.org/TR/cssom/#serialize-a-css-declaration
+            StringBuilder builder;
+
+            // 1. Let s be the empty string.
+            // 2. Append property to s.
+            builder.append(property);
+
+            // 3. Append ": " (U+003A U+0020) to s.
+            builder.append(": "sv);
+
+            // 4. Append value to s.
+            builder.append(value);
+
+            // 5. If the important flag is set, append " !important" (U+0020 U+0021 U+0069 U+006D U+0070 U+006F U+0072 U+0074 U+0061 U+006E U+0074) to s.
+            if (declaration.value.important == Important::Yes)
+                builder.append(" !important"sv);
+
+            // 6. Append ";" (U+003B) to s.
+            builder.append(';');
+
+            // 7. Return s.
+            return builder.to_deprecated_string();
+        }();
+
+        // 7. Append serialized declaration to list.
+        list.append(move(serialized_declaration));
+
+        // 8. Append property to already serialized.
+        // NOTE: We don't need to do this, as we don't have shorthands for custom properties.
+    }
+
     // 3. Declaration loop: For each CSS declaration declaration in declaration block’s declarations, follow these substeps:
     for (auto& declaration : m_properties) {
         // 1. Let property be declaration’s property name.
