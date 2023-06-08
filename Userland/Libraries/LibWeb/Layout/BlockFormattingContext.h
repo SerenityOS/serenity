@@ -57,7 +57,7 @@ private:
 
     void compute_width_for_floating_box(Box const&, AvailableSpace const&);
 
-    void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const&, AvailableSpace const&);
+    void compute_width_for_block_level_replaced_element_in_normal_flow(Box const&, AvailableSpace const&);
 
     CSSPixels compute_table_box_width_inside_table_wrapper(Box const&, AvailableSpace const&);
 

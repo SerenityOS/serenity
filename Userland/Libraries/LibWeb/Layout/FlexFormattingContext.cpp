@@ -590,12 +590,12 @@ CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross
 {
     if (!max_cross_size.is_none()) {
         auto max_cross_size_px = max_cross_size.to_px(box, !is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
-        main_size = min(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(max_cross_size_px, box.natural_aspect_ratio().value()));
+        main_size = min(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(max_cross_size_px, box.preferred_aspect_ratio().value()));
     }
 
     if (!min_cross_size.is_auto()) {
         auto min_cross_size_px = min_cross_size.to_px(box, !is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
-        main_size = max(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(min_cross_size_px, box.natural_aspect_ratio().value()));
+        main_size = max(main_size, calculate_main_size_from_cross_size_and_aspect_ratio(min_cross_size_px, box.preferred_aspect_ratio().value()));
     }
 
     return main_size;
@@ -647,13 +647,13 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    - an intrinsic aspect ratio,
         //    - a used flex basis of content, and
         //    - a definite cross size,
-        if (item.box->has_natural_aspect_ratio()
+        if (item.box->has_preferred_aspect_ratio()
             && item.used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
             return adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(
                 item.box,
-                calculate_main_size_from_cross_size_and_aspect_ratio(inner_cross_size(item.box), item.box->natural_aspect_ratio().value()),
+                calculate_main_size_from_cross_size_and_aspect_ratio(inner_cross_size(item.box), item.box->preferred_aspect_ratio().value()),
                 computed_cross_min_size(item.box),
                 computed_cross_max_size(item.box));
         }
@@ -713,7 +713,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
     // AD-HOC: This is not mentioned in the spec, but if the item has an aspect ratio,
     //         we may need to adjust the main size in response to cross size min/max constraints.
-    if (item.box->has_natural_aspect_ratio()) {
+    if (item.box->has_preferred_aspect_ratio()) {
         item.flex_base_size = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(child_box, item.flex_base_size, computed_cross_min_size(child_box), computed_cross_max_size(child_box));
     }
 
@@ -762,7 +762,7 @@ CSSPixels FlexFormattingContext::content_size_suggestion(FlexItem const& item) c
 {
     auto suggestion = calculate_min_content_main_size(item);
 
-    if (item.box->has_natural_aspect_ratio()) {
+    if (item.box->has_preferred_aspect_ratio()) {
         suggestion = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(item.box, suggestion, computed_cross_min_size(item.box), computed_cross_max_size(item.box));
     }
 
@@ -775,8 +775,8 @@ Optional<CSSPixels> FlexFormattingContext::transferred_size_suggestion(FlexItem 
     // If the item has a preferred aspect ratio and its preferred cross size is definite,
     // then the transferred size suggestion is that size
     // (clamped by its minimum and maximum cross sizes if they are definite), converted through the aspect ratio.
-    if (item.box->has_natural_aspect_ratio() && has_definite_cross_size(item.box)) {
-        auto aspect_ratio = item.box->natural_aspect_ratio().value();
+    if (item.box->has_preferred_aspect_ratio() && has_definite_cross_size(item.box)) {
+        auto aspect_ratio = item.box->preferred_aspect_ratio().value();
         return adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(
             item.box,
             calculate_main_size_from_cross_size_and_aspect_ratio(inner_cross_size(item.box), aspect_ratio),

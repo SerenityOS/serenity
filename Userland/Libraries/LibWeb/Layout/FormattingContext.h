@@ -50,8 +50,8 @@ public:
 
     static bool creates_block_formatting_context(Box const&);
 
-    CSSPixels compute_width_for_replaced_element(ReplacedBox const&, AvailableSpace const&) const;
-    CSSPixels compute_height_for_replaced_element(ReplacedBox const&, AvailableSpace const&) const;
+    CSSPixels compute_width_for_replaced_element(Box const&, AvailableSpace const&) const;
+    CSSPixels compute_height_for_replaced_element(Box const&, AvailableSpace const&) const;
 
     OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(LayoutState&, Box const& child_box);
 
@@ -112,18 +112,18 @@ protected:
         CSSPixels preferred_minimum_width { 0 };
     };
 
-    CSSPixels tentative_width_for_replaced_element(ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&) const;
-    CSSPixels tentative_height_for_replaced_element(ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&) const;
+    CSSPixels tentative_width_for_replaced_element(Box const&, CSS::Size const& computed_width, AvailableSpace const&) const;
+    CSSPixels tentative_height_for_replaced_element(Box const&, CSS::Size const& computed_height, AvailableSpace const&) const;
     CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
-    [[nodiscard]] CSSPixelSize solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, ReplacedBox const&) const;
+    [[nodiscard]] CSSPixelSize solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
     void layout_absolutely_positioned_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&);
-    void compute_width_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&);
+    void compute_width_for_absolutely_positioned_replaced_element(Box const&, AvailableSpace const&);
 
     enum class BeforeOrAfterInsideLayout {
         Before,
@@ -131,7 +131,7 @@ protected:
     };
     void compute_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
     void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
-    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
+    void compute_height_for_absolutely_positioned_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
 
     Type m_type {};
 
@@ -140,5 +140,7 @@ protected:
 
     LayoutState& m_state;
 };
+
+bool box_is_sized_as_replaced_element(Box const&);
 
 }
