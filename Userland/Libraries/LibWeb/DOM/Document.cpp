@@ -80,6 +80,7 @@
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/SVG/SVGElement.h>
+#include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -688,8 +689,9 @@ DeprecatedString Document::title() const
 
     // 1. If the document element is an SVG svg element, then let value be the child text content of the first SVG title
     //    element that is a child of the document element.
-    if (auto const* document_element = this->document_element(); document_element && is<SVG::SVGElement>(document_element)) {
-        // FIXME: Implement the SVG title element and get its child text content.
+    if (auto const* document_element = this->document_element(); is<SVG::SVGElement>(document_element)) {
+        if (auto const* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>())
+            value = title_element->child_text_content();
     }
 
     // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
@@ -712,13 +714,25 @@ WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
 
     // -> If the document element is an SVG svg element
     if (is<SVG::SVGElement>(document_element)) {
-        // FIXME: 1. If there is an SVG title element that is a child of the document element, let element be the first such
-        //           element.
-        // FIXME: 2. Otherwise:
-        //            1. Let element be the result of creating an element given the document element's node document, title,
-        //               and the SVG namespace.
-        //            2. Insert element as the first child of the document element.
-        // FIXME: 3. String replace all with the given value within element.
+        JS::GCPtr<Element> element;
+
+        // 1. If there is an SVG title element that is a child of the document element, let element be the first such
+        //    element.
+        if (auto* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>()) {
+            element = title_element;
+        }
+        // 2. Otherwise:
+        else {
+            // 1. Let element be the result of creating an element given the document element's node document, title,
+            //    and the SVG namespace.
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::SVG));
+
+            // 2. Insert element as the first child of the document element.
+            document_element->insert_before(*element, nullptr);
+        }
+
+        // 3. String replace all with the given value within element.
+        element->string_replace_all(title);
     }
 
     // -> If the document element is in the HTML namespace
