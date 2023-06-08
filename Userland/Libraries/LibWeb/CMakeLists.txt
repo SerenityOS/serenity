@@ -421,6 +421,7 @@ set(SOURCES
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
+    Layout/SVGTextBox.cpp
     Layout/TableFormattingContext.cpp
     Layout/TableWrapper.cpp
     Layout/TextNode.cpp
@@ -464,6 +465,7 @@ set(SOURCES
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
+    Painting/SVGTextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp

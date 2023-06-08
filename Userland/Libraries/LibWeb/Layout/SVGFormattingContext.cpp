@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
+#include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -187,6 +188,10 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, descendant, this);
             nested_context.run(descendant, layout_mode, available_space);
+        } else if (is<SVGTextBox>(descendant)) {
+            auto const& svg_text_box = static_cast<SVGTextBox const&>(descendant);
+            // NOTE: This hack creates a layout state to ensure the existence of a paintable box node in LayoutState::commit(), even when none of the values from UsedValues impact the SVG text.
+            m_state.get_mutable(svg_text_box);
         }
 
         return IterationDecision::Continue;
