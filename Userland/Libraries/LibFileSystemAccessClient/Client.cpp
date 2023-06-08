@@ -131,7 +131,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
             break;
         [[fallthrough]];
     default:
-        auto maybe_message = ErrorOr<String>({});
+        ErrorOr<String> maybe_message = String {};
         if (error == ECONNRESET)
             maybe_message = String::formatted("FileSystemAccessClient: {}", Error::from_errno(error));
         else
