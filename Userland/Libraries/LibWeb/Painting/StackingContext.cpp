@@ -13,6 +13,7 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -413,10 +414,12 @@ void StackingContext::paint(PaintContext& context) const
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
-        if (destination_rect.size() == bitmap->size())
+        if (destination_rect.size() == bitmap->size()) {
             context.painter().blit(destination_rect.location(), *bitmap, bitmap->rect(), opacity);
-        else
-            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, Gfx::Painter::ScalingMode::BilinearBlend);
+        } else {
+            auto scaling_mode = CSS::to_gfx_scaling_mode(m_box->computed_values().image_rendering(), bitmap->rect(), destination_rect);
+            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, scaling_mode);
+        }
     } else {
         Gfx::PainterStateSaver saver(context.painter());
         context.painter().translate(affine_transform.translation().to_rounded<int>());
