@@ -524,6 +524,7 @@ set(SOURCES
     SVG/SVGStopElement.cpp
     SVG/SVGSymbolElement.cpp
     SVG/SVGTextContentElement.cpp
+    SVG/SVGTitleElement.cpp
     SVG/SVGUseElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp

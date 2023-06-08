@@ -559,6 +559,7 @@ class SVGPolygonElement;
 class SVGPolylineElement;
 class SVGRectElement;
 class SVGSVGElement;
+class SVGTitleElement;
 }
 
 namespace Web::UIEvents {
