@@ -33,6 +33,7 @@ namespace Web::SVG::TagNames {
     __ENUMERATE_SVG_TAG(radialGradient) \
     __ENUMERATE_SVG_TAG(script)         \
     __ENUMERATE_SVG_TAG(stop)           \
+    __ENUMERATE_SVG_TAG(style)          \
     __ENUMERATE_SVG_TAG(symbol)         \
     __ENUMERATE_SVG_TAG(title)          \
     __ENUMERATE_SVG_TAG(use)
