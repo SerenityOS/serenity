@@ -22,6 +22,8 @@ namespace Web::SVG::AttributeNames {
     E(contentStyleType)             \
     E(cx)                           \
     E(cy)                           \
+    E(dx)                           \
+    E(dy)                           \
     E(diffuseConstant)              \
     E(edgeMode)                     \
     E(filterUnits)                  \
