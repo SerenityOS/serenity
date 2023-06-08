@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/GridTrackSize.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/PercentageOr.h>
+#include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -22,8 +23,14 @@
 
 namespace Web::CSS {
 
+struct AspectRatio {
+    bool use_natural_aspect_ratio_if_available;
+    Optional<Ratio> preferred_ratio;
+};
+
 class InitialValues {
 public:
+    static AspectRatio aspect_ratio() { return AspectRatio { true, {} }; }
     static float font_size() { return 16; }
     static int font_weight() { return 400; }
     static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
@@ -211,6 +218,7 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
 
 class ComputedValues {
 public:
+    AspectRatio aspect_ratio() const { return m_noninherited.aspect_ratio; }
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
     CSS::Clip clip() const { return m_noninherited.clip; }
@@ -344,6 +352,7 @@ protected:
     } m_inherited;
 
     struct {
+        AspectRatio aspect_ratio { InitialValues::aspect_ratio() };
         CSS::Float float_ { InitialValues::float_() };
         CSS::Clear clear { InitialValues::clear() };
         CSS::Clip clip { InitialValues::clip() };
@@ -418,6 +427,7 @@ class ImmutableComputedValues final : public ComputedValues {
 
 class MutableComputedValues final : public ComputedValues {
 public:
+    void set_aspect_ratio(AspectRatio aspect_ratio) { m_noninherited.aspect_ratio = aspect_ratio; }
     void set_font_size(float font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }

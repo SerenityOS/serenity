@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,9 +11,11 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
@@ -707,6 +710,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     if (auto border_collapse = computed_style.border_collapse(); border_collapse.has_value())
         computed_values.set_border_collapse(border_collapse.value());
+
+    auto aspect_ratio = computed_style.property(CSS::PropertyID::AspectRatio);
+    if (aspect_ratio->is_value_list()) {
+        auto& values_list = aspect_ratio->as_value_list().values();
+        if (values_list.size() == 2
+            && values_list[0]->is_identifier() && values_list[0]->as_identifier().id() == CSS::ValueID::Auto
+            && values_list[1]->is_ratio()) {
+            computed_values.set_aspect_ratio({ true, values_list[1]->as_ratio().ratio() });
+        }
+    } else if (aspect_ratio->is_identifier() && aspect_ratio->as_identifier().id() == CSS::ValueID::Auto) {
+        computed_values.set_aspect_ratio({ true, {} });
+    } else if (aspect_ratio->is_ratio()) {
+        computed_values.set_aspect_ratio({ false, aspect_ratio->as_ratio().ratio() });
+    }
 }
 
 bool Node::is_root_element() const

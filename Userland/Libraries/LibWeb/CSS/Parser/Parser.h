@@ -307,6 +307,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
 
     ErrorOr<RefPtr<StyleValue>> parse_filter_value_list_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_aspect_ratio_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_background_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_single_background_position_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);

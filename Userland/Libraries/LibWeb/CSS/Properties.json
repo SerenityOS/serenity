@@ -138,6 +138,17 @@
       "appearance"
     ]
   },
+  "aspect-ratio": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "ratio"
+    ],
+    "valid-identifiers":[
+      "auto"
+    ]
+  },
   "backdrop-filter": {
     "affects-layout": false,
     "affects-stacking-context": true,
