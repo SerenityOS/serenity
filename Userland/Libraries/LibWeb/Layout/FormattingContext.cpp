@@ -1463,14 +1463,28 @@ CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, Availa
 
 bool FormattingContext::should_treat_width_as_auto(Box const& box, AvailableSpace const& available_space)
 {
-    return box.computed_values().width().is_auto()
-        || (box.computed_values().width().contains_percentage() && !available_space.width.is_definite());
+    if (box.computed_values().width().is_auto())
+        return true;
+    if (box.computed_values().width().contains_percentage()) {
+        if (available_space.width.is_max_content())
+            return true;
+        if (available_space.width.is_indefinite())
+            return true;
+    }
+    return false;
 }
 
 bool FormattingContext::should_treat_height_as_auto(Box const& box, AvailableSpace const& available_space)
 {
-    return box.computed_values().height().is_auto()
-        || (box.computed_values().height().contains_percentage() && !available_space.height.is_definite());
+    if (box.computed_values().height().is_auto())
+        return true;
+    if (box.computed_values().height().contains_percentage()) {
+        if (available_space.height.is_max_content())
+            return true;
+        if (available_space.height.is_indefinite())
+            return true;
+    }
+    return false;
 }
 
 bool FormattingContext::can_skip_is_anonymous_text_run(Box& box)
