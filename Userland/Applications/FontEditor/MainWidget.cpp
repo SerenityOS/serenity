@@ -116,10 +116,13 @@ ErrorOr<void> MainWidget::create_actions()
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, g_resources.new_font, [this](auto&) {
         if (!request_close())
             return;
-        auto new_font_wizard = NewFontDialog::construct(window());
-        if (new_font_wizard->exec() != GUI::Dialog::ExecResult::OK)
+        auto maybe_wizard = NewFontDialog::create(window());
+        if (maybe_wizard.is_error())
+            return show_error(maybe_wizard.release_error(), "Creating font wizard failed"sv);
+        auto wizard = maybe_wizard.release_value();
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return;
-        auto maybe_font = new_font_wizard->create_font();
+        auto maybe_font = wizard->create_font();
         if (maybe_font.is_error())
             return show_error(maybe_font.release_error(), "Creating new font failed"sv);
         if (auto result = initialize({}, move(maybe_font.value())); result.is_error())

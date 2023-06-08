@@ -16,39 +16,37 @@
 
 namespace GUI {
 
-WizardDialog::WizardDialog(Window* parent_window)
-    : Dialog(parent_window)
-    , m_page_stack()
+ErrorOr<NonnullRefPtr<WizardDialog>> WizardDialog::create(Window* parent_window)
 {
-    resize(500, 360);
-    set_title(DeprecatedString::formatted("Sample wizard"));
-    set_resizable(false);
+    auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WizardDialog(parent_window)));
+    TRY(dialog->build());
+    return dialog;
+}
 
-    if (parent_window)
-        set_icon(parent_window->icon());
-
-    auto main_widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+ErrorOr<void> WizardDialog::build()
+{
+    auto main_widget = TRY(set_main_widget<Widget>());
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<VerticalBoxLayout>(GUI::Margins {}, 0);
+    TRY(main_widget->try_set_layout<VerticalBoxLayout>(Margins {}, 0));
 
-    m_page_container_widget = main_widget->add<Widget>();
+    m_page_container_widget = TRY(main_widget->try_add<Widget>());
     m_page_container_widget->set_fixed_size(500, 315);
-    m_page_container_widget->set_layout<VerticalBoxLayout>();
+    TRY(m_page_container_widget->try_set_layout<VerticalBoxLayout>());
 
-    auto& separator = main_widget->add<SeparatorWidget>(Gfx::Orientation::Horizontal);
-    separator.set_fixed_height(2);
+    auto separator = TRY(main_widget->try_add<SeparatorWidget>(Gfx::Orientation::Horizontal));
+    separator->set_fixed_height(2);
 
-    auto& nav_container_widget = main_widget->add<Widget>();
-    nav_container_widget.set_layout<HorizontalBoxLayout>(GUI::Margins { 0, 10 }, 0);
-    nav_container_widget.set_fixed_height(42);
-    nav_container_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
+    auto nav_container_widget = TRY(main_widget->try_add<Widget>());
+    TRY(nav_container_widget->try_set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0));
+    nav_container_widget->set_fixed_height(42);
+    TRY(nav_container_widget->add_spacer());
 
-    m_back_button = nav_container_widget.add<DialogButton>("< Back"_short_string);
+    m_back_button = TRY(nav_container_widget->try_add<DialogButton>("< Back"_short_string));
     m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
-    m_next_button = nav_container_widget.add<DialogButton>("Next >"_short_string);
+    m_next_button = TRY(nav_container_widget->try_add<DialogButton>("Next >"_short_string));
     m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
@@ -62,15 +60,25 @@ WizardDialog::WizardDialog(Window* parent_window)
         push_page(*next_page);
     };
 
-    auto& button_spacer = nav_container_widget.add<Widget>();
-    button_spacer.set_fixed_width(10);
+    auto button_spacer = TRY(nav_container_widget->try_add<Widget>());
+    button_spacer->set_fixed_width(10);
 
-    m_cancel_button = nav_container_widget.add<DialogButton>("Cancel"_short_string);
+    m_cancel_button = TRY(nav_container_widget->try_add<DialogButton>("Cancel"_short_string));
     m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };
 
     update_navigation();
+
+    return {};
+}
+
+WizardDialog::WizardDialog(Window* parent_window)
+    : Dialog(parent_window)
+    , m_page_stack()
+{
+    resize(500, 360);
+    set_resizable(false);
 }
 
 void WizardDialog::push_page(AbstractWizardPage& page)

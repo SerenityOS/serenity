@@ -27,9 +27,10 @@ namespace Spreadsheet {
 CSVImportDialogPage::CSVImportDialogPage(StringView csv)
     : m_csv(csv)
 {
-    m_page = GUI::WizardPage::construct(
-        "CSV Import Options",
-        "Please select the options for the csv file you wish to import");
+    m_page = GUI::WizardPage::create(
+        "CSV Import Options"sv,
+        "Please select the options for the csv file you wish to import"sv)
+                 .release_value_but_fixme_should_propagate_errors();
 
     m_page->body_widget().load_from_gml(csv_import_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
@@ -178,7 +179,7 @@ void CSVImportDialogPage::update_preview()
 
 ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
 {
-    auto wizard = GUI::WizardDialog::construct(&parent);
+    auto wizard = GUI::WizardDialog::create(&parent).release_value_but_fixme_should_propagate_errors();
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
@@ -244,9 +245,10 @@ ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_r
     } else if (mime == "application/x-sheets+json") {
         return import_worksheet();
     } else {
-        auto page = GUI::WizardPage::construct(
-            "Import File Format",
-            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename.to_deprecated_string())));
+        auto page = GUI::WizardPage::create(
+            "Import File Format"sv,
+            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename.to_deprecated_string())))
+                        .release_value_but_fixme_should_propagate_errors();
 
         page->on_next_page = [] { return nullptr; };
 
