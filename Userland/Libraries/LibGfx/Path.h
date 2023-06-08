@@ -9,13 +9,74 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
+#include <AK/Tuple.h>
 #include <AK/Vector.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Line.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
+
+struct StrokeProperties {
+    // https://www.w3.org/TR/svg-strokes/
+
+    enum class StrokeAlignment {
+        Center,
+        Inner,
+        Outer,
+    };
+    enum class StrokeLinecap {
+        Butt,
+        Round,
+        Square,
+    };
+    enum class StrokeLinejoin {
+        Miter,
+        MiterClip,
+        Round,
+        Bevel,
+        Arcs,
+    };
+    enum class StrokeDashadjust {
+        None = 0b0000,
+        StretchDashes = 0b0101,
+        StretchGaps = 0b0110,
+        StretchDashesGaps = 0b0111,
+        CompressDashes = 0b1001,
+        CompressGaps = 0b1010,
+        CompressDashesGaps = 0b1011,
+
+        StretchMask = 0b0100,
+        CompressMask = 0b1000,
+        DashesMask = 0b0001,
+        GapsMask = 0b0010,
+    };
+
+    StrokeAlignment stroke_alignment;
+    float stroke_width;
+    StrokeLinecap stroke_linecap;
+    StrokeLinejoin stroke_linejoin;
+    float stroke_miterlimit;
+    Vector<float> stroke_dasharray;
+    float stroke_dashoffset;
+    float stroke_dashcorner;
+    StrokeDashadjust stroke_dashadjust;
+
+    StrokeProperties(float thickness)
+        : stroke_alignment(StrokeAlignment::Center)
+        , stroke_width(thickness)
+        , stroke_linecap(StrokeLinecap::Butt)
+        , stroke_linejoin(StrokeLinejoin::Miter)
+        , stroke_miterlimit(4)
+        , stroke_dasharray()
+        , stroke_dashoffset(0)
+        , stroke_dashcorner(-1)
+        , stroke_dashadjust(StrokeDashadjust::None)
+    {
+    }
+};
 
 class Segment : public RefCounted<Segment> {
 public:
@@ -248,7 +309,7 @@ public:
 
     DeprecatedString to_deprecated_string() const;
 
-    Path stroke_to_fill(float thickness) const;
+    Path stroke_to_fill(StrokeProperties const&) const;
 
 private:
     void invalidate_split_lines()
@@ -262,6 +323,8 @@ private:
     {
         m_segments.append(adopt_ref(*new T(forward<Args>(args)...)));
     }
+
+    Vector<Tuple<float, float>> compute_dash_positions(float, StrokeProperties const&) const;
 
     Vector<NonnullRefPtr<Segment const>> m_segments {};
 

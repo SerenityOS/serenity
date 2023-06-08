@@ -38,6 +38,8 @@ public:
 
     void stroke_path(Path const&, Color, float thickness);
     void stroke_path(Path const&, PaintStyle const& paint_style, float thickness);
+    void stroke_path(Path const&, Color, StrokeProperties const&);
+    void stroke_path(Path const&, PaintStyle const& paint_style, StrokeProperties const&);
 
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint delta) { m_transform.translate(delta); }

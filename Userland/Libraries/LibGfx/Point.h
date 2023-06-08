@@ -12,6 +12,7 @@
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/Vector2.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
 
@@ -132,6 +133,7 @@ public:
     }
 
     [[nodiscard]] Point<T> operator+(Point<T> const& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+    [[nodiscard]] Point<T> operator+(Vector2<T> const& other) const { return { m_x + other.x(), m_y + other.y() }; }
 
     Point<T>& operator+=(Point<T> const& other)
     {
@@ -143,6 +145,7 @@ public:
     [[nodiscard]] Point<T> operator-() const { return { -m_x, -m_y }; }
 
     [[nodiscard]] Point<T> operator-(Point<T> const& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
+    [[nodiscard]] Point<T> operator-(Vector2<T> const& other) const { return { m_x - other.x(), m_y - other.y() }; }
 
     Point<T>& operator-=(Point<T> const& other)
     {
