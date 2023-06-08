@@ -348,6 +348,7 @@ TEST_CASE(test_webp_simple_lossless)
 
 TEST_CASE(test_webp_extended_lossy)
 {
+    // This extended lossy image has an ALPH chunk for (losslessly compressed) alpha data.
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
@@ -377,6 +378,30 @@ TEST_CASE(test_webp_extended_lossy)
     EXPECT_EQ(frame.image->get_pixel(141, 75), Gfx::Color(0, 255, 3, 255));
     EXPECT_EQ(frame.image->get_pixel(235, 75), Gfx::Color(0, 0, 255, 255));
     EXPECT_EQ(frame.image->get_pixel(341, 75), Gfx::Color(0, 0, 0, 128));
+}
+
+TEST_CASE(test_webp_extended_lossy_alpha_horizontal_filter)
+{
+    // Also lossy rgb + lossless alpha, but with a horizontal alpha filtering method.
+    // The image should look like smolkling.webp, but with a horizontal alpha gradient.
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling-horizontal-alpha.webp"sv)));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+
+    // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
+    // So pixels changing by 1 or so below is fine if you change code.
+    // The important component in this test is alpha, and that shouldn't change even by 1 as it's losslessly compressed and doesn't use YUV.
+    EXPECT_EQ(frame.image->get_pixel(131, 131), Gfx::Color(0x8f, 0x51, 0x2f, 0x4b));
 }
 
 TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)

@@ -276,7 +276,6 @@ static ErrorOr<void> decode_webp_chunk_ALPH(Chunk const& alph_chunk, Bitmap& bit
         // "Method 1: predictor = A"
         // "The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
         //  For horizontal or gradient filtering methods, the left-most pixels at location (0, y) are predicted using the location (0, y-1) just above."
-        // FIXME: This branch is untested.
         for (int y = 1; y < bitmap.height(); ++y)
             alpha[y * bitmap.width()] += alpha[(y - 1) * bitmap.width()];
         for (int y = 0; y < bitmap.height(); ++y) {
