@@ -42,7 +42,7 @@ struct Flags {
 
 class GzipDecompressor final : public Stream {
 public:
-    GzipDecompressor(NonnullOwnPtr<Stream>);
+    GzipDecompressor(MaybeOwned<Stream>);
     ~GzipDecompressor();
 
     virtual ErrorOr<Bytes> read_some(Bytes) override;
