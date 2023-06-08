@@ -565,8 +565,8 @@ Path Path::stroke_to_fill(StrokeProperties const& stroke_properties) const
                 FloatVector2 RS = { S.x() - R.x(), S.y() - R.y() };
 
                 float divisor = BC_normal.dot(AB);
-                float t1 = fabs(divisor) < 0.001f ? 1 : BC_normal.dot(PQ) / divisor;
-                float t2 = fabs(divisor) < 0.001f ? 1 : BC_normal.dot(RS) / divisor;
+                float t1 = AK::fabs<float>(divisor) < 0.001f ? 1 : BC_normal.dot(PQ) / divisor;
+                float t2 = AK::fabs<float>(divisor) < 0.001f ? 1 : BC_normal.dot(RS) / divisor;
 
                 FloatPoint out = P + AB * t1;
                 FloatPoint in = R + AB * t2;

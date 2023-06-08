@@ -54,9 +54,7 @@ struct StrokeProperties {
         GapsMask = 0b0010,
     };
 
-    Color stroke; // FIXME: what about orther paint styles
     StrokeAlignment stroke_alignment;
-    float stroke_opacity; // FIXME: This should be part of stroke?
     float stroke_width;
     StrokeLinecap stroke_linecap;
     StrokeLinejoin stroke_linejoin;
@@ -66,10 +64,8 @@ struct StrokeProperties {
     float stroke_dashcorner;
     StrokeDashadjust stroke_dashadjust;
 
-    StrokeProperties(float thickness, Color c)
-        : stroke(c)
-        , stroke_alignment(StrokeAlignment::Center)
-        , stroke_opacity(1)
+    StrokeProperties(float thickness)
+        : stroke_alignment(StrokeAlignment::Center)
         , stroke_width(thickness)
         , stroke_linecap(StrokeLinecap::Butt)
         , stroke_linejoin(StrokeLinejoin::Miter)

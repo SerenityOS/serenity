@@ -168,9 +168,7 @@ static ErrorOr<HashMap<DeprecatedString, PnpIdData>> parse_pnp_ids_database(Core
 
         auto approval_date = TRY(parse_approval_date(columns[(size_t)PnpIdColumns::ApprovalDate]));
         auto decoded_manufacturer_name = TRY(decode_html_entities(columns[(size_t)PnpIdColumns::ManufacturerName]));
-        auto hash_set_result = pnp_id_data.set(columns[(size_t)PnpIdColumns::ManufacturerId], PnpIdData { .manufacturer_name = decoded_manufacturer_name, .approval_date = move(approval_date) });
-        if (hash_set_result != AK::HashSetResult::InsertedNewEntry)
-            return Error::from_string_literal("Duplicate manufacturer ID encountered");
+        pnp_id_data.set(columns[(size_t)PnpIdColumns::ManufacturerId], PnpIdData { .manufacturer_name = decoded_manufacturer_name, .approval_date = move(approval_date) });
 
         row_content_offset = row_end.value() + row_end_tag.length();
     }

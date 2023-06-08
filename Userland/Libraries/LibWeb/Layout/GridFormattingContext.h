@@ -17,29 +17,9 @@ enum class GridDimension {
 };
 
 struct GridPosition {
-    size_t row;
-    size_t column;
+    int row;
+    int column;
     inline bool operator==(GridPosition const&) const = default;
-};
-
-class OccupationGrid {
-public:
-    OccupationGrid(size_t columns_count, size_t rows_count)
-        : m_columns_count(columns_count)
-        , m_rows_count(rows_count) {};
-    OccupationGrid() {};
-
-    void set_occupied(size_t column_start, size_t column_end, size_t row_start, size_t row_end);
-    void set_occupied(size_t column_index, size_t row_index);
-
-    size_t column_count() const { return m_columns_count; }
-    size_t row_count() const { return m_rows_count; }
-    bool is_occupied(size_t column_index, size_t row_index) const;
-
-private:
-    HashTable<GridPosition> m_occupation_grid;
-    size_t m_columns_count { 0 };
-    size_t m_rows_count { 0 };
 };
 
 class GridItem {
@@ -60,7 +40,7 @@ public:
         return dimension == GridDimension::Column ? m_column_span : m_row_span;
     }
 
-    size_t raw_position(GridDimension const dimension) const
+    int raw_position(GridDimension const dimension) const
     {
         return dimension == GridDimension::Column ? m_column : m_row;
     }
@@ -75,21 +55,61 @@ public:
         }
     }
 
-    size_t raw_row() const { return m_row; }
-    size_t raw_column() const { return m_column; }
+    int raw_row() const { return m_row; }
+    void set_raw_row(int row) { m_row = row; }
+
+    int raw_column() const { return m_column; }
+    void set_raw_column(int column) { m_column = column; }
 
     size_t raw_row_span() const { return m_row_span; }
     size_t raw_column_span() const { return m_column_span; }
 
-    size_t gap_adjusted_row(Box const& grid_box) const;
-    size_t gap_adjusted_column(Box const& grid_box) const;
+    int gap_adjusted_row(Box const& grid_box) const;
+    int gap_adjusted_column(Box const& grid_box) const;
 
 private:
     JS::NonnullGCPtr<Box const> m_box;
-    size_t m_row { 0 };
+    int m_row { 0 };
     size_t m_row_span { 1 };
-    size_t m_column { 0 };
+    int m_column { 0 };
     size_t m_column_span { 1 };
+};
+
+class OccupationGrid {
+public:
+    OccupationGrid(size_t columns_count, size_t rows_count)
+    {
+        m_max_column_index = max(0, columns_count - 1);
+        m_max_row_index = max(0, rows_count - 1);
+    };
+    OccupationGrid() {};
+
+    void set_occupied(int column_start, int column_end, int row_start, int row_end);
+
+    size_t column_count() const
+    {
+        return abs(m_min_column_index) + m_max_column_index + 1;
+    }
+
+    size_t row_count() const
+    {
+        return abs(m_min_row_index) + m_max_row_index + 1;
+    }
+
+    int min_column_index() const { return m_min_column_index; }
+    int max_column_index() const { return m_max_column_index; };
+    int min_row_index() const { return m_min_row_index; };
+    int max_row_index() const { return m_max_row_index; };
+
+    bool is_occupied(int column_index, int row_index) const;
+
+private:
+    HashTable<GridPosition> m_occupation_grid;
+
+    int m_min_column_index { 0 };
+    int m_max_column_index { 0 };
+    int m_min_row_index { 0 };
+    int m_max_row_index { 0 };
 };
 
 class GridFormattingContext final : public FormattingContext {
@@ -104,6 +124,8 @@ public:
     Box const& grid_container() const { return context_box(); }
 
 private:
+    void resolve_items_box_metrics(GridDimension const dimension);
+
     CSSPixels m_automatic_content_height { 0 };
     bool is_auto_positioned_row(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
@@ -198,6 +220,9 @@ private:
     Vector<TemporaryTrack&> m_grid_rows_and_gaps;
     Vector<TemporaryTrack&> m_grid_columns_and_gaps;
 
+    size_t m_explicit_rows_line_count { 0 };
+    size_t m_explicit_columns_line_count { 0 };
+
     OccupationGrid m_occupation_grid;
     Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
@@ -229,10 +254,14 @@ private:
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
 
+    template<typename Match>
+    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+
+    template<typename Match>
+    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+
     void initialize_track_sizes(AvailableSpace const&, GridDimension const);
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);
-    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
-    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks);
     void increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(AvailableSpace const&, GridDimension const, size_t span);
     void increase_sizes_to_accommodate_spanning_items_crossing_flexible_tracks(GridDimension const);
     void maximize_tracks(AvailableSpace const&, GridDimension const);

@@ -18,7 +18,7 @@
 <canvas id="conic" width="200" height="200"></canvas>
 <h2>Linear Gradients</h2>
 <em>This time in a path to spice things up!</em><br>
-<canvas id="linear" width="200" height="200"></canvas>
+<canvas id="linear" width="400" height="200"></canvas>
 
 <script>
 {
@@ -137,7 +137,6 @@ makeMouseDemo("radialHell2", (canvas, ctx, mX, mY) => {
   const ctx = canvas.getContext("2d");
 
   const gradient = ctx.createLinearGradient(20, 20, 220, 120);
-  ctx.createLinearGradient(0,0,200,50);
   gradient.addColorStop(0,"red");
   gradient.addColorStop(0.15,"yellow");
   gradient.addColorStop(0.3,"green");
@@ -147,6 +146,12 @@ makeMouseDemo("radialHell2", (canvas, ctx, mX, mY) => {
   gradient.addColorStop(1,"red");
 
   ctx.fillStyle = gradient;
+
+  const gradient2 = ctx.createLinearGradient(200,0,400,50);
+  gradient2.addColorStop(0,"cyan");
+  gradient2.addColorStop(1,"fuchsia");
+
+  ctx.strokeStyle = gradient2;
 
   const starPath = (cx, cy, spikes, outerRadius, innerRadius) => {
     let x = cx;
@@ -171,7 +176,11 @@ makeMouseDemo("radialHell2", (canvas, ctx, mX, mY) => {
     ctx.closePath();
   }
 
-  starPath(canvas.width/2,canvas.height/2,5,100,60);
+  starPath(canvas.width/4,canvas.height/2,5,100,60);
   ctx.fill();
+
+  starPath(canvas.width/4 + 200 ,canvas.height/2,5,80,40);
+  ctx.lineWidth = 5;
+  ctx.stroke();
 }
 </script>

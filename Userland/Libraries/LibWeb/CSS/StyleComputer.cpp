@@ -307,9 +307,41 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
     };
 
-    auto real_property_id = map_logical_property_to_real_property(property_id);
-    if (real_property_id.has_value())
+    struct StartAndEndPropertyIDs {
+        PropertyID start;
+        PropertyID end;
+    };
+    auto map_logical_property_to_real_properties = [](PropertyID property_id) -> Optional<StartAndEndPropertyIDs> {
+        // FIXME: Honor writing-mode, direction and text-orientation.
+        switch (property_id) {
+        case PropertyID::MarginBlock:
+            return StartAndEndPropertyIDs { PropertyID::MarginTop, PropertyID::MarginBottom };
+        case PropertyID::MarginInline:
+            return StartAndEndPropertyIDs { PropertyID::MarginLeft, PropertyID::MarginRight };
+        case PropertyID::PaddingBlock:
+            return StartAndEndPropertyIDs { PropertyID::PaddingTop, PropertyID::PaddingBottom };
+        case PropertyID::PaddingInline:
+            return StartAndEndPropertyIDs { PropertyID::PaddingLeft, PropertyID::PaddingRight };
+        default:
+            return {};
+        }
+    };
+
+    if (auto real_property_id = map_logical_property_to_real_property(property_id); real_property_id.has_value())
         return set_property_expanding_shorthands(style, real_property_id.value(), value, document, declaration);
+
+    if (auto real_property_ids = map_logical_property_to_real_properties(property_id); real_property_ids.has_value()) {
+        if (value.is_value_list() && value.as_value_list().size() == 2) {
+            auto const& start = value.as_value_list().values()[0];
+            auto const& end = value.as_value_list().values()[1];
+            set_property_expanding_shorthands(style, real_property_ids->start, start, document, declaration);
+            set_property_expanding_shorthands(style, real_property_ids->end, end, document, declaration);
+            return;
+        }
+        set_property_expanding_shorthands(style, real_property_ids->start, value, document, declaration);
+        set_property_expanding_shorthands(style, real_property_ids->end, value, document, declaration);
+        return;
+    }
 
     if (value.is_composite()) {
         auto& composite_value = value.as_composite();

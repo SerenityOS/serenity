@@ -3881,25 +3881,6 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
-
-)~~~");
-
-    if (interface.prototype_base_class == "ObjectPrototype") {
-        generator.append(R"~~~(
-
-    set_prototype(realm.intrinsics().object_prototype());
-
-)~~~");
-    } else {
-        generator.append(R"~~~(
-
-    set_prototype(&ensure_web_prototype<@prototype_base_class@>(realm, "@parent_name@"));
-
-)~~~");
-    }
-
-    generator.append(R"~~~(
-
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
 

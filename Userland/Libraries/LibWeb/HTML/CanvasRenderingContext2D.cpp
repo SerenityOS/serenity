@@ -74,11 +74,10 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
         auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-        auto color_fill = drawing_state.fill_style.as_color();
-        if (color_fill.has_value()) {
-            painter.fill_rect(rect, *color_fill);
+        if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
+            painter.fill_rect(rect, *color);
         } else {
-            // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support FillPath yet.
+            // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support PaintStyle yet.
             painter.underlying_painter().fill_rect(rect.to_rounded<int>(), *drawing_state.fill_style.to_gfx_paint_style());
         }
         return rect;
@@ -96,26 +95,21 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
-    draw_clipped([&](auto& painter) {
-        auto& drawing_state = this->drawing_state();
+    auto& drawing_state = this->drawing_state();
 
-        auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-        // We could remove the rounding here, but the lines look better when they have whole number pixel endpoints.
-        auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_rounded<float>();
-        auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_rounded<float>();
-        auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_rounded<float>();
-        auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_rounded<float>();
+    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y));
+    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y));
+    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1));
+    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1));
 
-        Gfx::Path path;
-        path.move_to(top_left);
-        path.line_to(top_right);
-        path.line_to(bottom_right);
-        path.line_to(bottom_left);
-        path.line_to(top_left);
-        painter.stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
+    Gfx::Path path;
+    path.move_to(top_left);
+    path.line_to(top_right);
+    path.line_to(bottom_right);
+    path.line_to(bottom_left);
+    path.line_to(top_left);
 
-        return rect;
-    });
+    stroke_internal(path);
 }
 
 // 4.12.5.1.14 Drawing images, https://html.spec.whatwg.org/multipage/canvas.html#drawing-images
@@ -238,8 +232,11 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
-
-        painter.stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
+        if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
+            painter.stroke_path(path, *color, drawing_state.line_width);
+        } else {
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width);
+        }
         return path.bounding_box();
     });
 }
@@ -266,11 +263,17 @@ static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
     return Gfx::Painter::WindingRule::Nonzero;
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule_value)
 {
     draw_clipped([&](auto& painter) {
         path.close_all_subpaths();
-        painter.fill_path(path, *drawing_state().fill_style.to_gfx_paint_style(), parse_fill_rule(fill_rule));
+        auto& drawing_state = this->drawing_state();
+        auto fill_rule = parse_fill_rule(fill_rule_value);
+        if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
+            painter.fill_path(path, *color, fill_rule);
+        } else {
+            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), fill_rule);
+        }
         return path.bounding_box();
     });
 }

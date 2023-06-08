@@ -155,6 +155,7 @@ class StyleSheetList;
 class StyleValue;
 class StyleValueList;
 class Supports;
+class SVGPaint;
 class TextDecorationStyleValue;
 class Time;
 class TimeOrCalculated;

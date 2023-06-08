@@ -147,19 +147,25 @@ public:
 
     HTML::HTMLHtmlElement* html_element();
     HTML::HTMLHeadElement* head();
+    JS::GCPtr<HTML::HTMLTitleElement> title_element();
     HTML::HTMLElement* body();
 
-    const HTML::HTMLHtmlElement* html_element() const
+    HTML::HTMLHtmlElement const* html_element() const
     {
         return const_cast<Document*>(this)->html_element();
     }
 
-    const HTML::HTMLHeadElement* head() const
+    HTML::HTMLHeadElement const* head() const
     {
         return const_cast<Document*>(this)->head();
     }
 
-    const HTML::HTMLElement* body() const
+    JS::GCPtr<HTML::HTMLTitleElement const> title_element() const
+    {
+        return const_cast<Document*>(this)->title_element();
+    }
+
+    HTML::HTMLElement const* body() const
     {
         return const_cast<Document*>(this)->body();
     }
@@ -167,7 +173,7 @@ public:
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     DeprecatedString title() const;
-    void set_title(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_title(DeprecatedString const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }

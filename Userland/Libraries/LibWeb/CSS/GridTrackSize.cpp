@@ -197,7 +197,7 @@ GridTrackSizeList::GridTrackSizeList()
 {
 }
 
-GridTrackSizeList GridTrackSizeList::make_auto()
+GridTrackSizeList GridTrackSizeList::make_none()
 {
     return GridTrackSizeList();
 }
