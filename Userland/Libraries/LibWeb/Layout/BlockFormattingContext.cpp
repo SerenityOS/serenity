@@ -54,6 +54,9 @@ static bool margins_collapse_through(Box const& box, LayoutState& state)
     // nor top or bottom padding, and it has a 'height' of either 0 or 'auto', and it does not contain a line box, and
     // all of its in-flow children's margins (if any) collapse.
     // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+    // FIXME: For the purpose of margin collapsing (CSS 2 §8.3.1 Collapsing margins), if the block axis is the
+    //        ratio-dependent axis, it is not considered to have a computed block-size of auto.
+    //        https://www.w3.org/TR/css-sizing-4/#aspect-ratio-margin-collapse
     return state.get(box).border_box_height() == 0;
 }
 
@@ -130,12 +133,14 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         remaining_available_space.width = AvailableSize::make_definite(remaining_width);
     }
 
-    if (is<ReplacedBox>(box)) {
+    if (box_is_sized_as_replaced_element(box)) {
         // FIXME: This should not be done *by* ReplacedBox
-        auto& replaced = verify_cast<ReplacedBox>(box);
-        // FIXME: This const_cast is gross.
-        const_cast<ReplacedBox&>(replaced).prepare_for_replaced_layout();
-        compute_width_for_block_level_replaced_element_in_normal_flow(replaced, remaining_available_space);
+        if (is<ReplacedBox>(box)) {
+            auto& replaced = verify_cast<ReplacedBox>(box);
+            // FIXME: This const_cast is gross.
+            const_cast<ReplacedBox&>(replaced).prepare_for_replaced_layout();
+        }
+        compute_width_for_block_level_replaced_element_in_normal_flow(box, remaining_available_space);
         if (box.is_floating()) {
             // 10.3.6 Floating, replaced elements:
             // https://www.w3.org/TR/CSS22/visudet.html#float-replaced-width
@@ -231,7 +236,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     };
 
     auto input_width = [&] {
-        if (is<ReplacedBox>(box)) {
+        if (box_is_sized_as_replaced_element(box)) {
             // NOTE: Replaced elements had their width calculated independently above.
             //       We use that width as the input here to ensure that margins get resolved.
             return CSS::Length::make_px(box_state.content_width());
@@ -266,7 +271,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         }
     }
 
-    if (!is<ReplacedBox>(box) && !used_width.is_auto())
+    if (!box_is_sized_as_replaced_element(box) && !used_width.is_auto())
         box_state.set_content_width(used_width.to_px(box));
 
     box_state.margin_left = margin_left.to_px(box);
@@ -350,7 +355,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
     box_state.padding_right = padding_right;
 }
 
-void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
+void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(Box const& box, AvailableSpace const& available_space)
 {
     // 10.3.6 Floating, replaced elements
     auto& computed_values = box.computed_values();
@@ -436,8 +441,8 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
 
     // Then work out what the height is, based on box type and CSS properties.
     CSSPixels height = 0;
-    if (is<ReplacedBox>(box)) {
-        height = compute_height_for_replaced_element(verify_cast<ReplacedBox>(box), available_space);
+    if (box_is_sized_as_replaced_element(box)) {
+        height = compute_height_for_replaced_element(box, available_space);
     } else {
         if (should_treat_height_as_auto(box, available_space)) {
             height = compute_auto_height_for_block_level_element(box, m_state.get(box).available_inner_space_or_constraints_from(available_space));

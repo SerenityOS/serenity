@@ -41,6 +41,10 @@ public:
     void set_natural_height(Optional<CSSPixels> height) { m_natural_height = height; }
     void set_natural_aspect_ratio(Optional<float> ratio) { m_natural_aspect_ratio = ratio; }
 
+    // https://www.w3.org/TR/css-sizing-4/#preferred-aspect-ratio
+    Optional<float> preferred_aspect_ratio() const;
+    bool has_preferred_aspect_ratio() const { return preferred_aspect_ratio().has_value(); }
+
     virtual ~Box() override;
 
     virtual void did_set_content_size() { }

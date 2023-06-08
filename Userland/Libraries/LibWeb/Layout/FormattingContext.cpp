@@ -256,7 +256,7 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
     };
 }
 
-CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, ReplacedBox const& box) const
+CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const& box) const
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
@@ -365,7 +365,7 @@ CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_ro
 }
 
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
-CSSPixels FormattingContext::tentative_width_for_replaced_element(ReplacedBox const& box, CSS::Size const& computed_width, AvailableSpace const& available_space) const
+CSSPixels FormattingContext::tentative_width_for_replaced_element(Box const& box, CSS::Size const& computed_width, AvailableSpace const& available_space) const
 {
     // Treat percentages of indefinite containing block widths as 0 (the initial width).
     if (computed_width.is_percentage() && !m_state.get(*box.containing_block()).has_definite_width())
@@ -387,16 +387,16 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(ReplacedBox co
     // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
     //
     //     (used height) * (intrinsic ratio)
-    if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_natural_width() && box.has_natural_height() && box.has_natural_aspect_ratio())
-        || (computed_width.is_auto() && !computed_height.is_auto() && box.has_natural_aspect_ratio())) {
-        return compute_height_for_replaced_element(box, available_space) * static_cast<double>(box.natural_aspect_ratio().value());
+    if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_natural_width() && box.has_natural_height() && box.has_preferred_aspect_ratio())
+        || (computed_width.is_auto() && !computed_height.is_auto() && box.has_preferred_aspect_ratio())) {
+        return compute_height_for_replaced_element(box, available_space) * static_cast<double>(box.preferred_aspect_ratio().value());
     }
 
     // If 'height' and 'width' both have computed values of 'auto' and the element has an intrinsic ratio but no intrinsic height or width,
     // then the used value of 'width' is undefined in CSS 2.2. However, it is suggested that, if the containing block's width does not itself
     // depend on the replaced element's width, then the used value of 'width' is calculated from the constraint equation used for block-level,
     // non-replaced elements in normal flow.
-    if (computed_height.is_auto() && computed_width.is_auto() && !box.has_natural_width() && !box.has_natural_height() && box.has_natural_aspect_ratio()) {
+    if (computed_height.is_auto() && computed_width.is_auto() && !box.has_natural_width() && !box.has_natural_height() && box.has_preferred_aspect_ratio()) {
         return calculate_stretch_fit_width(box, available_space.width);
     }
 
@@ -414,21 +414,21 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(ReplacedBox co
 
 void FormattingContext::compute_width_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
 {
-    if (is<ReplacedBox>(box))
-        compute_width_for_absolutely_positioned_replaced_element(verify_cast<ReplacedBox>(box), available_space);
+    if (box_is_sized_as_replaced_element(box))
+        compute_width_for_absolutely_positioned_replaced_element(box, available_space);
     else
         compute_width_for_absolutely_positioned_non_replaced_element(box, available_space);
 }
 
 void FormattingContext::compute_height_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout)
 {
-    if (is<ReplacedBox>(box))
-        compute_height_for_absolutely_positioned_replaced_element(static_cast<ReplacedBox const&>(box), available_space, before_or_after_inside_layout);
+    if (box_is_sized_as_replaced_element(box))
+        compute_height_for_absolutely_positioned_replaced_element(box, available_space, before_or_after_inside_layout);
     else
         compute_height_for_absolutely_positioned_non_replaced_element(box, available_space, before_or_after_inside_layout);
 }
 
-CSSPixels FormattingContext::compute_width_for_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space) const
+CSSPixels FormattingContext::compute_width_for_replaced_element(Box const& box, AvailableSpace const& available_space) const
 {
     // 10.3.4 Block-level, replaced elements in normal flow...
     // 10.3.2 Inline, replaced elements
@@ -443,7 +443,7 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(ReplacedBox cons
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = tentative_width_for_replaced_element(box, computed_width, available_space);
 
-    if (computed_width.is_auto() && computed_height.is_auto() && box.has_natural_aspect_ratio()) {
+    if (computed_width.is_auto() && computed_height.is_auto() && box.has_preferred_aspect_ratio()) {
         CSSPixels w = used_width;
         CSSPixels h = tentative_height_for_replaced_element(box, computed_height, available_space);
         used_width = solve_replaced_size_constraint(w, h, box).width();
@@ -473,7 +473,7 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(ReplacedBox cons
 
 // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow, 'inline-block' replaced elements in normal flow and floating replaced elements
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
-CSSPixels FormattingContext::tentative_height_for_replaced_element(ReplacedBox const& box, CSS::Size const& computed_height, AvailableSpace const& available_space) const
+CSSPixels FormattingContext::tentative_height_for_replaced_element(Box const& box, CSS::Size const& computed_height, AvailableSpace const& available_space) const
 {
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
@@ -483,8 +483,8 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(ReplacedBox c
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic ratio then the used value of 'height' is:
     //
     //     (used width) / (intrinsic ratio)
-    if (computed_height.is_auto() && box.has_natural_aspect_ratio())
-        return m_state.get(box).content_width() / static_cast<double>(box.natural_aspect_ratio().value());
+    if (computed_height.is_auto() && box.has_preferred_aspect_ratio())
+        return m_state.get(box).content_width() / static_cast<double>(box.preferred_aspect_ratio().value());
 
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (computed_height.is_auto() && box.has_natural_height())
@@ -500,7 +500,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(ReplacedBox c
     return calculate_inner_height(box, available_space.height, computed_height).to_px(box);
 }
 
-CSSPixels FormattingContext::compute_height_for_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space) const
+CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box, AvailableSpace const& available_space) const
 {
     // 10.6.2 Inline replaced elements
     // 10.6.4 Block-level replaced elements in normal flow
@@ -518,7 +518,7 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(ReplacedBox con
     // use the algorithm under 'Minimum and maximum widths'
     // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
     // to find the used width and height.
-    if (computed_width.is_auto() && computed_height.is_auto() && box.has_natural_aspect_ratio()) {
+    if (computed_width.is_auto() && computed_height.is_auto() && box.has_preferred_aspect_ratio()) {
         CSSPixels w = tentative_width_for_replaced_element(box, computed_width, available_space);
         CSSPixels h = used_height;
         used_height = solve_replaced_size_constraint(w, h, box).height();
@@ -689,12 +689,14 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     box_state.padding_right = padding_right;
 }
 
-void FormattingContext::compute_width_for_absolutely_positioned_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space)
+void FormattingContext::compute_width_for_absolutely_positioned_replaced_element(Box const& box, AvailableSpace const& available_space)
 {
     // 10.3.8 Absolutely positioned, replaced elements
     // The used value of 'width' is determined as for inline replaced elements.
-    // FIXME: This const_cast is gross.
-    const_cast<ReplacedBox&>(box).prepare_for_replaced_layout();
+    if (is<ReplacedBox>(box)) {
+        // FIXME: This const_cast is gross.
+        static_cast<ReplacedBox&>(const_cast<Box&>(box)).prepare_for_replaced_layout();
+    }
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(box, available_space));
 }
 
@@ -1061,7 +1063,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
-void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout)
+void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout)
 {
     // 10.6.5 Absolutely positioned, replaced elements
     // The used value of 'height' is determined as for inline replaced elements.
@@ -1283,8 +1285,8 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
 
 CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
-    if (box.has_natural_aspect_ratio() && available_width.is_definite())
-        return available_width.to_px() / static_cast<double>(*box.natural_aspect_ratio());
+    if (box.has_preferred_aspect_ratio() && available_width.is_definite())
+        return available_width.to_px() / static_cast<double>(*box.preferred_aspect_ratio());
 
     if (box.has_natural_height())
         return *box.natural_height();
@@ -1621,6 +1623,15 @@ CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
     VERIFY_NOT_REACHED();
+}
+
+bool box_is_sized_as_replaced_element(Box const& box)
+{
+    // When a box has a preferred aspect ratio, its automatic sizes are calculated the same as for a
+    // replaced element with a natural aspect ratio and no natural size in that axis, see e.g. CSS2 §10
+    // and CSS Flexible Box Model Level 1 §9.2.
+    // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-automatic
+    return is<ReplacedBox>(box) || box.has_preferred_aspect_ratio();
 }
 
 }
