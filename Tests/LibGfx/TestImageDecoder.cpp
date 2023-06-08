@@ -404,6 +404,31 @@ TEST_CASE(test_webp_extended_lossy_alpha_horizontal_filter)
     EXPECT_EQ(frame.image->get_pixel(131, 131), Gfx::Color(0x8f, 0x51, 0x2f, 0x4b));
 }
 
+TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
+{
+    // Also lossy rgb + lossless alpha, but with a gradient alpha filtering method.
+    // The image should look like smolkling.webp, but with a few transparent pixels in the shape of a C on it. Most of the image should not be transparent.
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling-gradient-alpha.webp"sv)));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+
+    // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
+    // So pixels changing by 1 or so below is fine if you change code.
+    // The important component in this test is alpha, and that shouldn't change even by 1 as it's losslessly compressed and doesn't use YUV.
+    // In particular, the center of the image should be fully opaque, not fully transparent.
+    EXPECT_EQ(frame.image->get_pixel(131, 131), Gfx::Color(0x8c, 0x47, 0x2e, 255));
+}
+
 TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy-uncompressed-alpha.webp"sv)));
