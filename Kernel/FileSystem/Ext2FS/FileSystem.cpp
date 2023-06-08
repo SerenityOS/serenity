@@ -540,7 +540,6 @@ ErrorOr<void> Ext2FS::prepare_to_clear_last_mount()
             return EBUSY;
     }
 
-    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
     m_inode_cache.clear();
     m_root_inode = nullptr;
     return {};
