@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -852,12 +853,19 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
     if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
         return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
 
-    auto result = Compress::ZlibDecompressor::decompress_all(context.compressed_data.span());
-    if (!result.has_value()) {
+    auto compressed_data_stream = make<FixedMemoryStream>(context.compressed_data.span());
+    auto decompressor_or_error = Compress::ZlibDecompressor::create(move(compressed_data_stream));
+    if (decompressor_or_error.is_error()) {
         context.state = PNGLoadingContext::State::Error;
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed");
+        return decompressor_or_error.release_error();
     }
-    auto& decompression_buffer = result.value();
+    auto decompressor = decompressor_or_error.release_value();
+    auto result_or_error = decompressor->read_until_eof();
+    if (result_or_error.is_error()) {
+        context.state = PNGLoadingContext::State::Error;
+        return result_or_error.release_error();
+    }
+    auto decompression_buffer = result_or_error.release_value();
     context.compressed_data.clear();
 
     context.scanlines.ensure_capacity(context.height);
@@ -887,11 +895,9 @@ static ErrorOr<RefPtr<Bitmap>> decode_png_animation_frame_bitmap(PNGLoadingConte
     auto frame_rect = animation_frame.rect();
     auto frame_context = context.create_subimage_context(frame_rect.width(), frame_rect.height());
 
-    auto result = Compress::ZlibDecompressor::decompress_all(animation_frame.compressed_data.span());
-    if (!result.has_value())
-        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression of animation frame failed");
-
-    auto& decompression_buffer = result.value();
+    auto compressed_data_stream = make<FixedMemoryStream>(animation_frame.compressed_data.span());
+    auto decompressor = TRY(Compress::ZlibDecompressor::create(move(compressed_data_stream)));
+    auto decompression_buffer = TRY(decompressor->read_until_eof());
     frame_context.compressed_data.clear();
 
     frame_context.scanlines.ensure_capacity(frame_context.height);
@@ -1443,12 +1449,19 @@ ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
 
     if (m_context->embedded_icc_profile.has_value()) {
         if (!m_context->decompressed_icc_profile.has_value()) {
-            auto result = Compress::ZlibDecompressor::decompress_all(m_context->embedded_icc_profile->compressed_data);
-            if (!result.has_value()) {
+            auto compressed_data_stream = make<FixedMemoryStream>(m_context->embedded_icc_profile->compressed_data);
+            auto decompressor_or_error = Compress::ZlibDecompressor::create(move(compressed_data_stream));
+            if (decompressor_or_error.is_error()) {
                 m_context->embedded_icc_profile.clear();
-                return Error::from_string_literal("PNGImageDecoderPlugin: Decompression of ICC profile failed");
+                return decompressor_or_error.release_error();
             }
-            m_context->decompressed_icc_profile = move(*result);
+            auto decompressor = decompressor_or_error.release_value();
+            auto result_or_error = decompressor->read_until_eof();
+            if (result_or_error.is_error()) {
+                m_context->embedded_icc_profile.clear();
+                return result_or_error.release_error();
+            }
+            m_context->decompressed_icc_profile = result_or_error.release_value();
         }
 
         return m_context->decompressed_icc_profile.value();

@@ -6,6 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/IntegralMath.h>
+#include <AK/MemoryStream.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/WOFF/Font.h>
@@ -120,12 +121,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
         if (font_buffer_offset + orig_length > font_buffer.size())
             return Error::from_string_literal("Uncompressed WOFF table too big");
         if (comp_length < orig_length) {
-            auto decompressed = Compress::ZlibDecompressor::decompress_all(buffer.slice(offset, comp_length));
-            if (!decompressed.has_value())
-                return Error::from_string_literal("Could not decompress WOFF table");
-            if (orig_length != decompressed->size())
+            auto compressed_data_stream = make<FixedMemoryStream>(buffer.slice(offset, comp_length));
+            auto decompressor = TRY(Compress::ZlibDecompressor::create(move(compressed_data_stream)));
+            auto decompressed = TRY(decompressor->read_until_eof());
+            if (orig_length != decompressed.size())
                 return Error::from_string_literal("Invalid decompressed WOFF table length");
-            font_buffer.overwrite(font_buffer_offset, decompressed->data(), orig_length);
+            font_buffer.overwrite(font_buffer_offset, decompressed.data(), orig_length);
         } else {
             if (comp_length != orig_length)
                 return Error::from_string_literal("Invalid uncompressed WOFF table length");

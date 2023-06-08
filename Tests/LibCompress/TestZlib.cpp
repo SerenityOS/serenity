@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
+#include <AK/MemoryStream.h>
 #include <LibCompress/Zlib.h>
 
 TEST_CASE(zlib_decompress_simple)
@@ -20,8 +21,10 @@ TEST_CASE(zlib_decompress_simple)
 
     const u8 uncompressed[] = "This is a simple text file :)";
 
-    auto const decompressed = Compress::ZlibDecompressor::decompress_all(compressed);
-    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
+    auto stream = make<FixedMemoryStream>(compressed);
+    auto decompressor = TRY_OR_FAIL(Compress::ZlibDecompressor::create(move(stream)));
+    auto decompressed = TRY_OR_FAIL(decompressor->read_until_eof());
+    EXPECT(decompressed.bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(zlib_compress_simple)
@@ -58,7 +61,7 @@ TEST_CASE(zlib_decompress_with_missing_end_bits)
         0x17, 0x17, 0x08, 0x43, 0xC5, 0xC9, 0x05, 0xA8, 0x4B, 0x50, 0x50, 0x50,
         0xC4, 0xD1, 0x45, 0x50, 0x80, 0x01, 0x06, 0x00, 0xB6, 0x1F, 0x15, 0xEF
     };
-    Array<u8, 144> const decompressed {
+    Array<u8, 144> const uncompressed {
         0x00, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x10, 0x00, 0x32, 0x22,
         0x22, 0x22, 0x22, 0x22, 0x22, 0x10, 0x00, 0x32, 0x55, 0x22, 0x25, 0x52,
         0x22, 0x22, 0x10, 0x00, 0x32, 0x55, 0x22, 0x25, 0x52, 0x22, 0x22, 0x10,
@@ -73,7 +76,8 @@ TEST_CASE(zlib_decompress_with_missing_end_bits)
         0x44, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-    auto const maybe_decompressed = Compress::ZlibDecompressor::decompress_all(compressed);
-    EXPECT(maybe_decompressed.has_value());
-    EXPECT_EQ(maybe_decompressed.value().span(), decompressed.span());
+    auto stream = make<FixedMemoryStream>(compressed);
+    auto decompressor = TRY_OR_FAIL(Compress::ZlibDecompressor::create(move(stream)));
+    auto decompressed = TRY_OR_FAIL(decompressor->read_until_eof());
+    EXPECT_EQ(decompressed.span(), uncompressed.span());
 }
