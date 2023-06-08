@@ -33,6 +33,7 @@
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
@@ -263,6 +264,19 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().align_self())));
     case PropertyID::Appearance:
         return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().appearance())));
+    case PropertyID::AspectRatio: {
+        auto aspect_ratio = layout_node.computed_values().aspect_ratio();
+        if (aspect_ratio.use_natural_aspect_ratio_if_available && aspect_ratio.preferred_ratio.has_value()) {
+            return TRY(StyleValueList::create(
+                StyleValueVector {
+                    TRY(IdentifierStyleValue::create(ValueID::Auto)),
+                    TRY(RatioStyleValue::create(aspect_ratio.preferred_ratio.value())) },
+                StyleValueList::Separator::Space));
+        }
+        if (aspect_ratio.preferred_ratio.has_value())
+            return TRY(RatioStyleValue::create(aspect_ratio.preferred_ratio.value()));
+        return TRY(IdentifierStyleValue::create(ValueID::Auto));
+    }
     case PropertyID::Background: {
         auto maybe_background_color = property(PropertyID::BackgroundColor);
         auto maybe_background_image = property(PropertyID::BackgroundImage);

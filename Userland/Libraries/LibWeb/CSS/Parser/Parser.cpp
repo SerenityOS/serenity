@@ -4457,6 +4457,51 @@ static void remove_property(Vector<PropertyID>& properties, PropertyID property_
     properties.remove_first_matching([&](auto it) { return it == property_to_remove; });
 }
 
+// https://www.w3.org/TR/css-sizing-4/#aspect-ratio
+ErrorOr<RefPtr<StyleValue>> Parser::parse_aspect_ratio_value(Vector<ComponentValue> const& component_values)
+{
+    // `auto || <ratio>`
+    RefPtr<StyleValue> auto_value;
+    RefPtr<StyleValue> ratio_value;
+
+    auto tokens = TokenStream { component_values };
+    while (tokens.has_next_token()) {
+        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::AspectRatio, tokens));
+        if (!maybe_value)
+            return nullptr;
+
+        if (maybe_value->is_ratio()) {
+            if (ratio_value)
+                return nullptr;
+            ratio_value = maybe_value.release_nonnull();
+            continue;
+        }
+
+        if (maybe_value->is_identifier() && maybe_value->as_identifier().id() == ValueID::Auto) {
+            if (auto_value)
+                return nullptr;
+            auto_value = maybe_value.release_nonnull();
+            continue;
+        }
+
+        return nullptr;
+    }
+
+    if (auto_value && ratio_value) {
+        return TRY(StyleValueList::create(
+            StyleValueVector { auto_value.release_nonnull(), ratio_value.release_nonnull() },
+            StyleValueList::Separator::Space));
+    }
+
+    if (ratio_value)
+        return ratio_value.release_nonnull();
+
+    if (auto_value)
+        return auto_value.release_nonnull();
+
+    return nullptr;
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
     StyleValueVector background_images;
@@ -7307,6 +7352,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     // Special-case property handling
     switch (property_id) {
+    case PropertyID::AspectRatio:
+        if (auto parsed_value = FIXME_TRY(parse_aspect_ratio_value(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::BackdropFilter:
         if (auto parsed_value = FIXME_TRY(parse_filter_value_list_value(component_values)))
             return parsed_value.release_nonnull();
