@@ -44,22 +44,21 @@ struct ZlibHeader {
 };
 static_assert(sizeof(ZlibHeader) == sizeof(u16));
 
-class ZlibDecompressor {
+class ZlibDecompressor : public Stream {
 public:
-    Optional<ByteBuffer> decompress();
-    u32 checksum();
+    static ErrorOr<NonnullOwnPtr<ZlibDecompressor>> create(MaybeOwned<Stream>);
 
-    static Optional<ZlibDecompressor> try_create(ReadonlyBytes data);
-    static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
 
 private:
-    ZlibDecompressor(ZlibHeader, ReadonlyBytes data);
+    ZlibDecompressor(ZlibHeader, NonnullOwnPtr<Stream>);
 
     ZlibHeader m_header;
-
-    u32 m_checksum { 0 };
-    ReadonlyBytes m_input_data;
-    ReadonlyBytes m_data_bytes;
+    NonnullOwnPtr<Stream> m_stream;
 };
 
 class ZlibCompressor : public Stream {
@@ -87,3 +86,8 @@ private:
 };
 
 }
+
+template<>
+struct AK::Traits<Compress::ZlibHeader> : public AK::GenericTraits<Compress::ZlibHeader> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};

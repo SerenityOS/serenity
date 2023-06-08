@@ -4,11 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibCompress/Zlib.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    (void)Compress::ZlibDecompressor::decompress_all(ReadonlyBytes { data, size });
+    auto stream = make<FixedMemoryStream>(ReadonlyBytes { data, size });
+
+    auto decompressor_or_error = Compress::ZlibDecompressor::create(move(stream));
+    if (decompressor_or_error.is_error())
+        return 0;
+    auto decompressor = decompressor_or_error.release_value();
+    (void)decompressor->read_until_eof();
     return 0;
 }
