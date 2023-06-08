@@ -54,7 +54,7 @@ GzipDecompressor::Member::Member(BlockHeader header, NonnullOwnPtr<DeflateDecomp
 {
 }
 
-GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Stream> stream)
+GzipDecompressor::GzipDecompressor(MaybeOwned<Stream> stream)
     : m_input_stream(make<LittleEndianInputBitStream>(move(stream)))
 {
 }
