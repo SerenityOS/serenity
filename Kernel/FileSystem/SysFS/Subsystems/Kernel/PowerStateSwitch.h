@@ -29,9 +29,6 @@ public:
 
 private:
     explicit SysFSPowerStateSwitchNode(SysFSDirectory const&);
-
-    void reboot();
-    void poweroff();
 };
 
 }
