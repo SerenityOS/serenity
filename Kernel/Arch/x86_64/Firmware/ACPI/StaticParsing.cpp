@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
-#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::ACPI::StaticParsing {

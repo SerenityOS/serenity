@@ -12,12 +12,12 @@
 #include <AK/Try.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

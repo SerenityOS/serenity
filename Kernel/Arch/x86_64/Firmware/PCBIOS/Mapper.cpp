@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Firmware/BIOS.h>
+#include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
 

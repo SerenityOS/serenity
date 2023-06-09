@@ -172,8 +172,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Devices/Directory.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
@@ -206,7 +204,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
     FileSystem/VirtualFileSystem.cpp
-    Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
@@ -372,6 +369,9 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/Firmware/ACPI/StaticParsing.cpp
         Arch/x86_64/Firmware/MultiProcessor/Parser.cpp
+        Arch/x86_64/Firmware/PCBIOS/Mapper.cpp
+        Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp
+        Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.cpp
 
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
