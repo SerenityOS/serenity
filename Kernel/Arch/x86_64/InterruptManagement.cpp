@@ -7,13 +7,13 @@
 #include <AK/ByteReader.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/x86_64/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
-#include <Kernel/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
