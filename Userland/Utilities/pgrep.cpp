@@ -28,6 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool list_process_name = false;
     bool invert_match = false;
     bool exact_match = false;
+    bool newest_only = false;
     HashTable<uid_t> uids_to_filter_by;
     StringView pattern;
 
@@ -35,6 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(display_number_of_matches, "Suppress normal output and print the number of matching processes", "count", 'c');
     args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', nullptr);
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
+    args_parser.add_option(newest_only, "Select the most recently created process only", "newest", 'n');
     args_parser.add_option(list_process_name, "List the process name in addition to its pid", "list-name", 'l');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
@@ -95,8 +97,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     if (display_number_of_matches) {
         outln("{}", matches.size());
-    } else {
-        quick_sort(matches, [](auto const& a, auto const& b) { return a.pid < b.pid; });
+    } else if (!matches.is_empty()) {
+        quick_sort(matches, [](auto const& a, auto const& b) { return a.creation_time < b.creation_time; });
+        if (newest_only)
+            matches = { matches.last() };
+
         auto displayed_at_least_one = false;
         for (auto& match : matches) {
             if (displayed_at_least_one)
@@ -114,5 +119,5 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             outln();
     }
 
-    return matches.size() > 0 ? 0 : 1;
+    return matches.is_empty() ? 1 : 0;
 }
