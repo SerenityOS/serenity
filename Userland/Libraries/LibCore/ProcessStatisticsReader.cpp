@@ -42,6 +42,7 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
         process.tty = process_object.get_deprecated_string("tty"sv).value_or("");
         process.pledge = process_object.get_deprecated_string("pledge"sv).value_or("");
         process.veil = process_object.get_deprecated_string("veil"sv).value_or("");
+        process.creation_time = UnixDateTime::from_nanoseconds_since_epoch(process_object.get_i64("creation_time"sv).value_or(0));
         process.amount_virtual = process_object.get_u32("amount_virtual"sv).value_or(0);
         process.amount_resident = process_object.get_u32("amount_resident"sv).value_or(0);
         process.amount_shared = process_object.get_u32("amount_shared"sv).value_or(0);
