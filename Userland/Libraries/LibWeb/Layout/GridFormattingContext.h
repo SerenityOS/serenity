@@ -188,29 +188,60 @@ private:
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
+    bool has_gaps(GridDimension const dimension) const
+    {
+        if (dimension == GridDimension::Column) {
+            return !grid_container().computed_values().column_gap().is_auto();
+        } else {
+            return !grid_container().computed_values().row_gap().is_auto();
+        }
+    }
+
     template<typename Callback>
     void for_each_spanned_track_by_item(GridItem const& item, GridDimension const dimension, Callback callback)
     {
         auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-        for (size_t span = 0; span < item.span(dimension); span++) {
-            if (item.raw_position(dimension) + span >= tracks.size())
+        auto& gaps = dimension == GridDimension::Column ? m_column_gap_tracks : m_row_gap_tracks;
+        auto has_gaps = this->has_gaps(dimension);
+        auto item_span = item.span(dimension);
+        auto item_index = item.raw_position(dimension);
+        for (size_t span = 0; span < item_span; span++) {
+            auto track_index = item_index + span;
+            if (track_index >= tracks.size())
                 break;
 
-            auto& track = tracks[item.raw_position(dimension) + span];
+            auto& track = tracks[track_index];
             callback(track);
+
+            auto is_last_spanned_track = span == item_span - 1;
+            if (has_gaps && !is_last_spanned_track) {
+                auto& gap = gaps[track_index];
+                callback(gap);
+            }
         }
     }
 
     template<typename Callback>
     void for_each_spanned_track_by_item(GridItem const& item, GridDimension const dimension, Callback callback) const
     {
-        auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
-        for (size_t span = 0; span < item.span(dimension); span++) {
-            if (item.raw_position(dimension) + span >= tracks.size())
+        auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+        auto& gaps = dimension == GridDimension::Column ? m_column_gap_tracks : m_row_gap_tracks;
+        auto has_gaps = this->has_gaps(dimension);
+        auto item_span = item.span(dimension);
+        auto item_index = item.raw_position(dimension);
+        for (size_t span = 0; span < item_span; span++) {
+            auto track_index = item_index + span;
+            if (track_index >= tracks.size())
                 break;
 
-            auto const& track = tracks[item.raw_position(dimension) + span];
+            auto& track = tracks[track_index];
             callback(track);
+
+            auto is_last_spanned_track = span == item_span - 1;
+            if (has_gaps && !is_last_spanned_track) {
+                auto& gap = gaps[track_index];
+                callback(gap);
+            }
         }
     }
 
