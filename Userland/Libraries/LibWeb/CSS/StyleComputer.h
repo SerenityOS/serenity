@@ -199,7 +199,7 @@ private:
 
     struct Animation {
         String name;
-        CSS::Time duration;
+        Optional<CSS::Time> duration; // "auto" if not set.
         CSS::Time delay;
         Optional<size_t> iteration_count; // Infinite if not set.
         CSS::AnimationDirection direction;

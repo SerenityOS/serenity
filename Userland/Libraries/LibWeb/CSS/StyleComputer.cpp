@@ -1090,7 +1090,11 @@ StyleComputer::AnimationStepTransition StyleComputer::Animation::step(CSS::Time 
     remaining_delay = CSS::Time { 0, CSS::Time::Type::Ms };
     time_step_ms -= delay_ms;
 
-    auto added_progress = time_step_ms / duration.to_milliseconds();
+    // "auto": For time-driven animations, equivalent to 0s.
+    // https://www.w3.org/TR/2023/WD-css-animations-2-20230602/#valdef-animation-duration-auto
+    auto used_duration = duration.value_or(CSS::Time { 0, CSS::Time::Type::S });
+
+    auto added_progress = time_step_ms / used_duration.to_milliseconds();
     auto new_progress = progress.as_fraction() + added_progress;
     auto changed_iteration = false;
     if (new_progress >= 1) {
@@ -1498,9 +1502,15 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                 auto active_animation = m_active_animations.get(animation_key);
                 if (!active_animation.has_value()) {
                     // New animation!
-                    CSS::Time duration { 0, CSS::Time::Type::S };
-                    if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value && duration_value->is_time())
-                        duration = duration_value->as_time().time();
+                    Optional<CSS::Time> duration;
+                    if (auto duration_value = style.maybe_null_property(PropertyID::AnimationDuration); duration_value) {
+                        if (duration_value->is_time()) {
+                            duration = duration_value->as_time().time();
+                        } else if (duration_value->is_identifier() && duration_value->as_identifier().id() == ValueID::Auto) {
+                            // We use empty optional to represent "auto".
+                            duration = {};
+                        }
+                    }
 
                     CSS::Time delay { 0, CSS::Time::Type::S };
                     if (auto delay_value = style.maybe_null_property(PropertyID::AnimationDelay); delay_value && delay_value->is_time())

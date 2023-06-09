@@ -67,9 +67,12 @@
   "animation-duration": {
     "affects-layout": true,
     "inherited": false,
-    "initial": "0s",
+    "initial": "auto",
     "valid-types": [
       "time [0,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
     ]
   },
   "animation-fill-mode": {
