@@ -210,7 +210,6 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
-    Firmware/MultiProcessor/Parser.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -372,6 +371,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Delay.cpp
 
         Arch/x86_64/Firmware/ACPI/StaticParsing.cpp
+        Arch/x86_64/Firmware/MultiProcessor/Parser.cpp
 
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
