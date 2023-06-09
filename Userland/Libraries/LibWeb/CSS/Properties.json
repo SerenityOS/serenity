@@ -45,48 +45,12 @@
       "animation-fill-mode"
     ]
   },
-  "animation-name": {
-    "affects-layout": true,
-    "inherited": false,
-    "initial": "none",
-    "valid-types": [
-      "string",
-      "custom-ident"
-    ],
-    "valid-identifiers": [
-      "none"
-    ]
-  },
-  "animation-duration": {
+  "animation-delay": {
     "affects-layout": true,
     "inherited": false,
     "initial": "0s",
     "valid-types": [
-      "time [0,∞]"
-    ]
-  },
-  "animation-timing-function": {
-    "affects-layout": true,
-    "inherited": false,
-    "initial": "ease",
-    "__comment": "FIXME: This is like...wrong.",
-    "valid-identifiers": [
-      "ease",
-      "linear",
-      "ease-in-out",
-      "ease-in",
-      "ease-out"
-    ]
-  },
-  "animation-iteration-count": {
-    "affects-layout": true,
-    "inherited": false,
-    "initial": "1",
-    "valid-types": [
-      "number [0,∞]"
-    ],
-    "valid-identifiers": [
-      "infinite"
+      "time [-∞,∞]"
     ]
   },
   "animation-direction": {
@@ -100,21 +64,12 @@
       "alternate-reverse"
     ]
   },
-  "animation-play-state": {
-    "affects-layout": false,
-    "inherited": false,
-    "initial": "running",
-    "valid-identifiers": [
-      "running",
-      "paused"
-    ]
-  },
-  "animation-delay": {
+  "animation-duration": {
     "affects-layout": true,
     "inherited": false,
     "initial": "0s",
     "valid-types": [
-      "time [-∞,∞]"
+      "time [0,∞]"
     ]
   },
   "animation-fill-mode": {
@@ -126,6 +81,51 @@
       "forwards",
       "backwards",
       "both"
+    ]
+  },
+  "animation-iteration-count": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "1",
+    "valid-types": [
+      "number [0,∞]"
+    ],
+    "valid-identifiers": [
+      "infinite"
+    ]
+  },
+  "animation-name": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "none",
+    "valid-types": [
+      "string",
+      "custom-ident"
+    ],
+    "valid-identifiers": [
+      "none"
+    ]
+  },
+  "animation-play-state": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "running",
+    "valid-identifiers": [
+      "running",
+      "paused"
+    ]
+  },
+  "animation-timing-function": {
+    "affects-layout": true,
+    "inherited": false,
+    "initial": "ease",
+    "__comment": "FIXME: This is like...wrong.",
+    "valid-identifiers": [
+      "ease",
+      "linear",
+      "ease-in-out",
+      "ease-in",
+      "ease-out"
     ]
   },
   "appearance": {
