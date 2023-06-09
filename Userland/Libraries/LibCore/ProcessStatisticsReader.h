@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <unistd.h>
 
@@ -49,6 +50,7 @@ struct ProcessStatistics {
     DeprecatedString tty;
     DeprecatedString pledge;
     DeprecatedString veil;
+    UnixDateTime creation_time;
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
