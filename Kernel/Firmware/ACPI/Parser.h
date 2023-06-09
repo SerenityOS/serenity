@@ -24,11 +24,11 @@ namespace Kernel::ACPI {
 class ACPISysFSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "acpi"sv; }
-    static NonnullLockRefPtr<ACPISysFSDirectory> must_create(FirmwareSysFSDirectory& firmware_directory);
+    static NonnullLockRefPtr<ACPISysFSDirectory> must_create(SysFSFirmwareDirectory& firmware_directory);
 
 private:
     void find_tables_and_register_them_as_components();
-    explicit ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory);
+    explicit ACPISysFSDirectory(SysFSFirmwareDirectory& firmware_directory);
 };
 
 class ACPISysFSComponent : public SysFSComponent {

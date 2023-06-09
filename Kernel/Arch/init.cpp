@@ -391,7 +391,7 @@ void init_stage2(void*)
     if (!PCI::Access::is_disabled()) {
         USB::USBManagement::initialize();
     }
-    FirmwareSysFSDirectory::initialize();
+    SysFSFirmwareDirectory::initialize();
 
     if (!PCI::Access::is_disabled()) {
         VirtIO::detect();

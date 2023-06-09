@@ -100,14 +100,14 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     }));
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSDirectory> ACPISysFSDirectory::must_create(SysFSFirmwareDirectory& firmware_directory)
 {
     auto acpi_directory = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ACPISysFSDirectory(firmware_directory)));
     acpi_directory->find_tables_and_register_them_as_components();
     return acpi_directory;
 }
 
-UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(SysFSFirmwareDirectory& firmware_directory)
     : SysFSDirectory(firmware_directory)
 {
 }
