@@ -200,6 +200,10 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
         ErrorOr<void> result;
         for (auto const& path : candidate_web_content_paths) {
             constexpr auto callgrind_prefix_length = 3;
+
+            if (Core::System::access(path, X_OK).is_error())
+                continue;
+
             auto arguments = Vector {
                 "valgrind"sv,
                 "--tool=callgrind"sv,
