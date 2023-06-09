@@ -8,9 +8,9 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Arch/x86_64/Firmware/MultiProcessor/Parser.h>
+#include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

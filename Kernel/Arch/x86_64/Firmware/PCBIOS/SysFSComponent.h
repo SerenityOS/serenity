@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-class BIOSSysFSComponent final : public SysFSComponent {
+class SysFSPCBIOSComponent final : public SysFSComponent {
 public:
     enum class Type {
         DMIEntryPoint,
@@ -24,13 +24,13 @@ public:
     };
 
 public:
-    static NonnullRefPtr<BIOSSysFSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
+    static NonnullRefPtr<SysFSPCBIOSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
     virtual StringView name() const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 
 private:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
-    BIOSSysFSComponent(Type, PhysicalAddress, size_t blob_size);
+    SysFSPCBIOSComponent(Type, PhysicalAddress, size_t blob_size);
 
     virtual size_t size() const override { return m_blob_length; }
 

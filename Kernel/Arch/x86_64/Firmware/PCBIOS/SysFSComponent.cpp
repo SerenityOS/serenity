@@ -5,9 +5,9 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
+#include <Kernel/Arch/x86_64/Firmware/PCBIOS/SysFSComponent.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.h>
-#include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -15,12 +15,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<BIOSSysFSComponent> BIOSSysFSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+NonnullRefPtr<SysFSPCBIOSComponent> SysFSPCBIOSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
 {
-    return adopt_ref_if_nonnull(new (nothrow) BIOSSysFSComponent(type, blob_paddr, blob_size)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSPCBIOSComponent(type, blob_paddr, blob_size)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+UNMAP_AFTER_INIT SysFSPCBIOSComponent::SysFSPCBIOSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)
     : SysFSComponent()
     , m_blob_paddr(blob_paddr)
     , m_blob_length(blob_size)
@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(Type type, PhysicalAddre
 {
 }
 
-ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> SysFSPCBIOSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = TRY(try_to_generate_buffer());
 
@@ -40,7 +40,7 @@ ErrorOr<size_t> BIOSSysFSComponent::read_bytes(off_t offset, size_t count, UserO
     return nread;
 }
 
-StringView BIOSSysFSComponent::name() const
+StringView SysFSPCBIOSComponent::name() const
 {
     switch (m_type) {
     case Type::DMIEntryPoint:
@@ -53,9 +53,9 @@ StringView BIOSSysFSComponent::name() const
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullOwnPtr<KBuffer>> BIOSSysFSComponent::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> SysFSPCBIOSComponent::try_to_generate_buffer() const
 {
     auto blob = TRY(Memory::map_typed<u8>((m_blob_paddr), m_blob_length));
-    return KBuffer::try_create_with_bytes("BIOSSysFSComponent: Blob"sv, Span<u8> { blob.ptr(), m_blob_length });
+    return KBuffer::try_create_with_bytes("SysFSPCBIOSComponent: Blob"sv, Span<u8> { blob.ptr(), m_blob_length });
 }
 }

@@ -15,15 +15,15 @@
 
 namespace Kernel {
 
-class BIOSSysFSDirectory : public SysFSDirectory {
+class SysFSBIOSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "bios"sv; }
-    static NonnullRefPtr<BIOSSysFSDirectory> must_create(SysFSFirmwareDirectory&);
+    static NonnullRefPtr<SysFSBIOSDirectory> must_create(SysFSFirmwareDirectory&);
 
     void create_components();
 
 private:
-    explicit BIOSSysFSDirectory(SysFSFirmwareDirectory&);
+    explicit SysFSBIOSDirectory(SysFSFirmwareDirectory&);
 
     void set_dmi_64_bit_entry_initialization_values();
     void set_dmi_32_bit_entry_initialization_values();
