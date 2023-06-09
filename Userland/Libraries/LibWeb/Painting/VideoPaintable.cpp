@@ -204,6 +204,17 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
     control_box_rect.take_from_left(playback_padding);
 }
 
+static void fill_triangle(Gfx::Painter& painter, Gfx::IntPoint location, Array<Gfx::IntPoint, 3> coordinates, Color color)
+{
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    Gfx::Path path;
+    path.move_to((coordinates[0] + location).to_type<float>());
+    path.line_to((coordinates[1] + location).to_type<float>());
+    path.line_to((coordinates[2] + location).to_type<float>());
+    path.close();
+    aa_painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+}
+
 DevicePixelRect VideoPaintable::paint_control_bar_playback_button(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const
 {
     auto maximum_playback_button_size = context.rounded_device_pixels(15);
@@ -231,7 +242,7 @@ DevicePixelRect VideoPaintable::paint_control_bar_playback_button(PaintContext& 
             { 0, static_cast<int>(playback_button_size) },
         } };
 
-        context.painter().draw_triangle(playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
+        fill_triangle(context.painter(), playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
     } else {
         DevicePixelRect pause_button_left_rect {
             playback_button_location,
@@ -344,7 +355,7 @@ void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, Dev
 
     Gfx::AntiAliasingPainter painter { context.painter() };
     painter.fill_ellipse(control_box_rect.to_type<int>(), control_box_color);
-    context.painter().draw_triangle(playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
+    fill_triangle(context.painter(), playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
 }
 
 VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
