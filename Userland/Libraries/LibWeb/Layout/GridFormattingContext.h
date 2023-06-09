@@ -131,7 +131,7 @@ private:
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
 
-    struct TemporaryTrack {
+    struct GridTrack {
         CSS::GridSize min_track_sizing_function;
         CSS::GridSize max_track_sizing_function;
 
@@ -148,19 +148,19 @@ private:
 
         bool is_gap { false };
 
-        TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
+        GridTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
             : min_track_sizing_function(min_track_sizing_function)
             , max_track_sizing_function(max_track_sizing_function)
         {
         }
 
-        TemporaryTrack(CSS::GridSize track_sizing_function)
+        GridTrack(CSS::GridSize track_sizing_function)
             : min_track_sizing_function(track_sizing_function)
             , max_track_sizing_function(track_sizing_function)
         {
         }
 
-        TemporaryTrack(CSSPixels size, bool is_gap)
+        GridTrack(CSSPixels size, bool is_gap)
             : min_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
             , max_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
             , base_size(size)
@@ -168,7 +168,7 @@ private:
         {
         }
 
-        TemporaryTrack()
+        GridTrack()
             : min_track_sizing_function(CSS::GridSize::make_auto())
             , max_track_sizing_function(CSS::GridSize::make_auto())
         {
@@ -185,8 +185,8 @@ private:
 
     HashMap<String, GridArea> m_grid_areas;
 
-    Vector<TemporaryTrack> m_grid_rows;
-    Vector<TemporaryTrack> m_grid_columns;
+    Vector<GridTrack> m_grid_rows;
+    Vector<GridTrack> m_grid_columns;
 
     bool has_gaps(GridDimension const dimension) const
     {
@@ -245,11 +245,11 @@ private:
         }
     }
 
-    Vector<TemporaryTrack> m_row_gap_tracks;
-    Vector<TemporaryTrack> m_column_gap_tracks;
+    Vector<GridTrack> m_row_gap_tracks;
+    Vector<GridTrack> m_column_gap_tracks;
 
-    Vector<TemporaryTrack&> m_grid_rows_and_gaps;
-    Vector<TemporaryTrack&> m_grid_columns_and_gaps;
+    Vector<GridTrack&> m_grid_rows_and_gaps;
+    Vector<GridTrack&> m_grid_columns_and_gaps;
 
     size_t m_explicit_rows_line_count { 0 };
     size_t m_explicit_columns_line_count { 0 };
@@ -281,15 +281,15 @@ private:
     void place_item_with_column_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
     void place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y);
 
-    void initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<TemporaryTrack>& tracks);
+    void initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<GridTrack>& tracks);
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
 
     template<typename Match>
-    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
 
     template<typename Match>
-    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher);
+    void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
 
     void initialize_track_sizes(AvailableSpace const&, GridDimension const);
     void resolve_intrinsic_track_sizes(AvailableSpace const&, GridDimension const);

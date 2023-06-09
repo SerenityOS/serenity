@@ -531,7 +531,7 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
     m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
-void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<TemporaryTrack>& tracks)
+void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpace const& available_space, Vector<CSS::ExplicitGridTrack> const& tracks_definition, Vector<GridTrack>& tracks)
 {
     auto track_count = get_count_of_tracks(tracks_definition, available_space);
     for (auto const& track_definition : tracks_definition) {
@@ -543,19 +543,19 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpac
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_definition.type()) {
             case CSS::ExplicitGridTrack::Type::MinMax:
-                tracks.append(TemporaryTrack(track_definition.minmax().min_grid_size(), track_definition.minmax().max_grid_size()));
+                tracks.append(GridTrack(track_definition.minmax().min_grid_size(), track_definition.minmax().max_grid_size()));
                 break;
             case CSS::ExplicitGridTrack::Type::Repeat:
                 for (auto& explicit_grid_track : track_definition.repeat().grid_track_size_list().track_list()) {
                     auto track_sizing_function = explicit_grid_track;
                     if (track_sizing_function.is_minmax())
-                        tracks.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
+                        tracks.append(GridTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
                     else
-                        tracks.append(TemporaryTrack(track_sizing_function.grid_size()));
+                        tracks.append(GridTrack(track_sizing_function.grid_size()));
                 }
                 break;
             case CSS::ExplicitGridTrack::Type::Default:
-                tracks.append(TemporaryTrack(track_definition.grid_size()));
+                tracks.append(GridTrack(track_definition.grid_size()));
                 break;
             default:
                 VERIFY_NOT_REACHED();
@@ -575,9 +575,9 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     for (int column_index = 0; column_index < negative_index_implied_column_tracks_count; column_index++) {
         if (grid_auto_columns.size() > 0) {
             auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
-            m_grid_columns.append(TemporaryTrack(size.grid_size()));
+            m_grid_columns.append(GridTrack(size.grid_size()));
         } else {
-            m_grid_columns.append(TemporaryTrack());
+            m_grid_columns.append(GridTrack());
         }
         implicit_column_index++;
     }
@@ -585,9 +585,9 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++) {
         if (grid_auto_columns.size() > 0) {
             auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
-            m_grid_columns.append(TemporaryTrack(size.grid_size()));
+            m_grid_columns.append(GridTrack(size.grid_size()));
         } else {
-            m_grid_columns.append(TemporaryTrack());
+            m_grid_columns.append(GridTrack());
         }
         implicit_column_index++;
     }
@@ -599,9 +599,9 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     for (int row_index = 0; row_index < negative_index_implied_row_tracks_count; row_index++) {
         if (grid_auto_rows.size() > 0) {
             auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
-            m_grid_rows.append(TemporaryTrack(size.grid_size()));
+            m_grid_rows.append(GridTrack(size.grid_size()));
         } else {
-            m_grid_rows.append(TemporaryTrack());
+            m_grid_rows.append(GridTrack());
         }
         implicit_row_index++;
     }
@@ -609,9 +609,9 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++) {
         if (grid_auto_rows.size() > 0) {
             auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
-            m_grid_rows.append(TemporaryTrack(size.grid_size()));
+            m_grid_rows.append(GridTrack(size.grid_size()));
         } else {
-            m_grid_rows.append(TemporaryTrack());
+            m_grid_rows.append(GridTrack());
         }
         implicit_row_index++;
     }
@@ -630,7 +630,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
         for (size_t column_index = 0; column_index < m_grid_columns.size(); column_index++) {
             m_grid_columns_and_gaps.append(m_grid_columns[column_index]);
             if (column_index != m_grid_columns.size() - 1) {
-                m_column_gap_tracks.append(TemporaryTrack(column_gap_width, true));
+                m_column_gap_tracks.append(GridTrack(column_gap_width, true));
                 m_grid_columns_and_gaps.append(m_column_gap_tracks.last());
             }
         }
@@ -645,7 +645,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
         for (size_t row_index = 0; row_index < m_grid_rows.size(); row_index++) {
             m_grid_rows_and_gaps.append(m_grid_rows[row_index]);
             if (row_index != m_grid_rows.size() - 1) {
-                m_row_gap_tracks.append(TemporaryTrack(row_gap_height, true));
+                m_row_gap_tracks.append(GridTrack(row_gap_height, true));
                 m_grid_rows_and_gaps.append(m_row_gap_tracks.last());
             }
         }
@@ -757,9 +757,9 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
 }
 
 template<typename Match>
-void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher)
+void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher)
 {
-    Vector<TemporaryTrack&> affected_tracks;
+    Vector<GridTrack&> affected_tracks;
     for (auto& track : spanned_tracks) {
         if (matcher(track))
             affected_tracks.append(track);
@@ -815,9 +815,9 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
 }
 
 template<typename Match>
-void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<TemporaryTrack&>& spanned_tracks, Match matcher)
+void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher)
 {
-    Vector<TemporaryTrack&> affected_tracks;
+    Vector<GridTrack&> affected_tracks;
     for (auto& track : spanned_tracks) {
         if (matcher(track))
             affected_tracks.append(track);
@@ -889,8 +889,8 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         if (item_span != span)
             continue;
 
-        Vector<TemporaryTrack&> spanned_tracks;
-        for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
+        Vector<GridTrack&> spanned_tracks;
+        for_each_spanned_track_by_item(item, dimension, [&](GridTrack& track) {
             spanned_tracks.append(track);
         });
 
@@ -909,7 +909,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
                 return calculate_limited_min_content_contribution(item, dimension);
             return calculate_minimum_contribution(item, dimension);
         }();
-        distribute_extra_space_across_spanned_tracks_base_size(item_size_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+        distribute_extra_space_across_spanned_tracks_base_size(item_size_contribution, spanned_tracks, [&](GridTrack const& track) {
             return track.min_track_sizing_function.is_intrinsic(available_size);
         });
         for (auto& track : spanned_tracks) {
@@ -921,7 +921,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         //    sizing function of min-content or max-content by distributing extra space as needed to account for
         //    these items' min-content contributions.
         auto item_min_content_contribution = calculate_min_content_contribution(item, dimension);
-        distribute_extra_space_across_spanned_tracks_base_size(item_min_content_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+        distribute_extra_space_across_spanned_tracks_base_size(item_min_content_contribution, spanned_tracks, [&](GridTrack const& track) {
             return track.min_track_sizing_function.is_min_content() || track.min_track_sizing_function.is_max_content();
         });
         for (auto& track : spanned_tracks) {
@@ -934,7 +934,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         //    distributing extra space as needed to account for these items' limited max-content contributions.
         if (available_size.is_max_content()) {
             auto item_limited_max_content_contribution = calculate_limited_max_content_contribution(item, dimension);
-            distribute_extra_space_across_spanned_tracks_base_size(item_limited_max_content_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+            distribute_extra_space_across_spanned_tracks_base_size(item_limited_max_content_contribution, spanned_tracks, [&](GridTrack const& track) {
                 return track.min_track_sizing_function.is_auto(available_size) || track.min_track_sizing_function.is_max_content();
             });
             for (auto& track : spanned_tracks) {
@@ -951,7 +951,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         }
 
         // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing
-        distribute_extra_space_across_spanned_tracks_growth_limit(item_min_content_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+        distribute_extra_space_across_spanned_tracks_growth_limit(item_min_content_contribution, spanned_tracks, [&](GridTrack const& track) {
             return track.max_track_sizing_function.is_intrinsic(available_size);
         });
         for (auto& track : spanned_tracks) {
@@ -971,7 +971,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         //    sizing function of max-content by distributing extra space as needed to account for these items' max-
         //    content contributions.
         auto item_max_content_contribution = calculate_max_content_contribution(item, dimension);
-        distribute_extra_space_across_spanned_tracks_growth_limit(item_max_content_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+        distribute_extra_space_across_spanned_tracks_growth_limit(item_max_content_contribution, spanned_tracks, [&](GridTrack const& track) {
             return track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto(available_size);
         });
         for (auto& track : spanned_tracks) {
@@ -990,8 +990,8 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
 {
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     for (auto& item : m_grid_items) {
-        Vector<TemporaryTrack&> spanned_tracks;
-        for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
+        Vector<GridTrack&> spanned_tracks;
+        for_each_spanned_track_by_item(item, dimension, [&](GridTrack& track) {
             spanned_tracks.append(track);
         });
 
@@ -1004,7 +1004,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         // 1. For intrinsic minimums: First increase the base size of tracks with an intrinsic min track sizing
         //    function by distributing extra space as needed to accommodate these items’ minimum contributions.
         auto item_minimum_contribution = automatic_minimum_size(item, dimension);
-        distribute_extra_space_across_spanned_tracks_base_size(item_minimum_contribution, spanned_tracks, [&](TemporaryTrack const& track) {
+        distribute_extra_space_across_spanned_tracks_base_size(item_minimum_contribution, spanned_tracks, [&](GridTrack const& track) {
             return track.min_track_sizing_function.is_flexible_length();
         });
 
@@ -1072,7 +1072,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     auto& available_size = dimension == GridDimension::Column ? available_space.width : available_space.height;
 
-    auto find_the_size_of_an_fr = [&](Vector<TemporaryTrack&> tracks, CSSPixels space_to_fill) -> CSSPixels {
+    auto find_the_size_of_an_fr = [&](Vector<GridTrack&> tracks, CSSPixels space_to_fill) -> CSSPixels {
         // https://www.w3.org/TR/css-grid-2/#algo-find-fr-size
 
         // 1. Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
@@ -1133,9 +1133,9 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
             // For each grid item that crosses a flexible track, the result of finding the size of an fr using all the
             // grid tracks that the item crosses and a space to fill of the item’s max-content contribution.
             for (auto& item : m_grid_items) {
-                Vector<TemporaryTrack&> spanned_tracks;
+                Vector<GridTrack&> spanned_tracks;
                 bool crosses_flexible_track = false;
-                for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack& track) {
+                for_each_spanned_track_by_item(item, dimension, [&](GridTrack& track) {
                     spanned_tracks.append(track);
                     if (track.max_track_sizing_function.is_flexible_length())
                         crosses_flexible_track = true;
@@ -1716,7 +1716,7 @@ CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item
 CSSPixels GridFormattingContext::containing_block_size_for_item(GridItem const& item, GridDimension const dimension) const
 {
     CSSPixels containing_block_size = 0;
-    for_each_spanned_track_by_item(item, dimension, [&](TemporaryTrack const& track) {
+    for_each_spanned_track_by_item(item, dimension, [&](GridTrack const& track) {
         containing_block_size += track.base_size;
     });
     return containing_block_size;
