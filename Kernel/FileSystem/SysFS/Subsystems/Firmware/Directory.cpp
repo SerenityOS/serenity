@@ -12,14 +12,14 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT void FirmwareSysFSDirectory::initialize()
+UNMAP_AFTER_INIT void SysFSFirmwareDirectory::initialize()
 {
-    auto firmware_directory = adopt_ref_if_nonnull(new (nothrow) FirmwareSysFSDirectory()).release_nonnull();
+    auto firmware_directory = adopt_ref_if_nonnull(new (nothrow) SysFSFirmwareDirectory()).release_nonnull();
     SysFSComponentRegistry::the().register_new_component(firmware_directory);
     firmware_directory->create_components();
 }
 
-void FirmwareSysFSDirectory::create_components()
+void SysFSFirmwareDirectory::create_components()
 {
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(BIOSSysFSDirectory::must_create(*this));
@@ -29,7 +29,7 @@ void FirmwareSysFSDirectory::create_components()
     }));
 }
 
-UNMAP_AFTER_INIT FirmwareSysFSDirectory::FirmwareSysFSDirectory()
+UNMAP_AFTER_INIT SysFSFirmwareDirectory::SysFSFirmwareDirectory()
     : SysFSDirectory(SysFSComponentRegistry::the().root_directory())
 {
 }
