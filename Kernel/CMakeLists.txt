@@ -209,6 +209,7 @@ set(KERNEL_SOURCES
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
+    Firmware/ACPI/StaticParsing.cpp
     Firmware/MultiProcessor/Parser.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
@@ -370,6 +371,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/DebugOutput.cpp
         Arch/x86_64/Delay.cpp
 
+        Arch/x86_64/Firmware/ACPI/StaticParsing.cpp
+
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
 
@@ -459,6 +462,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         ${RPI_SOURCES}
         ${SOURCES_RUNNING_WITHOUT_MMU}
         Arch/Processor.cpp
+
+        Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
 
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp

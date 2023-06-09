@@ -327,11 +327,4 @@ struct [[gnu::packed]] DSDT {
 };
 }
 
-class Parser;
-
-namespace StaticParsing {
-Optional<PhysicalAddress> find_rsdp();
-Optional<PhysicalAddress> find_table(PhysicalAddress rsdp, StringView signature);
-}
-
 }

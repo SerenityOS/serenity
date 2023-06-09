@@ -7,6 +7,7 @@
 
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
@@ -18,11 +19,11 @@ UNMAP_AFTER_INIT void initialize()
     if (feature_level == AcpiFeatureLevel::Disabled)
         return;
 
-    auto rsdp = StaticParsing::find_rsdp();
+    auto rsdp = MUST(StaticParsing::find_rsdp_in_platform_specific_memory_locations());
     if (!rsdp.has_value())
         return;
 
-    auto facp = StaticParsing::find_table(rsdp.value(), "FACP"sv);
+    auto facp = MUST(StaticParsing::find_table(rsdp.value(), "FACP"sv));
     if (!facp.has_value())
         return;
     auto facp_table_or_error = Memory::map_typed<Structures::FADT>(facp.value());
