@@ -29,6 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool invert_match = false;
     bool exact_match = false;
     bool newest_only = false;
+    bool oldest_only = false;
     HashTable<uid_t> uids_to_filter_by;
     StringView pattern;
 
@@ -37,6 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(pid_delimiter, "Set the string used to delimit multiple pids", "delimiter", 'd', nullptr);
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(newest_only, "Select the most recently created process only", "newest", 'n');
+    args_parser.add_option(oldest_only, "Select the least recently created process only", "oldest", 'o');
     args_parser.add_option(list_process_name, "List the process name in addition to its pid", "list-name", 'l');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
@@ -66,6 +68,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(exact_match, "Select only processes whose names match the given pattern exactly", "exact", 'x');
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
+
+    if (newest_only && oldest_only) {
+        warnln("The -n and -o options are mutually exclusive");
+        args_parser.print_usage(stderr, args.strings[0]);
+        return 1;
+    }
 
     PosixOptions options {};
     if (case_insensitive)
@@ -101,6 +109,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         quick_sort(matches, [](auto const& a, auto const& b) { return a.creation_time < b.creation_time; });
         if (newest_only)
             matches = { matches.last() };
+        else if (oldest_only)
+            matches = { matches.first() };
 
         auto displayed_at_least_one = false;
         for (auto& match : matches) {
