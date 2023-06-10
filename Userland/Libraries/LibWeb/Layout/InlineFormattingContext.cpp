@@ -18,8 +18,6 @@
 
 namespace Web::Layout {
 
-constexpr double text_justification_threshold = 0.1;
-
 InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
     , m_containing_block_state(state.get(containing_block))
@@ -191,13 +189,13 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         break;
     }
 
-    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
-
-    // Only justify the text if the excess horizontal space is less than or
-    // equal to 10%, or if we are not looking at the last line box.
-    if (is_last_line && excess_horizontal_space / m_available_space->width.to_px().value() > text_justification_threshold)
+    // https://www.w3.org/TR/css-text-3/#text-align-property
+    // Unless otherwise specified by text-align-last, the last line before a forced break or the end of the block is start-aligned.
+    // FIXME: Support text-align-last.
+    if (is_last_line || line_box.m_has_forced_break)
         return;
 
+    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
     CSSPixels excess_horizontal_space_including_whitespace = excess_horizontal_space;
     size_t whitespace_count = 0;
     for (auto& fragment : line_box.fragments()) {
@@ -249,7 +247,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak:
-            line_builder.break_line();
+            line_builder.break_line(LineBuilder::ForcedBreak::Yes);
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
