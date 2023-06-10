@@ -546,6 +546,7 @@ class WritableStream;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
+struct PullIntoDescriptor;
 struct UnderlyingSink;
 struct UnderlyingSource;
 }
