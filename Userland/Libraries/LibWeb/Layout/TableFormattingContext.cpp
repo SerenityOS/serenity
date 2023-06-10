@@ -234,8 +234,12 @@ void TableFormattingContext::compute_table_measures()
                 // - the outer max-content width of the cell minus the baseline max-content width and the baseline border spacing, or 0 if this is negative
                 cell_max_contribution += (m_columns[cell.column_index].max_width / baseline_max_content_width) * max(CSSPixels(0), cell.max_width - baseline_max_content_width);
 
-                cell_min_contributions_by_column_index[cell.column_index].append(cell_min_contribution);
-                cell_max_contributions_by_column_index[cell.column_index].append(cell_max_contribution);
+                // Spread contribution to all columns, since we've weighted the gap to the desired spanned width by the the
+                // ratio of the max-content width based on cells of span up to N-1 of the column to the baseline max-content width.
+                for (auto column_index = cell_start_column_index; column_index < cell_end_column_index; column_index++) {
+                    cell_min_contributions_by_column_index[column_index].append(cell_min_contribution);
+                    cell_max_contributions_by_column_index[column_index].append(cell_max_contribution);
+                }
             }
         }
 
