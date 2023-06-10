@@ -68,7 +68,7 @@ enum class ConfigurationType : u8 {
 
 struct Configuration {
     ConfigurationType cfg_type;
-    u8 bar;
+    u8 resource_index; // NOTE: For PCI devices, this is the BAR index
     u32 offset;
     u32 length;
 };

@@ -42,8 +42,6 @@ public:
 
     virtual ErrorOr<void> initialize_virtio_resources() override;
 
-    virtual StringView device_name() const override { return "VirtIOGraphicsAdapter"sv; }
-
     ErrorOr<void> mode_set_resolution(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, size_t width, size_t height);
     void set_dirty_displayed_rect(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     ErrorOr<void> flush_displayed_image(Badge<VirtIODisplayConnector>, VirtIODisplayConnector&, Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
@@ -67,7 +65,7 @@ private:
         PhysicalBuffer back_buffer;
     };
 
-    VirtIOGraphicsAdapter(PCI::DeviceIdentifier const&, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region);
+    VirtIOGraphicsAdapter(NonnullOwnPtr<VirtIO::TransportEntity>, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region);
 
     ErrorOr<void> initialize_adapter();
 
