@@ -9,9 +9,9 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/PCIIRQHandler.h>
 
-namespace Kernel {
+namespace Kernel::PCI {
 
-PCIIRQHandler::PCIIRQHandler(PCI::Device& device, u8 irq)
+IRQHandler::IRQHandler(PCI::Device& device, u8 irq)
     : GenericInterruptHandler(irq)
     , device(device)
 {
@@ -24,7 +24,7 @@ PCIIRQHandler::PCIIRQHandler(PCI::Device& device, u8 irq)
         disable_irq();
 }
 
-bool PCIIRQHandler::eoi()
+bool IRQHandler::eoi()
 {
     dbgln_if(IRQ_DEBUG, "EOI IRQ {}", interrupt_number());
     if (m_shared_with_others)
@@ -36,7 +36,7 @@ bool PCIIRQHandler::eoi()
     return true;
 }
 
-void PCIIRQHandler::enable_irq()
+void IRQHandler::enable_irq()
 {
     dbgln_if(IRQ_DEBUG, "Enable IRQ {}", interrupt_number());
     if (!is_registered())
@@ -50,7 +50,7 @@ void PCIIRQHandler::enable_irq()
         device.enable_interrupt(interrupt_number());
 }
 
-void PCIIRQHandler::disable_irq()
+void IRQHandler::disable_irq()
 {
     dbgln_if(IRQ_DEBUG, "Disable IRQ {}", interrupt_number());
     m_enabled = false;
@@ -63,7 +63,7 @@ void PCIIRQHandler::disable_irq()
         device.disable_interrupt(interrupt_number());
 }
 
-bool PCIIRQHandler::handle_interrupt(RegisterState const& regs)
+bool IRQHandler::handle_interrupt(RegisterState const& regs)
 {
     return handle_irq(regs);
 }

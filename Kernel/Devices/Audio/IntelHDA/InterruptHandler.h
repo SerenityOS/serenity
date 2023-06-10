@@ -14,7 +14,7 @@ namespace Kernel::Audio::IntelHDA {
 class Controller;
 
 class InterruptHandler
-    : public PCIIRQHandler
+    : public PCI::IRQHandler
     , public RefCounted<InterruptHandler> {
 public:
     static ErrorOr<NonnullRefPtr<InterruptHandler>> create(Controller& controller)
@@ -22,13 +22,13 @@ public:
         return adopt_nonnull_ref_or_enomem(new (nothrow) InterruptHandler(controller));
     }
 
-    // ^PCIIRQHandler
+    // ^PCI::IRQHandler
     virtual StringView purpose() const override { return "IntelHDA IRQ Handler"sv; }
 
 private:
     InterruptHandler(Controller& controller);
 
-    // ^PCIIRQHandler
+    // ^PCI::IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
     Controller& m_controller;

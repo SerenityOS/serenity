@@ -23,7 +23,7 @@ void AHCIInterruptHandler::allocate_resources_and_initialize_ports()
 }
 
 UNMAP_AFTER_INIT AHCIInterruptHandler::AHCIInterruptHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
-    : PCIIRQHandler(controller, irq)
+    : PCI::IRQHandler(controller, irq)
     , m_parent_controller(controller)
     , m_taken_ports(taken_ports)
     , m_pending_ports_interrupts(create_pending_ports_interrupts_bitfield())
