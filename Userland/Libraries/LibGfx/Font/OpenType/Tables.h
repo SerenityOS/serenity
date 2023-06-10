@@ -243,6 +243,8 @@ public:
 
     bool use_typographic_metrics() const;
 
+    [[nodiscard]] Optional<i16> x_height() const;
+
     explicit OS2(ReadonlyBytes slice)
         : m_slice(slice)
     {
@@ -282,7 +284,27 @@ private:
         BigEndian<u16> us_win_descent;
     };
 
+    struct Version1 {
+        Version0 version0;
+        BigEndian<u32> ul_code_page_range1;
+        BigEndian<u32> ul_code_page_range2;
+    };
+
+    struct Version2 {
+        Version1 version1;
+        BigEndian<i16> sx_height;
+        BigEndian<i16> s_cap_height;
+        BigEndian<u16> us_default_char;
+        BigEndian<u16> us_break_char;
+        BigEndian<u16> us_max_context;
+    };
+
     Version0 const& header() const { return *bit_cast<Version0 const*>(m_slice.data()); }
+    Version2 const& header_v2() const
+    {
+        VERIFY(header().version >= 2);
+        return *bit_cast<Version2 const*>(m_slice.data());
+    }
 
     ReadonlyBytes m_slice;
 };
