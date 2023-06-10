@@ -3220,6 +3220,8 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
         property->key().dump(2);
         auto key = TRY(property->key().execute(interpreter)).release_value();
 
+        dbgln("  key: '{}'", key.to_string_without_side_effects());
+
         // PropertyDefinition : ... AssignmentExpression
         if (property->type() == ObjectProperty::Type::Spread) {
             // 4. Perform ? CopyDataProperties(object, fromValue, excludedNames).
@@ -3231,6 +3233,8 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
 
         auto value = TRY(property->value().execute(interpreter)).release_value();
 
+        dbgln("  value: '{}'", value.to_string_without_side_effects());
+
         // 8. If isProtoSetter is true, then
         if (property->type() == ObjectProperty::Type::ProtoSetter) {
             // a. If Type(propValue) is either Object or Null, then
@@ -3241,6 +3245,9 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
             // b. Return unused.
             continue;
         }
+
+        dbgln("  Making PropertyKey from key..");
+        dbgln("    (key: '{}')", key.to_string_without_side_effects());
 
         auto property_key = TRY(PropertyKey::from_value(vm, key));
 
