@@ -38,6 +38,9 @@ public:
 
         // https://html.spec.whatwg.org/multipage/webappapis.html#navigation-and-traversal-task-source
         NavigationAndTraversal,
+
+        // https://w3c.github.io/FileAPI/#fileReadingTaskSource
+        FileReading,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
