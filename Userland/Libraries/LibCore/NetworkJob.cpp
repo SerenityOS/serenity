@@ -56,7 +56,7 @@ void NetworkJob::did_fail(Error error)
     shutdown(ShutdownMode::DetachFromSocket);
 }
 
-void NetworkJob::did_progress(Optional<u32> total_size, u32 downloaded)
+void NetworkJob::did_progress(Optional<u64> total_size, u64 downloaded)
 {
     if (is_cancelled())
         return;

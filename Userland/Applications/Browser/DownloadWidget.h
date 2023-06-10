@@ -25,7 +25,7 @@ public:
 private:
     explicit DownloadWidget(const URL&);
 
-    void did_progress(Optional<u32> total_size, u32 downloaded_size);
+    void did_progress(Optional<u64> total_size, u64 downloaded_size);
     void did_finish(bool success);
 
     URL m_url;

@@ -54,7 +54,7 @@ bool RequestClient::set_certificate(Badge<Request>, Request& request, Deprecated
     return IPCProxy::set_certificate(request.id(), move(certificate), move(key));
 }
 
-void RequestClient::request_finished(i32 request_id, bool success, u32 total_size)
+void RequestClient::request_finished(i32 request_id, bool success, u64 total_size)
 {
     RefPtr<Request> request;
     if ((request = m_requests.get(request_id).value_or(nullptr))) {
@@ -63,7 +63,7 @@ void RequestClient::request_finished(i32 request_id, bool success, u32 total_siz
     m_requests.remove(request_id);
 }
 
-void RequestClient::request_progress(i32 request_id, Optional<u32> const& total_size, u32 downloaded_size)
+void RequestClient::request_progress(i32 request_id, Optional<u64> const& total_size, u64 downloaded_size)
 {
     if (auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr))) {
         request->did_progress({}, total_size, downloaded_size);

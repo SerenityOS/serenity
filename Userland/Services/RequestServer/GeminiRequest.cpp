@@ -41,7 +41,7 @@ GeminiRequest::GeminiRequest(ConnectionFromClient& client, NonnullRefPtr<Gemini:
 
         did_finish(success);
     };
-    m_job->on_progress = [this](Optional<u32> total, u32 current) {
+    m_job->on_progress = [this](Optional<u64> total, u64 current) {
         did_progress(move(total), current);
     };
 }

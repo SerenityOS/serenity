@@ -46,7 +46,7 @@ void init(TSelf* self, TJob job)
 
         self->did_finish(success);
     };
-    job->on_progress = [self](Optional<u32> total, u32 current) {
+    job->on_progress = [self](Optional<u64> total, u64 current) {
         self->did_progress(total, current);
     };
     if constexpr (requires { job->on_certificate_requested; }) {

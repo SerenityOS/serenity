@@ -29,7 +29,7 @@ public:
     // Could fire twice, after Headers and after Trailers!
     Function<void(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<void(bool success)> on_finish;
-    Function<void(Optional<u32>, u32)> on_progress;
+    Function<void(Optional<u64>, u64)> on_progress;
 
     bool is_cancelled() const { return m_error == Error::Cancelled; }
     bool has_error() const { return m_error != Error::None; }
@@ -55,7 +55,7 @@ protected:
     NetworkJob(Stream&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
-    void did_progress(Optional<u32> total_size, u32 downloaded);
+    void did_progress(Optional<u64> total_size, u64 downloaded);
 
     ErrorOr<size_t> do_write(ReadonlyBytes bytes) { return m_output_stream.write_some(bytes); }
 

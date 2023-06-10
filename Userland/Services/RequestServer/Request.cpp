@@ -39,7 +39,7 @@ void Request::did_finish(bool success)
     m_client.did_finish_request({}, *this, success);
 }
 
-void Request::did_progress(Optional<u32> total_size, u32 downloaded_size)
+void Request::did_progress(Optional<u64> total_size, u64 downloaded_size)
 {
     m_total_size = total_size;
     m_downloaded_size = downloaded_size;
