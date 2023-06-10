@@ -645,7 +645,7 @@ if (BUILD_LAGOM)
         target_link_libraries(test-js LibCore LibFileSystem LibTest LibJS)
         add_test(
             NAME JS
-            COMMAND test-js --show-progress=false
+            COMMAND test-js --show-progress=false -t
         )
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
