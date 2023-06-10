@@ -364,6 +364,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
 
         if (m_loaded_style_sheet) {
             m_loaded_style_sheet->set_owner_node(this);
+            m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media));
             document().style_sheets().add_sheet(*m_loaded_style_sheet);
         } else {
             dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
