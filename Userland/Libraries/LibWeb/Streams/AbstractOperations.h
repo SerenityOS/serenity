@@ -56,6 +56,8 @@ Optional<double> readable_stream_default_controller_get_desired_size(ReadableStr
 bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefaultController&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream&, ReadableStreamDefaultController&, StartAlgorithm&&, PullAlgorithm&&, CancelAlgorithm&&, double high_water_mark, SizeAlgorithm&&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, SizeAlgorithm&&);
+WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_support(ReadableStream&, Optional<PullAlgorithm>&& = {}, Optional<CancelAlgorithm>&& = {}, double high_water_mark = 0);
+WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream&, ReadableByteStreamController&, StartAlgorithm&&, PullAlgorithm&&, CancelAlgorithm&&, double high_water_mark, JS::Value auto_allocate_chunk_size);
 
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController&);
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController&);
