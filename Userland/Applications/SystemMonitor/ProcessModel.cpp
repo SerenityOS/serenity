@@ -306,17 +306,17 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::CowFaults:
             return thread.current_state.cow_faults;
         case Column::IPv4SocketReadBytes:
-            return thread.current_state.ipv4_socket_read_bytes;
+            return human_readable_size_long(thread.current_state.ipv4_socket_read_bytes, UseThousandsSeparator::Yes);
         case Column::IPv4SocketWriteBytes:
-            return thread.current_state.ipv4_socket_write_bytes;
+            return human_readable_size_long(thread.current_state.ipv4_socket_write_bytes, UseThousandsSeparator::Yes);
         case Column::UnixSocketReadBytes:
-            return thread.current_state.unix_socket_read_bytes;
+            return human_readable_size_long(thread.current_state.unix_socket_read_bytes, UseThousandsSeparator::Yes);
         case Column::UnixSocketWriteBytes:
-            return thread.current_state.unix_socket_write_bytes;
+            return human_readable_size_long(thread.current_state.unix_socket_write_bytes, UseThousandsSeparator::Yes);
         case Column::FileReadBytes:
-            return thread.current_state.file_read_bytes;
+            return human_readable_size_long(thread.current_state.file_read_bytes, UseThousandsSeparator::Yes);
         case Column::FileWriteBytes:
-            return thread.current_state.file_write_bytes;
+            return human_readable_size_long(thread.current_state.file_write_bytes, UseThousandsSeparator::Yes);
         case Column::Pledge:
             return thread.current_state.pledge;
         case Column::Veil:
