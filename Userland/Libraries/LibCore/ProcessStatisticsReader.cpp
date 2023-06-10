@@ -68,12 +68,12 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
             thread.inode_faults = thread_object.get_u32("inode_faults"sv).value_or(0);
             thread.zero_faults = thread_object.get_u32("zero_faults"sv).value_or(0);
             thread.cow_faults = thread_object.get_u32("cow_faults"sv).value_or(0);
-            thread.unix_socket_read_bytes = thread_object.get_u32("unix_socket_read_bytes"sv).value_or(0);
-            thread.unix_socket_write_bytes = thread_object.get_u32("unix_socket_write_bytes"sv).value_or(0);
-            thread.ipv4_socket_read_bytes = thread_object.get_u32("ipv4_socket_read_bytes"sv).value_or(0);
-            thread.ipv4_socket_write_bytes = thread_object.get_u32("ipv4_socket_write_bytes"sv).value_or(0);
-            thread.file_read_bytes = thread_object.get_u32("file_read_bytes"sv).value_or(0);
-            thread.file_write_bytes = thread_object.get_u32("file_write_bytes"sv).value_or(0);
+            thread.unix_socket_read_bytes = thread_object.get_u64("unix_socket_read_bytes"sv).value_or(0);
+            thread.unix_socket_write_bytes = thread_object.get_u64("unix_socket_write_bytes"sv).value_or(0);
+            thread.ipv4_socket_read_bytes = thread_object.get_u64("ipv4_socket_read_bytes"sv).value_or(0);
+            thread.ipv4_socket_write_bytes = thread_object.get_u64("ipv4_socket_write_bytes"sv).value_or(0);
+            thread.file_read_bytes = thread_object.get_u64("file_read_bytes"sv).value_or(0);
+            thread.file_write_bytes = thread_object.get_u64("file_write_bytes"sv).value_or(0);
             process.threads.append(move(thread));
         });
 

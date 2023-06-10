@@ -123,12 +123,12 @@ private:
         unsigned inode_faults { 0 };
         unsigned zero_faults { 0 };
         unsigned cow_faults { 0 };
-        unsigned unix_socket_read_bytes { 0 };
-        unsigned unix_socket_write_bytes { 0 };
-        unsigned ipv4_socket_read_bytes { 0 };
-        unsigned ipv4_socket_write_bytes { 0 };
-        unsigned file_read_bytes { 0 };
-        unsigned file_write_bytes { 0 };
+        u64 unix_socket_read_bytes { 0 };
+        u64 unix_socket_write_bytes { 0 };
+        u64 ipv4_socket_read_bytes { 0 };
+        u64 ipv4_socket_write_bytes { 0 };
+        u64 file_read_bytes { 0 };
+        u64 file_write_bytes { 0 };
         float cpu_percent { 0 };
         float cpu_percent_kernel { 0 };
         Process& process;

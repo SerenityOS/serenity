@@ -896,41 +896,41 @@ public:
     unsigned cow_faults() const { return m_cow_faults; }
     void did_cow_fault() { ++m_cow_faults; }
 
-    unsigned file_read_bytes() const { return m_file_read_bytes; }
-    unsigned file_write_bytes() const { return m_file_write_bytes; }
+    u64 file_read_bytes() const { return m_file_read_bytes; }
+    u64 file_write_bytes() const { return m_file_write_bytes; }
 
-    void did_file_read(unsigned bytes)
+    void did_file_read(u64 bytes)
     {
         m_file_read_bytes += bytes;
     }
 
-    void did_file_write(unsigned bytes)
+    void did_file_write(u64 bytes)
     {
         m_file_write_bytes += bytes;
     }
 
-    unsigned unix_socket_read_bytes() const { return m_unix_socket_read_bytes; }
-    unsigned unix_socket_write_bytes() const { return m_unix_socket_write_bytes; }
+    u64 unix_socket_read_bytes() const { return m_unix_socket_read_bytes; }
+    u64 unix_socket_write_bytes() const { return m_unix_socket_write_bytes; }
 
-    void did_unix_socket_read(unsigned bytes)
+    void did_unix_socket_read(u64 bytes)
     {
         m_unix_socket_read_bytes += bytes;
     }
 
-    void did_unix_socket_write(unsigned bytes)
+    void did_unix_socket_write(u64 bytes)
     {
         m_unix_socket_write_bytes += bytes;
     }
 
-    unsigned ipv4_socket_read_bytes() const { return m_ipv4_socket_read_bytes; }
-    unsigned ipv4_socket_write_bytes() const { return m_ipv4_socket_write_bytes; }
+    u64 ipv4_socket_read_bytes() const { return m_ipv4_socket_read_bytes; }
+    u64 ipv4_socket_write_bytes() const { return m_ipv4_socket_write_bytes; }
 
-    void did_ipv4_socket_read(unsigned bytes)
+    void did_ipv4_socket_read(u64 bytes)
     {
         m_ipv4_socket_read_bytes += bytes;
     }
 
-    void did_ipv4_socket_write(unsigned bytes)
+    void did_ipv4_socket_write(u64 bytes)
     {
         m_ipv4_socket_write_bytes += bytes;
     }
@@ -1210,14 +1210,14 @@ private:
     unsigned m_zero_faults { 0 };
     unsigned m_cow_faults { 0 };
 
-    unsigned m_file_read_bytes { 0 };
-    unsigned m_file_write_bytes { 0 };
+    u64 m_file_read_bytes { 0 };
+    u64 m_file_write_bytes { 0 };
 
-    unsigned m_unix_socket_read_bytes { 0 };
-    unsigned m_unix_socket_write_bytes { 0 };
+    u64 m_unix_socket_read_bytes { 0 };
+    u64 m_unix_socket_write_bytes { 0 };
 
-    unsigned m_ipv4_socket_read_bytes { 0 };
-    unsigned m_ipv4_socket_write_bytes { 0 };
+    u64 m_ipv4_socket_read_bytes { 0 };
+    u64 m_ipv4_socket_write_bytes { 0 };
 
     FPUState m_fpu_state {};
     State m_state { Thread::State::Invalid };
