@@ -201,7 +201,7 @@ void TableFormattingContext::compute_table_measures()
         }
     }
 
-    for (size_t current_column_span = 2; current_column_span < max_cell_column_span; current_column_span++) {
+    for (size_t current_column_span = 2; current_column_span <= max_cell_column_span; current_column_span++) {
         // https://www.w3.org/TR/css-tables-3/#min-content-width-of-a-column-based-on-cells-of-span-up-to-n-n--1
         Vector<Vector<CSSPixels>> cell_min_contributions_by_column_index;
         cell_min_contributions_by_column_index.resize(m_columns.size());
