@@ -3210,8 +3210,14 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
     // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
     auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
+    if (!m_properties.is_empty()) {
+        dbgln("XXX ObjectExpression::execute in {}, evaluating {} properties", source_code().filename(), m_properties.size());
+    }
+    size_t zzz = 0;
     // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with argument obj.
     for (auto& property : m_properties) {
+        dbgln("  Property #{}", zzz++);
+        property->key().dump(2);
         auto key = TRY(property->key().execute(interpreter)).release_value();
 
         // PropertyDefinition : ... AssignmentExpression
