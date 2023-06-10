@@ -27,7 +27,7 @@ ScaledFont::ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float 
 
     m_pixel_metrics = Gfx::FontPixelMetrics {
         .size = (float)pixel_size(),
-        .x_height = (float)x_height(),
+        .x_height = metrics.x_height,
         .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
         .ascent = metrics.ascender,

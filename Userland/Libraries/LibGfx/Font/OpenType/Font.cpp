@@ -574,21 +574,28 @@ Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_sca
     i16 raw_ascender;
     i16 raw_descender;
     i16 raw_line_gap;
+    Optional<i16> x_height;
 
     if (m_os2.has_value() && m_os2->use_typographic_metrics()) {
         raw_ascender = m_os2->typographic_ascender();
         raw_descender = m_os2->typographic_descender();
         raw_line_gap = m_os2->typographic_line_gap();
+        x_height = m_os2->x_height();
     } else {
         raw_ascender = m_hhea.ascender();
         raw_descender = m_hhea.descender();
         raw_line_gap = m_hhea.line_gap();
     }
 
+    if (!x_height.has_value()) {
+        x_height = glyph_metrics(glyph_id_for_code_point('x'), 1, 1, 1, 1).ascender;
+    }
+
     return Gfx::ScaledFontMetrics {
         .ascender = static_cast<float>(raw_ascender) * y_scale,
         .descender = -static_cast<float>(raw_descender) * y_scale,
         .line_gap = static_cast<float>(raw_line_gap) * y_scale,
+        .x_height = static_cast<float>(x_height.value()) * y_scale,
     };
 }
 
@@ -852,6 +859,13 @@ i16 OS2::typographic_line_gap() const
 bool OS2::use_typographic_metrics() const
 {
     return header().fs_selection & 0x80;
+}
+
+Optional<i16> OS2::x_height() const
+{
+    if (header().version < 2)
+        return {};
+    return header_v2().sx_height;
 }
 
 Optional<ReadonlyBytes> Font::font_program() const
