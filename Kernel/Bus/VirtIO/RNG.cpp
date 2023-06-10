@@ -5,13 +5,15 @@
  */
 
 #include <Kernel/Bus/VirtIO/RNG.h>
+#include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
-    return adopt_lock_ref_if_nonnull(new RNG(device_identifier)).release_nonnull();
+    auto pci_transport_link = MUST(PCIeTransportLink::create(device_identifier));
+    return adopt_lock_ref_if_nonnull(new RNG(move(pci_transport_link))).release_nonnull();
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
@@ -32,8 +34,8 @@ UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
     return {};
 }
 
-UNMAP_AFTER_INIT RNG::RNG(PCI::DeviceIdentifier const& device_identifier)
-    : VirtIO::Device(device_identifier)
+UNMAP_AFTER_INIT RNG::RNG(NonnullOwnPtr<TransportEntity> transport_entity)
+    : VirtIO::Device(move(transport_entity))
 {
 }
 

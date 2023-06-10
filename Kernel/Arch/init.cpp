@@ -14,6 +14,7 @@
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
+#include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
@@ -394,7 +395,7 @@ void init_stage2(void*)
     SysFSFirmwareDirectory::initialize();
 
     if (!PCI::Access::is_disabled()) {
-        VirtIO::detect();
+        VirtIO::detect_pci_instances();
     }
 
     NetworkingManagement::the().initialize();

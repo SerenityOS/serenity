@@ -23,7 +23,6 @@ public:
 
     // VirtIO::Device
     virtual ErrorOr<void> initialize_virtio_resources() override;
-    virtual StringView device_name() const override { return class_name(); }
 
     // NetworkAdapter
     virtual StringView class_name() const override { return "VirtIONetworkAdapter"sv; }
@@ -35,7 +34,7 @@ public:
     virtual i32 link_speed() override { return m_link_speed; }
 
 private:
-    explicit VirtIONetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&);
+    explicit VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity>);
 
     // VirtIO::Device
     virtual bool handle_device_config_change() override;

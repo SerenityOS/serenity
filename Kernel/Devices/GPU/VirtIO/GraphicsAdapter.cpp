@@ -8,6 +8,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
+#include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -36,7 +37,8 @@ ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VirtIOGraphicsAdapter::create
         Memory::Region::Access::ReadWrite));
 
     auto active_context_ids = TRY(Bitmap::create(VREND_MAX_CTX, false));
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region))));
+    auto pci_transport_link = TRY(VirtIO::PCIeTransportLink::create(device_identifier));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VirtIOGraphicsAdapter(move(pci_transport_link), move(active_context_ids), move(scratch_space_region))));
     TRY(adapter->initialize_virtio_resources());
     TRY(adapter->initialize_adapter());
     return adapter;
@@ -132,8 +134,8 @@ ErrorOr<void> VirtIOGraphicsAdapter::attach_physical_range_to_framebuffer(VirtIO
     return {};
 }
 
-VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region)
-    : VirtIO::Device(device_identifier)
+VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(NonnullOwnPtr<VirtIO::TransportEntity> transport_entity, Bitmap&& active_context_ids, NonnullOwnPtr<Memory::Region> scratch_space_region)
+    : VirtIO::Device(move(transport_entity))
     , m_scratch_space(move(scratch_space_region))
 {
     m_active_context_ids.with([&](Bitmap& my_active_context_ids) {
@@ -146,7 +148,7 @@ VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device
 ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
 {
     TRY(VirtIO::Device::initialize_virtio_resources());
-    auto* config = TRY(get_config(VirtIO::ConfigurationType::Device));
+    auto* config = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
     m_device_configuration = config;
     bool success = negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
@@ -160,8 +162,8 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
         return negotiated;
     });
     if (success) {
-        read_config_atomic([&]() {
-            m_num_scanouts = config_read32(*config, DEVICE_NUM_SCANOUTS);
+        transport_entity().read_config_atomic([&]() {
+            m_num_scanouts = transport_entity().config_read32(*config, DEVICE_NUM_SCANOUTS);
         });
         dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
         success = setup_queues(2); // CONTROLQ + CURSORQ
@@ -193,12 +195,12 @@ void VirtIOGraphicsAdapter::handle_queue_update(u16)
 
 u32 VirtIOGraphicsAdapter::get_pending_events()
 {
-    return config_read32(*m_device_configuration, DEVICE_EVENTS_READ);
+    return transport_entity().config_read32(*m_device_configuration, DEVICE_EVENTS_READ);
 }
 
 void VirtIOGraphicsAdapter::clear_pending_events(u32 event_bitmask)
 {
-    config_write32(*m_device_configuration, DEVICE_EVENTS_CLEAR, event_bitmask);
+    transport_entity().config_write32(*m_device_configuration, DEVICE_EVENTS_CLEAR, event_bitmask);
 }
 
 static void populate_virtio_gpu_request_header(Graphics::VirtIOGPU::Protocol::ControlHeader& header, Graphics::VirtIOGPU::Protocol::CommandType ctrl_type, u32 flags)

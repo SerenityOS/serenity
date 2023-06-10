@@ -18,11 +18,8 @@ class Console
     friend VirtIO::ConsolePort;
 
 public:
-    static NonnullLockRefPtr<Console> must_create(PCI::DeviceIdentifier const&);
+    static NonnullLockRefPtr<Console> must_create_for_pci_instance(PCI::DeviceIdentifier const&);
     virtual ~Console() override = default;
-
-    virtual StringView purpose() const override { return class_name(); }
-    virtual StringView device_name() const override { return class_name(); }
 
     unsigned device_id() const
     {
@@ -33,7 +30,7 @@ public:
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"sv; }
-    explicit Console(PCI::DeviceIdentifier const&);
+    explicit Console(NonnullOwnPtr<TransportEntity>);
     enum class ControlEvent : u16 {
         DeviceReady = 0,
         DeviceAdd = 1,

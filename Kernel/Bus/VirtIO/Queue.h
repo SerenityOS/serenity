@@ -51,6 +51,8 @@ public:
 
     bool should_notify() const;
 
+    u16 size() const { return m_queue_size; }
+
 private:
     Queue(NonnullOwnPtr<Memory::Region> queue_region, u16 queue_size, u16 notify_offset);
 

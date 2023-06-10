@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Bus/PCI/IDs.h>
+#include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 
@@ -102,11 +103,12 @@ UNMAP_AFTER_INIT ErrorOr<bool> VirtIONetworkAdapter::probe(PCI::DeviceIdentifier
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> VirtIONetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(interface_name.representable_view(), pci_device_identifier)));
+    auto pci_transport_link = TRY(VirtIO::PCIeTransportLink::create(pci_device_identifier));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(interface_name.representable_view(), move(pci_transport_link))));
 }
 
-UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& pci_device_identifier)
-    : VirtIO::Device(pci_device_identifier)
+UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, NonnullOwnPtr<VirtIO::TransportEntity> pci_transport_link)
+    : VirtIO::Device(move(pci_transport_link))
     , NetworkAdapter(interface_name)
 {
 }
@@ -123,7 +125,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIONetworkAdapter: initialize_virtio_resources");
     TRY(Device::initialize_virtio_resources());
-    m_device_config = TRY(get_config(VirtIO::ConfigurationType::Device));
+    m_device_config = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
 
     bool success = negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
@@ -169,28 +171,28 @@ UNMAP_AFTER_INIT ErrorOr<void> VirtIONetworkAdapter::initialize_virtio_resources
 bool VirtIONetworkAdapter::handle_device_config_change()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIONetworkAdapter: handle_device_config_change");
-    read_config_atomic([&]() {
+    transport_entity().read_config_atomic([&]() {
         if (is_feature_accepted(VIRTIO_NET_F_MAC)) {
             set_mac_address(MACAddress(
-                config_read8(*m_device_config, 0x0),
-                config_read8(*m_device_config, 0x1),
-                config_read8(*m_device_config, 0x2),
-                config_read8(*m_device_config, 0x3),
-                config_read8(*m_device_config, 0x4),
-                config_read8(*m_device_config, 0x5)));
+                transport_entity().config_read8(*m_device_config, 0x0),
+                transport_entity().config_read8(*m_device_config, 0x1),
+                transport_entity().config_read8(*m_device_config, 0x2),
+                transport_entity().config_read8(*m_device_config, 0x3),
+                transport_entity().config_read8(*m_device_config, 0x4),
+                transport_entity().config_read8(*m_device_config, 0x5)));
         }
         if (is_feature_accepted(VIRTIO_NET_F_STATUS)) {
-            u16 status = config_read16(*m_device_config, offsetof(VirtIONetConfig, status));
+            u16 status = transport_entity().config_read16(*m_device_config, offsetof(VirtIONetConfig, status));
             m_link_up = (status & VIRTIO_NET_S_LINK_UP) != 0;
         }
         if (is_feature_accepted(VIRTIO_NET_F_MTU)) {
-            u16 mtu = config_read16(*m_device_config, offsetof(VirtIONetConfig, mtu));
+            u16 mtu = transport_entity().config_read16(*m_device_config, offsetof(VirtIONetConfig, mtu));
             set_mtu(mtu);
         }
         if (is_feature_accepted(VIRTIO_NET_F_SPEED_DUPLEX)) {
-            u32 speed = config_read32(*m_device_config, offsetof(VirtIONetConfig, speed));
+            u32 speed = transport_entity().config_read32(*m_device_config, offsetof(VirtIONetConfig, speed));
             m_link_speed = speed;
-            u32 duplex = config_read32(*m_device_config, offsetof(VirtIONetConfig, duplex));
+            u32 duplex = transport_entity().config_read32(*m_device_config, offsetof(VirtIONetConfig, duplex));
             m_link_duplex = duplex == 0x01;
         }
     });
