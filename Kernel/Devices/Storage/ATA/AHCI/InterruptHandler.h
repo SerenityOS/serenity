@@ -25,7 +25,7 @@ class AsyncBlockDeviceRequest;
 
 class AHCIController;
 class AHCIPort;
-class AHCIInterruptHandler final : public PCIIRQHandler {
+class AHCIInterruptHandler final : public PCI::IRQHandler {
     friend class AHCIController;
 
 public:

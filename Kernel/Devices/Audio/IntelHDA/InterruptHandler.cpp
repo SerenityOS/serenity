@@ -10,7 +10,7 @@
 namespace Kernel::Audio::IntelHDA {
 
 InterruptHandler::InterruptHandler(Controller& controller)
-    : PCIIRQHandler(controller, controller.device_identifier().interrupt_line().value())
+    : PCI::IRQHandler(controller, controller.device_identifier().interrupt_line().value())
     , m_controller(controller)
 {
     enable_irq();

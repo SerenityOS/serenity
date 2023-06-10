@@ -12,11 +12,11 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 
-namespace Kernel {
+namespace Kernel::PCI {
 
-class PCIIRQHandler : public GenericInterruptHandler {
+class IRQHandler : public GenericInterruptHandler {
 public:
-    virtual ~PCIIRQHandler() = default;
+    virtual ~IRQHandler() = default;
 
     virtual bool handle_interrupt(RegisterState const& regs) override;
     virtual bool handle_irq(RegisterState const&) = 0;
@@ -35,7 +35,7 @@ public:
     void set_shared_with_others(bool status) { m_shared_with_others = status; }
 
 protected:
-    PCIIRQHandler(PCI::Device& device, u8 irq);
+    IRQHandler(PCI::Device& device, u8 irq);
 
 private:
     bool m_shared_with_others { false };
