@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1169,6 +1170,141 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDe
         // 6. Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
         WebIDL::mark_promise_as_handled(*writer.closed_promise());
     }
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
+WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream& stream, ReadableByteStreamController& controller, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm, double high_water_mark, JS::Value auto_allocate_chunk_size)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream.[[controller]] is undefined.
+    VERIFY(!stream.controller().has_value());
+
+    // 2. If autoAllocateChunkSize is not undefined,
+    if (!auto_allocate_chunk_size.is_undefined()) {
+        // 1. Assert: ! IsInteger(autoAllocateChunkSize) is true.
+        VERIFY(auto_allocate_chunk_size.is_integral_number());
+
+        // 2. Assert: autoAllocateChunkSize is positive.
+        VERIFY(auto_allocate_chunk_size.as_double() > 0);
+    }
+
+    // 3. Set controller.[[stream]] to stream.
+    controller.set_stream(stream);
+
+    // 4. Set controller.[[pullAgain]] and controller.[[pulling]] to false.
+    controller.set_pull_again(false);
+    controller.set_pulling(false);
+
+    // 5. Set controller.[[byobRequest]] to null.
+    controller.set_byob_request({});
+
+    // 6. Perform ! ResetQueue(controller).
+    reset_queue(controller);
+
+    // 7. Set controller.[[closeRequested]] and controller.[[started]] to false.
+    controller.set_close_requested(false);
+    controller.set_started(false);
+
+    // 8. Set controller.[[strategyHWM]] to highWaterMark.
+    controller.set_strategy_hwm(high_water_mark);
+
+    // 9. Set controller.[[pullAlgorithm]] to pullAlgorithm.
+    controller.set_pull_algorithm(move(pull_algorithm));
+
+    // 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+    controller.set_cancel_algorithm(move(cancel_algorithm));
+
+    // 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
+    if (auto_allocate_chunk_size.is_integral_number())
+        controller.set_auto_allocate_chunk_size(auto_allocate_chunk_size.as_double());
+
+    // 12. Set controller.[[pendingPullIntos]] to a new empty list.
+    controller.pending_pull_intos().clear();
+
+    // 13. Set stream.[[controller]] to controller.
+    stream.set_controller(ReadableStreamController { controller });
+
+    // 14. Let startResult be the result of performing startAlgorithm.
+    auto start_result = TRY(start_algorithm());
+
+    // 15. Let startPromise be a promise resolved with startResult.
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
+
+    // 16. Upon fulfillment of startPromise,
+    WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Set controller.[[started]] to true.
+        controller.set_started(true);
+
+        // 2. Assert: controller.[[pulling]] is false.
+        VERIFY(!controller.pulling());
+
+        // 3. Assert: controller.[[pullAgain]] is false.
+        VERIFY(!controller.pull_again());
+
+        // 4. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+        TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+
+        return JS::js_undefined();
+    });
+
+    // 17. Upon rejection of startPromise with reason r,
+    WebIDL::upon_rejection(start_promise, [&](auto const& r) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Perform ! ReadableByteStreamControllerError(controller, r).
+        readable_byte_stream_controller_error(controller, r);
+
+        return JS::js_undefined();
+    });
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_support(ReadableStream& stream, Optional<PullAlgorithm>&& pull_algorithm, Optional<CancelAlgorithm>&& cancel_algorithm, double high_water_mark)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let startAlgorithm be an algorithm that returns undefined.
+    StartAlgorithm start_algorithm = [] { return JS::js_undefined(); };
+
+    // 2. Let pullAlgorithmWrapper be an algorithm that runs these steps:
+    PullAlgorithm pull_algorithm_wrapper = [&realm, pull_algorithm = move(pull_algorithm)]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        // 1. Let result be the result of running pullAlgorithm, if pullAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        if (pull_algorithm.has_value())
+            result = TRY(pull_algorithm.value()());
+
+        // 2. If result is a Promise, then return result.
+        if (result != nullptr)
+            return JS::NonnullGCPtr(*result);
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 3. Let cancelAlgorithmWrapper be an algorithm that runs these steps:
+    CancelAlgorithm cancel_algorithm_wrapper = [&realm, cancel_algorithm = move(cancel_algorithm)](auto const& c) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        // 1. Let result be the result of running cancelAlgorithm, if cancelAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        if (cancel_algorithm.has_value())
+            result = TRY(cancel_algorithm.value()(c));
+
+        // 2. If result is a Promise, then return result.
+        if (result != nullptr)
+            return JS::NonnullGCPtr(*result);
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. Perform ! InitializeReadableStream(stream).
+    // 5. Let controller be a new ReadableByteStreamController.
+    auto controller = MUST_OR_THROW_OOM(stream.heap().allocate<ReadableByteStreamController>(realm, realm));
+
+    // 6. Perform ! SetUpReadableByteStreamController(stream, controller, startAlgorithm, pullAlgorithmWrapper, cancelAlgorithmWrapper, highWaterMark, undefined).
+    TRY(set_up_readable_byte_stream_controller(stream, controller, move(start_algorithm), move(pull_algorithm_wrapper), move(cancel_algorithm_wrapper), high_water_mark, JS::js_undefined()));
 
     return {};
 }
