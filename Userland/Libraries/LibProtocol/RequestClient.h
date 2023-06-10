@@ -32,8 +32,8 @@ public:
 private:
     RequestClient(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual void request_progress(i32, Optional<u32> const&, u32) override;
-    virtual void request_finished(i32, bool, u32) override;
+    virtual void request_progress(i32, Optional<u64> const&, u64) override;
+    virtual void request_finished(i32, bool, u64) override;
     virtual void certificate_requested(i32) override;
     virtual void headers_became_available(i32, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const&, Optional<u32> const&) override;
 

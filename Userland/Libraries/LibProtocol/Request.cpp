@@ -88,7 +88,7 @@ void Request::set_should_buffer_all_input(bool value)
         m_internal_buffered_data->response_code = move(response_code);
     };
 
-    on_finish = [this](auto success, u32 total_size) {
+    on_finish = [this](auto success, auto total_size) {
         auto output_buffer = ByteBuffer::create_uninitialized(m_internal_buffered_data->payload_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
         m_internal_buffered_data->payload_stream.read_until_filled(output_buffer).release_value_but_fixme_should_propagate_errors();
         on_buffered_request_finish(
@@ -102,7 +102,7 @@ void Request::set_should_buffer_all_input(bool value)
     stream_into(m_internal_buffered_data->payload_stream);
 }
 
-void Request::did_finish(Badge<RequestClient>, bool success, u32 total_size)
+void Request::did_finish(Badge<RequestClient>, bool success, u64 total_size)
 {
     if (!on_finish)
         return;
@@ -110,7 +110,7 @@ void Request::did_finish(Badge<RequestClient>, bool success, u32 total_size)
     on_finish(success, total_size);
 }
 
-void Request::did_progress(Badge<RequestClient>, Optional<u32> total_size, u32 downloaded_size)
+void Request::did_progress(Badge<RequestClient>, Optional<u64> total_size, u64 downloaded_size)
 {
     if (on_progress)
         on_progress(total_size, downloaded_size);

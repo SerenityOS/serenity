@@ -232,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_save_stream_data = false;
     bool following_url = false;
 
-    u32 previous_downloaded_size = 0;
+    u64 previous_downloaded_size = 0;
     u32 const report_time_in_ms = 100;
     u32 const speed_update_time_in_ms = 4000;
 
@@ -274,7 +274,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        request->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
+        request->on_progress = [&](Optional<u64> maybe_total_size, u64 downloaded_size) {
             gettimeofday(&current_time, nullptr);
             timersub(&current_time, &previous_time, &time_diff);
             auto time_diff_ms = time_diff.tv_sec * 1000 + time_diff.tv_usec / 1000;

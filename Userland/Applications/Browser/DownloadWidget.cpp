@@ -43,7 +43,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_elapsed_timer.start();
     m_download = Web::ResourceLoader::the().connector().start_request("GET", url);
     VERIFY(m_download);
-    m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
+    m_download->on_progress = [this](Optional<u64> total_size, u64 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);
     };
 
@@ -78,6 +78,8 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     m_progressbar = add<GUI::Progressbar>();
     m_progressbar->set_fixed_height(20);
+    m_progressbar->set_max(0);
+    m_progressbar->set_max(100);
 
     m_progress_label = add<GUI::Label>();
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -117,17 +119,14 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 }
 
-void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
+void DownloadWidget::did_progress(Optional<u64> total_size, u64 downloaded_size)
 {
-    m_progressbar->set_min(0);
+    int percent = 0;
     if (total_size.has_value()) {
-        int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100.0f);
+        percent = downloaded_size * 100 / total_size.value();
         window()->set_progress(percent);
-        m_progressbar->set_max(total_size.value());
-    } else {
-        m_progressbar->set_max(0);
+        m_progressbar->set_value(percent);
     }
-    m_progressbar->set_value(downloaded_size);
 
     {
         StringBuilder builder;
@@ -140,7 +139,6 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
     {
         StringBuilder builder;
         if (total_size.has_value()) {
-            int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100);
             builder.appendff("{}%", percent);
         } else {
             builder.append(human_readable_size(downloaded_size));
