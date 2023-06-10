@@ -86,7 +86,7 @@ DeprecatedString ASTNode::class_name() const
 
 static void print_indent(int indent)
 {
-    out("{}", DeprecatedString::repeated(' ', indent * 2));
+    warn("{}", DeprecatedString::repeated(' ', indent * 2));
 }
 
 static void update_function_name(Value value, DeprecatedFlyString const& name)
@@ -212,12 +212,12 @@ void LabelledStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent + 1);
-    outln("(Label)");
+    warnln("(Label)");
     print_indent(indent + 2);
-    outln("\"{}\"", m_label);
+    warnln("\"{}\"", m_label);
 
     print_indent(indent + 1);
-    outln("(Labelled item)");
+    warnln("(Labelled item)");
     m_labelled_item->dump(indent + 2);
 }
 
@@ -2102,7 +2102,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
 void ASTNode::dump(int indent) const
 {
     print_indent(indent);
-    outln("{}", class_name());
+    warnln("{}", class_name());
 }
 
 void ScopeNode::dump(int indent) const
@@ -2110,28 +2110,28 @@ void ScopeNode::dump(int indent) const
     ASTNode::dump(indent);
     if (!m_lexical_declarations.is_empty()) {
         print_indent(indent + 1);
-        outln("(Lexical declarations)");
+        warnln("(Lexical declarations)");
         for (auto& declaration : m_lexical_declarations)
             declaration->dump(indent + 2);
     }
 
     if (!m_var_declarations.is_empty()) {
         print_indent(indent + 1);
-        outln("(Variable declarations)");
+        warnln("(Variable declarations)");
         for (auto& declaration : m_var_declarations)
             declaration->dump(indent + 2);
     }
 
     if (!m_functions_hoistable_with_annexB_extension.is_empty()) {
         print_indent(indent + 1);
-        outln("(Hoisted functions via annexB extension)");
+        warnln("(Hoisted functions via annexB extension)");
         for (auto& declaration : m_functions_hoistable_with_annexB_extension)
             declaration->dump(indent + 2);
     }
 
     if (!m_children.is_empty()) {
         print_indent(indent + 1);
-        outln("(Children)");
+        warnln("(Children)");
         for (auto& child : children())
             child->dump(indent + 2);
     }
@@ -2210,10 +2210,10 @@ void BinaryExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    outln("{}", class_name());
+    warnln("{}", class_name());
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    outln("{}", op_string);
+    warnln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
 
@@ -2233,10 +2233,10 @@ void LogicalExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    outln("{}", class_name());
+    warnln("{}", class_name());
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    outln("{}", op_string);
+    warnln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
 
@@ -2268,9 +2268,9 @@ void UnaryExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    outln("{}", class_name());
+    warnln("{}", class_name());
     print_indent(indent + 1);
-    outln("{}", op_string);
+    warnln("{}", op_string);
     m_lhs->dump(indent + 1);
 }
 
@@ -2278,9 +2278,9 @@ void CallExpression::dump(int indent) const
 {
     print_indent(indent);
     if (is<NewExpression>(*this))
-        outln("CallExpression [new]");
+        warnln("CallExpression [new]");
     else
-        outln("CallExpression");
+        warnln("CallExpression");
     m_callee->dump(indent + 1);
     for (auto& argument : arguments())
         argument.value->dump(indent + 1);
@@ -2289,7 +2289,7 @@ void CallExpression::dump(int indent) const
 void SuperCall::dump(int indent) const
 {
     print_indent(indent);
-    outln("SuperCall");
+    warnln("SuperCall");
     for (auto& argument : m_arguments)
         argument.value->dump(indent + 1);
 }
@@ -2311,20 +2311,20 @@ ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrV
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("ClassExpression: \"{}\"", m_name);
+    warnln("ClassExpression: \"{}\"", m_name);
 
     print_indent(indent);
-    outln("(Constructor)");
+    warnln("(Constructor)");
     m_constructor->dump(indent + 1);
 
     if (!m_super_class.is_null()) {
         print_indent(indent);
-        outln("(Super Class)");
+        warnln("(Super Class)");
         m_super_class->dump(indent + 1);
     }
 
     print_indent(indent);
-    outln("(Elements)");
+    warnln("(Elements)");
     for (auto& method : m_elements)
         method->dump(indent + 1);
 }
@@ -2334,7 +2334,7 @@ void ClassMethod::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("(Key)");
+    warnln("(Key)");
     m_key->dump(indent + 1);
 
     char const* kind_string = nullptr;
@@ -2350,13 +2350,13 @@ void ClassMethod::dump(int indent) const
         break;
     }
     print_indent(indent);
-    outln("Kind: {}", kind_string);
+    warnln("Kind: {}", kind_string);
 
     print_indent(indent);
-    outln("Static: {}", is_static());
+    warnln("Static: {}", is_static());
 
     print_indent(indent);
-    outln("(Function)");
+    warnln("(Function)");
     m_function->dump(indent + 1);
 }
 
@@ -2364,15 +2364,15 @@ void ClassField::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    outln("(Key)");
+    warnln("(Key)");
     m_key->dump(indent + 1);
 
     print_indent(indent);
-    outln("Static: {}", is_static());
+    warnln("Static: {}", is_static());
 
     if (m_initializer) {
         print_indent(indent);
-        outln("(Initializer)");
+        warnln("(Initializer)");
         m_initializer->dump(indent + 1);
     }
 }
@@ -2386,37 +2386,37 @@ void StaticInitializer::dump(int indent) const
 void StringLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("StringLiteral \"{}\"", m_value);
+    warnln("StringLiteral \"{}\"", m_value);
 }
 
 void SuperExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("super");
+    warnln("super");
 }
 
 void NumericLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("NumericLiteral {}", m_value);
+    warnln("NumericLiteral {}", m_value);
 }
 
 void BigIntLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("BigIntLiteral {}", m_value);
+    warnln("BigIntLiteral {}", m_value);
 }
 
 void BooleanLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("BooleanLiteral {}", m_value);
+    warnln("BooleanLiteral {}", m_value);
 }
 
 void NullLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("null");
+    warnln("null");
 }
 
 bool BindingPattern::contains_expression() const
@@ -2450,15 +2450,15 @@ ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoi
 void BindingPattern::dump(int indent) const
 {
     print_indent(indent);
-    outln("BindingPattern {}", kind == Kind::Array ? "Array" : "Object");
+    warnln("BindingPattern {}", kind == Kind::Array ? "Array" : "Object");
 
     for (auto& entry : entries) {
         print_indent(indent + 1);
-        outln("(Property)");
+        warnln("(Property)");
 
         if (kind == Kind::Object) {
             print_indent(indent + 2);
-            outln("(Identifier)");
+            warnln("(Identifier)");
             if (entry.name.has<NonnullRefPtr<Identifier const>>()) {
                 entry.name.get<NonnullRefPtr<Identifier const>>()->dump(indent + 3);
             } else {
@@ -2466,12 +2466,12 @@ void BindingPattern::dump(int indent) const
             }
         } else if (entry.is_elision()) {
             print_indent(indent + 2);
-            outln("(Elision)");
+            warnln("(Elision)");
             continue;
         }
 
         print_indent(indent + 2);
-        outln("(Pattern{})", entry.is_rest ? " rest=true" : "");
+        warnln("(Pattern{})", entry.is_rest ? " rest=true" : "");
         if (entry.alias.has<NonnullRefPtr<Identifier const>>()) {
             entry.alias.get<NonnullRefPtr<Identifier const>>()->dump(indent + 3);
         } else if (entry.alias.has<NonnullRefPtr<BindingPattern const>>()) {
@@ -2480,12 +2480,12 @@ void BindingPattern::dump(int indent) const
             entry.alias.get<NonnullRefPtr<MemberExpression const>>()->dump(indent + 3);
         } else {
             print_indent(indent + 3);
-            outln("<empty>");
+            warnln("<empty>");
         }
 
         if (entry.initializer) {
             print_indent(indent + 2);
-            outln("(Initializer)");
+            warnln("(Initializer)");
             entry.initializer->dump(indent + 3);
         }
     }
@@ -2496,22 +2496,22 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
     print_indent(indent);
     auto is_async = m_kind == FunctionKind::Async || m_kind == FunctionKind::AsyncGenerator;
     auto is_generator = m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator;
-    outln("{}{}{} '{}'", class_name, is_async ? " async" : "", is_generator ? "*" : "", name());
+    warnln("{}{}{} '{}'", class_name, is_async ? " async" : "", is_generator ? "*" : "", name());
     if (m_contains_direct_call_to_eval) {
         print_indent(indent + 1);
-        outln("\033[31;1m(direct eval)\033[0m");
+        warnln("\033[31;1m(direct eval)\033[0m");
     }
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
-        outln("(Parameters)");
+        warnln("(Parameters)");
 
         for (auto& parameter : m_parameters) {
             print_indent(indent + 2);
             if (parameter.is_rest)
-                out("...");
+                warn("...");
             parameter.binding.visit(
                 [&](DeprecatedFlyString const& name) {
-                    outln("{}", name);
+                    warnln("{}", name);
                 },
                 [&](BindingPattern const& pattern) {
                     pattern.dump(indent + 2);
@@ -2521,7 +2521,7 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
         }
     }
     print_indent(indent + 1);
-    outln("(Body)");
+    warnln("(Body)");
     body().dump(indent + 2);
 }
 
@@ -2567,12 +2567,12 @@ void IfStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("If");
+    warnln("If");
     predicate().dump(indent + 1);
     consequent().dump(indent + 1);
     if (alternate()) {
         print_indent(indent);
-        outln("Else");
+        warnln("Else");
         alternate()->dump(indent + 1);
     }
 }
@@ -2582,7 +2582,7 @@ void WhileStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("While");
+    warnln("While");
     test().dump(indent + 1);
     body().dump(indent + 1);
 }
@@ -2592,10 +2592,10 @@ void WithStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent + 1);
-    outln("Object");
+    warnln("Object");
     object().dump(indent + 2);
     print_indent(indent + 1);
-    outln("Body");
+    warnln("Body");
     body().dump(indent + 2);
 }
 
@@ -2604,7 +2604,7 @@ void DoWhileStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("DoWhile");
+    warnln("DoWhile");
     test().dump(indent + 1);
     body().dump(indent + 1);
 }
@@ -2614,7 +2614,7 @@ void ForStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("For");
+    warnln("For");
     if (init())
         init()->dump(indent + 1);
     if (test())
@@ -2629,7 +2629,7 @@ void ForInStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("ForIn");
+    warnln("ForIn");
     lhs().visit([&](auto& lhs) { lhs->dump(indent + 1); });
     rhs().dump(indent + 1);
     body().dump(indent + 1);
@@ -2640,7 +2640,7 @@ void ForOfStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("ForOf");
+    warnln("ForOf");
     lhs().visit([&](auto& lhs) { lhs->dump(indent + 1); });
     rhs().dump(indent + 1);
     body().dump(indent + 1);
@@ -2651,7 +2651,7 @@ void ForAwaitOfStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    outln("ForAwaitOf");
+    warnln("ForAwaitOf");
     m_lhs.visit([&](auto& lhs) { lhs->dump(indent + 1); });
     m_rhs->dump(indent + 1);
     m_body->dump(indent + 1);
@@ -2675,7 +2675,7 @@ Completion Identifier::execute(Interpreter& interpreter) const
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    outln("Identifier \"{}\"", m_string);
+    warnln("Identifier \"{}\"", m_string);
 }
 
 Completion PrivateIdentifier::execute(Interpreter&) const
@@ -2688,7 +2688,7 @@ Completion PrivateIdentifier::execute(Interpreter&) const
 void PrivateIdentifier::dump(int indent) const
 {
     print_indent(indent);
-    outln("PrivateIdentifier \"{}\"", m_string);
+    warnln("PrivateIdentifier \"{}\"", m_string);
 }
 
 void SpreadExpression::dump(int indent) const
@@ -3000,7 +3000,7 @@ void AssignmentExpression::dump(int indent) const
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("{}", op_string);
+    warnln("{}", op_string);
     m_lhs.visit([&](auto& lhs) { lhs->dump(indent + 1); });
     m_rhs->dump(indent + 1);
 }
@@ -3020,12 +3020,12 @@ void UpdateExpression::dump(int indent) const
     ASTNode::dump(indent);
     if (m_prefixed) {
         print_indent(indent + 1);
-        outln("{}", op_string);
+        warnln("{}", op_string);
     }
     m_argument->dump(indent + 1);
     if (!m_prefixed) {
         print_indent(indent + 1);
-        outln("{}", op_string);
+        warnln("{}", op_string);
     }
 }
 
@@ -3108,7 +3108,7 @@ void VariableDeclaration::dump(int indent) const
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("{}", declaration_kind_string);
+    warnln("{}", declaration_kind_string);
 
     for (auto& declarator : m_declarations)
         declarator->dump(indent + 1);
@@ -3170,7 +3170,7 @@ void ObjectProperty::dump(int indent) const
 
     if (m_property_type == Type::Spread) {
         print_indent(indent + 1);
-        outln("...Spreading");
+        warnln("...Spreading");
         m_key->dump(indent + 1);
     } else {
         m_key->dump(indent + 1);
@@ -3283,7 +3283,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter) const
 void MemberExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("{}(computed={})", class_name(), is_computed());
+    warnln("{}(computed={})", class_name(), is_computed());
     m_object->dump(indent + 1);
     m_property->dump(indent + 1);
 }
@@ -3322,29 +3322,29 @@ bool MemberExpression::ends_in_private_name() const
 void OptionalChain::dump(int indent) const
 {
     print_indent(indent);
-    outln("{}", class_name());
+    warnln("{}", class_name());
     m_base->dump(indent + 1);
     for (auto& reference : m_references) {
         reference.visit(
             [&](Call const& call) {
                 print_indent(indent + 1);
-                outln("Call({})", call.mode == Mode::Optional ? "Optional" : "Not Optional");
+                warnln("Call({})", call.mode == Mode::Optional ? "Optional" : "Not Optional");
                 for (auto& argument : call.arguments)
                     argument.value->dump(indent + 2);
             },
             [&](ComputedReference const& ref) {
                 print_indent(indent + 1);
-                outln("ComputedReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                warnln("ComputedReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
                 ref.expression->dump(indent + 2);
             },
             [&](MemberReference const& ref) {
                 print_indent(indent + 1);
-                outln("MemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                warnln("MemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
                 ref.identifier->dump(indent + 2);
             },
             [&](PrivateMemberReference const& ref) {
                 print_indent(indent + 1);
-                outln("PrivateMemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
+                warnln("PrivateMemberReference({})", ref.mode == Mode::Optional ? "Optional" : "Not Optional");
                 ref.private_identifier->dump(indent + 2);
             });
     }
@@ -3422,7 +3422,7 @@ void MetaProperty::dump(int indent) const
     else
         VERIFY_NOT_REACHED();
     print_indent(indent);
-    outln("{} {}", class_name(), name);
+    warnln("{} {}", class_name(), name);
 }
 
 // 13.3.12.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation
@@ -3492,10 +3492,10 @@ void ImportCall::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    outln("(Specifier)");
+    warnln("(Specifier)");
     m_specifier->dump(indent + 1);
     if (m_options) {
-        outln("(Options)");
+        warnln("(Options)");
         m_options->dump(indent + 1);
     }
 }
@@ -3672,7 +3672,7 @@ Completion NullLiteral::execute(Interpreter& interpreter) const
 void RegExpLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("{} (/{}/{})", class_name(), pattern(), flags());
+    warnln("{} (/{}/{})", class_name(), pattern(), flags());
 }
 
 // 13.2.7.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
@@ -3708,7 +3708,7 @@ void ArrayExpression::dump(int indent) const
             element->dump(indent + 1);
         } else {
             print_indent(indent + 1);
-            outln("<empty>");
+            warnln("<empty>");
         }
     }
 }
@@ -3785,10 +3785,10 @@ void TaggedTemplateLiteral::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("(Tag)");
+    warnln("(Tag)");
     m_tag->dump(indent + 2);
     print_indent(indent + 1);
-    outln("(Template Literal)");
+    warnln("(Template Literal)");
     m_template_literal->dump(indent + 2);
 }
 
@@ -3935,18 +3935,18 @@ void TryStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    outln("(Block)");
+    warnln("(Block)");
     block().dump(indent + 1);
 
     if (handler()) {
         print_indent(indent);
-        outln("(Handler)");
+        warnln("(Handler)");
         handler()->dump(indent + 1);
     }
 
     if (finalizer()) {
         print_indent(indent);
-        outln("(Finalizer)");
+        warnln("(Finalizer)");
         finalizer()->dump(indent + 1);
     }
 }
@@ -3957,14 +3957,14 @@ void CatchClause::dump(int indent) const
     m_parameter.visit(
         [&](DeprecatedFlyString const& parameter) {
             if (parameter.is_null())
-                outln("CatchClause");
+                warnln("CatchClause");
             else
-                outln("CatchClause ({})", parameter);
+                warnln("CatchClause ({})", parameter);
         },
         [&](NonnullRefPtr<BindingPattern const> const& pattern) {
-            outln("CatchClause");
+            warnln("CatchClause");
             print_indent(indent);
-            outln("(Parameter)");
+            warnln("(Parameter)");
             pattern->dump(indent + 2);
         });
 
@@ -4393,13 +4393,13 @@ void SwitchCase::dump(int indent) const
 {
     print_indent(indent + 1);
     if (m_test) {
-        outln("(Test)");
+        warnln("(Test)");
         m_test->dump(indent + 2);
     } else {
-        outln("(Default)");
+        warnln("(Default)");
     }
     print_indent(indent + 1);
-    outln("(Consequent)");
+    warnln("(Consequent)");
     ScopeNode::dump(indent + 2);
 }
 
@@ -4430,13 +4430,13 @@ void ConditionalExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("(Test)");
+    warnln("(Test)");
     m_test->dump(indent + 2);
     print_indent(indent + 1);
-    outln("(Consequent)");
+    warnln("(Consequent)");
     m_consequent->dump(indent + 2);
     print_indent(indent + 1);
-    outln("(Alternate)");
+    warnln("(Alternate)");
     m_alternate->dump(indent + 2);
 }
 
@@ -4654,10 +4654,10 @@ Completion ExportStatement::execute(Interpreter& interpreter) const
 static void dump_assert_clauses(ModuleRequest const& request)
 {
     if (!request.assertions.is_empty()) {
-        out("[ ");
+        warn("[ ");
         for (auto& assertion : request.assertions)
-            out("{}: {}, ", assertion.key, assertion.value);
-        out(" ]");
+            warn("{}: {}, ", assertion.key, assertion.value);
+        warn(" ]");
     }
 }
 
@@ -4665,7 +4665,7 @@ void ExportStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("(ExportEntries)");
+    warnln("(ExportEntries)");
 
     auto string_or_null = [](DeprecatedString const& string) -> DeprecatedString {
         if (string.is_empty()) {
@@ -4676,22 +4676,22 @@ void ExportStatement::dump(int indent) const
 
     for (auto& entry : m_entries) {
         print_indent(indent + 2);
-        out("ExportName: {}, ImportName: {}, LocalName: {}, ModuleRequest: ",
+        warn("ExportName: {}, ImportName: {}, LocalName: {}, ModuleRequest: ",
             string_or_null(entry.export_name),
             entry.is_module_request() ? string_or_null(entry.local_or_import_name) : "null",
             entry.is_module_request() ? "null" : string_or_null(entry.local_or_import_name));
         if (entry.is_module_request()) {
-            out("{}", entry.m_module_request->module_specifier);
+            warn("{}", entry.m_module_request->module_specifier);
             dump_assert_clauses(*entry.m_module_request);
-            outln();
+            warnln();
         } else {
-            outln("null");
+            warnln("null");
         }
     }
 
     if (m_statement) {
         print_indent(indent + 1);
-        outln("(Statement)");
+        warnln("(Statement)");
         m_statement->dump(indent + 2);
     }
 }
@@ -4702,15 +4702,15 @@ void ImportStatement::dump(int indent) const
     print_indent(indent + 1);
     if (m_entries.is_empty()) {
         // direct from "module" import
-        outln("Entire module '{}'", m_module_request.module_specifier);
+        warnln("Entire module '{}'", m_module_request.module_specifier);
         dump_assert_clauses(m_module_request);
     } else {
-        outln("(ExportEntries) from {}", m_module_request.module_specifier);
+        warnln("(ExportEntries) from {}", m_module_request.module_specifier);
         dump_assert_clauses(m_module_request);
 
         for (auto& entry : m_entries) {
             print_indent(indent + 2);
-            outln("ImportName: {}, LocalName: {}", entry.import_name, entry.local_name);
+            warnln("ImportName: {}, LocalName: {}", entry.import_name, entry.local_name);
         }
     }
 }
