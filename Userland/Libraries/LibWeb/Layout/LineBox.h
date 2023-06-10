@@ -47,6 +47,7 @@ private:
     CSSPixels m_original_available_width { 0 };
 
     bool m_has_break { false };
+    bool m_has_forced_break { false };
 };
 
 }

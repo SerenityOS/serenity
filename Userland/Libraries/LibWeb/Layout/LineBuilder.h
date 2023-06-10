@@ -18,7 +18,12 @@ public:
     LineBuilder(InlineFormattingContext&, LayoutState&);
     ~LineBuilder();
 
-    void break_line(Optional<CSSPixels> next_item_width = {});
+    enum class ForcedBreak {
+        No,
+        Yes,
+    };
+
+    void break_line(ForcedBreak, Optional<CSSPixels> next_item_width = {});
     void append_box(Box const&, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin);
     void append_text_chunk(TextNode const&, size_t offset_in_node, size_t length_in_node, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height);
 
@@ -26,7 +31,7 @@ public:
     bool break_if_needed(CSSPixels next_item_width)
     {
         if (should_break(next_item_width)) {
-            break_line(next_item_width);
+            break_line(LineBuilder::ForcedBreak::No, next_item_width);
             return true;
         }
         return false;

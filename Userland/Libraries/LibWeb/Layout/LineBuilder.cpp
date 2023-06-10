@@ -25,10 +25,11 @@ LineBuilder::~LineBuilder()
         update_last_line();
 }
 
-void LineBuilder::break_line(Optional<CSSPixels> next_item_width)
+void LineBuilder::break_line(ForcedBreak forced_break, Optional<CSSPixels> next_item_width)
 {
-    auto last_line_box = ensure_last_line_box();
+    auto& last_line_box = ensure_last_line_box();
     last_line_box.m_has_break = true;
+    last_line_box.m_has_forced_break = forced_break == ForcedBreak::Yes;
 
     update_last_line();
     size_t break_count = 0;
