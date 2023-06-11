@@ -149,32 +149,8 @@ private:
         bool is_gap { false };
 
         static GridTrack create_from_definition(CSS::ExplicitGridTrack const& definition);
-
-        GridTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
-            : min_track_sizing_function(min_track_sizing_function)
-            , max_track_sizing_function(max_track_sizing_function)
-        {
-        }
-
-        GridTrack(CSS::GridSize track_sizing_function)
-            : min_track_sizing_function(track_sizing_function)
-            , max_track_sizing_function(track_sizing_function)
-        {
-        }
-
-        GridTrack(CSSPixels size, bool is_gap)
-            : min_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
-            , max_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
-            , base_size(size)
-            , is_gap(is_gap)
-        {
-        }
-
-        GridTrack()
-            : min_track_sizing_function(CSS::GridSize::make_auto())
-            , max_track_sizing_function(CSS::GridSize::make_auto())
-        {
-        }
+        static GridTrack create_auto();
+        static GridTrack create_gap(CSSPixels size);
     };
 
     struct GridArea {
