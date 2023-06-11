@@ -9,6 +9,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/SVG/AttributeParser.h>
 
 namespace Web {
 
@@ -20,12 +21,14 @@ public:
         m_states.append(State());
     }
 
+    SVG::FillRule fill_rule() const { return state().fill_rule; }
     Gfx::Color fill_color() const { return state().fill_color; }
     Gfx::Color stroke_color() const { return state().stroke_color; }
     float stroke_width() const { return state().stroke_width; }
     float fill_opacity() const { return state().fill_opacity; }
     float stroke_opacity() const { return state().stroke_opacity; }
 
+    void set_fill_rule(SVG::FillRule fill_rule) { state().fill_rule = fill_rule; }
     void set_fill_color(Gfx::Color color) { state().fill_color = color; }
     void set_stroke_color(Gfx::Color color) { state().stroke_color = color; }
     void set_stroke_width(float width) { state().stroke_width = width; }
@@ -40,6 +43,7 @@ public:
 
 private:
     struct State {
+        SVG::FillRule fill_rule { SVG::FillRule::Nonzero };
         Gfx::Color fill_color { Gfx::Color::Transparent };
         Gfx::Color stroke_color { Gfx::Color::Transparent };
         float stroke_width { 1.0f };
