@@ -37,9 +37,6 @@ public:
     AK::URL const& current_url() const;
     void set_current_url(AK::URL);
 
-    // https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request
-    void abort(JS::Realm&);
-
     [[nodiscard]] RefPtr<DecodedImageData const> image_data() const;
     void set_image_data(RefPtr<DecodedImageData const>);
 
@@ -52,6 +49,7 @@ public:
     // https://html.spec.whatwg.org/multipage/images.html#prepare-an-image-for-presentation
     void prepare_for_presentation(HTMLImageElement&);
 
+    [[nodiscard]] JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller();
     void set_fetch_controller(JS::GCPtr<Fetch::Infrastructure::FetchController>);
 
 private:
@@ -79,5 +77,8 @@ private:
 
     JS::Handle<Fetch::Infrastructure::FetchController> m_fetch_controller;
 };
+
+// https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request
+void abort_the_image_request(JS::Realm&, ImageRequest*);
 
 }
