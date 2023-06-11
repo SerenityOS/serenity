@@ -130,7 +130,7 @@ enum RenderingIntent {
 struct AnimationFrame {
     fcTL_Chunk const& fcTL;
     RefPtr<Bitmap> bitmap;
-    Vector<u8> compressed_data;
+    ByteBuffer compressed_data;
 
     AnimationFrame(fcTL_Chunk const& fcTL)
         : fcTL(fcTL)
@@ -187,9 +187,9 @@ struct PNGLoadingContext {
     Vector<Scanline> scanlines;
     ByteBuffer unfiltered_data;
     RefPtr<Gfx::Bitmap> bitmap;
-    Vector<u8> compressed_data;
+    ByteBuffer compressed_data;
     Vector<PaletteEntry> palette_data;
-    Vector<u8> palette_transparency_data;
+    ByteBuffer palette_transparency_data;
     Vector<AnimationFrame> animation_frames;
 
     Optional<ChromaticitiesAndWhitepoint> chromaticities_and_whitepoint;
@@ -537,7 +537,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                         return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at((int)palette_index[i]);
                     auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
-                        ? context.palette_transparency_data.data()[palette_index[i]]
+                        ? context.palette_transparency_data[palette_index[i]]
                         : 0xff;
                     pixel.r = color.r;
                     pixel.g = color.g;
@@ -558,7 +558,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
                         return Error::from_string_literal("PNGImageDecoderPlugin: Palette index out of range");
                     auto& color = context.palette_data.at(palette_index);
                     auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
-                        ? context.palette_transparency_data.data()[palette_index]
+                        ? context.palette_transparency_data[palette_index]
                         : 0xff;
                     pixel.r = color.r;
                     pixel.g = color.g;
@@ -1023,7 +1023,7 @@ static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context
 
 static ErrorOr<void> process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
-    context.compressed_data.append(data.data(), data.size());
+    context.compressed_data.append(data);
     if (context.state < PNGLoadingContext::State::ImageDataChunkDecoded)
         context.state = PNGLoadingContext::State::ImageDataChunkDecoded;
     return {};
@@ -1041,7 +1041,7 @@ static ErrorOr<void> process_tRNS(ReadonlyBytes data, PNGLoadingContext& context
     case PNG::ColorType::Greyscale:
     case PNG::ColorType::Truecolor:
     case PNG::ColorType::IndexedColor:
-        TRY(context.palette_transparency_data.try_append(data.data(), data.size()));
+        TRY(context.palette_transparency_data.try_append(data));
         break;
     default:
         break;
