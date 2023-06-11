@@ -12,6 +12,7 @@
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
@@ -50,7 +51,7 @@ public:
             auto result = m_buffer->dequeue();
             if (result.is_error()) {
                 if (result.error() == Audio::AudioQueue::QueueStatus::Empty) {
-                    dbgln("Audio client {} can't keep up!", m_client->client_id());
+                    dbgln_if(AUDIO_DEBUG, "Audio client {} can't keep up!", m_client->client_id());
                     // Note: Even though we only check client state here, we will probably close the client much earlier.
                     if (!m_client->is_open()) {
                         dbgln("Client socket {} has closed, closing audio server connection.", m_client->client_id());

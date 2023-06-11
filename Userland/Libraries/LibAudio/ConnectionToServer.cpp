@@ -6,6 +6,7 @@
  */
 
 #include <AK/Atomic.h>
+#include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
@@ -97,7 +98,7 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
     Array<Sample, AUDIO_BUFFER_SIZE> next_chunk;
     while (true) {
         if (m_user_queue->is_empty()) {
-            dbgln("Reached end of provided audio data, going to sleep");
+            dbgln_if(AUDIO_DEBUG, "Reached end of provided audio data, going to sleep");
             break;
         }
 

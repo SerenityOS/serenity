@@ -10,6 +10,10 @@
 #    cmakedefine01 AFLACLOADER_DEBUG
 #endif
 
+#ifndef AUDIO_DEBUG
+#    cmakedefine01 AUDIO_DEBUG
+#endif
+
 #ifndef AWAVLOADER_DEBUG
 #    cmakedefine01 AWAVLOADER_DEBUG
 #endif
