@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +8,11 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
+#include <LibWeb/HTML/ImageRequest.h>
+#include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -75,7 +78,7 @@ JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS:
         // FIXME: Actually paint the nested browsing context's document, similar to how iframes are painted with FrameBox and NestedBrowsingContextPaintable.
         return nullptr;
     case Representation::Image:
-        if (m_image_loader.has_value() && m_image_loader->has_image())
+        if (image_data())
             return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *this);
         break;
     default:
@@ -272,7 +275,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<Depreca
         if (!resource()->has_encoded_data())
             return run_object_representation_fallback_steps();
 
-        convert_resource_to_image();
+        load_image();
     }
 
     // * Otherwise
@@ -310,22 +313,27 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
     update_layout_and_child_objects(Representation::Children);
 }
 
-void HTMLObjectElement::convert_resource_to_image()
+void HTMLObjectElement::load_image()
 {
-    // FIXME: This is a bit awkward. We convert the Resource to an ImageResource here because we do not know
-    //        until now that the resource is an image. ImageLoader then becomes responsible for handling
-    //        encoding failures, animations, etc. It would be clearer if those features were split from
-    //        ImageLoader into a purpose build class to be shared between here and ImageBox.
-    m_image_loader.emplace(*this);
+    // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
+    auto data = attribute(HTML::AttributeNames::data);
+    auto url = document().parse_url(data);
+    m_image_request = HTML::ImageRequest::get_shareable_or_create(*document().page(), url).release_value_but_fixme_should_propagate_errors();
+    m_image_request->add_callbacks(
+        [this] {
+            run_object_representation_completed_steps(Representation::Image);
+        },
+        [this] {
+            run_object_representation_fallback_steps();
+        });
 
-    m_image_loader->on_load = [this] {
-        run_object_representation_completed_steps(Representation::Image);
-    };
-    m_image_loader->on_fail = [this] {
-        run_object_representation_fallback_steps();
-    };
+    // If the image request is already available or fetching, no need to start another fetch.
+    if (m_image_request->is_available() || m_image_request->fetch_controller())
+        return;
 
-    m_image_loader->adopt_object_resource({}, *resource());
+    auto request = HTML::create_potential_CORS_request(vm(), url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
+    request->set_client(&document().relevant_settings_object());
+    m_image_request->fetch_image(realm(), request);
 }
 
 void HTMLObjectElement::update_layout_and_child_objects(Representation representation)
@@ -350,31 +358,38 @@ i32 HTMLObjectElement::default_tab_index_value() const
     return 0;
 }
 
+RefPtr<DecodedImageData const> HTMLObjectElement::image_data() const
+{
+    if (!m_image_request)
+        return nullptr;
+    return m_image_request->image_data();
+}
+
 Optional<CSSPixels> HTMLObjectElement::intrinsic_width() const
 {
-    if (m_image_loader.has_value())
-        return m_image_loader->bitmap(0)->width();
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_width();
     return {};
 }
 
 Optional<CSSPixels> HTMLObjectElement::intrinsic_height() const
 {
-    if (m_image_loader.has_value())
-        return m_image_loader->bitmap(0)->height();
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_height();
     return {};
 }
 
 Optional<float> HTMLObjectElement::intrinsic_aspect_ratio() const
 {
-    if (m_image_loader.has_value())
-        return static_cast<float>(m_image_loader->bitmap(0)->width()) / static_cast<float>(m_image_loader->bitmap(0)->height());
+    if (auto image_data = this->image_data())
+        return image_data->intrinsic_aspect_ratio();
     return {};
 }
 
-RefPtr<Gfx::Bitmap const> HTMLObjectElement::current_image_bitmap(Gfx::IntSize) const
+RefPtr<Gfx::Bitmap const> HTMLObjectElement::current_image_bitmap(Gfx::IntSize size) const
 {
-    if (m_image_loader.has_value())
-        return m_image_loader->bitmap(m_image_loader->current_frame_index());
+    if (auto image_data = this->image_data())
+        return image_data->bitmap(0, size);
     return nullptr;
 }
 
