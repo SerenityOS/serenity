@@ -1023,12 +1023,12 @@ AST::MatchEntry Parser::parse_match_entry()
         for (auto& regex : regexps) {
             if (names.is_empty()) {
                 for (auto& name : regex.parser_result.capture_groups)
-                    names.append(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
+                    names.append(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
             } else {
                 size_t index = 0;
                 for (auto& name : regex.parser_result.capture_groups) {
                     if (names.size() <= index) {
-                        names.append(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
+                        names.append(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
                         continue;
                     }
 
