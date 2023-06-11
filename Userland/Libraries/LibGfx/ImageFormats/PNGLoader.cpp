@@ -180,7 +180,6 @@ struct PNGLoadingContext {
     u32 animation_loop_count { 0 };
     Optional<u32> last_completed_animation_frame_index;
     bool is_first_idat_part_of_animation { false };
-    bool has_seen_zlib_header { false };
     bool has_seen_iend { false };
     bool has_seen_idat_chunk { false };
     bool has_seen_actl_chunk_before_idat { false };
