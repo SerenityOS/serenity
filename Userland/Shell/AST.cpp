@@ -3796,7 +3796,7 @@ ErrorOr<Vector<String>> GlobValue::resolve_as_list(RefPtr<Shell> shell)
     Vector<String> strings;
     TRY(strings.try_ensure_capacity(results.size()));
     for (auto& entry : results) {
-        TRY(strings.try_append(TRY(String::from_utf8(entry))));
+        TRY(strings.try_append(TRY(String::from_deprecated_string(entry))));
     }
 
     return resolve_slices(shell, move(strings), m_slices);
@@ -3927,7 +3927,7 @@ ErrorOr<Vector<String>> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     if (!shell)
         return { resolve_slices(shell, Vector { TRY(builder.to_string()) }, m_slices) };
 
-    return { resolve_slices(shell, Vector { TRY(String::from_utf8(shell->expand_tilde(builder.to_deprecated_string()))) }, m_slices) };
+    return { resolve_slices(shell, Vector { TRY(String::from_deprecated_string(shell->expand_tilde(builder.to_deprecated_string()))) }, m_slices) };
 }
 
 ErrorOr<NonnullRefPtr<Rewiring>> CloseRedirection::apply() const

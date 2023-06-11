@@ -232,7 +232,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_regex_replace(AST::ImmediateExpressi
         TRY(replacement->resolve_as_list(this))[0],
         PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), TRY(String::from_utf8(result)), AST::StringLiteral::EnclosureType::None);
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), TRY(String::from_deprecated_string(result)), AST::StringLiteral::EnclosureType::None);
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::immediate_remove_suffix(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)

@@ -598,7 +598,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                         if (!first)
                             current_builder().append(" | "sv);
                         first = false;
-                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, String::from_utf8(option.pattern_value).release_value_but_fixme_should_propagate_errors());
+                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, String::from_deprecated_string(option.pattern_value).release_value_but_fixme_should_propagate_errors());
                         node->visit(*this);
                     }
                 });
