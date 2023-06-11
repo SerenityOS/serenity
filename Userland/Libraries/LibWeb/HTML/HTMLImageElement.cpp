@@ -319,11 +319,8 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
             entry->ignore_higher_layer_caching = true;
 
             // 2. Abort the image request for the current request and the pending request.
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
 
             // 3. Set pending request to null.
             m_pending_request = nullptr;
@@ -379,11 +376,8 @@ after_step_6:
             //    abort the image request for the current request and the pending request,
             //    and set pending request to null.
             m_current_request->set_state(ImageRequest::State::Broken);
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like the image's pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
             m_pending_request = nullptr;
 
             // 2. Queue an element task on the DOM manipulation task source given the img element and the following steps:
@@ -406,11 +400,8 @@ after_step_6:
         // If that is not successful, then:
         if (!url_string.is_valid()) {
             // 1. Abort the image request for the current request and the pending request.
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
 
             // 2. Set the current request's state to broken.
             m_current_request->set_state(ImageRequest::State::Broken);
@@ -440,9 +431,7 @@ after_step_6:
         //     queue an element task on the DOM manipulation task source given the img element
         //     to restart the animation if restart animation is set, and return.
         if (url_string == m_current_request->current_url() && m_current_request->state() == ImageRequest::State::PartiallyAvailable) {
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_pending_request);
             if (restart_animations) {
                 queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
                     restart_the_animation();
@@ -452,8 +441,7 @@ after_step_6:
         }
 
         // 14. If the pending request is not null, then abort the image request for the pending request.
-        if (m_pending_request)
-            m_pending_request->abort(realm());
+        abort_the_image_request(realm(), m_pending_request);
 
         // 15. Set image request to a new image request whose current URL is urlString.
         auto image_request = ImageRequest::create().release_value_but_fixme_should_propagate_errors();
@@ -587,7 +575,7 @@ void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, String
     //    upgrade the pending request to the current request
     //    and prepare image request for presentation given the img element.
     if (image_request == m_pending_request) {
-        m_current_request->abort(realm());
+        abort_the_image_request(realm(), m_current_request);
         upgrade_pending_request_to_current_request();
         image_request.prepare_for_presentation(*this);
     }
