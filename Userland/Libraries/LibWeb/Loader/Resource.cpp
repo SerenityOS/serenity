@@ -9,7 +9,6 @@
 #include <LibCore/MimeData.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/Loader/ImageResource.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -18,8 +17,6 @@ namespace Web {
 
 NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, LoadRequest const& request)
 {
-    if (type == Type::Image)
-        return adopt_ref(*new ImageResource(request));
     return adopt_ref(*new Resource(type, request));
 }
 
