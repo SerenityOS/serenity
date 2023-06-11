@@ -957,7 +957,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
             // 6. If name is not an ASCII case-insensitive match for "_blank", then set chosen's name to name.
             if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
-                chosen->set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
+                chosen->set_name(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
         }
 
         // --> If the user agent has been configured such that in this instance t will reuse current

@@ -1971,7 +1971,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         default:
             return {};
         }
-        return find_font(String::from_utf8(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
+        return find_font(String::from_deprecated_string(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
     };
 
     RefPtr<Gfx::Font const> found_font;

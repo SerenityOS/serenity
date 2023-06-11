@@ -1323,7 +1323,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
         if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
     }
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
@@ -1351,7 +1351,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
         if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
@@ -2237,7 +2237,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     auto registry = window().custom_elements().release_value_but_fixme_should_propagate_errors();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
-    auto converted_local_name = String::from_utf8(local_name).release_value_but_fixme_should_propagate_errors();
+    auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
     auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name, converted_local_name);
     if (maybe_definition)
         return maybe_definition;
