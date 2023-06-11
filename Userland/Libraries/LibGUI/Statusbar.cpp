@@ -84,7 +84,7 @@ void Statusbar::update_segment(size_t index)
             if (!text(i).is_empty())
                 m_segments[i]->set_visible(true);
         }
-        segment->set_text(String::from_utf8(segment->restored_text()).release_value_but_fixme_should_propagate_errors());
+        segment->set_text(String::from_deprecated_string(segment->restored_text()).release_value_but_fixme_should_propagate_errors());
         segment->set_frame_style(Gfx::FrameStyle::SunkenPanel);
         if (segment->mode() != Segment::Mode::Proportional)
             segment->set_fixed_width(segment->restored_width());
@@ -93,7 +93,7 @@ void Statusbar::update_segment(size_t index)
             if (!m_segments[i]->is_clickable())
                 m_segments[i]->set_visible(false);
         }
-        segment->set_text(String::from_utf8(segment->override_text()).release_value_but_fixme_should_propagate_errors());
+        segment->set_text(String::from_deprecated_string(segment->override_text()).release_value_but_fixme_should_propagate_errors());
         segment->set_frame_style(Gfx::FrameStyle::NoFrame);
         if (segment->mode() != Segment::Mode::Proportional)
             segment->set_fixed_width(SpecialDimension::Grow);
