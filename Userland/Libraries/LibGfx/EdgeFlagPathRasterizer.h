@@ -146,7 +146,7 @@ public:
     EdgeFlagPathRasterizer(IntSize);
 
     void fill(Painter&, Path const&, Color, Painter::WindingRule, FloatPoint offset = {});
-    void fill(Painter&, Path const&, PaintStyle const&, Painter::WindingRule, FloatPoint offset = {});
+    void fill(Painter&, Path const&, PaintStyle const&, float opacity, Painter::WindingRule, FloatPoint offset = {});
 
 private:
     using SubpixelSample = Detail::Sample<SamplesPerPixel>;

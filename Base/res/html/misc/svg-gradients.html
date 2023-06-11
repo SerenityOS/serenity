@@ -133,6 +133,17 @@
   <rect x="115" y="15" width="170" height="110" fill="url(#grad7)" transform="rotate(45 200 70)" />
 </svg>
 <br>
+<b>Linear gradient + transform with fill-opacity</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad7" x1="0" y1="0" x2="70%" y2="0">
+      <stop offset="0" stop-color="blue"/>
+      <stop offset="1" stop-color="magenta"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="170" height="110" fill="url(#grad7)" fill-opacity="0.5" transform="rotate(5 200 70)" />
+</svg>
+<br>
 <b>Stroke linear gradient + transform</b><br>
 <svg height="150" width="400">
   <defs>
