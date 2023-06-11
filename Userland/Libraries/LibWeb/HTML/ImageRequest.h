@@ -18,7 +18,8 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/images.html#image-request
 class ImageRequest : public RefCounted<ImageRequest> {
 public:
-    static ErrorOr<NonnullRefPtr<ImageRequest>> create();
+    static ErrorOr<NonnullRefPtr<ImageRequest>> create(Page&);
+    static ErrorOr<NonnullRefPtr<ImageRequest>> get_shareable_or_create(Page&, AK::URL const&);
     ~ImageRequest();
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
@@ -52,8 +53,23 @@ public:
     [[nodiscard]] JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller();
     void set_fetch_controller(JS::GCPtr<Fetch::Infrastructure::FetchController>);
 
+    void fetch_image(JS::Realm&, JS::NonnullGCPtr<Fetch::Infrastructure::Request>);
+
+    void add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail);
+
 private:
-    ImageRequest();
+    explicit ImageRequest(Page&);
+
+    void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
+    void handle_failed_fetch();
+
+    Page& m_page;
+
+    struct Callbacks {
+        JS::SafeFunction<void()> on_finish;
+        JS::SafeFunction<void()> on_fail;
+    };
+    Vector<Callbacks> m_callbacks;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
     // An image request's state is initially unavailable.

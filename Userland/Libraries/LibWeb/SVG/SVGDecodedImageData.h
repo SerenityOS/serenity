@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 
 namespace Web::SVG {

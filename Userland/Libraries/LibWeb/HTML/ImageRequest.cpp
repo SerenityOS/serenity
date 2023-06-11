@@ -4,21 +4,53 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/HashTable.h>
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Fetch/Fetching/Fetching.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/HTML/AnimatedBitmapDecodedImageData.h>
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/ImageRequest.h>
+#include <LibWeb/HTML/ListOfAvailableImages.h>
+#include <LibWeb/Platform/ImageCodecPlugin.h>
+#include <LibWeb/SVG/SVGDecodedImageData.h>
 
 namespace Web::HTML {
 
-ErrorOr<NonnullRefPtr<ImageRequest>> ImageRequest::create()
+static HashTable<ImageRequest*>& shareable_image_requests()
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ImageRequest);
+    static HashTable<ImageRequest*> requests;
+    return requests;
 }
 
-ImageRequest::ImageRequest() = default;
+ErrorOr<NonnullRefPtr<ImageRequest>> ImageRequest::create(Page& page)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ImageRequest(page));
+}
 
-ImageRequest::~ImageRequest() = default;
+ErrorOr<NonnullRefPtr<ImageRequest>> ImageRequest::get_shareable_or_create(Page& page, AK::URL const& url)
+{
+    for (auto& it : shareable_image_requests()) {
+        if (it->current_url() == url)
+            return *it;
+    }
+    auto request = TRY(create(page));
+    request->set_current_url(url);
+    return request;
+}
+
+ImageRequest::ImageRequest(Page& page)
+    : m_page(page)
+{
+    shareable_image_requests().set(this);
+}
+
+ImageRequest::~ImageRequest()
+{
+    shareable_image_requests().remove(this);
+}
 
 // https://html.spec.whatwg.org/multipage/images.html#img-available
 bool ImageRequest::is_available() const
@@ -104,6 +136,117 @@ JS::GCPtr<Fetch::Infrastructure::FetchController> ImageRequest::fetch_controller
 void ImageRequest::set_fetch_controller(JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller)
 {
     m_fetch_controller = move(fetch_controller);
+}
+
+void ImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::Infrastructure::Request> request)
+{
+    Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
+    fetch_algorithms_input.process_response = [this, &realm, request](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response) {
+        // FIXME: If the response is CORS cross-origin, we must use its internal response to query any of its data. See:
+        //        https://github.com/whatwg/html/issues/9355
+        response = response->unsafe_response();
+
+        // 26. As soon as possible, jump to the first applicable entry from the following list:
+
+        // FIXME: - If the resource type is multipart/x-mixed-replace
+
+        // - If the resource type and data corresponds to a supported image format, as described below
+        // - The next task that is queued by the networking task source while the image is being fetched must run the following steps:
+        auto process_body = [this, request, response](ByteBuffer data) {
+            auto extracted_mime_type = response->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
+            auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
+            handle_successful_fetch(request->url(), mime_type, move(data));
+        };
+        auto process_body_error = [this](auto) {
+            handle_failed_fetch();
+        };
+
+        if (response->body().has_value())
+            response->body().value().fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
+    };
+
+    // 25. Fetch the image: Fetch request.
+    //     Return from this algorithm, and run the remaining steps as part of the fetch's processResponse for the response response.
+    auto fetch_controller = Fetch::Fetching::fetch(
+        realm,
+        request,
+        Fetch::Infrastructure::FetchAlgorithms::create(realm.vm(), move(fetch_algorithms_input)))
+                                .release_value_but_fixme_should_propagate_errors();
+
+    set_fetch_controller(fetch_controller);
+}
+
+void ImageRequest::add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail)
+{
+    if (is_available()) {
+        if (on_finish)
+            on_finish();
+        return;
+    }
+
+    if (state() == ImageRequest::State::Broken) {
+        if (on_fail)
+            on_fail();
+        return;
+    }
+
+    m_callbacks.append({ move(on_finish), move(on_fail) });
+}
+
+void ImageRequest::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ByteBuffer data)
+{
+    // AD-HOC: At this point, things gets very ad-hoc.
+    // FIXME: Bring this closer to spec.
+
+    bool const is_svg_image = mime_type == "image/svg+xml"sv || url_string.basename().ends_with(".svg"sv);
+
+    RefPtr<DecodedImageData> image_data;
+
+    auto handle_failed_decode = [&] {
+        for (auto& callback : m_callbacks) {
+            if (callback.on_fail)
+                callback.on_fail();
+        }
+    };
+
+    if (is_svg_image) {
+        auto result = SVG::SVGDecodedImageData::create(m_page, url_string, data);
+        if (result.is_error())
+            return handle_failed_decode();
+
+        image_data = result.release_value();
+    } else {
+        auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
+        if (!result.has_value())
+            return handle_failed_decode();
+
+        Vector<AnimatedBitmapDecodedImageData::Frame> frames;
+        for (auto& frame : result.value().frames) {
+            frames.append(AnimatedBitmapDecodedImageData::Frame {
+                .bitmap = frame.bitmap,
+                .duration = static_cast<int>(frame.duration),
+            });
+        }
+        image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
+    }
+
+    set_image_data(image_data);
+
+    // 2. Set image request to the completely available state.
+    set_state(ImageRequest::State::CompletelyAvailable);
+
+    for (auto& callback : m_callbacks) {
+        if (callback.on_finish)
+            callback.on_finish();
+    }
+}
+
+void ImageRequest::handle_failed_fetch()
+{
+    for (auto& callback : m_callbacks) {
+        if (callback.on_fail)
+            callback.on_fail();
+    }
 }
 
 }
