@@ -110,7 +110,7 @@ MainWidget::MainWidget()
                 return;
             }
             m_history.push(path.string());
-            auto string_path = String::from_utf8(path.string());
+            auto string_path = String::from_deprecated_string(path.string());
             if (string_path.is_error())
                 return;
             open_page(string_path.value());

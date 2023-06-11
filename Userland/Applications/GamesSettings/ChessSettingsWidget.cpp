@@ -97,7 +97,7 @@ public:
         if (m_piece_set_name == piece_set_name.view())
             return {};
 
-        m_piece_set_name = TRY(String::from_utf8(piece_set_name));
+        m_piece_set_name = TRY(String::from_deprecated_string(piece_set_name));
         m_piece_images.clear();
 
         m_piece_images.set({ Chess::Color::White, Chess::Type::Pawn }, TRY(load_piece_image(m_piece_set_name, "white-pawn.png"sv)));
