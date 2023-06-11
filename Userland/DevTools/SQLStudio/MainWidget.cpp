@@ -351,7 +351,7 @@ void MainWidget::open_new_script()
 
 void MainWidget::open_script_from_file(LexicalPath const& file_path)
 {
-    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_deprecated_string(file_path.title()).release_value_but_fixme_should_propagate_errors());
+    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_utf8(file_path.title()).release_value_but_fixme_should_propagate_errors());
 
     if (auto result = editor.open_script_from_file(file_path); result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, result.error()));
