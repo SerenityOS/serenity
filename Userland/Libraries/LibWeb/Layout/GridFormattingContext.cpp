@@ -10,6 +10,18 @@
 
 namespace Web::Layout {
 
+GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_from_definition(CSS::ExplicitGridTrack const& definition)
+{
+    // NOTE: repeat() is expected to be expanded beforehand.
+    VERIFY(!definition.is_repeat());
+
+    if (definition.is_minmax()) {
+        return GridTrack(definition.minmax().min_grid_size(), definition.minmax().max_grid_size());
+    }
+
+    return GridTrack(definition.grid_size());
+}
+
 GridFormattingContext::GridFormattingContext(LayoutState& state, Box const& grid_container, FormattingContext* parent)
     : FormattingContext(Type::Grid, state, grid_container, parent)
 {
@@ -542,20 +554,14 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(AvailableSpac
         }
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_definition.type()) {
+            case CSS::ExplicitGridTrack::Type::Default:
             case CSS::ExplicitGridTrack::Type::MinMax:
-                tracks.append(GridTrack(track_definition.minmax().min_grid_size(), track_definition.minmax().max_grid_size()));
+                tracks.append(GridTrack::create_from_definition(track_definition));
                 break;
             case CSS::ExplicitGridTrack::Type::Repeat:
                 for (auto& explicit_grid_track : track_definition.repeat().grid_track_size_list().track_list()) {
-                    auto track_sizing_function = explicit_grid_track;
-                    if (track_sizing_function.is_minmax())
-                        tracks.append(GridTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
-                    else
-                        tracks.append(GridTrack(track_sizing_function.grid_size()));
+                    tracks.append(GridTrack::create_from_definition(explicit_grid_track));
                 }
-                break;
-            case CSS::ExplicitGridTrack::Type::Default:
-                tracks.append(GridTrack(track_definition.grid_size()));
                 break;
             default:
                 VERIFY_NOT_REACHED();

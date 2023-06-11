@@ -148,6 +148,8 @@ private:
 
         bool is_gap { false };
 
+        static GridTrack create_from_definition(CSS::ExplicitGridTrack const& definition);
+
         GridTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
             : min_track_sizing_function(min_track_sizing_function)
             , max_track_sizing_function(max_track_sizing_function)
