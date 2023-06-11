@@ -277,7 +277,7 @@ private:
     size_t m_size_remaining { 0 };
 };
 
-static bool process_chunk(Streamer&, PNGLoadingContext& context);
+static ErrorOr<void> process_chunk(Streamer&, PNGLoadingContext& context);
 
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
@@ -624,7 +624,7 @@ static bool decode_png_size(PNGLoadingContext& context)
 
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
-        if (!process_chunk(streamer, context)) {
+        if (auto result = process_chunk(streamer, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -654,7 +654,7 @@ static bool decode_png_image_data_chunk(PNGLoadingContext& context)
 
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
-        if (!process_chunk(streamer, context)) {
+        if (auto result = process_chunk(streamer, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -683,7 +683,7 @@ static bool decode_png_animation_data_chunks(PNGLoadingContext& context, u32 req
 
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
-        if (!process_chunk(streamer, context)) {
+        if (auto result = process_chunk(streamer, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -717,7 +717,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
 
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
-        if (!process_chunk(streamer, context)) {
+        if (auto result = process_chunk(streamer, context); result.is_error()) {
             // Ignore failed chunk and just consider chunk decoding being done.
             // decode_png_bitmap() will check whether we got all required ones anyway.
             break;
@@ -949,25 +949,26 @@ static bool is_valid_filter_method(u8 filter_method)
     return filter_method == 0;
 }
 
-static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
-        return false;
-    auto& ihdr = *(const PNG_IHDR*)data.data();
+        return Error::from_string_literal("IHDR chunk has an abnormal size");
+
+    auto const& ihdr = *(const PNG_IHDR*)data.data();
 
     if (ihdr.width > maximum_width_for_decoded_images || ihdr.height > maximum_height_for_decoded_images) {
         dbgln("This PNG is too large for comfort: {}x{}", (u32)ihdr.width, (u32)ihdr.height);
-        return false;
+        return Error::from_string_literal("This PNG is too large for comfort");
     }
 
     if (!is_valid_compression_method(ihdr.compression_method)) {
         dbgln("PNG has invalid compression method {}", ihdr.compression_method);
-        return false;
+        return Error::from_string_literal("Unsupported compression method");
     }
 
     if (!is_valid_filter_method(ihdr.filter_method)) {
         dbgln("PNG has invalid filter method {}", ihdr.filter_method);
-        return false;
+        return Error::from_string_literal("Unsupported filter method");
     }
 
     context.width = ihdr.width;
@@ -986,169 +987,169 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
         dbgln_if(PNG_DEBUG, "PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
-        return false;
+        return Error::from_string_literal("Unsupported interlacing method");
     }
 
     switch (context.color_type) {
     case PNG::ColorType::Greyscale:
         if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8 && context.bit_depth != 16)
-            return false;
+            return Error::from_string_literal("Unsupported bit depth for a greyscale image");
         context.channels = 1;
         break;
     case PNG::ColorType::GreyscaleWithAlpha:
         if (context.bit_depth != 8 && context.bit_depth != 16)
-            return false;
+            return Error::from_string_literal("Unsupported bit depth for a greyscale image with alpha");
         context.channels = 2;
         break;
     case PNG::ColorType::Truecolor:
         if (context.bit_depth != 8 && context.bit_depth != 16)
-            return false;
+            return Error::from_string_literal("Unsupported bit depth for a true color image");
         context.channels = 3;
         break;
     case PNG::ColorType::IndexedColor:
         if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8)
-            return false;
+            return Error::from_string_literal("Unsupported bit depth for a indexed color image");
         context.channels = 1;
         break;
     case PNG::ColorType::TruecolorWithAlpha:
         if (context.bit_depth != 8 && context.bit_depth != 16)
-            return false;
+            return Error::from_string_literal("Unsupported bit depth for a true color image with alpha");
         context.channels = 4;
         break;
     default:
-        return false;
+        return Error::from_string_literal("Unsupported color type");
     }
-    return true;
+    return {};
 }
 
-static bool process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
     context.compressed_data.append(data.data(), data.size());
     if (context.state < PNGLoadingContext::State::ImageDataChunkDecoded)
         context.state = PNGLoadingContext::State::ImageDataChunkDecoded;
-    return true;
+    return {};
 }
 
-static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 {
-    context.palette_data.append((PaletteEntry const*)data.data(), data.size() / 3);
-    return true;
+    TRY(context.palette_data.try_append((PaletteEntry const*)data.data(), data.size() / 3));
+    return {};
 }
 
-static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
 {
     switch (context.color_type) {
     case PNG::ColorType::Greyscale:
     case PNG::ColorType::Truecolor:
     case PNG::ColorType::IndexedColor:
-        context.palette_transparency_data.append(data.data(), data.size());
+        TRY(context.palette_transparency_data.try_append(data.data(), data.size()));
         break;
     default:
         break;
     }
-    return true;
+    return {};
 }
 
-static bool process_cHRM(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_cHRM(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#11cHRM
     if (data.size() != 32)
-        return false;
+        return Error::from_string_literal("cHRM chunk has an abnormal size");
     context.chromaticities_and_whitepoint = *bit_cast<ChromaticitiesAndWhitepoint* const>(data.data());
-    return true;
+    return {};
 }
 
-static bool process_cICP(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_cICP(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#cICP-chunk
     if (data.size() != 4)
-        return false;
+        return Error::from_string_literal("cICP chunk has an abnormal size");
     context.coding_independent_code_points = *bit_cast<CodingIndependentCodePoints* const>(data.data());
-    return true;
+    return {};
 }
 
-static bool process_iCCP(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_iCCP(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#11iCCP
     size_t profile_name_length_max = min(80u, data.size());
     size_t profile_name_length = strnlen((char const*)data.data(), profile_name_length_max);
     if (profile_name_length == 0 || profile_name_length == profile_name_length_max)
-        return false;
+        return Error::from_string_literal("iCCP chunk does not contain a profile name");
 
     if (data.size() < profile_name_length + 2)
-        return false;
+        return Error::from_string_literal("iCCP chunk is too small");
 
     u8 compression_method = data[profile_name_length + 1];
     if (compression_method != 0)
-        return false;
+        return Error::from_string_literal("Unsupported compression method in the iCCP chunk");
 
     context.embedded_icc_profile = EmbeddedICCProfile { { data.data(), profile_name_length }, data.slice(profile_name_length + 2) };
 
-    return true;
+    return {};
 }
 
-static bool process_gAMA(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_gAMA(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#11gAMA
     if (data.size() != 4)
-        return false;
+        return Error::from_string_literal("gAMA chunk has an abnormal size");
 
     u32 gamma = *bit_cast<NetworkOrdered<u32> const*>(data.data());
     if (gamma & 0x8000'0000)
-        return false;
+        return Error::from_string_literal("Gamma value is too high");
     context.gamma = gamma;
 
-    return true;
+    return {};
 }
 
-static bool process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#srgb-standard-colour-space
     if (data.size() != 1)
-        return false;
+        return Error::from_string_literal("sRGB chunk has an abnormal size");
 
     u8 rendering_intent = data[0];
     if (rendering_intent > 3)
-        return false;
+        return Error::from_string_literal("Unsupported rendering intent");
 
     context.sRGB_rendering_intent = (RenderingIntent)rendering_intent;
 
-    return true;
+    return {};
 }
 
-static bool process_acTL(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_acTL(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#acTL-chunk
     if (context.has_seen_idat_chunk)
-        return true; // Ignore if we encounter it after the first idat
+        return {}; // Ignore if we encounter it after the first idat
     if (data.size() != sizeof(acTL_Chunk))
-        return false;
+        return Error::from_string_literal("acTL chunk has an abnormal size");
 
     auto const& acTL = *bit_cast<acTL_Chunk* const>(data.data());
     context.animation_frame_count = acTL.num_frames;
     context.animation_loop_count = acTL.num_plays;
     context.has_seen_actl_chunk_before_idat = true;
-    context.animation_frames.ensure_capacity(context.animation_frame_count);
-    return true;
+    TRY(context.animation_frames.try_ensure_capacity(context.animation_frame_count));
+    return {};
 }
 
-static bool process_fcTL(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_fcTL(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#fcTL-chunk
     if (!context.has_seen_actl_chunk_before_idat)
-        return true; // Ignore if it's not a valid animated png
+        return {}; // Ignore if it's not a valid animated png
 
     if (data.size() != sizeof(fcTL_Chunk))
-        return false;
+        return Error::from_string_literal("fcTL chunk has an abnormal size");
 
     auto const& fcTL = *bit_cast<fcTL_Chunk* const>(data.data());
     if (fcTL.sequence_number != context.animation_next_expected_seq)
-        return false;
+        return Error::from_string_literal("Unexpected sequence number");
 
     context.animation_next_expected_seq++;
 
     if (fcTL.width == 0 || fcTL.height == 0)
-        return false;
+        return Error::from_string_literal("width and height must be greater than zero in fcTL chunk");
 
     Checked<int> left { static_cast<int>(fcTL.x_offset) };
     Checked<int> top { static_cast<int>(fcTL.y_offset) };
@@ -1157,9 +1158,9 @@ static bool process_fcTL(ReadonlyBytes data, PNGLoadingContext& context)
     auto right = left + width;
     auto bottom = top + height;
     if (left < 0 || width <= 0 || right.has_overflow() || right > context.width)
-        return false;
+        return Error::from_string_literal("Invalid x_offset value in fcTL chunk");
     if (top < 0 || height <= 0 || bottom.has_overflow() || bottom > context.height)
-        return false;
+        return Error::from_string_literal("Invalid y_offset value in fcTL chunk");
 
     bool is_first_animation_frame = context.animation_frames.is_empty();
     if (!is_first_animation_frame)
@@ -1169,61 +1170,61 @@ static bool process_fcTL(ReadonlyBytes data, PNGLoadingContext& context)
 
     if (!context.has_seen_idat_chunk && is_first_animation_frame)
         context.is_first_idat_part_of_animation = true;
-    return true;
+    return {};
 }
 
-static bool process_fdAT(ReadonlyBytes data, PNGLoadingContext& context)
+static ErrorOr<void> process_fdAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#fdAT-chunk
 
     if (data.size() <= 4)
-        return false;
+        return Error::from_string_literal("fdAT chunk has an abnormal size");
+
     u32 sequence_number = *bit_cast<NetworkOrdered<u32> const*>(data.data());
     if (sequence_number != context.animation_next_expected_seq)
-        return false;
+        return Error::from_string_literal("Unexpected sequence number");
     context.animation_next_expected_seq++;
 
     if (context.animation_frames.is_empty())
-        return false;
+        return Error::from_string_literal("No frame available");
     auto& current_animation_frame = context.animation_frames[context.animation_frames.size() - 1];
     auto compressed_data = data.slice(4);
     current_animation_frame.compressed_data.append(compressed_data.data(), compressed_data.size());
-    return true;
+    return {};
 }
 
-static bool process_IEND(ReadonlyBytes, PNGLoadingContext& context)
+static void process_IEND(ReadonlyBytes, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#11IEND
     if (context.has_seen_actl_chunk_before_idat)
         context.last_completed_animation_frame_index = context.animation_frames.size();
 
     context.has_seen_iend = true;
-    return true;
 }
 
-static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
+static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
         dbgln_if(PNG_DEBUG, "Bail at chunk_size");
-        return false;
+        return Error::from_string_literal("Error while reading from Streamer");
     }
 
     Array<u8, 4> chunk_type_buffer;
     StringView const chunk_type { chunk_type_buffer.span() };
     if (!streamer.read_bytes(chunk_type_buffer.data(), chunk_type_buffer.size())) {
         dbgln_if(PNG_DEBUG, "Bail at chunk_type");
-        return false;
+        return Error::from_string_literal("Error while reading from Streamer");
     }
     ReadonlyBytes chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
         dbgln_if(PNG_DEBUG, "Bail at chunk_data");
-        return false;
+        return Error::from_string_literal("Error while reading from Streamer");
     }
     u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
         dbgln_if(PNG_DEBUG, "Bail at chunk_crc");
-        return false;
+        return Error::from_string_literal("Error while reading from Streamer");
     }
     dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
@@ -1252,8 +1253,8 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
     if (chunk_type == "fdAT"sv)
         return process_fdAT(chunk_data, context);
     if (chunk_type == "IEND"sv)
-        return process_IEND(chunk_data, context);
-    return true;
+        process_IEND(chunk_data, context);
+    return {};
 }
 
 PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size)
