@@ -2075,11 +2075,25 @@ bool Shell::has_history_event(StringView source)
     return visitor.has_history_event;
 }
 
+void Shell::setup_keybinds()
+{
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = parse(editor.line(), false);
+        if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
+            return true;
+
+        return EDITOR_INTERNAL_FUNCTION(finish)(editor);
+    });
+}
+
 bool Shell::read_single_line()
 {
     while (true) {
         restore_ios();
         bring_cursor_to_beginning_of_a_line();
+        m_editor->initialize();
+        setup_keybinds();
+
         auto line_result = m_editor->get_line(prompt());
 
         if (line_result.is_error()) {
@@ -2291,14 +2305,6 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
         m_editor->load_history(get_history_path());
         cache_path();
     }
-
-    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
-        auto ast = parse(editor.line(), false);
-        if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
-            return true;
-
-        return EDITOR_INTERNAL_FUNCTION(finish)(editor);
-    });
 
     start_timer(3000);
 }

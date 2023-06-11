@@ -109,6 +109,7 @@ public:
     void set_live_formatting(bool value) { m_should_format_live = value; }
 
     void setup_signals();
+    void setup_keybinds();
 
     struct SourcePosition {
         DeprecatedString source_file;
