@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/Layout/ImageProvider.h>
-#include <LibWeb/Loader/ImageLoader.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web::HTML {
 
@@ -59,7 +59,7 @@ private:
     void run_object_representation_completed_steps(Representation);
     void run_object_representation_fallback_steps();
 
-    void convert_resource_to_image();
+    void load_image();
     void update_layout_and_child_objects(Representation);
 
     // ^ResourceClient
@@ -77,7 +77,10 @@ private:
     virtual void set_visible_in_viewport(bool) override;
 
     Representation m_representation { Representation::Unknown };
-    Optional<ImageLoader> m_image_loader;
+
+    RefPtr<DecodedImageData const> image_data() const;
+
+    RefPtr<ImageRequest> m_image_request;
 };
 
 }
