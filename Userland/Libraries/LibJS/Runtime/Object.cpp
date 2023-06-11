@@ -70,7 +70,8 @@ Object::Object(Shape& shape)
 
 Object::~Object()
 {
-    s_intrinsics.remove(this);
+    if (m_has_intrinsic_accessors)
+        s_intrinsics.remove(this);
 }
 
 ThrowCompletionOr<void> Object::initialize(Realm&)
@@ -1086,8 +1087,10 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key
         if (!metadata.has_value())
             return {};
 
-        if (auto accessor = find_intrinsic_accessor(this, property_key); accessor.has_value())
-            const_cast<Object&>(*this).m_storage[metadata->offset] = (*accessor)(shape().realm());
+        if (m_has_intrinsic_accessors) {
+            if (auto accessor = find_intrinsic_accessor(this, property_key); accessor.has_value())
+                const_cast<Object&>(*this).m_storage[metadata->offset] = (*accessor)(shape().realm());
+        }
 
         value = m_storage[metadata->offset];
         attributes = metadata->attributes;
@@ -1116,7 +1119,7 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
         return;
     }
 
-    if (property_key.is_string()) {
+    if (m_has_intrinsic_accessors && property_key.is_string()) {
         if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
             intrinsics->value.remove(property_key.as_string());
     }
@@ -1158,7 +1161,7 @@ void Object::storage_delete(PropertyKey const& property_key)
     if (property_key.is_number())
         return m_indexed_properties.remove(property_key.as_number());
 
-    if (property_key.is_string()) {
+    if (m_has_intrinsic_accessors && property_key.is_string()) {
         if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
             intrinsics->value.remove(property_key.as_string());
     }
@@ -1217,6 +1220,7 @@ void Object::define_intrinsic_accessor(PropertyKey const& property_key, Property
 
     storage_set(property_key, { {}, attributes });
 
+    m_has_intrinsic_accessors = true;
     auto& intrinsics = s_intrinsics.ensure(this);
     intrinsics.set(property_key.as_string(), move(accessor));
 }
