@@ -187,9 +187,21 @@ void* memmem(void const* haystack, size_t haystack_length, void const* needle, s
 char* strcpy(char* dest, char const* src)
 {
     char* original_dest = dest;
-    while ((*dest++ = *src++) != '\0')
-        ;
+    while ((*dest = *src) != '\0') {
+        dest++;
+        src++;
+    }
     return original_dest;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/stpcpy.html
+char* stpcpy(char* dest, char const* src)
+{
+    while ((*dest = *src) != '\0') {
+        dest++;
+        src++;
+    }
+    return dest;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
