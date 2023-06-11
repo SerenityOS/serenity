@@ -29,7 +29,6 @@ class Resource : public RefCounted<Resource> {
 public:
     enum class Type {
         Generic,
-        Image,
     };
 
     static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, LoadRequest const&);

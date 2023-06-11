@@ -431,8 +431,6 @@ set(SOURCES
     Loader/ContentFilter.cpp
     Loader/FileRequest.cpp
     Loader/FrameLoader.cpp
-    Loader/ImageLoader.cpp
-    Loader/ImageResource.cpp
     Loader/LoadRequest.cpp
     Loader/ProxyMappings.cpp
     Loader/Resource.cpp
