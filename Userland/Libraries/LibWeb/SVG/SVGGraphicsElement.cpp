@@ -129,6 +129,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
             if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case("fill-rule"sv)) {
+            if (auto fill_rule_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillRule).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::FillRule, fill_rule_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("fill-opacity"sv)) {
             if (auto fill_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::FillOpacity, fill_opacity_value.release_nonnull());
@@ -137,6 +140,20 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
                 style.set_property(CSS::PropertyID::StrokeOpacity, stroke_opacity_value.release_nonnull());
         }
     });
+}
+
+Optional<FillRule> SVGGraphicsElement::fill_rule() const
+{
+    if (!layout_node())
+        return {};
+    switch (layout_node()->computed_values().fill_rule()) {
+    case CSS::FillRule::Nonzero:
+        return FillRule::Nonzero;
+    case CSS::FillRule::Evenodd:
+        return FillRule::Evenodd;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 Optional<Gfx::Color> SVGGraphicsElement::fill_color() const

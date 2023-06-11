@@ -42,6 +42,18 @@ Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, H
     return result;
 }
 
+static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
+{
+    switch (fill_rule) {
+    case SVG::FillRule::Nonzero:
+        return Gfx::Painter::WindingRule::Nonzero;
+    case SVG::FillRule::Evenodd:
+        return Gfx::Painter::WindingRule::EvenOdd;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -100,17 +112,19 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     };
 
     auto fill_opacity = geometry_element.fill_opacity().value_or(svg_context.fill_opacity());
+    auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(svg_context.fill_rule()));
+
     if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
         painter.fill_path(
             closed_path(),
             *paint_style,
             fill_opacity,
-            Gfx::Painter::WindingRule::EvenOdd);
+            winding_rule);
     } else if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()).with_opacity(fill_opacity); fill_color.alpha() > 0) {
         painter.fill_path(
             closed_path(),
             fill_color,
-            Gfx::Painter::WindingRule::EvenOdd);
+            winding_rule);
     }
 
     auto stroke_opacity = geometry_element.stroke_opacity().value_or(svg_context.stroke_opacity());

@@ -705,6 +705,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     else if (stroke_width->is_percentage())
         computed_values.set_stroke_width(CSS::LengthPercentage { stroke_width->as_percentage().percentage() });
 
+    if (auto fill_rule = computed_style.fill_rule(); fill_rule.has_value())
+        computed_values.set_fill_rule(*fill_rule);
+
     computed_values.set_fill_opacity(computed_style.fill_opacity());
     computed_values.set_stroke_opacity(computed_style.stroke_opacity());
     computed_values.set_stop_opacity(computed_style.stop_opacity());

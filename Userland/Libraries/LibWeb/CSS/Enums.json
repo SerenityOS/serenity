@@ -132,6 +132,10 @@
         "zoom-in",
         "zoom-out"
     ],
+    "fill-rule": [
+        "nonzero",
+        "evenodd"
+    ],
     "flex-direction": [
         "row",
         "row-reverse",

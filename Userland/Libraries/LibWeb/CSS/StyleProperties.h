@@ -107,6 +107,7 @@ public:
     float stop_opacity() const;
     float fill_opacity() const;
     float stroke_opacity() const;
+    Optional<CSS::FillRule> fill_rule() const;
 
     Gfx::Font const& computed_font() const
     {

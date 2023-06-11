@@ -72,6 +72,7 @@ public:
     static int order() { return 0; }
     static float opacity() { return 1.0f; }
     static float fill_opacity() { return 1.0f; }
+    static CSS::FillRule fill_rule() { return CSS::FillRule::Nonzero; }
     static float stroke_opacity() { return 1.0f; }
     static float stop_opacity() { return 1.0f; }
     static CSS::Length border_radius() { return Length::make_px(0); }
@@ -303,6 +304,7 @@ public:
     CSS::ListStylePosition list_style_position() const { return m_inherited.list_style_position; }
 
     Optional<SVGPaint> const& fill() const { return m_inherited.fill; }
+    CSS::FillRule fill_rule() const { return m_inherited.fill_rule; }
     Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
     float fill_opacity() const { return m_inherited.fill_opacity; }
     float stroke_opacity() const { return m_inherited.stroke_opacity; }
@@ -346,6 +348,7 @@ protected:
         CSS::Visibility visibility { InitialValues::visibility() };
 
         Optional<SVGPaint> fill;
+        CSS::FillRule fill_rule { InitialValues::fill_rule() };
         Optional<SVGPaint> stroke;
         float fill_opacity { InitialValues::fill_opacity() };
         float stroke_opacity { InitialValues::stroke_opacity() };
@@ -515,6 +518,7 @@ public:
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
+    void set_fill_rule(CSS::FillRule value) { m_inherited.fill_rule = value; }
     void set_fill_opacity(float value) { m_inherited.fill_opacity = value; }
     void set_stroke_opacity(float value) { m_inherited.stroke_opacity = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }

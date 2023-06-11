@@ -309,6 +309,12 @@ float StyleProperties::stop_opacity() const
     return resolve_opacity_value(*value);
 }
 
+Optional<CSS::FillRule> StyleProperties::fill_rule() const
+{
+    auto value = property(CSS::PropertyID::FillRule);
+    return value_id_to_fill_rule(value->to_identifier());
+}
+
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
 {
     auto value = property(CSS::PropertyID::FlexDirection);

@@ -120,6 +120,11 @@ private:
     bool m_is_percentage { false };
 };
 
+enum class FillRule {
+    Nonzero,
+    Evenodd
+};
+
 class AttributeParser final {
 public:
     ~AttributeParser() = default;

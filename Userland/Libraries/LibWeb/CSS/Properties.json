@@ -755,6 +755,15 @@
       "percentage [-∞,∞]"
     ]
   },
+  "fill-rule": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "nonzero",
+    "valid-identifiers": [
+      "nonzero",
+      "evenodd"
+    ]
+  },
   "flex": {
     "inherited": false,
     "initial": "0 1 auto",
