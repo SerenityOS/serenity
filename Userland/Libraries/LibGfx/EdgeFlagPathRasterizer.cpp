@@ -81,10 +81,19 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill(Painter& painter, Path const&
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::fill(Painter& painter, Path const& path, PaintStyle const& style, Painter::WindingRule winding_rule, FloatPoint offset)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::fill(Painter& painter, Path const& path, PaintStyle const& style, float opacity, Painter::WindingRule winding_rule, FloatPoint offset)
 {
     style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
-        fill_internal(painter, path, move(sampler), winding_rule, offset);
+        if (opacity == 0.0f)
+            return;
+        if (opacity != 1.0f) {
+            return fill_internal(
+                painter, path, [=, sampler = move(sampler)](IntPoint point) {
+                    return sampler(point).with_opacity(opacity);
+                },
+                winding_rule, offset);
+        }
+        return fill_internal(painter, path, move(sampler), winding_rule, offset);
     });
 }
 
@@ -321,10 +330,10 @@ void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
     rasterizer.fill(*this, path, color, winding_rule);
 }
 
-void Painter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule winding_rule)
+void Painter::fill_path(Path const& path, PaintStyle const& paint_style, float opacity, Painter::WindingRule winding_rule)
 {
     EdgeFlagPathRasterizer<8> rasterizer(path_bounds(path));
-    rasterizer.fill(*this, path, paint_style, winding_rule);
+    rasterizer.fill(*this, path, paint_style, opacity, winding_rule);
 }
 
 void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::WindingRule winding_rule)
@@ -333,10 +342,10 @@ void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::Wind
     rasterizer.fill(m_underlying_painter, path, color, winding_rule, m_transform.translation());
 }
 
-void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule winding_rule)
+void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, float opacity, Painter::WindingRule winding_rule)
 {
     EdgeFlagPathRasterizer<32> rasterizer(path_bounds(path));
-    rasterizer.fill(m_underlying_painter, path, paint_style, winding_rule, m_transform.translation());
+    rasterizer.fill(m_underlying_painter, path, paint_style, opacity, winding_rule, m_transform.translation());
 }
 
 template class EdgeFlagPathRasterizer<8>;

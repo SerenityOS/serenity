@@ -34,7 +34,7 @@ public:
     }
 
     void fill_path(Path const&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
-    void fill_path(Path const&, PaintStyle const& paint_style, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
+    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
 
     void stroke_path(Path const&, Color, float thickness);
     void stroke_path(Path const&, PaintStyle const& paint_style, float thickness);

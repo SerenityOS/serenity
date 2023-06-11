@@ -99,12 +99,12 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         .transform = paint_transform
     };
 
-    // FIXME: Apply fill opacity to paint styles?
     auto fill_opacity = geometry_element.fill_opacity().value_or(svg_context.fill_opacity());
     if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
         painter.fill_path(
             closed_path(),
             *paint_style,
+            fill_opacity,
             Gfx::Painter::WindingRule::EvenOdd);
     } else if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()).with_opacity(fill_opacity); fill_color.alpha() > 0) {
         painter.fill_path(

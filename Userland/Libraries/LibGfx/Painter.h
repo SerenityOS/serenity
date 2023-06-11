@@ -145,7 +145,7 @@ public:
     };
 
     void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
-    void fill_path(Path const&, PaintStyle const& paint_style, WindingRule rule = WindingRule::Nonzero);
+    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
 
     Font const& font() const
     {

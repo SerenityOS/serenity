@@ -272,7 +272,7 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_ru
         if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
             painter.fill_path(path, *color, fill_rule);
         } else {
-            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), fill_rule);
+            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), 1.0f, fill_rule);
         }
         return path.bounding_box();
     });
