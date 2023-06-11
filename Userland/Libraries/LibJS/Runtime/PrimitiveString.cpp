@@ -81,7 +81,7 @@ ThrowCompletionOr<String> PrimitiveString::utf8_string() const
 
     if (!has_utf8_string()) {
         if (has_deprecated_string())
-            m_utf8_string = TRY_OR_THROW_OOM(vm, String::from_utf8(*m_deprecated_string));
+            m_utf8_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*m_deprecated_string));
         else if (has_utf16_string())
             m_utf8_string = TRY(m_utf16_string->to_utf8(vm));
         else
