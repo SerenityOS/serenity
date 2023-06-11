@@ -21,6 +21,10 @@ public:
     ~FlyString();
 
     static ErrorOr<FlyString> from_utf8(StringView);
+    template<typename T>
+    requires(IsOneOf<RemoveCVReference<T>, DeprecatedString, DeprecatedFlyString>)
+    static ErrorOr<String> from_utf8(T&&) = delete;
+
     FlyString(String const&);
     FlyString& operator=(String const&);
 
@@ -54,6 +58,9 @@ public:
     // FIXME: Remove these once all code has been ported to FlyString
     [[nodiscard]] DeprecatedFlyString to_deprecated_fly_string() const;
     static ErrorOr<FlyString> from_deprecated_fly_string(DeprecatedFlyString const&);
+    template<typename T>
+    requires(IsSame<RemoveCVReference<T>, StringView>)
+    static ErrorOr<String> from_deprecated_fly_string(T&&) = delete;
 
     // Compare this FlyString against another string with ASCII caseless matching.
     [[nodiscard]] bool equals_ignoring_ascii_case(FlyString const&) const;
