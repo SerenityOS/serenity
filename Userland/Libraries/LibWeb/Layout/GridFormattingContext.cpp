@@ -580,8 +580,8 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     auto negative_index_implied_column_tracks_count = abs(m_occupation_grid.min_column_index());
     for (int column_index = 0; column_index < negative_index_implied_column_tracks_count; column_index++) {
         if (grid_auto_columns.size() > 0) {
-            auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
-            m_grid_columns.append(GridTrack(size.grid_size()));
+            auto definition = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
+            m_grid_columns.append(GridTrack::create_from_definition(definition));
         } else {
             m_grid_columns.append(GridTrack());
         }
@@ -590,8 +590,8 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_columns().track_list(), m_grid_columns);
     for (size_t column_index = m_grid_columns.size(); column_index < m_occupation_grid.column_count(); column_index++) {
         if (grid_auto_columns.size() > 0) {
-            auto size = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
-            m_grid_columns.append(GridTrack(size.grid_size()));
+            auto definition = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
+            m_grid_columns.append(GridTrack::create_from_definition(definition));
         } else {
             m_grid_columns.append(GridTrack());
         }
@@ -604,8 +604,8 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     auto negative_index_implied_row_tracks_count = abs(m_occupation_grid.min_row_index());
     for (int row_index = 0; row_index < negative_index_implied_row_tracks_count; row_index++) {
         if (grid_auto_rows.size() > 0) {
-            auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
-            m_grid_rows.append(GridTrack(size.grid_size()));
+            auto definition = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
+            m_grid_rows.append(GridTrack::create_from_definition(definition));
         } else {
             m_grid_rows.append(GridTrack());
         }
@@ -614,8 +614,8 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
     initialize_grid_tracks_from_definition(available_space, grid_computed_values.grid_template_rows().track_list(), m_grid_rows);
     for (size_t row_index = m_grid_rows.size(); row_index < m_occupation_grid.row_count(); row_index++) {
         if (grid_auto_rows.size() > 0) {
-            auto size = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
-            m_grid_rows.append(GridTrack(size.grid_size()));
+            auto definition = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
+            m_grid_rows.append(GridTrack::create_from_definition(definition));
         } else {
             m_grid_rows.append(GridTrack());
         }
