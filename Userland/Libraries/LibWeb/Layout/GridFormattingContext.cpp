@@ -16,10 +16,34 @@ GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_from_d
     VERIFY(!definition.is_repeat());
 
     if (definition.is_minmax()) {
-        return GridTrack(definition.minmax().min_grid_size(), definition.minmax().max_grid_size());
+        return GridTrack {
+            .min_track_sizing_function = definition.minmax().min_grid_size(),
+            .max_track_sizing_function = definition.minmax().max_grid_size(),
+        };
     }
 
-    return GridTrack(definition.grid_size());
+    return GridTrack {
+        .min_track_sizing_function = definition.grid_size(),
+        .max_track_sizing_function = definition.grid_size(),
+    };
+}
+
+GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_auto()
+{
+    return GridTrack {
+        .min_track_sizing_function = CSS::GridSize::make_auto(),
+        .max_track_sizing_function = CSS::GridSize::make_auto(),
+    };
+}
+
+GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_gap(CSSPixels size)
+{
+    return GridTrack {
+        .min_track_sizing_function = CSS::GridSize(CSS::Length::make_px(size)),
+        .max_track_sizing_function = CSS::GridSize(CSS::Length::make_px(size)),
+        .base_size = size,
+        .is_gap = true,
+    };
 }
 
 GridFormattingContext::GridFormattingContext(LayoutState& state, Box const& grid_container, FormattingContext* parent)
@@ -583,7 +607,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
             auto definition = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
             m_grid_columns.append(GridTrack::create_from_definition(definition));
         } else {
-            m_grid_columns.append(GridTrack());
+            m_grid_columns.append(GridTrack::create_auto());
         }
         implicit_column_index++;
     }
@@ -593,7 +617,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
             auto definition = grid_auto_columns[implicit_column_index % grid_auto_columns.size()];
             m_grid_columns.append(GridTrack::create_from_definition(definition));
         } else {
-            m_grid_columns.append(GridTrack());
+            m_grid_columns.append(GridTrack::create_auto());
         }
         implicit_column_index++;
     }
@@ -607,7 +631,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
             auto definition = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
             m_grid_rows.append(GridTrack::create_from_definition(definition));
         } else {
-            m_grid_rows.append(GridTrack());
+            m_grid_rows.append(GridTrack::create_auto());
         }
         implicit_row_index++;
     }
@@ -617,7 +641,7 @@ void GridFormattingContext::initialize_grid_tracks_for_columns_and_rows(Availabl
             auto definition = grid_auto_rows[implicit_row_index % grid_auto_rows.size()];
             m_grid_rows.append(GridTrack::create_from_definition(definition));
         } else {
-            m_grid_rows.append(GridTrack());
+            m_grid_rows.append(GridTrack::create_auto());
         }
         implicit_row_index++;
     }
@@ -636,7 +660,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
         for (size_t column_index = 0; column_index < m_grid_columns.size(); column_index++) {
             m_grid_columns_and_gaps.append(m_grid_columns[column_index]);
             if (column_index != m_grid_columns.size() - 1) {
-                m_column_gap_tracks.append(GridTrack(column_gap_width, true));
+                m_column_gap_tracks.append(GridTrack::create_gap(column_gap_width));
                 m_grid_columns_and_gaps.append(m_column_gap_tracks.last());
             }
         }
@@ -651,7 +675,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
         for (size_t row_index = 0; row_index < m_grid_rows.size(); row_index++) {
             m_grid_rows_and_gaps.append(m_grid_rows[row_index]);
             if (row_index != m_grid_rows.size() - 1) {
-                m_row_gap_tracks.append(GridTrack(row_gap_height, true));
+                m_row_gap_tracks.append(GridTrack::create_gap(row_gap_height));
                 m_grid_rows_and_gaps.append(m_row_gap_tracks.last());
             }
         }
