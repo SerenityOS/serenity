@@ -35,13 +35,13 @@ void SVGTextContentElement::parse_attribute(DeprecatedFlyString const& name, Dep
     SVGGraphicsElement::parse_attribute(name, value);
 
     if (name == SVG::AttributeNames::x) {
-        m_x = AttributeParser::parse_coordinate(value).value();
+        m_x = AttributeParser::parse_coordinate(value).value_or(m_x);
     } else if (name == SVG::AttributeNames::y) {
-        m_y = AttributeParser::parse_coordinate(value).value();
+        m_y = AttributeParser::parse_coordinate(value).value_or(m_y);
     } else if (name == SVG::AttributeNames::dx) {
-        m_dx = AttributeParser::parse_coordinate(value).value();
+        m_dx = AttributeParser::parse_coordinate(value).value_or(m_dx);
     } else if (name == SVG::AttributeNames::dy) {
-        m_dy = AttributeParser::parse_coordinate(value).value();
+        m_dy = AttributeParser::parse_coordinate(value).value_or(m_dy);
     }
 }
 
