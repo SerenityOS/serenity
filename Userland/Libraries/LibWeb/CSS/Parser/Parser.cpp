@@ -722,7 +722,7 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::TagName,
             // FIXME: XML requires case-sensitivity for identifiers, while HTML does not. As such, this should be reworked if XML support is added.
-            .value = Selector::SimpleSelector::Name { FlyString::from_utf8(first_value.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors() }
+            .value = Selector::SimpleSelector::Name { FlyString::from_deprecated_fly_string(first_value.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors() }
         };
     }
     if (first_value.is_block() && first_value.block().is_square())

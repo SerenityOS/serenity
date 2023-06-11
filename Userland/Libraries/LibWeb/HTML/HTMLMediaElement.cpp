@@ -463,7 +463,7 @@ public:
         //    empty string, then end the synchronous section, and jump down to the failed with elements step below.
         String candiate_src;
         if (m_candidate->has_attribute(HTML::AttributeNames::src))
-            candiate_src = TRY_OR_THROW_OOM(vm, String::from_utf8(m_candidate->attribute(HTML::AttributeNames::src)));
+            candiate_src = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_candidate->attribute(HTML::AttributeNames::src)));
 
         if (candiate_src.is_empty()) {
             TRY(failed_with_elements());
