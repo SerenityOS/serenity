@@ -122,7 +122,8 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         painter.stroke_path(
             path,
             *paint_style,
-            stroke_thickness);
+            stroke_thickness,
+            stroke_opacity);
     } else if (auto stroke_color = geometry_element.stroke_color().value_or(svg_context.stroke_color()).with_opacity(stroke_opacity); stroke_color.alpha() > 0) {
         painter.stroke_path(
             path,
