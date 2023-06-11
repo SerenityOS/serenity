@@ -12,7 +12,6 @@
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGShared.h>
 #include <LibGfx/Painter.h>
-#include <string.h>
 
 namespace Gfx {
 
@@ -1209,9 +1208,10 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         dbgln_if(PNG_DEBUG, "Bail at chunk_size");
         return false;
     }
-    u8 chunk_type[5];
-    chunk_type[4] = '\0';
-    if (!streamer.read_bytes(chunk_type, 4)) {
+
+    Array<u8, 4> chunk_type_buffer;
+    StringView const chunk_type { chunk_type_buffer.span() };
+    if (!streamer.read_bytes(chunk_type_buffer.data(), chunk_type_buffer.size())) {
         dbgln_if(PNG_DEBUG, "Bail at chunk_type");
         return false;
     }
@@ -1227,31 +1227,31 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
     }
     dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
-    if (!strcmp((char const*)chunk_type, "IHDR"))
+    if (chunk_type == "IHDR"sv)
         return process_IHDR(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "IDAT"))
+    if (chunk_type == "IDAT"sv)
         return process_IDAT(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "PLTE"))
+    if (chunk_type == "PLTE"sv)
         return process_PLTE(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "cHRM"))
+    if (chunk_type == "cHRM"sv)
         return process_cHRM(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "cICP"))
+    if (chunk_type == "cICP"sv)
         return process_cICP(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "iCCP"))
+    if (chunk_type == "iCCP"sv)
         return process_iCCP(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "gAMA"))
+    if (chunk_type == "gAMA"sv)
         return process_gAMA(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "sRGB"))
+    if (chunk_type == "sRGB"sv)
         return process_sRGB(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "tRNS"))
+    if (chunk_type == "tRNS"sv)
         return process_tRNS(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "acTL"))
+    if (chunk_type == "acTL"sv)
         return process_acTL(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "fcTL"))
+    if (chunk_type == "fcTL"sv)
         return process_fcTL(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "fdAT"))
+    if (chunk_type == "fdAT"sv)
         return process_fdAT(chunk_data, context);
-    if (!strcmp((char const*)chunk_type, "IEND"))
+    if (chunk_type == "IEND"sv)
         return process_IEND(chunk_data, context);
     return true;
 }
