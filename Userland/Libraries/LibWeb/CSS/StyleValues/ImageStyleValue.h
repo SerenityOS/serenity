@@ -12,13 +12,12 @@
 #include <AK/URL.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
-#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web::CSS {
 
 class ImageStyleValue final
     : public AbstractImageStyleValue
-    , public ImageResourceClient {
+    , public Weakable<ImageStyleValue> {
 public:
     static ErrorOr<ValueComparingNonnullRefPtr<ImageStyleValue>> create(AK::URL const& url)
     {
@@ -34,19 +33,20 @@ public:
     Optional<CSSPixels> natural_width() const override;
     Optional<CSSPixels> natural_height() const override;
 
-    bool is_paintable() const override { return bitmap(0) != nullptr; }
+    virtual bool is_paintable() const override;
     void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
     Function<void()> on_animate;
 
+    RefPtr<HTML::DecodedImageData const> image_data() const;
+
 private:
     ImageStyleValue(AK::URL const&);
 
-    // ^ResourceClient
-    virtual void resource_did_load() override;
+    RefPtr<HTML::ImageRequest> m_image_request;
 
     void animate();
-    Gfx::Bitmap const* bitmap(size_t index) const;
+    Gfx::Bitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;
 
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
