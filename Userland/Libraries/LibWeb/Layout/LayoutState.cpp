@@ -297,6 +297,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
 void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
+    VERIFY(isfinite(width.value()));
     if (width < 0) {
         // Negative widths are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
@@ -308,6 +309,7 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
 
 void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
+    VERIFY(isfinite(height.value()));
     if (height < 0) {
         // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
@@ -384,6 +386,20 @@ void LayoutState::UsedValues::set_indefinite_content_width()
 
 void LayoutState::UsedValues::set_indefinite_content_height()
 {
+    m_has_definite_height = false;
+}
+
+void LayoutState::UsedValues::set_min_content_width()
+{
+    width_constraint = SizeConstraint::MinContent;
+    m_content_width = 0;
+    m_has_definite_height = false;
+}
+
+void LayoutState::UsedValues::set_max_content_width()
+{
+    width_constraint = SizeConstraint::MaxContent;
+    m_content_width = INFINITY;
     m_has_definite_height = false;
 }
 
