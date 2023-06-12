@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,11 +8,13 @@
 #include <AK/GenericLexer.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/Infra/Strings.h>
+#include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::FileAPI {
@@ -247,6 +250,63 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
     // c. S.type = relativeContentType.
     auto byte_buffer = TRY_OR_THROW_OOM(vm, m_byte_buffer.slice(relative_start, span));
     return MUST_OR_THROW_OOM(heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type)));
+}
+
+// https://w3c.github.io/FileAPI/#blob-get-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream()
+{
+    auto& realm = this->realm();
+
+    // 1. Let stream be a new ReadableStream created in blob’s relevant Realm.
+    auto stream = MUST_OR_THROW_OOM(realm.heap().allocate<Streams::ReadableStream>(realm, realm));
+
+    // 2. Set up stream with byte reading support.
+    TRY(set_up_readable_stream_controller_with_byte_reading_support(stream));
+
+    // FIXME: 3. Run the following steps in parallel:
+    {
+        // 1. While not all bytes of blob have been read:
+        //    NOTE: for simplicity the chunk is the entire buffer for now.
+        {
+            // 1. Let bytes be the byte sequence that results from reading a chunk from blob, or failure if a chunk cannot be read.
+            auto bytes = m_byte_buffer;
+
+            // 2. Queue a global task on the file reading task source given blob’s relevant global object to perform the following steps:
+            HTML::queue_global_task(HTML::Task::Source::FileReading, realm.global_object(), [stream, bytes = move(bytes)]() {
+                // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
+                auto& environment_settings_object = Bindings::host_defined_environment_settings_object(stream->realm());
+                environment_settings_object.prepare_to_run_script();
+
+                ScopeGuard guard = [&]() {
+                    // See above NOTE.
+                    environment_settings_object.clean_up_after_running_script();
+                };
+
+                // 1. If bytes is failure, then error stream with a failure reason and abort these steps.
+                // 2. Let chunk be a new Uint8Array wrapping an ArrayBuffer containing bytes. If creating the ArrayBuffer throws an exception, then error stream with that exception and abort these steps.
+                auto array_buffer = JS::ArrayBuffer::create(stream->realm(), bytes);
+                auto chunk = JS::Uint8Array::create(stream->realm(), bytes.size(), *array_buffer);
+
+                // 3. Enqueue chunk in stream.
+                auto maybe_error = Bindings::throw_dom_exception_if_needed(stream->realm().vm(), [&]() {
+                    return readable_stream_enqueue(*stream->controller(), chunk);
+                });
+
+                if (maybe_error.is_error()) {
+                    readable_stream_error(*stream, maybe_error.release_error().value().value());
+                    return;
+                }
+
+                // FIXME: Close the stream now that we have finished enqueuing all chunks to the stream. Without this, ReadableStream.read will never resolve the second time around with 'done' set.
+                //        Nowhere in the spec seems to mention this - but testing against other implementations the stream does appear to be closed after reading all data (closed callback is fired).
+                //        Probably there is a better way of doing this.
+                readable_stream_close(*stream);
+            });
+        }
+    }
+
+    // 4. Return stream.
+    return stream;
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text
