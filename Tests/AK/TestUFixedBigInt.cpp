@@ -185,3 +185,15 @@ TEST_CASE(mod_hardcoded)
     EXPECT_EQ(u256(u128 { 0x7f13e232d82a24c6ULL, 0x23d41447dd7f5bc6ULL }, u128 { 0xd89a3ed8b30527caULL, 0xa98ef2cc01e83685ULL }) % u256(u128 { 0x8d4f5b1983fc1f0eULL, 0xf54102ece15fb0faULL }, u128 { 0x17b8aec68556a16dULL, 0x4e1e5bea70cb9398ULL }), u256(u128 { 0x64752bffd031e6aaULL, 0x39520e6e1abff9d1ULL }, u128 { 0xa928e14ba857e4eeULL, 0x0d523af720510f55ULL }));
     EXPECT_EQ(u256(u128 { 0x49750d7f39d61607ULL, 0x58bdef1c3e00d18eULL }, u128 { 0xa651479cd1fd1933ULL, 0xd1834bc3d654b633ULL }) % u256(u128 { 0x1bda34f5ec68ef3bULL, 0x12c65ce5363a7616ULL }, u128 { 0x5a79c4d85da0071aULL, 0xffa6b6284559d1aaULL }), u256(u128 { 0x49750d7f39d61607ULL, 0x58bdef1c3e00d18eULL }, u128 { 0xa651479cd1fd1933ULL, 0xd1834bc3d654b633ULL }));
 }
+
+TEST_CASE(endian_swap)
+{
+    constexpr u128 const a { 0x1234567890abcdefULL, 0xfedcba0987654321ULL };
+    constexpr u128 const a_swapped { 0x2143658709badcfeull, 0xefcdab9078563412ull };
+
+    static_assert(!AK::HostIsLittleEndian || bit_cast<u128>(BigEndian { a }) == a_swapped);
+    static_assert(AK::HostIsLittleEndian || bit_cast<u128>(LittleEndian { a }) == a_swapped);
+
+    static_assert(!AK::HostIsLittleEndian || bit_cast<u128>(LittleEndian { a }) == a);
+    static_assert(AK::HostIsLittleEndian || bit_cast<u128>(BigEndian { a }) == a);
+}
