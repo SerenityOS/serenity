@@ -5,6 +5,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/Debug.h>
 #include <AK/IntegralMath.h>
 #include <AK/Types.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -51,14 +52,19 @@ static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigne
         if (p0.y() == p1.y())
             continue;
 
-        auto dx = p1.x() - p0.x();
-        auto dy = p1.y() - p0.y();
-        float dxdy = float(dx) / dy;
-        float x = p0.x();
+        auto min_y = static_cast<int>(p0.y());
+        auto max_y = static_cast<int>(p1.y());
+        float start_x = p0.x();
+        float end_x = p1.x();
+
+        auto dx = end_x - start_x;
+        auto dy = max_y - min_y;
+        auto dxdy = dx / dy;
+
         edges.unchecked_append(Detail::Edge {
-            x,
-            static_cast<int>(p0.y()),
-            static_cast<int>(p1.y()),
+            start_x,
+            min_y,
+            max_y,
             dxdy,
             winding,
             nullptr });
@@ -132,18 +138,32 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
         max_scanline = max(max_scanline, end_scanline);
     }
 
-    Detail::Edge* active_edges = nullptr;
-
     // FIXME: We could probably clip some of the egde plotting if we know it won't be shown.
     // Though care would have to be taken to ensure the active edges are correct at the first drawn scaline.
+
+    auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, auto callback) {
+        for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
+            int xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
+            if (xi < 0 || xi >= (int)m_scanline.size()) {
+                // FIXME: For very low dxdy values, floating point error can push the sample outside the scanline.
+                // This does not seem to make a visible difference most of the time (and is more likely from generated
+                // paths, such as this 3D canvas demo: https://www.kevs3d.co.uk/dev/html5logo/).
+                dbgln_if(FILL_PATH_DEBUG, "fill_path: Sample out of bounds: {} not  in [0, {})", xi, m_scanline.size());
+                return;
+            }
+            SampleType sample = 1 << y;
+            callback(xi, y, sample);
+            edge.x += edge.dxdy;
+        }
+    };
+
+    Detail::Edge* active_edges = nullptr;
+
     if (winding_rule == Painter::WindingRule::EvenOdd) {
         auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y) {
-            for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
-                int xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
-                SampleType sample = 1 << y;
+            for_each_sample(edge, start_subpixel_y, end_subpixel_y, [&](int xi, int, SampleType sample) {
                 m_scanline[xi] ^= sample;
-                edge.x += edge.dxdy;
-            }
+            });
         };
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
             active_edges = plot_edges_for_scanline(scanline, plot_edge, active_edges);
@@ -157,13 +177,10 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
             m_windings.resize(m_size.width());
 
         auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y) {
-            for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
-                int xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
-                SampleType sample = 1 << y;
+            for_each_sample(edge, start_subpixel_y, end_subpixel_y, [&](int xi, int y, SampleType sample) {
                 m_scanline[xi] |= sample;
                 m_windings[xi].counts[y] += edge.winding;
-                edge.x += edge.dxdy;
-            }
+            });
         };
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
             active_edges = plot_edges_for_scanline(scanline, plot_edge, active_edges);
