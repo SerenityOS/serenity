@@ -306,7 +306,7 @@ build_toolchain() {
     if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildClang.sh )
     else
-        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
+        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildGNU.sh )
     fi
 }
 

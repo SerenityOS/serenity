@@ -9,7 +9,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=/dev/null
 . "${DIR}/../Meta/shell_include.sh"
 
-exit_if_running_as_root "Do not run BuildIt.sh as root, your Build directory will become root-owned"
+exit_if_running_as_root "Do not run BuildGNU.sh as root, your Build directory will become root-owned"
 
 echo "$DIR"
 
