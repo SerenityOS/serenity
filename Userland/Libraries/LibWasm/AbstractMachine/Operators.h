@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2021-2023, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,12 +9,15 @@
 #include <AK/BitCast.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/Result.h>
+#include <AK/SIMD.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <limits.h>
 #include <math.h>
 
-namespace Operators {
+namespace Wasm::Operators {
+
+using namespace AK::SIMD;
 
 #define DEFINE_BINARY_OPERATOR(Name, operation) \
     struct Name {                               \
@@ -62,6 +65,7 @@ struct Divide {
 
     static StringView name() { return "/"sv; }
 };
+
 struct Modulo {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -77,18 +81,21 @@ struct Modulo {
 
     static StringView name() { return "%"sv; }
 };
+
 struct BitShiftLeft {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const { return lhs << (rhs % (sizeof(lhs) * 8)); }
 
     static StringView name() { return "<<"sv; }
 };
+
 struct BitShiftRight {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const { return lhs >> (rhs % (sizeof(lhs) * 8)); }
 
     static StringView name() { return ">>"sv; }
 };
+
 struct BitRotateLeft {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -102,6 +109,7 @@ struct BitRotateLeft {
 
     static StringView name() { return "rotate_left"sv; }
 };
+
 struct BitRotateRight {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -115,6 +123,55 @@ struct BitRotateRight {
 
     static StringView name() { return "rotate_right"sv; }
 };
+
+template<size_t VectorSize>
+struct VectorShiftLeft {
+    auto operator()(u128 lhs, i32 rhs) const
+    {
+        auto shift_value = rhs % (sizeof(lhs) * 8 / VectorSize);
+        return bit_cast<u128>(bit_cast<Native128ByteVectorOf<NativeIntegralType<128 / VectorSize>, MakeUnsigned>>(lhs) << shift_value);
+    }
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16)<<"sv;
+        case 8:
+            return "vec(16x8)<<"sv;
+        case 4:
+            return "vec(32x4)<<"sv;
+        case 2:
+            return "vec(64x2)<<"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
+template<size_t VectorSize, template<typename> typename SetSign>
+struct VectorShiftRight {
+    auto operator()(u128 lhs, i32 rhs) const
+    {
+        auto shift_value = rhs % (sizeof(lhs) * 8 / VectorSize);
+        return bit_cast<u128>(bit_cast<Native128ByteVectorOf<NativeIntegralType<128 / VectorSize>, SetSign>>(lhs) >> shift_value);
+    }
+    static StringView name()
+    {
+        switch (VectorSize) {
+        case 16:
+            return "vec(8x16)>>"sv;
+        case 8:
+            return "vec(16x8)>>"sv;
+        case 4:
+            return "vec(32x4)>>"sv;
+        case 2:
+            return "vec(64x2)>>"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+};
+
 struct Minimum {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -134,6 +191,7 @@ struct Minimum {
 
     static StringView name() { return "minimum"sv; }
 };
+
 struct Maximum {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -153,6 +211,7 @@ struct Maximum {
 
     static StringView name() { return "maximum"sv; }
 };
+
 struct CopySign {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
@@ -176,6 +235,7 @@ struct EqualsZero {
 
     static StringView name() { return "== 0"sv; }
 };
+
 struct CountLeadingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
@@ -191,6 +251,7 @@ struct CountLeadingZeros {
 
     static StringView name() { return "clz"sv; }
 };
+
 struct CountTrailingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
@@ -206,6 +267,7 @@ struct CountTrailingZeros {
 
     static StringView name() { return "ctz"sv; }
 };
+
 struct PopCount {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
@@ -218,18 +280,21 @@ struct PopCount {
 
     static StringView name() { return "popcnt"sv; }
 };
+
 struct Absolute {
     template<typename Lhs>
     auto operator()(Lhs lhs) const { return AK::abs(lhs); }
 
     static StringView name() { return "abs"sv; }
 };
+
 struct Negate {
     template<typename Lhs>
     auto operator()(Lhs lhs) const { return -lhs; }
 
     static StringView name() { return "== 0"sv; }
 };
+
 struct Ceil {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
@@ -244,6 +309,7 @@ struct Ceil {
 
     static StringView name() { return "ceil"sv; }
 };
+
 struct Floor {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
@@ -258,9 +324,10 @@ struct Floor {
 
     static StringView name() { return "floor"sv; }
 };
+
 struct Truncate {
     template<typename Lhs>
-    Result<Lhs, StringView> operator()(Lhs lhs) const
+    AK::Result<Lhs, StringView> operator()(Lhs lhs) const
     {
         if constexpr (IsSame<Lhs, float>)
             return truncf(lhs);
@@ -272,6 +339,7 @@ struct Truncate {
 
     static StringView name() { return "truncate"sv; }
 };
+
 struct NearbyIntegral {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
@@ -286,6 +354,7 @@ struct NearbyIntegral {
 
     static StringView name() { return "round"sv; }
 };
+
 struct SquareRoot {
     template<typename Lhs>
     auto operator()(Lhs lhs) const

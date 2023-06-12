@@ -20,6 +20,18 @@
 
 namespace Wasm {
 
+template<size_t M>
+using NativeIntegralType = Conditional<M == 8, u8, Conditional<M == 16, u16, Conditional<M == 32, u32, Conditional<M == 64, u64, void>>>>;
+
+template<size_t M>
+using NativeFloatingType = Conditional<M == 32, f32, Conditional<M == 64, f64, void>>;
+
+template<size_t M, size_t N, template<typename> typename SetSign, typename ElementType = SetSign<NativeIntegralType<M>>>
+using NativeVectorType __attribute__((vector_size(N * sizeof(ElementType)))) = ElementType;
+
+template<typename T, template<typename> typename SetSign>
+using Native128ByteVectorOf = NativeVectorType<sizeof(T) * 8, 16 / sizeof(T), SetSign, T>;
+
 enum class ParseError {
     UnexpectedEof,
     UnknownInstruction,

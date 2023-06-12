@@ -140,6 +140,7 @@ def parse_typed_value(ast):
                 value.frombytes(parse_v128_chunk(num[0], ast[1][0]))
                 assert len(value) - s == size, f'Expected {size} bytes, got {len(value) - s} bytes'
 
+            assert len(value) == 16, f'Expected 16 bytes, got {len(value)} bytes'
             return {
                 'type': types[ast[0][0]],
                 'value': value.tobytes().hex()
