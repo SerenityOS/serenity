@@ -87,8 +87,8 @@ jobs:
           # *and* as actual output variable, in this order.
           message("  set-output name=time::${current_date}")
           message("::set-output name=time::${current_date}")
-          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildIt.sh') }}")
-          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildIt.sh') }}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildGNU.sh') }}")
 
       - name: Toolchain cache
         uses: actions/cache/restore@v3
@@ -102,7 +102,7 @@ jobs:
 
       - name: Build toolchain
         if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
-        run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+        run: ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildGNU.sh
 
       - name: Update toolchain cache
         uses: actions/cache/save@v3

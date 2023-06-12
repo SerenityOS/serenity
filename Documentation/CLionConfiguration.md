@@ -24,7 +24,7 @@ After opening the `serenity` repository in CLion as a new project, the "`Open Pr
 
 `Build Directory`: `Build/x86_64`
 
-> _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildIt.sh`_
+> _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildGNU.sh`_
 
 > _If you have not built host tools from Lagom at this point, please do so: `./Meta/serenity.sh build` or `ninja -C Build/superbuild-x86_64` after running `cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-x86_64`_
 
