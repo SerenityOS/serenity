@@ -22,55 +22,34 @@ struct GridPosition {
     inline bool operator==(GridPosition const&) const = default;
 };
 
-class GridItem {
-public:
-    GridItem(Box const& box, int row, int row_span, int column, int column_span)
-        : m_box(box)
-        , m_row(row)
-        , m_row_span(row_span)
-        , m_column(column)
-        , m_column_span(column_span)
+struct GridItem {
+    JS::NonnullGCPtr<Box const> box;
+
+    int row;
+    size_t row_span;
+    int column;
+    size_t column_span;
+
+    [[nodiscard]] size_t span(GridDimension const dimension) const
     {
+        return dimension == GridDimension::Column ? column_span : row_span;
     }
 
-    Box const& box() const { return m_box; }
-
-    size_t span(GridDimension const dimension) const
+    [[nodiscard]] int raw_position(GridDimension const dimension) const
     {
-        return dimension == GridDimension::Column ? m_column_span : m_row_span;
-    }
-
-    int raw_position(GridDimension const dimension) const
-    {
-        return dimension == GridDimension::Column ? m_column : m_row;
+        return dimension == GridDimension::Column ? column : row;
     }
 
     [[nodiscard]] CSSPixels add_margin_box_sizes(CSSPixels content_size, GridDimension dimension, LayoutState const& state) const
     {
-        auto const& box_state = state.get(box());
+        auto const& box_state = state.get(box);
         if (dimension == GridDimension::Column)
             return box_state.margin_box_left() + content_size + box_state.margin_box_right();
         return box_state.margin_box_top() + content_size + box_state.margin_box_bottom();
     }
 
-    int raw_row() const { return m_row; }
-    void set_raw_row(int row) { m_row = row; }
-
-    int raw_column() const { return m_column; }
-    void set_raw_column(int column) { m_column = column; }
-
-    size_t raw_row_span() const { return m_row_span; }
-    size_t raw_column_span() const { return m_column_span; }
-
-    int gap_adjusted_row(Box const& grid_box) const;
-    int gap_adjusted_column(Box const& grid_box) const;
-
-private:
-    JS::NonnullGCPtr<Box const> m_box;
-    int m_row { 0 };
-    size_t m_row_span { 1 };
-    int m_column { 0 };
-    size_t m_column_span { 1 };
+    [[nodiscard]] int gap_adjusted_row(Box const& grid_box) const;
+    [[nodiscard]] int gap_adjusted_column(Box const& grid_box) const;
 };
 
 class OccupationGrid {
