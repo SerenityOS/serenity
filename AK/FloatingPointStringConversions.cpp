@@ -176,10 +176,8 @@ static constexpr auto max_representable_power_of_ten_in_u64 = 19;
 static_assert(1e19 <= static_cast<double>(NumericLimits<u64>::max()));
 static_assert(1e20 >= static_cast<double>(NumericLimits<u64>::max()));
 
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#    error Float parsing currently assumes little endian, this fact is only used in fast parsing of 8 digits at a time \
-           you _should_ only need to change read eight_digits to make this big endian compatible.
-#endif
+static_assert(HostIsLittleEndian, "Float parsing currently assumes little endian, this fact is only used in fast parsing of 8 digits at a time"
+                                  "\nyou _should_ only need to change read eight_digits to make this big endian compatible.");
 constexpr u64 read_eight_digits(char const* string)
 {
     u64 val;

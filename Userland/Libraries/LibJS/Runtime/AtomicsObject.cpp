@@ -225,7 +225,7 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayB
     // 9. Let elementSize be TypedArrayElementSize(typedArray).
 
     // 10. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
-    constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
+    constexpr bool is_little_endian = AK::HostIsLittleEndian;
 
     // 11. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
     auto expected_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, expected, is_little_endian));

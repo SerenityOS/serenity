@@ -35,39 +35,40 @@
 #endif
 
 namespace AK {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+inline constexpr static bool HostIsLittleEndian = true;
+#else
+inline constexpr static bool HostIsLittleEndian = false;
+#endif
 
 template<typename T>
 ALWAYS_INLINE constexpr T convert_between_host_and_little_endian(T value)
 {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    return value;
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    if constexpr (sizeof(T) == 8)
-        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
-    if constexpr (sizeof(T) == 4)
-        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
-    if constexpr (sizeof(T) == 2)
-        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
-    if constexpr (sizeof(T) == 1)
+    if constexpr (HostIsLittleEndian || sizeof(T) == 1)
         return value;
-#endif
+    else if constexpr (sizeof(T) == 8)
+        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
+    else if constexpr (sizeof(T) == 4)
+        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
+    else if constexpr (sizeof(T) == 2)
+        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
+    else
+        static_assert(DependentFalse<T>, "Cannot byte-swap values larger than 64-bits");
 }
 
 template<typename T>
 ALWAYS_INLINE constexpr T convert_between_host_and_big_endian(T value)
 {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    if constexpr (sizeof(T) == 8)
-        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
-    if constexpr (sizeof(T) == 4)
-        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
-    if constexpr (sizeof(T) == 2)
-        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
-    if constexpr (sizeof(T) == 1)
+    if constexpr (sizeof(T) == 1 || !HostIsLittleEndian)
         return value;
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    return value;
-#endif
+    else if constexpr (sizeof(T) == 8)
+        return static_cast<T>(__builtin_bswap64(static_cast<u64>(value)));
+    else if constexpr (sizeof(T) == 4)
+        return static_cast<T>(__builtin_bswap32(static_cast<u32>(value)));
+    else if constexpr (sizeof(T) == 2)
+        return static_cast<T>(__builtin_bswap16(static_cast<u16>(value)));
+    else
+        static_assert(DependentFalse<T>, "Cannot byte-swap values larger than 64-bits");
 }
 
 template<typename T>
