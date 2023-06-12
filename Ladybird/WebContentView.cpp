@@ -34,6 +34,7 @@
 #include <LibWebView/WebContentClient.h>
 #include <QApplication>
 #include <QCursor>
+#include <QGuiApplication>
 #include <QIcon>
 #include <QInputDialog>
 #include <QLineEdit>
@@ -532,8 +533,24 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
     update_palette();
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
-    // FIXME: Get the screen rect.
-    // client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
+    auto screens = QGuiApplication::screens();
+
+    if (!screens.empty()) {
+        Vector<Gfx::IntRect> screen_rects;
+
+        for (auto const& screen : screens) {
+            auto geometry = screen->geometry();
+
+            screen_rects.append(Gfx::IntRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
+        }
+
+        // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
+
+        // NOTE: The first item in QGuiApplication::screens is always the primary screen.
+        //       This is not specified in the documentation but QGuiApplication::primaryScreen
+        //       always returns the first item in the list if it isn't empty.
+        client().async_update_screen_rects(screen_rects, 0);
+    }
 
     if (!m_webdriver_content_ipc_path.is_empty())
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
