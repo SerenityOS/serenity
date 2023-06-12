@@ -17,6 +17,8 @@
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/HTML/AudioTrack.h>
+#include <LibWeb/HTML/AudioTrackList.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLAudioElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
@@ -48,6 +50,7 @@ JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMediaElementPrototype>(realm, "HTMLMediaElement"));
 
+    m_audio_tracks = TRY(realm.heap().allocate<AudioTrackList>(realm, realm));
     m_video_tracks = TRY(realm.heap().allocate<VideoTrackList>(realm, realm));
     m_document_observer = TRY(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
 
@@ -73,6 +76,7 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_error);
+    visitor.visit(m_audio_tracks);
     visitor.visit(m_video_tracks);
     visitor.visit(m_document_observer);
     visitor.visit(m_source_element_selector);
@@ -1122,6 +1126,7 @@ void HTMLMediaElement::forget_media_resource_specific_tracks()
     // of text tracks all the media-resource-specific text tracks, then empty the media element's audioTracks attribute's AudioTrackList object, then
     // empty the media element's videoTracks attribute's VideoTrackList object. No events (in particular, no removetrack events) are fired as part of
     // this; the error and emptied events, fired by the algorithms that invoke this one, can be used instead.
+    m_audio_tracks->remove_all_tracks({});
     m_video_tracks->remove_all_tracks({});
 }
 

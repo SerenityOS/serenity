@@ -214,6 +214,8 @@ set(SOURCES
     Geometry/DOMRectReadOnly.cpp
     HTML/AnimatedBitmapDecodedImageData.cpp
     HTML/AttributeNames.cpp
+    HTML/AudioTrack.cpp
+    HTML/AudioTrackList.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextGroup.cpp
     HTML/Canvas/CanvasDrawImage.cpp
