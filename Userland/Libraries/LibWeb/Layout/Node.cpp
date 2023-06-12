@@ -298,7 +298,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
-    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).value());
+    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).to_double());
     computed_values.set_font_weight(round_to<int>(computed_style.property(CSS::PropertyID::FontWeight)->as_number().number()));
     m_line_height = computed_style.line_height(*this);
 
@@ -644,9 +644,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() -> double {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return value->as_calculated().resolve_length(*this)->to_px(*this).value();
+                    return value->as_calculated().resolve_length(*this)->to_px(*this).to_double();
                 if (value->is_length())
-                    return value->as_length().length().to_px(*this).value();
+                    return value->as_length().length().to_px(*this).to_double();
                 if (value->is_identifier()) {
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {

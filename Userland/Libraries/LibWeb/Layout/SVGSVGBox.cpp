@@ -57,7 +57,7 @@ Optional<float> SVGSVGBox::calculate_intrinsic_aspect_ratio() const
 
         if (width != 0 && height != 0) {
             // 1. return width / height
-            return width.value() / height.value();
+            return width.to_double() / height.to_double();
         }
 
         return {};

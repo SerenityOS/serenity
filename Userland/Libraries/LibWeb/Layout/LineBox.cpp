@@ -35,7 +35,7 @@ void LineBox::trim_trailing_whitespace()
 {
     while (!m_fragments.is_empty() && m_fragments.last().is_justifiable_whitespace()) {
         auto fragment = m_fragments.take_last();
-        m_width -= fragment.width().value();
+        m_width -= fragment.width();
     }
 
     if (m_fragments.is_empty())

@@ -91,8 +91,8 @@ CSSPixelPoint Page::device_to_css_point(DevicePixelPoint point) const
 DevicePixelPoint Page::css_to_device_point(CSSPixelPoint point) const
 {
     return {
-        point.x().value() * client().device_pixels_per_css_pixel(),
-        point.y().value() * client().device_pixels_per_css_pixel(),
+        (point.x() * client().device_pixels_per_css_pixel()).to_int(),
+        (point.y() * client().device_pixels_per_css_pixel()).to_int(),
     };
 }
 
@@ -111,20 +111,20 @@ DevicePixelRect Page::enclosing_device_rect(CSSPixelRect rect) const
 {
     auto scale = client().device_pixels_per_css_pixel();
     return DevicePixelRect(
-        floor(rect.x().value() * scale),
-        floor(rect.y().value() * scale),
-        ceil(rect.width().value() * scale),
-        ceil(rect.height().value() * scale));
+        floor(rect.x().to_double() * scale),
+        floor(rect.y().to_double() * scale),
+        ceil(rect.width().to_double() * scale),
+        ceil(rect.height().to_double() * scale));
 }
 
 DevicePixelRect Page::rounded_device_rect(CSSPixelRect rect) const
 {
     auto scale = client().device_pixels_per_css_pixel();
     return {
-        roundf(rect.x().value() * scale),
-        roundf(rect.y().value() * scale),
-        roundf(rect.width().value() * scale),
-        roundf(rect.height().value() * scale)
+        roundf(rect.x().to_double() * scale),
+        roundf(rect.y().to_double() * scale),
+        roundf(rect.width().to_double() * scale),
+        roundf(rect.height().to_double() * scale)
     };
 }
 

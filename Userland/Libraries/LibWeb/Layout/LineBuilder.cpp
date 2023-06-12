@@ -136,7 +136,7 @@ CSSPixels LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
 
 bool LineBuilder::should_break(CSSPixels next_item_width)
 {
-    if (!isfinite(m_available_width_for_current_line.value()))
+    if (!isfinite(m_available_width_for_current_line.to_double()))
         return false;
 
     auto const& line_boxes = m_containing_block_state.line_boxes;
@@ -228,7 +228,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     fragment_baseline += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    fragment_baseline += static_cast<double>(length_percentage->percentage().as_fraction()) * line_height;
+                    fragment_baseline += length_percentage->percentage().as_fraction() * line_height.to_double();
             }
 
             line_box_baseline = max(line_box_baseline, fragment_baseline);
@@ -282,7 +282,7 @@ void LineBuilder::update_last_line()
                     auto vertical_align_amount = length_percentage->length().to_px(fragment.layout_node());
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 } else if (length_percentage->is_percentage()) {
-                    auto vertical_align_amount = static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
+                    auto vertical_align_amount = length_percentage->percentage().as_fraction() * m_context.containing_block().line_height().to_double();
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 }
             }
@@ -310,7 +310,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     bottom_of_inline_box += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    bottom_of_inline_box += static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
+                    bottom_of_inline_box += length_percentage->percentage().as_fraction() * m_context.containing_block().line_height().to_double();
             }
         }
 

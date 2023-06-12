@@ -214,7 +214,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
             }
         }
         auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
-        return width->to_px(*layout_node(), scaled_viewport_size).value();
+        return width->to_px(*layout_node(), scaled_viewport_size).to_double();
     }
     return {};
 }

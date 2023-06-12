@@ -400,7 +400,7 @@ void SourceSet::normalize_source_densities()
             auto& width_descriptor = image_source.descriptor.get<ImageSource::WidthDescriptorValue>();
             if (source_size.is_absolute()) {
                 image_source.descriptor = ImageSource::PixelDensityDescriptorValue {
-                    .value = (width_descriptor.value / source_size.absolute_length_to_px()).value()
+                    .value = (width_descriptor.value / source_size.absolute_length_to_px()).to_double()
                 };
             } else {
                 dbgln("FIXME: Handle relative sizes: {}", source_size);

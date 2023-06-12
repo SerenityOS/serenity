@@ -49,7 +49,7 @@ Length Length::make_auto()
 
 Length Length::make_px(CSSPixels value)
 {
-    return Length(value.value(), Type::Px);
+    return Length(value.to_double(), Type::Px);
 }
 
 Length Length::percentage_of(Percentage const& percentage) const
@@ -74,31 +74,31 @@ CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_met
 {
     switch (m_type) {
     case Type::Em:
-        return m_value * font_metrics.font_size;
+        return m_value * font_metrics.font_size.to_double();
     case Type::Rem:
-        return m_value * root_font_metrics.font_size;
+        return m_value * root_font_metrics.font_size.to_double();
     case Type::Ex:
-        return m_value * font_metrics.x_height;
+        return m_value * font_metrics.x_height.to_double();
     case Type::Rex:
-        return m_value * root_font_metrics.x_height;
+        return m_value * root_font_metrics.x_height.to_double();
     case Type::Cap:
-        return m_value * font_metrics.cap_height;
+        return m_value * font_metrics.cap_height.to_double();
     case Type::Rcap:
-        return m_value * root_font_metrics.cap_height;
+        return m_value * root_font_metrics.cap_height.to_double();
     case Type::Ch:
-        return m_value * font_metrics.zero_advance;
+        return m_value * font_metrics.zero_advance.to_double();
     case Type::Rch:
-        return m_value * root_font_metrics.zero_advance;
+        return m_value * root_font_metrics.zero_advance.to_double();
     case Type::Ic:
         // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
-        return m_value * font_metrics.font_size;
+        return m_value * font_metrics.font_size.to_double();
     case Type::Ric:
         // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
-        return m_value * root_font_metrics.font_size;
+        return m_value * root_font_metrics.font_size.to_double();
     case Type::Lh:
-        return m_value * font_metrics.line_height;
+        return m_value * font_metrics.line_height.to_double();
     case Type::Rlh:
-        return m_value * root_font_metrics.line_height;
+        return m_value * root_font_metrics.line_height.to_double();
     default:
         VERIFY_NOT_REACHED();
     }

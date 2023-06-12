@@ -1888,7 +1888,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         Optional<Length> maybe_length;
         if (font_size->is_percentage()) {
             // Percentages refer to parent element's font size
-            maybe_length = Length::make_px(static_cast<double>(font_size->as_percentage().percentage().as_fraction()) * parent_font_size());
+            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size().to_double());
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->as_length().length();
@@ -1896,7 +1896,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = font_size->as_calculated().resolve_length(length_resolution_context);
         }
         if (maybe_length.has_value()) {
-            auto px = maybe_length.value().to_px(length_resolution_context).value();
+            auto px = maybe_length.value().to_px(length_resolution_context).to_int();
             if (px != 0)
                 font_size_in_px = px;
         }

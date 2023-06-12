@@ -168,12 +168,12 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 }
 
                 auto view_box = maybe_view_box.value();
-                auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width().value() / view_box.width : 1;
-                auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height().value() / view_box.height : 1;
+                auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width() / view_box.width : 1;
+                auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height() / view_box.height : 1;
 
                 // The initial value for preserveAspectRatio is xMidYMid meet.
                 auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
-                auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
+                auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width.to_double(), scale_height.to_double() }, svg_box_state);
                 path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<double>().to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
                 viewbox_scale = viewbox_transform.scale_factor;
             }

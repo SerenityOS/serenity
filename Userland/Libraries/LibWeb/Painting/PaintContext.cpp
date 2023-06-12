@@ -47,68 +47,68 @@ CSSPixelRect PaintContext::css_viewport_rect() const
 
 DevicePixels PaintContext::rounded_device_pixels(CSSPixels css_pixels) const
 {
-    return roundf(css_pixels.value() * m_device_pixels_per_css_pixel);
+    return roundf(css_pixels.to_double() * m_device_pixels_per_css_pixel);
 }
 
 DevicePixels PaintContext::enclosing_device_pixels(CSSPixels css_pixels) const
 {
-    return ceilf(css_pixels.value() * m_device_pixels_per_css_pixel);
+    return ceilf(css_pixels.to_double() * m_device_pixels_per_css_pixel);
 }
 
 DevicePixels PaintContext::floored_device_pixels(CSSPixels css_pixels) const
 {
-    return floorf(css_pixels.value() * m_device_pixels_per_css_pixel);
+    return floorf(css_pixels.to_double() * m_device_pixels_per_css_pixel);
 }
 
 DevicePixelPoint PaintContext::rounded_device_point(CSSPixelPoint point) const
 {
     return {
-        roundf(point.x().value() * m_device_pixels_per_css_pixel),
-        roundf(point.y().value() * m_device_pixels_per_css_pixel)
+        roundf(point.x().to_double() * m_device_pixels_per_css_pixel),
+        roundf(point.y().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 
 DevicePixelPoint PaintContext::floored_device_point(CSSPixelPoint point) const
 {
     return {
-        floorf(point.x().value() * m_device_pixels_per_css_pixel),
-        floorf(point.y().value() * m_device_pixels_per_css_pixel)
+        floorf(point.x().to_double() * m_device_pixels_per_css_pixel),
+        floorf(point.y().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 
 DevicePixelRect PaintContext::enclosing_device_rect(CSSPixelRect rect) const
 {
     return {
-        floorf(rect.x().value() * m_device_pixels_per_css_pixel),
-        floorf(rect.y().value() * m_device_pixels_per_css_pixel),
-        ceilf(rect.width().value() * m_device_pixels_per_css_pixel),
-        ceilf(rect.height().value() * m_device_pixels_per_css_pixel)
+        floorf(rect.x().to_double() * m_device_pixels_per_css_pixel),
+        floorf(rect.y().to_double() * m_device_pixels_per_css_pixel),
+        ceilf(rect.width().to_double() * m_device_pixels_per_css_pixel),
+        ceilf(rect.height().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 
 DevicePixelRect PaintContext::rounded_device_rect(CSSPixelRect rect) const
 {
     return {
-        roundf(rect.x().value() * m_device_pixels_per_css_pixel),
-        roundf(rect.y().value() * m_device_pixels_per_css_pixel),
-        roundf(rect.width().value() * m_device_pixels_per_css_pixel),
-        roundf(rect.height().value() * m_device_pixels_per_css_pixel)
+        roundf(rect.x().to_double() * m_device_pixels_per_css_pixel),
+        roundf(rect.y().to_double() * m_device_pixels_per_css_pixel),
+        roundf(rect.width().to_double() * m_device_pixels_per_css_pixel),
+        roundf(rect.height().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 
 DevicePixelSize PaintContext::enclosing_device_size(CSSPixelSize size) const
 {
     return {
-        ceilf(size.width().value() * m_device_pixels_per_css_pixel),
-        ceilf(size.height().value() * m_device_pixels_per_css_pixel)
+        ceilf(size.width().to_double() * m_device_pixels_per_css_pixel),
+        ceilf(size.height().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 
 DevicePixelSize PaintContext::rounded_device_size(CSSPixelSize size) const
 {
     return {
-        roundf(size.width().value() * m_device_pixels_per_css_pixel),
-        roundf(size.height().value() * m_device_pixels_per_css_pixel)
+        roundf(size.width().to_double() * m_device_pixels_per_css_pixel),
+        roundf(size.height().to_double() * m_device_pixels_per_css_pixel)
     };
 }
 

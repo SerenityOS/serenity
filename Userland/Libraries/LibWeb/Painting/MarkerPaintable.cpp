@@ -44,8 +44,8 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (auto const* list_style_image = layout_box().list_style_image()) {
         CSSPixelRect image_rect {
             0, 0,
-            list_style_image->natural_width().value_or(marker_width.value()),
-            list_style_image->natural_height().value_or(marker_width.value())
+            list_style_image->natural_width().value_or(marker_width),
+            list_style_image->natural_height().value_or(marker_width)
         };
         image_rect.center_within(enclosing);
 

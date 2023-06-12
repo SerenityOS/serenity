@@ -235,10 +235,10 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
         return transformation.values[index].visit(
             [this, reference_length](CSS::LengthPercentage const& value) -> double {
                 if (reference_length.has_value()) {
-                    return value.resolved(m_box, reference_length.value()).to_px(m_box).value();
+                    return value.resolved(m_box, reference_length.value()).to_px(m_box).to_float();
                 }
 
-                return value.length().to_px(m_box).value();
+                return value.length().to_px(m_box).to_float();
             },
             [this](CSS::AngleOrCalculated const& value) {
                 return value.resolved(m_box).to_degrees() * M_DEG2RAD;
@@ -431,7 +431,7 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
     auto reference_box = paintable_box().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.to_px(m_box, reference_box.width());
     auto y = reference_box.top() + style_value.y.to_px(m_box, reference_box.height());
-    return { static_cast<float>(x.value()), static_cast<float>(y.value()) };
+    return { x.to_float(), y.to_float() };
 }
 
 template<typename U, typename Callback>
@@ -472,14 +472,14 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     auto transform_origin = this->transform_origin().to_type<CSSPixels>();
     // NOTE: This CSSPixels -> Float -> CSSPixels conversion is because we can't AffineTransform::map() a CSSPixelPoint.
     Gfx::FloatPoint offset_position {
-        position.x().value() - transform_origin.x().value(),
-        position.y().value() - transform_origin.y().value()
+        (position.x() - transform_origin.x()).to_float(),
+        (position.y() - transform_origin.y()).to_float()
     };
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
     // FIXME: Support more overflow variations.
     if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
             return {};
     }
 
@@ -502,7 +502,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -542,7 +542,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -563,7 +563,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
             // FIXME: Support more overflow variations.
             if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                     return TraversalDecision::SkipChildrenAndContinue;
             }
 
@@ -592,7 +592,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
+    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y())) {
         return HitTestResult {
             .paintable = const_cast<PaintableBox&>(paintable_box()),
         };
