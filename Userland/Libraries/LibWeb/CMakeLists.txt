@@ -473,6 +473,7 @@ set(SOURCES
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp
+    Platform/AudioCodecPlugin.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp
@@ -595,7 +596,7 @@ set(GENERATED_SOURCES
 serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
-target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibVideo LibWasm LibXML LibIDL)
+target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
 generate_js_bindings(LibWeb)

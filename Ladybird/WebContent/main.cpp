@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "../AudioCodecPluginLadybird.h"
 #include "../EventLoopImplementationQt.h"
 #include "../FontPluginQt.h"
 #include "../ImageCodecPluginLadybird.h"
@@ -56,6 +57,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
+
+    Web::Platform::AudioCodecPlugin::install_creation_hook([] {
+        return Ladybird::AudioCodecPluginLadybird::create();
+    });
 
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());

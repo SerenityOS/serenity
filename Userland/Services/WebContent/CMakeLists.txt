@@ -11,6 +11,7 @@ compile_ipc(WebDriverClient.ipc WebDriverClientEndpoint.h)
 compile_ipc(WebDriverServer.ipc WebDriverServerEndpoint.h)
 
 set(SOURCES
+    AudioCodecPluginSerenity.cpp
     ConnectionFromClient.cpp
     ConsoleGlobalEnvironmentExtensions.cpp
     ImageCodecPluginSerenity.cpp
@@ -28,5 +29,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(WebContent)
-target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
+target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibAudio LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
 link_with_locale_data(WebContent)

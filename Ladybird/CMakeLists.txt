@@ -73,7 +73,7 @@ add_compile_options(-Wno-user-defined-literals)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg Multimedia)
 
 set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 

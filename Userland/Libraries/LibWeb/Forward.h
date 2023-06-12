@@ -509,6 +509,7 @@ class AutoplayAllowlist;
 }
 
 namespace Web::Platform {
+class AudioCodecPlugin;
 class Timer;
 }
 
