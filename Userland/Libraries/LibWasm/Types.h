@@ -11,6 +11,8 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/LEB128.h>
 #include <AK/Result.h>
+#include <AK/String.h>
+#include <AK/UFixedBigInt.h>
 #include <AK/Variant.h>
 #include <LibWasm/Constants.h>
 #include <LibWasm/Forward.h>
@@ -143,6 +145,7 @@ public:
         I64,
         F32,
         F64,
+        V128,
         FunctionReference,
         ExternReference,
         NullFunctionReference,
@@ -157,7 +160,8 @@ public:
     bool operator==(ValueType const&) const = default;
 
     auto is_reference() const { return m_kind == ExternReference || m_kind == FunctionReference || m_kind == NullExternReference || m_kind == NullFunctionReference; }
-    auto is_numeric() const { return !is_reference(); }
+    auto is_vector() const { return m_kind == V128; }
+    auto is_numeric() const { return !is_reference() && !is_vector(); }
     auto kind() const { return m_kind; }
 
     static ParseResult<ValueType> parse(Stream& stream);
@@ -173,6 +177,8 @@ public:
             return "f32";
         case F64:
             return "f64";
+        case V128:
+            return "v128";
         case FunctionReference:
             return "funcref";
         case ExternReference:
@@ -394,6 +400,27 @@ public:
         u32 offset;
     };
 
+    struct MemoryAndLaneArgument {
+        MemoryArgument memory;
+        u8 lane;
+    };
+
+    struct LaneIndex {
+        u8 lane;
+    };
+
+    struct ShuffleArgument {
+        explicit ShuffleArgument(u8 (&lanes)[16])
+            : lanes {
+                lanes[0], lanes[1], lanes[2], lanes[3], lanes[4], lanes[5], lanes[6], lanes[7],
+                lanes[8], lanes[9], lanes[10], lanes[11], lanes[12], lanes[13], lanes[14], lanes[15]
+            }
+        {
+        }
+
+        u8 lanes[16];
+    };
+
     template<typename T>
     explicit Instruction(OpCode opcode, T argument)
         : m_opcode(opcode)
@@ -417,9 +444,12 @@ private:
         GlobalIndex,
         IndirectCallArgs,
         LabelIndex,
+        LaneIndex,
         LocalIndex,
         MemoryArgument,
+        MemoryAndLaneArgument,
         StructuredInstructionArgs,
+        ShuffleArgument,
         TableBranchArgs,
         TableElementArgs,
         TableIndex,
@@ -430,6 +460,7 @@ private:
         float,
         i32,
         i64,
+        u128,
         u8 // Empty state
     > m_arguments;
     // clang-format on

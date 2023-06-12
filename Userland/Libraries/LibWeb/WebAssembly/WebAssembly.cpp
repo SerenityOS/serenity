@@ -416,6 +416,8 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value va
     case Wasm::ValueType::ExternReference:
     case Wasm::ValueType::NullExternReference:
         TODO();
+    case Wasm::ValueType::V128:
+        return vm.throw_completion<JS::TypeError>("Cannot convert a vector value to a javascript value"sv);
     }
 
     VERIFY_NOT_REACHED();
@@ -438,6 +440,7 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
         return create_native_function(vm, wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled");
     case Wasm::ValueType::NullFunctionReference:
         return JS::js_null();
+    case Wasm::ValueType::V128:
     case Wasm::ValueType::ExternReference:
     case Wasm::ValueType::NullExternReference:
         TODO();
