@@ -43,6 +43,7 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> slice(Optional<i64> start = {}, Optional<i64> end = {}, Optional<String> const& content_type = {});
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> stream();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> text();
     JS::Promise* array_buffer();
 
