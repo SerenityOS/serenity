@@ -64,12 +64,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create(JS::Realm& 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
 {
     MouseEventInit event_init {};
-    event_init.offset_x = static_cast<double>(offset.x().value());
-    event_init.offset_y = static_cast<double>(offset.y().value());
-    event_init.client_x = static_cast<double>(client_offset.x().value());
-    event_init.client_y = static_cast<double>(client_offset.y().value());
-    event_init.page_x = static_cast<double>(page_offset.x().value());
-    event_init.page_y = static_cast<double>(page_offset.y().value());
+    event_init.offset_x = offset.x().to_double();
+    event_init.offset_y = offset.y().to_double();
+    event_init.client_x = client_offset.x().to_double();
+    event_init.client_y = client_offset.y().to_double();
+    event_init.page_x = page_offset.x().to_double();
+    event_init.page_y = page_offset.y().to_double();
     event_init.button = determine_button(mouse_button);
     event_init.buttons = buttons;
     return MouseEvent::create(realm, event_name, event_init);

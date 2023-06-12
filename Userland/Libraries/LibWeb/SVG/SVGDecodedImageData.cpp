@@ -142,7 +142,7 @@ Optional<float> SVGDecodedImageData::intrinsic_aspect_ratio() const
     auto width = intrinsic_width();
     auto height = intrinsic_height();
     if (width.has_value() && height.has_value())
-        return (width.value() / height.value()).value();
+        return width->to_float() / height->to_float();
 
     if (auto const& viewbox = m_root_element->view_box(); viewbox.has_value())
         return viewbox->width / viewbox->height;

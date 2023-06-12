@@ -29,7 +29,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         inline void shrink(CSSPixels top, CSSPixels right, CSSPixels bottom, CSSPixels left)
         {
             rect.shrink(top, right, bottom, left);
-            radii.shrink(top.value(), right.value(), bottom.value(), left.value());
+            radii.shrink(top, right, bottom, left);
         }
     };
 
@@ -137,8 +137,8 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
 
         // FIXME: Implement proper default sizing algorithm: https://drafts.csswg.org/css-images/#default-sizing
-        CSSPixels natural_image_width = image.natural_width().value_or(background_positioning_area.width().value());
-        CSSPixels natural_image_height = image.natural_height().value_or(background_positioning_area.height().value());
+        CSSPixels natural_image_width = image.natural_width().value_or(background_positioning_area.width());
+        CSSPixels natural_image_height = image.natural_height().value_or(background_positioning_area.height());
 
         // If any of these are zero, the NaNs will pop up in the painting code.
         if (background_positioning_area.is_empty() || natural_image_height <= 0 || natural_image_width <= 0)
@@ -148,15 +148,15 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            double max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
-            double max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
+            double max_width_ratio = (background_positioning_area.width() / natural_image_width).to_double();
+            double max_height_ratio = (background_positioning_area.height() / natural_image_height).to_double();
             double ratio = min(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            double max_width_ratio = (background_positioning_area.width() / natural_image_width).value();
-            double max_height_ratio = (background_positioning_area.height() / natural_image_height).value();
+            double max_width_ratio = (background_positioning_area.width() / natural_image_width).to_double();
+            double max_height_ratio = (background_positioning_area.height() / natural_image_height).to_double();
             double ratio = max(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
@@ -247,12 +247,12 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             repeat_x = true;
             break;
         case CSS::Repeat::Space: {
-            int whole_images = (background_positioning_area.width() / image_rect.width()).value();
+            int whole_images = (background_positioning_area.width() / image_rect.width()).to_int();
             if (whole_images <= 1) {
                 x_step = image_rect.width();
                 repeat_x = false;
             } else {
-                auto space = fmod(background_positioning_area.width(), image_rect.width());
+                auto space = fmod(background_positioning_area.width().to_float(), image_rect.width().to_float());
                 x_step = image_rect.width() + (space / static_cast<double>(whole_images - 1));
                 repeat_x = true;
             }
@@ -278,12 +278,12 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             repeat_y = true;
             break;
         case CSS::Repeat::Space: {
-            int whole_images = (background_positioning_area.height() / image_rect.height()).value();
+            int whole_images = (background_positioning_area.height() / image_rect.height()).to_int();
             if (whole_images <= 1) {
                 y_step = image_rect.height();
                 repeat_y = false;
             } else {
-                auto space = fmod(background_positioning_area.height(), image_rect.height());
+                auto space = fmod(background_positioning_area.height().to_float(), image_rect.height().to_float());
                 y_step = image_rect.height() + (static_cast<double>(space) / static_cast<double>(whole_images - 1));
                 repeat_y = true;
             }

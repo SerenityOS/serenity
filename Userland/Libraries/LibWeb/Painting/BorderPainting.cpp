@@ -33,14 +33,14 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelR
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     CSSPixels f = 1.0f;
-    auto width_reciprocal = 1.0 / rect.width().value();
-    auto height_reciprocal = 1.0 / rect.height().value();
+    auto width_reciprocal = 1.0 / rect.width().to_double();
+    auto height_reciprocal = 1.0 / rect.height().to_double();
     f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
     f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
 
-    f = 1.0 / f.value();
+    f = 1.0 / f.to_double();
 
     top_left_radius_px.horizontal_radius *= f;
     top_left_radius_px.vertical_radius *= f;

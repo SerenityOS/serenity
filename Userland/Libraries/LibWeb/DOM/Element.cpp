@@ -776,7 +776,7 @@ int Element::client_width() const
     //    return the viewport width excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().width().value();
+        return document().browsing_context()->viewport_rect().width().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -788,7 +788,7 @@ int Element::client_width() const
 
     // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
     // ignoring any transforms that apply to the element and its ancestors.
-    return paintable_box()->absolute_padding_box_rect().width().value();
+    return paintable_box()->absolute_padding_box_rect().width().to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientheight
@@ -801,7 +801,7 @@ int Element::client_height() const
     //    return the viewport height excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().height().value();
+        return document().browsing_context()->viewport_rect().height().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -813,7 +813,7 @@ int Element::client_height() const
 
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return paintable_box()->absolute_padding_box_rect().height().value();
+    return paintable_box()->absolute_padding_box_rect().height().to_int();
 }
 
 void Element::children_changed()
@@ -941,7 +941,7 @@ double Element::scroll_top() const
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().y().value();
+    return box->scroll_offset().y().to_double();
 }
 
 double Element::scroll_left() const
@@ -983,7 +983,7 @@ double Element::scroll_left() const
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().x().value();
+    return box->scroll_offset().x().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -1135,8 +1135,8 @@ int Element::scroll_width() const
 
     // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_width = document.browsing_context()->viewport_rect().width().value();
-    auto viewport_scroll_width = document.browsing_context()->size().width().value();
+    auto viewport_width = document.browsing_context()->viewport_rect().width().to_int();
+    auto viewport_scroll_width = document.browsing_context()->size().width().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area width, viewport width).
@@ -1153,7 +1153,7 @@ int Element::scroll_width() const
         return 0;
 
     // 7. Return the width of the element’s scrolling area.
-    return paintable_box()->border_box_width().value();
+    return paintable_box()->border_box_width().to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollheight
@@ -1168,8 +1168,8 @@ int Element::scroll_height() const
 
     // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_height = document.browsing_context()->viewport_rect().height().value();
-    auto viewport_scroll_height = document.browsing_context()->size().height().value();
+    auto viewport_height = document.browsing_context()->viewport_rect().height().to_int();
+    auto viewport_scroll_height = document.browsing_context()->size().height().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area height, viewport height).
@@ -1186,7 +1186,7 @@ int Element::scroll_height() const
         return 0;
 
     // 7. Return the height of the element’s scrolling area.
-    return paintable_box()->border_box_height().value();
+    return paintable_box()->border_box_height().to_int();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled

@@ -503,21 +503,21 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             auto box_model = box->box_model();
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
-            MUST(serializer.add("padding_top"sv, box_model.padding.top.value()));
-            MUST(serializer.add("padding_right"sv, box_model.padding.right.value()));
-            MUST(serializer.add("padding_bottom"sv, box_model.padding.bottom.value()));
-            MUST(serializer.add("padding_left"sv, box_model.padding.left.value()));
-            MUST(serializer.add("margin_top"sv, box_model.margin.top.value()));
-            MUST(serializer.add("margin_right"sv, box_model.margin.right.value()));
-            MUST(serializer.add("margin_bottom"sv, box_model.margin.bottom.value()));
-            MUST(serializer.add("margin_left"sv, box_model.margin.left.value()));
-            MUST(serializer.add("border_top"sv, box_model.border.top.value()));
-            MUST(serializer.add("border_right"sv, box_model.border.right.value()));
-            MUST(serializer.add("border_bottom"sv, box_model.border.bottom.value()));
-            MUST(serializer.add("border_left"sv, box_model.border.left.value()));
+            MUST(serializer.add("padding_top"sv, box_model.padding.top.to_double()));
+            MUST(serializer.add("padding_right"sv, box_model.padding.right.to_double()));
+            MUST(serializer.add("padding_bottom"sv, box_model.padding.bottom.to_double()));
+            MUST(serializer.add("padding_left"sv, box_model.padding.left.to_double()));
+            MUST(serializer.add("margin_top"sv, box_model.margin.top.to_double()));
+            MUST(serializer.add("margin_right"sv, box_model.margin.right.to_double()));
+            MUST(serializer.add("margin_bottom"sv, box_model.margin.bottom.to_double()));
+            MUST(serializer.add("margin_left"sv, box_model.margin.left.to_double()));
+            MUST(serializer.add("border_top"sv, box_model.border.top.to_double()));
+            MUST(serializer.add("border_right"sv, box_model.border.right.to_double()));
+            MUST(serializer.add("border_bottom"sv, box_model.border.bottom.to_double()));
+            MUST(serializer.add("border_left"sv, box_model.border.left.to_double()));
             if (auto* paintable_box = box->paintable_box()) {
-                MUST(serializer.add("content_width"sv, paintable_box->content_width().value()));
-                MUST(serializer.add("content_height"sv, paintable_box->content_height().value()));
+                MUST(serializer.add("content_width"sv, paintable_box->content_width().to_double()));
+                MUST(serializer.add("content_height"sv, paintable_box->content_height().to_double()));
             } else {
                 MUST(serializer.add("content_width"sv, 0));
                 MUST(serializer.add("content_height"sv, 0));

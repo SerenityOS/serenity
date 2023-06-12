@@ -960,7 +960,7 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
                 }
             }
             if (last_fragment) {
-                y = (last_fragment->offset().y() + last_fragment->height()).value();
+                y = last_fragment->offset().y() + last_fragment->height();
             }
         } else {
             // Easy case: no previous sibling, we're at the top of the containing block.
@@ -1179,7 +1179,7 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
 
     cache.min_content_width = context->automatic_content_width();
 
-    if (!isfinite(cache.min_content_width->value())) {
+    if (!isfinite(cache.min_content_width->to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
         cache.min_content_width = 0;
@@ -1217,7 +1217,7 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
 
     cache.max_content_width = context->automatic_content_width();
 
-    if (!isfinite(cache.max_content_width->value())) {
+    if (!isfinite(cache.max_content_width->to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite max-content width for {}", box.debug_description());
         cache.max_content_width = 0;
@@ -1271,7 +1271,7 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_min_content()));
 
     auto min_content_height = context->automatic_content_height();
-    if (!isfinite(min_content_height.value())) {
+    if (!isfinite(min_content_height.to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite min-content height for {}", box.debug_description());
         min_content_height = 0;
@@ -1327,7 +1327,7 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
 
     auto max_content_height = context->automatic_content_height();
 
-    if (!isfinite(max_content_height.value())) {
+    if (!isfinite(max_content_height.to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite max-content height for {}", box.debug_description());
         max_content_height = 0;

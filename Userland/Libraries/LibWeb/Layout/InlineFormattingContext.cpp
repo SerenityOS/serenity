@@ -205,7 +205,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         }
     }
 
-    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<double>(whitespace_count)) : 0;
+    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / whitespace_count) : 0;
 
     // This is the amount that each fragment will be offset by. If a whitespace
     // fragment is shorter than the justified space width, it increases to push

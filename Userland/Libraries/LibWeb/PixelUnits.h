@@ -48,36 +48,156 @@ constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value
 
 /// CSSPixels: A position or length in CSS "reference pixels", independent of zoom or screen DPI.
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(double, CSSPixels, Arithmetic, CastToUnderlying, Comparison, Increment);
+class CSSPixels {
+public:
+    constexpr CSSPixels() = default;
+
+    constexpr CSSPixels(double value)
+        : m_value { value }
+    {
+    }
+
+    constexpr float to_float() const
+    {
+        return static_cast<float>(m_value);
+    }
+
+    constexpr double to_double() const
+    {
+        return static_cast<double>(m_value);
+    }
+
+    constexpr int to_int() const
+    {
+        return static_cast<int>(m_value);
+    }
+
+    constexpr bool operator==(CSSPixels const& other) const
+    {
+        return this->m_value == other.m_value;
+    }
+
+    constexpr explicit operator double() const
+    {
+        return to_double();
+    }
+
+    constexpr CSSPixels& operator++()
+    {
+        this->m_value += 1;
+        return *this;
+    }
+    constexpr CSSPixels operator++(int)
+    {
+        CSSPixels ret = this->m_value;
+        this->m_value += 1;
+        return ret;
+    }
+    constexpr CSSPixels& operator--()
+    {
+        this->m_value -= 1;
+        return *this;
+    }
+    constexpr CSSPixels operator--(int)
+    {
+        CSSPixels ret = this->m_value;
+        this->m_value -= 1;
+        return ret;
+    }
+
+    constexpr int operator<=>(CSSPixels const& other) const
+    {
+        return this->m_value > other.m_value ? 1 : this->m_value < other.m_value ? -1
+                                                                                 : 0;
+    }
+
+    constexpr CSSPixels operator+(CSSPixels const& other) const
+    {
+        return this->m_value + other.m_value;
+    }
+
+    constexpr CSSPixels operator-(CSSPixels const& other) const
+    {
+        return this->m_value - other.m_value;
+    }
+
+    constexpr CSSPixels operator+() const
+    {
+        return +this->m_value;
+    }
+
+    constexpr CSSPixels operator-() const
+    {
+        return -this->m_value;
+    }
+
+    constexpr CSSPixels operator*(CSSPixels const& other) const
+    {
+        return this->m_value * other.m_value;
+    }
+
+    constexpr CSSPixels operator/(CSSPixels const& other) const
+    {
+        return this->m_value / other.m_value;
+    }
+
+    constexpr CSSPixels& operator+=(CSSPixels const& other)
+    {
+        this->m_value += other.m_value;
+        return *this;
+    }
+
+    constexpr CSSPixels& operator-=(CSSPixels const& other)
+    {
+        this->m_value -= other.m_value;
+        return *this;
+    }
+
+    constexpr CSSPixels& operator*=(CSSPixels const& other)
+    {
+        this->m_value *= other.m_value;
+        return *this;
+    }
+
+    constexpr CSSPixels& operator/=(CSSPixels const& other)
+    {
+        this->m_value /= other.m_value;
+        return *this;
+    }
+
+private:
+    double m_value {};
+};
 
 template<Arithmetic T>
-constexpr bool operator==(CSSPixels left, T right) { return left.value() == right; }
+constexpr bool operator==(CSSPixels left, T right) { return left.to_double() == right; }
 
 template<Arithmetic T>
-constexpr bool operator!=(CSSPixels left, T right) { return left.value() != right; }
+constexpr bool operator!=(CSSPixels left, T right) { return left.to_double() != right; }
 
 template<Arithmetic T>
-constexpr bool operator>(CSSPixels left, T right) { return left.value() > right; }
+constexpr bool operator>(CSSPixels left, T right) { return left.to_double() > right; }
 
 template<Arithmetic T>
-constexpr bool operator<(CSSPixels left, T right) { return left.value() < right; }
+constexpr bool operator<(CSSPixels left, T right) { return left.to_double() < right; }
 
 template<Arithmetic T>
-constexpr bool operator>=(CSSPixels left, T right) { return left.value() >= right; }
+constexpr bool operator>=(CSSPixels left, T right) { return left.to_double() >= right; }
 
 template<Arithmetic T>
-constexpr bool operator<=(CSSPixels left, T right) { return left.value() <= right; }
+constexpr bool operator<=(CSSPixels left, T right) { return left.to_double() <= right; }
 
 template<Arithmetic T>
-constexpr CSSPixels operator*(CSSPixels left, T right) { return left.value() * right; }
+constexpr CSSPixels operator*(CSSPixels left, T right) { return left.to_double() * right; }
+
 template<Arithmetic T>
 constexpr CSSPixels operator*(T left, CSSPixels right) { return right * left; }
 
 template<Arithmetic T>
-constexpr CSSPixels operator/(CSSPixels left, T right) { return left.value() / right; }
+constexpr CSSPixels operator/(CSSPixels left, T right) { return left.to_double() / right; }
 
 template<Arithmetic T>
-constexpr CSSPixels operator%(CSSPixels left, T right) { return left.value() % right; }
+constexpr CSSPixels operator%(CSSPixels left, T right) { return left.to_double() % right; }
 
 using CSSPixelLine = Gfx::Line<CSSPixels>;
 using CSSPixelPoint = Gfx::Point<CSSPixels>;
@@ -93,27 +213,27 @@ using DevicePixelSize = Gfx::Size<DevicePixels>;
 
 constexpr Web::CSSPixels floor(Web::CSSPixels const& value)
 {
-    return ::floorf(value.value());
+    return ::floorf(value.to_float());
 }
 
 constexpr Web::CSSPixels ceil(Web::CSSPixels const& value)
 {
-    return ::ceilf(value.value());
+    return ::ceilf(value.to_float());
 }
 
 constexpr Web::CSSPixels round(Web::CSSPixels const& value)
 {
-    return ::roundf(value.value());
+    return ::roundf(value.to_float());
 }
 
 constexpr Web::CSSPixels fmod(Web::CSSPixels const& x, Web::CSSPixels const& y)
 {
-    return ::fmodf(x.value(), y.value());
+    return ::fmodf(x.to_float(), y.to_float());
 }
 
 constexpr Web::CSSPixels abs(Web::CSSPixels const& value)
 {
-    return AK::abs(value.value());
+    return AK::abs(value.to_float());
 }
 
 constexpr Web::DevicePixels abs(Web::DevicePixels const& value)
@@ -127,8 +247,8 @@ template<>
 struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
     static unsigned hash(Web::CSSPixels const& key)
     {
-        VERIFY(isfinite(key.value()));
-        return Traits<Web::CSSPixels::Type>::hash(key.value());
+        VERIFY(isfinite(key.to_double()));
+        return Traits<double>::hash(key.to_double());
     }
 
     static bool equals(Web::CSSPixels const& a, Web::CSSPixels const& b)
@@ -151,10 +271,10 @@ struct Traits<Web::DevicePixels> : public GenericTraits<Web::DevicePixels> {
 };
 
 template<>
-struct Formatter<Web::CSSPixels> : Formatter<Web::CSSPixels::Type> {
+struct Formatter<Web::CSSPixels> : Formatter<double> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSSPixels const& value)
     {
-        return Formatter<Web::CSSPixels::Type>::format(builder, value.value());
+        return Formatter<double>::format(builder, value.to_double());
     }
 };
 

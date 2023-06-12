@@ -30,7 +30,7 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Number const& number) { return number.value(); },
         [](Angle const& angle) { return angle.to_degrees(); },
         [](Frequency const& frequency) { return frequency.to_hertz(); },
-        [&context](Length const& length) { return length.to_px(*context).value(); },
+        [&context](Length const& length) { return length.to_px(*context).to_double(); },
         [](Percentage const& percentage) { return percentage.value(); },
         [](Time const& time) { return time.to_seconds(); });
 };

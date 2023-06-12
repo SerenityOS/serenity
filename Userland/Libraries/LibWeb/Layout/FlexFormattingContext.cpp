@@ -1037,7 +1037,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                 for (auto& item : line.items) {
                     if (item.frozen)
                         continue;
-                    item.scaled_flex_shrink_factor = item.flex_factor.value() * item.flex_base_size.value();
+                    item.scaled_flex_shrink_factor = item.flex_factor.value() * item.flex_base_size.to_double();
                 }
                 auto sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line = line.sum_of_scaled_flex_shrink_factor_of_unfrozen_items();
                 for (auto& item : line.items) {
@@ -1123,7 +1123,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
     // AD-HOC: Due to the way we calculate the remaining free space, it can be infinite when sizing
     //         under a max-content constraint. In that case, we can simply set it to zero here.
-    if (!isfinite(line.remaining_free_space.value()))
+    if (!isfinite(line.remaining_free_space.to_double()))
         line.remaining_free_space = 0;
 
     // 6. Set each item’s used main size to its target main size.
@@ -1704,7 +1704,7 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
                 result /= item.scaled_flex_shrink_factor;
         }
 
-        item.desired_flex_fraction = result.value();
+        item.desired_flex_fraction = result.to_double();
     }
 
     // 2. Place all flex items into lines of infinite length.

@@ -184,8 +184,8 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         if (!computed_values.min_width().is_auto())
             min_width = max(min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
 
-        CSSPixels max_height = computed_values.height().is_auto() ? max_content_height.value() : height;
-        CSSPixels max_width = computed_values.width().is_auto() ? max_content_width.value() : width;
+        CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
+        CSSPixels max_width = computed_values.width().is_auto() ? max_content_width : width;
         if (!computed_values.max_height().is_none())
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
         if (!computed_values.max_width().is_none())

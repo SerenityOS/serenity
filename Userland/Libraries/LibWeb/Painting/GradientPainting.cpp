@@ -115,7 +115,7 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPix
 
     auto resolved_color_stops = resolve_color_stop_positions(
         linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.to_px(node, gradient_length_px).value() / static_cast<double>(gradient_length_px);
+            return length_percentage.to_px(node, gradient_length_px).to_float() / static_cast<float>(gradient_length_px);
         },
         linear_gradient.is_repeating());
 
@@ -138,7 +138,7 @@ RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, CSSPix
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
     auto resolved_color_stops = resolve_color_stop_positions(
         radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return (length_percentage.to_px(node, gradient_size.width()) / gradient_size.width()).value();
+            return (length_percentage.to_px(node, gradient_size.width()) / gradient_size.width()).to_float();
         },
         radial_gradient.is_repeating());
     return { resolved_color_stops };

@@ -108,10 +108,10 @@ void LayoutState::commit()
         auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
 
         // Transfer box model metrics.
-        node.box_model().inset = { used_values.inset_top.value(), used_values.inset_right.value(), used_values.inset_bottom.value(), used_values.inset_left.value() };
-        node.box_model().padding = { used_values.padding_top.value(), used_values.padding_right.value(), used_values.padding_bottom.value(), used_values.padding_left.value() };
-        node.box_model().border = { used_values.border_top.value(), used_values.border_right.value(), used_values.border_bottom.value(), used_values.border_left.value() };
-        node.box_model().margin = { used_values.margin_top.value(), used_values.margin_right.value(), used_values.margin_bottom.value(), used_values.margin_left.value() };
+        node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
+        node.box_model().padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
+        node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
+        node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
 
         node.set_paintable(node.create_paintable());
 
@@ -297,7 +297,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
 void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
-    VERIFY(isfinite(width.value()));
+    VERIFY(isfinite(width.to_double()));
     if (width < 0) {
         // Negative widths are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
@@ -309,7 +309,7 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
 
 void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
-    VERIFY(isfinite(height.value()));
+    VERIFY(isfinite(height.to_double()));
     if (height < 0) {
         // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
