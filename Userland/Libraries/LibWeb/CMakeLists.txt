@@ -389,6 +389,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     IntersectionObserver/IntersectionObserver.cpp
+    Layout/AudioBox.cpp
     Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
@@ -444,6 +445,7 @@ set(SOURCES
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp
+    Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
     Painting/BorderRadiusCornerClipper.cpp

@@ -16,10 +16,18 @@ class HTMLAudioElement final : public HTMLMediaElement {
 public:
     virtual ~HTMLAudioElement() override;
 
+    Layout::AudioBox* layout_node();
+    Layout::AudioBox const* layout_node() const;
+
 private:
     HTMLAudioElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+
+    virtual void on_playing() override;
+    virtual void on_paused() override;
 };
 
 }
