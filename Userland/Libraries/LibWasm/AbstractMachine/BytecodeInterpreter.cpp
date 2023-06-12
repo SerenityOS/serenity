@@ -5,15 +5,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
+#include <AK/SIMDExtras.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Operators.h>
 #include <LibWasm/Opcode.h>
 #include <LibWasm/Printer/Printer.h>
+
+using namespace AK::SIMD;
 
 namespace Wasm {
 
@@ -110,6 +114,148 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
     configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
 
+template<typename TDst, typename TSrc>
+ALWAYS_INLINE static TDst convert_vector(TSrc v)
+{
+    return __builtin_convertvector(v, TDst);
+}
+
+template<size_t M, size_t N, template<typename> typename SetSign>
+void BytecodeInterpreter::load_and_push_mxn(Configuration& configuration, Instruction const& instruction)
+{
+    auto& address = configuration.frame().module().memories().first();
+    auto memory = configuration.store().get(address);
+    if (!memory) {
+        m_trap = Trap { "Nonexistent memory" };
+        return;
+    }
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& entry = configuration.stack().peek();
+    auto base = entry.get<Value>().to<i32>();
+    if (!base.has_value()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        return;
+    }
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += M * N / 8;
+    if (addition.has_overflow() || addition.value() > memory->size()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        dbgln("LibWasm: Memory access out of bounds (expected {} to be less than or equal to {})", instance_address + M * N / 8, memory->size());
+        return;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "vec-load({} : {}) -> stack", instance_address, M * N / 8);
+    auto slice = memory->data().bytes().slice(instance_address, M * N / 8);
+    using V64 = NativeVectorType<M, N, SetSign>;
+    using V128 = NativeVectorType<M * 2, N, SetSign>;
+
+    V64 bytes { 0 };
+    if (bit_cast<FlatPtr>(slice.data()) % sizeof(V64) == 0)
+        bytes = *bit_cast<V64*>(slice.data());
+    else
+        ByteReader::load(slice.data(), bytes);
+
+    configuration.stack().peek() = Value(bit_cast<u128>(convert_vector<V128>(bytes)));
+}
+
+template<size_t M>
+void BytecodeInterpreter::load_and_push_m_splat(Configuration& configuration, Instruction const& instruction)
+{
+    auto& address = configuration.frame().module().memories().first();
+    auto memory = configuration.store().get(address);
+    if (!memory) {
+        m_trap = Trap { "Nonexistent memory" };
+        return;
+    }
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    auto& entry = configuration.stack().peek();
+    auto base = entry.get<Value>().to<i32>();
+    if (!base.has_value()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        return;
+    }
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += M / 8;
+    if (addition.has_overflow() || addition.value() > memory->size()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        dbgln("LibWasm: Memory access out of bounds (expected {} to be less than or equal to {})", instance_address + M / 8, memory->size());
+        return;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "vec-splat({} : {}) -> stack", instance_address, M / 8);
+    auto slice = memory->data().bytes().slice(instance_address, M / 8);
+    auto value = read_value<NativeIntegralType<M>>(slice);
+    set_top_m_splat<M, NativeIntegralType>(configuration, value);
+}
+
+template<size_t M, template<size_t> typename NativeType>
+void BytecodeInterpreter::set_top_m_splat(Wasm::Configuration& configuration, NativeType<M> value)
+{
+    auto push = [&](auto result) {
+        configuration.stack().peek() = Value(bit_cast<u128>(result));
+    };
+
+    if constexpr (IsFloatingPoint<NativeType<32>>) {
+        if constexpr (M == 32) // 32 -> 32x4
+            push(expand4(value));
+        else if constexpr (M == 64) // 64 -> 64x2
+            push(f64x2 { value, value });
+        else
+            static_assert(DependentFalse<NativeType<M>>, "Invalid vector size");
+    } else {
+        if constexpr (M == 8) // 8 -> 8x4 -> 32x4
+            push(expand4(bit_cast<u32>(u8x4 { value, value, value, value })));
+        else if constexpr (M == 16) // 16 -> 16x2 -> 32x4
+            push(expand4(bit_cast<u32>(u16x2 { value, value })));
+        else if constexpr (M == 32) // 32 -> 32x4
+            push(expand4(value));
+        else if constexpr (M == 64) // 64 -> 64x2
+            push(u64x2 { value, value });
+        else
+            static_assert(DependentFalse<NativeType<M>>, "Invalid vector size");
+    }
+}
+
+template<size_t M, template<size_t> typename NativeType>
+void BytecodeInterpreter::pop_and_push_m_splat(Wasm::Configuration& configuration, Instruction const&)
+{
+    using PopT = Conditional<M <= 32, NativeType<32>, NativeType<64>>;
+    using ReadT = NativeType<M>;
+    auto entry = configuration.stack().peek();
+    auto value = static_cast<ReadT>(*entry.get<Value>().to<PopT>());
+    dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> splat({})", value, M);
+    set_top_m_splat<M, NativeType>(configuration, value);
+}
+
+template<typename M, template<typename> typename SetSign, typename VectorType>
+Optional<VectorType> BytecodeInterpreter::pop_vector(Configuration& configuration)
+{
+    auto value = peek_vector<M, SetSign, VectorType>(configuration);
+    if (value.has_value())
+        configuration.stack().pop();
+    return value;
+}
+
+template<typename M, template<typename> typename SetSign, typename VectorType>
+Optional<VectorType> BytecodeInterpreter::peek_vector(Configuration& configuration)
+{
+    auto& entry = configuration.stack().peek();
+    auto value = entry.get<Value>().value().get_pointer<u128>();
+    if (!value)
+        return {};
+    auto vector = bit_cast<VectorType>(*value);
+    dbgln_if(WASM_TRACE_DEBUG, "stack({}) peek-> vector({:x})", *value, bit_cast<u128>(vector));
+    return vector;
+}
+
+template<typename VectorType>
+static u128 shuffle_vector(VectorType values, VectorType indices)
+{
+    auto vector = bit_cast<VectorType>(values);
+    auto indices_vector = bit_cast<VectorType>(indices);
+    return bit_cast<u128>(shuffle(vector, indices_vector));
+}
+
 void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
     TRAP_IF_NOT(m_stack_info.size_free() >= Constants::minimum_stack_space_to_keep_free);
@@ -150,15 +296,15 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
         configuration.stack().entries().unchecked_append(move(entry));
 }
 
-template<typename PopType, typename PushType, typename Operator>
+template<typename PopTypeLHS, typename PushType, typename Operator, typename PopTypeRHS>
 void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
 {
     auto rhs_entry = configuration.stack().pop();
     auto& lhs_entry = configuration.stack().peek();
     auto rhs_ptr = rhs_entry.get_pointer<Value>();
     auto lhs_ptr = lhs_entry.get_pointer<Value>();
-    auto rhs = rhs_ptr->to<PopType>();
-    auto lhs = lhs_ptr->to<PopType>();
+    auto rhs = rhs_ptr->to<PopTypeRHS>();
+    auto lhs = lhs_ptr->to<PopTypeLHS>();
     PushType result;
     auto call_result = Operator {}(lhs.value(), rhs.value());
     if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
@@ -1016,6 +1162,78 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return unary_operation<double, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f64_u.value():
         return unary_operation<double, i64, Operators::SaturatingTruncate<u64>>(configuration);
+    case Instructions::v128_const.value():
+        configuration.stack().push(Value(instruction.arguments().get<u128>()));
+        return;
+    case Instructions::v128_load.value():
+        return load_and_push<u128, u128>(configuration, instruction);
+    case Instructions::v128_load8x8_s.value():
+        return load_and_push_mxn<8, 8, MakeSigned>(configuration, instruction);
+    case Instructions::v128_load8x8_u.value():
+        return load_and_push_mxn<8, 8, MakeUnsigned>(configuration, instruction);
+    case Instructions::v128_load16x4_s.value():
+        return load_and_push_mxn<16, 4, MakeSigned>(configuration, instruction);
+    case Instructions::v128_load16x4_u.value():
+        return load_and_push_mxn<16, 4, MakeUnsigned>(configuration, instruction);
+    case Instructions::v128_load32x2_s.value():
+        return load_and_push_mxn<32, 2, MakeSigned>(configuration, instruction);
+    case Instructions::v128_load32x2_u.value():
+        return load_and_push_mxn<32, 2, MakeUnsigned>(configuration, instruction);
+    case Instructions::v128_load8_splat.value():
+        return load_and_push_m_splat<8>(configuration, instruction);
+    case Instructions::v128_load16_splat.value():
+        return load_and_push_m_splat<16>(configuration, instruction);
+    case Instructions::v128_load32_splat.value():
+        return load_and_push_m_splat<32>(configuration, instruction);
+    case Instructions::v128_load64_splat.value():
+        return load_and_push_m_splat<64>(configuration, instruction);
+    case Instructions::i8x16_splat.value():
+        return pop_and_push_m_splat<8, NativeIntegralType>(configuration, instruction);
+    case Instructions::i16x8_splat.value():
+        return pop_and_push_m_splat<16, NativeIntegralType>(configuration, instruction);
+    case Instructions::i32x4_splat.value():
+        return pop_and_push_m_splat<32, NativeIntegralType>(configuration, instruction);
+    case Instructions::i64x2_splat.value():
+        return pop_and_push_m_splat<64, NativeIntegralType>(configuration, instruction);
+    case Instructions::f32x4_splat.value():
+        return pop_and_push_m_splat<32, NativeFloatingType>(configuration, instruction);
+    case Instructions::f64x2_splat.value():
+        return pop_and_push_m_splat<64, NativeFloatingType>(configuration, instruction);
+    case Instructions::i8x16_shuffle.value(): {
+        auto indices = pop_vector<u8, MakeSigned>(configuration);
+        TRAP_IF_NOT(indices.has_value());
+        auto vector = peek_vector<u8, MakeSigned>(configuration);
+        TRAP_IF_NOT(vector.has_value());
+        auto result = shuffle_vector(vector.value(), indices.value());
+        configuration.stack().peek() = Value(result);
+        return;
+    }
+    case Instructions::v128_store.value():
+        return pop_and_store<u128, u128>(configuration, instruction);
+    case Instructions::i8x16_shl.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftLeft<16>, i32>(configuration);
+    case Instructions::i8x16_shr_u.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<16, MakeUnsigned>, i32>(configuration);
+    case Instructions::i8x16_shr_s.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<16, MakeSigned>, i32>(configuration);
+    case Instructions::i16x8_shl.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftLeft<8>, i32>(configuration);
+    case Instructions::i16x8_shr_u.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<8, MakeUnsigned>, i32>(configuration);
+    case Instructions::i16x8_shr_s.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<8, MakeSigned>, i32>(configuration);
+    case Instructions::i32x4_shl.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftLeft<4>, i32>(configuration);
+    case Instructions::i32x4_shr_u.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<4, MakeUnsigned>, i32>(configuration);
+    case Instructions::i32x4_shr_s.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<4, MakeSigned>, i32>(configuration);
+    case Instructions::i64x2_shl.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftLeft<2>, i32>(configuration);
+    case Instructions::i64x2_shr_u.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<2, MakeUnsigned>, i32>(configuration);
+    case Instructions::i64x2_shr_s.value():
+        return binary_numeric_operation<u128, u128, Operators::VectorShiftRight<2, MakeSigned>, i32>(configuration);
     case Instructions::table_init.value():
     case Instructions::elem_drop.value():
     case Instructions::table_copy.value():
@@ -1024,7 +1242,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::table_fill.value():
     default:
     unimplemented:;
-        dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
+        dbgln_if(WASM_TRACE_DEBUG, "Instruction '{}' not implemented", instruction_name(instruction.opcode()));
         m_trap = Trap { DeprecatedString::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
         return;
     }

@@ -140,9 +140,16 @@ public:
                 if constexpr (IsSame<T, decltype(value)> || (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)) {
                     result = static_cast<T>(value);
                 } else if constexpr (!IsFloatingPoint<T> && IsConvertible<decltype(value), T>) {
-                    if (AK::is_within_range<T>(value))
-                        result = static_cast<T>(value);
+                    // NOTE: No implicit vector <-> scalar conversion.
+                    if constexpr (!IsSame<T, u128>) {
+                        if (AK::is_within_range<T>(value))
+                            result = static_cast<T>(value);
+                    }
                 }
+            },
+            [&](u128 value) {
+                if constexpr (IsSame<T, u128>)
+                    result = value;
             },
             [&](Reference const& value) {
                 if constexpr (IsSame<T, Reference>) {
