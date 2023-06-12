@@ -205,7 +205,7 @@ ALWAYS_INLINE bool Parser::match_ordinary_characters()
     // NOTE: This method must not be called during bracket and repetition parsing!
     // FIXME: Add assertion for that?
     auto type = m_parser_state.current_token.type();
-    return (type == TokenType::Char
+    return ((type == TokenType::Char && m_parser_state.current_token.value() != "\\"sv) // NOTE: Backslash will only be matched as 'char' if it does not form a valid escape.
         || type == TokenType::Comma
         || type == TokenType::Slash
         || type == TokenType::EqualSign
@@ -529,8 +529,23 @@ bool PosixBasicParser::parse_one_char_or_collation_element(ByteCode& bytecode, s
         back(2);
     }
 
+    if (match(TokenType::Char)) {
+        auto ch = consume().value()[0];
+        if (ch == '\\') {
+            if (m_parser_state.regex_options.has_flag_set(AllFlags::Extra))
+                return set_error(Error::InvalidPattern);
+
+            // This was \<ORD_CHAR>, the spec does not define any behaviour for this but glibc regex ignores it - and so do we.
+            return true;
+        }
+
+        bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
+        match_length_minimum += 1;
+        return true;
+    }
+
     // None of these are special in BRE.
-    if (match(TokenType::Char) || match(TokenType::Questionmark) || match(TokenType::RightParen) || match(TokenType::HyphenMinus)
+    if (match(TokenType::Questionmark) || match(TokenType::RightParen) || match(TokenType::HyphenMinus)
         || match(TokenType::Circumflex) || match(TokenType::RightCurly) || match(TokenType::Comma) || match(TokenType::Colon)
         || match(TokenType::Dollar) || match(TokenType::EqualSign) || match(TokenType::LeftCurly) || match(TokenType::LeftParen)
         || match(TokenType::Pipe) || match(TokenType::Slash) || match(TokenType::RightBracket) || match(TokenType::RightParen)) {
@@ -719,6 +734,14 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
 
             should_parse_repetition_symbol = true;
             break;
+        }
+
+        if (m_parser_state.current_token.value() == "\\"sv) {
+            if (m_parser_state.regex_options.has_flag_set(AllFlags::Extra))
+                return set_error(Error::InvalidPattern);
+
+            consume();
+            continue;
         }
 
         if (match_repetition_symbol())
