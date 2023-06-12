@@ -1,3 +1,4 @@
+#import <HTML/AudioTrackList.idl>
 #import <HTML/HTMLElement.idl>
 #import <HTML/MediaError.idl>
 #import <HTML/TimeRanges.idl>
@@ -53,5 +54,6 @@ interface HTMLMediaElement : HTMLElement {
     [Reflect, CEReactions] attribute boolean controls;
 
     // tracks
+    [SameObject] readonly attribute AudioTrackList audioTracks;
     [SameObject] readonly attribute VideoTrackList videoTracks;
 };
