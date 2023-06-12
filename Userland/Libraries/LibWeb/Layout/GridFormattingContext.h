@@ -45,14 +45,12 @@ public:
         return dimension == GridDimension::Column ? m_column : m_row;
     }
 
-    CSSPixels add_border_box_sizes(CSSPixels content_size, GridDimension dimension, LayoutState const& state) const
+    [[nodiscard]] CSSPixels add_margin_box_sizes(CSSPixels content_size, GridDimension dimension, LayoutState const& state) const
     {
-        auto& box_state = state.get(box());
-        if (dimension == GridDimension::Column) {
-            return box_state.border_left + box_state.padding_left + content_size + box_state.padding_right + box_state.border_right;
-        } else {
-            return box_state.border_top + box_state.padding_top + content_size + box_state.padding_bottom + box_state.border_bottom;
-        }
+        auto const& box_state = state.get(box());
+        if (dimension == GridDimension::Column)
+            return box_state.margin_box_left() + content_size + box_state.margin_box_right();
+        return box_state.margin_box_top() + content_size + box_state.margin_box_bottom();
     }
 
     int raw_row() const { return m_row; }
