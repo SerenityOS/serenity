@@ -252,6 +252,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
     return MUST_OR_THROW_OOM(heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type)));
 }
 
+// https://w3c.github.io/FileAPI/#dom-blob-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::stream()
+{
+    // The stream() method, when invoked, must return the result of calling get stream on this.
+    return this->get_stream();
+}
+
 // https://w3c.github.io/FileAPI/#blob-get-stream
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream()
 {
