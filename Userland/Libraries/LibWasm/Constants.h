@@ -15,6 +15,7 @@ static constexpr auto i32_tag = 0x7f;
 static constexpr auto i64_tag = 0x7e;
 static constexpr auto f32_tag = 0x7d;
 static constexpr auto f64_tag = 0x7c;
+static constexpr auto v128_tag = 0x7b;
 static constexpr auto function_reference_tag = 0x70;
 static constexpr auto extern_reference_tag = 0x6f;
 

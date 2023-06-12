@@ -221,6 +221,17 @@ public:
             return result;
         }
 
+        template<auto... kinds>
+        ErrorOr<void, ValidationError> take_and_put(Wasm::ValueType::Kind kind, SourceLocation location = SourceLocation::current())
+        {
+            ErrorOr<void, ValidationError> result;
+            if (((result = take(Wasm::ValueType(kinds), location)).is_error(), ...)) {
+                return result;
+            }
+            append(Wasm::ValueType(kind));
+            return result;
+        }
+
         size_t actual_size() const { return Vector<StackEntry>::size(); }
         size_t size() const { return m_did_insert_unknown_entry ? static_cast<size_t>(-1) : actual_size(); }
 
@@ -238,7 +249,7 @@ public:
     };
     ErrorOr<ExpressionTypeResult, ValidationError> validate(Expression const&, Vector<ValueType> const&);
     ErrorOr<void, ValidationError> validate(Instruction const& instruction, Stack& stack, bool& is_constant);
-    template<u32 opcode>
+    template<u64 opcode>
     ErrorOr<void, ValidationError> validate_instruction(Instruction const&, Stack& stack, bool& is_constant);
 
     // Types

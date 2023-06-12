@@ -711,7 +711,7 @@ if (BUILD_LAGOM)
         add_executable(test-wasm
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-wasm LibCore LibFileSystem LibTest LibWasm LibJS)
+        target_link_libraries(test-wasm LibCore LibFileSystem LibTest LibWasm LibJS LibCrypto)
         add_test(
             NAME WasmParser
             COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests

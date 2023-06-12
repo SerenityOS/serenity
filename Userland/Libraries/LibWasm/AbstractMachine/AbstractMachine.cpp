@@ -330,6 +330,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     size_t offset = 0;
                     result.values().first().value().visit(
                         [&](auto const& value) { offset = value; },
+                        [&](u128 const&) { instantiation_result = InstantiationError { "Data segment offset returned a vector type"sv }; },
                         [&](Reference const&) { instantiation_result = InstantiationError { "Data segment offset returned a reference"sv }; });
                     if (instantiation_result.has_value() && instantiation_result->is_error())
                         return;

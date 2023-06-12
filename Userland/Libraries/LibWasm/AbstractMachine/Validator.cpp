@@ -330,7 +330,7 @@ ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t 
     return {};
 }
 
-template<u32 opcode>
+template<u64 opcode>
 ErrorOr<void, ValidationError> Validator::validate_instruction(Instruction const& instruction, Stack&, bool&)
 {
     return Errors::invalid(DeprecatedString::formatted("instruction opcode (0x{:x}) (missing validation!)", instruction.opcode().value()));
@@ -2179,6 +2179,1562 @@ VALIDATE_INSTRUCTION(call_indirect)
         stack.append(type);
 
     return {};
+}
+
+VALIDATE_INSTRUCTION(v128_load)
+{
+    TRY(validate(MemoryIndex { 0 }));
+
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    if ((1ull << arg.align) > sizeof(u128))
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(u128));
+
+    TRY((stack.take_and_put<ValueType::I32>(ValueType::V128)));
+
+    return {};
+}
+
+VALIDATE_INSTRUCTION(v128_load8x8_s)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 8;
+    constexpr auto M = 8;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load8x8_u)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 8;
+    constexpr auto M = 8;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load16x4_s)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 16;
+    constexpr auto M = 4;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load16x4_u)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 16;
+    constexpr auto M = 4;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load32x2_s)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 32;
+    constexpr auto M = 2;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load32x2_u)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 32;
+    constexpr auto M = 2;
+    constexpr auto max_alignment = N * M / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load8_splat)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 8;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load16_splat)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 16;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load32_splat)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 32;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load64_splat)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 64;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_store)
+{
+    TRY(validate(MemoryIndex { 0 }));
+
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    if ((1ull << arg.align) > sizeof(u128))
+        return Errors::out_of_bounds("memory op alignment"sv, 1ull << arg.align, 0, sizeof(u128));
+
+    TRY((stack.take<ValueType::V128, ValueType::I32>()));
+
+    return {};
+}
+
+VALIDATE_INSTRUCTION(v128_const)
+{
+    is_constant = true;
+    stack.append(ValueType(ValueType::V128));
+    return {};
+}
+
+VALIDATE_INSTRUCTION(i8x16_shuffle)
+{
+    auto const& arg = instruction.arguments().get<Instruction::ShuffleArgument>();
+    for (auto lane : arg.lanes) {
+        if (lane >= 32)
+            return Errors::out_of_bounds("shuffle lane"sv, lane, 0, 32);
+    }
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_swizzle)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+enum class Shape {
+    I8x16,
+    I16x8,
+    I32x4,
+    I64x2,
+    F32x4,
+    F64x2,
+};
+
+template<Shape shape>
+static constexpr Wasm::ValueType::Kind unpacked()
+{
+    switch (shape) {
+    case Shape::I8x16:
+    case Shape::I16x8:
+    case Shape::I32x4:
+        return Wasm::ValueType::I32;
+    case Shape::I64x2:
+        return Wasm::ValueType::I64;
+    case Shape::F32x4:
+        return Wasm::ValueType::F32;
+    case Shape::F64x2:
+        return Wasm::ValueType::F64;
+    }
+}
+
+template<Shape shape>
+static constexpr size_t dimensions()
+{
+    switch (shape) {
+    case Shape::I8x16:
+        return 16;
+    case Shape::I16x8:
+        return 8;
+    case Shape::I32x4:
+        return 4;
+    case Shape::I64x2:
+        return 2;
+    case Shape::F32x4:
+        return 4;
+    case Shape::F64x2:
+        return 2;
+    }
+}
+
+VALIDATE_INSTRUCTION(i8x16_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::I8x16>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::I16x8>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::I32x4>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::I64x2>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::F32x4>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_splat)
+{
+    constexpr auto unpacked_shape = unpacked<Shape::F64x2>();
+    return stack.take_and_put<unpacked_shape>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_extract_lane_s)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I8x16;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i8x16_extract_lane_u)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I8x16;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i8x16_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I8x16;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extract_lane_s)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I16x8;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i16x8_extract_lane_u)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I16x8;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i16x8_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I16x8;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extract_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I32x4;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i32x4_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I32x4;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extract_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I64x2;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(i64x2_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::I64x2;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_extract_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::F32x4;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(f32x4_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::F32x4;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_extract_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::F64x2;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<ValueType::V128>(unpacked<shape>());
+}
+
+VALIDATE_INSTRUCTION(f64x2_replace_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::LaneIndex>();
+    constexpr auto shape = Shape::F64x2;
+    constexpr auto max_lane = dimensions<shape>();
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("extract lane"sv, arg.lane, 0, max_lane);
+    return stack.take_and_put<unpacked<shape>(), ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_lt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_lt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_gt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_gt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_le_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_le_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_ge_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_ge_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_lt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_lt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_gt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_gt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_le_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_le_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_ge_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_ge_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_lt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_lt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_gt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_gt_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_le_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_le_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_ge_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_ge_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_lt)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_gt)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_le)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_ge)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_lt)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_gt)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_le)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_ge)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_not)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_and)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_andnot)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_or)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_xor)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_bitselect)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_any_true)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(v128_load8_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 8;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane > max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load16_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 16;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load32_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 32;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load64_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 64;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if (arg.memory.align > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_store8_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 8;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_store16_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 16;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_store32_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 32;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_store64_lane)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryAndLaneArgument>();
+    constexpr auto N = 64;
+    constexpr auto max_lane = 128 / N;
+    constexpr auto max_alignment = N / 8;
+
+    if (arg.lane >= max_lane)
+        return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.memory.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load32_zero)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 32;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(v128_load64_zero)
+{
+    auto const& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    constexpr auto N = 64;
+    constexpr auto max_alignment = N / 8;
+
+    TRY(validate(MemoryIndex { 0 }));
+
+    if ((1 << arg.align) > max_alignment)
+        return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.align, 0u, max_alignment);
+
+    return stack.take_and_put<ValueType::I32>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_demote_f64x2_zero)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_promote_low_f32x4)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_popcnt)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_all_true)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i8x16_bitmask)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i8x16_narrow_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_narrow_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_ceil)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_floor)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_trunc)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_nearest)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_shl)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_shr_s)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_shr_u)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_add_sat_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_add_sat_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_sub_sat_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_sub_sat_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_ceil)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_floor)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_min_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_min_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_max_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_max_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_trunc)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i8x16_avgr_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extadd_pairwise_i8x16_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extadd_pairwise_i8x16_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extadd_pairwise_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extadd_pairwise_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_q15mulr_sat_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_all_true)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i16x8_bitmask)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i16x8_narrow_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_narrow_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extend_low_i8x16_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extend_high_i8x16_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extend_low_i8x16_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extend_high_i8x16_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_shl)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_shr_s)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_shr_u)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_add_sat_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_add_sat_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_sub_sat_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_sub_sat_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_nearest)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_mul)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_min_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_min_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_max_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_max_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_avgr_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extmul_low_i8x16_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extmul_high_i8x16_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extmul_low_i8x16_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i16x8_extmul_high_i8x16_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_all_true)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i32x4_bitmask)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extend_low_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extend_high_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extend_low_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extend_high_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_shl)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_shr_s)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_shr_u)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_mul)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_min_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_min_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_max_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_max_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_dot_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extmul_low_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extmul_high_i16x8_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extmul_low_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_extmul_high_i16x8_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_all_true)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i64x2_bitmask)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::I32);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extend_low_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extend_high_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extend_low_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extend_high_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_shl)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_shr_s)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_shr_u)
+{
+    return stack.take_and_put<ValueType::I32, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_mul)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_eq)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_ne)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_lt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_gt_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_le_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_ge_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extmul_low_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extmul_high_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extmul_low_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i64x2_extmul_high_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_sqrt)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_mul)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_div)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_min)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_max)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_pmin)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_pmax)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_abs)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_neg)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_sqrt)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_add)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_sub)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_mul)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_div)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_min)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_max)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_pmin)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_pmax)
+{
+    return stack.take_and_put<ValueType::V128, ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_trunc_sat_f32x4_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_trunc_sat_f32x4_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_convert_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f32x4_convert_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_trunc_sat_f64x2_s_zero)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(i32x4_trunc_sat_f64x2_u_zero)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_convert_low_i32x4_s)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
+}
+
+VALIDATE_INSTRUCTION(f64x2_convert_low_i32x4_u)
+{
+    return stack.take_and_put<ValueType::V128>(ValueType::V128);
 }
 
 ErrorOr<void, ValidationError> Validator::validate(Instruction const& instruction, Stack& stack, bool& is_constant)
