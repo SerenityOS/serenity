@@ -1443,7 +1443,9 @@ void GridFormattingContext::resolve_grid_item_heights()
         box_state.border_bottom = border_bottom;
 
         auto const& computed_height = item.box().computed_values().height();
-        auto used_height = computed_height.is_auto() ? (containing_block_height - box_state.border_top - box_state.border_bottom - box_state.padding_top - box_state.padding_bottom) : computed_height.to_px(grid_container(), containing_block_height);
+        auto used_height = computed_height.is_auto()
+            ? (containing_block_height - box_state.margin_box_top() - box_state.margin_box_bottom())
+            : computed_height.to_px(grid_container(), containing_block_height);
         box_state.set_content_height(used_height);
     }
 }
@@ -1771,12 +1773,12 @@ CSSPixels GridFormattingContext::calculate_min_content_contribution(GridItem con
     }();
 
     if (should_treat_preferred_size_as_auto) {
-        return item.add_border_box_sizes(calculate_min_content_size(item, dimension), dimension, m_state);
+        return item.add_margin_box_sizes(calculate_min_content_size(item, dimension), dimension, m_state);
     }
 
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return item.add_border_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    return item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
 }
 
 CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -1790,12 +1792,12 @@ CSSPixels GridFormattingContext::calculate_max_content_contribution(GridItem con
     }();
 
     if (should_treat_preferred_size_as_auto) {
-        return item.add_border_box_sizes(calculate_max_content_size(item, dimension), dimension, m_state);
+        return item.add_margin_box_sizes(calculate_max_content_size(item, dimension), dimension, m_state);
     }
 
     auto preferred_size = get_item_preferred_size(item, dimension);
     auto containing_block_size = containing_block_size_for_item(item, dimension);
-    return item.add_border_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+    return item.add_margin_box_sizes(preferred_size.to_px(grid_container(), containing_block_size), dimension, m_state);
 }
 
 CSSPixels GridFormattingContext::calculate_limited_min_content_contribution(GridItem const& item, GridDimension const dimension) const
@@ -1881,7 +1883,7 @@ CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, Gr
     AvailableSize const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
     auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto(available_size);
     if (item_spans_auto_tracks && !item.box().is_scroll_container()) {
-        return item.add_border_box_sizes(content_based_minimum_size(item, dimension), dimension, m_state);
+        return content_based_minimum_size(item, dimension);
     }
 
     // Otherwise, the automatic minimum size is zero, as usual.
@@ -1907,9 +1909,9 @@ CSSPixels GridFormattingContext::calculate_minimum_contribution(GridItem const& 
     if (should_treat_preferred_size_as_auto) {
         auto minimum_size = get_item_minimum_size(item, dimension);
         if (minimum_size.is_auto())
-            return automatic_minimum_size(item, dimension);
+            return item.add_margin_box_sizes(automatic_minimum_size(item, dimension), dimension, m_state);
         auto containing_block_size = containing_block_size_for_item(item, dimension);
-        return item.add_border_box_sizes(minimum_size.to_px(grid_container(), containing_block_size), dimension, m_state);
+        return item.add_margin_box_sizes(minimum_size.to_px(grid_container(), containing_block_size), dimension, m_state);
     }
 
     return calculate_min_content_contribution(item, dimension);
