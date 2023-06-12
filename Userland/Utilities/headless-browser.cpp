@@ -243,7 +243,10 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
 
     bool color_output = isatty(STDOUT_FILENO);
 
-    dbgln("Test failed: {}", input_path);
+    if (color_output)
+        outln("\n\033[33;1mTest failed\033[0m: {}", input_path);
+    else
+        outln("\nTest failed: {}", input_path);
 
     auto hunks = Diff::from_text(expectation, actual);
     for (auto const& hunk : hunks) {
