@@ -8,11 +8,9 @@
 
 #include <AK/Optional.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/Rect.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
-#include <LibWeb/PixelUnits.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -43,16 +41,6 @@ public:
     VideoFrame const& current_frame() const { return m_current_frame; }
     RefPtr<Gfx::Bitmap> const& poster_frame() const { return m_poster_frame; }
 
-    void set_layout_mouse_position(Badge<Painting::VideoPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
-    Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::VideoPaintable>) const { return m_mouse_position; }
-
-    struct CachedLayoutBoxes {
-        Optional<CSSPixelRect> control_box_rect;
-        Optional<CSSPixelRect> playback_button_rect;
-        Optional<CSSPixelRect> timeline_rect;
-    };
-    CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::VideoPaintable>) const { return m_layout_boxes; }
-
 private:
     HTMLVideoElement(DOM::Document&, DOM::QualifiedName);
 
@@ -79,10 +67,6 @@ private:
 
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
     Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
-
-    // Cached state for layout
-    Optional<CSSPixelPoint> m_mouse_position;
-    mutable CachedLayoutBoxes m_layout_boxes;
 };
 
 }
