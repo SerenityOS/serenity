@@ -445,6 +445,7 @@ class IntersectionObserver;
 }
 
 namespace Web::Layout {
+class AudioBox;
 class BlockContainer;
 class BlockFormattingContext;
 class Box;
@@ -484,6 +485,7 @@ class PerformanceTiming;
 }
 
 namespace Web::Painting {
+class AudioPaintable;
 class ButtonPaintable;
 class CheckBoxPaintable;
 class LabelablePaintable;

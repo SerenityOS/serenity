@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibAudio/Loader.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibVideo/PlaybackManager.h>
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
@@ -947,11 +948,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
+    auto audio_loader = Audio::Loader::create(m_media_data.bytes());
     auto playback_manager = Video::PlaybackManager::from_data(m_media_data);
 
     // -> If the media data cannot be fetched at all, due to network errors, causing the user agent to give up trying to fetch the resource
     // -> If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all
-    if (playback_manager.is_error()) {
+    if (audio_loader.is_error() && playback_manager.is_error()) {
         // 1. The user agent should cancel the fetching process.
         m_fetch_controller->stop_fetch();
 
@@ -961,25 +963,38 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         return {};
     }
 
+    JS::GCPtr<AudioTrack> audio_track;
     JS::GCPtr<VideoTrack> video_track;
 
     // -> If the media resource is found to have an audio track
-    {
-        // FIXME: 1. Create an AudioTrack object to represent the audio track.
-        // FIXME: 2. Update the media element's audioTracks attribute's AudioTrackList object with the new AudioTrack object.
-        // FIXME: 3. Let enable be unknown.
+    if (!audio_loader.is_error()) {
+        // 1. Create an AudioTrack object to represent the audio track.
+        audio_track = TRY(vm.heap().allocate<AudioTrack>(realm, realm, *this, audio_loader.release_value()));
+
+        // 2. Update the media element's audioTracks attribute's AudioTrackList object with the new AudioTrack object.
+        TRY_OR_THROW_OOM(vm, m_audio_tracks->add_track({}, *audio_track));
+
+        // 3. Let enable be unknown.
+        auto enable = TriState::Unknown;
+
         // FIXME: 4. If either the media resource or the URL of the current media resource indicate a particular set of audio tracks to enable, or if
         //           the user agent has information that would facilitate the selection of specific audio tracks to improve the user's experience, then:
         //           if this audio track is one of the ones to enable, then set enable to true, otherwise, set enable to false.
-        // FIXME: 5. If enable is still unknown, then, if the media element does not yet have an enabled audio track, then set enable to true, otherwise,
-        //           set enable to false.
-        // FIXME: 6. If enable is true, then enable this audio track, otherwise, do not enable this audio track.
+
+        // 5. If enable is still unknown, then, if the media element does not yet have an enabled audio track, then set enable to true, otherwise,
+        //    set enable to false.
+        if (enable == TriState::Unknown)
+            enable = m_audio_tracks->has_enabled_track() ? TriState::False : TriState::True;
+
+        // 6. If enable is true, then enable this audio track, otherwise, do not enable this audio track.
+        if (enable == TriState::True)
+            audio_track->set_enabled(true);
+
         // FIXME: 7. Fire an event named addtrack at this AudioTrackList object, using TrackEvent, with the track attribute initialized to the new AudioTrack object.
     }
 
     // -> If the media resource is found to have a video track
-    // NOTE: Creating a Video::PlaybackManager above will have failed if there was not a video track.
-    {
+    if (!playback_manager.is_error()) {
         // 1. Create a VideoTrack object to represent the video track.
         video_track = TRY(vm.heap().allocate<VideoTrack>(realm, realm, *this, playback_manager.release_value()));
 
@@ -1009,13 +1024,13 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
 
         auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, event_init));
         m_video_tracks->dispatch_event(event);
-
-        // AD-HOC: After selecting a track, we do not need the source element selector anymore.
-        m_source_element_selector = nullptr;
     }
 
     // -> Once enough of the media data has been fetched to determine the duration of the media resource, its dimensions, and other metadata
-    if (video_track != nullptr) {
+    if (audio_track != nullptr || video_track != nullptr) {
+        // AD-HOC: After selecting a track, we do not need the source element selector anymore.
+        m_source_element_selector = nullptr;
+
         // FIXME: 1. Establish the media timeline for the purposes of the current playback position and the earliest possible position, based on the media data.
         // FIXME: 2. Update the timeline offset to the date and time that corresponds to the zero time in the media timeline established in the previous step,
         //           if any. If no explicit time and date is given by the media resource, the timeline offset must be set to Not-a-Number (NaN).
@@ -1027,12 +1042,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         // 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
         //    not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
         // FIXME: Handle unbounded media resources.
-        auto duration = static_cast<double>(video_track->duration().to_milliseconds());
-        set_duration(duration / 1000.0);
+        auto duration = audio_track ? audio_track->duration() : video_track->duration();
+        set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
 
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.
-        if (is<HTMLVideoElement>(*this)) {
+        if (video_track && is<HTMLVideoElement>(*this)) {
             auto& video_element = verify_cast<HTMLVideoElement>(*this);
             video_element.set_video_width(video_track->pixel_width());
             video_element.set_video_height(video_track->pixel_height());
@@ -1060,15 +1075,18 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         // FIXME: 10. Let the initial playback position be zero.
         // FIXME: 11. If either the media resource or the URL of the current media resource indicate a particular start time, then set the initial playback
         //            position to that time and, if jumped is still false, seek to that time.
-        // FIXME: 12. If there is no enabled audio track, then enable an audio track. This will cause a change event to be fired.
+
+        // 12. If there is no enabled audio track, then enable an audio track. This will cause a change event to be fired.
+        if (audio_track && !m_audio_tracks->has_enabled_track())
+            audio_track->set_enabled(true);
 
         // 13. If there is no selected video track, then select a video track. This will cause a change event to be fired.
-        if (m_video_tracks->selected_index() == -1)
+        if (video_track && m_video_tracks->selected_index() == -1)
             video_track->set_selected(true);
     }
 
     // -> Once the entire media resource has been fetched (but potentially before any of it has been decoded)
-    if (video_track != nullptr) {
+    if (audio_track != nullptr || video_track != nullptr) {
         // Fire an event named progress at the media element.
         dispatch_event(TRY(DOM::Event::create(this->realm(), HTML::EventNames::progress)));
 
