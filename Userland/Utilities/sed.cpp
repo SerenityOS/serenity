@@ -261,14 +261,25 @@ struct SArguments {
         if (delimiter == '\n' || delimiter == '\\')
             return SedError::parsing_error(lexer, "\\n and \\ cannot be used as delimiters."sv);
 
-        auto pattern = lexer.consume_until(delimiter);
+        auto pattern = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
+
         if (pattern.is_empty())
             return SedError::parsing_error(lexer, "Substitution patterns cannot be empty."sv);
 
         if (!lexer.consume_specific(delimiter))
             return SedError::parsing_error(lexer, generic_error_message);
 
-        auto replacement = lexer.consume_until(delimiter);
+        auto replacement = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
 
         // According to Posix, "s/x/y" is an invalid substitution command.
         // It must have a closing delimiter: "s/x/y/"
