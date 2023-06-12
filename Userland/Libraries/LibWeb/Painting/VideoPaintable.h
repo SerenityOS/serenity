@@ -7,12 +7,12 @@
 #pragma once
 
 #include <LibWeb/Forward.h>
-#include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/MediaPaintable.h>
 
 namespace Web::Painting {
 
-class VideoPaintable final : public PaintableBox {
-    JS_CELL(VideoPaintable, PaintableBox);
+class VideoPaintable final : public MediaPaintable {
+    JS_CELL(VideoPaintable, MediaPaintable);
 
 public:
     static JS::NonnullGCPtr<VideoPaintable> create(Layout::VideoBox const&);
@@ -24,15 +24,6 @@ public:
 
 private:
     VideoPaintable(Layout::VideoBox const&);
-
-    virtual bool wants_mouse_events() const override { return true; }
-    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
-    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers) override;
-
-    void paint_loaded_video_controls(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
-    DevicePixelRect paint_control_bar_playback_button(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const;
-    DevicePixelRect paint_control_bar_timeline(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const;
-    DevicePixelRect paint_control_bar_timestamp(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect) const;
 
     void paint_placeholder_video_controls(PaintContext&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
 };

@@ -8,14 +8,17 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Optional.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
+#include <LibGfx/Rect.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <math.h>
 
@@ -83,6 +86,16 @@ public:
     WebIDL::ExceptionOr<void> pause();
 
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
+
+    void set_layout_mouse_position(Badge<Painting::MediaPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
+    Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::MediaPaintable>) const { return m_mouse_position; }
+
+    struct CachedLayoutBoxes {
+        Optional<CSSPixelRect> control_box_rect;
+        Optional<CSSPixelRect> playback_button_rect;
+        Optional<CSSPixelRect> timeline_rect;
+    };
+    CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::MediaPaintable>) const { return m_layout_boxes; }
 
 protected:
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
@@ -220,6 +233,10 @@ private:
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 
     bool m_seek_in_progress = false;
+
+    // Cached state for layout.
+    Optional<CSSPixelPoint> m_mouse_position;
+    mutable CachedLayoutBoxes m_layout_boxes;
 };
 
 }

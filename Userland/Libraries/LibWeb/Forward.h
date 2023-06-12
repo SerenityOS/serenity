@@ -485,6 +485,7 @@ namespace Web::Painting {
 class ButtonPaintable;
 class CheckBoxPaintable;
 class LabelablePaintable;
+class MediaPaintable;
 class Paintable;
 class PaintableBox;
 class PaintableWithLines;
