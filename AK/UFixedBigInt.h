@@ -11,6 +11,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
+#include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
@@ -511,6 +512,78 @@ struct NumericLimits<UFixedBigInt<bit_size>> {
     static constexpr T min() { return T {}; }
     static constexpr T max() { return --T {}; }
     static constexpr bool is_signed() { return false; }
+};
+
+template<size_t N>
+class LittleEndian<UFixedBigInt<N>> {
+    template<size_t M>
+    constexpr static auto byte_swap_if_not_little_endian(UFixedBigInt<M> value)
+    {
+        if constexpr (HostIsLittleEndian) {
+            return value;
+        } else {
+            auto words = value.span();
+            auto front_it = words.begin();
+            auto ending_half_words = words.slice(ceil_div(words.size(), static_cast<size_t>(2)));
+            for (size_t i = 0; i < ending_half_words.size(); ++i, ++front_it)
+                *front_it = convert_between_host_and_little_endian(exchange(ending_half_words[ending_half_words.size() - i - 1], convert_between_host_and_little_endian(*front_it)));
+            if (words.size() % 2)
+                words[words.size() / 2] = convert_between_host_and_little_endian(*front_it);
+            return value;
+        }
+    }
+
+public:
+    constexpr LittleEndian() = default;
+
+    constexpr LittleEndian(UFixedBigInt<N> value)
+        : m_value(byte_swap_if_not_little_endian(value))
+    {
+    }
+
+    constexpr operator UFixedBigInt<N>() const { return byte_swap_if_not_little_endian(m_value); }
+
+private:
+    UFixedBigInt<N> m_value { 0 };
+};
+
+template<size_t N>
+class BigEndian<UFixedBigInt<N>> {
+    template<size_t M>
+    constexpr static auto byte_swap_if_not_big_endian(UFixedBigInt<M> value)
+    {
+        if constexpr (!HostIsLittleEndian) {
+            return value;
+        } else {
+            auto words = value.span();
+            auto front_it = words.begin();
+            auto ending_half_words = words.slice(ceil_div(words.size(), static_cast<size_t>(2)));
+            for (size_t i = 0; i < ending_half_words.size(); ++i, ++front_it)
+                *front_it = convert_between_host_and_big_endian(exchange(ending_half_words[ending_half_words.size() - i - 1], convert_between_host_and_big_endian(*front_it)));
+            if (words.size() % 2)
+                words[words.size() / 2] = convert_between_host_and_big_endian(*front_it);
+            return value;
+        }
+    }
+
+public:
+    constexpr BigEndian() = default;
+
+    constexpr BigEndian(UFixedBigInt<N> value)
+        : m_value(byte_swap_if_not_big_endian(value))
+    {
+    }
+
+    constexpr operator UFixedBigInt<N>() const { return byte_swap_if_not_big_endian(m_value); }
+
+private:
+    UFixedBigInt<N> m_value { 0 };
+};
+
+template<size_t M>
+struct Traits<UFixedBigInt<M>> : public GenericTraits<UFixedBigInt<M>> {
+    static constexpr bool is_trivially_serializable() { return true; }
+    static constexpr bool is_trivial() { return true; }
 };
 
 // ===== Formatting =====
