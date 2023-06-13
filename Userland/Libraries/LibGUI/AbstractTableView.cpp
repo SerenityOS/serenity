@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -385,6 +386,38 @@ void AbstractTableView::set_default_column_width(int column, int width)
 void AbstractTableView::set_column_visible(int column, bool visible)
 {
     column_header().set_section_visible(column, visible);
+}
+
+ErrorOr<String> AbstractTableView::get_visible_columns() const
+{
+    StringBuilder builder;
+
+    bool first = true;
+    for (int column = 0; column < model()->column_count(); ++column) {
+        if (!column_header().is_section_visible(column))
+            continue;
+
+        if (first) {
+            TRY(builder.try_appendff("{}", column));
+            first = false;
+        } else {
+            TRY(builder.try_appendff(",{}", column));
+        }
+    }
+
+    return builder.to_string();
+}
+
+void AbstractTableView::set_visible_columns(StringView column_names)
+{
+    for (int column = 0; column < model()->column_count(); ++column)
+        column_header().set_section_visible(column, false);
+
+    column_names.for_each_split_view(',', SplitBehavior::Nothing, [&, this](StringView column_id_string) {
+        if (auto column = column_id_string.to_int(); column.has_value()) {
+            column_header().set_section_visible(column.value(), true);
+        }
+    });
 }
 
 void AbstractTableView::set_column_headers_visible(bool visible)
