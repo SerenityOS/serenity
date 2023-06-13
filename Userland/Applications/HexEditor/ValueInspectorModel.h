@@ -63,13 +63,13 @@ public:
         return 2;
     }
 
-    String column_name(int column) const override
+    ErrorOr<String> column_name(int column) const override
     {
         switch (column) {
         case Column::Type:
             return "Type"_short_string;
         case Column::Value:
-            return m_is_little_endian ? "Value (Little Endian)"_string.release_value_but_fixme_should_propagate_errors() : "Value (Big Endian)"_string.release_value_but_fixme_should_propagate_errors();
+            return m_is_little_endian ? TRY("Value (Little Endian)"_string) : TRY("Value (Big Endian)"_string);
         }
         VERIFY_NOT_REACHED();
     }

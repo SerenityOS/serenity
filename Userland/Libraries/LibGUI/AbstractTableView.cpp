@@ -58,7 +58,7 @@ void AbstractTableView::auto_resize_column(int column)
     auto& model = *this->model();
     int row_count = model.row_count();
 
-    int header_width = m_column_header->font().width(model.column_name(column));
+    int header_width = m_column_header->font().width(model.column_name(column).release_value_but_fixme_should_propagate_errors());
     if (column == m_key_column && model.is_column_sortable(column))
         header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
 
@@ -97,7 +97,7 @@ void AbstractTableView::update_column_sizes()
     for (int column = 0; column < column_count; ++column) {
         if (!column_header().is_section_visible(column))
             continue;
-        int header_width = m_column_header->font().width(model.column_name(column));
+        int header_width = m_column_header->font().width(model.column_name(column).release_value_but_fixme_should_propagate_errors());
         if (column == m_key_column && model.is_column_sortable(column))
             header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
         int column_width = header_width;

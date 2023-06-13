@@ -44,7 +44,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_certificates.size(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual ErrorOr<void> load();
     virtual ErrorOr<size_t> add(Vector<Certificate> const&);

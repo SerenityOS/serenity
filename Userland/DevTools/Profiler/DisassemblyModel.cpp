@@ -131,22 +131,21 @@ int DisassemblyModel::row_count(GUI::ModelIndex const&) const
     return m_instructions.size();
 }
 
-String DisassemblyModel::column_name(int column) const
+ErrorOr<String> DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? "% Samples"_string.release_value_but_fixme_should_propagate_errors() : "# Samples"_string.release_value_but_fixme_should_propagate_errors();
+        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
     case Column::Address:
         return "Address"_short_string;
     case Column::InstructionBytes:
-        return "Insn Bytes"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Insn Bytes"_string);
     case Column::Disassembly:
-        return "Disassembly"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Disassembly"_string);
     case Column::SourceLocation:
-        return "Source Location"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Source Location"_string);
     default:
         VERIFY_NOT_REACHED();
-        return {};
     }
 }
 

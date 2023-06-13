@@ -30,7 +30,7 @@ public:
     int row_count(GUI::ModelIndex const&) const override { return m_symbols.size(); };
     bool is_column_sortable(int) const override { return false; }
 
-    String column_name(int column) const override
+    ErrorOr<String> column_name(int column) const override
     {
         switch (column) {
         case Column::Address:

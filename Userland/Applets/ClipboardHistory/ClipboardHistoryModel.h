@@ -60,7 +60,7 @@ private:
 
     // ^GUI::Model
     virtual int row_count(const GUI::ModelIndex&) const override { return m_history_items.size(); }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
     // ^GUI::Clipboard::ClipboardClient

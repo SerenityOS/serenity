@@ -40,7 +40,7 @@ public:
         return 2;
     }
 
-    String column_name(int column) const override
+    ErrorOr<String> column_name(int column) const override
     {
         switch (column) {
         case Column::Offset:

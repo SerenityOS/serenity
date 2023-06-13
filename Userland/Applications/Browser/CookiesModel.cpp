@@ -34,7 +34,7 @@ int CookiesModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-String CookiesModel::column_name(int column) const
+ErrorOr<String> CookiesModel::column_name(int column) const
 {
     switch (column) {
     case Column::Domain:
@@ -46,14 +46,14 @@ String CookiesModel::column_name(int column) const
     case Column::Value:
         return "Value"_short_string;
     case Column::ExpiryTime:
-        return "Expiry time"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Expiry time"_string);
     case Column::SameSite:
-        return "SameSite"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("SameSite"_string);
     case Column::__Count:
-        return {};
+        return String {};
     }
 
-    return {};
+    return String {};
 }
 
 GUI::ModelIndex CookiesModel::index(int row, int column, GUI::ModelIndex const&) const

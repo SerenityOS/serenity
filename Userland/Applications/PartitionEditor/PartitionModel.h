@@ -28,7 +28,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_partition_table->partitions_count(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
 
     ErrorOr<void> set_device_path(DeprecatedString const&);

@@ -26,23 +26,23 @@ int SignpostsModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String SignpostsModel::column_name(int column) const
+ErrorOr<String> SignpostsModel::column_name(int column) const
 {
     switch (column) {
     case Column::SignpostIndex:
         return "#"_short_string;
     case Column::Timestamp:
-        return "Timestamp"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Timestamp"_string);
     case Column::ProcessID:
         return "PID"_short_string;
     case Column::ThreadID:
         return "TID"_short_string;
     case Column::ExecutableName:
-        return "Executable"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Executable"_string);
     case Column::SignpostString:
         return "String"_short_string;
     case Column::SignpostArgument:
-        return "Argument"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Argument"_string);
     default:
         VERIFY_NOT_REACHED();
     }

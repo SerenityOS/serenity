@@ -73,13 +73,13 @@ DeprecatedString PlaylistModel::format_duration(u32 duration_in_seconds)
     return DeprecatedString::formatted("{:02}:{:02}:{:02}", duration_in_seconds / 3600, duration_in_seconds / 60, duration_in_seconds % 60);
 }
 
-String PlaylistModel::column_name(int column) const
+ErrorOr<String> PlaylistModel::column_name(int column) const
 {
     switch (column) {
     case 0:
         return "Title"_short_string;
     case 1:
-        return "Duration"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Duration"_string);
     case 2:
         return "Group"_short_string;
     case 3:
@@ -87,7 +87,7 @@ String PlaylistModel::column_name(int column) const
     case 4:
         return "Artist"_short_string;
     case 5:
-        return "Filesize"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Filesize"_string);
     }
     VERIFY_NOT_REACHED();
 }

@@ -71,7 +71,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const = 0;
     virtual int column_count(ModelIndex const& = ModelIndex()) const = 0;
-    virtual String column_name(int) const { return {}; }
+    virtual ErrorOr<String> column_name(int) const { return String {}; }
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const = 0;
     virtual MatchResult data_matches(ModelIndex const&, Variant const&) const { return {}; }
     virtual void invalidate();

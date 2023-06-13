@@ -48,7 +48,7 @@ public:
                     // NOTE: The icon column is nameless in ProcessModel, but we want it to have a name here.
                     return "Icon";
                 }
-                return m_target.column_name(index.row());
+                return m_target.column_name(index.row()).release_value_but_fixme_should_propagate_errors();
             }
             return m_target_index.sibling_at_column(index.row()).data();
         }

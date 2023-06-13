@@ -28,23 +28,23 @@ int SamplesModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String SamplesModel::column_name(int column) const
+ErrorOr<String> SamplesModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleIndex:
         return "#"_short_string;
     case Column::Timestamp:
-        return "Timestamp"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Timestamp"_string);
     case Column::ProcessID:
         return "PID"_short_string;
     case Column::ThreadID:
         return "TID"_short_string;
     case Column::ExecutableName:
-        return "Executable"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Executable"_string);
     case Column::LostSamples:
-        return "Lost Samples"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Lost Samples"_string);
     case Column::InnermostStackFrame:
-        return "Innermost Frame"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Innermost Frame"_string);
     case Column::Path:
         return "Path"_short_string;
     default:

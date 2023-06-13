@@ -64,7 +64,7 @@ public:
         return Columns::Page;
     }
 
-    String column_name(int index) const override
+    ErrorOr<String> column_name(int index) const override
     {
         switch (index) {
         case 0:

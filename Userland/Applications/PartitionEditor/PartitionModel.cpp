@@ -17,17 +17,17 @@ NonnullRefPtr<PartitionModel> PartitionModel::create()
     return adopt_ref(*new PartitionModel);
 }
 
-String PartitionModel::column_name(int column) const
+ErrorOr<String> PartitionModel::column_name(int column) const
 {
     switch (column) {
     case Column::Partition:
-        return "Partition"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Partition"_string);
     case Column::StartBlock:
-        return "Start Block"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Start Block"_string);
     case Column::EndBlock:
-        return "End Block"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("End Block"_string);
     case Column::TotalBlocks:
-        return "Total Blocks"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Total Blocks"_string);
     case Column::Size:
         return "Size"_short_string;
     default:

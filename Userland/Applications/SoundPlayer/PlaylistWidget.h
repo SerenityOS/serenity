@@ -24,7 +24,7 @@ public:
     int row_count(const GUI::ModelIndex&) const override { return m_playlist_items.size(); }
     int column_count(const GUI::ModelIndex&) const override { return 6; }
     GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
-    String column_name(int column) const override;
+    ErrorOr<String> column_name(int column) const override;
     Vector<M3UEntry>& items() { return m_playlist_items; }
 
 private:

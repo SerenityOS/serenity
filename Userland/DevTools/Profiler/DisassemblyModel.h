@@ -46,7 +46,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual bool is_column_sortable(int) const override { return false; }
 

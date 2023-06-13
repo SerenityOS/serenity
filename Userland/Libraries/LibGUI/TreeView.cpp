@@ -673,7 +673,7 @@ void TreeView::auto_resize_column(int column)
 
     auto& model = *this->model();
 
-    int header_width = column_header().font().width(model.column_name(column));
+    int header_width = column_header().font().width(model.column_name(column).release_value_but_fixme_should_propagate_errors());
     if (column == m_key_column && model.is_column_sortable(column))
         header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
     int column_width = header_width;
@@ -718,7 +718,7 @@ void TreeView::update_column_sizes()
             continue;
         if (!column_header().is_section_visible(column))
             continue;
-        int header_width = column_header().font().width(model.column_name(column));
+        int header_width = column_header().font().width(model.column_name(column).release_value_but_fixme_should_propagate_errors());
         if (column == m_key_column && model.is_column_sortable(column))
             header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
         int column_width = header_width;
@@ -739,7 +739,7 @@ void TreeView::update_column_sizes()
         set_column_width(column, max(this->column_width(column), column_width));
     }
 
-    int tree_column_header_width = column_header().font().width(model.column_name(tree_column));
+    int tree_column_header_width = column_header().font().width(model.column_name(tree_column).release_value_but_fixme_should_propagate_errors());
     if (tree_column == m_key_column && model.is_column_sortable(tree_column))
         tree_column_header_width += HeaderView::sorting_arrow_width + HeaderView::sorting_arrow_offset;
     int tree_column_width = tree_column_header_width;

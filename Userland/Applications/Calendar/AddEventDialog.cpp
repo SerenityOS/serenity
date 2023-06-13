@@ -120,7 +120,7 @@ int AddEventDialog::MeridiemListModel::row_count(const GUI::ModelIndex&) const
     return 2;
 }
 
-String AddEventDialog::MonthListModel::column_name(int column) const
+ErrorOr<String> AddEventDialog::MonthListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Month:
@@ -130,11 +130,11 @@ String AddEventDialog::MonthListModel::column_name(int column) const
     }
 }
 
-String AddEventDialog::MeridiemListModel::column_name(int column) const
+ErrorOr<String> AddEventDialog::MeridiemListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Meridiem:
-        return "Meridiem"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Meridiem"_string);
     default:
         VERIFY_NOT_REACHED();
     }

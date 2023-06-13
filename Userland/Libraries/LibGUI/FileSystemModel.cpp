@@ -761,11 +761,11 @@ int FileSystemModel::column_count(ModelIndex const&) const
     return Column::__Count;
 }
 
-String FileSystemModel::column_name(int column) const
+ErrorOr<String> FileSystemModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return {};
+        return String {};
     case Column::Name:
         return "Name"_short_string;
     case Column::Size:
@@ -777,11 +777,11 @@ String FileSystemModel::column_name(int column) const
     case Column::Permissions:
         return "Mode"_short_string;
     case Column::ModificationTime:
-        return "Modified"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Modified"_string);
     case Column::Inode:
         return "Inode"_short_string;
     case Column::SymlinkTarget:
-        return "Symlink target"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Symlink target"_string);
     }
     VERIFY_NOT_REACHED();
 }
