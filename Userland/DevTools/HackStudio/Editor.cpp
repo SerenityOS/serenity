@@ -246,7 +246,8 @@ void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hov
         return;
     }
 
-    s_tooltip_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv), {});
+    String rendered_html = man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv).release_value_but_fixme_should_propagate_errors();
+    s_tooltip_page_view->load_html(rendered_html, {});
 
     s_tooltip_window->set_rect(0, 0, 500, 400);
     s_tooltip_window->move_to(screen_location.translated(4, 4));

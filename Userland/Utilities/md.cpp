@@ -56,11 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (html) {
-        out("{}", document->render_to_html());
-    } else {
-        out("{}", TRY(document->render_for_terminal(view_width)));
-    }
+    out("{}", html ? TRY(document->render_to_html()) : TRY(document->render_for_terminal(view_width)));
 
     return 0;
 }

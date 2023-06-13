@@ -72,7 +72,8 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 </script>
 )~~~"sv;
 
-    auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(extra_head_contents), "utf-8");
+    auto rendered_markdown = markdown_document->render_to_html(extra_head_contents).release_value_but_fixme_should_propagate_errors();
+    auto parser = HTML::HTMLParser::create(document, rendered_markdown, "utf-8");
     parser->run(document.url());
     return true;
 }

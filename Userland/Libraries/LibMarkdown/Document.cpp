@@ -12,30 +12,30 @@
 
 namespace Markdown {
 
-DeprecatedString Document::render_to_html(StringView extra_head_contents) const
+ErrorOr<String> Document::render_to_html(StringView extra_head_contents) const
 {
     StringBuilder builder;
-    builder.append(R"~~~(<!DOCTYPE html>
+    TRY(builder.try_append(R"~~~(<!DOCTYPE html>
 <html>
 <head>
     <style>
         code { white-space: pre; }
     </style>
-)~~~"sv);
+)~~~"sv));
     if (!extra_head_contents.is_empty())
-        builder.append(extra_head_contents);
-    builder.append(R"~~~(
+        TRY(builder.try_append(extra_head_contents));
+    TRY(builder.try_append(R"~~~(
 </head>
 <body>
-)~~~"sv);
+)~~~"sv));
 
-    builder.append(render_to_inline_html());
+    TRY(builder.try_append(render_to_inline_html()));
 
-    builder.append(R"~~~(
+    TRY(builder.try_append(R"~~~(
 </body>
-</html>)~~~"sv);
+</html>)~~~"sv));
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 DeprecatedString Document::render_to_inline_html() const

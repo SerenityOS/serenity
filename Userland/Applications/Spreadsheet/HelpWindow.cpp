@@ -124,7 +124,8 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->show();
         } else if (url.host() == "doc") {
             auto entry = LexicalPath::basename(url.serialize_path());
-            m_webview->load(URL::create_with_data("text/html", render(entry)));
+            auto payload = render(entry).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+            m_webview->load(URL::create_with_data("text/html", payload));
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.host());
         }
@@ -135,11 +136,12 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             return;
 
         auto key = static_cast<HelpListModel*>(m_listview->model())->key(index);
-        m_webview->load(URL::create_with_data("text/html", render(key)));
+        auto payload = render(key).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        m_webview->load(URL::create_with_data("text/html", payload));
     };
 }
 
-DeprecatedString HelpWindow::render(StringView key)
+ErrorOr<String> HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get_object(key).value();

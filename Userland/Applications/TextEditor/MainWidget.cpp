@@ -907,7 +907,7 @@ void MainWidget::update_markdown_preview()
 {
     auto document = Markdown::Document::parse(m_editor->text());
     if (document) {
-        auto html = document->render_to_html();
+        String html = document->render_to_html().release_value_but_fixme_should_propagate_errors();
         auto current_scroll_pos = m_page_view->visible_content_rect();
         m_page_view->load_html(html, URL::create_with_file_scheme(m_path));
         m_page_view->scroll_into_view(current_scroll_pos, true, true);
