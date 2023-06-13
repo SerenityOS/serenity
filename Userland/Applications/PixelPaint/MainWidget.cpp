@@ -13,6 +13,7 @@
 #include "EditGuideDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
+#include "ImageMasking.h"
 #include "LevelsDialog.h"
 #include "ResizeImageDialog.h"
 #include <AK/String.h>
@@ -867,6 +868,19 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(m_layer_menu->try_add_action(*m_toggle_mask_visibility_action));
 
+    m_open_luminosity_masking_action = GUI::Action::create(
+        "Luminosity Masking", create_layer_mask_callback("Luminosity Masking", [&](Layer* active_layer) {
+            VERIFY(active_layer->mask_type() == Layer::MaskType::EditingMask);
+
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::ImageMasking::construct(&window, editor);
+            if (dialog->exec() != GUI::Dialog::ExecResult::OK)
+                dialog->revert_possible_changes();
+        }));
+
+    TRY(m_layer_menu->try_add_action(*m_open_luminosity_masking_action));
+
     TRY(m_layer_menu->try_add_separator());
 
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
@@ -1248,6 +1262,7 @@ void MainWidget::set_mask_actions_for_layer(Layer* layer)
     m_apply_mask_action->set_visible(layer->mask_type() == Layer::MaskType::BasicMask);
     m_toggle_mask_visibility_action->set_visible(layer->mask_type() == Layer::MaskType::EditingMask);
     m_toggle_mask_visibility_action->set_checked(layer->mask_visibility());
+    m_open_luminosity_masking_action->set_visible(layer->mask_type() == Layer::MaskType::EditingMask);
 }
 
 void MainWidget::open_image(FileSystemAccessClient::File file)
