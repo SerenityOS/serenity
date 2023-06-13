@@ -186,6 +186,7 @@ TEST_CASE(heap_free_storage)
     TRY_OR_FAIL(heap->free_storage(storage_block_id));
 
     // Again, write some large storage spanning multiple blocks
+    storage_block_id = heap->request_new_block_index();
     TRY_OR_FAIL(heap->write_storage(storage_block_id, long_string.bytes()));
     MUST(heap->flush());
     auto new_heap_size = MUST(heap->file_size_in_bytes());
