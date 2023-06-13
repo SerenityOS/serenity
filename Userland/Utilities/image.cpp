@@ -30,6 +30,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int frame_index = 0;
     args_parser.add_option(frame_index, "Which frame of a multi-frame input image (0-based)", "frame-index", {}, "INDEX");
 
+    bool move_alpha_to_rgb = false;
+    args_parser.add_option(move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
+
     bool ppm_ascii = false;
     args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
 
@@ -60,6 +63,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto frame = TRY(decoder->frame(frame_index)).image;
+
+    if (move_alpha_to_rgb) {
+        switch (frame->format()) {
+        case Gfx::BitmapFormat::Invalid:
+        case Gfx::BitmapFormat::Indexed1:
+        case Gfx::BitmapFormat::Indexed2:
+        case Gfx::BitmapFormat::Indexed4:
+        case Gfx::BitmapFormat::Indexed8:
+            warnln("Can't --strip-alpha with indexed or invalid bitmaps");
+            return 1;
+        case Gfx::BitmapFormat::RGBA8888:
+            // No image decoder currently produces bitmaps with this format.
+            // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
+            // If there's a good reason for not doing that, implement support for this, I suppose.
+            warnln("Can't --strip-alpha not implemented for RGBA8888");
+            return 1;
+        case Gfx::BitmapFormat::BGRA8888:
+        case Gfx::BitmapFormat::BGRx8888:
+            // FIXME: If BitmapFormat::Gray8 existed (and image encoders made use of it to write grayscale images), we could use it here.
+            for (auto& pixel : *frame) {
+                u8 alpha = pixel >> 24;
+                pixel = 0xff000000 | (alpha << 16) | (alpha << 8) | alpha;
+            }
+        }
+    }
 
     if (strip_alpha) {
         switch (frame->format()) {
