@@ -598,8 +598,34 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             goto Rule3;
         }
 
+        // If none of the three is auto:
         if (!computed_left.is_auto() && !width.is_auto() && !computed_right.is_auto()) {
-            // FIXME: This should be solved in a more complicated way.
+            // If both margin-left and margin-right are auto,
+            // solve the equation under the extra constraint that the two margins get equal values
+            // FIXME: unless this would make them negative, in which case when direction of the containing block is ltr (rtl), set margin-left (margin-right) to 0 and solve for margin-right (margin-left).
+            auto size_available_for_margins = width_of_containing_block - border_left - padding_left - width.to_px(box) - padding_right - border_right - right;
+            if (margin_left.is_auto() && margin_right.is_auto()) {
+                margin_left = CSS::Length::make_px(size_available_for_margins / 2);
+                margin_right = CSS::Length::make_px(size_available_for_margins / 2);
+                return width;
+            }
+
+            // If one of margin-left or margin-right is auto, solve the equation for that value.
+            if (margin_left.is_auto()) {
+                margin_left = CSS::Length::make_px(size_available_for_margins);
+                return width;
+            }
+            if (margin_right.is_auto()) {
+                margin_right = CSS::Length::make_px(size_available_for_margins);
+                return width;
+            }
+            // If the values are over-constrained, ignore the value for left
+            // (in case the direction property of the containing block is rtl)
+            // or right (in case direction is ltr) and solve for that value.
+
+            // NOTE: At this point we *are* over-constrained since none of margin-left, left, width, right, or margin-right are auto.
+            // FIXME: Check direction.
+            right = solve_for_right();
             return width;
         }
 
@@ -995,9 +1021,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
 
     compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
 
-    box_state.margin_left = box.computed_values().margin().left().to_px(box, width_of_containing_block);
     box_state.margin_top = box.computed_values().margin().top().to_px(box, width_of_containing_block);
-    box_state.margin_right = box.computed_values().margin().right().to_px(box, width_of_containing_block);
     box_state.margin_bottom = box.computed_values().margin().bottom().to_px(box, width_of_containing_block);
 
     box_state.border_left = box.computed_values().border_left().width;
@@ -1014,13 +1038,6 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     box_state.inset_top = computed_top.to_px(box, height_of_containing_block);
     box_state.inset_right = computed_right.to_px(box, width_of_containing_block);
     box_state.inset_bottom = computed_bottom.to_px(box, height_of_containing_block);
-
-    if (computed_left.is_auto() && box.computed_values().width().is_auto() && computed_right.is_auto()) {
-        if (box.computed_values().margin().left().is_auto())
-            box_state.margin_left = 0;
-        if (box.computed_values().margin().right().is_auto())
-            box_state.margin_right = 0;
-    }
 
     auto static_position = calculate_static_position(box);
 
