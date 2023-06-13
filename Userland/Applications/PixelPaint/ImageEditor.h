@@ -37,6 +37,7 @@ public:
 
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
+    Gfx::IntRect active_layer_visible_rect();
 
     ErrorOr<void> add_new_layer_from_selection();
     Tool* active_tool() { return m_active_tool; }

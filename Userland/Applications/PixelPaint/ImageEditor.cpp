@@ -290,6 +290,9 @@ Gfx::IntRect ImageEditor::mouse_indicator_rect_y() const
 
 void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 {
+    if (m_active_layer && m_active_layer->mask_type() != Layer::MaskType::None)
+        m_active_layer->on_second_paint(*this);
+
     if (m_active_tool) {
         if (m_show_rulers) {
             auto clipped_event = GUI::PaintEvent(subtract_rulers_from_rect(event.rect()), event.window_size());
@@ -943,6 +946,17 @@ DeprecatedString ImageEditor::generate_unique_layer_name(DeprecatedString const&
     } while (layer_with_name_exists(new_layer_name.string_view()));
 
     return new_layer_name.to_deprecated_string();
+}
+
+Gfx::IntRect ImageEditor::active_layer_visible_rect()
+{
+    if (!active_layer())
+        return {};
+
+    auto scaled_layer_rect = active_layer()->relative_rect().to_type<float>().scaled(scale(), scale()).to_type<int>().translated(content_rect().location());
+    auto visible_editor_rect = ruler_visibility() ? subtract_rulers_from_rect(rect()) : rect();
+    scaled_layer_rect.intersect(visible_editor_rect);
+    return scaled_layer_rect;
 }
 
 }
