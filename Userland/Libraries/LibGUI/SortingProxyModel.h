@@ -24,7 +24,7 @@ public:
     virtual int tree_column() const override { return m_source->tree_column(); }
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
     virtual StringView drag_data_type() const override;

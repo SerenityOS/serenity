@@ -92,7 +92,7 @@ public:
         return Column::__Count;
     }
 
-    virtual String column_name(int) const override { return {}; }
+    virtual ErrorOr<String> column_name(int) const override { return String {}; }
 
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& = ModelIndex()) const override
     {

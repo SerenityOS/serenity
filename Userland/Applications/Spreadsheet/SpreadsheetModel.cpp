@@ -162,12 +162,12 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
     return mime_data;
 }
 
-String SheetModel::column_name(int index) const
+ErrorOr<String> SheetModel::column_name(int index) const
 {
     if (index < 0)
-        return {};
+        return String {};
 
-    return String::from_deprecated_string(m_sheet->column(index)).release_value_but_fixme_should_propagate_errors();
+    return TRY(String::from_deprecated_string(m_sheet->column(index)));
 }
 
 bool SheetModel::is_editable(const GUI::ModelIndex& index) const

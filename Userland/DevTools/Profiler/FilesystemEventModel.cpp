@@ -142,18 +142,17 @@ int FileEventModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String FileEventModel::column_name(int column) const
+ErrorOr<String> FileEventModel::column_name(int column) const
 {
     switch (column) {
     case Column::Path:
         return "Path"_short_string;
     case Column::Count:
-        return "Event Count"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Event Count"_string);
     case Column::Duration:
-        return "Duration [ms]"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Duration [ms]"_string);
     default:
         VERIFY_NOT_REACHED();
-        return {};
     }
 }
 

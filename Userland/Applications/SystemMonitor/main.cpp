@@ -303,7 +303,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column) {
         process_table_view.set_column_visible(column,
-            Config::read_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column),
+            Config::read_bool("SystemMonitor"sv, "ProcessTableColumns"sv, TRY(process_model->column_name(column)),
                 process_model->is_default_column(column)));
     }
 
@@ -516,7 +516,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // to be loaded the next time the application is opened.
     auto& process_table_header = process_table_view.column_header();
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
-        Config::write_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column), process_table_header.is_section_visible(column));
+        Config::write_bool("SystemMonitor"sv, "ProcessTableColumns"sv, TRY(process_model->column_name(column)), process_table_header.is_section_visible(column));
 
     return exec;
 }

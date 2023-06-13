@@ -34,7 +34,7 @@ int FilteringProxyModel::column_count(ModelIndex const& index) const
     return m_model->column_count(m_matching_indices[index.row()].index);
 }
 
-String FilteringProxyModel::column_name(int column) const
+ErrorOr<String> FilteringProxyModel::column_name(int column) const
 {
     return m_model->column_name(column);
 }

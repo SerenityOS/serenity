@@ -74,22 +74,21 @@ int ProfileModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String ProfileModel::column_name(int column) const
+ErrorOr<String> ProfileModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? "% Samples"_string.release_value_but_fixme_should_propagate_errors() : "# Samples"_string.release_value_but_fixme_should_propagate_errors();
+        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
     case Column::SelfCount:
         return m_profile.show_percentages() ? "% Self"_short_string : "# Self"_short_string;
     case Column::ObjectName:
         return "Object"_short_string;
     case Column::StackFrame:
-        return "Stack Frame"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Stack Frame"_string);
     case Column::SymbolAddress:
-        return "Symbol Address"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Symbol Address"_string);
     default:
         VERIFY_NOT_REACHED();
-        return {};
     }
 }
 

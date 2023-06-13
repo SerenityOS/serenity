@@ -34,7 +34,7 @@ int HistoryModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-String HistoryModel::column_name(int column) const
+ErrorOr<String> HistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Title:
@@ -45,7 +45,7 @@ String HistoryModel::column_name(int column) const
         VERIFY_NOT_REACHED();
     }
 
-    return {};
+    return String {};
 }
 
 GUI::ModelIndex HistoryModel::index(int row, int column, GUI::ModelIndex const&) const

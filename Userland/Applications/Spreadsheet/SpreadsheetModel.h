@@ -23,7 +23,7 @@ public:
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->row_count(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->column_count(); }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual RefPtr<Core::MimeData> mime_data(const GUI::ModelSelection&) const override;
     virtual bool is_editable(const GUI::ModelIndex&) const override;

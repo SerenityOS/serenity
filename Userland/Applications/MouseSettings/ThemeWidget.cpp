@@ -15,11 +15,11 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
-String MouseCursorModel::column_name(int column_index) const
+ErrorOr<String> MouseCursorModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Bitmap:
-        return {};
+        return String {};
     case Column::Name:
         return "Name"_short_string;
     }

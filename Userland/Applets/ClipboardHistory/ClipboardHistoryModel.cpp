@@ -23,7 +23,7 @@ ClipboardHistoryModel::ClipboardHistoryModel()
 {
 }
 
-String ClipboardHistoryModel::column_name(int column) const
+ErrorOr<String> ClipboardHistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Data:

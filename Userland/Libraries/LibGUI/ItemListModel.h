@@ -71,7 +71,7 @@ public:
         return 1;
     }
 
-    virtual String column_name(int index) const override
+    virtual ErrorOr<String> column_name(int index) const override
     {
         if constexpr (IsTwoDimensional)
             return m_column_names[index];
