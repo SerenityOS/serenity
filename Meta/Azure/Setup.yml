@@ -37,7 +37,6 @@ steps:
     # macOS ships an ancient Bash 3.x by default
     - script: |
         set -e
-        brew update
         brew install coreutils bash ninja wabt ccache unzip qt llvm@15
       displayName: 'Install Dependencies'
 
