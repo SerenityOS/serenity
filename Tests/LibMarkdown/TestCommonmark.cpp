@@ -41,7 +41,9 @@ TEST_SETUP
         Test::TestSuite::the().add_case(adopt_ref(*new Test::TestCase(
             name, [markdown, html]() {
                 auto document = Markdown::Document::parse(markdown);
-                EXPECT_EQ(document->render_to_inline_html(), html);
+                EXPECT_EQ(
+                    document->render_to_inline_html().release_value_but_fixme_should_propagate_errors(),
+                    String::from_deprecated_string(html).release_value_but_fixme_should_propagate_errors());
             },
             false)));
     }

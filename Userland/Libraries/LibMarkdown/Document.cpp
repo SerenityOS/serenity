@@ -29,7 +29,8 @@ ErrorOr<String> Document::render_to_html(StringView extra_head_contents) const
 <body>
 )~~~"sv));
 
-    TRY(builder.try_append(render_to_inline_html()));
+    auto inline_html = TRY(render_to_inline_html());
+    TRY(builder.try_append(inline_html));
 
     TRY(builder.try_append(R"~~~(
 </body>
@@ -38,9 +39,9 @@ ErrorOr<String> Document::render_to_html(StringView extra_head_contents) const
     return builder.to_string();
 }
 
-DeprecatedString Document::render_to_inline_html() const
+ErrorOr<String> Document::render_to_inline_html() const
 {
-    return m_container->render_to_html();
+    return String::from_deprecated_string(m_container->render_to_html());
 }
 
 ErrorOr<String> Document::render_for_terminal(size_t view_width) const

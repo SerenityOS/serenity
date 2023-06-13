@@ -32,8 +32,8 @@ TEST_CASE(test_image_size_markdown_extension)
 {
     for (auto const& test_case : image_size_tests) {
         auto document = Markdown::Document::parse(test_case.markdown);
-        auto raw_rendered_html = document->render_to_inline_html();
-        auto rendered_html = StringView(raw_rendered_html).trim_whitespace();
+        auto raw_rendered_html = document->render_to_inline_html().release_value_but_fixme_should_propagate_errors();
+        StringView rendered_html = raw_rendered_html.bytes_as_string_view().trim_whitespace();
         EXPECT_EQ(rendered_html, test_case.expected_html);
     }
 }
