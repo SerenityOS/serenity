@@ -44,6 +44,7 @@ public:
     // These return/accept a comma-separated list of column ids, for storing in a config file.
     ErrorOr<String> get_visible_columns() const;
     void set_visible_columns(StringView column_ids);
+    Function<void()> on_visible_columns_changed;
 
     int column_width(int column) const;
     void set_column_width(int column, int width);

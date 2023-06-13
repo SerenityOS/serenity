@@ -376,6 +376,9 @@ void AbstractTableView::header_did_change_section_visibility(Badge<HeaderView>, 
 {
     update_content_size();
     update();
+
+    if (on_visible_columns_changed)
+        on_visible_columns_changed();
 }
 
 void AbstractTableView::set_default_column_width(int column, int width)
