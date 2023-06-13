@@ -819,7 +819,7 @@ private:
 
     static size_t padded_capacity(size_t capacity)
     {
-        return max(static_cast<size_t>(4), capacity + (capacity / 4) + 4);
+        return 4 + capacity + capacity / 4;
     }
 
     StorageType* slot(size_t i) { return &data()[i]; }
