@@ -29,6 +29,8 @@ Heap::~Heap()
 
 ErrorOr<void> Heap::open()
 {
+    VERIFY(!m_file);
+
     size_t file_size = 0;
     struct stat stat_buffer;
     if (stat(name().characters(), &stat_buffer) != 0) {

@@ -23,6 +23,7 @@ Database::Database(DeprecatedString name)
 
 ResultOr<void> Database::open()
 {
+    VERIFY(!m_open);
     TRY(m_heap->open());
 
     m_schemas = BTree::construct(m_serializer, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root());
