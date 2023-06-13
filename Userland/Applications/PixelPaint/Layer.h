@@ -13,12 +13,14 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
+#include <LibGUI/Event.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 
 namespace PixelPaint {
 
 class Image;
+class ImageEditor;
 class Selection;
 
 class Layer
@@ -56,6 +58,8 @@ public:
     void apply_mask();
     void invert_mask();
     void clear_mask();
+    void set_mask_visibility(bool visible) { m_visible_mask = visible; }
+    bool mask_visibility() { return m_visible_mask; }
 
     Gfx::Bitmap& get_scratch_edited_bitmap();
 
@@ -126,6 +130,8 @@ public:
         return current_color.mixed_with(target_color, mask_intensity);
     }
 
+    void on_second_paint(ImageEditor&);
+
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
 
@@ -140,6 +146,7 @@ private:
 
     bool m_selected { false };
     bool m_visible { true };
+    bool m_visible_mask { false };
 
     int m_opacity_percent { 100 };
 

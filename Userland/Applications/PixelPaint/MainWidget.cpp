@@ -853,6 +853,20 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     TRY(m_layer_menu->try_add_action(*m_clear_mask_action));
 
+    m_toggle_mask_visibility_action = GUI::Action::create_checkable(
+        "Show Mask", [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            if (!editor->active_layer())
+                return;
+
+            VERIFY(editor->active_layer()->is_masked());
+            editor->active_layer()->set_mask_visibility(m_toggle_mask_visibility_action->is_checked());
+            editor->update();
+        });
+
+    TRY(m_layer_menu->try_add_action(*m_toggle_mask_visibility_action));
+
     TRY(m_layer_menu->try_add_separator());
 
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
@@ -1232,6 +1246,8 @@ void MainWidget::set_mask_actions_for_layer(Layer* layer)
     m_clear_mask_action->set_visible(masked);
     m_delete_mask_action->set_visible(masked);
     m_apply_mask_action->set_visible(layer->mask_type() == Layer::MaskType::BasicMask);
+    m_toggle_mask_visibility_action->set_visible(layer->mask_type() == Layer::MaskType::EditingMask);
+    m_toggle_mask_visibility_action->set_checked(layer->mask_visibility());
 }
 
 void MainWidget::open_image(FileSystemAccessClient::File file)
@@ -1373,6 +1389,8 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_palette_widget->set_primary_color(color);
         if (image_editor.active_tool())
             image_editor.active_tool()->on_primary_color_change(color);
+        if (image_editor.active_layer()->mask_visibility())
+            image_editor.update();
     };
     image_editor.on_secondary_color_change = [&](Color color) {
         m_palette_widget->set_secondary_color(color);

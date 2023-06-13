@@ -117,6 +117,7 @@ private:
     RefPtr<GUI::Action> m_add_editing_mask_action;
     RefPtr<GUI::Action> m_invert_mask_action;
     RefPtr<GUI::Action> m_clear_mask_action;
+    RefPtr<GUI::Action> m_toggle_mask_visibility_action;
 
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };

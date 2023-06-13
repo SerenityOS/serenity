@@ -8,9 +8,11 @@
 
 #include "Layer.h"
 #include "Image.h"
+#include "ImageEditor.h"
 #include "Selection.h"
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
+#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 
@@ -45,6 +47,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::create_snapshot(Image& image, Layer const& 
         snapshot->m_mask_bitmap = TRY(layer.mask_bitmap()->clone());
         snapshot->m_edit_mode = layer.m_edit_mode;
         snapshot->m_mask_type = layer.m_mask_type;
+        snapshot->m_visible_mask = layer.m_visible_mask;
     }
 
     /*
@@ -322,6 +325,7 @@ void Layer::delete_mask()
 {
     m_mask_bitmap = nullptr;
     m_mask_type = MaskType::None;
+    m_visible_mask = false;
     set_edit_mode(EditMode::Content);
     update_cached_bitmap();
 }
@@ -462,6 +466,37 @@ Layer::MaskType Layer::mask_type()
     if (m_mask_bitmap.is_null())
         return MaskType::None;
     return m_mask_type;
+}
+
+void Layer::on_second_paint(ImageEditor& editor)
+{
+    if (!m_visible_mask || edit_mode() != EditMode::Mask)
+        return;
+
+    auto visible_rect = editor.active_layer_visible_rect();
+    if (visible_rect.width() == 0 || visible_rect.height() == 0)
+        return;
+
+    GUI::Painter painter(editor);
+    painter.translate(visible_rect.location());
+
+    auto content_offset = editor.content_to_frame_position(location());
+    auto drawing_cursor_offset = visible_rect.location() - content_offset.to_type<int>();
+
+    Gfx::Color editing_mask_color = editor.primary_color();
+    int mask_alpha;
+    Gfx::IntPoint mask_coordinates;
+
+    for (int y = 0; y < visible_rect.height(); y++) {
+        for (int x = 0; x < visible_rect.width(); x++) {
+            mask_coordinates = (Gfx::FloatPoint(drawing_cursor_offset.x() + x, drawing_cursor_offset.y() + y) / editor.scale()).to_type<int>();
+            mask_alpha = mask_bitmap()->get_pixel(mask_coordinates).alpha();
+            if (!mask_alpha)
+                continue;
+
+            painter.set_pixel(x, y, editing_mask_color.with_alpha(mask_alpha), true);
+        }
+    }
 }
 
 }
