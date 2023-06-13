@@ -41,15 +41,16 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space = parent().space_used_by_floats(y_in_root);
-    if (box_in_root_rect.x() >= space.left) {
+    auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
+    auto left_side_floats_limit_to_right = space_and_containing_margin.left_total_containing_margin + space_and_containing_margin.left_used_space;
+    if (box_in_root_rect.x() >= left_side_floats_limit_to_right) {
         // The left edge of the containing block is to the right of the rightmost left-side float.
         // We start placing inline content at the left edge of the containing block.
         return 0;
     }
     // The left edge of the containing block is to the left of the rightmost left-side float.
     // We adjust the inline content insertion point by the overlap between the containing block and the float.
-    return space.left - max(CSSPixels(0), box_in_root_rect.x());
+    return left_side_floats_limit_to_right - max(CSSPixels(0), box_in_root_rect.x());
 }
 
 CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
@@ -319,8 +320,8 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 {
     auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space = parent().space_used_by_floats(y_in_root);
-    return space.left > 0 || space.right > 0;
+    auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
+    return space_and_containing_margin.left_used_space > 0 || space_and_containing_margin.right_used_space > 0;
 }
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
