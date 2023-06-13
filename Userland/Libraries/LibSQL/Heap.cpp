@@ -118,8 +118,12 @@ ErrorOr<ByteBuffer> Heap::read_storage(Block::Index index)
 ErrorOr<void> Heap::write_storage(Block::Index index, ReadonlyBytes data)
 {
     dbgln_if(SQL_DEBUG, "{}({}, {} bytes)", __FUNCTION__, index, data.size());
-    VERIFY(index > 0);
-    VERIFY(data.size() > 0);
+    if (index == 0)
+        return Error::from_string_view("Writing to zero block is not allowed"sv);
+    if (data.is_empty())
+        return Error::from_string_view("Writing empty data is not allowed"sv);
+    if (m_free_block_indices.contains_slow(index))
+        return Error::from_string_view("Invalid write to a free block index"sv);
 
     // Split up the storage across multiple blocks if necessary, creating a chain
     u32 remaining_size = static_cast<u32>(data.size());
