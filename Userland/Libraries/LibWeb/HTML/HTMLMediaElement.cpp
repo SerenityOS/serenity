@@ -990,7 +990,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         if (enable == TriState::True)
             audio_track->set_enabled(true);
 
-        // FIXME: 7. Fire an event named addtrack at this AudioTrackList object, using TrackEvent, with the track attribute initialized to the new AudioTrack object.
+        // 7. Fire an event named addtrack at this AudioTrackList object, using TrackEvent, with the track attribute initialized to the new AudioTrack object.
+        TrackEventInit event_init {};
+        event_init.track = JS::make_handle(audio_track);
+
+        auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, move(event_init)));
+        m_audio_tracks->dispatch_event(event);
     }
 
     // -> If the media resource is found to have a video track
