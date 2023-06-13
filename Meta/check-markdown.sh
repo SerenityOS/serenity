@@ -23,4 +23,4 @@ if [ -z "$SERENITY_SOURCE_DIR" ] ; then
     export SERENITY_SOURCE_DIR
 fi
 
-find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.md' -print0 | xargs -0 "${MARKDOWN_CHECK_BINARY}" README.md CONTRIBUTING.md
+find AK Base Documentation Kernel Meta Ports Tests Userland -path Tests/LibWeb/WPT/wpt -prune -o -type f -name '*.md' -print0 | xargs -0 "${MARKDOWN_CHECK_BINARY}" README.md CONTRIBUTING.md
