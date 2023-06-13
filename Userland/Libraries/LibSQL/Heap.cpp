@@ -176,7 +176,7 @@ ErrorOr<ByteBuffer> Heap::read_raw_block(Block::Index index)
 
 ErrorOr<Block> Heap::read_block(Block::Index index)
 {
-    dbgln_if(SQL_DEBUG, "Read heap block {}", index);
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, index);
 
     auto buffer = TRY(read_raw_block(index));
     auto size_in_bytes = *reinterpret_cast<u32*>(buffer.offset_pointer(0));
@@ -204,7 +204,7 @@ ErrorOr<void> Heap::write_raw_block(Block::Index index, ReadonlyBytes data)
 
 ErrorOr<void> Heap::write_raw_block_to_wal(Block::Index index, ByteBuffer&& data)
 {
-    dbgln_if(SQL_DEBUG, "{}(): adding raw block {} to WAL", __FUNCTION__, index);
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, index);
     VERIFY(index < m_next_block);
     VERIFY(data.size() == Block::SIZE);
 
@@ -215,6 +215,7 @@ ErrorOr<void> Heap::write_raw_block_to_wal(Block::Index index, ByteBuffer&& data
 
 ErrorOr<void> Heap::write_block(Block const& block)
 {
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, block.index());
     VERIFY(block.index() < m_next_block);
     VERIFY(block.next_block() < m_next_block);
     VERIFY(block.size_in_bytes() > 0);
