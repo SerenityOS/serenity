@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Debounce.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibFileSystem/FileSystem.h>
@@ -294,8 +295,17 @@ void DirectoryView::setup_table_view()
     m_table_view->set_model(m_sorting_model);
     m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
-    m_table_view->set_column_visible(GUI::FileSystemModel::Column::Inode, false);
-    m_table_view->set_column_visible(GUI::FileSystemModel::Column::SymlinkTarget, false);
+    auto visible_columns = Config::read_string("FileManager"sv, "DirectoryView"sv, "TableColumns"sv, ""sv);
+    if (visible_columns.is_empty()) {
+        m_table_view->set_column_visible(GUI::FileSystemModel::Column::Inode, false);
+        m_table_view->set_column_visible(GUI::FileSystemModel::Column::SymlinkTarget, false);
+    } else {
+        m_table_view->set_visible_columns(visible_columns);
+    }
+    m_table_view->on_visible_columns_changed = Core::debounce(100, [this]() {
+        auto visible_columns = m_table_view->get_visible_columns().release_value_but_fixme_should_propagate_errors();
+        Config::write_string("FileManager"sv, "DirectoryView"sv, "TableColumns"sv, visible_columns);
+    });
 
     m_table_view->on_activation = [&](auto& index) {
         handle_activation(index);
