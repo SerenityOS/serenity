@@ -7,30 +7,34 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Optional.h>
+#include <AK/Variant.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/DOM/Event.h>
 
 namespace Web::HTML {
 
 struct TrackEventInit : public DOM::EventInit {
-    JS::GCPtr<VideoTrack> track;
+    using TrackType = Optional<Variant<JS::Handle<VideoTrack>, JS::Handle<AudioTrack>>>;
+    TrackType track;
 };
 
 class TrackEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(TrackEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TrackEvent>> create(JS::Realm&, FlyString const& event_name, TrackEventInit const& event_init = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TrackEvent>> construct_impl(JS::Realm&, FlyString const& event_name, TrackEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TrackEvent>> create(JS::Realm&, FlyString const& event_name, TrackEventInit event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TrackEvent>> construct_impl(JS::Realm&, FlyString const& event_name, TrackEventInit event_init);
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-trackevent-track
-    JS::GCPtr<VideoTrack> track() const { return m_track; }
+    Variant<Empty, JS::Handle<VideoTrack>, JS::Handle<AudioTrack>> track() const;
 
 private:
-    TrackEvent(JS::Realm&, FlyString const& event_name, TrackEventInit const& event_init);
+    TrackEvent(JS::Realm&, FlyString const& event_name, TrackEventInit event_init);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    JS::GCPtr<VideoTrack> m_track;
+    TrackEventInit::TrackType m_track;
 };
 
 }

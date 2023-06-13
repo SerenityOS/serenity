@@ -1020,9 +1020,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
 
         // 7. Fire an event named addtrack at this VideoTrackList object, using TrackEvent, with the track attribute initialized to the new VideoTrack object.
         TrackEventInit event_init {};
-        event_init.track = video_track;
+        event_init.track = JS::make_handle(video_track);
 
-        auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, event_init));
+        auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, move(event_init)));
         m_video_tracks->dispatch_event(event);
     }
 

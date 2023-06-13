@@ -27,6 +27,7 @@ static bool is_platform_object(Type const& type)
     static constexpr Array types = {
         "AbortSignal"sv,
         "Attr"sv,
+        "AudioTrack"sv,
         "Blob"sv,
         "CanvasGradient"sv,
         "CanvasPattern"sv,
