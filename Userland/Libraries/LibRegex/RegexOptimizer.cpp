@@ -351,7 +351,9 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
 
     bool following_block_has_at_least_one_compare = false;
     // Find the first compare in the following block, it must NOT match any of the values in `repeated_values'.
+    auto final_instruction = following_block.start;
     for (state.instruction_position = following_block.start; state.instruction_position < following_block.end;) {
+        final_instruction = state.instruction_position;
         auto& opcode = bytecode.get_opcode(state);
         switch (opcode.opcode_id()) {
         // Note: These have to exist since we're effectively repeating the following block as well
@@ -397,6 +399,18 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
         }
 
         state.instruction_position += opcode.size();
+    }
+
+    // If the following block falls through, we can't rewrite it.
+    state.instruction_position = final_instruction;
+    switch (bytecode.get_opcode(state).opcode_id()) {
+    case OpCodeId::Jump:
+    case OpCodeId::JumpNonEmpty:
+    case OpCodeId::ForkJump:
+    case OpCodeId::ForkReplaceJump:
+        break;
+    default:
+        return AtomicRewritePreconditionResult::NotSatisfied;
     }
 
     if (following_block_has_at_least_one_compare)
@@ -717,7 +731,7 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
 
         size_t i = 0;
         for (auto& entry : alternatives) {
-            auto& blocks = basic_blocks[i];
+            auto& blocks = basic_blocks[i++];
             auto& block = blocks[block_index];
             auto end = block_index + 1 == blocks.size() ? block.end : blocks[block_index + 1].start;
             state.instruction_position = block.start;
