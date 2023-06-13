@@ -40,6 +40,10 @@ steps:
         brew update
         brew install coreutils bash ninja wabt ccache unzip qt llvm@15
       displayName: 'Install Dependencies'
+      env:
+        HOMEBREW_NO_AUTO_UPDATE: '1'
+        HOMEBREW_NO_INSTALL_UPGRADE: '1'
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
 
   - ${{ if eq(parameters.os, 'Android') }}:
     - script: |
