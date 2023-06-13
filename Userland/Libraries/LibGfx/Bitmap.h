@@ -212,6 +212,9 @@ public:
     [[nodiscard]] bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888 || m_format == BitmapFormat::RGBA8888; }
     [[nodiscard]] BitmapFormat format() const { return m_format; }
 
+    // Call only for BGRx8888 and BGRA8888 bitmaps.
+    void strip_alpha_channel();
+
     void set_mmap_name(DeprecatedString const&);
 
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
