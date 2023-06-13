@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,6 +41,9 @@ public:
     void set_column_headers_visible(bool);
 
     void set_column_visible(int, bool);
+    // These return/accept a comma-separated list of column ids, for storing in a config file.
+    ErrorOr<String> get_visible_columns() const;
+    void set_visible_columns(StringView column_ids);
 
     int column_width(int column) const;
     void set_column_width(int column, int width);
