@@ -430,6 +430,27 @@ void ArgsParser::add_option(DeprecatedString& value, char const* help_string, ch
     add_option(move(option));
 }
 
+void ArgsParser::add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+{
+    Option option {
+        OptionArgumentMode::Required,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](StringView s) {
+            auto value_or_error = String::from_utf8(s);
+            if (value_or_error.is_error())
+                return false;
+
+            value = value_or_error.release_value();
+            return true;
+        },
+        hide_mode,
+    };
+    add_option(move(option));
+}
+
 void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
@@ -604,6 +625,25 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
         1,
         [&value](StringView s) {
             value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void ArgsParser::add_positional_argument(String& value, char const* help_string, char const* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](StringView s) {
+            auto value_or_error = String::from_utf8(s);
+            if (value_or_error.is_error())
+                return false;
+
+            value = value_or_error.release_value();
             return true;
         }
     };
