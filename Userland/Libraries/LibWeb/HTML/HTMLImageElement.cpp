@@ -487,7 +487,10 @@ after_step_7:
                 //    upgrade the pending request to the current request
                 //    and prepare image request for presentation given the img element.
                 if (image_request == m_pending_request) {
-                    abort_the_image_request(realm(), m_current_request);
+                    // AD-HOC: Account for image sharing. On this branch, the current request is already available and has the same URL
+                    //         as the pending request. Clearing its data through abort_the_image_request would break future reuses.
+                    if (image_request != m_current_request)
+                        abort_the_image_request(realm(), m_current_request);
                     upgrade_pending_request_to_current_request();
                     image_request->prepare_for_presentation(*this);
                 }
