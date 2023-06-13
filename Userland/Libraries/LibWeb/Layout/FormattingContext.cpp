@@ -1436,7 +1436,11 @@ CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, Availab
 {
     // The size a box would take if its outer size filled the available space in the given axis;
     // in other words, the stretch fit into the available space, if that is definite.
+
     // Undefined if the available space is indefinite.
+    if (!available_width.is_definite())
+        return 0;
+
     auto const& box_state = m_state.get(box);
     return available_width.to_px()
         - box_state.margin_left
