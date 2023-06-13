@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -100,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto document = Markdown::Document::parse(source);
     VERIFY(document);
 
-    DeprecatedString rendered = document->render_for_terminal(view_width);
+    auto rendered = TRY(document->render_for_terminal(view_width));
     outln("{}", rendered);
 
     // FIXME: Remove this wait, it shouldn't be necessary but Shell does not
