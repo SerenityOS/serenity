@@ -66,7 +66,7 @@ enum class StorageFormat {
     RGBA8888,
 };
 
-static StorageFormat determine_storage_format(BitmapFormat format)
+inline StorageFormat determine_storage_format(BitmapFormat format)
 {
     switch (format) {
     case BitmapFormat::BGRx8888:
