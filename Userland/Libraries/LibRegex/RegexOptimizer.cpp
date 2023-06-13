@@ -701,7 +701,7 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
     for (auto& entry : alternatives)
         basic_blocks.append(Regex<PosixBasicParser>::split_basic_blocks(entry));
 
-    size_t left_skip = 0;
+    Optional<size_t> left_skip;
     size_t shared_block_count = basic_blocks.first().size();
     for (auto& entry : basic_blocks)
         shared_block_count = min(shared_block_count, entry.size());
@@ -741,21 +741,48 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
                 state.instruction_position += opcode.size();
                 skip = state.instruction_position;
             }
-            left_skip = min(skip, left_skip);
+
+            if (left_skip.has_value())
+                left_skip = min(skip, *left_skip);
+            else
+                left_skip = skip;
         }
     }
 
+    // Remove forward jumps as they no longer make sense.
+    state.instruction_position = 0;
+    for (size_t i = 0; i < left_skip.value_or(0);) {
+        auto& opcode = alternatives[0].get_opcode(state);
+        switch (opcode.opcode_id()) {
+        case OpCodeId::Jump:
+        case OpCodeId::ForkJump:
+        case OpCodeId::JumpNonEmpty:
+        case OpCodeId::ForkStay:
+        case OpCodeId::ForkReplaceJump:
+        case OpCodeId::ForkReplaceStay:
+            if (opcode.argument(0) + opcode.size() > left_skip.value_or(0)) {
+                left_skip = i;
+                goto break_out;
+            }
+            break;
+        default:
+            break;
+        }
+        i += opcode.size();
+    }
+break_out:;
+
     dbgln_if(REGEX_DEBUG, "Skipping {}/{} bytecode entries from {}", left_skip, 0, alternatives[0].size());
 
-    if (left_skip > 0) {
-        target.extend(alternatives[0].release_slice(basic_blocks.first().first().start, left_skip));
+    if (left_skip.has_value() && *left_skip > 0) {
+        target.extend(alternatives[0].release_slice(basic_blocks.first().first().start, *left_skip));
         auto first = true;
         for (auto& entry : alternatives) {
             if (first) {
                 first = false;
                 continue;
             }
-            entry = entry.release_slice(left_skip);
+            entry = entry.release_slice(*left_skip);
         }
     }
 
