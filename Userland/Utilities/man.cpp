@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
@@ -22,9 +21,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
+static ErrorOr<pid_t> pipe_to_pager(StringView command)
 {
-    char const* argv[] = { "Shell", "-c", command.characters(), nullptr };
+    StringBuilder builder;
+    TRY(builder.try_append(command));
+    TRY(builder.try_append('\0'));
+    auto shell_command = builder.string_view().characters_without_null_termination();
+
+    char const* argv[] = { "Shell", "-c", shell_command, nullptr };
 
     auto stdout_pipe = TRY(Core::System::pipe2(O_CLOEXEC));
 
@@ -58,9 +62,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    DeprecatedString section_argument;
-    DeprecatedString name_argument;
-    DeprecatedString pager;
+    StringView section_argument;
+    StringView name_argument;
+    String pager;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
@@ -80,9 +84,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (pager.is_empty())
         pager = TRY(String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'",
-                        TRY(page_name.replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly)),
-                        TRY(section->section_name().replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly))))
-                    .to_deprecated_string();
+            TRY(page_name.replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly)),
+            TRY(section->section_name().replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly))));
     pid_t pager_pid = TRY(pipe_to_pager(pager));
 
     auto file = TRY(Core::File::open(TRY(page->path()), Core::File::OpenMode::Read));
@@ -91,14 +94,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     dbgln("Loading man page from {}", TRY(page->path()));
     auto buffer = TRY(file->read_until_eof());
-    auto source = DeprecatedString::copy(buffer);
 
     auto const title = TRY("SerenityOS manual"_string);
 
     int spaces = max(view_width / 2 - page_name.code_points().length() - section->section_name().code_points().length() - title.code_points().length() / 2 - 4, 0);
-    outln("{}({}){}{}", page_name, section->section_name(), DeprecatedString::repeated(' ', spaces), title);
+    outln("{}({}){}{}", page_name, section->section_name(), String::repeated(' ', spaces), title);
 
-    auto document = Markdown::Document::parse(source);
+    auto document = Markdown::Document::parse(buffer);
     VERIFY(document);
 
     auto rendered = TRY(document->render_for_terminal(view_width));
