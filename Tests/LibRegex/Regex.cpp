@@ -995,6 +995,9 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "[^x]+y"sv, "ay"sv, true },
         // .+ should not be rewritten here, as it's followed by something that would be matched by `.`.
         Tuple { ".+(a|b|c)"sv, "xxa"sv, true },
+        // (b+)(b+) produces an intermediate block with no matching ops, the optimiser should ignore that block when looking for following matches and correctly detect the overlap between (b+) and (b+).
+        // note that the second loop may be rewritten to a ForkReplace, but the first loop should not be rewritten.
+        Tuple { "(b+)(b+)"sv, "bbb"sv, true },
     };
 
     for (auto& test : tests) {
