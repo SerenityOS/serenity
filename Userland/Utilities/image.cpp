@@ -33,6 +33,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool ppm_ascii = false;
     args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
 
+    bool strip_alpha = false;
+    args_parser.add_option(strip_alpha, "Remove alpha channel", "strip-alpha", {});
+
     StringView assign_color_profile_path;
     args_parser.add_option(assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
 
@@ -57,6 +60,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto frame = TRY(decoder->frame(frame_index)).image;
+
+    if (strip_alpha) {
+        switch (frame->format()) {
+        case Gfx::BitmapFormat::Invalid:
+        case Gfx::BitmapFormat::Indexed1:
+        case Gfx::BitmapFormat::Indexed2:
+        case Gfx::BitmapFormat::Indexed4:
+        case Gfx::BitmapFormat::Indexed8:
+            warnln("Can't --strip-alpha with indexed or invalid bitmaps");
+            return 1;
+        case Gfx::BitmapFormat::RGBA8888:
+            // No image decoder currently produces bitmaps with this format.
+            // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
+            // If there's a good reason for not doing that, implement support for this, I suppose.
+            warnln("Can't --strip-alpha not implemented for RGBA8888");
+            return 1;
+        case Gfx::BitmapFormat::BGRA8888:
+        case Gfx::BitmapFormat::BGRx8888:
+            frame->strip_alpha_channel();
+        }
+    }
+
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
     RefPtr<Core::MappedFile> icc_file;
