@@ -43,7 +43,7 @@ public:
 private:
     ImageStyleValue(AK::URL const&);
 
-    RefPtr<HTML::ImageRequest> m_image_request;
+    RefPtr<HTML::SharedImageRequest> m_image_request;
 
     void animate();
     Gfx::Bitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;

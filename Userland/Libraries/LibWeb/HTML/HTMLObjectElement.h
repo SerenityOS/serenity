@@ -80,7 +80,7 @@ private:
 
     RefPtr<DecodedImageData const> image_data() const;
 
-    RefPtr<ImageRequest> m_image_request;
+    RefPtr<SharedImageRequest> m_image_request;
 };
 
 }
