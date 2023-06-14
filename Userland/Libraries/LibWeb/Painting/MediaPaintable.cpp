@@ -169,14 +169,14 @@ DevicePixelRect MediaPaintable::paint_control_bar_timestamp(PaintContext& contex
     auto duration = human_readable_digital_time(round(media_element.duration()));
     auto timestamp = String::formatted("{} / {}", current_time, duration).release_value_but_fixme_should_propagate_errors();
 
-    auto timestamp_size = static_cast<DevicePixels::Type>(ceilf(context.painter().font().width(timestamp)));
+    auto const& scaled_font = layout_node().scaled_font(context);
+
+    auto timestamp_size = static_cast<DevicePixels::Type>(ceilf(scaled_font.width(timestamp)));
     if (timestamp_size > control_box_rect.width())
         return control_box_rect;
 
     auto timestamp_rect = control_box_rect;
     timestamp_rect.set_width(timestamp_size);
-
-    auto const& scaled_font = layout_node().scaled_font(context);
     context.painter().draw_text(timestamp_rect.to_type<int>(), timestamp, scaled_font, Gfx::TextAlignment::CenterLeft, Color::White);
 
     control_box_rect.take_from_left(timestamp_rect.width());
