@@ -132,7 +132,7 @@ DevicePixelRect MediaPaintable::paint_control_bar_timeline(PaintContext& context
         timeline_rect.set_width(min(control_box_rect.width() * 6 / 10, timeline_rect.width()));
     media_element.cached_layout_boxes({}).timeline_rect = context.scale_to_css_rect(timeline_rect);
 
-    auto playback_percentage = media_element.current_time() / media_element.duration();
+    auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.current_time() / media_element.duration();
     auto playback_position = static_cast<double>(static_cast<int>(timeline_rect.width())) * playback_percentage;
 
     auto timeline_button_size = min(maximum_timeline_button_size, timeline_rect.height() / 2);
@@ -166,7 +166,8 @@ DevicePixelRect MediaPaintable::paint_control_bar_timeline(PaintContext& context
 DevicePixelRect MediaPaintable::paint_control_bar_timestamp(PaintContext& context, HTML::HTMLMediaElement const& media_element, DevicePixelRect control_box_rect) const
 {
     auto current_time = human_readable_digital_time(round(media_element.current_time()));
-    auto duration = human_readable_digital_time(round(media_element.duration()));
+    auto duration = human_readable_digital_time(isnan(media_element.duration()) ? 0 : round(media_element.duration()));
+
     auto timestamp = String::formatted("{} / {}", current_time, duration).release_value_but_fixme_should_propagate_errors();
 
     auto const& scaled_font = layout_node().scaled_font(context);
