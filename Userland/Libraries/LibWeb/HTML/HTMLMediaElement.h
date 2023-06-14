@@ -85,6 +85,14 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
 
+    double volume() const { return m_volume; }
+    WebIDL::ExceptionOr<void> set_volume(double);
+
+    bool muted() const { return m_muted; }
+    void set_muted(bool);
+
+    double effective_media_volume() const;
+
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
 
@@ -118,6 +126,8 @@ protected:
     // subclasses must invoke set_current_playback_position() to unblock the user agent.
     virtual void on_seek(double, MediaSeekMode) { m_seek_in_progress = false; }
 
+    virtual void on_volume_change() { }
+
 private:
     friend SourceElementSelector;
 
@@ -141,6 +151,8 @@ private:
     void set_show_poster(bool);
     void set_paused(bool);
     void set_duration(double);
+
+    void volume_or_muted_attribute_changed();
 
     bool blocked() const;
     bool is_eligible_for_autoplay() const;
@@ -211,6 +223,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-paused
     bool m_paused { true };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-volume
+    double m_volume { 1.0 };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-muted
+    bool m_muted { false };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-audiotracks
     JS::GCPtr<AudioTrackList> m_audio_tracks;

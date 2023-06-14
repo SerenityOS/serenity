@@ -29,6 +29,7 @@ private:
     virtual void on_playing() override;
     virtual void on_paused() override;
     virtual void on_seek(double, MediaSeekMode) override;
+    virtual void on_volume_change() override;
 };
 
 }

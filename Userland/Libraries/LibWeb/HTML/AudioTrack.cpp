@@ -100,6 +100,11 @@ void AudioTrack::seek(double position, MediaSeekMode seek_mode)
     m_loader->seek(position).release_value_but_fixme_should_propagate_errors();
 }
 
+void AudioTrack::update_volume()
+{
+    m_audio_plugin->set_volume(m_media_element->effective_media_volume());
+}
+
 void AudioTrack::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
