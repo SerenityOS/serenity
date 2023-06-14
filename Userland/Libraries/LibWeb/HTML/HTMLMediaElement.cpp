@@ -303,6 +303,9 @@ void HTMLMediaElement::set_duration(double duration)
     }
 
     m_duration = duration;
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
