@@ -22,6 +22,7 @@
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibLocale/Locale.h>
+#include <LibUnicode/CharacterTypes.h>
 
 template<class T>
 inline constexpr bool StorageTypeIsList = false;
@@ -597,4 +598,34 @@ ReadonlySpan<StringView> @name@()
     return values.span();
 }
 )~~~");
+}
+
+inline Vector<u32> parse_code_point_list(StringView list)
+{
+    Vector<u32> code_points;
+
+    auto segments = list.split_view(' ');
+    for (auto const& code_point : segments)
+        code_points.append(AK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
+
+    return code_points;
+}
+
+inline Unicode::CodePointRange parse_code_point_range(StringView list)
+{
+    Unicode::CodePointRange code_point_range {};
+
+    if (list.contains(".."sv)) {
+        auto segments = list.split_view(".."sv);
+        VERIFY(segments.size() == 2);
+
+        auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
+        code_point_range = { begin, end };
+    } else {
+        auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(list).value();
+        code_point_range = { code_point, code_point };
+    }
+
+    return code_point_range;
 }
