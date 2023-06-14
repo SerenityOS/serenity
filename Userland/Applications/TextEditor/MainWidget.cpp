@@ -70,10 +70,9 @@ MainWidget::MainWidget()
     if (font_entry != "default")
         m_editor->set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
 
-    m_editor->on_change = Core::debounce([this] {
+    m_editor->on_change = Core::debounce(100, [this] {
         update_preview();
-    },
-        100);
+    });
 
     m_editor->on_modified_change = [this](bool modified) {
         window()->set_modified(modified);

@@ -11,7 +11,7 @@
 namespace Core {
 
 template<typename TFunction>
-auto debounce(TFunction function, int timeout)
+auto debounce(int timeout, TFunction function)
 {
     RefPtr<Core::Timer> timer;
     return [=]<typename... T>(T... args) mutable {
