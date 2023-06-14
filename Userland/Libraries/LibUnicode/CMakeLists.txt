@@ -5,6 +5,7 @@ set(SOURCES
     CurrencyCode.cpp
     Emoji.cpp
     Normalize.cpp
+    Punycode.cpp
     Segmentation.cpp
     String.cpp
     UnicodeUtils.cpp
