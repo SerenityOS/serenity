@@ -190,7 +190,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    text_box.on_change = Core::debounce([&]() {
+    text_box.on_change = Core::debounce(5, [&]() {
         {
             Threading::MutexLocker locker(app_state.lock);
             if (app_state.last_query == text_box.text())
@@ -200,8 +200,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         db.search(text_box.text());
-    },
-        5);
+    });
     text_box.on_return_pressed = [&]() {
         if (!app_state.selected_index.has_value())
             return;

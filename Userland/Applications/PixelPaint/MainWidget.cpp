@@ -1299,13 +1299,12 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_tab_widget->set_tab_title(image_editor, title);
     };
 
-    image_editor.on_modified_change = Core::debounce([&](auto const modified) {
+    image_editor.on_modified_change = Core::debounce(100, [&](auto const modified) {
         m_tab_widget->set_tab_modified(image_editor, modified);
         update_window_modified();
         m_histogram_widget->image_changed();
         m_vectorscope_widget->image_changed();
-    },
-        100);
+    });
 
     image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {
         auto const& image_size = current_image_editor()->image().size();
@@ -1340,11 +1339,10 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_show_rulers_action->set_checked(show_rulers);
     };
 
-    image_editor.on_scale_change = Core::debounce([this](float scale) {
+    image_editor.on_scale_change = Core::debounce(100, [this](float scale) {
         m_zoom_combobox->set_text(DeprecatedString::formatted("{}%", roundf(scale * 100)));
         current_image_editor()->update_tool_cursor();
-    },
-        100);
+    });
 
     image_editor.on_primary_color_change = [&](Color color) {
         m_palette_widget->set_primary_color(color);

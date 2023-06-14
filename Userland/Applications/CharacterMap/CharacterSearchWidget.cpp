@@ -62,7 +62,7 @@ CharacterSearchWidget::CharacterSearchWidget()
     m_search_input->on_up_pressed = [this] { m_results_table->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set); };
     m_search_input->on_down_pressed = [this] { m_results_table->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set); };
 
-    m_search_input->on_change = Core::debounce([this] { search(); }, 100);
+    m_search_input->on_change = Core::debounce(100, [this] { search(); });
 
     m_results_table->horizontal_scrollbar().set_visible(false);
     m_results_table->set_column_headers_visible(false);
