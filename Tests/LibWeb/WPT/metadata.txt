@@ -96,7 +96,7 @@
 
 --- css/CSS2/floats/float-nowrap-5.html.ini ---
 [float-nowrap-5.html]
-  expected: FAIL
+  expected: PASS
 
 --- css/CSS2/floats/float-nowrap-4.html.ini ---
 [float-nowrap-4.html]
@@ -200,7 +200,7 @@
 
 --- css/CSS2/floats/float-nowrap-6.html.ini ---
 [float-nowrap-6.html]
-  expected: FAIL
+  expected: PASS
 
 --- css/CSS2/floats/float-nowrap-7.html.ini ---
 [float-nowrap-7.html]
