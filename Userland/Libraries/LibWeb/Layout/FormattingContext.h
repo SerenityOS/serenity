@@ -99,6 +99,8 @@ protected:
     static bool should_treat_width_as_auto(Box const&, AvailableSpace const&);
     static bool should_treat_height_as_auto(Box const&, AvailableSpace const&);
 
+    [[nodiscard]] bool should_treat_max_height_as_none(Box const&) const;
+
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode, AvailableSpace const&);
     void compute_inset(Box const& box);
 

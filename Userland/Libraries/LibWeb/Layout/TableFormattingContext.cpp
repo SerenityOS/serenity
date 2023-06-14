@@ -186,7 +186,7 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
 
         CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
         CSSPixels max_width = computed_values.width().is_auto() ? max_content_width : width;
-        if (!computed_values.max_height().is_none())
+        if (!should_treat_max_height_as_none(cell.box))
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
         if (!computed_values.max_width().is_none())
             max_width = min(max_width, computed_values.max_width().to_px(cell.box, containing_block.content_width()));

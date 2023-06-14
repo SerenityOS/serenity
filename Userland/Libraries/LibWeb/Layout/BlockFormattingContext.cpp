@@ -458,7 +458,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         }
     }
 
-    if (!computed_values.max_height().is_none()) {
+    if (!should_treat_max_height_as_none(box)) {
         auto max_height = calculate_inner_height(box, available_space.height, computed_values.max_height());
         if (!max_height.is_auto())
             height = min(height, max_height.to_px(box));

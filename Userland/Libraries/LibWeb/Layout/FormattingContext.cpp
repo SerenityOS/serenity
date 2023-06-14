@@ -268,7 +268,7 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     CSSPixels specified_min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
     CSSPixels specified_max_width = box.computed_values().max_width().is_none() ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
     CSSPixels specified_min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
-    CSSPixels specified_max_height = box.computed_values().max_height().is_none() ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
+    CSSPixels specified_max_height = should_treat_max_height_as_none(box) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
 
     auto min_width = min(specified_min_width, specified_max_width);
     auto max_width = max(specified_min_width, specified_max_width);
@@ -527,8 +527,8 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box,
 
     // 2. If this tentative height is greater than 'max-height', the rules above are applied again,
     //    but this time using the value of 'max-height' as the computed value for 'height'.
-    auto computed_max_height = box.computed_values().max_height();
-    if (!computed_max_height.is_none()) {
+    if (!should_treat_max_height_as_none(box)) {
+        auto const& computed_max_height = box.computed_values().max_height();
         if (used_height > computed_max_height.to_px(box, height_of_containing_block)) {
             used_height = tentative_height_for_replaced_element(box, computed_max_height, available_space);
         }
@@ -1653,6 +1653,22 @@ bool box_is_sized_as_replaced_element(Box const& box)
     // and CSS Flexible Box Model Level 1 §9.2.
     // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-automatic
     return is<ReplacedBox>(box) || box.has_preferred_aspect_ratio();
+}
+
+bool FormattingContext::should_treat_max_height_as_none(Box const& box) const
+{
+    // https://www.w3.org/TR/CSS22/visudet.html#min-max-heights
+    // If the height of the containing block is not specified explicitly (i.e., it depends on content height),
+    // and this element is not absolutely positioned, the percentage value is treated as '0' (for 'min-height')
+    // or 'none' (for 'max-height').
+    auto const& max_height = box.computed_values().max_height();
+    if (max_height.is_none())
+        return true;
+    if (box.is_absolutely_positioned())
+        return false;
+    if (max_height.contains_percentage() && !m_state.get(*box.non_anonymous_containing_block()).has_definite_height())
+        return true;
+    return false;
 }
 
 }

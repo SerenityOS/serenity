@@ -1,0 +1,46 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x123.34375 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x105.34375 children: not-inline
+      BlockContainer <div.block.formatting-context> at (11,11) content-size 778x19.46875 [BFC] children: not-inline
+        BlockContainer <div> at (12,12) content-size 776x17.46875 children: inline
+          line 0 width: 40.671875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 5, rect: [12,12 40.671875x17.46875]
+              "block"
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (10,31.46875) content-size 780x0 children: inline
+        TextNode <#text>
+      BlockContainer <div.inline.formatting-context> at (11,32.46875) content-size 778x17.46875 [BFC] children: inline
+        line 0 width: 43.296875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 6, rect: [12,32.46875 41.296875x17.46875]
+            "inline"
+        InlineNode <div>
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (10,50.9375) content-size 780x0 children: inline
+        TextNode <#text>
+      Box <div.flex.formatting-context> at (11,51.9375) content-size 778x19.46875 flex-container(row) [FFC] children: not-inline
+        BlockContainer <div> at (12,52.9375) content-size 29.09375x17.46875 flex-item [BFC] children: inline
+          line 0 width: 29.09375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 4, rect: [12,52.9375 29.09375x17.46875]
+              "flex"
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (10,72.40625) content-size 780x0 children: inline
+        TextNode <#text>
+      Box <div.grid.formatting-context> at (11,73.40625) content-size 778x19.46875 [GFC] children: not-inline
+        BlockContainer <div> at (12,74.40625) content-size 776x17.46875 [BFC] children: inline
+          line 0 width: 28.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 4, rect: [12,74.40625 28.8125x17.46875]
+              "grid"
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (10,93.875) content-size 780x0 children: inline
+        TextNode <#text>
+      TableWrapper <(anonymous)> at (10,93.875) content-size 38.625x21.46875 [BFC] children: not-inline
+        Box <div.table.formatting-context> at (11,94.875) content-size 38.625x19.46875 table-box [TFC] children: not-inline
+          Box <(anonymous)> at (11,94.875) content-size 40.625x19.46875 table-row children: not-inline
+            BlockContainer <(anonymous)> at (11,94.875) content-size 40.625x19.46875 table-cell [BFC] children: not-inline
+              BlockContainer <div> at (12,95.875) content-size 38.625x17.46875 children: inline
+                line 0 width: 38.625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                  frag 0 from TextNode start: 0, length: 5, rect: [12,95.875 38.625x17.46875]
+                    "table"
+                TextNode <#text>
+      BlockContainer <(anonymous)> at (10,115.34375) content-size 780x0 children: inline
+        TextNode <#text>
