@@ -89,6 +89,17 @@ Duration AudioTrack::duration() const
     return Duration::from_milliseconds(static_cast<i64>(duration * 1000.0));
 }
 
+void AudioTrack::seek(double position, MediaSeekMode seek_mode)
+{
+    // FIXME: Implement seeking mode.
+    (void)seek_mode;
+
+    auto duration = static_cast<double>(this->duration().to_milliseconds()) / 1000.0;
+    position = position / duration * static_cast<double>(m_loader->total_samples());
+
+    m_loader->seek(position).release_value_but_fixme_should_propagate_errors();
+}
+
 void AudioTrack::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

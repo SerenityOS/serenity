@@ -26,6 +26,7 @@ public:
 
     Duration position() const;
     Duration duration() const;
+    void seek(double, MediaSeekMode);
 
     String const& id() const { return m_id; }
     String const& kind() const { return m_kind; }
