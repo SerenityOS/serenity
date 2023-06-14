@@ -31,6 +31,8 @@ public:
     virtual void pause_playback() override;
     virtual void playback_ended() override;
 
+    virtual void set_volume(double) override;
+
 private:
     AudioCodecPluginLadybird(NonnullOwnPtr<QMediaDevices>, NonnullOwnPtr<QAudioSink>);
 

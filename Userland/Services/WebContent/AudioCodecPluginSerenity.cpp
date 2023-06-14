@@ -56,4 +56,9 @@ void AudioCodecPluginSerenity::playback_ended()
     m_connection->async_clear_buffer();
 }
 
+void AudioCodecPluginSerenity::set_volume(double volume)
+{
+    m_connection->async_set_self_volume(volume);
+}
+
 }

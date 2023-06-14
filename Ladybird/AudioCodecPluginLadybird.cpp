@@ -86,4 +86,9 @@ void AudioCodecPluginLadybird::playback_ended()
     m_audio_output->suspend();
 }
 
+void AudioCodecPluginLadybird::set_volume(double volume)
+{
+    m_audio_output->setVolume(volume);
+}
+
 }
