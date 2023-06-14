@@ -772,7 +772,7 @@ template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
     CONSTEXPR_STATE(pow, x, y);
-    // fixme I am naive
+    // FIXME: I am naive
     if (__builtin_isnan(y))
         return y;
     if (y == 0)
