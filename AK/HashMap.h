@@ -14,13 +14,23 @@
 
 namespace AK {
 
+namespace Detail {
+
+template<typename K, typename V>
+struct Entry {
+    K key;
+    V value;
+};
+
+}
+
 template<typename K, typename V, typename KeyTraits, typename ValueTraits, bool IsOrdered>
 class HashMap {
 private:
-    struct Entry {
-        K key;
-        V value;
-    };
+    template<typename K2, typename V2, typename KeyTraits2, typename ValueTraits2, bool IsOrdered2>
+    friend class HashMap;
+
+    using Entry = Detail::Entry<K, V>;
 
     struct EntryTraits {
         static unsigned hash(Entry const& entry) { return KeyTraits::hash(entry.key); }
@@ -286,12 +296,27 @@ public:
         return hash;
     }
 
-    template<typename NewKeyTraits = KeyTraits, typename NewValueTraits = ValueTraits, bool NewIsOrdered = IsOrdered>
-    ErrorOr<HashMap<K, V, NewKeyTraits, NewValueTraits, NewIsOrdered>> clone() const
+    template<typename NewKeyTraits = KeyTraits, typename NewValueTraits = ValueTraits, bool NewIsOrdered = IsOrdered, typename ClonerK = CloneCaller<K>, typename ClonerV = CloneCaller<V>>
+    ErrorOr<HashMap<K, V, NewKeyTraits, NewValueTraits, NewIsOrdered>> clone(ClonerK cloner_k = {}, ClonerV cloner_v = {}) const
+    requires(IsCloner<ClonerK, K> && IsCloner<ClonerV, V>)
     {
-        HashMap<K, V, NewKeyTraits, NewValueTraits, NewIsOrdered> hash_map_clone;
-        for (auto& it : *this)
-            TRY(hash_map_clone.try_set(it.key, it.value));
+        using HashMapClone = HashMap<K, V, NewKeyTraits, NewValueTraits, NewIsOrdered>;
+        using NewEntry = typename HashMapClone::Entry;
+        using NewEntryTraits = typename HashMapClone::EntryTraits;
+        HashMapClone hash_map_clone;
+        hash_map_clone.m_table = TRY((m_table.template clone<NewEntry, NewEntryTraits, NewIsOrdered>(
+            [&](Entry const& source) -> ErrorOr<Entry> {
+                // NOTE: It is tempting to "clean up" this code by handling the new key and value separately. This would seemingly "reduce" the number of cases from 2*2 to 2+2 (same number, but simpler to think about).
+                // It would also unnecessarily increase the number of moves, so be wary of that.
+                if constexpr (FallibleFunction<ClonerK, K const&> && FallibleFunction<ClonerV, V const&>)
+                    return Entry { TRY(cloner_k(source.key)), TRY(cloner_v(source.value)) };
+                else if constexpr (FallibleFunction<ClonerK, K const&>)
+                    return Entry { TRY(cloner_k(source.key)), source.value };
+                else if constexpr (FallibleFunction<ClonerV, V const&>)
+                    return Entry { source.key, TRY(cloner_v(source.value)) };
+                else
+                    return Entry { source.key, source.value };
+            })));
         return hash_map_clone;
     }
 

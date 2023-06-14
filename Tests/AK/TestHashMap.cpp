@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -326,4 +327,271 @@ TEST_CASE(move_assign)
     EXPECT_EQ(orig.get(2), Optional<int>());
     EXPECT_EQ(second.size(), static_cast<size_t>(3));
     EXPECT_EQ(second.get(2), Optional<int>(20));
+}
+
+template<bool CanClone, bool CanCopyConstruct = true>
+class ObservableConstructor {
+public:
+    ObservableConstructor(int value)
+        : m_value(value)
+    {
+    }
+    ObservableConstructor(ObservableConstructor const& other)
+    requires(CanCopyConstruct)
+        : m_value(other.m_value)
+    {
+        s_observed_copy_constructs += 1;
+    }
+    ObservableConstructor(ObservableConstructor&& other)
+        : m_value(other.m_value)
+    {
+        s_observed_move_constructs += 1;
+    }
+
+    ObservableConstructor& operator=(ObservableConstructor const& other)
+    requires(CanCopyConstruct)
+    {
+        m_value = other.m_value;
+        s_observed_copy_assigns += 1;
+        return *this;
+    }
+    ObservableConstructor& operator=(ObservableConstructor&& other)
+    {
+        m_value = other.m_value;
+        s_observed_move_assigns += 1;
+        return *this;
+    }
+
+    int value() const { return m_value; }
+
+    ErrorOr<ObservableConstructor> clone() const
+    requires(CanClone)
+    {
+        s_observed_clones += 1;
+        return { ObservableConstructor { m_value } };
+    }
+
+    bool operator==(ObservableConstructor const& other) const
+    {
+        return m_value == other.m_value;
+    }
+
+    static int observed_copy_constructs() { return s_observed_copy_constructs; }
+    static int observed_move_constructs() { return s_observed_move_constructs; }
+    static int observed_copy_assigns() { return s_observed_copy_assigns; }
+    static int observed_move_assigns() { return s_observed_move_assigns; }
+    static int observed_clones() { return s_observed_clones; }
+
+private:
+    int m_value;
+
+    static int s_observed_copy_constructs;
+    static int s_observed_move_constructs;
+    static int s_observed_copy_assigns;
+    static int s_observed_move_assigns;
+    static int s_observed_clones;
+};
+
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_copy_constructs = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_move_constructs = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_copy_assigns = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_move_assigns = 0;
+template<bool CanClone, bool CanCopyConstruct>
+int ObservableConstructor<CanClone, CanCopyConstruct>::s_observed_clones = 0;
+
+static_assert(HasFallibleClone<ObservableConstructor<true, true>>);
+static_assert(!HasFallibleClone<ObservableConstructor<false, true>>);
+static_assert(HasFallibleClone<ObservableConstructor<true, false>>);
+static_assert(!HasFallibleClone<ObservableConstructor<false, false>>);
+
+template<bool CanClone, bool CanCopyConstruct>
+struct Traits<ObservableConstructor<CanClone, CanCopyConstruct>> : public GenericTraits<ObservableConstructor<CanClone, CanCopyConstruct>> {
+    static constexpr unsigned hash(ObservableConstructor<CanClone, CanCopyConstruct> const& value)
+    {
+        return value.value() + 1;
+    }
+};
+
+TEST_CASE(clone_copy_construct_key)
+{
+    using TypeUnderTest = ObservableConstructor<false, true>;
+    auto old_copies = TypeUnderTest::observed_copy_constructs();
+    auto old_moves = TypeUnderTest::observed_move_constructs();
+    auto old_copies_a = TypeUnderTest::observed_copy_assigns();
+    auto old_moves_a = TypeUnderTest::observed_move_assigns();
+    auto old_clones = TypeUnderTest::observed_clones();
+
+    HashMap<TypeUnderTest, int> map1;
+    TRY_OR_FAIL(map1.try_set({ 42 }, 43));
+    TRY_OR_FAIL(map1.try_set({ 1337 }, 1338));
+    TRY_OR_FAIL(map1.try_set({ 123456789 }, 987654321));
+    TRY_OR_FAIL(map1.try_set({ 55 }, 56));
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+
+    HashMap<TypeUnderTest, int> map2 = TRY_OR_FAIL(map1.clone());
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(map2.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 4);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8 + 12);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+    EXPECT_EQ(map1.get({ 42 }).value(), 43);
+    EXPECT_EQ(map1.get({ 43 }).has_value(), false);
+    EXPECT_EQ(map2.get({ 42 }).value(), 43);
+    EXPECT_EQ(map2.get({ 43 }).has_value(), false);
+}
+
+TEST_CASE(clone_copy_construct_value)
+{
+    using TypeUnderTest = ObservableConstructor<false, true>;
+    auto old_copies = TypeUnderTest::observed_copy_constructs();
+    auto old_moves = TypeUnderTest::observed_move_constructs();
+    auto old_copies_a = TypeUnderTest::observed_copy_assigns();
+    auto old_moves_a = TypeUnderTest::observed_move_assigns();
+    auto old_clones = TypeUnderTest::observed_clones();
+
+    HashMap<int, TypeUnderTest> map1;
+    TRY_OR_FAIL(map1.try_set(42, { 43 }));
+    TRY_OR_FAIL(map1.try_set(1337, { 1338 }));
+    TRY_OR_FAIL(map1.try_set(123456789, { 987654321 }));
+    TRY_OR_FAIL(map1.try_set(55, { 56 }));
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+
+    HashMap<int, TypeUnderTest> map2 = TRY_OR_FAIL(map1.clone());
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(map2.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 4);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8 + 12);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+    EXPECT_EQ(map1.get(42).value().value(), 43);
+    EXPECT_EQ(map1.get(43).has_value(), false);
+    EXPECT_EQ(map2.get(42).value().value(), 43);
+    EXPECT_EQ(map2.get(43).has_value(), false);
+}
+
+TEST_CASE(clone_call_key)
+{
+    using TypeUnderTest = ObservableConstructor<true, false>;
+    auto old_copies = TypeUnderTest::observed_copy_constructs();
+    auto old_moves = TypeUnderTest::observed_move_constructs();
+    auto old_copies_a = TypeUnderTest::observed_copy_assigns();
+    auto old_moves_a = TypeUnderTest::observed_move_assigns();
+    auto old_clones = TypeUnderTest::observed_clones();
+
+    HashMap<TypeUnderTest, int> map1;
+    TRY_OR_FAIL(map1.try_set({ 42 }, 43));
+    TRY_OR_FAIL(map1.try_set({ 1337 }, 1338));
+    TRY_OR_FAIL(map1.try_set({ 123456789 }, 987654321));
+    TRY_OR_FAIL(map1.try_set({ 55 }, 56));
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+
+    HashMap<TypeUnderTest, int> map2 = TRY_OR_FAIL(map1.clone());
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(map2.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    // We have way too many moves.
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8 + 20);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 4);
+    EXPECT_EQ(map1.get({ 42 }).value(), 43);
+    EXPECT_EQ(map1.get({ 43 }).has_value(), false);
+    EXPECT_EQ(map2.get({ 42 }).value(), 43);
+    EXPECT_EQ(map2.get({ 43 }).has_value(), false);
+}
+
+TEST_CASE(clone_call_value)
+{
+    using TypeUnderTest = ObservableConstructor<true, false>;
+    auto old_copies = TypeUnderTest::observed_copy_constructs();
+    auto old_moves = TypeUnderTest::observed_move_constructs();
+    auto old_copies_a = TypeUnderTest::observed_copy_assigns();
+    auto old_moves_a = TypeUnderTest::observed_move_assigns();
+    auto old_clones = TypeUnderTest::observed_clones();
+
+    HashMap<int, TypeUnderTest> map1;
+    TRY_OR_FAIL(map1.try_set(42, { 43 }));
+    TRY_OR_FAIL(map1.try_set(1337, { 1338 }));
+    TRY_OR_FAIL(map1.try_set(123456789, { 987654321 }));
+    TRY_OR_FAIL(map1.try_set(55, { 56 }));
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+
+    HashMap<int, TypeUnderTest> map2 = TRY_OR_FAIL(map1.clone());
+    EXPECT_EQ(map1.size(), static_cast<size_t>(4));
+    EXPECT_EQ(map2.size(), static_cast<size_t>(4));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    // We have way too many moves.
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 8 + 20);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 4);
+    EXPECT_EQ(map1.get(42).value().value(), 43);
+    EXPECT_EQ(map1.get(43).has_value(), false);
+    EXPECT_EQ(map2.get(42).value().value(), 43);
+    EXPECT_EQ(map2.get(43).has_value(), false);
+}
+
+static_assert(HasFallibleClone<Vector<ObservableConstructor<true>>>);
+static_assert(HasFallibleClone<Vector<ObservableConstructor<false>>>);
+
+TEST_CASE(clone_fallible_recursive)
+{
+    using TypeUnderTest = ObservableConstructor<true, false>;
+
+    auto old_copies = TypeUnderTest::observed_copy_constructs();
+    auto old_moves = TypeUnderTest::observed_move_constructs();
+    auto old_copies_a = TypeUnderTest::observed_copy_assigns();
+    auto old_moves_a = TypeUnderTest::observed_move_assigns();
+    auto old_clones = TypeUnderTest::observed_clones();
+
+    HashMap<int, Vector<TypeUnderTest>> map1;
+    TRY_OR_FAIL(map1.try_set(42, TRY_OR_FAIL((Vector<int> { 41, 42, 43 }.clone<TypeUnderTest>()))));
+    TRY_OR_FAIL(map1.try_set(1337, TRY_OR_FAIL((Vector<int> { 1336, 1337, 1338 }.clone<TypeUnderTest>()))));
+    TRY_OR_FAIL(map1.try_set(123456789, TRY_OR_FAIL((Vector<int> { 987654321, 999 }.clone<TypeUnderTest>()))));
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 0);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 0);
+    EXPECT_EQ(map1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(map1.get(1337).value()[2].value(), 1338);
+
+    auto map2 = TRY_OR_FAIL(map1.clone());
+    static_assert(IsSame<decltype(map2), HashMap<int, Vector<TypeUnderTest>>>);
+    EXPECT_EQ(TypeUnderTest::observed_copy_constructs() - old_copies, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_constructs() - old_moves, 16);
+    EXPECT_EQ(TypeUnderTest::observed_copy_assigns() - old_copies_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_move_assigns() - old_moves_a, 0);
+    EXPECT_EQ(TypeUnderTest::observed_clones() - old_clones, 8);
+    EXPECT_EQ(map1.size(), static_cast<size_t>(3));
+    EXPECT_EQ(map1.get(1337).value()[2].value(), 1338);
+    EXPECT_EQ(map2.size(), static_cast<size_t>(3));
+    EXPECT_EQ(map2.get(1337).value()[2].value(), 1338);
 }
