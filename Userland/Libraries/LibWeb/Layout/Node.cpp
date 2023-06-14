@@ -119,7 +119,7 @@ Box const* Node::containing_block() const
     return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 }
 
-Box const* Node::non_anyonymous_containing_block() const
+Box const* Node::non_anonymous_containing_block() const
 {
     auto nearest_ancestor_box = containing_block();
     VERIFY(nearest_ancestor_box);
