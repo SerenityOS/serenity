@@ -188,14 +188,16 @@ void AttributeParser::parse_horizontal_lineto()
 {
     bool absolute = consume() == 'H';
     parse_whitespace();
-    m_instructions.append({ PathInstructionType::HorizontalLine, absolute, parse_coordinate_sequence() });
+    for (auto coordinate : parse_coordinate_sequence())
+        m_instructions.append({ PathInstructionType::HorizontalLine, absolute, { coordinate } });
 }
 
 void AttributeParser::parse_vertical_lineto()
 {
     bool absolute = consume() == 'V';
     parse_whitespace();
-    m_instructions.append({ PathInstructionType::VerticalLine, absolute, parse_coordinate_sequence() });
+    for (auto coordinate : parse_coordinate_sequence())
+        m_instructions.append({ PathInstructionType::VerticalLine, absolute, { coordinate } });
 }
 
 void AttributeParser::parse_curveto()
