@@ -52,6 +52,9 @@ interface HTMLMediaElement : HTMLElement {
 
     // controls
     [Reflect, CEReactions] attribute boolean controls;
+    attribute double volume;
+    attribute boolean muted;
+    [Reflect=muted, CEReactions] attribute boolean defaultMuted;
 
     // tracks
     [SameObject] readonly attribute AudioTrackList audioTracks;

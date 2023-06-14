@@ -63,4 +63,11 @@ void HTMLAudioElement::on_seek(double position, MediaSeekMode seek_mode)
     });
 }
 
+void HTMLAudioElement::on_volume_change()
+{
+    audio_tracks()->for_each_enabled_track([&](auto& audio_track) {
+        audio_track.update_volume();
+    });
+}
+
 }

@@ -28,6 +28,8 @@ public:
     Duration duration() const;
     void seek(double, MediaSeekMode);
 
+    void update_volume();
+
     String const& id() const { return m_id; }
     String const& kind() const { return m_kind; }
     String const& label() const { return m_label; }

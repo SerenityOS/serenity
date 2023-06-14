@@ -92,6 +92,8 @@ void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
         load_element().release_value_but_fixme_should_propagate_errors();
     else if (name == HTML::AttributeNames::crossorigin)
         m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    else if (name == HTML::AttributeNames::muted)
+        set_muted(true);
 }
 
 void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
@@ -342,6 +344,69 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
     TRY(pause_element());
 
     return {};
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-volume
+WebIDL::ExceptionOr<void> HTMLMediaElement::set_volume(double volume)
+{
+    if (m_volume == volume)
+        return {};
+
+    // On setting, if the new value is in the range 0.0 to 1.0 inclusive, the media element's playback volume must be
+    // set to the new value. If the new value is outside the range 0.0 to 1.0 inclusive, then, on setting, an
+    // "IndexSizeError" DOMException must be thrown instead.
+    if (volume < 0.0 || volume > 1.0)
+        return WebIDL::IndexSizeError::create(realm(), "Volume must be in the range 0.0 to 1.0, inclusive"sv);
+
+    m_volume = volume;
+    volume_or_muted_attribute_changed();
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-muted
+void HTMLMediaElement::set_muted(bool muted)
+{
+    if (m_muted == muted)
+        return;
+
+    m_muted = muted;
+    volume_or_muted_attribute_changed();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#user-interface:dom-media-volume-3
+void HTMLMediaElement::volume_or_muted_attribute_changed()
+{
+    // Whenever either of the values that would be returned by the volume and muted IDL attributes change, the user
+    // agent must queue a media element task given the media element to fire an event named volumechange at the media
+    // element.
+    queue_a_media_element_task([this] {
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::volumechange).release_value_but_fixme_should_propagate_errors());
+    });
+
+    // FIXME: Then, if the media element is not allowed to play, the user agent must run the internal pause steps for the media element.
+
+    on_volume_change();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#effective-media-volume
+double HTMLMediaElement::effective_media_volume() const
+{
+    // FIXME 1. If the user has indicated that the user agent is to override the volume of the element, then return the
+    //          volume desired by the user.
+
+    // 2. If the element's audio output is muted, then return zero.
+    if (m_muted)
+        return 0.0;
+
+    // 3. Let volume be the playback volume of the audio portions of the media element, in range 0.0 (silent) to
+    //    1.0 (loudest).
+    auto volume = clamp(m_volume, 0.0, 1.0);
+
+    // 4. Return volume, interpreted relative to the range 0.0 to 1.0, with 0.0 being silent, and 1.0 being the loudest
+    //    setting, values in between increasing in loudness. The range need not be linear. The loudest setting may be
+    //    lower than the system's loudest possible setting; for example the user could have set a maximum volume.
+    return volume;
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
