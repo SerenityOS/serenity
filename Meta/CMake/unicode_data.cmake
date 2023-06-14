@@ -68,6 +68,9 @@ set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
 set(EMOJI_SERENITY_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji-serenity.txt")
 set(EMOJI_INSTALL_PATH "${CMAKE_BINARY_DIR}/Root/home/anon/Documents/emoji.txt")
 
+set(IDNA_MAPPING_TABLE_URL "https://www.unicode.org/Public/idna/${UCD_VERSION}/IdnaMappingTable.txt")
+set(IDNA_MAPPING_TABLE_PATH "${UCD_PATH}/IdnaMappingTable.txt")
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     remove_path_if_version_changed("${UCD_VERSION}" "${UCD_VERSION_FILE}" "${UCD_PATH}")
 
@@ -98,11 +101,16 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         message(STATUS "Skipping download of ${EMOJI_TEST_URL}, expecting the archive to have been extracted to ${EMOJI_TEST_PATH}")
     endif()
 
+    download_file("${IDNA_MAPPING_TABLE_URL}" "${IDNA_MAPPING_TABLE_PATH}")
+
     set(UNICODE_DATA_HEADER UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
 
     set(EMOJI_DATA_HEADER EmojiData.h)
     set(EMOJI_DATA_IMPLEMENTATION EmojiData.cpp)
+
+    set(IDNA_DATA_HEADER IDNAData.h)
+    set(IDNA_DATA_IMPLEMENTATION IDNAData.cpp)
 
     if (SERENITYOS)
         set(EMOJI_INSTALL_ARG -i "${EMOJI_INSTALL_PATH}")
@@ -130,11 +138,21 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         # the generated emoji.txt file.
         dependencies "${EMOJI_RES_PATH}" "${EMOJI_SERENITY_PATH}"
     )
+    invoke_generator(
+        "IDNAData"
+        Lagom::GenerateIDNAData
+        "${UCD_VERSION_FILE}"
+        "${IDNA_DATA_HEADER}"
+        "${IDNA_DATA_IMPLEMENTATION}"
+        arguments -m "${IDNA_MAPPING_TABLE_PATH}"
+    )
 
     set(UNICODE_DATA_SOURCES
         ${UNICODE_DATA_HEADER}
         ${UNICODE_DATA_IMPLEMENTATION}
         ${EMOJI_DATA_HEADER}
         ${EMOJI_DATA_IMPLEMENTATION}
+        ${IDNA_DATA_HEADER}
+        ${IDNA_DATA_IMPLEMENTATION}
     )
 endif()
