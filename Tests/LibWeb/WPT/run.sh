@@ -32,4 +32,4 @@ git clone --depth 10000 https://github.com/web-platform-tests/wpt.git
 ./concat-extract-metadata.py --extract metadata.txt metadata
 
 # Run tests.
-./wpt/wpt run ladybird --include-manifest include.ini --metadata ./metadata --manifest ./MANIFEST.json
+./wpt/wpt run ladybird --no-fail-on-unexpected --no-fail-on-unexpected-pass --skip-timeout --include-manifest include.ini --metadata ./metadata --manifest ./MANIFEST.json --log-raw "${wpt_run_log_filename}"
