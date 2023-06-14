@@ -149,9 +149,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     }
 
     CSSPixels width = unconstrained_width;
-    auto computed_max_width = box.computed_values().max_width();
-    if (!computed_max_width.is_none()) {
-        auto max_width = computed_max_width.to_px(box, width_of_containing_block);
+    if (!should_treat_max_width_as_none(box)) {
+        auto max_width = box.computed_values().max_width().to_px(box, width_of_containing_block);
         width = min(width, max_width);
     }
 
