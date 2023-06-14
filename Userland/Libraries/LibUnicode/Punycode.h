@@ -11,5 +11,7 @@
 namespace Unicode::Punycode {
 
 ErrorOr<String> decode(StringView);
+ErrorOr<String> encode(StringView);
+ErrorOr<String> encode(Utf32View);
 
 }

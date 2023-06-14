@@ -47,4 +47,11 @@ TEST_CASE(decode)
     EXPECT(decode("Nåväl hej vänner"sv).is_error());
 }
 
+TEST_CASE(encode)
+{
+#define CASE(a, b) EXPECT_EQ(TRY_OR_FAIL(encode(a)), b);
+    ENUMERATE_TEST_CASES
+#undef CASE
+}
+
 }
