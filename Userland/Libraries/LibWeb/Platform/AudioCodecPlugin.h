@@ -30,6 +30,8 @@ public:
     virtual void pause_playback() = 0;
     virtual void playback_ended() = 0;
 
+    virtual void set_volume(double) = 0;
+
 protected:
     AudioCodecPlugin();
 };
