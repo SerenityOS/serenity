@@ -115,7 +115,7 @@ public:
     // Anonymous block boxes are ignored when resolving percentage values that would refer to it:
     // the closest non-anonymous ancestor box is used instead.
     // https://www.w3.org/TR/CSS22/visuren.html#anonymous-block-level
-    Box const* non_anyonymous_containing_block() const;
+    Box const* non_anonymous_containing_block() const;
 
     bool establishes_stacking_context() const;
 
