@@ -266,7 +266,7 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     auto height_of_containing_block = containing_block_state.content_height();
 
     CSSPixels specified_min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
-    CSSPixels specified_max_width = box.computed_values().max_width().is_none() ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
+    CSSPixels specified_max_width = should_treat_max_width_as_none(box) ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
     CSSPixels specified_min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
     CSSPixels specified_max_height = should_treat_max_height_as_none(box) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
 
@@ -452,8 +452,8 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(Box const& box, 
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto computed_max_width = box.computed_values().max_width();
-    if (!computed_max_width.is_none()) {
+    if (!should_treat_max_width_as_none(box)) {
+        auto const& computed_max_width = box.computed_values().max_width();
         if (used_width > computed_max_width.to_px(box, width_of_containing_block)) {
             used_width = tentative_width_for_replaced_element(box, computed_max_width, available_space);
         }
@@ -688,7 +688,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    if (!computed_values.max_width().is_none()) {
+    if (!should_treat_max_width_as_none(box)) {
         auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
         if (used_width.to_px(box) > max_width.to_px(box)) {
             used_width = try_compute_width(max_width);
@@ -1653,6 +1653,18 @@ bool box_is_sized_as_replaced_element(Box const& box)
     // and CSS Flexible Box Model Level 1 §9.2.
     // https://www.w3.org/TR/css-sizing-4/#aspect-ratio-automatic
     return is<ReplacedBox>(box) || box.has_preferred_aspect_ratio();
+}
+
+bool FormattingContext::should_treat_max_width_as_none(Box const& box) const
+{
+    auto const& max_width = box.computed_values().max_width();
+    if (max_width.is_none())
+        return true;
+    if (box.is_absolutely_positioned())
+        return false;
+    if (max_width.contains_percentage() && !m_state.get(*box.non_anonymous_containing_block()).has_definite_width())
+        return true;
+    return false;
 }
 
 bool FormattingContext::should_treat_max_height_as_none(Box const& box) const
