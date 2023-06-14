@@ -280,7 +280,7 @@ private:
     // FIXME: Try to decrease this.
     static constexpr size_t inline_capacity = 6 * sizeof(void*);
 #endif
-    alignas(max(alignof(CallableWrapperBase), alignof(CallableWrapperBase*))) u8 m_storage[inline_capacity];
+    alignas(__BIGGEST_ALIGNMENT__) u8 m_storage[inline_capacity];
 };
 
 }
