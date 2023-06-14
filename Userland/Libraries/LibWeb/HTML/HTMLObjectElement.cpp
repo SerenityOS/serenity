@@ -318,7 +318,7 @@ void HTMLObjectElement::load_image()
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
     auto data = attribute(HTML::AttributeNames::data);
     auto url = document().parse_url(data);
-    m_image_request = HTML::ImageRequest::get_shareable_or_create(*document().page(), url).release_value_but_fixme_should_propagate_errors();
+    m_image_request = HTML::SharedImageRequest::get_or_create(*document().page(), url).release_value_but_fixme_should_propagate_errors();
     m_image_request->add_callbacks(
         [this] {
             run_object_representation_completed_steps(Representation::Image);
@@ -327,13 +327,11 @@ void HTMLObjectElement::load_image()
             run_object_representation_fallback_steps();
         });
 
-    // If the image request is already available or fetching, no need to start another fetch.
-    if (m_image_request->is_available() || m_image_request->fetch_controller())
-        return;
-
-    auto request = HTML::create_potential_CORS_request(vm(), url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
-    request->set_client(&document().relevant_settings_object());
-    m_image_request->fetch_image(realm(), request);
+    if (m_image_request->needs_fetching()) {
+        auto request = HTML::create_potential_CORS_request(vm(), url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
+        request->set_client(&document().relevant_settings_object());
+        m_image_request->fetch_image(realm(), request);
+    }
 }
 
 void HTMLObjectElement::update_layout_and_child_objects(Representation representation)

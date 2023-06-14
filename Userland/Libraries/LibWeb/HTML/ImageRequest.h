@@ -12,6 +12,7 @@
 #include <LibGfx/Size.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/SharedImageRequest.h>
 
 namespace Web::HTML {
 
@@ -19,7 +20,6 @@ namespace Web::HTML {
 class ImageRequest : public RefCounted<ImageRequest> {
 public:
     static ErrorOr<NonnullRefPtr<ImageRequest>> create(Page&);
-    static ErrorOr<NonnullRefPtr<ImageRequest>> get_shareable_or_create(Page&, AK::URL const&);
     ~ImageRequest();
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
@@ -31,6 +31,7 @@ public:
     };
 
     bool is_available() const;
+    bool is_fetching() const;
 
     State state() const;
     void set_state(State);
@@ -50,26 +51,15 @@ public:
     // https://html.spec.whatwg.org/multipage/images.html#prepare-an-image-for-presentation
     void prepare_for_presentation(HTMLImageElement&);
 
-    [[nodiscard]] JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller();
-    void set_fetch_controller(JS::GCPtr<Fetch::Infrastructure::FetchController>);
-
     void fetch_image(JS::Realm&, JS::NonnullGCPtr<Fetch::Infrastructure::Request>);
-
     void add_callbacks(JS::SafeFunction<void()> on_finish, JS::SafeFunction<void()> on_fail);
+
+    SharedImageRequest const* shared_image_request() const { return m_shared_image_request; }
 
 private:
     explicit ImageRequest(Page&);
 
-    void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
-    void handle_failed_fetch();
-
     Page& m_page;
-
-    struct Callbacks {
-        JS::SafeFunction<void()> on_finish;
-        JS::SafeFunction<void()> on_fail;
-    };
-    Vector<Callbacks> m_callbacks;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
     // An image request's state is initially unavailable.
@@ -91,7 +81,7 @@ private:
     // which is either a struct consisting of a width and a height or is null. It must initially be null.
     Optional<Gfx::FloatSize> m_preferred_density_corrected_dimensions;
 
-    JS::Handle<Fetch::Infrastructure::FetchController> m_fetch_controller;
+    RefPtr<SharedImageRequest> m_shared_image_request;
 };
 
 // https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request

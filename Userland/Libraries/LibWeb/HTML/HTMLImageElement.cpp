@@ -456,8 +456,8 @@ after_step_7:
         //         multiple image elements (as well as CSS background-images, etc.)
 
         // 16. Set image request to a new image request whose current URL is urlString.
-        // AD-HOC: Note that the ImageRequest "created" here may be an already existing one.
-        auto image_request = ImageRequest::get_shareable_or_create(*document().page(), url_string).release_value_but_fixme_should_propagate_errors();
+        auto image_request = ImageRequest::create(*document().page()).release_value_but_fixme_should_propagate_errors();
+        image_request->set_current_url(url_string);
 
         // 17. If current request's state is unavailable or broken, then set the current request to image request.
         //     Otherwise, set the pending request to image request.
@@ -476,7 +476,9 @@ after_step_7:
 
         image_request->add_callbacks(
             [this, image_request, maybe_omit_events, url_string, previous_url]() {
-                auto image_data = image_request->image_data();
+                VERIFY(image_request->shared_image_request());
+                auto image_data = image_request->shared_image_request()->image_data();
+                image_request->set_image_data(image_data);
 
                 ListOfAvailableImages::Key key;
                 key.url = url_string;
@@ -491,6 +493,9 @@ after_step_7:
                     upgrade_pending_request_to_current_request();
                     image_request->prepare_for_presentation(*this);
                 }
+
+                // 2. Set image request to the completely available state.
+                image_request->set_state(ImageRequest::State::CompletelyAvailable);
 
                 // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
                 document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
@@ -534,7 +539,7 @@ after_step_7:
             });
 
         // AD-HOC: If the image request is already available or fetching, no need to start another fetch.
-        if (image_request->is_available() || image_request->fetch_controller())
+        if (image_request->is_available() || image_request->is_fetching())
             return;
 
         // 18. Let request be the result of creating a potential-CORS request given urlString, "image",

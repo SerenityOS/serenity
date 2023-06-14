@@ -403,6 +403,7 @@ class Path2D;
 class Plugin;
 class PluginArray;
 class PromiseRejectionEvent;
+class SharedImageRequest;
 class Storage;
 class SubmitEvent;
 class TextMetrics;

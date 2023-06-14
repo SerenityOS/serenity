@@ -360,6 +360,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/SessionHistoryEntry.cpp
+    HTML/SharedImageRequest.cpp
     HTML/SourceSet.cpp
     HTML/Storage.cpp
     HTML/StructuredSerialize.cpp

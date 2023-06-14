@@ -31,7 +31,7 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
         return;
     m_document = &document;
 
-    m_image_request = HTML::ImageRequest::get_shareable_or_create(*document.page(), m_url).release_value_but_fixme_should_propagate_errors();
+    m_image_request = HTML::SharedImageRequest::get_or_create(*document.page(), m_url).release_value_but_fixme_should_propagate_errors();
     m_image_request->add_callbacks(
         [this, weak_this = make_weak_ptr()] {
             if (!weak_this)
@@ -54,13 +54,11 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
         },
         nullptr);
 
-    // If the image request is already available or fetching, no need to start another fetch.
-    if (m_image_request->is_available() || m_image_request->fetch_controller())
-        return;
-
-    auto request = HTML::create_potential_CORS_request(document.vm(), m_url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
-    request->set_client(&document.relevant_settings_object());
-    m_image_request->fetch_image(document.realm(), request);
+    if (m_image_request->needs_fetching()) {
+        auto request = HTML::create_potential_CORS_request(document.vm(), m_url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
+        request->set_client(&document.relevant_settings_object());
+        m_image_request->fetch_image(document.realm(), request);
+    }
 }
 
 void ImageStyleValue::animate()
