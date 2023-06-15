@@ -202,21 +202,19 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         return {};
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-    if (auto width = layout_node()->computed_values().stroke_width(); width.has_value()) {
-        // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
-        // FIXME: This isn't right, but it's something.
-        CSSPixels viewport_width = 0;
-        CSSPixels viewport_height = 0;
-        if (auto* svg_svg_element = shadow_including_first_ancestor_of_type<SVGSVGElement>()) {
-            if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
-                viewport_width = svg_svg_layout_node->computed_values().width().to_px(*svg_svg_layout_node, 0);
-                viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
-            }
+    auto width = layout_node()->computed_values().stroke_width();
+    // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
+    // FIXME: This isn't right, but it's something.
+    CSSPixels viewport_width = 0;
+    CSSPixels viewport_height = 0;
+    if (auto* svg_svg_element = shadow_including_first_ancestor_of_type<SVGSVGElement>()) {
+        if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
+            viewport_width = svg_svg_layout_node->computed_values().width().to_px(*svg_svg_layout_node, 0);
+            viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
         }
-        auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
-        return width->to_px(*layout_node(), scaled_viewport_size).to_double();
     }
-    return {};
+    auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
+    return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 
 }

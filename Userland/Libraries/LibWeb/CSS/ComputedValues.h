@@ -308,7 +308,7 @@ public:
     Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
     float fill_opacity() const { return m_inherited.fill_opacity; }
     float stroke_opacity() const { return m_inherited.stroke_opacity; }
-    Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
+    LengthPercentage const& stroke_width() const { return m_inherited.stroke_width; }
     Color stop_color() const { return m_noninherited.stop_color; }
     float stop_opacity() const { return m_noninherited.stop_opacity; }
 
@@ -352,7 +352,7 @@ protected:
         Optional<SVGPaint> stroke;
         float fill_opacity { InitialValues::fill_opacity() };
         float stroke_opacity { InitialValues::stroke_opacity() };
-        Optional<LengthPercentage> stroke_width;
+        LengthPercentage stroke_width { Length::make_px(1) };
 
         Vector<ShadowData> text_shadow;
     } m_inherited;
