@@ -61,6 +61,7 @@ void MediaPaintable::paint_media_controls(PaintContext& context, HTML::HTMLMedia
     paint_control_bar_playback_button(context, media_element, components, mouse_position);
     paint_control_bar_timeline(context, media_element, components, mouse_position);
     paint_control_bar_timestamp(context, components);
+    paint_control_bar_speaker(context, media_element, components, mouse_position);
 }
 
 MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintContext& context, HTML::HTMLMediaElement const& media_element, DevicePixelRect media_rect) const
@@ -81,6 +82,13 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     components.playback_button_rect = remaining_rect;
     components.playback_button_rect.set_width(playback_button_rect_width);
     remaining_rect.take_from_left(playback_button_rect_width);
+
+    components.speaker_button_size = context.rounded_device_pixels(30);
+    if (components.speaker_button_size <= remaining_rect.width()) {
+        components.speaker_button_rect = remaining_rect;
+        components.speaker_button_rect.take_from_left(remaining_rect.width() - components.speaker_button_size);
+        remaining_rect.take_from_right(components.speaker_button_size + component_padding);
+    }
 
     auto current_time = human_readable_digital_time(round(media_element.current_time()));
     auto duration = human_readable_digital_time(isnan(media_element.duration()) ? 0 : round(media_element.duration()));
@@ -105,6 +113,7 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     media_element.cached_layout_boxes({}).control_box_rect = context.scale_to_css_rect(components.control_box_rect);
     media_element.cached_layout_boxes({}).playback_button_rect = context.scale_to_css_rect(components.playback_button_rect);
     media_element.cached_layout_boxes({}).timeline_rect = context.scale_to_css_rect(components.timeline_rect);
+    media_element.cached_layout_boxes({}).speaker_button_rect = context.scale_to_css_rect(components.speaker_button_rect);
 
     return components;
 }
@@ -182,6 +191,52 @@ void MediaPaintable::paint_control_bar_timestamp(PaintContext& context, Componen
     context.painter().draw_text(components.timestamp_rect.to_type<int>(), components.timestamp, *components.timestamp_font, Gfx::TextAlignment::CenterLeft, Color::White);
 }
 
+void MediaPaintable::paint_control_bar_speaker(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components, Optional<DevicePixelPoint> const& mouse_position)
+{
+    if (components.speaker_button_rect.is_empty())
+        return;
+
+    auto speaker_button_width = context.rounded_device_pixels(20);
+    auto speaker_button_height = context.rounded_device_pixels(15);
+
+    auto speaker_button_offset_x = (components.speaker_button_rect.width() - speaker_button_width) / 2;
+    auto speaker_button_offset_y = (components.speaker_button_rect.height() - speaker_button_height) / 2;
+    auto speaker_button_location = components.speaker_button_rect.top_left().translated(speaker_button_offset_x, speaker_button_offset_y);
+
+    auto device_point = [&](double x, double y) {
+        auto position = context.rounded_device_point({ x, y }) + speaker_button_location;
+        return position.to_type<DevicePixels::Type>().to_type<float>();
+    };
+
+    auto speaker_button_is_hovered = mouse_position.has_value() && components.speaker_button_rect.contains(*mouse_position);
+    auto speaker_button_color = control_button_color(speaker_button_is_hovered);
+
+    Gfx::AntiAliasingPainter painter { context.painter() };
+    Gfx::Path path;
+
+    path.move_to(device_point(0, 4));
+    path.line_to(device_point(5, 4));
+    path.line_to(device_point(11, 0));
+    path.line_to(device_point(11, 15));
+    path.line_to(device_point(5, 11));
+    path.line_to(device_point(0, 11));
+    path.line_to(device_point(0, 4));
+    path.close();
+    painter.fill_path(path, speaker_button_color, Gfx::Painter::WindingRule::EvenOdd);
+
+    path.clear();
+    path.move_to(device_point(13, 3));
+    path.quadratic_bezier_curve_to(device_point(16, 7.5), device_point(13, 12));
+    path.move_to(device_point(14, 0));
+    path.quadratic_bezier_curve_to(device_point(20, 7.5), device_point(14, 15));
+    painter.stroke_path(path, speaker_button_color, 1);
+
+    if (media_element.muted()) {
+        painter.draw_line(device_point(0, 0), device_point(20, 15), Color::Red, 2);
+        painter.draw_line(device_point(0, 15), device_point(20, 0), Color::Red, 2);
+    }
+}
+
 MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary)
@@ -218,6 +273,11 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             auto position = static_cast<double>(x_percentage) * media_element.duration();
             media_element.set_current_time(position);
 
+            return DispatchEventOfSameName::Yes;
+        }
+
+        if (cached_layout_boxes.speaker_button_rect.has_value() && cached_layout_boxes.speaker_button_rect->contains(position)) {
+            media_element.set_muted(!media_element.muted());
             return DispatchEventOfSameName::Yes;
         }
 

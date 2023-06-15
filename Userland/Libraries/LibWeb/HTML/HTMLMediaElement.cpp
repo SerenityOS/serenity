@@ -389,6 +389,9 @@ void HTMLMediaElement::volume_or_muted_attribute_changed()
 
     // FIXME: Then, if the media element is not allowed to play, the user agent must run the internal pause steps for the media element.
 
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
+
     on_volume_change();
 }
 
