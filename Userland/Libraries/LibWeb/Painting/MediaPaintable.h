@@ -34,6 +34,9 @@ private:
         String timestamp;
         RefPtr<Gfx::Font> timestamp_font;
         DevicePixelRect timestamp_rect;
+
+        DevicePixelRect speaker_button_rect;
+        DevicePixels speaker_button_size;
     };
 
     virtual bool wants_mouse_events() const override { return true; }
@@ -44,6 +47,7 @@ private:
     static void paint_control_bar_playback_button(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);
     static void paint_control_bar_timeline(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);
     static void paint_control_bar_timestamp(PaintContext&, Components const&);
+    static void paint_control_bar_speaker(PaintContext&, HTML::HTMLMediaElement const&, Components const& components, Optional<DevicePixelPoint> const& mouse_position);
 };
 
 }
