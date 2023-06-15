@@ -15,6 +15,7 @@
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Streams/AbstractOperations.h>
+#include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::FileAPI {
@@ -336,25 +337,34 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
-JS::Promise* Blob::array_buffer()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
 {
-    // FIXME: 1. Let stream be the result of calling get stream on this.
-    // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
 
-    // FIXME: We still need to implement ReadableStream for this step to be fully valid.
-    // 3. Let promise be the result of reading all bytes from stream with reader.
-    auto promise = JS::Promise::create(realm());
-    auto buffer_result = JS::ArrayBuffer::create(realm(), m_byte_buffer.size());
-    if (buffer_result.is_error()) {
-        promise->reject(buffer_result.release_error().value().release_value());
-        return promise;
+    // 1. Let stream be the result of calling get stream on this.
+    auto stream = TRY(this->get_stream());
+
+    // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
+    if (reader_or_exception.is_exception()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
+        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
+        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
     }
-    auto buffer = buffer_result.release_value();
-    buffer->buffer().overwrite(0, m_byte_buffer.data(), m_byte_buffer.size());
+    auto reader = reader_or_exception.release_value();
+
+    // 3. Let promise be the result of reading all bytes from stream with reader.
+    auto promise = TRY(reader->read_all_bytes_deprecated());
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.
-    promise->fulfill(buffer);
-    return promise;
+    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+        auto const& object = first_argument.as_object();
+        VERIFY(is<JS::ArrayBuffer>(object));
+        auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
+
+        return JS::ArrayBuffer::create(realm, buffer);
+    });
 }
 
 }
