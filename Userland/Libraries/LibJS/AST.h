@@ -1507,13 +1507,26 @@ struct CallExpressionArgument {
     bool is_spread;
 };
 
+enum InvocationStyleEnum {
+    Parenthesized,
+    NotParenthesized,
+};
+
+enum InsideParenthesesEnum {
+    InsideParentheses,
+    NotInsideParentheses,
+};
+
 class CallExpression : public ASTNodeWithTailArray<CallExpression, Expression, CallExpressionArgument> {
     friend class ASTNodeWithTailArray;
+
+    InvocationStyleEnum m_invocation_style;
+    InsideParenthesesEnum m_inside_parentheses;
 
 public:
     using Argument = CallExpressionArgument;
 
-    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments);
+    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -1523,9 +1536,15 @@ public:
 
     ReadonlySpan<Argument> arguments() const { return tail_span(); }
 
+    bool is_parenthesized() const { return m_invocation_style == InvocationStyleEnum::Parenthesized; }
+    bool is_inside_parens() const { return m_inside_parentheses == InsideParenthesesEnum::InsideParentheses; }
+    void set_inside_parens() { m_inside_parentheses = InsideParenthesesEnum::InsideParentheses; }
+
 protected:
-    CallExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
+    CallExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens = InsideParenthesesEnum::NotInsideParentheses)
         : ASTNodeWithTailArray(move(source_range), arguments)
+        , m_invocation_style(invocation_style)
+        , m_inside_parentheses(inside_parens)
         , m_callee(move(callee))
     {
     }
@@ -1550,15 +1569,15 @@ class NewExpression final : public CallExpression {
     friend class ASTNodeWithTailArray;
 
 public:
-    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments);
+    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
     virtual Completion execute(Interpreter&) const override;
 
     virtual bool is_new_expression() const override { return true; }
 
 private:
-    NewExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
-        : CallExpression(move(source_range), move(callee), arguments)
+    NewExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens)
+        : CallExpression(move(source_range), move(callee), arguments, invocation_style, inside_parens)
     {
     }
 };
