@@ -6,6 +6,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/QuickSort.h>
 #include <AK/Vector.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
@@ -29,6 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool case_insensitive = false;
     bool echo = false;
     bool exact_match = false;
+    bool newest_only = false;
     StringView pattern;
     HashTable<uid_t> uids_to_filter_by;
     int signal = SIGTERM;
@@ -37,6 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(display_number_of_matches, "Display the number of matching processes", "count", 'c');
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
+    args_parser.add_option(newest_only, "Kill the most recently created process only", "newest", 'n');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Signal number to send. A signal name or number may be used",
@@ -115,12 +118,18 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
-    for (auto& process : matched_processes) {
-        auto result = Core::System::kill(process.pid, signal);
-        if (result.is_error())
-            warnln("Killing pid {} failed. {}", process.pid, result.release_error());
-        else if (echo)
-            outln("{} killed (pid {})", process.name, process.pid);
+    if (!matched_processes.is_empty()) {
+        quick_sort(matched_processes, [](auto const& a, auto const& b) { return a.creation_time < b.creation_time; });
+        if (newest_only)
+            matched_processes = { matched_processes.last() };
+
+        for (auto& process : matched_processes) {
+            auto result = Core::System::kill(process.pid, signal);
+            if (result.is_error())
+                warnln("Killing pid {} failed. {}", process.pid, result.release_error());
+            else if (echo)
+                outln("{} killed (pid {})", process.name, process.pid);
+        }
     }
 
     if (display_number_of_matches)
