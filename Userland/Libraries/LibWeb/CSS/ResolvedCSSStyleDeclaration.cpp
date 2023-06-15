@@ -39,6 +39,7 @@
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -245,6 +246,20 @@ static ErrorOr<NonnullRefPtr<StyleValue const>> style_value_for_sided_shorthand(
         return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom) }, StyleValueList::Separator::Space);
 
     return StyleValueList::create(StyleValueVector { move(top), move(right), move(bottom), move(left) }, StyleValueList::Separator::Space);
+}
+
+static ErrorOr<NonnullRefPtr<StyleValue const>> style_value_for_svg_paint(Optional<SVGPaint> const& maybe_paint)
+{
+    if (!maybe_paint.has_value())
+        return IdentifierStyleValue::create(ValueID::None);
+    auto& paint = maybe_paint.value();
+
+    if (paint.is_color())
+        return ColorStyleValue::create(paint.as_color());
+    if (paint.is_url())
+        return URLStyleValue::create(paint.as_url());
+
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
@@ -538,6 +553,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().cursor()));
     case PropertyID::Display:
         return style_value_for_display(layout_node.display());
+    case PropertyID::Fill:
+        return style_value_for_svg_paint(layout_node.computed_values().fill());
+    case PropertyID::FillOpacity:
+        return NumberStyleValue::create(layout_node.computed_values().fill_opacity());
+    case PropertyID::FillRule:
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().fill_rule()));
     case PropertyID::FlexBasis: {
         switch (layout_node.computed_values().flex_basis().type) {
         case FlexBasis::Content:
@@ -730,6 +751,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return style_value_for_length_percentage(layout_node.computed_values().inset().right());
     case PropertyID::RowGap:
         return style_value_for_size(layout_node.computed_values().row_gap());
+    case PropertyID::Stroke:
+        return style_value_for_svg_paint(layout_node.computed_values().stroke());
+    case PropertyID::StrokeOpacity:
+        return NumberStyleValue::create(layout_node.computed_values().stroke_opacity());
+    case PropertyID::StrokeWidth:
+        return style_value_for_length_percentage(layout_node.computed_values().stroke_width());
     case PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
     case PropertyID::TextDecorationLine: {
