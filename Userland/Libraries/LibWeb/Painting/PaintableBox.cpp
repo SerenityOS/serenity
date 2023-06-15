@@ -512,7 +512,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
 
 static void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase)
 {
-    if (!text_node.is_visible())
+    if (!text_node.parent()->is_visible())
         return;
 
     auto& painter = context.painter();
