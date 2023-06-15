@@ -714,6 +714,7 @@ public:
     enum class CallType {
         Call,
         Construct,
+        DirectEval,
     };
 
     Call(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
