@@ -1419,7 +1419,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
-        if (is<FunctionExpression>(*expression)) {
+        if (is<NewExpression>(*expression)) {
+            auto& new_expression = static_cast<NewExpression&>(*static_cast<NonnullRefPtr<Expression>>(expression));
+            new_expression.set_inside_parens();
+        } else if (is<FunctionExpression>(*expression)) {
             auto& function = static_cast<FunctionExpression const&>(*expression);
             if (function.kind() == FunctionKind::Generator && function.name() == "yield"sv)
                 syntax_error("function is not allowed to be called 'yield' in this context", function.source_range().start);
@@ -2221,15 +2224,18 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
         return parse_assignment_expression(AssignmentOp::NullishAssignment, move(lhs), min_precedence, associativity, forbidden);
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs), forbidden);
-    case TokenType::QuestionMarkPeriod:
-        // FIXME: This should allow `(new Foo)?.bar', but as our parser strips parenthesis,
-        //        we can't really tell if `lhs' was parenthesized at this point.
-        if (is<NewExpression>(lhs.ptr())) {
-            syntax_error("'new' cannot be used with optional chaining", position());
-            consume();
-            return lhs;
+    case TokenType::QuestionMarkPeriod: {
+        auto const* lhs_expression = lhs.ptr();
+        if (is<NewExpression>(lhs_expression)) {
+            auto const& new_expression = static_cast<NewExpression const&>(*lhs_expression);
+            if (!new_expression.is_parenthesized() && !new_expression.is_inside_parens()) {
+                syntax_error("'new' cannot be used with optional chaining", position());
+                consume();
+                return lhs;
+            }
         }
         return parse_optional_chain(move(lhs));
+    }
     default:
         expected("secondary expression");
         consume();
@@ -2380,7 +2386,7 @@ NonnullRefPtr<Expression const> Parser::parse_call_expression(NonnullRefPtr<Expr
     if (is<SuperExpression>(*lhs))
         return create_ast_node<SuperCall>({ m_source_code, rule_start.position(), position() }, move(arguments));
 
-    return CallExpression::create({ m_source_code, rule_start.position(), position() }, move(lhs), arguments.span());
+    return CallExpression::create({ m_source_code, rule_start.position(), position() }, move(lhs), arguments.span(), InvocationStyleEnum::Parenthesized, InsideParenthesesEnum::NotInsideParentheses);
 }
 
 NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
@@ -2394,8 +2400,10 @@ NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
 
     Vector<CallExpression::Argument> arguments;
 
-    if (match(TokenType::ParenOpen)) {
-        consume(TokenType::ParenOpen);
+    auto is_parenthesized = match(TokenType::ParenOpen);
+
+    if (is_parenthesized) {
+        consume();
         while (match_expression() || match(TokenType::TripleDot)) {
             if (match(TokenType::TripleDot)) {
                 consume();
@@ -2410,7 +2418,9 @@ NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
         consume(TokenType::ParenClose);
     }
 
-    return NewExpression::create({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments));
+    InvocationStyleEnum invocation_style = is_parenthesized ? InvocationStyleEnum::Parenthesized : InvocationStyleEnum::NotParenthesized;
+
+    return NewExpression::create({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments), invocation_style, InsideParenthesesEnum::NotInsideParentheses);
 }
 
 NonnullRefPtr<YieldExpression const> Parser::parse_yield_expression()
@@ -4846,5 +4856,4 @@ Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<To
 
 template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u16, Optional<Position> const&);
 template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u16, Optional<Position> const&);
-
 }
