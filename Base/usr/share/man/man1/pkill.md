@@ -5,7 +5,7 @@ pkill - Signal processes based on name
 ## Synopsis
 
 ```sh
-$ pkill [--count] [--ignore-case] [--echo] [--newest] [--signal signame] [--uid uid-list] [--exact] <process-name>
+$ pkill [--count] [--ignore-case] [--echo] [--newest] [--oldest] [--signal signame] [--uid uid-list] [--exact] <process-name>
 ```
 
 ## Options
@@ -14,6 +14,7 @@ $ pkill [--count] [--ignore-case] [--echo] [--newest] [--signal signame] [--uid 
 * `-i`, `--ignore-case`: Make matches case-insensitive
 * `-e`, `--echo`: Display what is killed
 * `-n`, `--newest`: Kill the most recently created process only
+* `-o`, `--oldest`: Select the least recently created process only
 * `-s signame`, `--signal signame`: Signal to send. The signal name or number may be used
 * `-U uid-list`, `--uid uid-list`: Select only processes whose UID is in the given comma-separated list. Login name or numerical user ID may be used
 * `-x`, `--exact`: Select only processes whose names match the given pattern exactly
