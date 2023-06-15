@@ -25,6 +25,7 @@ protected:
 
 private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }
