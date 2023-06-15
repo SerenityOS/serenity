@@ -700,10 +700,15 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         COMMENT "Preprocessing linker.ld"
         VERBATIM
     )
-
     add_custom_target(generate_kernel_linker_script DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
     target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib -nodefaultlibs)
     set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(Kernel PRIVATE -mpreferred-stack-boundary=3)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        target_compile_options(Kernel PRIVATE -mstack-alignment=8)
+    endif()
 else()
     target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
     set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)
