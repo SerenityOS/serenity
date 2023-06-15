@@ -573,19 +573,17 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (!scope_body)
         return {};
 
-    if (!Bytecode::Interpreter::current()) {
-        // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
-        MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-            // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
-            //       an exception should not result from `for_each_bound_name`.
-            MUST(declaration.for_each_bound_name([&](auto const& name) {
-                if (declaration.is_constant_declaration())
-                    MUST(lex_environment->create_immutable_binding(vm, name, true));
-                else
-                    MUST(lex_environment->create_mutable_binding(vm, name, false));
-            }));
+    // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
+    MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+        // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+        //       an exception should not result from `for_each_bound_name`.
+        MUST(declaration.for_each_bound_name([&](auto const& name) {
+            if (declaration.is_constant_declaration())
+                MUST(lex_environment->create_immutable_binding(vm, name, true));
+            else
+                MUST(lex_environment->create_mutable_binding(vm, name, false));
         }));
-    }
+    }));
 
     auto private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
