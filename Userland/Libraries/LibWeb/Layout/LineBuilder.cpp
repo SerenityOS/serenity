@@ -180,9 +180,11 @@ void LineBuilder::update_last_line()
             x_offset += excess_horizontal_space / 2;
             break;
         case CSS::TextAlign::Right:
+        case CSS::TextAlign::LibwebRight:
             x_offset += excess_horizontal_space;
             break;
         case CSS::TextAlign::Left:
+        case CSS::TextAlign::LibwebLeft:
         case CSS::TextAlign::Justify:
         default:
             break;

@@ -815,6 +815,9 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
 
     if (child_box.containing_block()->computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
         x += (available_width_within_containing_block / 2) - box_state.content_width() / 2;
+    } else if (child_box.containing_block()->computed_values().text_align() == CSS::TextAlign::LibwebRight) {
+        // Subtracting the left margin here because left and right margins need to be swapped when aligning to the right
+        x += available_width_within_containing_block - box_state.content_width() - box_state.margin_box_left();
     } else {
         x += box_state.margin_box_left();
     }
