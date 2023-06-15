@@ -132,6 +132,10 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
     if (display.is_inline_outside()) {
         // Inlines can be inserted into the nearest ancestor.
         auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
+        // TextNode's visible follows its parent's visible property.
+        if (is<Layout::TextNode>(node)) {
+            node.set_visible(insertion_point.is_visible());
+        }
         if (mode == AppendOrPrepend::Prepend)
             insertion_point.prepend_child(node);
         else

@@ -31,6 +31,9 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
 
 void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 {
+    if (!is_visible())
+        return;
+
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
