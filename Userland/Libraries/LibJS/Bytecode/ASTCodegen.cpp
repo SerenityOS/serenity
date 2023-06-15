@@ -1935,8 +1935,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     auto raw_strings_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(raw_strings_reg);
 
-    generator.emit<Bytecode::Op::Load>(strings_reg);
-    generator.emit<Bytecode::Op::PutById>(raw_strings_reg, generator.intern_identifier("raw"));
+    generator.emit<Bytecode::Op::PutById>(strings_reg, generator.intern_identifier("raw"));
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto this_reg = generator.allocate_register();
