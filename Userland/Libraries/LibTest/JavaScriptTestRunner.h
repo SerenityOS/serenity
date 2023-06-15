@@ -361,12 +361,10 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     auto test_script = result.release_value();
 
     if (g_run_bytecode) {
-        auto executable = MUST(JS::Bytecode::Generator::generate(test_script->parse_node()));
-        executable->name = test_path;
-        if (JS::Bytecode::g_dump_bytecode)
-            executable->dump();
+        g_vm->push_execution_context(global_execution_context);
         JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
-        MUST(bytecode_interpreter.run(*executable));
+        MUST(bytecode_interpreter.run(*test_script));
+        g_vm->pop_execution_context();
     } else {
         g_vm->push_execution_context(global_execution_context);
         MUST(interpreter->run(*test_script));
@@ -377,21 +375,14 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     JS::ThrowCompletionOr<JS::Value> top_level_result { JS::js_undefined() };
     if (file_script.is_error())
         return { test_path, file_script.error() };
+    g_vm->push_execution_context(global_execution_context);
     if (g_run_bytecode) {
-        auto executable_result = JS::Bytecode::Generator::generate(file_script.value()->parse_node());
-        if (!executable_result.is_error()) {
-            auto executable = executable_result.release_value();
-            executable->name = test_path;
-            if (JS::Bytecode::g_dump_bytecode)
-                executable->dump();
-            JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
-            top_level_result = bytecode_interpreter.run(*executable);
-        }
+        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
+        top_level_result = bytecode_interpreter.run(file_script.value());
     } else {
-        g_vm->push_execution_context(global_execution_context);
         top_level_result = interpreter->run(file_script.value());
-        g_vm->pop_execution_context();
     }
+    g_vm->pop_execution_context();
 
     g_vm->push_execution_context(global_execution_context);
     auto test_json = get_test_results(*interpreter);

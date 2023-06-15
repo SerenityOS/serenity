@@ -134,7 +134,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 
     VM::InterpreterExecutionScope scope(*this);
 
-    TRY(vm.link_and_eval_module({}, module));
+    TRY(vm.link_and_eval_module(Badge<JS::Interpreter> {}, module));
 
     vm.run_queued_promise_jobs();
 

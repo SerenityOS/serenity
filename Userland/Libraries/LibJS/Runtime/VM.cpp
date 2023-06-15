@@ -792,6 +792,11 @@ ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Interpreter>, SourceTextM
     return link_and_eval_module(module);
 }
 
+ThrowCompletionOr<void> VM::link_and_eval_module(Badge<Bytecode::Interpreter>, SourceTextModule& module)
+{
+    return link_and_eval_module(module);
+}
+
 ThrowCompletionOr<void> VM::link_and_eval_module(Module& module)
 {
     auto filename = module.filename();

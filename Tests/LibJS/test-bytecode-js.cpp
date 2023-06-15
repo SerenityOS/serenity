@@ -22,7 +22,7 @@
 
 #define EXPECT_NO_EXCEPTION(executable)                                                        \
     auto executable = MUST(JS::Bytecode::Generator::generate(program));                        \
-    auto result = bytecode_interpreter.run(*executable);                                       \
+    auto result = bytecode_interpreter.run(*script);                                           \
     if (result.is_error()) {                                                                   \
         FAIL("unexpected exception");                                                          \
         dbgln("Error: {}", MUST(result.throw_completion().value()->to_deprecated_string(vm))); \
@@ -113,11 +113,8 @@ TEST_CASE(loading_multiple_files)
         auto test_file_script = MUST(JS::Script::parse(
             "if (f() !== 'hello') throw new Exception('failed'); "sv, ast_interpreter->realm()));
 
-        auto const& test_file_program = test_file_script->parse_node();
-
-        auto executable = MUST(JS::Bytecode::Generator::generate(test_file_program));
         // TODO: This could be TRY_OR_FAIL(), if someone implements Formatter<JS::Completion>.
-        MUST(bytecode_interpreter.run(*executable));
+        MUST(bytecode_interpreter.run(test_file_script));
     }
 }
 
