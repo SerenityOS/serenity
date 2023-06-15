@@ -3289,6 +3289,8 @@ DeprecatedString MemberExpression::to_string_approximation() const
         object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
         return DeprecatedString::formatted("{}[<computed>]", object_string);
+    if (is<PrivateIdentifier>(*m_property))
+        return DeprecatedString::formatted("{}.{}", object_string, verify_cast<PrivateIdentifier>(*m_property).string());
     return DeprecatedString::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
 }
 
