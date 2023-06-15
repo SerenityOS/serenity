@@ -31,6 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool echo = false;
     bool exact_match = false;
     bool newest_only = false;
+    bool oldest_only = false;
     StringView pattern;
     HashTable<uid_t> uids_to_filter_by;
     int signal = SIGTERM;
@@ -40,6 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
     args_parser.add_option(newest_only, "Kill the most recently created process only", "newest", 'n');
+    args_parser.add_option(oldest_only, "Kill the least recently created process only", "oldest", 'o');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Signal number to send. A signal name or number may be used",
@@ -89,6 +91,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
     args_parser.parse(args);
 
+    if (newest_only && oldest_only) {
+        warnln("The -n and -o options are mutually exclusive");
+        args_parser.print_usage(stderr, args.strings[0]);
+        return 1;
+    }
+
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 
     PosixOptions options {};
@@ -122,6 +130,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         quick_sort(matched_processes, [](auto const& a, auto const& b) { return a.creation_time < b.creation_time; });
         if (newest_only)
             matched_processes = { matched_processes.last() };
+        else if (oldest_only)
+            matched_processes = { matched_processes.first() };
 
         for (auto& process : matched_processes) {
             auto result = Core::System::kill(process.pid, signal);
