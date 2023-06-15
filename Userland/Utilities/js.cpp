@@ -212,34 +212,10 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
-            auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
-            if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(TRY(executable_result.error().to_string()));
-                return ReturnEarly::No;
-            }
-
-            auto executable = executable_result.release_value();
-            executable->name = source_name;
-            if (s_opt_bytecode) {
-                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline(JS::Bytecode::Interpreter::OptimizationLevel::Optimize);
-                passes.perform(*executable);
-                dbgln("Optimisation passes took {}us", passes.elapsed());
-            }
-
-            if (JS::Bytecode::g_dump_bytecode)
-                executable->dump();
-
-            if (s_run_bytecode) {
-                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
-                auto result_or_error = bytecode_interpreter.run_and_return_frame(*executable, nullptr);
-                if (result_or_error.value.is_error())
-                    result = result_or_error.value.release_error();
-                else
-                    result = result_or_error.frame->registers[0];
-            } else {
-                return ReturnEarly::Yes;
-            }
+        if (s_run_bytecode) {
+            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
+            bytecode_interpreter.set_optimizations_enabled(s_opt_bytecode);
+            result = bytecode_interpreter.run(*script_or_module);
         } else {
             result = interpreter.run(*script_or_module);
         }

@@ -79,35 +79,10 @@ static Result<ScriptOrModuleProgram, TestError> parse_program(JS::Realm& realm, 
 template<typename InterpreterT>
 static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrModuleProgram& program)
 {
-    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
-    if constexpr (IsSame<InterpreterT, JS::Interpreter>) {
-        result = program.visit(
-            [&](auto& visitor) {
-                return interpreter.run(*visitor);
-            });
-    } else {
-        auto program_node = program.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program const> {
-                return visitor->parse_node();
-            });
-
-        auto& vm = interpreter.vm();
-
-        if (auto unit_result = JS::Bytecode::Generator::generate(program_node); unit_result.is_error()) {
-            if (auto error_string = unit_result.error().to_string(); error_string.is_error())
-                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
-            else if (error_string = String::formatted("TODO({})", error_string.value()); error_string.is_error())
-                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
-            else
-                result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), error_string.release_value()));
-        } else {
-            auto unit = unit_result.release_value();
-            auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;
-            auto& passes = JS::Bytecode::Interpreter::optimization_pipeline(optimization_level);
-            passes.perform(*unit);
-            result = interpreter.run(*unit);
-        }
-    }
+    auto result = program.visit(
+        [&](auto& visitor) {
+            return interpreter.run(*visitor);
+        });
 
     if (result.is_error()) {
         auto error_value = *result.throw_completion().value();

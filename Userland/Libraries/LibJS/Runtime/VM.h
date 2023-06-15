@@ -246,6 +246,7 @@ public:
 
     // Do not call this method unless you are sure this is the only and first module to be loaded in this vm.
     ThrowCompletionOr<void> link_and_eval_module(Badge<Interpreter>, SourceTextModule& module);
+    ThrowCompletionOr<void> link_and_eval_module(Badge<Bytecode::Interpreter>, SourceTextModule& module);
 
     ScriptOrModule get_active_script_or_module() const;
 

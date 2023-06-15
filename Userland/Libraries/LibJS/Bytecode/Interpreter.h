@@ -36,6 +36,11 @@ public:
     Realm& realm() { return m_realm; }
     VM& vm() { return m_vm; }
 
+    void set_optimizations_enabled(bool);
+
+    ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
+    ThrowCompletionOr<Value> run(SourceTextModule&);
+
     ThrowCompletionOr<Value> run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
         auto value_and_frame = run_and_return_frame(executable, entry_point);
@@ -120,6 +125,7 @@ private:
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };
+    bool m_optimizations_enabled { false };
 };
 
 extern bool g_dump_bytecode;

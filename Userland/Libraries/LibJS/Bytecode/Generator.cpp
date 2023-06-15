@@ -60,7 +60,8 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
         .number_of_registers = generator.m_next_register,
-        .is_strict_mode = is_strict_mode });
+        .is_strict_mode = is_strict_mode,
+    });
 }
 
 void Generator::grow(size_t additional_size)
