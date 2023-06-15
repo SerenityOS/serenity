@@ -247,44 +247,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false, true);
         }
     } else {
-        // Perform the steps of FunctionDeclarationInstantiation.
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Var, Bytecode::Generator::SurroundingScopeKind::Function);
-        pushed_scope_count++;
-        if (has_lexical_declarations()) {
-            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Function);
-            pushed_scope_count++;
-        }
-
-        // FIXME: Implement this boi correctly.
-        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
-            auto is_constant_declaration = declaration.is_constant_declaration();
-            // NOTE: Nothing in the callback throws an exception.
-            MUST(declaration.for_each_bound_name([&](auto const& name) {
-                auto index = generator.intern_identifier(name);
-                if (is_constant_declaration || !generator.has_binding(index)) {
-                    generator.register_binding(index);
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
-                }
-            }));
-
-            if (is<FunctionDeclaration>(declaration)) {
-                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-                if (auto result = function_declaration.generate_bytecode(generator); result.is_error()) {
-                    maybe_error = result.release_error();
-                    // To make `for_each_lexically_scoped_declaration` happy.
-                    return failing_completion;
-                }
-                auto const& name = function_declaration.name();
-                auto index = generator.intern_identifier(name);
-                if (!generator.has_binding(index)) {
-                    generator.register_binding(index);
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
-                }
-                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
-            }
-
-            return {};
-        });
+        // FunctionDeclarationInstantiation is handled by the C++ AO.
     }
 
     if (maybe_error.has_value())
