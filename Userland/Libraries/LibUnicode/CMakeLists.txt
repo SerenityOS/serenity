@@ -4,6 +4,7 @@ set(SOURCES
     CharacterTypes.cpp
     CurrencyCode.cpp
     Emoji.cpp
+    IDNA.cpp
     Normalize.cpp
     Punycode.cpp
     Segmentation.cpp
