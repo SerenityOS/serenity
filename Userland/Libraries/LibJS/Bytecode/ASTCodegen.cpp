@@ -1379,6 +1379,8 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     Bytecode::Op::Call::CallType call_type;
     if (is<NewExpression>(*this)) {
         call_type = Bytecode::Op::Call::CallType::Construct;
+    } else if (m_callee->is_identifier() && static_cast<Identifier const&>(*m_callee).string() == "eval"sv) {
+        call_type = Bytecode::Op::Call::CallType::DirectEval;
     } else {
         call_type = Bytecode::Op::Call::CallType::Call;
     }

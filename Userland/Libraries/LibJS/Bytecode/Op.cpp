@@ -661,7 +661,12 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     auto argument_values = argument_list_evaluation(interpreter);
 
     Value return_value;
-    if (m_type == CallType::Call)
+    if (m_type == CallType::DirectEval) {
+        if (callee == interpreter.realm().intrinsics().eval_function())
+            return_value = TRY(perform_eval(vm, argument_values[0].value_or(JS::js_undefined()), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
+        else
+            return_value = TRY(call(vm, function, this_value, move(argument_values)));
+    } else if (m_type == CallType::Call)
         return_value = TRY(call(vm, function, this_value, move(argument_values)));
     else
         return_value = TRY(construct(vm, function, move(argument_values)));
@@ -1239,10 +1244,23 @@ DeprecatedString JumpUndefined::to_deprecated_string_impl(Bytecode::Executable c
 
 DeprecatedString Call::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    if (m_expression_string.has_value())
-        return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc] ({})", m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+    StringView type;
+    switch (m_type) {
+    case Call::CallType::Call:
+        type = ""sv;
+        break;
+    case Call::CallType::Construct:
+        type = " (Construct)"sv;
+        break;
+    case Call::CallType::DirectEval:
+        type = " (DirectEval)"sv;
+        break;
+    }
 
-    return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
+    if (m_expression_string.has_value())
+        return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+
+    return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
 }
 
 DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const&) const
