@@ -7565,6 +7565,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list(Vector<ComponentV
             if (!token.block().is_square())
                 return GridTrackSizeListStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
+            block_tokens.skip_whitespace();
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
                 auto maybe_string = String::from_utf8(current_block_token.token().ident());
