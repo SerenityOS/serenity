@@ -62,6 +62,7 @@ void MediaPaintable::paint_media_controls(PaintContext& context, HTML::HTMLMedia
     paint_control_bar_timeline(context, media_element, components, mouse_position);
     paint_control_bar_timestamp(context, components);
     paint_control_bar_speaker(context, media_element, components, mouse_position);
+    paint_control_bar_volume(context, media_element, components, mouse_position);
 }
 
 MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintContext& context, HTML::HTMLMediaElement const& media_element, DevicePixelRect media_rect) const
@@ -85,6 +86,16 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
 
     components.speaker_button_size = context.rounded_device_pixels(30);
     if (components.speaker_button_size <= remaining_rect.width()) {
+        components.volume_button_size = context.rounded_device_pixels(16);
+
+        if ((components.speaker_button_size + components.volume_button_size * 3) <= remaining_rect.width()) {
+            auto volume_width = min(context.rounded_device_pixels(60), remaining_rect.width() - components.speaker_button_size);
+
+            components.volume_rect = remaining_rect;
+            components.volume_rect.take_from_left(remaining_rect.width() - volume_width);
+            remaining_rect.take_from_right(volume_width);
+        }
+
         components.speaker_button_rect = remaining_rect;
         components.speaker_button_rect.take_from_left(remaining_rect.width() - components.speaker_button_size);
         remaining_rect.take_from_right(components.speaker_button_size + component_padding);
@@ -114,6 +125,7 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     media_element.cached_layout_boxes({}).playback_button_rect = context.scale_to_css_rect(components.playback_button_rect);
     media_element.cached_layout_boxes({}).timeline_rect = context.scale_to_css_rect(components.timeline_rect);
     media_element.cached_layout_boxes({}).speaker_button_rect = context.scale_to_css_rect(components.speaker_button_rect);
+    media_element.cached_layout_boxes({}).volume_rect = context.scale_to_css_rect(components.volume_rect);
 
     return components;
 }
@@ -237,6 +249,36 @@ void MediaPaintable::paint_control_bar_speaker(PaintContext& context, HTML::HTML
     }
 }
 
+void MediaPaintable::paint_control_bar_volume(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components, Optional<DevicePixelPoint> const& mouse_position)
+{
+    if (components.volume_rect.is_empty())
+        return;
+
+    auto volume_scrub_rect = components.volume_rect;
+    volume_scrub_rect.shrink(components.volume_button_size, volume_scrub_rect.height() - components.volume_button_size / 2);
+
+    auto volume_position = static_cast<double>(static_cast<int>(volume_scrub_rect.width())) * media_element.volume();
+    auto volume_button_offset_x = static_cast<DevicePixels>(round(volume_position));
+
+    Gfx::AntiAliasingPainter painter { context.painter() };
+
+    auto volume_lower_rect = volume_scrub_rect;
+    volume_lower_rect.set_width(volume_button_offset_x);
+    painter.fill_rect_with_rounded_corners(volume_lower_rect.to_type<int>(), control_highlight_color.lightened(), 4);
+
+    auto volume_higher_rect = volume_scrub_rect;
+    volume_higher_rect.take_from_left(volume_button_offset_x);
+    painter.fill_rect_with_rounded_corners(volume_higher_rect.to_type<int>(), Color::Black, 4);
+
+    auto volume_button_rect = volume_scrub_rect;
+    volume_button_rect.shrink(volume_scrub_rect.width() - components.volume_button_size, volume_scrub_rect.height() - components.volume_button_size);
+    volume_button_rect.set_x(volume_scrub_rect.x() + volume_button_offset_x - components.volume_button_size / 2);
+
+    auto volume_is_hovered = mouse_position.has_value() && components.volume_rect.contains(*mouse_position);
+    auto volume_color = control_button_color(volume_is_hovered);
+    painter.fill_ellipse(volume_button_rect.to_type<int>(), volume_color);
+}
+
 MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary)
@@ -278,6 +320,15 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
 
         if (cached_layout_boxes.speaker_button_rect.has_value() && cached_layout_boxes.speaker_button_rect->contains(position)) {
             media_element.set_muted(!media_element.muted());
+            return DispatchEventOfSameName::Yes;
+        }
+
+        if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
+            auto x_offset = position.x() - cached_layout_boxes.volume_rect->x();
+            auto volume = static_cast<double>(x_offset) / static_cast<double>(cached_layout_boxes.volume_rect->width());
+
+            media_element.set_volume(volume).release_value_but_fixme_should_propagate_errors();
+
             return DispatchEventOfSameName::Yes;
         }
 

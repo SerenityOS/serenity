@@ -104,6 +104,7 @@ public:
         Optional<CSSPixelRect> playback_button_rect;
         Optional<CSSPixelRect> timeline_rect;
         Optional<CSSPixelRect> speaker_button_rect;
+        Optional<CSSPixelRect> volume_rect;
     };
     CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::MediaPaintable>) const { return m_layout_boxes; }
 
