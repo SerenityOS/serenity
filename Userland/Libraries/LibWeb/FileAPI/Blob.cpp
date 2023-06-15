@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -323,17 +324,31 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
-    // FIXME: 1. Let stream be the result of calling get stream on this.
-    // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    // 1. Let stream be the result of calling get stream on this.
+    auto stream = TRY(this->get_stream());
 
-    // FIXME: We still need to implement ReadableStream for this step to be fully valid.
+    // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
+    if (reader_or_exception.is_exception()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
+        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
+        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+    }
+    auto reader = reader_or_exception.release_value();
+
     // 3. Let promise be the result of reading all bytes from stream with reader
-    auto promise = JS::Promise::create(realm);
-    auto result = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return JS::PrimitiveString::create(vm, StringView { m_byte_buffer.bytes() }); }));
+    auto promise = TRY(reader->read_all_bytes_deprecated());
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
-    promise->fulfill(result);
-    return promise;
+    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+        auto const& object = first_argument.as_object();
+        VERIFY(is<JS::ArrayBuffer>(object));
+        auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
+
+        auto decoder = TextCodec::decoder_for("UTF-8"sv);
+        auto utf8_text = TRY_OR_THROW_OOM(vm, TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, buffer));
+        return JS::PrimitiveString::create(vm, move(utf8_text));
+    });
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
