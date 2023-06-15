@@ -603,7 +603,8 @@ static Optional<URL::Host> parse_host(StringView input, bool is_opaque = false)
     // FIXME: 4. Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
     auto domain = URL::percent_decode(input);
 
-    // FIXME: 5. Let asciiDomain be the result of running domain to ASCII on domain.
+    // NOTE: This is handled in Unicode::create_unicode_url, to work around the fact that we can't call into LibUnicode here
+    // FIXME: 5. Let asciiDomain be the result of running domain to ASCII with domain and false.
     // FIXME: 6. If asciiDomain is failure, then return failure.
     auto ascii_domain_or_error = String::from_deprecated_string(domain);
     if (ascii_domain_or_error.is_error())

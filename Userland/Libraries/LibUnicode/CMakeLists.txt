@@ -10,6 +10,7 @@ set(SOURCES
     Segmentation.cpp
     String.cpp
     UnicodeUtils.cpp
+    URL.cpp
     ${UNICODE_DATA_SOURCES}
 )
 set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
