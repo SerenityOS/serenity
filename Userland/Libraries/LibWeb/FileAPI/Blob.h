@@ -45,7 +45,7 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> stream();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> text();
-    JS::Promise* array_buffer();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> array_buffer();
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 
