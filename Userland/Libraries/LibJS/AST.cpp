@@ -4760,9 +4760,8 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
 }
 
 // 16.1.7 GlobalDeclarationInstantiation ( script, env ), https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
-ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& interpreter, GlobalEnvironment& global_environment) const
+ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, GlobalEnvironment& global_environment) const
 {
-    auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
