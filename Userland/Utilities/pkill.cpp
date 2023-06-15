@@ -32,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool exact_match = false;
     bool newest_only = false;
     bool oldest_only = false;
+    Optional<UnixDateTime> display_if_older_than;
     StringView pattern;
     HashTable<uid_t> uids_to_filter_by;
     int signal = SIGTERM;
@@ -42,6 +43,23 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
     args_parser.add_option(newest_only, "Kill the most recently created process only", "newest", 'n');
     args_parser.add_option(oldest_only, "Kill the least recently created process only", "oldest", 'o');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Kill only processes older than the specified number of seconds",
+        .long_name = "older",
+        .short_name = 'O',
+        .value_name = "seconds",
+        .accept_value = [&display_if_older_than](StringView seconds_string) {
+            auto number = seconds_string.to_uint<u64>();
+
+            if (number.has_value() && number.value() <= NumericLimits<i64>::max()) {
+                auto now_time = UnixDateTime::now();
+                display_if_older_than = now_time - Duration::from_seconds(static_cast<i64>(number.value()));
+            }
+
+            return display_if_older_than.has_value();
+        },
+    });
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Signal number to send. A signal name or number may be used",
@@ -120,6 +138,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         auto result = re.match(process.name, PosixFlags::Global);
         if (result.success) {
             if (!uids_to_filter_by.is_empty() && !uids_to_filter_by.contains(process.uid))
+                continue;
+
+            if (display_if_older_than.has_value() && process.creation_time >= display_if_older_than.value())
                 continue;
 
             matched_processes.append(process);
