@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    bool display_number_of_matches;
+    bool display_number_of_matches = false;
     bool case_insensitive = false;
     bool echo = false;
     bool exact_match = false;
