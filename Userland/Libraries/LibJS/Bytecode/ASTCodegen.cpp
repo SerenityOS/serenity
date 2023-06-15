@@ -1357,7 +1357,12 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
                 TRY(member_expression.property().generate_bytecode(generator));
                 generator.emit<Bytecode::Op::GetByValue>(this_reg);
             } else {
-                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+                auto identifier_table_ref = [&] {
+                    if (is<PrivateIdentifier>(member_expression.property()))
+                        return generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string());
+                    return generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+                }();
+
                 generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
             }
         }
