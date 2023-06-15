@@ -1,5 +1,7 @@
 [
   "-libweb-center",
+  "-libweb-left",
+  "-libweb-right",
   "-libweb-link",
   "-libweb-palette-active-link",
   "-libweb-palette-active-window-border1",

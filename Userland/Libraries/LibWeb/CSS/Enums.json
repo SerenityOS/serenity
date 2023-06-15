@@ -242,7 +242,9 @@
         "justify",
         "left",
         "right",
-        "-libweb-center"
+        "-libweb-center",
+        "-libweb-left",
+        "-libweb-right"
     ],
     "text-decoration-line": [
         "blink",
