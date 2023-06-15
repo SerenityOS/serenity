@@ -37,7 +37,27 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(display_number_of_matches, "Display the number of matching processes", "count", 'c');
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", "ignore-case", 'i');
     args_parser.add_option(echo, "Display what is killed", "echo", 'e');
-    args_parser.add_option(signal, "Signal number to send", "signal", 's', "number");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Signal number to send. A signal name or number may be used",
+        .long_name = "signal",
+        .short_name = 's',
+        .value_name = "signame",
+        .accept_value = [&signal](StringView signal_string) {
+            if (signal_string.is_empty())
+                return false;
+
+            if (is_ascii_alpha(signal_string[0]))
+                signal = getsignalbyname(&signal_string[0]);
+            else if (auto maybe_signal = signal_string.to_int(); maybe_signal.has_value())
+                signal = maybe_signal.value();
+
+            if (signal <= 0 || signal >= NSIG)
+                return false;
+
+            return true;
+        },
+    });
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Select only processes whose UID is in the given comma-separated list. Login name or numerical user ID may be used",
