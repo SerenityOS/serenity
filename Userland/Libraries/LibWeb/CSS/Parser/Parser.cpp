@@ -4652,6 +4652,39 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_image_value(ComponentValue const& comp
     return parse_radial_gradient_function(component_value);
 }
 
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens)
+{
+    // `<paint> = none | <color> | <url> [none | <color>]? | context-fill | context-stroke`
+
+    if (tokens.peek_token().is(Token::Type::Ident)) {
+        auto maybe_ident = value_id_from_string(tokens.peek_token().token().ident());
+        if (maybe_ident.has_value()) {
+            // FIXME: Accept `context-fill` and `context-stroke`
+            switch (*maybe_ident) {
+            case ValueID::None:
+                (void)tokens.next_token();
+                return IdentifierStyleValue::create(*maybe_ident);
+            default:
+                return nullptr;
+            }
+        }
+    }
+
+    if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
+        (void)tokens.next_token();
+        return color;
+    }
+
+    if (auto url = TRY(parse_url_value(tokens.peek_token(), AllowedDataUrlType::Image))) {
+        // FIXME: Accept `[none | <color>]?`
+        (void)tokens.next_token();
+        return url;
+    }
+
+    return nullptr;
+}
+
 template<typename ParseFunction>
 ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
 {
@@ -7760,15 +7793,6 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = FIXME_TRY(parse_transform_origin_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError ::SyntaxError;
-    case PropertyID::Fill:
-    case PropertyID::Stroke:
-        if (component_values.size() == 1) {
-            if (auto parsed_url = FIXME_TRY(parse_url_value(component_values.first())))
-                return parsed_url.release_nonnull();
-        }
-        // Allow normal value parsing to continue.
-        // URL is done here to avoid ambiguity with images.
-        break;
     default:
         break;
     }
@@ -8053,6 +8077,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
                 break;
             }
         }
+    }
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::Paint); property.has_value()) {
+        if (auto value = TRY(parse_paint_value(tokens)))
+            return PropertyAndValue { *property, value.release_nonnull() };
     }
 
     return PropertyAndValue { property_ids.first(), nullptr };

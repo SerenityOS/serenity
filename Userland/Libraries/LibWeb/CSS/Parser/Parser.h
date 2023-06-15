@@ -311,6 +311,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_ratio_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_string_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_image_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_paint_value(TokenStream<ComponentValue>&);
     template<typename ParseFunction>
     ErrorOr<RefPtr<StyleValue>> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
     ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
