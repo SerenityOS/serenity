@@ -315,6 +315,21 @@ WebIDL::ExceptionOr<void> Page::toggle_media_play_state()
     return {};
 }
 
+void Page::toggle_media_mute_state()
+{
+    auto media_element = media_context_menu_element();
+    if (!media_element)
+        return;
+
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = media_element->document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    media_element->set_muted(!media_element->muted());
+}
+
 WebIDL::ExceptionOr<void> Page::toggle_media_loop_state()
 {
     auto media_element = media_context_menu_element();
@@ -380,6 +395,7 @@ ErrorOr<void> IPC::encode(Encoder& encoder, Web::Page::MediaContextMenu const& m
     TRY(encoder.encode(menu.media_url));
     TRY(encoder.encode(menu.is_video));
     TRY(encoder.encode(menu.is_playing));
+    TRY(encoder.encode(menu.is_muted));
     TRY(encoder.encode(menu.has_user_agent_controls));
     TRY(encoder.encode(menu.is_looping));
     return {};
@@ -392,6 +408,7 @@ ErrorOr<Web::Page::MediaContextMenu> IPC::decode(Decoder& decoder)
         .media_url = TRY(decoder.decode<AK::URL>()),
         .is_video = TRY(decoder.decode<bool>()),
         .is_playing = TRY(decoder.decode<bool>()),
+        .is_muted = TRY(decoder.decode<bool>()),
         .has_user_agent_controls = TRY(decoder.decode<bool>()),
         .is_looping = TRY(decoder.decode<bool>()),
     };

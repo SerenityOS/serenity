@@ -100,7 +100,10 @@ private:
     OwnPtr<QMenu> m_video_context_menu;
     OwnPtr<QIcon> m_media_context_menu_play_icon;
     OwnPtr<QIcon> m_media_context_menu_pause_icon;
+    OwnPtr<QIcon> m_media_context_menu_mute_icon;
+    OwnPtr<QIcon> m_media_context_menu_unmute_icon;
     OwnPtr<QAction> m_media_context_menu_play_pause_action;
+    OwnPtr<QAction> m_media_context_menu_mute_unmute_action;
     OwnPtr<QAction> m_media_context_menu_controls_action;
     OwnPtr<QAction> m_media_context_menu_loop_action;
     URL m_media_context_menu_url;

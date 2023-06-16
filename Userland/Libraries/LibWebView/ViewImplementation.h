@@ -75,6 +75,7 @@ public:
     void js_console_request_messages(i32 start_index);
 
     void toggle_media_play_state();
+    void toggle_media_mute_state();
     void toggle_media_loop_state();
     void toggle_media_controls_state();
 

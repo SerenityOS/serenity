@@ -339,6 +339,11 @@ Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_play_state()
     return page().toggle_media_play_state();
 }
 
+void PageHost::toggle_media_mute_state()
+{
+    page().toggle_media_mute_state();
+}
+
 Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_loop_state()
 {
     return page().toggle_media_loop_state();

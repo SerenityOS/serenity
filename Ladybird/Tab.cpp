@@ -376,11 +376,19 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     m_media_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
     m_media_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_mute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-muted.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_unmute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-high.png").arg(s_serenity_resource_root.characters()));
 
     m_media_context_menu_play_pause_action = make<QAction>("&Play", this);
     m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
     QObject::connect(m_media_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
         view().toggle_media_play_state();
+    });
+
+    m_media_context_menu_mute_unmute_action = make<QAction>("&Mute", this);
+    m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+    QObject::connect(m_media_context_menu_mute_unmute_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_mute_state();
     });
 
     m_media_context_menu_controls_action = make<QAction>("Show &Controls", this);
@@ -403,6 +411,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     m_audio_context_menu = make<QMenu>("Audio context menu", this);
     m_audio_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_audio_context_menu->addAction(m_media_context_menu_mute_unmute_action);
     m_audio_context_menu->addAction(m_media_context_menu_controls_action);
     m_audio_context_menu->addAction(m_media_context_menu_loop_action);
     m_audio_context_menu->addSeparator();
@@ -430,6 +439,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     m_video_context_menu = make<QMenu>("Video context menu", this);
     m_video_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_video_context_menu->addAction(m_media_context_menu_mute_unmute_action);
     m_video_context_menu->addAction(m_media_context_menu_controls_action);
     m_video_context_menu->addAction(m_media_context_menu_loop_action);
     m_video_context_menu->addSeparator();
@@ -449,6 +459,14 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         } else {
             m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
             m_media_context_menu_play_pause_action->setText("&Play");
+        }
+
+        if (menu.is_muted) {
+            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_unmute_icon);
+            m_media_context_menu_mute_unmute_action->setText("Un&mute");
+        } else {
+            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+            m_media_context_menu_mute_unmute_action->setText("&Mute");
         }
 
         m_media_context_menu_controls_action->setChecked(menu.has_user_agent_controls);

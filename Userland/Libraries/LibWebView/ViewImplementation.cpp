@@ -156,6 +156,11 @@ void ViewImplementation::toggle_media_play_state()
     client().async_toggle_media_play_state();
 }
 
+void ViewImplementation::toggle_media_mute_state()
+{
+    client().async_toggle_media_mute_state();
+}
+
 void ViewImplementation::toggle_media_loop_state()
 {
     client().async_toggle_media_loop_state();
