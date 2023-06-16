@@ -489,8 +489,28 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto object = TRY(interpreter.accumulator().to_object(vm));
-    interpreter.accumulator() = TRY(object->get(interpreter.current_executable().get_identifier(m_property)));
+
+    auto const& name = interpreter.current_executable().get_identifier(m_property);
+    auto base_value = interpreter.accumulator();
+
+    // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
+    GCPtr<Object> base_obj;
+    if (base_value.is_string()) {
+        auto string_value = TRY(base_value.as_string().get(vm, name));
+        if (string_value.has_value()) {
+            interpreter.accumulator() = *string_value;
+            return {};
+        }
+        base_obj = vm.current_realm()->intrinsics().string_prototype();
+    } else if (base_value.is_number()) {
+        base_obj = vm.current_realm()->intrinsics().number_prototype();
+    } else if (base_value.is_boolean()) {
+        base_obj = vm.current_realm()->intrinsics().boolean_prototype();
+    } else {
+        base_obj = TRY(base_value.to_object(vm));
+    }
+
+    interpreter.accumulator() = TRY(base_obj->internal_get(name, base_value));
     return {};
 }
 
