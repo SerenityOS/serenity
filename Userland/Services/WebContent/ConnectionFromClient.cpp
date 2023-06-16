@@ -790,6 +790,11 @@ void ConnectionFromClient::toggle_media_play_state()
     m_page_host->toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
 }
 
+void ConnectionFromClient::toggle_media_mute_state()
+{
+    m_page_host->toggle_media_mute_state();
+}
+
 void ConnectionFromClient::toggle_media_loop_state()
 {
     m_page_host->toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();

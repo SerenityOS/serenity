@@ -45,6 +45,8 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.rename = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/rename.png"sv));
     icon_bag.play = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     icon_bag.pause = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
+    icon_bag.mute = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-muted.png"sv));
+    icon_bag.unmute = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-high.png"sv));
 
     return icon_bag;
 }

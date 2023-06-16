@@ -50,6 +50,7 @@ public:
     void prompt_closed(Optional<String> response);
 
     Web::WebIDL::ExceptionOr<void> toggle_media_play_state();
+    void toggle_media_mute_state();
     Web::WebIDL::ExceptionOr<void> toggle_media_loop_state();
     Web::WebIDL::ExceptionOr<void> toggle_media_controls_state();
 

@@ -125,11 +125,13 @@ public:
         AK::URL media_url;
         bool is_video { false };
         bool is_playing { false };
+        bool is_muted { false };
         bool has_user_agent_controls { false };
         bool is_looping { false };
     };
     void did_request_media_context_menu(i32 media_id, CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, MediaContextMenu);
     WebIDL::ExceptionOr<void> toggle_media_play_state();
+    void toggle_media_mute_state();
     WebIDL::ExceptionOr<void> toggle_media_loop_state();
     WebIDL::ExceptionOr<void> toggle_media_controls_state();
 

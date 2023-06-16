@@ -97,6 +97,7 @@ private:
     virtual void prompt_closed(Optional<String> const& response) override;
 
     virtual void toggle_media_play_state() override;
+    virtual void toggle_media_mute_state() override;
     virtual void toggle_media_loop_state() override;
     virtual void toggle_media_controls_state() override;
 

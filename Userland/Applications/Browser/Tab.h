@@ -146,6 +146,7 @@ private:
     RefPtr<GUI::Menu> m_audio_context_menu;
     RefPtr<GUI::Menu> m_video_context_menu;
     RefPtr<GUI::Action> m_media_context_menu_play_pause_action;
+    RefPtr<GUI::Action> m_media_context_menu_mute_unmute_action;
     RefPtr<GUI::Action> m_media_context_menu_controls_action;
     RefPtr<GUI::Action> m_media_context_menu_loop_action;
     URL m_media_context_menu_url;

@@ -47,5 +47,7 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> rename { nullptr };
     RefPtr<Gfx::Bitmap> play { nullptr };
     RefPtr<Gfx::Bitmap> pause { nullptr };
+    RefPtr<Gfx::Bitmap> mute { nullptr };
+    RefPtr<Gfx::Bitmap> unmute { nullptr };
 };
 }

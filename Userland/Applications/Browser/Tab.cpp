@@ -377,6 +377,9 @@ Tab::Tab(BrowserWindow& window)
     m_media_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
         view().toggle_media_play_state();
     });
+    m_media_context_menu_mute_unmute_action = GUI::Action::create("&Mute", g_icon_bag.mute, [this](auto&) {
+        view().toggle_media_mute_state();
+    });
     m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
         view().toggle_media_controls_state();
     });
@@ -386,6 +389,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_audio_context_menu = GUI::Menu::construct();
     m_audio_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_mute_unmute_action);
     m_audio_context_menu->add_action(*m_media_context_menu_controls_action);
     m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
     m_audio_context_menu->add_separator();
@@ -401,6 +405,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_video_context_menu = GUI::Menu::construct();
     m_video_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_video_context_menu->add_action(*m_media_context_menu_mute_unmute_action);
     m_video_context_menu->add_action(*m_media_context_menu_controls_action);
     m_video_context_menu->add_action(*m_media_context_menu_loop_action);
     m_video_context_menu->add_separator();
@@ -430,6 +435,14 @@ Tab::Tab(BrowserWindow& window)
         } else {
             m_media_context_menu_play_pause_action->set_icon(g_icon_bag.play);
             m_media_context_menu_play_pause_action->set_text("&Play"sv);
+        }
+
+        if (menu.is_muted) {
+            m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.unmute);
+            m_media_context_menu_mute_unmute_action->set_text("Un&mute"sv);
+        } else {
+            m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.mute);
+            m_media_context_menu_mute_unmute_action->set_text("&Mute"sv);
         }
 
         m_media_context_menu_controls_action->set_checked(menu.has_user_agent_controls);

@@ -315,6 +315,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                             .media_url = media_element.document().parse_url(media_element.current_src()),
                             .is_video = is<HTML::HTMLVideoElement>(*node),
                             .is_playing = media_element.potentially_playing(),
+                            .is_muted = media_element.muted(),
                             .has_user_agent_controls = media_element.has_attribute(HTML::AttributeNames::controls),
                             .is_looping = media_element.has_attribute(HTML::AttributeNames::loop),
                         };

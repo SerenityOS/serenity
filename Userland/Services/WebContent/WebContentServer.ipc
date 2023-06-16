@@ -79,6 +79,7 @@ endpoint WebContentServer
     prompt_closed(Optional<String> response) =|
 
     toggle_media_play_state() =|
+    toggle_media_mute_state() =|
     toggle_media_loop_state() =|
     toggle_media_controls_state() =|
 }
