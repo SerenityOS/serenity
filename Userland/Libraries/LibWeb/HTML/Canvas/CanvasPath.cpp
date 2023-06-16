@@ -10,6 +10,13 @@
 
 namespace Web::HTML {
 
+Gfx::AffineTransform CanvasPath::active_transform() const
+{
+    if (m_canvas_state.has_value())
+        return m_canvas_state->drawing_state().transform;
+    return {};
+}
+
 void CanvasPath::close_path()
 {
     m_path.close();
@@ -17,22 +24,25 @@ void CanvasPath::close_path()
 
 void CanvasPath::move_to(float x, float y)
 {
-    m_path.move_to({ x, y });
+    m_path.move_to(active_transform().map(Gfx::FloatPoint { x, y }));
 }
 
 void CanvasPath::line_to(float x, float y)
 {
-    m_path.line_to({ x, y });
+    m_path.line_to(active_transform().map(Gfx::FloatPoint { x, y }));
 }
 
 void CanvasPath::quadratic_curve_to(float cx, float cy, float x, float y)
 {
-    m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
+    auto transform = active_transform();
+    m_path.quadratic_bezier_curve_to(transform.map(Gfx::FloatPoint { cx, cy }), transform.map(Gfx::FloatPoint { x, y }));
 }
 
 void CanvasPath::bezier_curve_to(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y)
 {
-    m_path.cubic_bezier_curve_to(Gfx::FloatPoint(cp1x, cp1y), Gfx::FloatPoint(cp2x, cp2y), Gfx::FloatPoint(x, y));
+    auto transform = active_transform();
+    m_path.cubic_bezier_curve_to(
+        transform.map(Gfx::FloatPoint { cp1x, cp1y }), transform.map(Gfx::FloatPoint { cp2x, cp2y }), transform.map(Gfx::FloatPoint { x, y }));
 }
 
 WebIDL::ExceptionOr<void> CanvasPath::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
@@ -97,23 +107,28 @@ WebIDL::ExceptionOr<void> CanvasPath::ellipse(float x, float y, float radius_x, 
     auto start_point = resolve_point_with_angle(start_angle);
     auto end_point = resolve_point_with_angle(end_angle);
 
-    m_path.move_to(start_point);
-
     auto delta_theta = end_angle - start_angle;
 
-    m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > AK::Pi<float>, !counter_clockwise);
+    auto transform = active_transform();
+    m_path.move_to(transform.map(start_point));
+    m_path.elliptical_arc_to(
+        transform.map(Gfx::FloatPoint { end_point }),
+        transform.map(Gfx::FloatSize { radius_x, radius_y }),
+        rotation + transform.rotation(),
+        delta_theta > AK::Pi<float>, !counter_clockwise);
 
     return {};
 }
 
 void CanvasPath::rect(float x, float y, float width, float height)
 {
-    m_path.move_to({ x, y });
+    auto transform = active_transform();
+    m_path.move_to(transform.map(Gfx::FloatPoint { x, y }));
     if (width == 0 || height == 0)
         return;
-    m_path.line_to({ x + width, y });
-    m_path.line_to({ x + width, y + height });
-    m_path.line_to({ x, y + height });
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + width, y }));
+    m_path.line_to(transform.map(Gfx::FloatPoint { x + width, y + height }));
+    m_path.line_to(transform.map(Gfx::FloatPoint { x, y + height }));
     m_path.close();
 }
 
