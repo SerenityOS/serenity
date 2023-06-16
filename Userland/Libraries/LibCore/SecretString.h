@@ -14,6 +14,7 @@ namespace Core {
 
 class SecretString {
     AK_MAKE_NONCOPYABLE(SecretString);
+    AK_MAKE_DEFAULT_MOVABLE(SecretString);
 
 public:
     [[nodiscard]] static ErrorOr<SecretString> take_ownership(char*&, size_t);
@@ -26,8 +27,6 @@ public:
 
     SecretString() = default;
     ~SecretString();
-    SecretString(SecretString&&) = default;
-    SecretString& operator=(SecretString&&) = default;
 
 private:
     explicit SecretString(ByteBuffer&&);
