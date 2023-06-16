@@ -14,12 +14,10 @@ TEST_CASE(sorts_without_copy)
 {
     struct NoCopy {
         AK_MAKE_NONCOPYABLE(NoCopy);
+        AK_MAKE_DEFAULT_MOVABLE(NoCopy);
 
     public:
         NoCopy() = default;
-        NoCopy(NoCopy&&) = default;
-
-        NoCopy& operator=(NoCopy&&) = default;
 
         int value { 0 };
     };
