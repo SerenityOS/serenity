@@ -47,6 +47,8 @@ private:
     void position_row_boxes(CSSPixels&);
     void position_cell_boxes();
     void border_conflict_resolution();
+    CSSPixels border_spacing_horizontal() const;
+    CSSPixels border_spacing_vertical() const;
 
     CSSPixels m_table_height { 0 };
     CSSPixels m_automatic_content_height { 0 };
@@ -106,6 +108,9 @@ private:
 
     template<class RowOrColumn>
     static CSSPixels cell_max_size(Cell const& cell);
+
+    template<class RowOrColumn>
+    CSSPixels border_spacing();
 
     template<class RowOrColumn>
     Vector<RowOrColumn>& table_rows_or_columns();
