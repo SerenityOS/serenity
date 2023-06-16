@@ -379,6 +379,24 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
     return value_id_to_image_rendering(value->to_identifier());
 }
 
+CSS::Length StyleProperties::border_spacing_horizontal() const
+{
+    auto value = property(CSS::PropertyID::BorderSpacing);
+    if (value->is_length())
+        return value->as_length().length();
+    auto const& list = value->as_value_list();
+    return list.value_at(0, false)->as_length().length();
+}
+
+CSS::Length StyleProperties::border_spacing_vertical() const
+{
+    auto value = property(CSS::PropertyID::BorderSpacing);
+    if (value->is_length())
+        return value->as_length().length();
+    auto const& list = value->as_value_list();
+    return list.value_at(1, false)->as_length().length();
+}
+
 Optional<CSS::CaptionSide> StyleProperties::caption_side() const
 {
     auto value = property(CSS::PropertyID::CaptionSide);

@@ -533,6 +533,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (float_.has_value())
         computed_values.set_float(float_.value());
 
+    computed_values.set_border_spacing_horizontal(computed_style.border_spacing_horizontal());
+    computed_values.set_border_spacing_vertical(computed_style.border_spacing_vertical());
+
     auto caption_side = computed_style.caption_side();
     if (caption_side.has_value())
         computed_values.set_caption_side(caption_side.value());

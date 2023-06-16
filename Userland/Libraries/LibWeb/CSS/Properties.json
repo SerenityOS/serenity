@@ -502,6 +502,7 @@
   "border-spacing": {
     "inherited": true,
     "initial": "0",
+    "max-values": 2,
     "valid-types": [
       "length [0,∞]"
     ],
