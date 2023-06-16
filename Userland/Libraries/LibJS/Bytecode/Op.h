@@ -383,11 +383,10 @@ enum class EnvironmentMode {
     Var,
 };
 
-class CreateEnvironment final : public Instruction {
+class CreateLexicalEnvironment final : public Instruction {
 public:
-    explicit CreateEnvironment(EnvironmentMode mode)
-        : Instruction(Type::CreateEnvironment)
-        , m_mode(mode)
+    explicit CreateLexicalEnvironment()
+        : Instruction(Type::CreateLexicalEnvironment)
     {
     }
 
@@ -395,9 +394,6 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
-
-private:
-    EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
 class EnterObjectEnvironment final : public Instruction {
@@ -955,11 +951,10 @@ private:
     Label m_target;
 };
 
-class LeaveEnvironment final : public Instruction {
+class LeaveLexicalEnvironment final : public Instruction {
 public:
-    LeaveEnvironment(EnvironmentMode mode)
-        : Instruction(Type::LeaveEnvironment)
-        , m_mode(mode)
+    LeaveLexicalEnvironment()
+        : Instruction(Type::LeaveLexicalEnvironment)
     {
     }
 
@@ -967,9 +962,6 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
-
-private:
-    EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
 class LeaveUnwindContext final : public Instruction {

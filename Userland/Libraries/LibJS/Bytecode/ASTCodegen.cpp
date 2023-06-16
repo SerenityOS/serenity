@@ -2226,7 +2226,7 @@ Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode:
     generator.end_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
 
     if (!generator.is_current_block_terminated())
-        generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+        generator.emit<Bytecode::Op::LeaveLexicalEnvironment>();
 
     return {};
 }
@@ -2282,7 +2282,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
                 generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
             }));
             // d. Set the running execution context's LexicalEnvironment to newEnv.
-            // NOTE: Done by CreateEnvironment.
+            // NOTE: Done by CreateLexicalEnvironment.
         }
     } else {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:

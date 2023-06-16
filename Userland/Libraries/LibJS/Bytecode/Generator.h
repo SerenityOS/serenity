@@ -164,7 +164,7 @@ public:
                 emit<Bytecode::Op::LeaveUnwindContext>();
                 break;
             case LeaveLexicalEnvironment:
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+                emit<Bytecode::Op::LeaveLexicalEnvironment>();
                 break;
             case Break:
             case Continue:
