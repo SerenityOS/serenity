@@ -612,14 +612,7 @@ enum class CycleDecision {
 // In most cases, just an input to sed. However, files are also written to when the -i option is used.
 class File {
     AK_MAKE_NONCOPYABLE(File);
-
-    File(LexicalPath input_file_path, NonnullOwnPtr<Core::InputBufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
-        : m_input_file_path(move(input_file_path))
-        , m_file(move(file))
-        , m_output(move(output))
-        , m_output_temp_file(move(temp_file))
-    {
-    }
+    AK_MAKE_DEFAULT_MOVABLE(File);
 
 public:
     // Used for -i mode.
@@ -655,9 +648,6 @@ public:
             nullptr,
         };
     }
-
-    File(File&&) = default;
-    File& operator=(File&&) = default;
 
     ErrorOr<bool> has_next() const
     {
@@ -696,6 +686,14 @@ public:
     }
 
 private:
+    File(LexicalPath input_file_path, NonnullOwnPtr<Core::InputBufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
+        : m_input_file_path(move(input_file_path))
+        , m_file(move(file))
+        , m_output(move(output))
+        , m_output_temp_file(move(temp_file))
+    {
+    }
+
     LexicalPath m_input_file_path;
     NonnullOwnPtr<Core::InputBufferedFile> m_file;
 
