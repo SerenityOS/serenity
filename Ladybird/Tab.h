@@ -96,6 +96,7 @@ private:
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
 
+    OwnPtr<QMenu> m_audio_context_menu;
     OwnPtr<QMenu> m_video_context_menu;
     OwnPtr<QIcon> m_media_context_menu_play_icon;
     OwnPtr<QIcon> m_media_context_menu_pause_icon;
