@@ -99,8 +99,8 @@ protected:
     static bool should_treat_width_as_auto(Box const&, AvailableSpace const&);
     static bool should_treat_height_as_auto(Box const&, AvailableSpace const&);
 
-    [[nodiscard]] bool should_treat_max_width_as_none(Box const&) const;
-    [[nodiscard]] bool should_treat_max_height_as_none(Box const&) const;
+    [[nodiscard]] bool should_treat_max_width_as_none(Box const&, AvailableSize const&) const;
+    [[nodiscard]] bool should_treat_max_height_as_none(Box const&, AvailableSize const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode, AvailableSpace const&);
     void compute_inset(Box const& box);
@@ -129,7 +129,7 @@ protected:
     CSSPixels tentative_height_for_replaced_element(Box const&, CSS::Size const& computed_height, AvailableSpace const&) const;
     CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
-    [[nodiscard]] CSSPixelSize solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const&) const;
+    [[nodiscard]] CSSPixelSize solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const&, AvailableSpace const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 

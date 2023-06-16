@@ -186,9 +186,9 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
 
         CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
         CSSPixels max_width = computed_values.width().is_auto() ? max_content_width : width;
-        if (!should_treat_max_height_as_none(cell.box))
+        if (!should_treat_max_height_as_none(cell.box, available_space.height))
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
-        if (!should_treat_max_width_as_none(cell.box))
+        if (!should_treat_max_width_as_none(cell.box, available_space.width))
             max_width = min(max_width, computed_values.max_width().to_px(cell.box, containing_block.content_width()));
 
         if (computed_values.height().is_percentage()) {
@@ -355,7 +355,7 @@ void TableFormattingContext::compute_table_width()
         // of resolved-table-width, and the used min-width of the table.
         CSSPixels resolved_table_width = computed_values.width().to_px(table_box(), width_of_table_wrapper_containing_block);
         used_width = max(resolved_table_width, used_min_width);
-        if (!should_treat_max_width_as_none(table_box()))
+        if (!should_treat_max_width_as_none(table_box(), m_available_space->width))
             used_width = min(used_width, computed_values.max_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 

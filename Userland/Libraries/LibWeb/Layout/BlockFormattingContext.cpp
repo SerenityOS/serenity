@@ -253,7 +253,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    if (!should_treat_max_width_as_none(box)) {
+    if (!should_treat_max_width_as_none(box, available_space.width)) {
         auto max_width = calculate_inner_width(box, remaining_available_space.width, computed_values.max_width());
         auto used_width_px = used_width.is_auto() ? remaining_available_space.width.to_px() : used_width.to_px(box);
         if (used_width_px > max_width.to_px(box)) {
@@ -331,7 +331,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    if (!should_treat_max_width_as_none(box)) {
+    if (!should_treat_max_width_as_none(box, available_space.width)) {
         auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
         if (width.to_px(box) > max_width.to_px(box))
             width = compute_width(max_width);
@@ -458,7 +458,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         }
     }
 
-    if (!should_treat_max_height_as_none(box)) {
+    if (!should_treat_max_height_as_none(box, available_space.height)) {
         auto max_height = calculate_inner_height(box, available_space.height, computed_values.max_height());
         if (!max_height.is_auto())
             height = min(height, max_height.to_px(box));
