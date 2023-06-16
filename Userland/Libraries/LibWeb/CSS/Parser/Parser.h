@@ -289,6 +289,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
+    ErrorOr<NonnullOwnPtr<CalculationNode>> simplify_a_calculation_tree(NonnullOwnPtr<CalculationNode>);
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calc_function_node(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_min_function(Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_max_function(Function const&);
