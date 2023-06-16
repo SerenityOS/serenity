@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Brandon Pruitt <brapru@pm.me>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,6 +50,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(username, "Username of the account to modify", "username");
 
     args_parser.parse(arguments);
+
+    if (lock && unlock) {
+        warnln("The -L and -U options are mutually exclusive");
+        args_parser.print_usage(stderr, arguments.strings[0]);
+        return 1;
+    }
 
     auto account_or_error = Core::Account::from_name(username);
 
