@@ -1966,6 +1966,7 @@ Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Byteco
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
     if (!m_prefixed) {
         previous_value_for_postfix_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::ToNumeric>();
         generator.emit<Bytecode::Op::Store>(*previous_value_for_postfix_reg);
     }
 

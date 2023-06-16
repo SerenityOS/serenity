@@ -88,6 +88,7 @@
     O(SuperCall)                     \
     O(Throw)                         \
     O(ThrowIfNotObject)              \
+    O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \
     O(UnaryMinus)                    \
