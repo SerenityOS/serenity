@@ -113,7 +113,7 @@ html, body {
  * https://html.spec.whatwg.org/multipage/rendering.html#flow-content-3
  */
 address, blockquote, center, dialog, div, figure, figcaption, footer, form,
-header, hr, legend, listing, main, p, plaintext, pre, xmp {
+header, hr, legend, listing, main, p, plaintext, pre, search, xmp {
     display: block;
 }
 
@@ -142,8 +142,8 @@ dialog:not([open]) {
 
 dialog {
     position: absolute;
-    inset-left: 0;
-    inset-right: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
     width: fit-content;
     height: fit-content;
     margin: auto;
@@ -153,8 +153,44 @@ dialog {
     color: CanvasText;
 }
 
+dialog:modal {
+    position: fixed;
+    overflow: auto;
+    inset-block: 0;
+    max-width: calc(100% - 6px - 2em);
+    max-height: calc(100% - 6px - 2em);
+}
+
 dialog::backdrop {
     background: rgba(0, 0, 0, 0.1);
+}
+
+[popover]:not(:popover-open):not(dialog[open]) {
+    display:none;
+}
+
+dialog:popover-open {
+    display:block;
+}
+
+[popover] {
+    position: fixed;
+    inset: 0;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+    border: solid;
+    padding: 0.25em;
+    overflow: auto;
+    color: CanvasText;
+    background-color: Canvas;
+}
+
+:popover-open::backdrop {
+    position: fixed;
+    inset: 0;
+    pointer-events: none !important;
+    background-color: transparent;
 }
 
 slot {
@@ -394,21 +430,21 @@ li {
 }
 
 dir, dl, menu, ol, ul {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
 }
 
 :is(dir, dl, menu, ol, ul) :is(dir, dl, menu, ol, ul) {
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-block-start: 0;
+    margin-block-end: 0;
 }
 
 dd {
-    margin-left: 40px;
+    margin-inline-start: 40px;
 }
 
 dir, menu, ol, ul {
-    padding-left: 40px;
+    padding-inline-start: 40px;
 }
 
 ol, ul, menu {
@@ -582,7 +618,10 @@ hr {
     color: gray;
     border-style: inset;
     border-width: 1px;
-    margin: 0.5em auto;
+    margin-block-start: 0.5em;
+    margin-inline-end: auto;
+    margin-block-end: 0.5em;
+    margin-inline-start: auto;
     overflow: hidden;
 }
 
@@ -592,10 +631,13 @@ hr {
 
 fieldset {
     display: block;
-    margin-left: 2px;
-    margin-right: 2px;
+    margin-inline-start: 2px;
+    margin-inline-end: 2px;
     border: groove 2px ThreeDFace;
-    padding: 0.35em 0.75em 0.625em;
+    padding-block-start: 0.35em;
+    padding-inline-end: 0.75em;
+    padding-block-end: 0.625em;
+    padding-inline-start: 0.75em;
     min-inline-size: min-content;
 }
 
@@ -614,110 +656,6 @@ legend[align=center i] {
 
 legend[align=right i] {
     justify-self: right;
-}
-
-/* 15.3.8 Embedded content
- * https://html.spec.whatwg.org/multipage/rendering.html#tables-2
- */
-
-table {
-    display: table;
-}
-
-caption {
-    display: table-caption;
-}
-
-colgroup, colgroup[hidden] {
-    display: table-column-group;
-}
-
-col, col[hidden] {
-    display: table-column;
-}
-
-thead, thead[hidden] {
-    display: table-header-group;
-}
-
-tbody, tbody[hidden] {
-    display: table-row-group;
-}
-
-tfoot, tfoot[hidden] {
-    display: table-footer-group;
-}
-
-tr, tr[hidden] {
-    display: table-row;
-}
-
-td, th {
-    display: table-cell;
-}
-
-colgroup[hidden], col[hidden], thead[hidden], tbody[hidden],
-tfoot[hidden], tr[hidden] {
-    visibility: collapse;
-}
-
-table {
-    box-sizing: border-box;
-    border-spacing: 2px;
-    border-collapse: separate;
-    text-indent: initial;
-}
-
-td, th {
-    padding: 1px;
-}
-
-th {
-    font-weight: bold;
-}
-
-caption {
-    text-align: center;
-}
-
-thead, tbody, tfoot, table > tr {
-    vertical-align: middle;
-}
-
-tr, td, th {
-    vertical-align: inherit;
-}
-
-thead, tbody, tfoot, tr {
-    border-color: inherit;
-}
-
-table[rules=none i], table[rules=groups i], table[rules=rows i],
-table[rules=cols i], table[rules=all i], table[frame=void i],
-table[frame=above i], table[frame=below i], table[frame=hsides i],
-table[frame=lhs i], table[frame=rhs i], table[frame=vsides i],
-table[frame=box i], table[frame=border i],
-table[rules=none i] > tr > td, table[rules=none i] > tr > th,
-table[rules=groups i] > tr > td, table[rules=groups i] > tr > th,
-table[rules=rows i] > tr > td, table[rules=rows i] > tr > th,
-table[rules=cols i] > tr > td, table[rules=cols i] > tr > th,
-table[rules=all i] > tr > td, table[rules=all i] > tr > th,
-table[rules=none i] > thead > tr > td, table[rules=none i] > thead > tr > th,
-table[rules=groups i] > thead > tr > td, table[rules=groups i] > thead > tr > th,
-table[rules=rows i] > thead > tr > td, table[rules=rows i] > thead > tr > th,
-table[rules=cols i] > thead > tr > td, table[rules=cols i] > thead > tr > th,
-table[rules=all i] > thead > tr > td, table[rules=all i] > thead > tr > th,
-table[rules=none i] > tbody > tr > td, table[rules=none i] > tbody > tr > th,
-table[rules=groups i] > tbody > tr > td, table[rules=groups i] > tbody > tr > th,
-table[rules=rows i] > tbody > tr > td, table[rules=rows i] > tbody > tr > th,
-table[rules=cols i] > tbody > tr > td, table[rules=cols i] > tbody > tr > th,
-table[rules=all i] > tbody > tr > td, table[rules=all i] > tbody > tr > th,
-table[rules=none i] > tfoot > tr > td, table[rules=none i] > tfoot > tr > th,
-table[rules=groups i] > tfoot > tr > td, table[rules=groups i] > tfoot > tr > th,
-table[rules=rows i] > tfoot > tr > td, table[rules=rows i] > tfoot > tr > th,
-table[rules=cols i] > tfoot > tr > td, table[rules=cols i] > tfoot > tr > th,
-table[rules=all i] > tfoot > tr > td, table[rules=all i] > tfoot > tr > th {
-    border-color: black;
 }
 
 /* 15.4.1 Embedded content
@@ -779,13 +717,13 @@ input[type=image i][align=bottom i], object[align=bottom i] {
  * https://html.spec.whatwg.org/multipage/rendering.html#the-details-and-summary-elements
  */
 
-summary {
+details > summary:first-of-type {
     display: list-item;
     counter-increment: list-item 0;
     list-style: disclosure-closed inside;
 }
 
-details[open] > summary {
+details[open] > summary:first-of-type {
     list-style-type: disclosure-open;
 }
 
