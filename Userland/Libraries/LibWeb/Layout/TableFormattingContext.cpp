@@ -249,13 +249,17 @@ void TableFormattingContext::compute_table_measures()
                     baseline_max_content_size += rows_or_columns[rc_index].max_size;
                 }
 
+                // Define the baseline border spacing as the sum of the horizontal border-spacing for any columns spanned by the cell, other than the one in which the cell originates.
+                auto baseline_border_spacing = border_spacing<RowOrColumn>() * (cell_span_value - 1);
+
                 // The contribution of the cell is the sum of:
                 // the min-content size of the column based on cells of span up to N-1
                 auto cell_min_contribution = rows_or_columns[cell_start_rc_index].min_size;
                 // and the product of:
                 // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                 // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
-                cell_min_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size) * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size);
+                cell_min_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size)
+                    * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
 
                 // The contribution of the cell is the sum of:
                 // the max-content size of the column based on cells of span up to N-1
@@ -263,7 +267,8 @@ void TableFormattingContext::compute_table_measures()
                 // and the product of:
                 // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                 // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
-                cell_max_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size) * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size);
+                cell_max_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size)
+                    * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
 
                 // Spread contribution to all rows / columns, since we've weighted the gap to the desired spanned size by the the
                 // ratio of the max-content size based on cells of span up to N-1 of the row / column to the baseline max-content width.
@@ -354,16 +359,23 @@ void TableFormattingContext::compute_table_width()
             used_width = min(used_width, computed_values.max_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 
-    // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
-    // This is the width that we will be able to allocate to the columns.
-    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right);
+    // Compute undistributable space due to border spacing: https://www.w3.org/TR/css-tables-3/#computing-undistributable-space.
+    auto undistributable_space = (m_columns.size() + 1) * border_spacing_horizontal();
+    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right + undistributable_space);
 }
 
 void TableFormattingContext::distribute_width_to_columns()
 {
     // Implements https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm
 
-    CSSPixels available_width = m_state.get(table_box()).content_width();
+    // The total horizontal border spacing is defined for each table:
+    // - For tables laid out in separated-borders mode containing at least one column, the horizontal component of the computed value of the border-spacing property times one plus the number of columns in the table
+    // - Otherwise, 0
+    auto total_horizontal_border_spacing = m_columns.is_empty() ? 0 : (m_columns.size() + 1) * border_spacing_horizontal();
+
+    // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
+    // This is the width that we will be able to allocate to the columns.
+    CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
 
     auto columns_total_used_width = [&]() {
         CSSPixels total_used_width = 0;
@@ -547,7 +559,12 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
             row.base_height = max(row.base_height, cell_used_height);
         }
 
-        cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
+        // Compute cell width as specified by https://www.w3.org/TR/css-tables-3/#bounding-box-assignment:
+        // The position of any table-cell, table-track, or table-track-group box within the table is defined as the rectangle whose width/height is the sum of:
+        // - the widths/heights of all spanned visible columns/rows
+        // - the horizontal/vertical border-spacing times the amount of spanned visible columns/rows minus one
+        // FIXME: Account for visibility.
+        cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right() + (cell.column_span - 1) * border_spacing_horizontal());
         if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
             cell_state.set_content_height(independent_formatting_context->automatic_content_height());
             independent_formatting_context->parent_context_did_dimension_child_root_box();
@@ -574,7 +591,6 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         sum_rows_height += row.base_height;
     }
 
-    // The height of a table is the sum of the row heights plus any cell spacing or borders.
     m_table_height = sum_rows_height;
 
     if (!table_box().computed_values().height().is_auto()) {
@@ -632,7 +648,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
             continue;
         }
 
-        cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
+        cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right() + (cell.column_span - 1) * border_spacing_horizontal());
         if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
             independent_formatting_context->parent_context_did_dimension_child_root_box();
         }
@@ -699,8 +715,8 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
 {
     auto const& table_state = m_state.get(table_box());
 
-    CSSPixels row_top_offset = table_state.offset.y() + table_state.padding_top;
-    CSSPixels row_left_offset = table_state.border_left + table_state.padding_left;
+    CSSPixels row_top_offset = table_state.offset.y() + table_state.padding_top + border_spacing_vertical();
+    CSSPixels row_left_offset = table_state.border_left + table_state.padding_left + border_spacing_horizontal();
     for (size_t y = 0; y < m_rows.size(); y++) {
         auto& row = m_rows[y];
         auto& row_state = m_state.get_mutable(row.box);
@@ -739,6 +755,9 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
     });
 
     total_content_height = max(row_top_offset, row_group_top_offset) - table_state.offset.y() - table_state.padding_top;
+    // The height of a table is the sum of the row heights plus any cell spacing or borders.
+    // Note that we've already added one vertical border-spacing to row_top_offset, so it's sufficient to multiply it by row count here.
+    total_content_height += m_rows.size() * border_spacing_vertical();
 }
 
 void TableFormattingContext::position_cell_boxes()
@@ -775,7 +794,14 @@ void TableFormattingContext::position_cell_boxes()
             }
         }
 
-        cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset, cell_state.border_box_top());
+        // Compute cell position as specified by https://www.w3.org/TR/css-tables-3/#bounding-box-assignment:
+        // left/top location is the sum of:
+        // - for top: the height reserved for top captions (including margins), if any
+        // - the padding-left/padding-top and border-left-width/border-top-width of the table
+        // FIXME: Account for visibility.
+        cell_state.offset = row_state.offset.translated(
+            cell_state.border_box_left() + m_columns[cell.column_index].left_offset + cell.column_index * border_spacing_horizontal(),
+            cell_state.border_box_top() + cell.row_index * border_spacing_vertical());
     }
 }
 
@@ -881,6 +907,13 @@ CSSPixels TableFormattingContext::compute_row_content_height(Cell const& cell) c
             span_height += row_state.border_box_height();
         }
     }
+
+    // Compute cell height as specified by https://www.w3.org/TR/css-tables-3/#bounding-box-assignment:
+    // width/height is the sum of:
+    // - the widths/heights of all spanned visible columns/rows
+    // - the horizontal/vertical border-spacing times the amount of spanned visible columns/rows minus one
+    // FIXME: Account for visibility.
+    span_height += (cell.row_span - 1) * border_spacing_vertical();
     return span_height;
 }
 
@@ -1041,6 +1074,38 @@ template<>
 CSSPixels TableFormattingContext::cell_max_size<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
 {
     return cell.max_width;
+}
+
+template<>
+CSSPixels TableFormattingContext::border_spacing<TableFormattingContext::Row>()
+{
+    return border_spacing_vertical();
+}
+
+template<>
+CSSPixels TableFormattingContext::border_spacing<TableFormattingContext::Column>()
+{
+    return border_spacing_horizontal();
+}
+
+CSSPixels TableFormattingContext::border_spacing_horizontal() const
+{
+    auto const& computed_values = table_box().computed_values();
+    // When a table is laid out in collapsed-borders mode, the border-spacing of the table-root is ignored (as if it was set to 0px):
+    // https://www.w3.org/TR/css-tables-3/#collapsed-style-overrides
+    if (computed_values.border_collapse() == CSS::BorderCollapse::Collapse)
+        return 0;
+    return computed_values.border_spacing_horizontal().to_px(table_box());
+}
+
+CSSPixels TableFormattingContext::border_spacing_vertical() const
+{
+    auto const& computed_values = table_box().computed_values();
+    // When a table is laid out in collapsed-borders mode, the border-spacing of the table-root is ignored (as if it was set to 0px):
+    // https://www.w3.org/TR/css-tables-3/#collapsed-style-overrides
+    if (computed_values.border_collapse() == CSS::BorderCollapse::Collapse)
+        return 0;
+    return computed_values.border_spacing_vertical().to_px(table_box());
 }
 
 template<>
