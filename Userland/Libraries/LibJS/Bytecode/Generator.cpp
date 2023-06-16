@@ -96,7 +96,7 @@ void Generator::block_declaration_instantiation(ScopeNode const& scope_node)
 void Generator::begin_variable_scope()
 {
     start_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
-    emit<Bytecode::Op::CreateEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+    emit<Bytecode::Op::CreateLexicalEnvironment>();
 }
 
 void Generator::end_variable_scope()
@@ -104,7 +104,7 @@ void Generator::end_variable_scope()
     end_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
 
     if (!m_current_basic_block->is_terminated()) {
-        emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+        emit<Bytecode::Op::LeaveLexicalEnvironment>();
     }
 }
 
@@ -313,7 +313,7 @@ void Generator::generate_break()
             last_was_finally = false;
             break;
         case LeaveLexicalEnvironment:
-            emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            emit<Bytecode::Op::LeaveLexicalEnvironment>();
             break;
         case Continue:
             break;
@@ -341,7 +341,7 @@ void Generator::generate_break(DeprecatedFlyString const& break_label)
                     emit<Bytecode::Op::LeaveUnwindContext>();
                 last_was_finally = false;
             } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+                emit<Bytecode::Op::LeaveLexicalEnvironment>();
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
                 auto& block = make_block(DeprecatedString::formatted("{}.break", current_block().name()));
                 emit<Op::ScheduleJump>(Label { block });
@@ -381,7 +381,7 @@ void Generator::generate_continue()
             last_was_finally = false;
             break;
         case LeaveLexicalEnvironment:
-            emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            emit<Bytecode::Op::LeaveLexicalEnvironment>();
             break;
         case Break:
             break;
@@ -409,7 +409,7 @@ void Generator::generate_continue(DeprecatedFlyString const& continue_label)
                     emit<Bytecode::Op::LeaveUnwindContext>();
                 last_was_finally = false;
             } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+                emit<Bytecode::Op::LeaveLexicalEnvironment>();
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
                 auto& block = make_block(DeprecatedString::formatted("{}.continue", current_block().name()));
                 emit<Op::ScheduleJump>(Label { block });

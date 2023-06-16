@@ -411,17 +411,14 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto& old_environment) {
         GCPtr<Environment> environment = new_declarative_environment(*old_environment).ptr();
         swap(old_environment, environment);
         return environment;
     };
-    if (m_mode == EnvironmentMode::Lexical)
-        interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
-    else if (m_mode == EnvironmentMode::Var)
-        interpreter.saved_variable_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().variable_environment));
+    interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
     return {};
 }
 
@@ -831,12 +828,9 @@ ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter& interp
     return {};
 }
 
-ThrowCompletionOr<void> LeaveEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (m_mode == EnvironmentMode::Lexical)
-        interpreter.vm().running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
-    if (m_mode == EnvironmentMode::Var)
-        interpreter.vm().running_execution_context().variable_environment = interpreter.saved_variable_environment_stack().take_last();
+    interpreter.vm().running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
     return {};
 }
 
@@ -1191,12 +1185,9 @@ DeprecatedString DeleteVariable::to_deprecated_string_impl(Bytecode::Executable 
     return DeprecatedString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-DeprecatedString CreateEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
+DeprecatedString CreateLexicalEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto mode_string = m_mode == EnvironmentMode::Lexical
-        ? "Lexical"
-        : "Variable";
-    return DeprecatedString::formatted("CreateEnvironment mode:{}", mode_string);
+    return "CreateLexicalEnvironment"sv;
 }
 
 DeprecatedString CreateVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
@@ -1344,12 +1335,9 @@ DeprecatedString ScheduleJump::to_deprecated_string_impl(Bytecode::Executable co
     return DeprecatedString::formatted("ScheduleJump {}", m_target);
 }
 
-DeprecatedString LeaveEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
+DeprecatedString LeaveLexicalEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto mode_string = m_mode == EnvironmentMode::Lexical
-        ? "Lexical"
-        : "Variable";
-    return DeprecatedString::formatted("LeaveEnvironment env:{}", mode_string);
+    return "LeaveLexicalEnvironment"sv;
 }
 
 DeprecatedString LeaveUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const

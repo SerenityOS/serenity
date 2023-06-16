@@ -22,7 +22,7 @@
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \
     O(CopyObjectExcludingProperties) \
-    O(CreateEnvironment)             \
+    O(CreateLexicalEnvironment)      \
     O(CreateVariable)                \
     O(Decrement)                     \
     O(DeleteById)                    \
@@ -53,7 +53,7 @@
     O(JumpConditional)               \
     O(JumpNullish)                   \
     O(JumpUndefined)                 \
-    O(LeaveEnvironment)              \
+    O(LeaveLexicalEnvironment)       \
     O(LeaveUnwindContext)            \
     O(LeftShift)                     \
     O(LessThan)                      \
