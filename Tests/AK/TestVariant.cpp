@@ -96,10 +96,10 @@ TEST_CASE(move_moves)
 {
     struct NoCopy {
         AK_MAKE_NONCOPYABLE(NoCopy);
+        AK_MAKE_DEFAULT_MOVABLE(NoCopy);
 
     public:
         NoCopy() = default;
-        NoCopy(NoCopy&&) = default;
     };
 
     Variant<NoCopy, int> first_variant { 42 };
