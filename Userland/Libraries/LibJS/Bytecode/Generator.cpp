@@ -87,30 +87,24 @@ Label Generator::nearest_continuable_scope() const
     return m_continuable_scopes.last().bytecode_target;
 }
 
-void Generator::begin_variable_scope(BindingMode mode, SurroundingScopeKind kind)
+void Generator::block_declaration_instantiation(ScopeNode const& scope_node)
 {
-    m_variable_scopes.append({ kind, mode, {} });
-    if (mode != BindingMode::Global) {
-        start_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
-        emit<Bytecode::Op::CreateEnvironment>(
-            mode == BindingMode::Lexical
-                ? Bytecode::Op::EnvironmentMode::Lexical
-                : Bytecode::Op::EnvironmentMode::Var);
-    }
+    start_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
+    emit<Bytecode::Op::BlockDeclarationInstantiation>(scope_node);
+}
+
+void Generator::begin_variable_scope()
+{
+    start_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
+    emit<Bytecode::Op::CreateEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
 }
 
 void Generator::end_variable_scope()
 {
-    auto mode = m_variable_scopes.take_last().mode;
-    if (mode != BindingMode::Global) {
-        end_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
+    end_boundary(BlockBoundaryType::LeaveLexicalEnvironment);
 
-        if (!m_current_basic_block->is_terminated()) {
-            emit<Bytecode::Op::LeaveEnvironment>(
-                mode == BindingMode::Lexical
-                    ? Bytecode::Op::EnvironmentMode::Lexical
-                    : Bytecode::Op::EnvironmentMode::Var);
-        }
+    if (!m_current_basic_block->is_terminated()) {
+        emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
     }
 }
 

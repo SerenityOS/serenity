@@ -794,6 +794,23 @@ private:
     Optional<Register> m_home_object;
 };
 
+class BlockDeclarationInstantiation final : public Instruction {
+public:
+    explicit BlockDeclarationInstantiation(ScopeNode const& scope_node)
+        : Instruction(Type::BlockDeclarationInstantiation)
+        , m_scope_node(scope_node)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    ScopeNode const& m_scope_node;
+};
+
 class Return final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
