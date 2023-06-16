@@ -21,6 +21,7 @@ concept SeekableStreamLike = IsBaseOf<SeekableStream, T>;
 template<typename T>
 class BufferedHelper {
     AK_MAKE_NONCOPYABLE(BufferedHelper);
+    AK_MAKE_DEFAULT_MOVABLE(BufferedHelper);
 
 public:
     template<StreamLike U>
@@ -28,19 +29,6 @@ public:
         : m_stream(move(stream))
         , m_buffer(move(buffer))
     {
-    }
-
-    BufferedHelper(BufferedHelper&& other)
-        : m_stream(move(other.m_stream))
-        , m_buffer(move(other.m_buffer))
-    {
-    }
-
-    BufferedHelper& operator=(BufferedHelper&& other)
-    {
-        m_stream = move(other.m_stream);
-        m_buffer = move(other.m_buffer);
-        return *this;
     }
 
     template<template<typename> typename BufferedType>

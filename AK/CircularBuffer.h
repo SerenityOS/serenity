@@ -15,13 +15,11 @@ namespace AK {
 
 class CircularBuffer {
     AK_MAKE_NONCOPYABLE(CircularBuffer);
+    AK_MAKE_DEFAULT_MOVABLE(CircularBuffer);
 
 public:
     static ErrorOr<CircularBuffer> create_empty(size_t size);
     static ErrorOr<CircularBuffer> create_initialized(ByteBuffer);
-
-    CircularBuffer(CircularBuffer&& other) = default;
-    CircularBuffer& operator=(CircularBuffer&& other) = default;
 
     ~CircularBuffer() = default;
 
