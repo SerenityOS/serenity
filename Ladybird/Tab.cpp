@@ -395,6 +395,21 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         view().toggle_media_loop_state();
     });
 
+    auto* copy_audio_url_action = new QAction("Copy Audio &URL", this);
+    copy_audio_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(copy_audio_url_action, &QAction::triggered, this, [this]() {
+        copy_link_url(m_media_context_menu_url);
+    });
+
+    m_audio_context_menu = make<QMenu>("Audio context menu", this);
+    m_audio_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_audio_context_menu->addAction(m_media_context_menu_controls_action);
+    m_audio_context_menu->addAction(m_media_context_menu_loop_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(copy_audio_url_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(&m_window->inspect_dom_node_action());
+
     auto* open_video_action = new QAction("&Open Video", this);
     open_video_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-video.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(open_video_action, &QAction::triggered, this, [this]() {
@@ -443,6 +458,8 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
         if (menu.is_video)
             m_video_context_menu->exec(screen_position);
+        else
+            m_audio_context_menu->exec(screen_position);
     };
 }
 

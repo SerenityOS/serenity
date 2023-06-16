@@ -384,6 +384,21 @@ Tab::Tab(BrowserWindow& window)
         view().toggle_media_loop_state();
     });
 
+    m_audio_context_menu = GUI::Menu::construct();
+    m_audio_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_controls_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
+    }));
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+        start_download(m_media_context_menu_url);
+    }));
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(window.inspect_dom_node_action());
+
     m_video_context_menu = GUI::Menu::construct();
     m_video_context_menu->add_action(*m_media_context_menu_play_pause_action);
     m_video_context_menu->add_action(*m_media_context_menu_controls_action);
@@ -424,6 +439,8 @@ Tab::Tab(BrowserWindow& window)
 
         if (menu.is_video)
             m_video_context_menu->popup(screen_position);
+        else
+            m_audio_context_menu->popup(screen_position);
     };
 
     view().on_link_middle_click = [this](auto& href, auto&, auto) {
