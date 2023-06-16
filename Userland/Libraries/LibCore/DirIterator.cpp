@@ -56,7 +56,11 @@ bool DirIterator::advance_next()
             return false;
         }
 
+#ifdef AK_OS_SOLARIS
+        m_next = DirectoryEntry::from_stat(m_dir, *de);
+#else
         m_next = DirectoryEntry::from_dirent(*de);
+#endif
 
         if (m_next->name.is_empty())
             return false;
