@@ -63,16 +63,10 @@ public:
         GenericLexer lexer { pattern };
 
         while (!lexer.is_eof()) {
-            // FIXME: It is a bit inconvenient, that 'consume_until' also consumes the 'stop' character, this makes
-            //        the method less generic because there is no way to check if the 'stop' character ever appeared.
-            auto const consume_until_without_consuming_stop_character = [&](char stop) {
-                return lexer.consume_while([&](char ch) { return ch != stop; });
-            };
-
-            m_builder.append(consume_until_without_consuming_stop_character(m_opening));
+            m_builder.append(lexer.consume_until(m_opening));
 
             if (lexer.consume_specific(m_opening)) {
-                auto const placeholder = consume_until_without_consuming_stop_character(m_closing);
+                auto const placeholder = lexer.consume_until(m_closing);
 
                 if (!lexer.consume_specific(m_closing))
                     VERIFY_NOT_REACHED();
