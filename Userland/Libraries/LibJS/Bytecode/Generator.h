@@ -149,7 +149,6 @@ public:
         Unwind,
         ReturnToFinally,
         LeaveLexicalEnvironment,
-        LeaveVariableEnvironment,
     };
     template<typename OpType>
     void perform_needed_unwinds()
@@ -166,9 +165,6 @@ public:
                 break;
             case LeaveLexicalEnvironment:
                 emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
-                break;
-            case LeaveVariableEnvironment:
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
                 break;
             case Break:
             case Continue:
