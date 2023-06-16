@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
     TRY(Core::System::unveil("/etc", "rwc"));
 
-    int uid = 0;
+    uid_t uid = 0;
     int gid = 0;
     bool lock = false;
     bool unlock = false;
@@ -75,12 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     unveil(nullptr, nullptr);
 
     if (uid) {
-        if (uid < 0) {
-            warnln("invalid uid {}", uid);
-            return 1;
-        }
-
-        if (getpwuid(static_cast<uid_t>(uid))) {
+        if (getpwuid(uid)) {
             warnln("uid {} already exists", uid);
             return 1;
         }
