@@ -57,6 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView shell;
     StringView gecos;
     StringView username;
+    Vector<gid_t> extra_gids;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify a user account");
@@ -72,6 +73,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 gid = move(maybe_gid);
 
             return gid.has_value();
+        },
+    });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Set the user's supplementary groups. Groups are specified with a comma-separated list. Group names or numbers may be used",
+        .long_name = "groups",
+        .short_name = 'G',
+        .value_name = "groups",
+        .accept_value = [&extra_gids](StringView comma_separated_groups) {
+            auto groups = comma_separated_groups.split_view(',');
+            for (auto group : groups) {
+                if (auto gid = group_string_to_gid(group); gid.has_value())
+                    extra_gids.append(gid.value());
+            }
+            return true;
         },
     });
     args_parser.add_option(lock, "Lock password", "lock", 'L');
@@ -160,6 +176,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!gecos.is_empty()) {
         target_account.set_gecos(gecos);
+    }
+
+    if (!extra_gids.is_empty()) {
+        target_account.set_extra_gids(extra_gids);
     }
 
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
