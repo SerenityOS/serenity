@@ -246,7 +246,7 @@ Completion BlockStatement::execute(Interpreter& interpreter) const
 
     old_environment = vm.running_execution_context().lexical_environment;
     auto block_environment = new_declarative_environment(*old_environment);
-    block_declaration_instantiation(interpreter, block_environment);
+    block_declaration_instantiation(vm, block_environment);
     vm.running_execution_context().lexical_environment = block_environment;
 
     // 5. Let blockValue be the result of evaluating StatementList.
@@ -4309,7 +4309,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
         auto block_environment = new_declarative_environment(*old_environment);
 
         // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-        block_declaration_instantiation(interpreter, block_environment);
+        block_declaration_instantiation(vm, block_environment);
 
         // 6. Set the running execution context's LexicalEnvironment to blockEnv.
         vm.running_execution_context().lexical_environment = block_environment;
@@ -4729,10 +4729,9 @@ bool ImportStatement::has_bound_name(DeprecatedFlyString const& name) const
 }
 
 // 14.2.3 BlockDeclarationInstantiation ( code, env ), https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
-void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Environment* environment) const
+void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment) const
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
-    auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
     VERIFY(environment);
