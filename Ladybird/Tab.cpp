@@ -374,49 +374,49 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_image_context_menu->exec(screen_position);
     };
 
-    m_video_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
-    m_video_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
 
-    m_video_context_menu_play_pause_action = make<QAction>("&Play", this);
-    m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_play_icon);
-    QObject::connect(m_video_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_play_state();
+    m_media_context_menu_play_pause_action = make<QAction>("&Play", this);
+    m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+    QObject::connect(m_media_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_play_state();
     });
 
-    m_video_context_menu_controls_action = make<QAction>("Show &Controls", this);
-    m_video_context_menu_controls_action->setCheckable(true);
-    QObject::connect(m_video_context_menu_controls_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_controls_state();
+    m_media_context_menu_controls_action = make<QAction>("Show &Controls", this);
+    m_media_context_menu_controls_action->setCheckable(true);
+    QObject::connect(m_media_context_menu_controls_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_controls_state();
     });
 
-    m_video_context_menu_loop_action = make<QAction>("&Loop Video", this);
-    m_video_context_menu_loop_action->setCheckable(true);
-    QObject::connect(m_video_context_menu_loop_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_loop_state();
+    m_media_context_menu_loop_action = make<QAction>("&Loop", this);
+    m_media_context_menu_loop_action->setCheckable(true);
+    QObject::connect(m_media_context_menu_loop_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_loop_state();
     });
 
     auto* open_video_action = new QAction("&Open Video", this);
     open_video_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-video.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(open_video_action, &QAction::triggered, this, [this]() {
-        open_link(m_video_context_menu_url);
+        open_link(m_media_context_menu_url);
     });
 
     auto* open_video_in_new_tab_action = new QAction("Open Video in New &Tab", this);
     open_video_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(open_video_in_new_tab_action, &QAction::triggered, this, [this]() {
-        open_link_in_new_tab(m_video_context_menu_url);
+        open_link_in_new_tab(m_media_context_menu_url);
     });
 
     auto* copy_video_url_action = new QAction("Copy Video &URL", this);
     copy_video_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(copy_video_url_action, &QAction::triggered, this, [this]() {
-        copy_link_url(m_video_context_menu_url);
+        copy_link_url(m_media_context_menu_url);
     });
 
     m_video_context_menu = make<QMenu>("Video context menu", this);
-    m_video_context_menu->addAction(m_video_context_menu_play_pause_action);
-    m_video_context_menu->addAction(m_video_context_menu_controls_action);
-    m_video_context_menu->addAction(m_video_context_menu_loop_action);
+    m_video_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_video_context_menu->addAction(m_media_context_menu_controls_action);
+    m_video_context_menu->addAction(m_media_context_menu_loop_action);
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(open_video_action);
     m_video_context_menu->addAction(open_video_in_new_tab_action);
@@ -425,22 +425,24 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto const& video_url, Gfx::IntPoint, bool is_playing, bool has_user_agent_controls, bool is_looping) {
-        m_video_context_menu_url = video_url;
+    view().on_media_context_menu_request = [this](Gfx::IntPoint, Web::Page::MediaContextMenu const& menu) {
+        m_media_context_menu_url = menu.media_url;
 
-        if (is_playing) {
-            m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_play_icon);
-            m_video_context_menu_play_pause_action->setText("&Play");
+        if (menu.is_playing) {
+            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_pause_icon);
+            m_media_context_menu_play_pause_action->setText("&Pause");
         } else {
-            m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_pause_icon);
-            m_video_context_menu_play_pause_action->setText("&Pause");
+            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+            m_media_context_menu_play_pause_action->setText("&Play");
         }
 
-        m_video_context_menu_controls_action->setChecked(has_user_agent_controls);
-        m_video_context_menu_loop_action->setChecked(is_looping);
+        m_media_context_menu_controls_action->setChecked(menu.has_user_agent_controls);
+        m_media_context_menu_loop_action->setChecked(menu.is_looping);
 
         auto screen_position = QCursor::pos();
-        m_video_context_menu->exec(screen_position);
+
+        if (menu.is_video)
+            m_video_context_menu->exec(screen_position);
     };
 }
 

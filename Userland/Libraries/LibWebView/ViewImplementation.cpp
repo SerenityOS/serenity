@@ -151,19 +151,19 @@ void ViewImplementation::js_console_request_messages(i32 start_index)
     client().async_js_console_request_messages(start_index);
 }
 
-void ViewImplementation::toggle_video_play_state()
+void ViewImplementation::toggle_media_play_state()
 {
-    client().async_toggle_video_play_state();
+    client().async_toggle_media_play_state();
 }
 
-void ViewImplementation::toggle_video_loop_state()
+void ViewImplementation::toggle_media_loop_state()
 {
-    client().async_toggle_video_loop_state();
+    client().async_toggle_media_loop_state();
 }
 
-void ViewImplementation::toggle_video_controls_state()
+void ViewImplementation::toggle_media_controls_state()
 {
-    client().async_toggle_video_controls_state();
+    client().async_toggle_media_controls_state();
 }
 
 void ViewImplementation::handle_resize()

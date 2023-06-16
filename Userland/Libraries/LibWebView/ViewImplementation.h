@@ -74,9 +74,9 @@ public:
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 
-    void toggle_video_play_state();
-    void toggle_video_loop_state();
-    void toggle_video_controls_state();
+    void toggle_media_play_state();
+    void toggle_media_loop_state();
+    void toggle_media_controls_state();
 
     enum class ScreenshotType {
         Visible,
@@ -90,7 +90,7 @@ public:
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint screen_position, bool, bool, bool)> on_video_context_menu_request;
+    Function<void(Gfx::IntPoint screen_position, Web::Page::MediaContextMenu const&)> on_media_context_menu_request;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void()> on_link_unhover;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;

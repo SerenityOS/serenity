@@ -21,6 +21,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibIPC/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -120,15 +121,22 @@ public:
     void dismiss_dialog();
     void accept_dialog();
 
-    void did_request_video_context_menu(i32 video_id, CSSPixelPoint, AK::URL const&, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping);
-    WebIDL::ExceptionOr<void> toggle_video_play_state();
-    WebIDL::ExceptionOr<void> toggle_video_loop_state();
-    WebIDL::ExceptionOr<void> toggle_video_controls_state();
+    struct MediaContextMenu {
+        AK::URL media_url;
+        bool is_video { false };
+        bool is_playing { false };
+        bool has_user_agent_controls { false };
+        bool is_looping { false };
+    };
+    void did_request_media_context_menu(i32 media_id, CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, MediaContextMenu);
+    WebIDL::ExceptionOr<void> toggle_media_play_state();
+    WebIDL::ExceptionOr<void> toggle_media_loop_state();
+    WebIDL::ExceptionOr<void> toggle_media_controls_state();
 
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
-    JS::GCPtr<HTML::HTMLVideoElement> video_context_menu_element();
+    JS::GCPtr<HTML::HTMLMediaElement> media_context_menu_element();
 
     PageClient& m_client;
 
@@ -155,7 +163,7 @@ private:
     Optional<bool> m_pending_confirm_response;
     Optional<Optional<String>> m_pending_prompt_response;
 
-    Optional<int> m_video_context_menu_element_id;
+    Optional<int> m_media_context_menu_element_id;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-supported
     // Each user agent has a PDF viewer supported boolean, whose value is implementation-defined (and might vary according to user preferences).
@@ -192,7 +200,7 @@ public:
     virtual void page_did_request_context_menu(CSSPixelPoint) { }
     virtual void page_did_request_link_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_request_image_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
-    virtual void page_did_request_video_context_menu(CSSPixelPoint, AK::URL const&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, [[maybe_unused]] bool is_playing, [[maybe_unused]] bool has_user_agent_controls, [[maybe_unused]] bool is_looping) { }
+    virtual void page_did_request_media_context_menu(CSSPixelPoint, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers, Page::MediaContextMenu) { }
     virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_enter_tooltip_area(CSSPixelPoint, DeprecatedString const&) { }
@@ -229,5 +237,15 @@ public:
 protected:
     virtual ~PageClient() = default;
 };
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder&, Web::Page::MediaContextMenu const&);
+
+template<>
+ErrorOr<Web::Page::MediaContextMenu> decode(Decoder&);
 
 }

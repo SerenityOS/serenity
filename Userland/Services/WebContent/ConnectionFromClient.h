@@ -96,9 +96,9 @@ private:
     virtual void confirm_closed(bool accepted) override;
     virtual void prompt_closed(Optional<String> const& response) override;
 
-    virtual void toggle_video_play_state() override;
-    virtual void toggle_video_loop_state() override;
-    virtual void toggle_video_controls_state() override;
+    virtual void toggle_media_play_state() override;
+    virtual void toggle_media_loop_state() override;
+    virtual void toggle_media_controls_state() override;
 
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
