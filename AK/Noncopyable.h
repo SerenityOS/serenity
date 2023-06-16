@@ -15,3 +15,8 @@ private:                       \
 private:                      \
     c(c&&) = delete;          \
     c& operator=(c&&) = delete
+
+#define AK_MAKE_DEFAULT_MOVABLE(c) \
+public:                            \
+    c(c&&) = default;              \
+    c& operator=(c&&) = default
