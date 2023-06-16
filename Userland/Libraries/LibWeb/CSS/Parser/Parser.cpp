@@ -4657,6 +4657,18 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue
 {
     // `<paint> = none | <color> | <url> [none | <color>]? | context-fill | context-stroke`
 
+    if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
+        (void)tokens.next_token();
+        return color;
+    }
+
+    if (auto url = TRY(parse_url_value(tokens.peek_token(), AllowedDataUrlType::Image))) {
+        // FIXME: Accept `[none | <color>]?`
+        (void)tokens.next_token();
+        return url;
+    }
+
+    // NOTE: <color> also accepts identifiers, so we do this identifier check last.
     if (tokens.peek_token().is(Token::Type::Ident)) {
         auto maybe_ident = value_id_from_string(tokens.peek_token().token().ident());
         if (maybe_ident.has_value()) {
@@ -4669,17 +4681,6 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue
                 return nullptr;
             }
         }
-    }
-
-    if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
-        (void)tokens.next_token();
-        return color;
-    }
-
-    if (auto url = TRY(parse_url_value(tokens.peek_token(), AllowedDataUrlType::Image))) {
-        // FIXME: Accept `[none | <color>]?`
-        (void)tokens.next_token();
-        return url;
     }
 
     return nullptr;
