@@ -732,6 +732,10 @@ ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+    if (m_home_object.has_value()) {
+        auto home_object_value = interpreter.reg(m_home_object.value());
+        static_cast<ECMAScriptFunctionObject&>(interpreter.accumulator().as_function()).set_home_object(&home_object_value.as_object());
+    }
     return {};
 }
 
@@ -783,6 +787,12 @@ ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& 
     interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
     interpreter.jump(m_entry_point);
     return {};
+}
+
+void NewFunction::replace_references_impl(Register from, Register to)
+{
+    if (m_home_object == from)
+        m_home_object = to;
 }
 
 void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
@@ -1270,7 +1280,9 @@ DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const
 
 DeprecatedString NewFunction::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return "NewFunction";
+    if (m_home_object.has_value())
+        return DeprecatedString::formatted("NewFunction home_object:{}", m_home_object.value());
+    return "NewFunction"sv;
 }
 
 DeprecatedString NewClass::to_deprecated_string_impl(Bytecode::Executable const&) const
