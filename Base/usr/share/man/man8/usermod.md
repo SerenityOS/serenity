@@ -5,7 +5,7 @@ usermod - modify a user account
 ## Synopsis
 
 ```sh
-$ usermod [--uid uid] [--gid gid] [--lock] [--unlock] [--home new-home] [--move] [--shell path-to-shell] [--gecos general-info] <username>
+$ usermod [--uid uid] [--gid group] [--lock] [--unlock] [--home new-home] [--move] [--shell path-to-shell] [--gecos general-info] <username>
 ```
 
 ## Description
@@ -18,7 +18,7 @@ This program must be run as root.
 * `--help`: Display help message and exit
 * `--version`: Print version
 * `-u uid`, `--uid uid`: The new numerical value of the user's ID
-* `-g gid`, `--gid gid`: The group number of the user's new initial login group
+* `-g group`, `--gid group`: The group name or number of the user's new initial login group
 * `-L`, `--lock`: Lock password
 * `-U`, `--unlock`: Unlock password
 * `-d new-home`, `--home new-home`: The user's new login directory
