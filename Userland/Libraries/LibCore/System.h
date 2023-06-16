@@ -237,9 +237,9 @@ ErrorOr<int> poll(Span<struct pollfd>, int timeout);
 
 class AddressInfoVector {
     AK_MAKE_NONCOPYABLE(AddressInfoVector);
+    AK_MAKE_DEFAULT_MOVABLE(AddressInfoVector);
 
 public:
-    AddressInfoVector(AddressInfoVector&&) = default;
     ~AddressInfoVector() = default;
 
     ReadonlySpan<struct addrinfo> addresses() const { return m_addresses; }
