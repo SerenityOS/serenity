@@ -50,6 +50,8 @@ public:
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
     Optional<CSS::TextJustify> text_justify() const;
+    CSS::Length border_spacing_horizontal() const;
+    CSS::Length border_spacing_vertical() const;
     Optional<CSS::CaptionSide> caption_side() const;
     CSS::Clip clip() const;
     CSS::Display display() const;
