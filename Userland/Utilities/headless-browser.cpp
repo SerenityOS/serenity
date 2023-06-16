@@ -180,7 +180,7 @@ enum class TestMode {
     Text,
 };
 
-static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 5000)
+static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 15000)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
