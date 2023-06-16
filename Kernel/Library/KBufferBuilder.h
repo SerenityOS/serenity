@@ -14,14 +14,13 @@ namespace Kernel {
 
 class KBufferBuilder {
     AK_MAKE_NONCOPYABLE(KBufferBuilder);
+    AK_MAKE_DEFAULT_MOVABLE(KBufferBuilder);
 
 public:
     using OutputType = KBuffer;
 
     static ErrorOr<KBufferBuilder> try_create();
 
-    KBufferBuilder(KBufferBuilder&&) = default;
-    KBufferBuilder& operator=(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
     ErrorOr<void> append(StringView);
