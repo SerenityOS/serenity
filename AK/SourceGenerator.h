@@ -34,6 +34,8 @@ public:
     }
 
     SourceGenerator(SourceGenerator&&) = default;
+    // Move-assign is undefinable due to 'StringBuilder& m_builder;'
+    SourceGenerator& operator=(SourceGenerator&&) = delete;
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
