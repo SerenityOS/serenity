@@ -1097,6 +1097,16 @@ ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
+ThrowCompletionOr<void> BlockDeclarationInstantiation::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto old_environment = vm.running_execution_context().lexical_environment;
+    interpreter.saved_lexical_environment_stack().append(old_environment);
+    vm.running_execution_context().lexical_environment = new_declarative_environment(*old_environment);
+    m_scope_node.block_declaration_instantiation(vm, vm.running_execution_context().lexical_environment);
+    return {};
+}
+
 DeprecatedString Load::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("Load {}", m_src);
@@ -1457,6 +1467,11 @@ DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable 
 DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "ToNumeric"sv;
+}
+
+DeprecatedString BlockDeclarationInstantiation::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "BlockDeclarationInstantiation"sv;
 }
 
 }
