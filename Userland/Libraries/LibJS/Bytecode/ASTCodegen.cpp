@@ -876,6 +876,8 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
     auto object_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(object_reg);
 
+    generator.push_home_object(object_reg);
+
     for (auto& property : m_properties) {
         Bytecode::Op::PropertyKind property_kind;
         switch (property->type()) {
@@ -917,6 +919,8 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
     }
 
     generator.emit<Bytecode::Op::Load>(object_reg);
+
+    generator.pop_home_object();
     return {};
 }
 
@@ -996,7 +1000,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
         generator.emit<Bytecode::Op::CreateVariable>(*name_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
     }
 
-    generator.emit<Bytecode::Op::NewFunction>(*this);
+    generator.emit_new_function(*this);
 
     if (has_name) {
         generator.emit<Bytecode::Op::SetVariable>(*name_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);

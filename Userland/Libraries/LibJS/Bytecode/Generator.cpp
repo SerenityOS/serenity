@@ -448,4 +448,22 @@ void Generator::generate_continue(DeprecatedFlyString const& continue_label)
     VERIFY_NOT_REACHED();
 }
 
+void Generator::push_home_object(Register register_)
+{
+    m_home_objects.append(register_);
+}
+
+void Generator::pop_home_object()
+{
+    m_home_objects.take_last();
+}
+
+void Generator::emit_new_function(FunctionNode const& function_node)
+{
+    if (m_home_objects.is_empty())
+        emit<Op::NewFunction>(function_node);
+    else
+        emit<Op::NewFunction>(function_node, m_home_objects.last());
+}
+
 }

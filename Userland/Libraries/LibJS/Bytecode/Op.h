@@ -777,19 +777,21 @@ private:
 
 class NewFunction final : public Instruction {
 public:
-    explicit NewFunction(FunctionNode const& function_node)
+    explicit NewFunction(FunctionNode const& function_node, Optional<Register> home_object = {})
         : Instruction(Type::NewFunction)
         , m_function_node(function_node)
+        , m_home_object(move(home_object))
     {
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
-    void replace_references_impl(Register, Register) { }
+    void replace_references_impl(Register, Register);
 
 private:
     FunctionNode const& m_function_node;
+    Optional<Register> m_home_object;
 };
 
 class Return final : public Instruction {

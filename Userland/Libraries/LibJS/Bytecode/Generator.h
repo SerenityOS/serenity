@@ -83,6 +83,10 @@ public:
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
+    void push_home_object(Register);
+    void pop_home_object();
+    void emit_new_function(JS::FunctionNode const&);
+
     void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();
     void begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set);
@@ -237,6 +241,7 @@ private:
     Vector<LabelableScope> m_breakable_scopes;
     Vector<LexicalScope> m_variable_scopes;
     Vector<BlockBoundaryType> m_boundaries;
+    Vector<Register> m_home_objects;
 };
 
 }
