@@ -33,7 +33,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasRenderingContext2D>> CanvasRenderingC
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)
     : PlatformObject(realm)
-    , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
+    , CanvasPath(static_cast<Bindings::PlatformObject&>(*this), *this)
     , m_element(element)
 {
 }
@@ -243,8 +243,7 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 
 void CanvasRenderingContext2D::stroke()
 {
-    auto transformed_path = path().copy_transformed(drawing_state().transform);
-    stroke_internal(transformed_path);
+    stroke_internal(path());
 }
 
 void CanvasRenderingContext2D::stroke(Path2D const& path)
@@ -265,7 +264,7 @@ static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
 
 void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule_value)
 {
-    draw_clipped([&](auto& painter) {
+    draw_clipped([=, this](auto& painter) mutable {
         path.close_all_subpaths();
         auto& drawing_state = this->drawing_state();
         auto fill_rule = parse_fill_rule(fill_rule_value);
@@ -280,8 +279,7 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_ru
 
 void CanvasRenderingContext2D::fill(DeprecatedString const& fill_rule)
 {
-    auto transformed_path = path().copy_transformed(drawing_state().transform);
-    return fill_internal(transformed_path, fill_rule);
+    return fill_internal(path(), fill_rule);
 }
 
 void CanvasRenderingContext2D::fill(Path2D& path, DeprecatedString const& fill_rule)
