@@ -334,19 +334,19 @@ void PageHost::prompt_closed(Optional<String> response)
     page().prompt_closed(move(response));
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_play_state()
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_play_state()
 {
-    return page().toggle_video_play_state();
+    return page().toggle_media_play_state();
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_loop_state()
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_loop_state()
 {
-    return page().toggle_video_loop_state();
+    return page().toggle_media_loop_state();
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_controls_state()
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_controls_state()
 {
-    return page().toggle_video_controls_state();
+    return page().toggle_media_controls_state();
 }
 
 void PageHost::page_did_request_accept_dialog()
@@ -370,9 +370,9 @@ void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint content_po
     m_client.async_did_request_image_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, url, target, modifiers, bitmap);
 }
 
-void PageHost::page_did_request_video_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+void PageHost::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
 {
-    m_client.async_did_request_video_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+    m_client.async_did_request_media_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, target, modifiers, move(menu));
 }
 
 Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)

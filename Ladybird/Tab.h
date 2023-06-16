@@ -97,12 +97,12 @@ private:
     URL m_image_context_menu_url;
 
     OwnPtr<QMenu> m_video_context_menu;
-    OwnPtr<QIcon> m_video_context_menu_play_icon;
-    OwnPtr<QIcon> m_video_context_menu_pause_icon;
-    OwnPtr<QAction> m_video_context_menu_play_pause_action;
-    OwnPtr<QAction> m_video_context_menu_controls_action;
-    OwnPtr<QAction> m_video_context_menu_loop_action;
-    URL m_video_context_menu_url;
+    OwnPtr<QIcon> m_media_context_menu_play_icon;
+    OwnPtr<QIcon> m_media_context_menu_pause_icon;
+    OwnPtr<QAction> m_media_context_menu_play_pause_action;
+    OwnPtr<QAction> m_media_context_menu_controls_action;
+    OwnPtr<QAction> m_media_context_menu_loop_action;
+    URL m_media_context_menu_url;
 
     int tab_index();
 

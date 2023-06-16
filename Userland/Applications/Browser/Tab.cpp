@@ -374,54 +374,56 @@ Tab::Tab(BrowserWindow& window)
         m_image_context_menu->popup(screen_position);
     };
 
-    m_video_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
-        view().toggle_video_play_state();
+    m_media_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
+        view().toggle_media_play_state();
     });
-    m_video_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
-        view().toggle_video_controls_state();
+    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
+        view().toggle_media_controls_state();
     });
-    m_video_context_menu_loop_action = GUI::Action::create_checkable("&Loop Video", [this](auto&) {
-        view().toggle_video_loop_state();
+    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop", [this](auto&) {
+        view().toggle_media_loop_state();
     });
 
     m_video_context_menu = GUI::Menu::construct();
-    m_video_context_menu->add_action(*m_video_context_menu_play_pause_action);
-    m_video_context_menu->add_action(*m_video_context_menu_controls_action);
-    m_video_context_menu->add_action(*m_video_context_menu_loop_action);
+    m_video_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_video_context_menu->add_action(*m_media_context_menu_controls_action);
+    m_video_context_menu->add_action(*m_media_context_menu_loop_action);
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Open Video", g_icon_bag.filetype_video, [this](auto&) {
-        view().on_link_click(m_video_context_menu_url, "", 0);
+        view().on_link_click(m_media_context_menu_url, "", 0);
     }));
     m_video_context_menu->add_action(GUI::Action::create("Open Video in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_video_context_menu_url, "_blank", 0);
+        view().on_link_click(m_media_context_menu_url, "_blank", 0);
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_video_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
-        start_download(m_video_context_menu_url);
+        start_download(m_media_context_menu_url);
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto& video_url, auto widget_position, bool is_playing, bool has_user_agent_controls, bool is_looping) {
-        m_video_context_menu_url = video_url;
+    view().on_media_context_menu_request = [this](auto widget_position, Web::Page::MediaContextMenu const& menu) {
+        m_media_context_menu_url = menu.media_url;
 
-        if (is_playing) {
-            m_video_context_menu_play_pause_action->set_icon(g_icon_bag.play);
-            m_video_context_menu_play_pause_action->set_text("&Play"sv);
+        if (menu.is_playing) {
+            m_media_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
+            m_media_context_menu_play_pause_action->set_text("&Pause"sv);
         } else {
-            m_video_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
-            m_video_context_menu_play_pause_action->set_text("&Pause"sv);
+            m_media_context_menu_play_pause_action->set_icon(g_icon_bag.play);
+            m_media_context_menu_play_pause_action->set_text("&Play"sv);
         }
 
-        m_video_context_menu_controls_action->set_checked(has_user_agent_controls);
-        m_video_context_menu_loop_action->set_checked(is_looping);
+        m_media_context_menu_controls_action->set_checked(menu.has_user_agent_controls);
+        m_media_context_menu_loop_action->set_checked(menu.is_looping);
 
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
-        m_video_context_menu->popup(screen_position);
+
+        if (menu.is_video)
+            m_video_context_menu->popup(screen_position);
     };
 
     view().on_link_middle_click = [this](auto& href, auto&, auto) {

@@ -176,10 +176,10 @@ void WebContentClient::did_request_image_context_menu(Gfx::IntPoint content_posi
         m_view.on_image_context_menu_request(url, m_view.to_widget_position(content_position), bitmap);
 }
 
-void WebContentClient::did_request_video_context_menu(Gfx::IntPoint content_position, AK::URL const& url, DeprecatedString const&, unsigned, bool is_playing, bool has_user_agent_controls, bool is_looping)
+void WebContentClient::did_request_media_context_menu(Gfx::IntPoint content_position, DeprecatedString const&, unsigned, Web::Page::MediaContextMenu const& menu)
 {
-    if (m_view.on_video_context_menu_request)
-        m_view.on_video_context_menu_request(url, m_view.to_widget_position(content_position), is_playing, has_user_agent_controls, is_looping);
+    if (m_view.on_media_context_menu_request)
+        m_view.on_media_context_menu_request(m_view.to_widget_position(content_position), menu);
 }
 
 void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const& source)

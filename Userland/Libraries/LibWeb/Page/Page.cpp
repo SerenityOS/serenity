@@ -7,10 +7,12 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/SourceLocation.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
-#include <LibWeb/HTML/HTMLVideoElement.h>
+#include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -286,88 +288,111 @@ void Page::accept_dialog()
     }
 }
 
-void Page::did_request_video_context_menu(i32 video_id, CSSPixelPoint position, AK::URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+void Page::did_request_media_context_menu(i32 media_id, CSSPixelPoint position, DeprecatedString const& target, unsigned modifiers, MediaContextMenu menu)
 {
-    m_video_context_menu_element_id = video_id;
-    client().page_did_request_video_context_menu(position, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+    m_media_context_menu_element_id = media_id;
+    client().page_did_request_media_context_menu(position, target, modifiers, move(menu));
 }
 
-WebIDL::ExceptionOr<void> Page::toggle_video_play_state()
+WebIDL::ExceptionOr<void> Page::toggle_media_play_state()
 {
-    auto video_element = video_context_menu_element();
-    if (!video_element)
+    auto media_element = media_context_menu_element();
+    if (!media_element)
         return {};
 
     // FIXME: This runs from outside the context of any user script, so we do not have a running execution
     //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = video_element->document().relevant_settings_object();
+    auto& environment_settings = media_element->document().relevant_settings_object();
     environment_settings.prepare_to_run_script();
 
     ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
 
-    if (video_element->potentially_playing())
-        TRY(video_element->pause());
+    if (media_element->potentially_playing())
+        TRY(media_element->pause());
     else
-        TRY(video_element->play());
+        TRY(media_element->play());
 
     return {};
 }
 
-WebIDL::ExceptionOr<void> Page::toggle_video_loop_state()
+WebIDL::ExceptionOr<void> Page::toggle_media_loop_state()
 {
-    auto video_element = video_context_menu_element();
-    if (!video_element)
+    auto media_element = media_context_menu_element();
+    if (!media_element)
         return {};
 
     // FIXME: This runs from outside the context of any user script, so we do not have a running execution
     //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = video_element->document().relevant_settings_object();
+    auto& environment_settings = media_element->document().relevant_settings_object();
     environment_settings.prepare_to_run_script();
 
     ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
 
-    if (video_element->has_attribute(HTML::AttributeNames::loop))
-        video_element->remove_attribute(HTML::AttributeNames::loop);
+    if (media_element->has_attribute(HTML::AttributeNames::loop))
+        media_element->remove_attribute(HTML::AttributeNames::loop);
     else
-        TRY(video_element->set_attribute(HTML::AttributeNames::loop, {}));
+        TRY(media_element->set_attribute(HTML::AttributeNames::loop, {}));
 
     return {};
 }
 
-WebIDL::ExceptionOr<void> Page::toggle_video_controls_state()
+WebIDL::ExceptionOr<void> Page::toggle_media_controls_state()
 {
-    auto video_element = video_context_menu_element();
-    if (!video_element)
+    auto media_element = media_context_menu_element();
+    if (!media_element)
         return {};
 
     // FIXME: This runs from outside the context of any user script, so we do not have a running execution
     //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = video_element->document().relevant_settings_object();
+    auto& environment_settings = media_element->document().relevant_settings_object();
     environment_settings.prepare_to_run_script();
 
     ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
 
-    if (video_element->has_attribute(HTML::AttributeNames::controls))
-        video_element->remove_attribute(HTML::AttributeNames::controls);
+    if (media_element->has_attribute(HTML::AttributeNames::controls))
+        media_element->remove_attribute(HTML::AttributeNames::controls);
     else
-        TRY(video_element->set_attribute(HTML::AttributeNames::controls, {}));
+        TRY(media_element->set_attribute(HTML::AttributeNames::controls, {}));
 
     return {};
 }
 
-JS::GCPtr<HTML::HTMLVideoElement> Page::video_context_menu_element()
+JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
 {
-    if (!m_video_context_menu_element_id.has_value())
+    if (!m_media_context_menu_element_id.has_value())
         return nullptr;
 
-    auto* dom_node = DOM::Node::from_id(*m_video_context_menu_element_id);
+    auto* dom_node = DOM::Node::from_id(*m_media_context_menu_element_id);
     if (dom_node == nullptr)
         return nullptr;
 
-    if (!is<HTML::HTMLVideoElement>(dom_node))
+    if (!is<HTML::HTMLMediaElement>(dom_node))
         return nullptr;
 
-    return static_cast<HTML::HTMLVideoElement*>(dom_node);
+    return static_cast<HTML::HTMLMediaElement*>(dom_node);
 }
 
+}
+
+template<>
+ErrorOr<void> IPC::encode(Encoder& encoder, Web::Page::MediaContextMenu const& menu)
+{
+    TRY(encoder.encode(menu.media_url));
+    TRY(encoder.encode(menu.is_video));
+    TRY(encoder.encode(menu.is_playing));
+    TRY(encoder.encode(menu.has_user_agent_controls));
+    TRY(encoder.encode(menu.is_looping));
+    return {};
+}
+
+template<>
+ErrorOr<Web::Page::MediaContextMenu> IPC::decode(Decoder& decoder)
+{
+    return Web::Page::MediaContextMenu {
+        .media_url = TRY(decoder.decode<AK::URL>()),
+        .is_video = TRY(decoder.decode<bool>()),
+        .is_playing = TRY(decoder.decode<bool>()),
+        .has_user_agent_controls = TRY(decoder.decode<bool>()),
+        .is_looping = TRY(decoder.decode<bool>()),
+    };
 }
