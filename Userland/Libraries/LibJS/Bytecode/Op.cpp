@@ -1091,6 +1091,12 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = TRY(interpreter.accumulator().to_numeric(interpreter.vm()));
+    return {};
+}
+
 DeprecatedString Load::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("Load {}", m_src);
@@ -1446,6 +1452,11 @@ DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable co
 DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ToNumeric"sv;
 }
 
 }

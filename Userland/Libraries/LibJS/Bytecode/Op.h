@@ -835,6 +835,19 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
+class ToNumeric final : public Instruction {
+public:
+    ToNumeric()
+        : Instruction(Type::ToNumeric)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
 class Throw final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
