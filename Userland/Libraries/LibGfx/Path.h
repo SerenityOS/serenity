@@ -253,6 +253,7 @@ public:
 private:
     void invalidate_split_lines()
     {
+        m_bounding_box.clear();
         m_split_lines.clear();
     }
     void segmentize_path();
