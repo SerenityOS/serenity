@@ -256,7 +256,7 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
     };
 }
 
-CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const& box) const
+CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const& box, AvailableSpace const& available_space) const
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
@@ -266,9 +266,9 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     auto height_of_containing_block = containing_block_state.content_height();
 
     CSSPixels specified_min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
-    CSSPixels specified_max_width = should_treat_max_width_as_none(box) ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
+    CSSPixels specified_max_width = should_treat_max_width_as_none(box, available_space.width) ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
     CSSPixels specified_min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
-    CSSPixels specified_max_height = should_treat_max_height_as_none(box) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
+    CSSPixels specified_max_height = should_treat_max_height_as_none(box, available_space.height) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
 
     auto min_width = min(specified_min_width, specified_max_width);
     auto max_width = max(specified_min_width, specified_max_width);
@@ -446,13 +446,13 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(Box const& box, 
     if (computed_width.is_auto() && computed_height.is_auto() && box.has_preferred_aspect_ratio()) {
         CSSPixels w = used_width;
         CSSPixels h = tentative_height_for_replaced_element(box, computed_height, available_space);
-        used_width = solve_replaced_size_constraint(w, h, box).width();
+        used_width = solve_replaced_size_constraint(w, h, box, available_space).width();
         return used_width;
     }
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    if (!should_treat_max_width_as_none(box)) {
+    if (!should_treat_max_width_as_none(box, available_space.width)) {
         auto const& computed_max_width = box.computed_values().max_width();
         if (used_width > computed_max_width.to_px(box, width_of_containing_block)) {
             used_width = tentative_width_for_replaced_element(box, computed_max_width, available_space);
@@ -521,13 +521,13 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box,
     if (computed_width.is_auto() && computed_height.is_auto() && box.has_preferred_aspect_ratio()) {
         CSSPixels w = tentative_width_for_replaced_element(box, computed_width, available_space);
         CSSPixels h = used_height;
-        used_height = solve_replaced_size_constraint(w, h, box).height();
+        used_height = solve_replaced_size_constraint(w, h, box, available_space).height();
         return used_height;
     }
 
     // 2. If this tentative height is greater than 'max-height', the rules above are applied again,
     //    but this time using the value of 'max-height' as the computed value for 'height'.
-    if (!should_treat_max_height_as_none(box)) {
+    if (!should_treat_max_height_as_none(box, available_space.height)) {
         auto const& computed_max_height = box.computed_values().max_height();
         if (used_height > computed_max_height.to_px(box, height_of_containing_block)) {
             used_height = tentative_height_for_replaced_element(box, computed_max_height, available_space);
@@ -688,7 +688,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    if (!should_treat_max_width_as_none(box)) {
+    if (!should_treat_max_width_as_none(box, available_space.width)) {
         auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
         if (used_width.to_px(box) > max_width.to_px(box)) {
             used_width = try_compute_width(max_width);
@@ -1655,19 +1655,24 @@ bool box_is_sized_as_replaced_element(Box const& box)
     return is<ReplacedBox>(box) || box.has_preferred_aspect_ratio();
 }
 
-bool FormattingContext::should_treat_max_width_as_none(Box const& box) const
+bool FormattingContext::should_treat_max_width_as_none(Box const& box, AvailableSize const& available_width) const
 {
     auto const& max_width = box.computed_values().max_width();
     if (max_width.is_none())
         return true;
     if (box.is_absolutely_positioned())
         return false;
-    if (max_width.contains_percentage() && !m_state.get(*box.non_anonymous_containing_block()).has_definite_width())
-        return true;
+    if (max_width.contains_percentage()) {
+        if (available_width.is_min_content())
+            return false;
+        if (!m_state.get(*box.non_anonymous_containing_block()).has_definite_width())
+            return true;
+    }
+
     return false;
 }
 
-bool FormattingContext::should_treat_max_height_as_none(Box const& box) const
+bool FormattingContext::should_treat_max_height_as_none(Box const& box, AvailableSize const& available_height) const
 {
     // https://www.w3.org/TR/CSS22/visudet.html#min-max-heights
     // If the height of the containing block is not specified explicitly (i.e., it depends on content height),
@@ -1678,8 +1683,12 @@ bool FormattingContext::should_treat_max_height_as_none(Box const& box) const
         return true;
     if (box.is_absolutely_positioned())
         return false;
-    if (max_height.contains_percentage() && !m_state.get(*box.non_anonymous_containing_block()).has_definite_height())
-        return true;
+    if (max_height.contains_percentage()) {
+        if (available_height.is_min_content())
+            return false;
+        if (!m_state.get(*box.non_anonymous_containing_block()).has_definite_height())
+            return true;
+    }
     return false;
 }
 
