@@ -8,8 +8,8 @@
 #include <LibCompress/Gzip.h>
 
 #include <AK/BitStream.h>
-#include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -152,17 +152,17 @@ ErrorOr<Bytes> GzipDecompressor::read_some(Bytes bytes)
     return bytes.slice(0, total_read);
 }
 
-Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes)
+ErrorOr<Optional<String>> GzipDecompressor::describe_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(BlockHeader))
-        return {};
+        return OptionalNone {};
 
     auto& header = *(reinterpret_cast<BlockHeader const*>(bytes.data()));
     if (!header.valid_magic_number() || !header.supported_by_implementation())
-        return {};
+        return OptionalNone {};
 
     LittleEndian<u32> original_size = *reinterpret_cast<u32 const*>(bytes.offset(bytes.size() - sizeof(u32)));
-    return DeprecatedString::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_deprecated_string(), (u32)original_size);
+    return TRY(String::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time), (u32)original_size));
 }
 
 ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)

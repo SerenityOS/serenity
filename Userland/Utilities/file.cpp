@@ -97,7 +97,7 @@ static ErrorOr<Optional<String>> gzip_details(StringView description, StringView
     if (!Compress::GzipDecompressor::is_likely_compressed(mapped_file->bytes()))
         return OptionalNone {};
 
-    auto gzip_details = Compress::GzipDecompressor::describe_header(mapped_file->bytes());
+    auto gzip_details = TRY(Compress::GzipDecompressor::describe_header(mapped_file->bytes()));
     if (!gzip_details.has_value())
         return OptionalNone {};
 
