@@ -15,6 +15,27 @@
 #include <string.h>
 #include <unistd.h>
 
+static Optional<gid_t> group_string_to_gid(StringView group)
+{
+    auto maybe_gid = group.to_uint<gid_t>();
+    auto maybe_group_or_error = maybe_gid.has_value()
+        ? Core::System::getgrgid(maybe_gid.value())
+        : Core::System::getgrnam(group);
+
+    if (maybe_group_or_error.is_error()) {
+        warnln("Error resolving group '{}': {}", group, maybe_group_or_error.release_error());
+        return {};
+    }
+
+    auto maybe_group = maybe_group_or_error.release_value();
+    if (!maybe_group.has_value()) {
+        warnln("Group '{}' does not exist", group);
+        return {};
+    }
+
+    return maybe_group->gr_gid;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (geteuid() != 0) {
@@ -28,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc", "rwc"));
 
     uid_t uid = 0;
-    int gid = 0;
+    Optional<gid_t> gid;
     bool lock = false;
     bool unlock = false;
     StringView new_home_directory;
@@ -40,7 +61,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify a user account");
     args_parser.add_option(uid, "The new numerical value of the user's ID", "uid", 'u', "uid");
-    args_parser.add_option(gid, "The group number of the user's new initial login group", "gid", 'g', "gid");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "The group name or number of the user's new initial login group",
+        .long_name = "gid",
+        .short_name = 'g',
+        .value_name = "group",
+        .accept_value = [&gid](StringView group) {
+            if (auto maybe_gid = group_string_to_gid(group); maybe_gid.has_value())
+                gid = move(maybe_gid);
+
+            return gid.has_value();
+        },
+    });
     args_parser.add_option(lock, "Lock password", "lock", 'L');
     args_parser.add_option(unlock, "Unlock password", "unlock", 'U');
     args_parser.add_option(new_home_directory, "The user's new login directory", "home", 'd', "new-home");
@@ -83,14 +116,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_uid(uid);
     }
 
-    if (gid) {
-        if (gid < 0) {
-            warnln("invalid gid {}", gid);
-            return 1;
-        }
-
-        target_account.set_gid(gid);
-    }
+    if (gid.has_value())
+        target_account.set_gid(gid.value());
 
     if (lock) {
         target_account.set_password_enabled(false);
