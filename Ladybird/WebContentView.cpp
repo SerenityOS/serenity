@@ -32,7 +32,9 @@
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWebView/WebContentClient.h>
+#include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QCursor>
 #include <QGuiApplication>
 #include <QIcon>
@@ -61,6 +63,14 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
 
     m_device_pixel_ratio = devicePixelRatio();
     m_inverse_pixel_scaling_ratio = 1.0 / m_device_pixel_ratio;
+
+    auto* copy_selected_text_action = new QAction("&Copy", this);
+    copy_selected_text_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
+    QObject::connect(copy_selected_text_action, &QAction::triggered, this, [this]() {
+        QClipboard* clipboard = QGuiApplication::clipboard();
+        clipboard->setText(qstring_from_ak_deprecated_string(selected_text()));
+    });
+    addAction(copy_selected_text_action);
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
