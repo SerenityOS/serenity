@@ -98,6 +98,7 @@ void AudioTrack::seek(double position, MediaSeekMode seek_mode)
     position = position / duration * static_cast<double>(m_loader->total_samples());
 
     m_loader->seek(position).release_value_but_fixme_should_propagate_errors();
+    m_media_element->set_current_playback_position(this->position().to_milliseconds() / 1000.0);
 }
 
 void AudioTrack::update_volume()
