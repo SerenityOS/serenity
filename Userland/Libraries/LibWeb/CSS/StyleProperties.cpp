@@ -819,6 +819,9 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
     if (value->is_percentage())
         return CSS::LengthPercentage(value->as_percentage().percentage());
 
+    if (value->is_calculated())
+        return LengthPercentage { const_cast<CalculatedStyleValue&>(value->as_calculated()) };
+
     VERIFY_NOT_REACHED();
 }
 
