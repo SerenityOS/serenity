@@ -614,6 +614,7 @@ ErrorOr<void, ParseError> Parser::parse_element()
     //           | STag content ETag
     if (auto result = parse_empty_element_tag(); !result.is_error()) {
         append_node(result.release_value());
+        leave_node();
         rollback.disarm();
         return {};
     }
