@@ -95,6 +95,7 @@ private:
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
     virtual Messages::WebDriverClient::PrintPageResponse print_page() override;
+    virtual Messages::WebDriverClient::ReleaseActionsResponse release_actions() override;
 
     virtual Messages::WebDriverClient::EnsureTopLevelBrowsingContextIsOpenResponse ensure_top_level_browsing_context_is_open() override;
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
