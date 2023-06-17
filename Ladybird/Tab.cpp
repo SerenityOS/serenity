@@ -59,7 +59,7 @@ static QIcon render_svg_icon_with_theme_colors(QString name, QPalette const& pal
     return icon;
 }
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
     : QWidget(window)
     , m_window(window)
 {
@@ -67,7 +67,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling);
+    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_javascript_bytecode);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
     m_reset_zoom_button = new QToolButton(m_toolbar);

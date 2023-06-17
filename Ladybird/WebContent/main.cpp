@@ -19,6 +19,7 @@
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -69,11 +70,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
+    bool use_javascript_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
+    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
     args_parser.parse(arguments);
+
+    JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 

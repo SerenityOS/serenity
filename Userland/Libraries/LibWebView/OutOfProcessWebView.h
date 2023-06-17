@@ -78,7 +78,7 @@ private:
     virtual void did_scroll() override;
 
     // ^WebView::ViewImplementation
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) override;
+    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No) override;
     virtual void update_zoom() override;
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) override;
