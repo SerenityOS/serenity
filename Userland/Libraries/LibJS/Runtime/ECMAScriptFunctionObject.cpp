@@ -833,28 +833,33 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     }
 
     if (bytecode_interpreter) {
+        auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
+            auto executable_result = Bytecode::Generator::generate(node, kind);
+            if (executable_result.is_error())
+                return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
+
+            auto bytecode_executable = executable_result.release_value();
+            bytecode_executable->name = name;
+            auto& passes = Bytecode::Interpreter::optimization_pipeline();
+            passes.perform(*bytecode_executable);
+            if constexpr (JS_BYTECODE_DEBUG) {
+                dbgln("Optimisation passes took {}us", passes.elapsed());
+                dbgln("Compiled Bytecode::Block for function '{}':", m_name);
+            }
+            if (Bytecode::g_dump_bytecode)
+                bytecode_executable->dump();
+
+            return bytecode_executable;
+        };
+
+        // NOTE: There's a subtle ordering issue here:
+        //       - We have to compile the default parameter values before instantiating the function.
+        //       - We have to instantiate the function before compiling the function body.
+        //       This is why FunctionDeclarationInstantiation is invoked in the middle.
+        //       The issue is that FunctionDeclarationInstantiation may mark certain functions as hoisted
+        //       per Annex B. This affects code generation for FunctionDeclaration nodes.
+
         if (!m_bytecode_executable) {
-            auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
-                auto executable_result = Bytecode::Generator::generate(node, kind);
-                if (executable_result.is_error())
-                    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
-
-                auto bytecode_executable = executable_result.release_value();
-                bytecode_executable->name = name;
-                auto& passes = Bytecode::Interpreter::optimization_pipeline();
-                passes.perform(*bytecode_executable);
-                if constexpr (JS_BYTECODE_DEBUG) {
-                    dbgln("Optimisation passes took {}us", passes.elapsed());
-                    dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-                }
-                if (Bytecode::g_dump_bytecode)
-                    bytecode_executable->dump();
-
-                return bytecode_executable;
-            };
-
-            m_bytecode_executable = TRY(compile(*m_ecmascript_code, m_kind, m_name));
-
             size_t default_parameter_index = 0;
             for (auto& parameter : m_formal_parameters) {
                 if (!parameter.default_value)
@@ -863,7 +868,13 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
                 m_default_parameter_bytecode_executables.append(move(executable));
             }
         }
+
         TRY(function_declaration_instantiation(nullptr));
+
+        if (!m_bytecode_executable) {
+            m_bytecode_executable = TRY(compile(*m_ecmascript_code, m_kind, m_name));
+        }
+
         auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
 
         VERIFY(result_and_frame.frame != nullptr);
