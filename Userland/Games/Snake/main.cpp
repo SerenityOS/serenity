@@ -64,6 +64,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
     statusbar.set_text(0, TRY("Score: 0"_string));
     statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score)));
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     game.on_score_update = [&](auto score) {
         statusbar.set_text(0, String::formatted("Score: {}", score).release_value_but_fixme_should_propagate_errors());
