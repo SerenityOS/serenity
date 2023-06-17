@@ -51,6 +51,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(main_widget->load_from_gml(master_word_gml));
     auto& game = *main_widget->find_descendant_of_type_named<MasterWord::WordGame>("word_game");
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     auto use_system_theme = Config::read_bool("MasterWord"sv, ""sv, "use_system_theme"sv, false);
     game.set_use_system_theme(use_system_theme);
