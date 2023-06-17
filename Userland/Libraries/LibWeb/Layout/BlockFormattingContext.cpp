@@ -659,7 +659,11 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         }
     }
 
-    compute_height(box, available_space);
+    // Tables already set their height during the independent formatting context run. When multi-line text cells are involved, using different
+    // available space here than during the independent formatting context run can result in different line breaks and thus a different height.
+    if (!box.display().is_table_inside()) {
+        compute_height(box, available_space);
+    }
 
     if (independent_formatting_context || !margins_collapse_through(box, m_state)) {
         if (!m_margin_state.box_last_in_flow_child_margin_bottom_collapsed) {
