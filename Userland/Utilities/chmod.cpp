@@ -29,34 +29,51 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto mask = TRY(Core::FilePermissionsMask::parse(mode));
 
-    Function<ErrorOr<void>(StringView const&)> update_path_permissions = [&](StringView const& path) -> ErrorOr<void> {
-        auto stat = TRY(Core::System::lstat(path));
+    Function<bool(StringView)> update_path_permissions = [&](StringView const& path) {
+        auto stat_or_error = Core::System::lstat(path);
+        if (stat_or_error.is_error()) {
+            warnln("Could not stat '{}': {}", path, stat_or_error.release_error());
+            return false;
+        }
 
+        auto stat = stat_or_error.release_value();
         if (S_ISLNK(stat.st_mode)) {
             // Symlinks don't get processed unless they are explicitly listed on the command line.
             if (!paths.contains_slow(path))
-                return {};
+                return false;
 
             // The chmod syscall changes the file that a link points to, so we will have to get
             // the correct mode to base our modifications on.
-            stat = TRY(Core::System::stat(path));
+            stat_or_error = Core::System::stat(path);
+            if (stat_or_error.is_error()) {
+                warnln("Could not stat '{}': {}", path, stat_or_error.release_error());
+                return false;
+            }
+
+            stat = stat_or_error.release_value();
         }
 
-        TRY(Core::System::chmod(path, mask.apply(stat.st_mode)));
+        auto success = true;
+        auto maybe_error = Core::System::chmod(path, mask.apply(stat.st_mode));
+        if (maybe_error.is_error()) {
+            warnln("Failed to change permissions of '{}': {}", path, maybe_error.release_error());
+            success = false;
+        }
 
         if (recursive && S_ISDIR(stat.st_mode)) {
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
 
             while (it.has_next())
-                TRY(update_path_permissions(it.next_full_path()));
+                success &= update_path_permissions(it.next_full_path());
         }
 
-        return {};
+        return success;
     };
 
+    auto success = true;
     for (auto const& path : paths) {
-        TRY(update_path_permissions(path));
+        success &= update_path_permissions(path);
     }
 
-    return 0;
+    return success ? 0 : 1;
 }
