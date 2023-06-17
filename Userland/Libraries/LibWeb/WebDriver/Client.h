@@ -92,6 +92,9 @@ public:
     virtual Response delete_cookie(Parameters parameters, JsonValue payload) = 0;
     virtual Response delete_all_cookies(Parameters parameters, JsonValue payload) = 0;
 
+    // 15. Actions, https://w3c.github.io/webdriver/#actions
+    virtual Response release_actions(Parameters parameters, JsonValue payload) = 0;
+
     // 16. User prompts, https://w3c.github.io/webdriver/#user-prompts
     virtual Response dismiss_alert(Parameters parameters, JsonValue payload) = 0;
     virtual Response accept_alert(Parameters parameters, JsonValue payload) = 0;

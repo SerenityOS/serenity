@@ -1654,6 +1654,26 @@ Messages::WebDriverClient::DeleteAllCookiesResponse WebDriverConnection::delete_
     return JsonValue {};
 }
 
+// 15.8 Release Actions, https://w3c.github.io/webdriver/#release-actions
+Messages::WebDriverClient::ReleaseActionsResponse WebDriverConnection::release_actions()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Let input state be the result of get the input state with current session and current top-level browsing context.
+
+    // FIXME: 3. Let actions options be a new actions options with the is element origin steps set to represents a web element, and the get element origin steps set to get a WebElement origin.
+
+    // FIXME: 4. Let undo actions be input state’s input cancel list in reverse order.
+
+    // FIXME: 5. Try to dispatch tick actions with arguments undo actions, 0, current browsing context, and actions options.
+
+    // FIXME: 6. Reset the input state with current session and current top-level browsing context.
+
+    // 7. Return success with data null.
+    return JsonValue {};
+}
+
 // 16.1 Dismiss Alert, https://w3c.github.io/webdriver/#dismiss-alert
 Messages::WebDriverClient::DismissAlertResponse WebDriverConnection::dismiss_alert()
 {
