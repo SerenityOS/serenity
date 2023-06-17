@@ -358,8 +358,10 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
         // NOTE: Prior revisions of this specification did not recognize the return value of the provided script.
         //       In order to preserve legacy behavior, the return value only influences the command if it is a
         //       "thenable"  object or if determining this produces an exception.
-        if (script_result.is_throw_completion())
+        if (script_result.is_throw_completion()) {
+            promise->reject(*script_result.throw_completion().value());
             return;
+        }
 
         // 5. If Type(scriptResult.[[Value]]) is not Object, then abort these steps.
         if (!script_result.value().is_object())
@@ -369,8 +371,10 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
         auto then = script_result.value().as_object().get(vm.names.then);
 
         // 7. If then.[[Type]] is not normal, then reject promise with value then.[[Value]], and abort these steps.
-        if (then.is_throw_completion())
+        if (then.is_throw_completion()) {
+            promise->reject(*then.throw_completion().value());
             return;
+        }
 
         // 8. If IsCallable(then.[[Type]]) is false, then abort these steps.
         if (!then.value().is_function())
