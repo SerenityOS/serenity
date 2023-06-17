@@ -249,6 +249,14 @@ private:
         bool is_time_percentage() const;
         TimePercentage time_percentage() const;
 
+        ErrorOr<String> to_string()
+        {
+            return m_value.visit(
+                [](auto& value) -> ErrorOr<String> {
+                    return value.to_string();
+                });
+        }
+
     private:
         Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
     };

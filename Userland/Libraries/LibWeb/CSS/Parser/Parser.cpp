@@ -8351,11 +8351,11 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                 TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->length())) }));
             else if (dimension->is_percentage())
                 TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->percentage())) }));
-            // FIXME: Resolutions, once calc() supports them.
             else if (dimension->is_time())
                 TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->time())) }));
             else
-                VERIFY_NOT_REACHED();
+                dbgln("Unknown dimension type: {}", TRY(dimension->to_string()));
+            // FIXME: Resolutions, once calc() supports them.
             continue;
         }
 
