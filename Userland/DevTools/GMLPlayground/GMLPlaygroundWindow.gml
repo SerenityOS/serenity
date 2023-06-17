@@ -20,4 +20,8 @@
             name: "preview_frame"
         }
     }
+
+    @GUI::Statusbar {
+        name: "statusbar"
+    }
 }
