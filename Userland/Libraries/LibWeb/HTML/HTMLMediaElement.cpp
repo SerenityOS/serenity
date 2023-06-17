@@ -191,6 +191,27 @@ WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type
         return Bindings::CanPlayTypeResult::Maybe;
     }
 
+    if (mime_type.has_value() && mime_type->type() == "audio"sv) {
+        // "Maybe" because we support mp3, but "mpeg" can also refer to MP1 and MP2.
+        if (mime_type->subtype() == "mpeg"sv)
+            return Bindings::CanPlayTypeResult::Maybe;
+        if (mime_type->subtype() == "mp3"sv)
+            return Bindings::CanPlayTypeResult::Probably;
+        if (mime_type->subtype() == "wav"sv)
+            return Bindings::CanPlayTypeResult::Probably;
+        if (mime_type->subtype() == "flac"sv)
+            return Bindings::CanPlayTypeResult::Probably;
+        // We don't currently support `ogg`. We'll also have to check parameters, e.g. from Bandcamp:
+        // audio/ogg; codecs="vorbis"
+        // audio/ogg; codecs="opus"
+        if (mime_type->subtype() == "ogg"sv)
+            return Bindings::CanPlayTypeResult::Empty;
+        // Quite OK Audio
+        if (mime_type->subtype() == "qoa"sv)
+            return Bindings::CanPlayTypeResult::Probably;
+        return Bindings::CanPlayTypeResult::Maybe;
+    }
+
     return Bindings::CanPlayTypeResult::Empty;
 }
 
