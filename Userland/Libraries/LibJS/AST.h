@@ -1455,6 +1455,26 @@ private:
     NonnullRefPtr<ClassExpression const> m_class_expression;
 };
 
+// We use this class to mimic  Initializer : = AssignmentExpression of
+// 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
+class ClassFieldInitializerStatement final : public Statement {
+public:
+    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression, DeprecatedFlyString field_name)
+        : Statement(move(source_range))
+        , m_expression(move(expression))
+        , m_class_field_identifier_name(move(field_name))
+    {
+    }
+
+    virtual Completion execute(Interpreter& interpreter) const override;
+    virtual void dump(int) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+private:
+    NonnullRefPtr<Expression const> m_expression;
+    DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
+};
+
 class SpreadExpression final : public Expression {
 public:
     explicit SpreadExpression(SourceRange source_range, NonnullRefPtr<Expression const> target)
