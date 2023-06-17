@@ -9,6 +9,7 @@
  */
 
 #include "MainWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -26,6 +27,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
 
     auto app = TRY(GUI::Application::create(arguments));
+
+    Config::pledge_domain("ThemeEditor");
+    app->set_config_domain(TRY("ThemeEditor"_string));
 
     StringView file_to_edit;
 
