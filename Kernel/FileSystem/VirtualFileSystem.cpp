@@ -217,6 +217,9 @@ ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_poin
             return EBUSY;
         }
 
+        // A bind mount also counts as a normal mount from the perspective of unmount(),
+        // so we need to keep track of it in order for prepare_to_clear_last_mount() to work properly.
+        new_mount->guest_fs().mounted_count({}).with([&](auto& count) { count++; });
         // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
         // deleted after being added.
         mounts.append(*new_mount.leak_ptr());
