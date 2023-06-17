@@ -632,6 +632,15 @@ Web::WebDriver::Response Client::delete_all_cookies(Web::WebDriver::Parameters p
     return session->web_content_connection().delete_all_cookies();
 }
 
+// 15.8 Release Actions, https://w3c.github.io/webdriver/#release-actions
+// DELETE /session/{session id}/actions
+Web::WebDriver::Response Client::release_actions(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/actions");
+    auto session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().release_actions();
+}
+
 // 16.1 Dismiss Alert, https://w3c.github.io/webdriver/#dismiss-alert
 // POST /session/{session id}/alert/dismiss
 Web::WebDriver::Response Client::dismiss_alert(Web::WebDriver::Parameters parameters, JsonValue)
