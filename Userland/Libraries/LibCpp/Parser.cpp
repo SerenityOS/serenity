@@ -93,6 +93,10 @@ NonnullRefPtr<Declaration const> Parser::parse_declaration(ASTNode const& parent
         return parse_destructor(parent);
     case DeclarationType::UsingNamespace:
         return parse_using_namespace_declaration(parent);
+    case DeclarationType::UsingType:
+        return parse_using_type_declaration(parent);
+    case DeclarationType::Typedef:
+        return parse_typedef_declaration(parent);
     default:
         error("unexpected declaration type"sv);
         return create_ast_node<InvalidDeclaration>(parent, position(), position());
@@ -641,6 +645,10 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
         return DeclarationType::Variable;
     if (match_using_namespace_declaration())
         return DeclarationType::UsingNamespace;
+    if (match_using_type_declaration())
+        return DeclarationType::UsingType;
+    if (match_typedef_declaration())
+        return DeclarationType::Typedef;
     return {};
 }
 
@@ -1761,6 +1769,41 @@ bool Parser::match_using_namespace_declaration()
     return true;
 }
 
+bool Parser::match_using_type_declaration()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match_keyword("using"))
+        return false;
+    consume();
+
+    if (!match(Token::Type::Identifier))
+        return false;
+
+    return true;
+}
+
+bool Parser::match_typedef_declaration()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match_keyword("typedef"))
+        return false;
+    consume();
+
+    // FIXME: typedef void (*fn)()
+
+    if (!match_type())
+        return false;
+
+    if (!match(Token::Type::Identifier))
+        return false;
+
+    return true;
+}
+
 NonnullRefPtr<UsingNamespaceDeclaration const> Parser::parse_using_namespace_declaration(ASTNode const& parent)
 {
     auto decl = create_ast_node<UsingNamespaceDeclaration>(parent, position(), {});
@@ -1774,6 +1817,46 @@ NonnullRefPtr<UsingNamespaceDeclaration const> Parser::parse_using_namespace_dec
     consume(Token::Type::Semicolon);
 
     decl->set_name(name);
+
+    return decl;
+}
+
+NonnullRefPtr<TypedefDeclaration const> Parser::parse_typedef_declaration(Cpp::ASTNode const& parent)
+{
+    auto decl = create_ast_node<TypedefDeclaration>(parent, position(), {});
+
+    consume_keyword("typedef");
+
+    auto type = parse_type(*decl);
+    decl->set_alias(type);
+
+    auto name = parse_name(*decl);
+    decl->set_name(name);
+
+    decl->set_end(position());
+    consume(Token::Type::Semicolon);
+
+    return decl;
+}
+
+NonnullRefPtr<TypedefDeclaration const> Parser::parse_using_type_declaration(Cpp::ASTNode const& parent)
+{
+    auto decl = create_ast_node<TypedefDeclaration>(parent, position(), {});
+
+    // FIXME: These can also be templated.
+    consume_keyword("using");
+
+    auto name = parse_name(*decl);
+    decl->set_name(name);
+
+    if (match(Token::Type::Equals)) {
+        consume();
+        auto type = parse_type(*decl);
+        decl->set_alias(type);
+    }
+
+    decl->set_end(position());
+    consume(Token::Type::Semicolon);
 
     return decl;
 }

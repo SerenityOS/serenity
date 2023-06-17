@@ -683,4 +683,13 @@ void UsingNamespaceDeclaration::dump(FILE* output, size_t indent) const
     outln(output, "{}", full_name());
 }
 
+void TypedefDeclaration::dump(FILE* output, size_t indent) const
+{
+    ASTNode::dump(output, indent);
+    print_indent(output, indent + 1);
+    outln(output, "{}", full_name());
+    if (m_alias)
+        m_alias->dump(output, indent + 1);
+}
+
 }
