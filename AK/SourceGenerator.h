@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
@@ -17,7 +19,7 @@ class SourceGenerator {
     AK_MAKE_NONCOPYABLE(SourceGenerator);
 
 public:
-    using MappingType = HashMap<StringView, DeprecatedString>;
+    using MappingType = HashMap<StringView, String>;
 
     explicit SourceGenerator(StringBuilder& builder, char opening = '@', char closing = '@')
         : m_builder(builder)
@@ -37,16 +39,22 @@ public:
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
 
-    void set(StringView key, DeprecatedString value)
+    ErrorOr<void> set(StringView key, String value)
     {
         if (key.contains(m_opening) || key.contains(m_closing)) {
             warnln("SourceGenerator keys cannot contain the opening/closing delimiters `{}` and `{}`. (Keys are only wrapped in these when using them, not when setting them.)", m_opening, m_closing);
             VERIFY_NOT_REACHED();
         }
-        m_mapping.set(key, move(value));
+        TRY(m_mapping.try_set(key, move(value)));
+        return {};
     }
 
-    DeprecatedString get(StringView key) const
+    void set(StringView key, DeprecatedString value)
+    {
+        MUST(set(key, MUST(String::from_deprecated_string(value))));
+    }
+
+    String get(StringView key) const
     {
         auto result = m_mapping.get(key);
         if (!result.has_value()) {
@@ -85,7 +93,7 @@ public:
     }
 
     template<size_t N>
-    DeprecatedString get(char const (&key)[N])
+    String get(char const (&key)[N])
     {
         return get(StringView { key, N - 1 });
     }
@@ -94,6 +102,12 @@ public:
     void set(char const (&key)[N], DeprecatedString value)
     {
         set(StringView { key, N - 1 }, value);
+    }
+
+    template<size_t N>
+    ErrorOr<void> set(char const (&key)[N], String value)
+    {
+        return set(StringView { key, N - 1 }, value);
     }
 
     template<size_t N>
