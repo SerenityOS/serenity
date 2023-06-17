@@ -438,7 +438,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     VERIFY(table_box.has_value());
 
     auto table_used_width = throwaway_state.get(*table_box).content_width();
-    return table_used_width > available_width ? available_width : table_used_width;
+    return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
 }
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
