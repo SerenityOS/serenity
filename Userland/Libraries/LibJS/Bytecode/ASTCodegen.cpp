@@ -2593,4 +2593,13 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
     VERIFY_NOT_REACHED();
 }
+
+Bytecode::CodeGenerationErrorOr<void> ClassFieldInitializerStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_expression->generate_bytecode(generator));
+    generator.perform_needed_unwinds<Bytecode::Op::Return>();
+    generator.emit<Bytecode::Op::Return>();
+    return {};
+}
+
 }

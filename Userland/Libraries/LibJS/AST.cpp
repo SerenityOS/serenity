@@ -1748,46 +1748,30 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     }
 }
 
-// We use this class to mimic  Initializer : = AssignmentExpression of
-// 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
-class ClassFieldInitializerStatement : public Statement {
-public:
-    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression, DeprecatedFlyString field_name)
-        : Statement(source_range)
-        , m_expression(move(expression))
-        , m_class_field_identifier_name(move(field_name))
-    {
-    }
+Completion ClassFieldInitializerStatement::execute(Interpreter& interpreter) const
+{
+    // 1. Assert: argumentsList is empty.
+    VERIFY(interpreter.vm().argument_count() == 0);
 
-    Completion execute(Interpreter& interpreter) const override
-    {
-        // 1. Assert: argumentsList is empty.
-        VERIFY(interpreter.vm().argument_count() == 0);
+    // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
+    VERIFY(!m_class_field_identifier_name.is_empty());
 
-        // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
-        VERIFY(!m_class_field_identifier_name.is_empty());
+    // 3. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
+    //    a. Let value be ? NamedEvaluation of Initializer with argument functionObject.[[ClassFieldInitializerName]].
+    // 4. Else,
+    //    a. Let rhs be the result of evaluating AssignmentExpression.
+    //    b. Let value be ? GetValue(rhs).
+    auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(m_expression, m_class_field_identifier_name));
 
-        // 3. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
-        //    a. Let value be ? NamedEvaluation of Initializer with argument functionObject.[[ClassFieldInitializerName]].
-        // 4. Else,
-        //    a. Let rhs be the result of evaluating AssignmentExpression.
-        //    b. Let value be ? GetValue(rhs).
-        auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(m_expression, m_class_field_identifier_name));
+    // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+    return { Completion::Type::Return, value, {} };
+}
 
-        // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-        return { Completion::Type::Return, value, {} };
-    }
-
-    void dump(int) const override
-    {
-        // This should not be dumped as it is never part of an actual AST.
-        VERIFY_NOT_REACHED();
-    }
-
-private:
-    NonnullRefPtr<Expression const> m_expression;
-    DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
-};
+void ClassFieldInitializerStatement::dump(int) const
+{
+    // This should not be dumped as it is never part of an actual AST.
+    VERIFY_NOT_REACHED();
+}
 
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, Object& target) const
