@@ -77,6 +77,7 @@ private:
     Value m_detach_key;
 };
 
+void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_block, u64 from_index, u64 count);
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);

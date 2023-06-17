@@ -67,6 +67,57 @@ static ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
     return data_block.release_value();
 }
 
+// 6.2.9.3 CopyDataBlockBytes ( toBlock, toIndex, fromBlock, fromIndex, count ), https://tc39.es/ecma262/#sec-copydatablockbytes
+void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_block, u64 from_index, u64 count)
+{
+    // 1. Assert: fromBlock and toBlock are distinct values.
+    VERIFY(&to_block != &from_block);
+
+    // 2. Let fromSize be the number of bytes in fromBlock.
+    auto from_size = from_block.size();
+
+    // 3. Assert: fromIndex + count ≤ fromSize.
+    VERIFY(from_index + count <= from_size);
+
+    // 4. Let toSize be the number of bytes in toBlock.
+    auto to_size = to_block.size();
+
+    // 5. Assert: toIndex + count ≤ toSize.
+    VERIFY(to_index + count <= to_size);
+
+    // 6. Repeat, while count > 0,
+    while (count > 0) {
+        // FIXME: a. If fromBlock is a Shared Data Block, then
+        // FIXME:    i. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+        // FIXME:    ii. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+        // FIXME:    iii. Let bytes be a List whose sole element is a nondeterministically chosen byte value.
+        // FIXME:    iv. NOTE: In implementations, bytes is the result of a non-atomic read instruction on the underlying hardware. The nondeterminism is a semantic prescription of the memory model to describe observable behaviour of hardware with weak consistency.
+        // FIXME:    v. Let readEvent be ReadSharedMemory { [[Order]]: Unordered, [[NoTear]]: true, [[Block]]: fromBlock, [[ByteIndex]]: fromIndex, [[ElementSize]]: 1 }.
+        // FIXME:    vi. Append readEvent to eventsRecord.[[EventList]].
+        // FIXME:    vii. Append Chosen Value Record { [[Event]]: readEvent, [[ChosenValue]]: bytes } to execution.[[ChosenValues]].
+        // FIXME:    viii. If toBlock is a Shared Data Block, then
+        // FIXME:       1. Append WriteSharedMemory { [[Order]]: Unordered, [[NoTear]]: true, [[Block]]: toBlock, [[ByteIndex]]: toIndex, [[ElementSize]]: 1, [[Payload]]: bytes } to eventsRecord.[[EventList]].
+        // FIXME:    ix. Else,
+        // FIXME:       1. Set toBlock[toIndex] to bytes[0].
+        // FIXME: b. Else,
+        // FIXME:    i. Assert: toBlock is not a Shared Data Block.
+
+        // ii. Set toBlock[toIndex] to fromBlock[fromIndex].
+        to_block[to_index] = from_block[from_index];
+
+        // c. Set toIndex to toIndex + 1.
+        ++to_index;
+
+        // d. Set fromIndex to fromIndex + 1.
+        ++from_index;
+
+        // e. Set count to count - 1.
+        --count;
+    }
+
+    // 7. Return unused.
+}
+
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
 {
