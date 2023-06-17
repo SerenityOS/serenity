@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -117,6 +117,7 @@ private:
 
     RefPtr<PreviewWidget> m_preview_widget;
     RefPtr<GUI::TabWidget> m_property_tabs;
+    RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Action> m_save_action;
 
     RefPtr<GUI::Button> m_theme_override_apply;
