@@ -16,7 +16,7 @@
 ErrorOr<void> replace_logical_aliases(JsonObject& properties);
 ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file);
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file);
-void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name = {}, Optional<StringView> value_getter = {});
+ErrorOr<void> generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name = {}, Optional<StringView> value_getter = {});
 
 static bool type_name_is_enum(StringView type_name)
 {
@@ -120,7 +120,7 @@ enum class PropertyID {
 
     for (auto& name : shorthand_property_ids) {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
@@ -129,21 +129,21 @@ enum class PropertyID {
 
     for (auto& name : longhand_property_ids) {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
 )~~~");
     }
 
-    generator.set("first_property_id", title_casify(first_property_id));
-    generator.set("last_property_id", title_casify(last_property_id));
+    TRY(generator.set("first_property_id", TRY(title_casify(first_property_id))));
+    TRY(generator.set("last_property_id", TRY(title_casify(last_property_id))));
 
-    generator.set("first_shorthand_property_id", title_casify(shorthand_property_ids.first()));
-    generator.set("last_shorthand_property_id", title_casify(shorthand_property_ids.last()));
+    TRY(generator.set("first_shorthand_property_id", TRY(title_casify(shorthand_property_ids.first()))));
+    TRY(generator.set("last_shorthand_property_id", TRY(title_casify(shorthand_property_ids.last()))));
 
-    generator.set("first_longhand_property_id", title_casify(longhand_property_ids.first()));
-    generator.set("last_longhand_property_id", title_casify(longhand_property_ids.last()));
+    TRY(generator.set("first_longhand_property_id", TRY(title_casify(longhand_property_ids.first()))));
+    TRY(generator.set("last_longhand_property_id", TRY(title_casify(longhand_property_ids.last()))));
 
     generator.append(R"~~~(
 };
@@ -223,7 +223,7 @@ struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID>
     return {};
 }
 
-void generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name, Optional<StringView> value_getter)
+ErrorOr<void> generate_bounds_checking_function(JsonObject& properties, SourceGenerator& parent_generator, StringView css_type_name, StringView type_name, Optional<StringView> default_unit_name, Optional<StringView> value_getter)
 {
     auto generator = parent_generator.fork();
     generator.set("css_type_name", css_type_name);
@@ -235,7 +235,7 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, JsonValue const& value) {
+    TRY(properties.try_for_each_member([&](auto& name, JsonValue const& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
         if (auto maybe_valid_types = value.as_object().get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
             for (auto valid_type : maybe_valid_types->values()) {
@@ -244,7 +244,7 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                     continue;
 
                 auto property_generator = generator.fork();
-                property_generator.set("property_name:titlecase", title_casify(name));
+                TRY(property_generator.set("property_name:titlecase", TRY(title_casify(name))));
 
                 property_generator.append(R"~~~(
     case PropertyID::@property_name:titlecase@:
@@ -268,13 +268,13 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                         break;
                     }
 
-                    auto output_check = [&](auto& value_string, StringView comparator) {
+                    auto output_check = [&](auto& value_string, StringView comparator) -> ErrorOr<void> {
                         if (value_getter.has_value()) {
                             property_generator.set("value_number", value_string);
                             property_generator.set("value_getter", value_getter.value());
                             property_generator.set("comparator", comparator);
                             property_generator.append("@value_getter@ @comparator@ @value_number@");
-                            return;
+                            return {};
                         }
 
                         GenericLexer lexer { value_string };
@@ -284,17 +284,18 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                             value_unit = default_unit_name.value();
                         VERIFY(lexer.is_eof());
                         property_generator.set("value_number", value_number);
-                        property_generator.set("value_unit", title_casify(value_unit));
+                        TRY(property_generator.set("value_unit", TRY(title_casify(value_unit))));
                         property_generator.set("comparator", comparator);
                         property_generator.append("value @comparator@ @type_name@(@value_number@, @type_name@::Type::@value_unit@)");
+                        return {};
                     };
 
                     if (!min_value_string.is_empty())
-                        output_check(min_value_string, ">="sv);
+                        TRY(output_check(min_value_string, ">="sv));
                     if (!min_value_string.is_empty() && !max_value_string.is_empty())
                         property_generator.append(" && ");
                     if (!max_value_string.is_empty())
-                        output_check(max_value_string, "<="sv);
+                        TRY(output_check(max_value_string, "<="sv));
                     property_generator.appendln(";");
                 } else {
                     property_generator.appendln("true;");
@@ -302,7 +303,8 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                 break;
             }
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
@@ -310,6 +312,7 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
     }
 }
 )~~~");
+    return {};
 }
 
 ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& file)
@@ -333,18 +336,19 @@ Optional<PropertyID> property_id_from_camel_case_string(StringView string)
 {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
         member_generator.set("name", name);
-        member_generator.set("name:titlecase", title_casify(name));
-        member_generator.set("name:camelcase", camel_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        TRY(member_generator.set("name:camelcase", TRY(camel_casify(name))));
         member_generator.append(R"~~~(
     if (string.equals_ignoring_ascii_case("@name:camelcase@"sv))
         return PropertyID::@name:titlecase@;
 )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     return {};
@@ -354,17 +358,18 @@ Optional<PropertyID> property_id_from_string(StringView string)
 {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
         member_generator.set("name", name);
-        member_generator.set("name:titlecase", title_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
         member_generator.append(R"~~~(
     if (Infra::is_ascii_case_insensitive_match(string, "@name@"sv))
         return PropertyID::@name:titlecase@;
 )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     return {};
@@ -374,17 +379,18 @@ StringView string_from_property_id(PropertyID property_id) {
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
         member_generator.set("name", name);
-        member_generator.set("name:titlecase", title_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
         member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return "@name@"sv;
 )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
@@ -397,7 +403,7 @@ bool is_inherited_property(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         bool inherited = false;
@@ -409,13 +415,14 @@ bool is_inherited_property(PropertyID property_id)
 
         if (inherited) {
             auto member_generator = generator.fork();
-            member_generator.set("name:titlecase", title_casify(name));
+            TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
             member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return true;
 )~~~");
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
@@ -428,7 +435,7 @@ bool property_affects_layout(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         bool affects_layout = true;
@@ -437,12 +444,13 @@ bool property_affects_layout(PropertyID property_id)
 
         if (affects_layout) {
             auto member_generator = generator.fork();
-            member_generator.set("name:titlecase", title_casify(name));
+            TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
             member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
 )~~~");
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
         return true;
@@ -456,7 +464,7 @@ bool property_affects_stacking_context(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         bool affects_stacking_context = false;
@@ -465,12 +473,13 @@ bool property_affects_stacking_context(PropertyID property_id)
 
         if (affects_stacking_context) {
             auto member_generator = generator.fork();
-            member_generator.set("name:titlecase", title_casify(name));
+            TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
             member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
 )~~~");
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
         return true;
@@ -493,7 +502,7 @@ ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm& context_rea
     switch (property_id) {
 )~~~");
 
-    auto output_initial_value_code = [&](auto& name, auto& object) {
+    auto output_initial_value_code = [&](auto& name, auto& object) -> ErrorOr<void> {
         if (!object.has("initial"sv)) {
             dbgln("No initial value specified for property '{}'", name);
             VERIFY_NOT_REACHED();
@@ -503,7 +512,7 @@ ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm& context_rea
         auto& initial_value_string = initial_value.value();
 
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
         member_generator.set("initial_value_string", initial_value_string);
         member_generator.append(
             R"~~~(        case PropertyID::@name:titlecase@:
@@ -515,12 +524,14 @@ ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm& context_rea
             return initial_value;
         }
 )~~~");
+        return {};
     };
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
-        output_initial_value_code(name, value.as_object());
-    });
+        TRY(output_initial_value_code(name, value.as_object()));
+        return {};
+    }));
 
     generator.append(
         R"~~~(        default: VERIFY_NOT_REACHED();
@@ -533,7 +544,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
         if (value.as_object().has("quirks"sv)) {
             auto quirks_value = value.as_object().get_array("quirks"sv);
@@ -542,7 +553,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
 
             if (!quirks.is_empty()) {
                 auto property_generator = generator.fork();
-                property_generator.set("name:titlecase", title_casify(name));
+                TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
                 property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@: {
         switch (quirk) {
@@ -550,7 +561,7 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
                 for (auto& quirk : quirks.values()) {
                     VERIFY(quirk.is_string());
                     auto quirk_generator = property_generator.fork();
-                    quirk_generator.set("quirk:titlecase", title_casify(quirk.as_string()));
+                    TRY(quirk_generator.set("quirk:titlecase", TRY(title_casify(quirk.as_string()))));
                     quirk_generator.append(R"~~~(
         case Quirk::@quirk:titlecase@:
             return true;
@@ -564,7 +575,8 @@ bool property_has_quirk(PropertyID property_id, Quirk quirk)
 )~~~");
             }
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
@@ -576,13 +588,13 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
 {
     switch (property_id) {
 )~~~");
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
         auto& object = value.as_object();
         if (auto maybe_valid_types = object.get_array("valid-types"sv); maybe_valid_types.has_value() && !maybe_valid_types->is_empty()) {
             auto& valid_types = maybe_valid_types.value();
             auto property_generator = generator.fork();
-            property_generator.set("name:titlecase", title_casify(name));
+            TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@: {
         switch (value_type) {
@@ -643,7 +655,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
     }
 )~~~");
         }
-    });
+        return {};
+    }));
     generator.append(R"~~~(
     default:
         return false;
@@ -654,12 +667,12 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
 {
     switch (property_id) {
 )~~~");
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
         auto& object = value.as_object();
 
         auto property_generator = generator.fork();
-        property_generator.set("name:titlecase", title_casify(name));
+        TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
         property_generator.appendln("    case PropertyID::@name:titlecase@: {");
 
         if (auto maybe_valid_identifiers = object.get_array("valid-identifiers"sv); maybe_valid_identifiers.has_value() && !maybe_valid_identifiers->is_empty()) {
@@ -667,7 +680,7 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
             auto& valid_identifiers = maybe_valid_identifiers.value();
             for (auto& identifier : valid_identifiers.values()) {
                 auto identifier_generator = generator.fork();
-                identifier_generator.set("identifier:titlecase", title_casify(identifier.as_string()));
+                TRY(identifier_generator.set("identifier:titlecase", TRY(title_casify(identifier.as_string()))));
                 identifier_generator.appendln("        case ValueID::@identifier:titlecase@:");
             }
             property_generator.append(R"~~~(
@@ -686,7 +699,7 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
                     continue;
 
                 auto type_generator = generator.fork();
-                type_generator.set("type_name:snakecase", snake_casify(type_name));
+                TRY(type_generator.set("type_name:snakecase", TRY(snake_casify(type_name))));
                 type_generator.append(R"~~~(
         if (value_id_to_@type_name:snakecase@(identifier).has_value())
             return true;
@@ -697,7 +710,8 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
         return false;
     }
 )~~~");
-    });
+        return {};
+    }));
     generator.append(R"~~~(
     default:
         return false;
@@ -709,20 +723,21 @@ size_t property_maximum_value_count(PropertyID property_id)
     switch (property_id) {
 )~~~");
 
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
         if (value.as_object().has("max-values"sv)) {
             auto max_values = value.as_object().get("max-values"sv);
             VERIFY(max_values.has_value() && max_values->is_number() && !max_values->is_double());
             auto property_generator = generator.fork();
-            property_generator.set("name:titlecase", title_casify(name));
+            TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
             property_generator.set("max_values", max_values->to_deprecated_string());
             property_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return @max_values@;
 )~~~");
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
@@ -730,44 +745,45 @@ size_t property_maximum_value_count(PropertyID property_id)
     }
 })~~~");
 
-    generate_bounds_checking_function(properties, generator, "angle"sv, "Angle"sv, "Deg"sv);
-    generate_bounds_checking_function(properties, generator, "frequency"sv, "Frequency"sv, "Hertz"sv);
-    generate_bounds_checking_function(properties, generator, "integer"sv, "i64"sv, {}, "value"sv);
-    generate_bounds_checking_function(properties, generator, "length"sv, "Length"sv, {}, "value.raw_value()"sv);
-    generate_bounds_checking_function(properties, generator, "number"sv, "double"sv, {}, "value"sv);
-    generate_bounds_checking_function(properties, generator, "percentage"sv, "Percentage"sv, {}, "value.value()"sv);
-    generate_bounds_checking_function(properties, generator, "resolution"sv, "Resolution"sv, "Dpi"sv);
-    generate_bounds_checking_function(properties, generator, "time"sv, "Time"sv, "S"sv);
+    TRY(generate_bounds_checking_function(properties, generator, "angle"sv, "Angle"sv, "Deg"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "frequency"sv, "Frequency"sv, "Hertz"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "integer"sv, "i64"sv, {}, "value"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "length"sv, "Length"sv, {}, "value.raw_value()"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "number"sv, "double"sv, {}, "value"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "percentage"sv, "Percentage"sv, {}, "value.value()"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "resolution"sv, "Resolution"sv, "Dpi"sv));
+    TRY(generate_bounds_checking_function(properties, generator, "time"sv, "Time"sv, "S"sv));
 
     generator.append(R"~~~(
 Vector<PropertyID> longhands_for_shorthand(PropertyID property_id)
 {
     switch (property_id) {
 )~~~");
-    properties.for_each_member([&](auto& name, auto& value) {
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         if (value.as_object().has("longhands"sv)) {
             auto longhands = value.as_object().get("longhands"sv);
             VERIFY(longhands.has_value() && longhands->is_array());
             auto longhand_values = longhands->as_array();
             auto property_generator = generator.fork();
-            property_generator.set("name:titlecase", title_casify(name));
+            TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
             StringBuilder builder;
             bool first = true;
-            longhand_values.for_each([&](auto& longhand) {
+            TRY(longhand_values.try_for_each([&](auto& longhand) -> ErrorOr<IterationDecision> {
                 if (first)
                     first = false;
                 else
                     builder.append(", "sv);
-                builder.appendff("PropertyID::{}", title_casify(longhand.to_deprecated_string()));
+                builder.appendff("PropertyID::{}", TRY(title_casify(longhand.to_deprecated_string())));
                 return IterationDecision::Continue;
-            });
+            }));
             property_generator.set("longhands", builder.to_deprecated_string());
             property_generator.append(R"~~~(
         case PropertyID::@name:titlecase@:
                 return { @longhands@ };
 )~~~");
         }
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
         default:

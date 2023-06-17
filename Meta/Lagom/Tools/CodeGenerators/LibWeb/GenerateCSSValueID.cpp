@@ -55,14 +55,15 @@ enum class ValueID {
     Invalid,
 )~~~");
 
-    identifier_data.for_each([&](auto& name) {
+    TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string()))));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
 )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
 };
@@ -93,14 +94,15 @@ namespace Web::CSS {
 HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringview_to_value_id_map {
 )~~~");
 
-    identifier_data.for_each([&](auto& name) {
+    TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", name.to_deprecated_string());
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string()))));
         member_generator.append(R"~~~(
     {"@name@"sv, ValueID::@name:titlecase@},
 )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
 };
@@ -114,15 +116,16 @@ StringView string_from_value_id(ValueID value_id) {
     switch (value_id) {
 )~~~");
 
-    identifier_data.for_each([&](auto& name) {
+    TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", name.to_deprecated_string());
-        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
+        TRY(member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string()))));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@"sv;
         )~~~");
-    });
+        return {};
+    }));
 
     generator.append(R"~~~(
     default:
