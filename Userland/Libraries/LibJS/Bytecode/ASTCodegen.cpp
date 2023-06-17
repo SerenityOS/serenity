@@ -1267,11 +1267,13 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
 Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
-        if (declarator->init())
+        if (declarator->init()) {
             TRY(declarator->init()->generate_bytecode(generator));
-        else
+            TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+        } else if (m_declaration_kind != DeclarationKind::Var) {
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-        TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+            TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+        }
     }
 
     return {};
