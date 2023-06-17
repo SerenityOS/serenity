@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, networkException <networkexception@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Antonio Di Stefano <tonio9681@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
@@ -31,11 +31,11 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ScrollableContainerWidget.h>
-#include <LibGfx/Filters/ColorBlindnessFilter.h>
+#include <LibGUI/Statusbar.h>
 
 namespace ThemeEditor {
 
-static const PropertyTab window_tab {
+static PropertyTab const window_tab {
     "Windows"sv,
     {
         { "General",
@@ -91,7 +91,7 @@ static const PropertyTab window_tab {
     }
 };
 
-static const PropertyTab widgets_tab {
+static PropertyTab const widgets_tab {
     "Widgets"sv,
     {
         { "General",
@@ -160,7 +160,7 @@ static const PropertyTab widgets_tab {
     }
 };
 
-static const PropertyTab syntax_highlighting_tab {
+static PropertyTab const syntax_highlighting_tab {
     "Syntax Highlighting"sv,
     {
         { "General",
@@ -184,7 +184,7 @@ static const PropertyTab syntax_highlighting_tab {
     }
 };
 
-static const PropertyTab color_scheme_tab {
+static PropertyTab const color_scheme_tab {
     "Color Scheme"sv,
     {
         { "General",
@@ -219,6 +219,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
     TRY(main_widget->load_from_gml(theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
+    main_widget->m_statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     TRY(main_widget->add_property_tab(window_tab));
     TRY(main_widget->add_property_tab(widgets_tab));
@@ -234,6 +235,12 @@ MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model)
     : m_current_palette(GUI::Application::the()->palette())
     , m_alignment_model(move(alignment_model))
 {
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        m_statusbar->set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 }
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
