@@ -1,14 +1,18 @@
 /*
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ReadableStreamDefaultReaderPrototype.h>
 #include <LibWeb/Streams/AbstractOperations.h>
@@ -48,6 +52,62 @@ void ReadableStreamDefaultReader::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     ReadableStreamGenericReaderMixin::visit_edges(visitor);
+}
+
+// https://streams.spec.whatwg.org/#read-loop
+ReadLoopReadRequest::ReadLoopReadRequest(JS::VM& vm, JS::Realm& realm, ReadableStreamDefaultReader& reader, SuccessSteps success_steps, FailureSteps failure_steps)
+    : m_vm(vm)
+    , m_realm(realm)
+    , m_reader(reader)
+    , m_success_steps(move(success_steps))
+    , m_failure_steps(move(failure_steps))
+{
+}
+
+// chunk steps, given chunk
+void ReadLoopReadRequest::on_chunk(JS::Value chunk)
+{
+    // 1. If chunk is not a Uint8Array object, call failureSteps with a TypeError and abort these steps.
+    if (!chunk.is_object() || !is<JS::Uint8Array>(chunk.as_object())) {
+        auto exception = JS::TypeError::create(m_realm, "Chunk data is not Uint8Array"sv);
+        if (exception.is_error()) {
+            m_failure_steps(*exception.release_error().value());
+            return;
+        }
+
+        m_failure_steps(exception.value());
+    }
+
+    auto const& array = static_cast<JS::Uint8Array const&>(chunk.as_object());
+    auto const& buffer = array.viewed_array_buffer()->buffer();
+
+    // 2. Append the bytes represented by chunk to bytes.
+    m_bytes.append(buffer);
+
+    // FIXME: As the spec suggests, implement this non-recursively - instead of directly. It is not too big of a deal currently
+    //        as we enqueue the entire blob buffer in one go, meaning that we only recurse a single time. Once we begin queuing
+    //        up more than one chunk at a time, we may run into stack overflow problems.
+    //
+    // 3. Read-loop given reader, bytes, successSteps, and failureSteps.
+    auto maybe_error = readable_stream_default_reader_read(m_reader, *this);
+    if (maybe_error.is_exception()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(m_vm, maybe_error.exception());
+        m_failure_steps(*throw_completion.release_error().value());
+    }
+}
+
+// close steps
+void ReadLoopReadRequest::on_close()
+{
+    // 1. Call successSteps with bytes.
+    m_success_steps(m_bytes);
+}
+
+// error steps, given e
+void ReadLoopReadRequest::on_error(JS::Value error)
+{
+    // 1. Call failureSteps with e.
+    m_failure_steps(error);
 }
 
 class DefaultReaderReadRequest : public ReadRequest {

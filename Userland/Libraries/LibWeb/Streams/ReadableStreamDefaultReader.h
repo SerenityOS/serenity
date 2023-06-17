@@ -29,6 +29,31 @@ public:
     virtual void on_error(JS::Value error) = 0;
 };
 
+class ReadLoopReadRequest : public ReadRequest {
+public:
+    // successSteps, which is an algorithm accepting a byte sequence
+    using SuccessSteps = JS::SafeFunction<void(ByteBuffer)>;
+
+    // failureSteps, which is an algorithm accepting a JavaScript value
+    using FailureSteps = JS::SafeFunction<void(JS::Value error)>;
+
+    ReadLoopReadRequest(JS::VM& vm, JS::Realm& realm, ReadableStreamDefaultReader& reader, SuccessSteps success_steps, FailureSteps failure_steps);
+
+    virtual void on_chunk(JS::Value chunk) override;
+
+    virtual void on_close() override;
+
+    virtual void on_error(JS::Value error) override;
+
+private:
+    JS::VM& m_vm;
+    JS::Realm& m_realm;
+    ReadableStreamDefaultReader& m_reader;
+    ByteBuffer m_bytes;
+    SuccessSteps m_success_steps;
+    FailureSteps m_failure_steps;
+};
+
 // https://streams.spec.whatwg.org/#readablestreamdefaultreader
 class ReadableStreamDefaultReader final
     : public Bindings::PlatformObject
