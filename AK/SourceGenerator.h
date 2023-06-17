@@ -49,11 +49,6 @@ public:
         return {};
     }
 
-    void set(StringView key, DeprecatedString value)
-    {
-        MUST(set(key, MUST(String::from_deprecated_string(value))));
-    }
-
     String get(StringView key) const
     {
         auto result = m_mapping.get(key);
@@ -66,12 +61,12 @@ public:
 
     StringView as_string_view() const { return m_builder.string_view(); }
 
-    void append(StringView pattern)
+    ErrorOr<void> try_append(StringView pattern)
     {
         GenericLexer lexer { pattern };
 
         while (!lexer.is_eof()) {
-            m_builder.append(lexer.consume_until(m_opening));
+            TRY(m_builder.try_append(lexer.consume_until(m_opening)));
 
             if (lexer.consume_specific(m_opening)) {
                 auto const placeholder = lexer.consume_until(m_closing);
@@ -79,17 +74,19 @@ public:
                 if (!lexer.consume_specific(m_closing))
                     VERIFY_NOT_REACHED();
 
-                m_builder.append(get(placeholder));
+                TRY(m_builder.try_append(get(placeholder)));
             } else {
                 VERIFY(lexer.is_eof());
             }
         }
+        return {};
     }
 
-    void appendln(StringView pattern)
+    ErrorOr<void> try_appendln(StringView pattern)
     {
-        append(pattern);
-        m_builder.append('\n');
+        TRY(try_append(pattern));
+        TRY(m_builder.try_append('\n'));
+        return {};
     }
 
     template<size_t N>
@@ -99,28 +96,39 @@ public:
     }
 
     template<size_t N>
-    void set(char const (&key)[N], DeprecatedString value)
-    {
-        set(StringView { key, N - 1 }, value);
-    }
-
-    template<size_t N>
     ErrorOr<void> set(char const (&key)[N], String value)
     {
         return set(StringView { key, N - 1 }, value);
     }
 
     template<size_t N>
-    void append(char const (&pattern)[N])
+    ErrorOr<void> try_append(char const (&pattern)[N])
     {
-        append(StringView { pattern, N - 1 });
+        return try_append(StringView { pattern, N - 1 });
     }
 
     template<size_t N>
-    void appendln(char const (&pattern)[N])
+    ErrorOr<void> try_appendln(char const (&pattern)[N])
     {
-        appendln(StringView { pattern, N - 1 });
+        return try_appendln(StringView { pattern, N - 1 });
     }
+
+    // FIXME: These are deprecated.
+    void set(StringView key, DeprecatedString value)
+    {
+        MUST(set(key, MUST(String::from_deprecated_string(value))));
+    }
+    template<size_t N>
+    void set(char const (&key)[N], DeprecatedString value)
+    {
+        set(StringView { key, N - 1 }, value);
+    }
+    void append(StringView pattern) { MUST(try_append(pattern)); }
+    void appendln(StringView pattern) { MUST(try_appendln(pattern)); }
+    template<size_t N>
+    void append(char const (&pattern)[N]) { MUST(try_append(pattern)); }
+    template<size_t N>
+    void appendln(char const (&pattern)[N]) { MUST(try_appendln(pattern)); }
 
 private:
     StringBuilder& m_builder;
