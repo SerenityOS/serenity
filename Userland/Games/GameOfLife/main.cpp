@@ -66,6 +66,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(click_tip);
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     auto& columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
     auto& rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
