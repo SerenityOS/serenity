@@ -185,6 +185,29 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::read_all_bytes(ReadLoopRe
     return {};
 }
 
+// FIXME: This function is a promise-based wrapper around "read all bytes". The spec changed this function to not use promises
+//        in https://github.com/whatwg/streams/commit/f894acdd417926a2121710803cef593e15127964 - however, it seems that the
+//        FileAPI blob specification has not been updated to match, see: https://github.com/w3c/FileAPI/issues/187.
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultReader::read_all_bytes_deprecated()
+{
+    auto& realm = this->realm();
+
+    auto promise = WebIDL::create_promise(realm);
+
+    auto success_steps = [promise, &realm](ByteBuffer bytes) {
+        auto buffer = JS::ArrayBuffer::create(realm, move(bytes));
+        WebIDL::resolve_promise(realm, promise, buffer);
+    };
+
+    auto failure_steps = [promise, &realm](JS::Value error) {
+        WebIDL::reject_promise(realm, promise, error);
+    };
+
+    TRY(read_all_bytes(move(success_steps), move(failure_steps)));
+
+    return promise;
+}
+
 // https://streams.spec.whatwg.org/#default-reader-release-lock
 WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::release_lock()
 {
