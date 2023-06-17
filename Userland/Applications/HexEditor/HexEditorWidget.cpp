@@ -272,6 +272,13 @@ HexEditorWidget::HexEditorWidget()
     m_statusbar->segment(0).set_action(*m_goto_offset_action);
 
     m_editor->set_focus(true);
+
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        m_statusbar->set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 }
 
 void HexEditorWidget::update_inspector_values(size_t position)
