@@ -813,13 +813,14 @@ CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Optional<L
     auto center_value = resolve_value(center_node.value(), context);
     auto max_value = resolve_value(max_node.value(), context);
 
+    // NOTE: Any operation with at least one NaN argument produces NaN.
     // NOTE: The value should be returned as "max(MIN, min(VAL, MAX))"
     auto chosen_value = max(min_value, min(center_value, max_value));
-    if (chosen_value == min_value)
+    if (isnan(min_value) || chosen_value == min_value)
         return min_node;
-    if (chosen_value == center_value)
+    if (isnan(center_value) || chosen_value == center_value)
         return center_node;
-    if (chosen_value == max_value)
+    if (isnan(max_value) || chosen_value == max_value)
         return max_node;
 
     VERIFY_NOT_REACHED();
