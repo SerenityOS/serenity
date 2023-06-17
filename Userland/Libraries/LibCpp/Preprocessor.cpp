@@ -230,6 +230,10 @@ void Preprocessor::handle_preprocessor_keyword(StringView keyword, GenericLexer&
         line_lexer.consume_all();
         return;
     }
+    if (keyword == "error") {
+        line_lexer.consume_all();
+        return;
+    }
 
     if (!m_options.ignore_unsupported_keywords) {
         dbgln("Unsupported preprocessor keyword: {}", keyword);
