@@ -395,11 +395,21 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
             WebIDL::reject_promise(realm, promise_capability, script_promise.result());
     }();
 
-    // FIXME: 6. If promise is still pending and session script timeout milliseconds is reached, return error with error code script timeout.
-
+    // 6. If promise is still pending and session script timeout milliseconds is reached, return error with error code script timeout.
     vm.custom_data()->spin_event_loop_until([&] {
+        if (timeout.has_value() && (MonotonicTime::now() - start) > Duration::from_seconds(static_cast<i64>(*timeout))) {
+            return true;
+        }
+
         return promise->state() != JS::Promise::State::Pending;
     });
+
+    if (timeout.has_value() && (MonotonicTime::now() - start) > Duration::from_seconds(static_cast<i64>(*timeout))) {
+        auto error_object = JsonObject {};
+        error_object.set("name", "Error");
+        error_object.set("message", "script timeout");
+        return { ExecuteScriptResultType::Timeout, move(error_object) };
+    }
 
     auto json_value_or_error = json_clone(realm, promise->result());
     if (json_value_or_error.is_error()) {
