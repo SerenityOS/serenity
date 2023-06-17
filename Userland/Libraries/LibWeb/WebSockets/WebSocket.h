@@ -37,11 +37,11 @@ public:
         Closed = 3,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> construct_impl(JS::Realm&, DeprecatedString const& url, Optional<Variant<DeprecatedString, Vector<DeprecatedString>>> const& protocols);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> construct_impl(JS::Realm&, String const& url, Optional<Variant<String, Vector<String>>> const& protocols);
 
     virtual ~WebSocket() override;
 
-    DeprecatedString url() const { return m_url.to_deprecated_string(); }
+    WebIDL::ExceptionOr<String> url() const { return TRY_OR_THROW_OOM(vm(), m_url.to_string()); }
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -51,22 +51,22 @@ public:
 #undef __ENUMERATE
 
     ReadyState ready_state() const;
-    DeprecatedString extensions() const;
-    DeprecatedString protocol() const;
+    String extensions() const;
+    WebIDL::ExceptionOr<String> protocol() const;
 
-    DeprecatedString const& binary_type() { return m_binary_type; };
-    void set_binary_type(DeprecatedString const& type) { m_binary_type = type; };
+    String const& binary_type() { return m_binary_type; };
+    void set_binary_type(String const& type) { m_binary_type = type; };
 
-    WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<DeprecatedString> reason);
-    WebIDL::ExceptionOr<void> send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, DeprecatedString> const& data);
+    WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
+    WebIDL::ExceptionOr<void> send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, String> const& data);
 
 private:
     void on_open();
     void on_message(ByteBuffer message, bool is_text);
     void on_error();
-    void on_close(u16 code, DeprecatedString reason, bool was_clean);
+    void on_close(u16 code, String reason, bool was_clean);
 
-    WebSocket(HTML::Window&, AK::URL&, Vector<DeprecatedString> const& protocols);
+    WebSocket(HTML::Window&, AK::URL&, Vector<String> const& protocols);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -74,7 +74,7 @@ private:
     JS::NonnullGCPtr<HTML::Window> m_window;
 
     AK::URL m_url;
-    DeprecatedString m_binary_type { "blob" };
+    String m_binary_type { "blob"_string.release_value_but_fixme_should_propagate_errors() };
     RefPtr<WebSocketClientSocket> m_websocket;
 };
 
