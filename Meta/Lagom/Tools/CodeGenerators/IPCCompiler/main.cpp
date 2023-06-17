@@ -348,7 +348,7 @@ public:)~~~");
         IPC::Decoder decoder { stream, socket };)~~~");
 
     for (auto const& parameter : parameters) {
-        auto parameter_generator = message_generator.fork();
+        auto parameter_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
 
         parameter_generator.set("parameter.type", parameter.type);
         parameter_generator.set("parameter.name", parameter.name);
@@ -394,7 +394,7 @@ public:)~~~");
         TRY(stream.encode((int)MessageID::@message.pascal_name@));)~~~");
 
     for (auto const& parameter : parameters) {
-        auto parameter_generator = message_generator.fork();
+        auto parameter_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
 
         parameter_generator.set("parameter.name", parameter.name);
         parameter_generator.appendln(R"~~~(
@@ -406,7 +406,7 @@ public:)~~~");
     })~~~");
 
     for (auto const& parameter : parameters) {
-        auto parameter_generator = message_generator.fork();
+        auto parameter_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
         parameter_generator.set("parameter.type", parameter.type);
         parameter_generator.set("parameter.name", parameter.name);
         parameter_generator.appendln(R"~~~(
@@ -419,7 +419,7 @@ private:
     bool m_ipc_message_valid { true };)~~~");
 
     for (auto const& parameter : parameters) {
-        auto parameter_generator = message_generator.fork();
+        auto parameter_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
         parameter_generator.set("parameter.type", parameter.type);
         parameter_generator.set("parameter.name", parameter.name);
         parameter_generator.appendln(R"~~~(
@@ -455,7 +455,7 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
 
         for (size_t i = 0; i < parameters.size(); ++i) {
             auto const& parameter = parameters[i];
-            auto argument_generator = message_generator.fork();
+            auto argument_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
             argument_generator.set("argument.type", parameter.type);
             argument_generator.set("argument.name", parameter.name);
             argument_generator.append("@argument.type@ @argument.name@");
@@ -488,7 +488,7 @@ void do_message_for_proxy(SourceGenerator message_generator, Endpoint const& end
 
         for (size_t i = 0; i < parameters.size(); ++i) {
             auto const& parameter = parameters[i];
-            auto argument_generator = message_generator.fork();
+            auto argument_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
             argument_generator.set("argument.name", parameter.name);
             if (is_primitive_or_simple_type(parameters[i].type))
                 argument_generator.append("@argument.name@");
@@ -544,15 +544,15 @@ void build_endpoint(SourceGenerator generator, Endpoint const& endpoint)
 
     generator.appendln("\nnamespace Messages::@endpoint.name@ {");
 
-    HashMap<DeprecatedString, int> message_ids = build_message_ids_for_endpoint(generator.fork(), endpoint);
+    HashMap<DeprecatedString, int> message_ids = build_message_ids_for_endpoint(generator.fork().release_value_but_fixme_should_propagate_errors(), endpoint);
 
     for (auto const& message : endpoint.messages) {
         DeprecatedString response_name;
         if (message.is_synchronous) {
             response_name = message.response_name();
-            do_message(generator.fork(), response_name, message.outputs);
+            do_message(generator.fork().release_value_but_fixme_should_propagate_errors(), response_name, message.outputs);
         }
-        do_message(generator.fork(), message.name, message.inputs, response_name);
+        do_message(generator.fork().release_value_but_fixme_should_propagate_errors(), message.name, message.inputs, response_name);
     }
 
     generator.appendln(R"~~~(
@@ -569,7 +569,7 @@ public:
     { })~~~");
 
     for (auto const& message : endpoint.messages)
-        do_message_for_proxy(generator.fork(), endpoint, message);
+        do_message_for_proxy(generator.fork().release_value_but_fixme_should_propagate_errors(), endpoint, message);
 
     generator.appendln(R"~~~(
 private:
@@ -611,7 +611,7 @@ public:
 
     for (auto const& message : endpoint.messages) {
         auto do_decode_message = [&](DeprecatedString const& name) {
-            auto message_generator = generator.fork();
+            auto message_generator = generator.fork().release_value_but_fixme_should_propagate_errors();
 
             message_generator.set("message.name", name);
             message_generator.set("message.pascal_name", pascal_case(name));
@@ -655,7 +655,7 @@ public:
         switch (message.message_id()) {)~~~");
     for (auto const& message : endpoint.messages) {
         auto do_handle_message = [&](DeprecatedString const& name, Vector<Parameter> const& parameters, bool returns_something) {
-            auto message_generator = generator.fork();
+            auto message_generator = generator.fork().release_value_but_fixme_should_propagate_errors();
 
             StringBuilder argument_generator;
             for (size_t i = 0; i < parameters.size(); ++i) {
@@ -706,7 +706,7 @@ public:
     })~~~");
 
     for (auto const& message : endpoint.messages) {
-        auto message_generator = generator.fork();
+        auto message_generator = generator.fork().release_value_but_fixme_should_propagate_errors();
 
         auto do_handle_message_decl = [&](DeprecatedString const& name, Vector<Parameter> const& parameters, bool is_response) {
             DeprecatedString return_type = "void";
@@ -732,7 +732,7 @@ public:
 
             for (size_t i = 0; i < parameters.size(); ++i) {
                 auto const& parameter = parameters[i];
-                auto argument_generator = message_generator.fork();
+                auto argument_generator = message_generator.fork().release_value_but_fixme_should_propagate_errors();
                 argument_generator.set("argument.type", make_argument_type(parameter.type));
                 argument_generator.set("argument.name", parameter.name);
                 argument_generator.append("[[maybe_unused]] @argument.type@ @argument.name@");
@@ -790,7 +790,7 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 #endif)~~~");
 
     for (auto const& endpoint : endpoints)
-        build_endpoint(generator.fork(), endpoint);
+        build_endpoint(generator.fork().release_value_but_fixme_should_propagate_errors(), endpoint);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
