@@ -58,6 +58,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& breadcrumbbar = *main_widget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
     auto& tree_map_widget = *main_widget->find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     tree_map_widget.set_focus(true);
 
