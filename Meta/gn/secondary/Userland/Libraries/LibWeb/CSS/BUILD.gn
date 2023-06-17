@@ -57,5 +57,6 @@ source_set("CSS") {
     "StyleValue.cpp",
     "Supports.cpp",
     "Time.cpp",
+    "VisualViewport.cpp",
   ]
 }

@@ -380,6 +380,8 @@ public:
     void evaluate_media_queries_and_report_changes();
     void add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList>);
 
+    JS::NonnullGCPtr<CSS::VisualViewport> visual_viewport();
+
     bool has_focus() const;
 
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
@@ -667,6 +669,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
     OwnPtr<HTML::ListOfAvailableImages> m_list_of_available_images;
+
+    JS::GCPtr<CSS::VisualViewport> m_visual_viewport;
 
     // NOTE: Not in the spec per say, but Document must be able to access all IntersectionObservers whose root is in the document.
     OrderedHashTable<JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>> m_intersection_observers;

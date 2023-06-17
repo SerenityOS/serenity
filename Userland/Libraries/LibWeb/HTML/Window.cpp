@@ -1085,6 +1085,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> Window::screen()
     return JS::NonnullGCPtr { *m_screen };
 }
 
+WebIDL::ExceptionOr<JS::GCPtr<CSS::VisualViewport>> Window::visual_viewport()
+{
+    // If the associated document is fully active, the visualViewport attribute must return
+    // the VisualViewport object associated with the Window object’s associated document.
+    if (associated_document().is_fully_active())
+        return associated_document().visual_viewport();
+
+    // Otherwise, it must return null.
+    return nullptr;
+}
+
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-innerwidth
 i32 Window::inner_width() const
 {

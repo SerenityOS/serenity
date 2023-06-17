@@ -78,6 +78,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(reset)                    \
     __ENUMERATE_HTML_EVENT(resize)                   \
     __ENUMERATE_HTML_EVENT(scroll)                   \
+    __ENUMERATE_HTML_EVENT(scrollend)                \
     __ENUMERATE_HTML_EVENT(securitypolicyviolation)  \
     __ENUMERATE_HTML_EVENT(seeked)                   \
     __ENUMERATE_HTML_EVENT(seeking)                  \
