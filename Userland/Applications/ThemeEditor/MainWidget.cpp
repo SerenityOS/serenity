@@ -285,8 +285,21 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         save_to_file(result.value().filename(), result.value().release_stream());
     })));
-
     TRY(file_menu->try_add_separator());
+
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        if (response.is_error())
+            return;
+        auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
+        if (load_from_file_result.is_error()) {
+            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
+            return;
+        }
+    }));
+
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::Close)
             GUI::Application::the()->quit();
@@ -362,6 +375,7 @@ void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> 
         m_last_modified_time = MonotonicTime::now();
         set_path(filename.to_deprecated_string());
         window()->set_modified(false);
+        GUI::Application::the()->set_most_recently_open_file(filename);
     }
 }
 
@@ -657,6 +671,7 @@ ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<C
 
     m_last_modified_time = MonotonicTime::now();
     window()->set_modified(false);
+    GUI::Application::the()->set_most_recently_open_file(filename);
     return {};
 }
 
