@@ -31,6 +31,24 @@
 </svg>
 <br>
 <br>
+<b>MDN radialGradient example (gradientUnits=objectBoundingBox)</b>
+<br>
+<svg width="200" height="200"
+  viewBox="0 0 10 10"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <radialGradient id="myGradient">
+      <stop offset="10%" stop-color="gold" />
+      <stop offset="95%" stop-color="red" />
+    </radialGradient>
+  </defs>
+
+  <!-- using my radial gradient -->
+  <circle cx="5" cy="5" r="4" fill="url('#myGradient')" />
+</svg>
+<br>
+<br>
 <b>Simple radialGradient gradientUnits=objectBoundingBox</b><br>
 <svg height="150" width="500">
   <defs>

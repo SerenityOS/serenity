@@ -136,11 +136,9 @@ Optional<Gfx::PaintStyle const&> SVGRadialGradientElement::to_gfx_paint_style(SV
         // is established using the bounding box of the element to which the gradient is applied (see Object bounding box units)
         // and then applying the transform specified by attribute ‘gradientTransform’. Percentages represent values relative
         // to the bounding box for the object.
-        start_center = Gfx::FloatPoint {
-            start_circle_x().value(), start_circle_y().value()
-        };
+        start_center = Gfx::FloatPoint { start_circle_x().value(), start_circle_y().value() };
         start_radius = start_circle_radius().value();
-        end_center = paint_context.path_bounding_box.location() + Gfx::FloatPoint { end_circle_x().value(), end_circle_y().value() };
+        end_center = Gfx::FloatPoint { end_circle_x().value(), end_circle_y().value() };
         end_radius = end_circle_radius().value();
     } else {
         // GradientUnits::UserSpaceOnUse
