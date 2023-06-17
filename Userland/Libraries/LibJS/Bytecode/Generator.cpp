@@ -177,7 +177,10 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
             if (computed_property_value_register.has_value()) {
                 // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
                 // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
-                emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
+                auto super_base_register = allocate_register();
+                emit<Bytecode::Op::Store>(super_base_register);
+                emit<Bytecode::Op::Load>(*computed_property_value_register);
+                emit<Bytecode::Op::GetByValue>(super_base_register);
             } else {
                 // 3. Let propertyKey be StringValue of IdentifierName.
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());

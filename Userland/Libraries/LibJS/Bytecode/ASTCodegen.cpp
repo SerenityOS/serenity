@@ -1311,7 +1311,10 @@ static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expr
         if (computed_property_value_register.has_value()) {
             // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
             // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
-            generator.emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
+            auto super_base_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(super_base_register);
+            generator.emit<Bytecode::Op::Load>(*computed_property_value_register);
+            generator.emit<Bytecode::Op::GetByValue>(super_base_register);
         } else {
             // 3. Let propertyKey be StringValue of IdentifierName.
             auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
