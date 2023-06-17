@@ -35,7 +35,7 @@ OutOfProcessWebView::OutOfProcessWebView()
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
 
-void OutOfProcessWebView::create_client(EnableCallgrindProfiling)
+void OutOfProcessWebView::create_client(EnableCallgrindProfiling, UseJavaScriptBytecode)
 {
     m_client_state = {};
 

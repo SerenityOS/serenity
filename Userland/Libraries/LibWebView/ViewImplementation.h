@@ -30,6 +30,11 @@ enum class IsLayoutTestMode {
     Yes
 };
 
+enum class UseJavaScriptBytecode {
+    No,
+    Yes
+};
+
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -167,10 +172,10 @@ protected:
     void request_repaint();
     void handle_resize();
 
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) {};
+    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No) { }
 
 #if !defined(AK_OS_SERENITY)
-    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No);
+    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No);
 #endif
 
     void handle_web_content_process_crash();

@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "Generator.h"
-#include "PassManager.h"
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
@@ -18,6 +16,9 @@
 
 namespace JS::Bytecode {
 
+class InstructionStreamIterator;
+class PassManager;
+
 struct RegisterWindow {
     MarkedVector<Value> registers;
     MarkedVector<GCPtr<Environment>> saved_lexical_environments;
@@ -27,6 +28,9 @@ struct RegisterWindow {
 
 class Interpreter {
 public:
+    [[nodiscard]] static bool enabled();
+    static void set_enabled(bool);
+
     explicit Interpreter(Realm&);
     ~Interpreter();
 
@@ -82,11 +86,8 @@ public:
 
     Executable const& current_executable() { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
-    size_t pc() const { return m_pc ? m_pc->offset() : 0; }
-    DeprecatedString debug_position()
-    {
-        return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
-    }
+    size_t pc() const;
+    DeprecatedString debug_position() const;
 
     enum class OptimizationLevel {
         None,

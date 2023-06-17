@@ -46,16 +46,17 @@
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No, WebView::UseJavaScriptBytecode use_javascript_bytecode = WebView::UseJavaScriptBytecode::No)
     {
         auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView()));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
         (void)is_layout_test_mode;
+        (void)use_javascript_bytecode;
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode));
+        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode));
 #endif
 
         view->client().async_update_system_theme(move(theme));
@@ -123,7 +124,7 @@ private:
 
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
-    void create_client(WebView::EnableCallgrindProfiling) override { }
+    void create_client(WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode) override { }
 
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }
@@ -396,6 +397,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_layout_tree = false;
     bool dump_text = false;
     bool is_layout_test_mode = false;
+    bool use_javascript_bytecode = false;
     StringView test_root_path;
 
     Core::ArgsParser args_parser;
@@ -407,6 +409,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
+    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -428,7 +431,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         is_layout_test_mode = true;
     }
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No, use_javascript_bytecode ? WebView::UseJavaScriptBytecode::Yes : WebView::UseJavaScriptBytecode::No));
     RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {

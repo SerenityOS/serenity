@@ -8,15 +8,29 @@
 #include <AK/TemporaryChange.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
+#include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS::Bytecode {
+
+static bool s_bytecode_interpreter_enabled = false;
+
+bool Interpreter::enabled()
+{
+    return s_bytecode_interpreter_enabled;
+}
+
+void Interpreter::set_enabled(bool enabled)
+{
+    s_bytecode_interpreter_enabled = enabled;
+}
 
 static Interpreter* s_current;
 bool g_dump_bytecode = false;
@@ -423,6 +437,16 @@ Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::Optimizat
     entry = move(pm);
 
     return passes;
+}
+
+size_t Interpreter::pc() const
+{
+    return m_pc ? m_pc->offset() : 0;
+}
+
+DeprecatedString Interpreter::debug_position() const
+{
+    return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
 }
 
 }

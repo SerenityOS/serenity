@@ -179,7 +179,7 @@ void ViewImplementation::handle_resize()
 
 #if !defined(AK_OS_SERENITY)
 
-ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling enable_callgrind_profiling, IsLayoutTestMode is_layout_test_mode)
+ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling enable_callgrind_profiling, IsLayoutTestMode is_layout_test_mode, UseJavaScriptBytecode use_javascript_bytecode)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -221,6 +221,8 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
                 arguments.remove(0, callgrind_prefix_length);
             if (is_layout_test_mode == IsLayoutTestMode::Yes)
                 arguments.append("--layout-test-mode"sv);
+            if (use_javascript_bytecode == UseJavaScriptBytecode::Yes)
+                arguments.append("--use-bytecode"sv);
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);
             if (!result.is_error())
