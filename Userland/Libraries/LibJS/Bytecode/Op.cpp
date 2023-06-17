@@ -48,10 +48,8 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, PropertyKey name, Bytecode::Interpreter& interpreter, PropertyKind kind)
+static ThrowCompletionOr<void> put_by_property_key(VM& vm, Object* object, Value value, PropertyKey name, PropertyKind kind)
 {
-    auto& vm = interpreter.vm();
-
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
         VERIFY(value.is_function());
@@ -72,9 +70,9 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
         break;
     }
     case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
+        bool succeeded = TRY(object->internal_set(name, value, object));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
         break;
     }
     case PropertyKind::Spread:
@@ -517,10 +515,11 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    auto value = interpreter.accumulator();
-    return put_by_property_key(object, value, name, interpreter, m_kind);
+    return put_by_property_key(vm, object, value, name, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -903,9 +902,13 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
-    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
+    auto property_key = TRY(property_key_value.to_property_key(vm));
 
     interpreter.accumulator() = TRY(object->get(property_key));
     return {};
@@ -914,17 +917,25 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    return put_by_property_key(object, interpreter.accumulator(), property_key, interpreter, m_kind);
+    return put_by_property_key(vm, object, value, property_key, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
-    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
+    auto property_key = TRY(property_key_value.to_property_key(vm));
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, property_key, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
