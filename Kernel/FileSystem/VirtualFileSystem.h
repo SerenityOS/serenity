@@ -62,6 +62,7 @@ public:
     ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);
+    ErrorOr<void> unmount(Inode& guest_inode, StringView custody_path);
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});

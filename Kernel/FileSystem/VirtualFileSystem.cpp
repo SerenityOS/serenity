@@ -267,15 +267,18 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
 {
     auto& guest_inode = mountpoint_custody.inode();
     auto custody_path = TRY(mountpoint_custody.try_serialize_absolute_path());
-    dbgln("VirtualFileSystem: unmount called with inode {} on mountpoint {}", guest_inode.identifier(), custody_path->view());
+    return unmount(guest_inode, custody_path->view());
+}
 
+ErrorOr<void> VirtualFileSystem::unmount(Inode& guest_inode, StringView custody_path)
+{
     return m_file_backed_file_systems_list.with_exclusive([&](auto& file_backed_fs_list) -> ErrorOr<void> {
         TRY(m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
             for (auto& mount : mounts) {
                 if (&mount.guest() != &guest_inode)
                     continue;
                 auto mountpoint_path = TRY(mount.absolute_path());
-                if (custody_path->view() != mountpoint_path->view())
+                if (custody_path != mountpoint_path->view())
                     continue;
                 NonnullRefPtr<FileSystem> fs = mount.guest_fs();
                 TRY(fs->prepare_to_unmount(mount.guest()));
