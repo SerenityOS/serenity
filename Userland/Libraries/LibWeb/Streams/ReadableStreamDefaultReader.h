@@ -66,6 +66,8 @@ public:
     virtual ~ReadableStreamDefaultReader() override = default;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> read();
+
+    WebIDL::ExceptionOr<void> read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
     WebIDL::ExceptionOr<void> release_lock();
 
     SinglyLinkedList<NonnullRefPtr<ReadRequest>>& read_requests() { return m_read_requests; }

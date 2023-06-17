@@ -169,6 +169,22 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };
 }
 
+// https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-all-bytes
+WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::read_all_bytes(ReadLoopReadRequest::SuccessSteps success_steps, ReadLoopReadRequest::FailureSteps failure_steps)
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // 1. Let readRequest be a new read request with the following items:
+    //    NOTE: items and steps in ReadLoopReadRequest.
+    auto read_request = adopt_ref(*new ReadLoopReadRequest(vm, realm, *this, move(success_steps), move(failure_steps)));
+
+    // 2. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
+    TRY(readable_stream_default_reader_read(*this, read_request));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#default-reader-release-lock
 WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::release_lock()
 {
