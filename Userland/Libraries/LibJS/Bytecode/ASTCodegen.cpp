@@ -1279,6 +1279,66 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
     return {};
 }
 
+static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expression(Bytecode::Generator& generator, MemberExpression const& member_expression, Bytecode::Register this_reg)
+{
+    // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+    if (is<SuperExpression>(member_expression.object())) {
+        // 1. Let env be GetThisEnvironment().
+        // 2. Let actualThis be ? env.GetThisBinding().
+        generator.emit<Bytecode::Op::ResolveThisBinding>();
+        generator.emit<Bytecode::Op::Store>(this_reg);
+
+        Optional<Bytecode::Register> computed_property_value_register;
+
+        if (member_expression.is_computed()) {
+            // SuperProperty : super [ Expression ]
+            // 3. Let propertyNameReference be ? Evaluation of Expression.
+            // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+            TRY(member_expression.property().generate_bytecode(generator));
+            computed_property_value_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(*computed_property_value_register);
+        }
+
+        // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+        // https://tc39.es/ecma262/#sec-makesuperpropertyreference
+        // 1. Let env be GetThisEnvironment().
+        // 2. Assert: env.HasSuperBinding() is true.
+        // 3. Let baseValue be ? env.GetSuperBase().
+        generator.emit<Bytecode::Op::ResolveSuperBase>();
+
+        // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+        if (computed_property_value_register.has_value()) {
+            // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+            // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
+            generator.emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
+        } else {
+            // 3. Let propertyKey be StringValue of IdentifierName.
+            auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+        }
+    } else {
+        TRY(member_expression.object().generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Store>(this_reg);
+        if (member_expression.is_computed()) {
+            TRY(member_expression.property().generate_bytecode(generator));
+            generator.emit<Bytecode::Op::GetByValue>(this_reg);
+        } else {
+            auto identifier_table_ref = [&] {
+                if (is<PrivateIdentifier>(member_expression.property()))
+                    return generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string());
+                return generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+            }();
+
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+        }
+    }
+
+    return {};
+}
+
+static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::Generator& generator, OptionalChain const& optional_chain, Bytecode::Register current_value_register, Bytecode::Register current_base_register);
+
 Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto callee_reg = generator.allocate_register();
@@ -1291,61 +1351,11 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     } else if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
-
-        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
-        if (is<SuperExpression>(member_expression.object())) {
-            // 1. Let env be GetThisEnvironment().
-            // 2. Let actualThis be ? env.GetThisBinding().
-            generator.emit<Bytecode::Op::ResolveThisBinding>();
-            generator.emit<Bytecode::Op::Store>(this_reg);
-
-            Optional<Bytecode::Register> computed_property_value_register;
-
-            if (member_expression.is_computed()) {
-                // SuperProperty : super [ Expression ]
-                // 3. Let propertyNameReference be ? Evaluation of Expression.
-                // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
-                TRY(member_expression.property().generate_bytecode(generator));
-                computed_property_value_register = generator.allocate_register();
-                generator.emit<Bytecode::Op::Store>(*computed_property_value_register);
-            }
-
-            // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-
-            // https://tc39.es/ecma262/#sec-makesuperpropertyreference
-            // 1. Let env be GetThisEnvironment().
-            // 2. Assert: env.HasSuperBinding() is true.
-            // 3. Let baseValue be ? env.GetSuperBase().
-            generator.emit<Bytecode::Op::ResolveSuperBase>();
-
-            // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-            if (computed_property_value_register.has_value()) {
-                // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-                // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
-                generator.emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
-            } else {
-                // 3. Let propertyKey be StringValue of IdentifierName.
-                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-            }
-        } else {
-            TRY(member_expression.object().generate_bytecode(generator));
-            generator.emit<Bytecode::Op::Store>(this_reg);
-            if (member_expression.is_computed()) {
-                TRY(member_expression.property().generate_bytecode(generator));
-                generator.emit<Bytecode::Op::GetByValue>(this_reg);
-            } else {
-                auto identifier_table_ref = [&] {
-                    if (is<PrivateIdentifier>(member_expression.property()))
-                        return generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string());
-                    return generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-                }();
-
-                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-            }
-        }
-
+        TRY(get_base_and_value_from_member_expression(generator, member_expression, this_reg));
         generator.emit<Bytecode::Op::Store>(callee_reg);
+    } else if (is<OptionalChain>(*m_callee)) {
+        auto& optional_chain = static_cast<OptionalChain const&>(*m_callee);
+        TRY(generate_optional_chain(generator, optional_chain, callee_reg, this_reg));
     } else {
         // FIXME: this = global object in sloppy mode.
         TRY(m_callee->generate_bytecode(generator));
@@ -2602,6 +2612,86 @@ Bytecode::CodeGenerationErrorOr<void> ClassFieldInitializerStatement::generate_b
     generator.perform_needed_unwinds<Bytecode::Op::Return>();
     generator.emit<Bytecode::Op::Return>();
     return {};
+}
+
+static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::Generator& generator, OptionalChain const& optional_chain, Bytecode::Register current_value_register, Bytecode::Register current_base_register)
+{
+    if (is<MemberExpression>(optional_chain.base())) {
+        auto& member_expression = static_cast<MemberExpression const&>(optional_chain.base());
+        TRY(get_base_and_value_from_member_expression(generator, member_expression, current_base_register));
+    } else if (is<OptionalChain>(optional_chain.base())) {
+        auto& sub_optional_chain = static_cast<OptionalChain const&>(optional_chain.base());
+        TRY(generate_optional_chain(generator, sub_optional_chain, current_value_register, current_base_register));
+    } else {
+        TRY(optional_chain.base().generate_bytecode(generator));
+    }
+
+    generator.emit<Bytecode::Op::Store>(current_value_register);
+
+    auto& load_undefined_and_jump_to_end_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
+    for (auto& reference : optional_chain.references()) {
+        auto is_optional = reference.visit([](auto& ref) { return ref.mode; }) == OptionalChain::Mode::Optional;
+        if (is_optional) {
+            auto& not_nullish_block = generator.make_block();
+            generator.emit<Bytecode::Op::JumpNullish>(
+                Bytecode::Label { load_undefined_and_jump_to_end_block },
+                Bytecode::Label { not_nullish_block });
+            generator.switch_to_basic_block(not_nullish_block);
+        }
+
+        TRY(reference.visit(
+            [&](OptionalChain::Call const& call) -> Bytecode::CodeGenerationErrorOr<void> {
+                TRY(arguments_to_array_for_call(generator, call.arguments));
+                generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, current_value_register, current_base_register);
+
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+
+                generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+
+                generator.emit<Bytecode::Op::Load>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::ComputedReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+                TRY(ref.expression->generate_bytecode(generator));
+                generator.emit<Bytecode::Op::GetByValue>(current_base_register);
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::MemberReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+                generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(ref.identifier->string()));
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::PrivateMemberReference const&) -> Bytecode::CodeGenerationErrorOr<void> {
+                return Bytecode::CodeGenerationError {
+                    &optional_chain,
+                    "Unimplemented reference: PrivateMemberReference"sv,
+                };
+            }));
+    }
+
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(load_undefined_and_jump_to_end_block);
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(end_block);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> OptionalChain::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto current_base_register = generator.allocate_register();
+    auto current_value_register = generator.allocate_register();
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    generator.emit<Bytecode::Op::Store>(current_base_register);
+    return generate_optional_chain(generator, *this, current_value_register, current_base_register);
 }
 
 }

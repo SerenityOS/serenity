@@ -1975,6 +1975,10 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual ThrowCompletionOr<JS::Reference> to_reference(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+    Expression const& base() const { return *m_base; }
+    Vector<Reference> const& references() const { return m_references; }
 
 private:
     struct ReferenceAndValue {
