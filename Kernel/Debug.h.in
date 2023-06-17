@@ -187,6 +187,10 @@
 #cmakedefine01 LOCK_TRACE_DEBUG
 #endif
 
+#ifndef LOOPBACK_DEBUG
+#cmakedefine01 LOOPBACK_DEBUG
+#endif
+
 #ifndef MASTERPTY_DEBUG
 #cmakedefine01 MASTERPTY_DEBUG
 #endif
