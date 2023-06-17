@@ -386,6 +386,7 @@ if (BUILD_LAGOM)
         Audio
         Compress
         Crypto
+        Cpp
         DNS
         Diff
         Gemini
