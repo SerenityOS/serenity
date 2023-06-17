@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/VisualViewport.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Comment.h>
@@ -2805,6 +2806,13 @@ HTML::ListOfAvailableImages& Document::list_of_available_images()
 HTML::ListOfAvailableImages const& Document::list_of_available_images() const
 {
     return *m_list_of_available_images;
+}
+
+JS::NonnullGCPtr<CSS::VisualViewport> Document::visual_viewport()
+{
+    if (!m_visual_viewport)
+        m_visual_viewport = CSS::VisualViewport::create(*this).release_value_but_fixme_should_propagate_errors();
+    return *m_visual_viewport;
 }
 
 void Document::register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver& observer)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -156,6 +156,7 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> match_media(String const& query);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> screen();
+    WebIDL::ExceptionOr<JS::GCPtr<CSS::VisualViewport>> visual_viewport();
 
     i32 inner_width() const;
     i32 inner_height() const;

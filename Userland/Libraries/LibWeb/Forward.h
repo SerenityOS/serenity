@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -181,6 +181,7 @@ class URLStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
+class VisualViewport;
 
 enum class MediaFeatureID;
 enum class PropertyID;
