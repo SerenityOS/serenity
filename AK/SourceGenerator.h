@@ -27,9 +27,9 @@ public:
         , m_closing(closing)
     {
     }
-    explicit SourceGenerator(StringBuilder& builder, MappingType const& mapping, char opening = '@', char closing = '@')
+    explicit SourceGenerator(StringBuilder& builder, MappingType&& mapping, char opening = '@', char closing = '@')
         : m_builder(builder)
-        , m_mapping(mapping.clone().release_value_but_fixme_should_propagate_errors())
+        , m_mapping(move(mapping))
         , m_opening(opening)
         , m_closing(closing)
     {
@@ -37,7 +37,10 @@ public:
 
     SourceGenerator(SourceGenerator&&) = default;
 
-    SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
+    ErrorOr<SourceGenerator> fork()
+    {
+        return SourceGenerator { m_builder, TRY(m_mapping.clone()), m_opening, m_closing };
+    }
 
     ErrorOr<void> set(StringView key, String value)
     {
