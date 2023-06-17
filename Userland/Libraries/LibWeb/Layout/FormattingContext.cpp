@@ -1390,9 +1390,9 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
     return width.resolved(box, width_of_containing_block_as_length_for_resolve);
 }
 
-CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const
+CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const& available_height, CSS::Size const& height) const
 {
-    auto height_of_containing_block = m_state.get(*box.non_anonymous_containing_block()).content_height();
+    auto height_of_containing_block = available_height.to_px();
     auto height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(height_of_containing_block);
     if (height.is_auto()) {
         return height.resolved(box, height_of_containing_block_as_length_for_resolve);
