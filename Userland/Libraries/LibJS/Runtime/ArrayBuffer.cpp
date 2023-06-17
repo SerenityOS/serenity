@@ -176,8 +176,7 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
     auto& target_block = target_buffer->buffer();
 
     // 5. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
-    // FIXME: This is only correct for ArrayBuffers, once SharedArrayBuffer is implemented, the AO has to be implemented
-    target_block.overwrite(0, source_block.offset_pointer(source_byte_offset), source_length);
+    copy_data_block_bytes(target_block, 0, source_block, source_byte_offset, source_length);
 
     // 6. Return targetBuffer.
     return target_buffer;
