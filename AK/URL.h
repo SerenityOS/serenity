@@ -99,6 +99,7 @@ public:
     DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
     DeprecatedString serialize_for_display() const;
     DeprecatedString to_deprecated_string() const { return serialize(); }
+    ErrorOr<String> to_string() const;
 
     // HTML origin
     DeprecatedString serialize_origin() const;
