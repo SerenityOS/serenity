@@ -180,7 +180,7 @@ TEST_CASE(test_jpeg_sof2_12bits)
 
 TEST_CASE(test_pbm)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pbm"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pbm"sv)));
     EXPECT(Gfx::PBMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PBMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -195,7 +195,7 @@ TEST_CASE(test_pbm)
 
 TEST_CASE(test_pgm)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pgm"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pgm"sv)));
     EXPECT(Gfx::PGMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PGMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -225,7 +225,7 @@ TEST_CASE(test_png)
 
 TEST_CASE(test_ppm)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.ppm"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.ppm"sv)));
     EXPECT(Gfx::PPMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PPMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
