@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
+#include <Kernel/Arch/aarch64/RPi/HardwareClocks.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
@@ -128,7 +129,7 @@ void MiniUART::put_char(u8 ch)
 // See section "2.2.1. Mini UART implementation details"
 void MiniUART::set_baud_rate(u32 baud_rate)
 {
-    auto system_clock = Timer::get_clock_rate(Timer::ClockID::V3D);
+    auto system_clock = HardwareClocks::get_clock_rate(HardwareClocks::ClockID::V3D);
     m_registers->baud_rate = system_clock / (8 * baud_rate) - 1;
 }
 
