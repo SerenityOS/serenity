@@ -49,9 +49,9 @@ public:
         return 0;
     }
 
-private:
     StringView unit_name() const;
 
+private:
     Type m_type;
     double m_value { 0 };
 };

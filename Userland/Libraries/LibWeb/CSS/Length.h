@@ -218,9 +218,9 @@ public:
     Optional<Length> absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
     Length absolutized(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
 
-private:
-    char const* unit_name() const;
+    StringView unit_name() const;
 
+private:
     Type m_type;
     double m_value { 0 };
 };
