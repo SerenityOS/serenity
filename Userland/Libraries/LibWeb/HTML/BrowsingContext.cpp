@@ -1220,7 +1220,21 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     (void)process_response_end_of_body;
 
     // AD-HOC:
-    loader().load(resource->url(), FrameLoader::Type::IFrame);
+    auto request = LoadRequest::create_for_url_on_page(resource->url(), page());
+    request.set_method(DeprecatedString { resource->method() });
+    for (auto& header : *resource->header_list()) {
+        request.set_header(DeprecatedString { header.name.bytes() }, DeprecatedString { header.value.bytes() });
+    }
+    if (request.method() == "POST"sv) {
+        if (resource->body().has<ByteBuffer>()) {
+            auto const& byte_buffer = resource->body().get<ByteBuffer>();
+            request.set_body(byte_buffer);
+            request.set_header("Content-Length", DeprecatedString::number(byte_buffer.size()));
+        } else {
+            request.set_header("Content-Length", DeprecatedString::number(0));
+        }
+    }
+    loader().load(request, FrameLoader::Type::Navigation);
     return {};
 }
 
