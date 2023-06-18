@@ -342,8 +342,31 @@ TEST_CASE(test_webp_simple_lossless)
     auto frame = MUST(plugin_decoder->frame(0));
     EXPECT_EQ(frame.image->size(), Gfx::IntSize(386, 395));
 
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0));
+
     // This pixel tests all predictor modes except 5, 7, 8, 9, and 13.
     EXPECT_EQ(frame.image->get_pixel(289, 332), Gfx::Color(0xf2, 0xee, 0xd3, 255));
+}
+
+TEST_CASE(test_webp_simple_lossless_alpha_used_false)
+{
+    // This file is identical to simple-vp8l.webp, but the `is_alpha_used` used bit is false.
+    // The file still contains alpha data. This tests that the decoder replaces the stored alpha data with 0xff if `is_alpha_used` is false.
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8l-alpha-used-false.webp"sv)));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(386, 395));
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(386, 395));
+
+    EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0xff));
 }
 
 TEST_CASE(test_webp_extended_lossy)
