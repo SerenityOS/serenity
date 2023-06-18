@@ -2596,6 +2596,9 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
 
         // FIXME: Painter should have an affine transform as part of its state and handle all of this instead.
 
+        if (opacity == 0.0f)
+            return;
+
         auto inverse_transform = transform.inverse();
         if (!inverse_transform.has_value())
             return;
@@ -2626,6 +2629,8 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
                 auto source_color = bitmap.get_pixel(source_point);
                 if (source_color.alpha() == 0)
                     continue;
+                if (opacity != 1.0f)
+                    source_color = source_color.with_opacity(opacity);
                 set_physical_pixel(point + clipped_bounding_rect.location(), source_color, true);
             }
         }
