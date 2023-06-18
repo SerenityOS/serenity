@@ -55,8 +55,9 @@ protected:
     virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(DeprecatedString) = 0;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
     virtual bool hyperlink_element_utils_is_connected() const = 0;
-    virtual DeprecatedString hyperlink_element_utils_target() const = 0;
-    virtual DeprecatedString hyperlink_element_utils_rel() const = 0;
+    virtual DeprecatedString hyperlink_element_utils_get_an_elements_target() const = 0;
+    virtual TokenizedFeature::NoOpener hyperlink_element_utils_get_an_elements_noopener(StringView target) const = 0;
+
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();
@@ -66,8 +67,6 @@ private:
     void reinitialize_url() const;
     void update_href();
     bool cannot_navigate() const;
-    DeprecatedString get_an_elements_target() const;
-    TokenizedFeature::NoOpener get_an_elements_noopener(StringView target) const;
 
     Optional<AK::URL> m_url;
 };
