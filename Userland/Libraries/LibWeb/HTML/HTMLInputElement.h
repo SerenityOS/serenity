@@ -63,7 +63,7 @@ public:
     DeprecatedString default_value() const { return attribute(HTML::AttributeNames::value); }
     DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
-    DeprecatedString value() const;
+    virtual DeprecatedString value() const override;
     WebIDL::ExceptionOr<void> set_value(DeprecatedString);
 
     Optional<DeprecatedString> placeholder_value() const;
@@ -119,6 +119,12 @@ public:
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-button
+    virtual bool is_button() const override;
+
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-submit-button
+    virtual bool is_submit_button() const override;
 
     virtual void reset_algorithm() override;
 

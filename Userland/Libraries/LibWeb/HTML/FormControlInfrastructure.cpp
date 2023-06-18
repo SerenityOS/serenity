@@ -49,8 +49,7 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set
-// FIXME: Add missing parameters optional submitter, and optional encoding
-WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form)
+WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form, JS::GCPtr<HTMLElement> submitter, Optional<String> encoding)
 {
     auto& vm = realm.vm();
 
@@ -69,6 +68,9 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
 
     // 5. For each element field in controls, in tree order:
     for (auto const& control : controls) {
+        auto const* control_as_form_associated_element = dynamic_cast<HTML::FormAssociatedElement const*>(control.ptr());
+        VERIFY(control_as_form_associated_element);
+
         // 1. If any of the following is true, then continue:
         // - The field element has a datalist element ancestor.
         if (control->first_ancestor_of_type<HTML::HTMLDataListElement>())
@@ -76,16 +78,18 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
         // - The field element is disabled.
         if (control->is_actually_disabled())
             continue;
-        // FIXME: - The field element is a button but it is not submitter.
+        // - The field element is a button but it is not submitter.
+        if (control_as_form_associated_element->is_button() && control.ptr() != submitter.ptr())
+            continue;
         // - The field element is an input element whose type attribute is in the Checkbox state and whose checkedness is false.
         // - The field element is an input element whose type attribute is in the Radio Button state and whose checkedness is false.
         if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr())) {
-            if ((input_element->type() == "checkbox" || input_element->type() == "radio") && !input_element->checked())
+            if ((input_element->type_state() == HTMLInputElement::TypeAttributeState::Checkbox || input_element->type_state() == HTMLInputElement::TypeAttributeState::RadioButton) && !input_element->checked())
                 continue;
         }
 
         // 2. If the field element is an input element whose type attribute is in the Image Button state, then:
-        if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); input_element && input_element->type() == "image") {
+        if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); input_element && input_element->type_state() == HTMLInputElement::TypeAttributeState::ImageButton) {
             // FIXME: 1. If the field element has a name attribute specified and its value is not the empty string, let name be that value followed by a single U+002E FULL STOP character (.). Otherwise, let name be the empty string.
             // FIXME: 2. Let namex be the string consisting of the concatenation of name and a single U0078 LATIN SMALL LETTER X character (x).
             // FIXME: 3. Let namey be the string consisting of the concatenation of name and a single U+0079 LATIN SMALL LETTER Y character (y).
@@ -116,7 +120,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             }
         }
         // 7. Otherwise, if the field element is an input element whose type attribute is in the Checkbox state or the Radio Button state, then:
-        else if (auto* checkbox_or_radio_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); checkbox_or_radio_element && (checkbox_or_radio_element->type() == "checkbox" || checkbox_or_radio_element->type() == "radio") && checkbox_or_radio_element->checked()) {
+        else if (auto* checkbox_or_radio_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); checkbox_or_radio_element && (checkbox_or_radio_element->type_state() == HTMLInputElement::TypeAttributeState::Checkbox || checkbox_or_radio_element->type_state() == HTMLInputElement::TypeAttributeState::RadioButton) && checkbox_or_radio_element->checked()) {
             //  1. If the field element has a value attribute specified, then let value be the value of that attribute; otherwise, let value be the string "on".
             auto value = checkbox_or_radio_element->value();
             if (value.is_empty())
@@ -128,7 +132,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(checkbox_or_radio_element_value) }));
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
-        else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type() == "file") {
+        else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
             // 1. If there are no selected files, then create an entry with name and a new File object with an empty name, application/octet-stream as type, and an empty body, and append it to entry list.
             if (file_element->files()->length() == 0) {
                 FileAPI::FilePropertyBag options {};
@@ -144,14 +148,17 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
                 }
             }
         }
-        // FIXME: 9. Otherwise, if the field element is an input element whose type attribute is in the Hidden state and name is an ASCII case-insensitive match for "_charset_":
-        // FIXME:    1. Let charset be the name of encoding if encoding is given, and "UTF-8" otherwise.
-        // FIXME:    2. Create an entry with name and charset, and append it to entry list.
+        // 9. Otherwise, if the field element is an input element whose type attribute is in the Hidden state and name is an ASCII case-insensitive match for "_charset_":
+        else if (auto* hidden_input = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); hidden_input && hidden_input->type_state() == HTMLInputElement::TypeAttributeState::Hidden && Infra::is_ascii_case_insensitive_match(name, "_charset_"sv)) {
+            // 1. Let charset be the name of encoding if encoding is given, and "UTF-8" otherwise.
+            auto charset = encoding.has_value() ? encoding.value() : TRY_OR_THROW_OOM(vm, "UTF-8"_string);
+
+            // 2. Create an entry with name and charset, and append it to entry list.
+            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(charset) }));
+        }
         // 10. Otherwise, create an entry with name and the value of the field element, and append it to entry list.
         else {
-            auto* element = dynamic_cast<HTML::HTMLElement*>(control.ptr());
-            VERIFY(element);
-            auto value_attribute = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element->attribute("value"sv)));
+            auto value_attribute = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(control_as_form_associated_element->value()));
             TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(value_attribute) }));
         }
 
@@ -177,24 +184,27 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
     return entry_list;
 }
 
+ErrorOr<String> normalize_line_breaks(StringView value)
+{
+    // Replace every occurrence of U+000D (CR) not followed by U+000A (LF), and every occurrence of U+000A (LF) not
+    // preceded by U+000D (CR) by a string consisting of a U+000D (CR) and U+000A (LF).
+    StringBuilder builder;
+    GenericLexer lexer { value };
+    while (!lexer.is_eof()) {
+        TRY(builder.try_append(lexer.consume_until(is_any_of("\r\n"sv))));
+        if ((lexer.peek() == '\r' && lexer.peek(1) != '\n') || lexer.peek() == '\n') {
+            TRY(builder.try_append("\r\n"sv));
+            lexer.ignore(1);
+        } else {
+            lexer.ignore(2);
+        }
+    }
+    return builder.to_string();
+}
+
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart/form-data-encoding-algorithm
 ErrorOr<SerializedFormData> serialize_to_multipart_form_data(Vector<XHR::FormDataEntry> const& entry_list)
 {
-    auto normalize_line_breaks = [](StringView value) -> ErrorOr<String> {
-        StringBuilder builder;
-        GenericLexer lexer { value };
-        while (!lexer.is_eof()) {
-            TRY(builder.try_append(lexer.consume_until(is_any_of("\r\n"sv))));
-            if ((lexer.peek() == '\r' && lexer.peek(1) != '\n') || lexer.peek() == '\n') {
-                TRY(builder.try_append("\r\n"sv));
-                lexer.ignore(1);
-            } else {
-                lexer.ignore(2);
-            }
-        }
-        return builder.to_string();
-    };
-
     auto escape_line_feed_carriage_return_double_quote = [](StringView value) -> ErrorOr<String> {
         StringBuilder builder;
         GenericLexer lexer { value };

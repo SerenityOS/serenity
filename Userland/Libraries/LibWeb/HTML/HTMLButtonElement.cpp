@@ -99,4 +99,20 @@ i32 HTMLButtonElement::default_tab_index_value() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#concept-submit-button
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-submit-button
+bool HTMLButtonElement::is_submit_button() const
+{
+    // If the type attribute is in the Submit Button state, the element is specifically a submit button.
+    return type_state() == TypeAttributeState::Submit;
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-fe-value
+DeprecatedString HTMLButtonElement::value() const
+{
+    if (!has_attribute(AttributeNames::value))
+        return DeprecatedString::empty();
+    return attribute(AttributeNames::value);
+}
+
 }

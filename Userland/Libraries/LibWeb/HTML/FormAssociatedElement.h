@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/WeakPtr.h>
 #include <LibWeb/Forward.h>
 
@@ -62,6 +63,14 @@ public:
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const { return false; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-button
+    virtual bool is_button() const { return false; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-submit-button
+    virtual bool is_submit_button() const { return false; }
+
+    virtual DeprecatedString value() const { return DeprecatedString::empty(); }
 
     virtual HTMLElement& form_associated_element_to_html_element() = 0;
 
