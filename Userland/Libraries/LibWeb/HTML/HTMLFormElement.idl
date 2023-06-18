@@ -9,8 +9,11 @@ interface HTMLFormElement : HTMLElement {
 
     [CEReactions, Reflect] attribute DOMString name;
     [CEReactions, Reflect] attribute DOMString rel;
+    [CEReactions] attribute DOMString method;
     [CEReactions, Reflect=accept-charset] attribute DOMString acceptCharset;
     [CEReactions, Reflect=novalidate] attribute boolean noValidate;
+    [CEReactions] attribute USVString action;
+    [CEReactions, Reflect] attribute DOMString target;
 
     undefined submit();
     [CEReactions] undefined reset();
