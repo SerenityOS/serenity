@@ -153,6 +153,12 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
     });
 
     m_columns.resize(x_width);
+
+    for (auto& cell : m_cells) {
+        // Clip spans to the end of the table.
+        cell.row_span = min(cell.row_span, m_rows.size() - cell.row_index);
+        cell.column_span = min(cell.column_span, m_columns.size() - cell.column_index);
+    }
 }
 
 void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
