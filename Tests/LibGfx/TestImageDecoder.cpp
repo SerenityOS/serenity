@@ -240,7 +240,7 @@ TEST_CASE(test_ppm)
 
 TEST_CASE(test_targa_bottom_left)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-bottom-left-uncompressed.tga"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-bottom-left-uncompressed.tga"sv)));
     EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -255,7 +255,7 @@ TEST_CASE(test_targa_bottom_left)
 
 TEST_CASE(test_targa_top_left)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-top-left-uncompressed.tga"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-top-left-uncompressed.tga"sv)));
     EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -270,7 +270,7 @@ TEST_CASE(test_targa_top_left)
 
 TEST_CASE(test_targa_bottom_left_compressed)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-bottom-left-compressed.tga"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-bottom-left-compressed.tga"sv)));
     EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -285,7 +285,7 @@ TEST_CASE(test_targa_bottom_left_compressed)
 
 TEST_CASE(test_targa_top_left_compressed)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-top-left-compressed.tga"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tga/buggie-top-left-compressed.tga"sv)));
     EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
