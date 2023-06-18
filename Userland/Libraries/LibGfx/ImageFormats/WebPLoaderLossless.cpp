@@ -1000,6 +1000,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_contents(VP8LHeader const&
     for (auto const& transform : transforms.in_reverse())
         bitmap = TRY(transform->transform(bitmap));
 
+    if (!vp8l_header.is_alpha_used)
+        bitmap->strip_alpha_channel();
+
     return bitmap;
 }
 
