@@ -17,7 +17,7 @@
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#ws-constructor
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_sink_object)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_sink_object, QueuingStrategy const& strategy)
 {
     auto& vm = realm.vm();
 
@@ -36,11 +36,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_
     // 4. Perform ! InitializeWritableStream(this).
     // Note: This AO configures slot values which are already specified in the class's field initializers.
 
-    // FIXME: 5. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
-    SizeAlgorithm size_algorithm = [](auto const&) { return JS::normal_completion(JS::Value(1)); };
+    // 5. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
+    auto size_algorithm = extract_size_algorithm(strategy);
 
-    // FIXME: 6. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
-    auto high_water_mark = 1.0;
+    // 6. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
+    auto high_water_mark = TRY(extract_high_water_mark(strategy, 1));
 
     // 7. Perform ? SetUpWritableStreamDefaultControllerFromUnderlyingSink(this, underlyingSink, underlyingSinkDict, highWaterMark, sizeAlgorithm).
     TRY(set_up_writable_stream_default_controller_from_underlying_sink(*writable_stream, underlying_sink, underlying_sink_dict, high_water_mark, move(size_algorithm)));
