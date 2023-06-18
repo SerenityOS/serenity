@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#rs-constructor
-WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_source_object)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_source_object, QueuingStrategy const& strategy)
 {
     auto& vm = realm.vm();
 
@@ -34,22 +35,26 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_
 
     // 4. If underlyingSourceDict["type"] is "bytes":
     if (underlying_source_dict.type.has_value() && underlying_source_dict.type.value() == ReadableStreamType::Bytes) {
-        // FIXME:
         // 1. If strategy["size"] exists, throw a RangeError exception.
+        if (strategy.size)
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Size strategy not allowed for byte stream"sv };
+
         // 2. Let highWaterMark be ? ExtractHighWaterMark(strategy, 0).
+        auto high_water_mark = TRY(extract_high_water_mark(strategy, 0));
+
         // 3. Perform ? SetUpReadableByteStreamControllerFromUnderlyingSource(this, underlyingSource, underlyingSourceDict, highWaterMark).
-        TODO();
+        TRY(set_up_readable_byte_stream_controller_from_underlying_source(*readable_stream, underlying_source, underlying_source_dict, high_water_mark));
     }
     // 5. Otherwise,
     else {
         // 1. Assert: underlyingSourceDict["type"] does not exist.
         VERIFY(!underlying_source_dict.type.has_value());
 
-        // FIXME: 2. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
-        SizeAlgorithm size_algorithm = [](auto const&) { return JS::normal_completion(JS::Value(1)); };
+        // 2. Let sizeAlgorithm be ! ExtractSizeAlgorithm(strategy).
+        auto size_algorithm = extract_size_algorithm(strategy);
 
-        // FIXME: 3. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
-        auto high_water_mark = 1.0;
+        // 3. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
+        auto high_water_mark = TRY(extract_high_water_mark(strategy, 1));
 
         // 4. Perform ? SetUpReadableStreamDefaultControllerFromUnderlyingSource(this, underlyingSource, underlyingSourceDict, highWaterMark, sizeAlgorithm).
         TRY(set_up_readable_stream_default_controller_from_underlying_source(*readable_stream, underlying_source, underlying_source_dict, high_water_mark, move(size_algorithm)));
