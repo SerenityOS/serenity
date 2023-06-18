@@ -1,11 +1,11 @@
+#import <Streams/QueuingStrategy.idl>
 #import <Streams/ReadableStreamBYOBReader.idl>
 #import <Streams/ReadableStreamDefaultReader.idl>
 
 // https://streams.spec.whatwg.org/#readablestream
 [Exposed=*, Transferable]
 interface ReadableStream {
-    // FIXME: optional QueuingStrategy strategy = {}
-    constructor(optional object underlyingSource);
+    constructor(optional object underlyingSource, optional QueuingStrategy strategy = {});
 
     readonly attribute boolean locked;
 
