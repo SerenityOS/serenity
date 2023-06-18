@@ -187,6 +187,20 @@ bool readable_stream_has_default_reader(ReadableStream const& stream)
     return false;
 }
 
+// https://streams.spec.whatwg.org/#make-size-algorithm-from-size-function
+SizeAlgorithm extract_size_algorithm(QueuingStrategy const& strategy)
+{
+    // 1. If strategy["size"] does not exist, return an algorithm that returns 1.
+    if (!strategy.size)
+        return [](auto const&) { return JS::normal_completion(JS::Value(1)); };
+
+    // 2. Return an algorithm that performs the following steps, taking a chunk argument:
+    return [strategy](auto const& chunk) {
+        // 1. Return the result of invoking strategy["size"] with argument list « chunk ».
+        return WebIDL::invoke_callback(*strategy.size, JS::js_undefined(), chunk);
+    };
+}
+
 // https://streams.spec.whatwg.org/#validate-and-normalize-high-water-mark
 WebIDL::ExceptionOr<double> extract_high_water_mark(QueuingStrategy const& strategy, double default_hwm)
 {
