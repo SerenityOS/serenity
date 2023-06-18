@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, stelar7 <dudedbz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -99,6 +100,8 @@ public:
     Optional<i64> resolve_integer();
 
     bool contains_percentage() const;
+
+    static ErrorOr<NonnullOwnPtr<CalculationNode>> simplify_a_calculation(NonnullOwnPtr<CalculationNode>, Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&);
 
 private:
     explicit CalculatedStyleValue(NonnullOwnPtr<CalculationNode> calculation, ResolvedType resolved_type)
@@ -204,6 +207,11 @@ public:
         return first_is_one_of(m_type, Type::Sum, Type::Product, Type::Negate, Type::Invert);
     }
 
+    bool is_numeric_or_invert() const
+    {
+        return first_is_one_of(m_type, Type::Numeric, Type::Invert);
+    }
+
     virtual ErrorOr<String> to_string() const = 0;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const = 0;
     virtual bool contains_percentage() const = 0;
@@ -233,6 +241,8 @@ public:
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
 
+    NumericValue value() const { return m_value; }
+
 private:
     explicit NumericCalculationNode(NumericValue);
     NumericValue m_value;
@@ -251,6 +261,8 @@ public:
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+    Vector<NonnullOwnPtr<CalculationNode>>& children() { return m_values; }
 
 private:
     explicit SumCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -271,6 +283,8 @@ public:
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
 
+    Vector<NonnullOwnPtr<CalculationNode>>& children() { return m_values; }
+
 private:
     explicit ProductCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
     Vector<NonnullOwnPtr<CalculationNode>> m_values;
@@ -290,6 +304,8 @@ public:
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
 
+    NonnullOwnPtr<CalculationNode> child() { return move(m_value); }
+
 private:
     explicit NegateCalculationNode(NonnullOwnPtr<CalculationNode>);
     NonnullOwnPtr<CalculationNode> m_value;
@@ -308,6 +324,8 @@ public:
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+
+    NonnullOwnPtr<CalculationNode> child() { return move(m_value); }
 
 private:
     explicit InvertCalculationNode(NonnullOwnPtr<CalculationNode>);

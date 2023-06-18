@@ -62,6 +62,10 @@
 #    cmakedefine01 CRYPTO_DEBUG
 #endif
 
+#ifndef CSS_CALC_DEBUG
+#    cmakedefine01 CSS_CALC_DEBUG
+#endif
+
 #ifndef CSS_LOADER_DEBUG
 #    cmakedefine01 CSS_LOADER_DEBUG
 #endif

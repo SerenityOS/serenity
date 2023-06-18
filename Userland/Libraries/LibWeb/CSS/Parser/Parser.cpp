@@ -8994,8 +8994,8 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
     if (parsing_failed_for_child_node)
         return nullptr;
 
-    // FIXME: 6. Return the result of simplifying a calculation tree from values.
-    return single_value.release_value();
+    // 6. Return the result of simplifying a calculation tree from values.
+    return CalculatedStyleValue::simplify_a_calculation(single_value.release_value(), {}, {});
 }
 
 bool Parser::has_ignored_vendor_prefix(StringView string)

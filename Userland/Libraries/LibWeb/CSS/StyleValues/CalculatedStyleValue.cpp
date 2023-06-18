@@ -3,11 +3,13 @@
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, stelar7 <dudedbz@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "CalculatedStyleValue.h"
+#include <AK/Debug.h>
 #include <LibWeb/CSS/Percentage.h>
 
 namespace Web::CSS {
@@ -38,7 +40,16 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Number const& number) { return number.value(); },
         [](Angle const& angle) { return angle.to_degrees(); },
         [](Frequency const& frequency) { return frequency.to_hertz(); },
-        [&context](Length const& length) { return length.to_px(*context).to_double(); },
+        [&context](Length const& length) {
+            // NOTE: By resolving absolute lengths before trying to dereference the context, we can parse more stuff.
+            if (length.is_auto())
+                return 0.0;
+
+            if (length.is_absolute())
+                return length.absolute_length_to_px().to_double();
+
+            return length.to_px(*context).to_double();
+        },
         [](Percentage const& percentage) { return percentage.value(); },
         [](Time const& time) { return time.to_seconds(); });
 };
@@ -64,6 +75,409 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
 
     VERIFY_NOT_REACHED();
 };
+
+// https://drafts.csswg.org/css-values-4/#calc-simplification
+ErrorOr<NonnullOwnPtr<CalculationNode>> CalculatedStyleValue::simplify_a_calculation(NonnullOwnPtr<CalculationNode> root, Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis)
+{
+    dbgln_if(CSS_CALC_DEBUG, "Simplifying a calculation tree from {}", root->to_string());
+    dbgln_if(CSS_CALC_DEBUG, "    root->type() = {}", (int)root->type());
+
+    // 1. If root is a numeric value:
+    if (root->type() == CalculationNode::Type::Numeric) {
+        // FIXME: 1. If root is a percentage that will be resolved against another value,
+        //    and there is enough information available to resolve it, do so,
+        //    and express the resulting numeric value in the appropriate canonical unit.
+        //    Return the value.
+
+        // FIXME: 2. If root is a dimension that is not expressed in its canonical unit,
+        //           and there is enough information available to convert it to the canonical unit,
+        //           do so, and return the value.
+
+        // 3. If root is a <calc-constant>, return its numeric value.
+        // NOTE: We do this below this if, since Numeric nodes are not <calc-constant>s.
+
+        // 4. Otherwise, return root.
+        return root;
+    }
+
+    // 1.3 If root is a <calc-constant>, return its numeric value.
+    if (root->type() == CalculationNode::Type::Constant) {
+        auto& constant_node = static_cast<ConstantCalculationNode&>(*root);
+        dbgln_if(CSS_CALC_DEBUG, "    root is a <calc-constant> with value {}", constant_node.to_string());
+        auto node_value = constant_node.resolve(context, percentage_basis).value();
+        auto node_resolved_value = resolve_value(node_value, context);
+        dbgln_if(CSS_CALC_DEBUG, "    root is a <calc-constant> with resolved value {}", node_resolved_value);
+        auto new_value_resolved = to_resolved_type(constant_node.resolved_type().value(), node_resolved_value);
+        return TRY(NumericCalculationNode::create(new_value_resolved.value()));
+    }
+
+    // 2. If root is any other leaf node (not an operator node):
+    if (!root->is_operator_node()) {
+        // FIXME: 1. If there is enough information available to determine its numeric value,
+        //           return its value, expressed in the value’s canonical unit.
+
+        // 2. Otherwise, return root.
+        return root;
+    }
+
+    // FIXME: 3. At this point, root is an operator node. Simplify all the calculation children of root.
+
+    // FIXME: 4. If root is an operator node that’s not one of the calc-operator nodes,
+    //    and all of its calculation children are numeric values with enough information
+    //    to compute the operation root represents, return the result of running root’s operation using its children,
+    //    expressed in the result’s canonical unit.
+
+    // 5. If root is a Min or Max node, attempt to partially simplify it:
+    if (root->type() == CalculationNode::Type::Min || root->type() == CalculationNode::Type::Max) {
+        // FIXME: 1. For each node child of root’s children:
+        // If child is a numeric value with enough information to compare magnitudes with another child of the same unit
+        // (see note in previous step), and there are other children of root that are numeric values with the same unit,
+        // combine all such children with the appropriate operator per root, and replace child with the result,
+        // removing all other child nodes involved.
+
+        // 2. Return root.
+        return root;
+    }
+
+    // 6. If root is a Negate node:
+    if (root->type() == CalculationNode::Type::Negate) {
+        auto& real_root = static_cast<NegateCalculationNode&>(*root);
+        auto child = real_root.child();
+
+        // 1. If root’s child is a numeric value, return an equivalent numeric value, but with the value negated (0 - value).
+        if (child->type() == CalculationNode::Type::Numeric) {
+            if (child->contains_relative_length() && !context.has_value()) {
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Negate node with Numeric child containing relative length, returning original");
+                return root;
+            }
+
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Negate node with Numeric child, returning negated Numeric");
+            auto node_value = child->resolve(context, percentage_basis);
+            auto resolved_value = resolve_value(node_value.value(), context);
+            auto new_value_resolved = to_resolved_type(child->resolved_type().value(), 0 - resolved_value);
+            return TRY(NumericCalculationNode::create(new_value_resolved.value()));
+        }
+
+        // 2. If root’s child is a Negate node, return the child’s child.
+        if (child->type() == CalculationNode::Type::Negate) {
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Negate node with Negate child, returning child's child");
+            return static_cast<NegateCalculationNode&>(*real_root.child()).child();
+        }
+
+        // 3. Return root.
+        return root;
+    }
+
+    // 7. If root is an Invert node:
+    if (root->type() == CalculationNode::Type::Invert) {
+        auto& real_root = static_cast<InvertCalculationNode&>(*root);
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Invert node with child {}", real_root.child()->to_string());
+
+        // 1. If root’s child is a number (not a percentage or dimension) return the reciprocal of the child’s value.
+        if (real_root.resolved_type() == CalculatedStyleValue::ResolvedType::Number) {
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Invert node with numeric child");
+            auto value = real_root.resolve(context, percentage_basis).value().template get<Number>();
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Invert node with numeric child, returning reciprocal of {}", value);
+            return TRY(NumericCalculationNode::create(value));
+        }
+
+        // 2. If root’s child is an Invert node, return the child’s child.
+        if (real_root.child()->type() == CalculationNode::Type::Invert) {
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Invert node with Invert child, returning child's child");
+            return static_cast<InvertCalculationNode&>(*real_root.child()).child();
+        }
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Invert node with non-numeric, non-Invert child, returning root");
+        // 3. Return root.
+        return root;
+    }
+
+    // 8. If root is a Sum node:
+    if (root->type() == CalculationNode::Type::Sum) {
+        auto& real_root = static_cast<SumCalculationNode&>(*root);
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Sum node with {} children", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation:     {}", child->to_string());
+
+        // 1. For each of root’s children that are Sum nodes, replace them with their children.
+        Vector<NonnullOwnPtr<CalculationNode>> new_children;
+        for (size_t i = 0; i < real_root.children().size(); i++) {
+            auto& child = real_root.children()[i];
+            if (child->type() == CalculationNode::Type::Sum) {
+                auto& real_child = static_cast<SumCalculationNode&>(*child);
+                for (auto& grandchild : real_child.children())
+                    new_children.append(move(grandchild));
+
+                real_root.children().remove(i);
+                i--;
+            }
+        }
+
+        TRY(real_root.children().try_extend(move(new_children)));
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Sum node after removing Sum children has new size {}", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation:     {}", child->to_string());
+
+        // 2. For each set of root’s children that are numeric values with identical units,
+        //    remove those children and replace them with a single numeric value containing the sum of the removed nodes,
+        //    and with the same unit. (E.g. combine numbers, combine percentages, combine px values, etc.)
+        HashMap<StringView, Vector<NonnullOwnPtr<CalculationNode>>> children_by_unit;
+        for (size_t i = 0; i < real_root.children().size(); i++) {
+            auto& child = real_root.children()[i];
+            if (child->type() != CalculationNode::Type::Numeric)
+                continue;
+
+            auto& number_node = static_cast<NumericCalculationNode&>(*child);
+            auto value = number_node.value();
+            auto unit = value.visit(
+                [](Number const&) { return "number"sv; },
+                [](Angle const& angle) { return angle.unit_name(); },
+                [](Frequency const& frequency) { return frequency.unit_name(); },
+                [](Length const& length) { return length.unit_name(); },
+                [](Percentage const&) { return "%"sv; },
+                [](Time const& time) { return time.unit_name(); });
+
+            auto taken_child = real_root.children().take(i);
+            auto& child_vector = children_by_unit.ensure(unit, []() { return Vector<NonnullOwnPtr<CalculationNode>> {}; });
+            child_vector.append(move(taken_child));
+            i--;
+        }
+
+        for (auto& [unit, children] : children_by_unit) {
+            auto sum = 0.0;
+            for (auto& child : children) {
+                auto& number_node = static_cast<NumericCalculationNode&>(*child);
+                auto value = number_node.value();
+                auto number = value.visit(
+                    [](Number const& number) { return number.value(); },
+                    [](Angle const& angle) { return angle.raw_value(); },
+                    [](Frequency const& frequency) { return frequency.raw_value(); },
+                    [](Length const& length) { return length.raw_value(); },
+                    [](Percentage const& percentage) { return percentage.value(); },
+                    [](Time const& time) { return time.raw_value(); });
+                sum += number;
+            }
+
+            if (unit == "number"sv) {
+                auto new_node = TRY(NumericCalculationNode::create(Number(Number::Type::Number, sum)));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            if (unit == "%"sv) {
+                auto new_node = TRY(NumericCalculationNode::create(Percentage(sum)));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            if (auto maybe_unit = Angle::unit_from_name(unit); maybe_unit.has_value()) {
+                auto new_node = TRY(NumericCalculationNode::create(Angle(sum, maybe_unit.value())));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            if (auto maybe_unit = Frequency::unit_from_name(unit); maybe_unit.has_value()) {
+                auto new_node = TRY(NumericCalculationNode::create(Frequency(sum, maybe_unit.value())));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            if (auto maybe_unit = Length::unit_from_name(unit); maybe_unit.has_value()) {
+                auto new_node = TRY(NumericCalculationNode::create(Length(sum, maybe_unit.value())));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            if (auto maybe_unit = Time::unit_from_name(unit); maybe_unit.has_value()) {
+                auto new_node = TRY(NumericCalculationNode::create(Time(sum, maybe_unit.value())));
+                real_root.children().append(move(new_node));
+                continue;
+            }
+
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Unhandled unit {}", unit);
+        }
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Sum node with {} children after merging by unit", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "    child: {}", child->to_string());
+
+        // 3. If root has only a single child at this point, return the child. Otherwise, return root.
+        if (real_root.children().size() == 1)
+            return move(real_root.children()[0]);
+
+        return root;
+    }
+
+    // 9. If root is a Product node:
+    if (root->type() == CalculationNode::Type::Product) {
+        auto& real_root = static_cast<ProductCalculationNode&>(*root);
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with {} children", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "    child: {}", child->to_string());
+
+        // 1. For each of root’s children that are Product nodes, replace them with their children.
+        Vector<NonnullOwnPtr<CalculationNode>> new_children;
+        for (size_t i = 0; i < real_root.children().size(); i++) {
+            auto& child = real_root.children()[i];
+            if (child->type() == CalculationNode::Type::Product) {
+                auto& real_child = static_cast<ProductCalculationNode&>(*child);
+                for (auto& grandchild : real_child.children())
+                    new_children.append(move(grandchild));
+
+                real_root.children().remove(i);
+                i--;
+            }
+        }
+
+        TRY(real_root.children().try_extend(move(new_children)));
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with {} children after removing Product children", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "    child: {}", child->to_string());
+
+        // 2. If root has multiple children that are numbers (not percentages or dimensions),
+        //    remove them and replace them with a single number containing the product of the removed nodes.
+        Vector<NonnullOwnPtr<CalculationNode>> children_to_combine;
+        for (size_t i = 0; i < real_root.children().size(); i++) {
+            auto& child = real_root.children()[i];
+            if (child->type() == CalculationNode::Type::Numeric) {
+                auto& real_child = static_cast<NumericCalculationNode&>(*child);
+                if (real_child.resolved_type() == CalculatedStyleValue::ResolvedType::Number || real_child.resolved_type() == CalculatedStyleValue::ResolvedType::Integer) {
+                    children_to_combine.append(real_root.children().take(i));
+                    i--;
+                }
+            }
+        }
+
+        if (real_root.contains_relative_length() && !context.has_value()) {
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node contains relative length, returning root");
+            return root;
+        }
+
+        double value = 1;
+        for (auto& child : children_to_combine) {
+            auto& real_child = static_cast<NumericCalculationNode&>(*child);
+            value *= real_child.resolve(context, percentage_basis).value().template get<Number>().value();
+        }
+
+        if (!children_to_combine.is_empty()) {
+            auto new_node = TRY(NumericCalculationNode::create(Number(Number::Type::Number, value)));
+            real_root.children().append(move(new_node));
+        }
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with {} children after combining numeric children", real_root.children().size());
+        for (auto& child : real_root.children())
+            dbgln_if(CSS_CALC_DEBUG, "    child: {}", child->to_string());
+
+        // 3. If root contains only two children, one of which is a number (not a percentage or dimension)
+        //    and the other of which is a Sum whose children are all numeric values, multiply all of the Sum’s children
+        //    by the number, then return the Sum.
+        if (real_root.children().size() == 2) {
+            auto& number_child = real_root.children()[0]->type() == CalculationNode::Type::Numeric ? real_root.children()[0] : real_root.children()[1];
+            auto& sum_child = real_root.children()[1]->type() == CalculationNode::Type::Sum ? real_root.children()[1] : real_root.children()[0];
+
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with two children");
+            dbgln_if(CSS_CALC_DEBUG, "    number_child type: {}", (int)number_child->type());
+            dbgln_if(CSS_CALC_DEBUG, "    sum_child type: {}", (int)sum_child->type());
+
+            if (number_child->type() == CalculationNode::Type::Numeric && number_child->resolved_type().value() == CalculatedStyleValue::ResolvedType::Number
+                && sum_child->type() == CalculationNode::Type::Sum) {
+
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with two children, one of which is a number and the other a Sum");
+
+                auto& number_child_node = static_cast<NumericCalculationNode&>(*number_child);
+                auto& sum_child_node = static_cast<SumCalculationNode&>(*sum_child);
+
+                bool all_numeric = true;
+                for (auto& child : sum_child_node.children()) {
+                    if (child->type() != CalculationNode::Type::Numeric) {
+                        all_numeric = false;
+                        break;
+                    }
+                }
+
+                if (all_numeric) {
+                    dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: All children of the Sum are numeric");
+
+                    if (sum_child_node.contains_relative_length() && !context.has_value()) {
+                        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Sum node contains relative length, returning root");
+                        return root;
+                    }
+
+                    double multiply_value = number_child_node.resolve(context, percentage_basis).value().template get<Number>().value();
+
+                    for (size_t i = 0; i < sum_child_node.children().size(); i++) {
+                        auto& grandchild = sum_child_node.children()[i];
+                        auto grandchild_value = grandchild->resolve(context, percentage_basis).value();
+                        auto grandchild_resolved_value = resolve_value(grandchild_value, context);
+                        auto new_value = grandchild_resolved_value * multiply_value;
+                        auto new_value_resolved = to_resolved_type(grandchild->resolved_type().value(), new_value);
+                        auto new_node = TRY(NumericCalculationNode::create(new_value_resolved.value()));
+
+                        sum_child_node.children().remove(i);
+                        sum_child_node.children().insert(i, move(new_node));
+                    }
+
+                    dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node with {} children after sum multiplying", real_root.children().size());
+                    for (auto& child : real_root.children())
+                        dbgln_if(CSS_CALC_DEBUG, "    child: {}", child->to_string());
+
+                    return move(sum_child);
+                }
+
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Not all children of the Sum are numeric");
+            }
+        }
+
+        // 4. If root contains only numeric values and/or Invert nodes containing numeric values,
+        //    and multiplying the types of all the children (noting that the type of an Invert node is the inverse of its child’s type)
+        //    results in a type that matches any of the types that a math function can resolve to,
+        //    return the result of multiplying all the values of the children
+        //    (noting that the value of an Invert node is the reciprocal of its child’s value),
+        //    expressed in the result’s canonical unit.
+        bool all_numeric_or_invert = true;
+        for (auto& child : real_root.children()) {
+            if (!child->is_numeric_or_invert()) {
+                all_numeric_or_invert = false;
+                break;
+            }
+        }
+
+        if (all_numeric_or_invert) {
+            dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: All children are numeric or invert");
+
+            if (real_root.contains_relative_length() && !context.has_value()) {
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Product node contains relative length, returning root");
+                return root;
+            }
+
+            double multiply_value = 1.0;
+            for (auto& child : real_root.children()) {
+                auto child_value = child->resolve(context, percentage_basis).value();
+                auto child_resolved_value = resolve_value(child_value, context);
+
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Multiplying all children by {}", child_resolved_value);
+                multiply_value *= child_resolved_value;
+
+                dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Value after multiplying {}", multiply_value);
+            }
+
+            auto new_value = to_resolved_type(root->resolved_type().value(), multiply_value);
+            return TRY(NumericCalculationNode::create(new_value.value()));
+        }
+
+        dbgln_if(CSS_CALC_DEBUG, "simplify_a_calculation: Not all children are numeric or invert");
+
+        // 5. Return root
+        return root;
+    }
+
+    // NOTE: The spec stops here, so lets assume this is an invalid state
+    VERIFY_NOT_REACHED();
+}
 
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
