@@ -300,7 +300,7 @@ TEST_CASE(test_targa_top_left_compressed)
 
 TEST_CASE(test_webp_simple_lossy)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -322,7 +322,7 @@ TEST_CASE(test_webp_simple_lossy)
 
 TEST_CASE(test_webp_simple_lossless)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8l.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8l.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -352,7 +352,7 @@ TEST_CASE(test_webp_simple_lossless_alpha_used_false)
 {
     // This file is identical to simple-vp8l.webp, but the `is_alpha_used` used bit is false.
     // The file still contains alpha data. This tests that the decoder replaces the stored alpha data with 0xff if `is_alpha_used` is false.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8l-alpha-used-false.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8l-alpha-used-false.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -372,7 +372,7 @@ TEST_CASE(test_webp_simple_lossless_alpha_used_false)
 TEST_CASE(test_webp_extended_lossy)
 {
     // This extended lossy image has an ALPH chunk for (losslessly compressed) alpha data.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -407,7 +407,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_horizontal_filter)
 {
     // Also lossy rgb + lossless alpha, but with a horizontal alpha filtering method.
     // The image should look like smolkling.webp, but with a horizontal alpha gradient.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling-horizontal-alpha.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-horizontal-alpha.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -431,7 +431,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_vertical_filter)
 {
     // Also lossy rgb + lossless alpha, but with a vertical alpha filtering method.
     // The image should look like smolkling.webp, but with a vertical alpha gradient, and with a fully transparent first column.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling-vertical-alpha.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-vertical-alpha.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -455,7 +455,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
 {
     // Also lossy rgb + lossless alpha, but with a gradient alpha filtering method.
     // The image should look like smolkling.webp, but with a few transparent pixels in the shape of a C on it. Most of the image should not be transparent.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling-gradient-alpha.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling-gradient-alpha.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -478,7 +478,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
 
 TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy-uncompressed-alpha.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy-uncompressed-alpha.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -503,7 +503,7 @@ TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
 
 TEST_CASE(test_webp_extended_lossy_negative_quantization_offset)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("smolkling.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/smolkling.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -528,7 +528,7 @@ TEST_CASE(test_webp_lossy_4)
     // under the Creative Commons Attribution-Share Alike 3.0 Unported license. The image was re-encoded
     // as webp at https://developers.google.com/speed/webp/gallery1 and the webp version is from there.
     // No other changes have been made.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("4.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/4.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -549,7 +549,7 @@ TEST_CASE(test_webp_lossy_4)
 TEST_CASE(test_webp_lossy_4_with_partitions)
 {
     // Same input file as in the previous test, but re-encoded to use 8 secondary partitions.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("4-with-8-partitions.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/4-with-8-partitions.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -568,7 +568,7 @@ TEST_CASE(test_webp_lossy_4_with_partitions)
 
 TEST_CASE(test_webp_extended_lossless)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -599,7 +599,7 @@ TEST_CASE(test_webp_extended_lossless)
 TEST_CASE(test_webp_simple_lossless_color_index_transform)
 {
     // In addition to testing the index transform, this file also tests handling of explicity setting max_symbol.
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("Qpalette.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/Qpalette.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -629,10 +629,10 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
     // catdog-alert-3 tests the 2-bit-per-pixel case,
     // catdog-alert-8 and catdog-alert-13 both test the 4-bits-per-pixel case.
     TestCase test_cases[] = {
-        { "catdog-alert-2.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0xf3, 0xe6, 0xd8, 0xff) },
-        { "catdog-alert-3.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0, 0, 0, 0) },
-        { "catdog-alert-8.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
-        { "catdog-alert-13.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
+        { "webp/catdog-alert-2.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0xf3, 0xe6, 0xd8, 0xff) },
+        { "webp/catdog-alert-3.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0, 0, 0, 0) },
+        { "webp/catdog-alert-8.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
+        { "webp/catdog-alert-13.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
     };
 
     for (auto test_case : test_cases) {
@@ -659,9 +659,9 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
 TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_width)
 {
     StringView file_names[] = {
-        "width11-height11-colors2.webp"sv,
-        "width11-height11-colors3.webp"sv,
-        "width11-height11-colors15.webp"sv,
+        "webp/width11-height11-colors2.webp"sv,
+        "webp/width11-height11-colors3.webp"sv,
+        "webp/width11-height11-colors15.webp"sv,
     };
 
     for (auto file_name : file_names) {
@@ -679,7 +679,7 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_wid
 
 TEST_CASE(test_webp_extended_lossless_animated)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless-animated.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless-animated.webp"sv)));
     EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
