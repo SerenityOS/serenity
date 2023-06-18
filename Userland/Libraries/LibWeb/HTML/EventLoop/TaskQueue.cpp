@@ -71,4 +71,11 @@ ErrorOr<Vector<NonnullOwnPtr<Task>>> TaskQueue::take_tasks_matching(Function<boo
     return matching_tasks;
 }
 
+Task const* TaskQueue::last_added_task() const
+{
+    if (m_tasks.is_empty())
+        return nullptr;
+    return m_tasks.last();
+}
+
 }
