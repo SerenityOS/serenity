@@ -1,9 +1,9 @@
+#import <Streams/QueuingStrategy.idl>
 #import <Streams/WritableStreamDefaultWriter.idl>
 
 [Exposed=*, Transferable]
 interface WritableStream {
-    // FIXME: optional QueuingStrategy strategy = {}
-    constructor(optional object underlyingSink);
+    constructor(optional object underlyingSink, optional QueuingStrategy strategy = {});
 
     readonly attribute boolean locked;
 
