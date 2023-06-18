@@ -34,6 +34,8 @@ public:
     void remove_tasks_matching(Function<bool(HTML::Task const&)>);
     ErrorOr<Vector<NonnullOwnPtr<Task>>> take_tasks_matching(Function<bool(HTML::Task const&)>);
 
+    Task const* last_added_task() const;
+
 private:
     HTML::EventLoop& m_event_loop;
 
