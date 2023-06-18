@@ -7,6 +7,8 @@
  */
 
 #include "BoardWidget.h"
+#include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 
@@ -146,9 +148,10 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 
             if (m_selected_pattern != nullptr) {
                 int y_offset = 0;
-                for (auto line : m_selected_pattern->pattern()) {
+                for (unsigned y = 0; y < m_selected_pattern->height(); y++) {
                     int x_offset = 0;
-                    for (auto c : line) {
+                    for (unsigned x = 0; x < m_selected_pattern->width(); x++) {
+                        char c = m_selected_pattern->at(x, y);
                         if (c == 'O' && (m_last_cell_hovered.row + y_offset) < m_board->rows()
                             && (m_last_cell_hovered.column + x_offset) < m_board->columns() && row == (m_last_cell_hovered.row + y_offset) && column == (m_last_cell_hovered.column + x_offset))
                             fill_color = Color::Green;
@@ -237,9 +240,10 @@ Optional<Board::RowAndColumn> BoardWidget::get_row_and_column_for_point(int x, i
 void BoardWidget::place_pattern(size_t row, size_t column)
 {
     int y_offset = 0;
-    for (auto line : m_selected_pattern->pattern()) {
+    for (unsigned int y = 0; y < m_selected_pattern->height(); y++) {
         int x_offset = 0;
-        for (auto c : line) {
+        for (unsigned int x = 0; x < m_selected_pattern->width(); x++) {
+            char c = m_selected_pattern->at(x, y);
             if (c == 'O' && (row + y_offset) < m_board->rows() && (column + x_offset) < m_board->columns())
                 toggle_cell(row + y_offset, column + x_offset);
             x_offset++;
@@ -255,136 +259,150 @@ void BoardWidget::place_pattern(size_t row, size_t column)
 
 void BoardWidget::setup_patterns()
 {
-    auto add_pattern = [&](DeprecatedString name, NonnullOwnPtr<Pattern> pattern) {
-        auto action = GUI::Action::create(move(name), [this, pattern = pattern.ptr()](const GUI::Action&) {
+    auto add_pattern = [&](StringView name, NonnullOwnPtr<Pattern> pattern) {
+        auto action = GUI::Action::create(move(name).to_deprecated_string(), [this, pattern = pattern.ptr()](const GUI::Action&) {
             on_pattern_selection(pattern);
         });
         pattern->set_action(action);
         m_patterns.append(move(pattern));
     };
 
-    Vector<DeprecatedString> blinker = {
-        "OOO"
+    Pattern blinker {
+        "OOO"sv,
+        3
     };
 
-    Vector<DeprecatedString> toad = {
-        ".OOO",
-        "OOO."
+    Pattern toad {
+        ".OOO"
+        "OOO."sv,
+        3
     };
 
-    Vector<DeprecatedString> glider = {
-        ".O.",
-        "..O",
-        "OOO",
-    };
-
-    Vector<DeprecatedString> lightweight_spaceship = {
-        ".OO..",
-        "OOOO.",
-        "OO.OO",
-        "..OO."
-    };
-
-    Vector<DeprecatedString> middleweight_spaceship = {
-        ".OOOOO",
-        "O....O",
-        ".....O",
-        "O...O.",
-        "..O..."
-    };
-
-    Vector<DeprecatedString> heavyweight_spaceship = {
-        "..OO...",
-        "O....O.",
-        "......O",
-        "O.....O",
-        ".OOOOOO"
-    };
-
-    Vector<DeprecatedString> infinite_1 = { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO" };
-
-    Vector<DeprecatedString> infinite_2 = {
-        "......O.",
-        "....O.OO",
-        "....O.O.",
-        "....O...",
-        "..O.....",
-        "O.O....."
-    };
-
-    Vector<DeprecatedString> infinite_3 = {
-        "OOO.O",
-        "O....",
-        "...OO",
-        ".OO.O",
-        "O.O.O"
-    };
-
-    Vector<DeprecatedString> simkin_glider_gun = {
-        "OO.....OO........................",
-        "OO.....OO........................",
-        ".................................",
-        "....OO...........................",
-        "....OO...........................",
-        ".................................",
-        ".................................",
-        ".................................",
-        ".................................",
-        "......................OO.OO......",
-        ".....................O.....O.....",
-        ".....................O......O..OO",
-        ".....................OOO...O...OO",
-        "..........................O......",
-        ".................................",
-        ".................................",
-        ".................................",
-        "....................OO...........",
-        "....................O............",
-        ".....................OOO.........",
-        ".......................O........."
-    };
-    Vector<DeprecatedString> gosper_glider_gun = {
-        "........................O...........",
-        "......................O.O...........",
-        "............OO......OO............OO",
-        "...........O...O....OO............OO",
-        "OO........O.....O...OO..............",
-        "OO........O...O.OO....O.O...........",
-        "..........O.....O.......O...........",
-        "...........O...O....................",
-        "............OO......................"
-    };
-
-    Vector<DeprecatedString> r_pentomino = {
-        ".OO",
-        "OO.",
+    Pattern glider {
         ".O."
+        "..O"
+        "OOO"sv,
+        3
     };
 
-    Vector<DeprecatedString> diehard = {
-        "......O.",
-        "OO......",
-        ".O...OOO"
+    Pattern lightweight_spaceship {
+        ".OO.."
+        "OOOO."
+        "OO.OO"
+        "..OO."sv,
+        5
     };
 
-    Vector<DeprecatedString> acorn = {
-        ".O.....",
-        "...O...",
-        "OO..OOO"
+    Pattern middleweight_spaceship {
+        ".OOOOO"
+        "O....O"
+        ".....O"
+        "O...O."
+        "..O..."sv,
+        6
     };
 
-    add_pattern("Blinker", make<Pattern>(move(blinker)));
-    add_pattern("Toad", make<Pattern>(move(toad)));
-    add_pattern("Glider", make<Pattern>(move(glider)));
-    add_pattern("Lightweight Spaceship", make<Pattern>(move(lightweight_spaceship)));
-    add_pattern("Middleweight Spaceship", make<Pattern>(move(middleweight_spaceship)));
-    add_pattern("Heavyweight Spaceship", make<Pattern>(move(heavyweight_spaceship)));
-    add_pattern("Infinite 1", make<Pattern>(move(infinite_1)));
-    add_pattern("Infinite 2", make<Pattern>(move(infinite_2)));
-    add_pattern("Infinite 3", make<Pattern>(move(infinite_3)));
-    add_pattern("R-Pentomino", make<Pattern>(move(r_pentomino)));
-    add_pattern("Diehard", make<Pattern>(move(diehard)));
-    add_pattern("Acorn", make<Pattern>(move(acorn)));
-    add_pattern("Simkin's Glider Gun", make<Pattern>(move(simkin_glider_gun)));
-    add_pattern("Gosper's Glider Gun", make<Pattern>(move(gosper_glider_gun)));
+    Pattern heavyweight_spaceship {
+        "..OO..."
+        "O....O."
+        "......O"
+        "O.....O"
+        ".OOOOOO"sv,
+        7
+    };
+
+    Pattern infinite_1 { "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO"sv, 39 };
+
+    Pattern infinite_2 {
+        "......O."
+        "....O.OO"
+        "....O.O."
+        "....O..."
+        "..O....."
+        "O.O....."sv,
+        8
+    };
+
+    Pattern infinite_3 {
+        "OOO.O"
+        "O...."
+        "...OO"
+        ".OO.O"
+        "O.O.O"sv,
+        5
+    };
+
+    Pattern simkin_glider_gun {
+        "OO.....OO........................"
+        "OO.....OO........................"
+        "................................."
+        "....OO..........................."
+        "....OO..........................."
+        "................................."
+        "................................."
+        "................................."
+        "................................."
+        "......................OO.OO......"
+        ".....................O.....O....."
+        ".....................O......O..OO"
+        ".....................OOO...O...OO"
+        "..........................O......"
+        "................................."
+        "................................."
+        "................................."
+        "....................OO..........."
+        "....................O............"
+        ".....................OOO........."
+        ".......................O........."sv,
+        33
+    };
+
+    Pattern gosper_glider_gun {
+        "........................O..........."
+        "......................O.O..........."
+        "............OO......OO............OO"
+        "...........O...O....OO............OO"
+        "OO........O.....O...OO.............."
+        "OO........O...O.OO....O.O..........."
+        "..........O.....O.......O..........."
+        "...........O...O...................."
+        "............OO......................"sv,
+        36
+    };
+
+    Pattern r_pentomino {
+        ".OO"
+        "OO."
+        ".O."sv,
+        3
+    };
+
+    Pattern diehard {
+        "......O."
+        "OO......"
+        ".O...OOO"sv,
+        8
+    };
+
+    Pattern acorn {
+        ".O....."
+        "...O..."
+        "OO..OOO"sv,
+        7
+    };
+
+    add_pattern("Blinker"sv, make<Pattern>(move(blinker)));
+    add_pattern("Toad"sv, make<Pattern>(move(toad)));
+    add_pattern("Glider"sv, make<Pattern>(move(glider)));
+    add_pattern("Lightweight Spaceship"sv, make<Pattern>(move(lightweight_spaceship)));
+    add_pattern("Middleweight Spaceship"sv, make<Pattern>(move(middleweight_spaceship)));
+    add_pattern("Heavyweight Spaceship"sv, make<Pattern>(move(heavyweight_spaceship)));
+    add_pattern("Infinite 1"sv, make<Pattern>(move(infinite_1)));
+    add_pattern("Infinite 2"sv, make<Pattern>(move(infinite_2)));
+    add_pattern("Infinite 3"sv, make<Pattern>(move(infinite_3)));
+    add_pattern("R-Pentomino"sv, make<Pattern>(move(r_pentomino)));
+    add_pattern("Diehard"sv, make<Pattern>(move(diehard)));
+    add_pattern("Acorn"sv, make<Pattern>(move(acorn)));
+    add_pattern("Simkin's Glider Gun"sv, make<Pattern>(move(simkin_glider_gun)));
+    add_pattern("Gosper's Glider Gun"sv, make<Pattern>(move(gosper_glider_gun)));
 }
