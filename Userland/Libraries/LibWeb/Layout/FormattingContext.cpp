@@ -1390,9 +1390,16 @@ CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, Ava
     return width.resolved(box, width_of_containing_block_as_length_for_resolve);
 }
 
-CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const& available_height, CSS::Size const& height) const
+CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const&, CSS::Size const& height) const
 {
-    auto height_of_containing_block = available_height.to_px();
+    auto const* containing_block = box.non_anonymous_containing_block();
+    auto const& containing_block_state = m_state.get(*containing_block);
+    auto height_of_containing_block = containing_block_state.content_height();
+    if (box.computed_values().position() == CSS::Position::Absolute) {
+        // https://www.w3.org/TR/css-position-3/#def-cb
+        // If the box has position: absolute, then the containing block is formed by the padding edge of the ancestor
+        height_of_containing_block += containing_block_state.padding_top + containing_block_state.padding_bottom;
+    }
     auto height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(height_of_containing_block);
     if (height.is_auto()) {
         return height.resolved(box, height_of_containing_block_as_length_for_resolve);
