@@ -438,7 +438,6 @@ static bool check_for_invalid_bitmask_combinations(BMPLoadingContext& context)
                 return false;
             break;
         case Compression::RLE4:
-            // TODO: This is a guess
             if (bpp > 4)
                 return false;
             break;
