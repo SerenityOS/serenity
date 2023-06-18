@@ -66,7 +66,7 @@ ReadableStream::ReadableStream(JS::Realm& realm)
 ReadableStream::~ReadableStream() = default;
 
 // https://streams.spec.whatwg.org/#rs-locked
-bool ReadableStream::locked()
+bool ReadableStream::locked() const
 {
     // 1. Return ! IsReadableStreamLocked(this).
     return is_readable_stream_locked(*this);
