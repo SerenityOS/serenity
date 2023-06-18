@@ -52,6 +52,7 @@ public:
     };
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
     void show_console_window();
+    void show_history_window();
 
     Ladybird::ConsoleWidget* console() { return m_console_widget; };
 

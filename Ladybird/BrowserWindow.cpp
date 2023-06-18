@@ -110,6 +110,11 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     view_menu->addAction(open_previous_tab_action);
     QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
 
+    auto* open_history_window_action = new QAction("Open &History Window", this);
+    open_history_window_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
+    view_menu->addAction(open_history_window_action);
+    QObject::connect(open_history_window_action, &QAction::triggered, this, &BrowserWindow::open_history_window);
+
     view_menu->addSeparator();
 
     m_zoom_menu = view_menu->addMenu("&Zoom");
@@ -564,6 +569,14 @@ void BrowserWindow::open_previous_tab()
     if (next_index < 0)
         next_index = m_tabs_container->count() - 1;
     m_tabs_container->setCurrentIndex(next_index);
+}
+
+void BrowserWindow::open_history_window()
+{
+    if (!m_current_tab)
+        return;
+
+    m_current_tab->show_history_window();
 }
 
 void BrowserWindow::enable_auto_color_scheme()

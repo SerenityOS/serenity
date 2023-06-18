@@ -676,6 +676,14 @@ void Tab::show_console_window()
     m_console_widget->show();
 }
 
+void Tab::show_history_window()
+{
+    dbgln("FIXME: Create history window widget.");
+    for (auto& history_entry : m_history.get_all_history_entries()) {
+        dbgln("{} {}", history_entry.title, history_entry.url);
+    }
+}
+
 void Tab::close_sub_widgets()
 {
     auto close_widget_window = [](auto* widget) {
