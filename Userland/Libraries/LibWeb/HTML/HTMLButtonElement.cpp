@@ -32,7 +32,7 @@ HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName
         case TypeAttributeState::Submit:
             // Submit Button
             // Submit element's form owner from element.
-            form()->submit_form(this).release_value_but_fixme_should_propagate_errors();
+            form()->submit_form(*this).release_value_but_fixme_should_propagate_errors();
             break;
         case TypeAttributeState::Reset:
             // Reset Button
