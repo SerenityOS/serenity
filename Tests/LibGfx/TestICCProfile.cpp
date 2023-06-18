@@ -22,7 +22,7 @@
 
 TEST_CASE(png)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc-v2.png"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/icc-v2.png"sv)));
     auto png = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
     MUST(png->initialize());
     auto icc_bytes = MUST(png->icc_data());
@@ -34,7 +34,7 @@ TEST_CASE(png)
 
 TEST_CASE(jpg)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc-v4.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/icc-v4.jpg"sv)));
     auto jpg = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(jpg->initialize());
     auto icc_bytes = MUST(jpg->icc_data());
@@ -46,7 +46,7 @@ TEST_CASE(jpg)
 
 TEST_CASE(webp_extended_lossless)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
@@ -58,7 +58,7 @@ TEST_CASE(webp_extended_lossless)
 
 TEST_CASE(webp_extended_lossy)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
@@ -70,7 +70,7 @@ TEST_CASE(webp_extended_lossy)
 
 TEST_CASE(serialize_icc)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("p3-v4.icc"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/p3-v4.icc"sv)));
     auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(file->bytes()));
     EXPECT(icc_profile->is_v4());
 
