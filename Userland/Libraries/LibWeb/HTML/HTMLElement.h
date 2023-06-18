@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 
 namespace Web::HTML {
 
@@ -60,6 +61,9 @@ public:
     virtual bool is_labelable() const { return false; }
 
     virtual Optional<ARIA::Role> default_role() const override;
+
+    DeprecatedString get_an_elements_target() const;
+    TokenizedFeature::NoOpener get_an_elements_noopener(StringView target) const;
 
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);

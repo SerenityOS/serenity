@@ -52,11 +52,17 @@ private:
     virtual WebIDL::ExceptionOr<void> set_hyperlink_element_utils_href(DeprecatedString) override;
     virtual bool hyperlink_element_utils_is_html_anchor_element() const final { return true; }
     virtual bool hyperlink_element_utils_is_connected() const final { return is_connected(); }
-    virtual DeprecatedString hyperlink_element_utils_target() const final { return target(); }
-    virtual DeprecatedString hyperlink_element_utils_rel() const final { return rel(); }
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) override
     {
         queue_an_element_task(source, move(steps));
+    }
+    virtual DeprecatedString hyperlink_element_utils_get_an_elements_target() const override
+    {
+        return get_an_elements_target();
+    }
+    virtual TokenizedFeature::NoOpener hyperlink_element_utils_get_an_elements_noopener(StringView target) const override
+    {
+        return get_an_elements_noopener(target);
     }
 
     virtual Optional<ARIA::Role> default_role() const override;

@@ -17,11 +17,14 @@
 #include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
+#include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -424,6 +427,43 @@ Optional<ARIA::Role> HTMLElement::default_role() const
         return ARIA::Role::generic;
 
     return {};
+}
+
+// https://html.spec.whatwg.org/multipage/semantics.html#get-an-element's-target
+DeprecatedString HTMLElement::get_an_elements_target() const
+{
+    // To get an element's target, given an a, area, or form element element, run these steps:
+
+    // 1. If element has a target attribute, then return that attribute's value.
+    if (has_attribute(AttributeNames::target))
+        return attribute(AttributeNames::target);
+
+    // FIXME: 2. If element's node document contains a base element with a
+    // target attribute, then return the value of the target attribute of the
+    // first such base element.
+
+    // 3. Return the empty string.
+    return DeprecatedString::empty();
+}
+
+// https://html.spec.whatwg.org/multipage/links.html#get-an-element's-noopener
+TokenizedFeature::NoOpener HTMLElement::get_an_elements_noopener(StringView target) const
+{
+    // To get an element's noopener, given an a, area, or form element element and a string target:
+    auto rel = attribute(HTML::AttributeNames::rel).to_lowercase();
+    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
+
+    // 1. If element's link types include the noopener or noreferrer keyword, then return true.
+    if (link_types.contains_slow("noopener"sv) || link_types.contains_slow("noreferrer"sv))
+        return TokenizedFeature::NoOpener::Yes;
+
+    // 2. If element's link types do not include the opener keyword and
+    //    target is an ASCII case-insensitive match for "_blank", then return true.
+    if (!link_types.contains_slow("opener"sv) && Infra::is_ascii_case_insensitive_match(target, "_blank"sv))
+        return TokenizedFeature::NoOpener::Yes;
+
+    // 3. Return false.
+    return TokenizedFeature::NoOpener::No;
 }
 
 }

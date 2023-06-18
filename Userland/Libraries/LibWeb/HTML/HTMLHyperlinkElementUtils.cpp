@@ -7,8 +7,6 @@
 #include <AK/URLParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
-#include <LibWeb/Infra/CharacterTypes.h>
-#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web::HTML {
@@ -487,10 +485,10 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     // 4. Let targetAttributeValue be the empty string.
     // 5. If subject is an a or area element, then set targetAttributeValue to
     // the result of getting an element's target given subject.
-    DeprecatedString target_attribute_value = get_an_elements_target();
+    DeprecatedString target_attribute_value = hyperlink_element_utils_get_an_elements_target();
 
     // 6. Let noopener be the result of getting an element's noopener with subject and targetAttributeValue.
-    auto noopener = get_an_elements_noopener(target_attribute_value);
+    auto noopener = hyperlink_element_utils_get_an_elements_noopener(target_attribute_value);
 
     // 7. Let target be the first return value of applying the rules for
     // choosing a browsing context given targetAttributeValue, source, and
@@ -539,42 +537,6 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
         verify_cast<BrowsingContext>(*target).loader().load(url_string, FrameLoader::Type::Navigation);
     });
-}
-
-DeprecatedString HTMLHyperlinkElementUtils::get_an_elements_target() const
-{
-    // To get an element's target, given an a, area, or form element element, run these steps:
-
-    // 1. If element has a target attribute, then return that attribute's value.
-    if (auto target = hyperlink_element_utils_target(); !target.is_empty())
-        return target;
-
-    // FIXME: 2. If element's node document contains a base element with a
-    // target attribute, then return the value of the target attribute of the
-    // first such base element.
-
-    // 3. Return the empty string.
-    return "";
-}
-
-// https://html.spec.whatwg.org/multipage/links.html#get-an-element's-noopener
-TokenizedFeature::NoOpener HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) const
-{
-    // To get an element's noopener, given an a, area, or form element element and a string target:
-    auto rel = hyperlink_element_utils_rel().to_lowercase();
-    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
-
-    // 1. If element's link types include the noopener or noreferrer keyword, then return true.
-    if (link_types.contains_slow("noopener"sv) || link_types.contains_slow("noreferrer"sv))
-        return TokenizedFeature::NoOpener::Yes;
-
-    // 2. If element's link types do not include the opener keyword and
-    //    target is an ASCII case-insensitive match for "_blank", then return true.
-    if (!link_types.contains_slow("opener"sv) && Infra::is_ascii_case_insensitive_match(target, "_blank"sv))
-        return TokenizedFeature::NoOpener::Yes;
-
-    // 3. Return false.
-    return TokenizedFeature::NoOpener::No;
 }
 
 }
