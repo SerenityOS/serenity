@@ -221,6 +221,17 @@ ErrorOr<String> convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte
     return output;
 }
 
+// https://encoding.spec.whatwg.org/#get-an-output-encoding
+StringView get_output_encoding(StringView encoding)
+{
+    // 1. If encoding is replacement or UTF-16BE/LE, then return UTF-8.
+    if (encoding.is_one_of_ignoring_ascii_case("replacement"sv, "utf-16le"sv, "utf-16be"sv))
+        return "UTF-8"sv;
+
+    // 2. Return encoding.
+    return encoding;
+}
+
 ErrorOr<String> Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
