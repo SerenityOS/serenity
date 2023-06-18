@@ -149,6 +149,10 @@ void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)
 
 void PageHost::page_did_invalidate(Web::CSSPixelRect const& content_rect)
 {
+    auto* layout_root = this->layout_root();
+    if (layout_root)
+        layout_root->invalidate(page().enclosing_device_rect(content_rect));
+
     m_invalidation_rect = m_invalidation_rect.united(page().enclosing_device_rect(content_rect));
     if (!m_invalidation_coalescing_timer->is_active())
         m_invalidation_coalescing_timer->start();

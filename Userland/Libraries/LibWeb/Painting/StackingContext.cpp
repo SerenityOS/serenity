@@ -143,6 +143,9 @@ void StackingContext::paint_internal(PaintContext& context) const
     paint_node(m_box, context, PaintPhase::Border);
 
     auto paint_child = [&](auto* child) {
+        if (child->paintable_box().has_own_compositing_layer())
+            return;
+
         auto parent = child->m_box->parent();
         auto* parent_paintable = parent ? parent->paintable() : nullptr;
         if (parent_paintable)
@@ -366,9 +369,6 @@ Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 void StackingContext::paint(PaintContext& context) const
 {
     Gfx::PainterStateSaver saver(context.painter());
-    if (m_box->is_fixed_position()) {
-        context.painter().translate(-context.painter().translation());
-    }
 
     auto opacity = m_box->computed_values().opacity();
     if (opacity == 0.0f)

@@ -8,6 +8,7 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Painting/CompositingLayer.h>
 #include <LibWeb/Selection/Selection.h>
 
 namespace Web::Layout {
@@ -28,9 +29,18 @@ public:
     void build_stacking_context_tree_if_needed();
     void recompute_selection_states();
 
+    void rebuild_compositing_layers();
+    void build_compositing_layers_if_needed();
+
+    void invalidate(DevicePixelRect rect);
+
 private:
     void build_stacking_context_tree();
+    void build_compositing_layers(Painting::StackingContext*);
+
     virtual bool is_viewport() const override { return true; }
+
+    Vector<OwnPtr<Painting::CompositingLayer>> m_compositing_layers;
 };
 
 template<>

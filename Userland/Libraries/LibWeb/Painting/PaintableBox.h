@@ -108,6 +108,9 @@ public:
     void set_stacking_context(NonnullOwnPtr<StackingContext>);
     StackingContext* enclosing_stacking_context();
 
+    void set_has_own_compositing_layer(bool b) { m_has_own_compositing_layer = b; }
+    bool has_own_compositing_layer() const { return m_has_own_compositing_layer; }
+
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
     DOM::Node* dom_node() { return layout_box().dom_node(); }
 
@@ -155,6 +158,8 @@ private:
     Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<StackingContext> m_stacking_context;
+
+    bool m_has_own_compositing_layer { false };
 
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;

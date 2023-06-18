@@ -29,6 +29,8 @@ void Viewport::build_stacking_context_tree_if_needed()
     if (paintable_box()->stacking_context())
         return;
     build_stacking_context_tree();
+
+    rebuild_compositing_layers();
 }
 
 void Viewport::build_stacking_context_tree()
@@ -53,11 +55,63 @@ void Viewport::build_stacking_context_tree()
     const_cast<Painting::PaintableBox*>(paintable_box())->stacking_context()->sort();
 }
 
+void Viewport::rebuild_compositing_layers()
+{
+    m_compositing_layers.clear();
+    build_compositing_layers_if_needed();
+}
+
+void Viewport::build_compositing_layers_if_needed()
+{
+    if (m_compositing_layers.size())
+        return;
+
+    Painting::StackingContext* stacking_context = const_cast<Painting::PaintableBox*>(paintable_box())->stacking_context();
+
+    NonnullOwnPtr<Painting::CompositingLayer> compositing_layer = make<Painting::CompositingLayer>(stacking_context->box()->is_fixed_position());
+    compositing_layer->add_stacking_context(stacking_context);
+    m_compositing_layers.append(move(compositing_layer));
+
+    const_cast<Painting::PaintableBox*>(paintable_box())->set_has_own_compositing_layer(true);
+
+    build_compositing_layers(stacking_context);
+}
+
+void Viewport::build_compositing_layers(Painting::StackingContext* stacking_context)
+{
+    bool encoutered_fixed_layer = false;
+    for (auto& child : stacking_context->children()) {
+        if (child->box()->is_fixed_position()) {
+            const_cast<Painting::PaintableBox&>(child->paintable_box()).set_has_own_compositing_layer(true);
+            encoutered_fixed_layer = true;
+            NonnullOwnPtr<Painting::CompositingLayer> compositing_layer = make<Painting::CompositingLayer>(true);
+            compositing_layer->add_stacking_context(child);
+            m_compositing_layers.append(move(compositing_layer));
+        } else if (encoutered_fixed_layer) {
+            const_cast<Painting::PaintableBox&>(child->paintable_box()).set_has_own_compositing_layer(true);
+            NonnullOwnPtr<Painting::CompositingLayer> compositing_layer = make<Painting::CompositingLayer>(false);
+            compositing_layer->add_stacking_context(child);
+            m_compositing_layers.append(move(compositing_layer));
+        }
+
+        build_compositing_layers(child);
+    }
+}
+
+void Viewport::invalidate(DevicePixelRect rect)
+{
+    for (auto& layer : m_compositing_layers)
+        layer->invalidate(rect);
+}
+
 void Viewport::paint_all_phases(PaintContext& context)
 {
     build_stacking_context_tree_if_needed();
-    context.painter().translate(-context.device_viewport_rect().location().to_type<int>());
-    paintable_box()->stacking_context()->paint(context);
+    build_compositing_layers_if_needed();
+
+    for (auto& layer : m_compositing_layers) {
+        layer->paint(context, context.device_viewport_rect());
+    }
 }
 
 void Viewport::recompute_selection_states()

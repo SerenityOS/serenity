@@ -21,6 +21,8 @@ public:
     StackingContext const* parent() const { return m_parent; }
 
     PaintableBox const& paintable_box() const { return *m_box->paintable_box(); }
+    JS::NonnullGCPtr<Layout::Box const> box() const { return m_box; }
+    Vector<StackingContext*> const& children() const { return m_children; }
 
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,
