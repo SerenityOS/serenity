@@ -70,31 +70,42 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    Function<ErrorOr<void>(StringView)> update_path_owner = [&](StringView path) -> ErrorOr<void> {
-        auto stat = TRY(Core::System::lstat(path));
+    Function<bool(StringView)> update_path_owner = [&](StringView path) {
+        auto stat_or_error = Core::System::lstat(path);
+        if (stat_or_error.is_error()) {
+            warnln("Could not stat '{}': {}", path, stat_or_error.release_error());
+            return false;
+        }
+
+        auto stat = stat_or_error.release_value();
 
         if (S_ISLNK(stat.st_mode) && !follow_symlinks && !paths.contains_slow(path))
-            return {};
+            return false;
 
-        if (no_dereference) {
-            TRY(Core::System::lchown(path, new_uid, new_gid));
-        } else {
-            TRY(Core::System::chown(path, new_uid, new_gid));
+        auto success = true;
+        auto maybe_error = no_dereference
+            ? Core::System::lchown(path, new_uid, new_gid)
+            : Core::System::chown(path, new_uid, new_gid);
+
+        if (maybe_error.is_error()) {
+            warnln("Failed to change owner of '{}': {}", path, maybe_error.release_error());
+            success = false;
         }
 
         if (recursive && S_ISDIR(stat.st_mode)) {
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
 
             while (it.has_next())
-                TRY(update_path_owner(it.next_full_path()));
+                success &= update_path_owner(it.next_full_path());
         }
 
-        return {};
+        return success;
     };
 
-    for (auto path : paths) {
-        TRY(update_path_owner(path));
+    auto success = true;
+    for (auto const& path : paths) {
+        success &= update_path_owner(path);
     }
 
-    return 0;
+    return success ? 0 : 1;
 }
