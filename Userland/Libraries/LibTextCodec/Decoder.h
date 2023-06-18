@@ -97,4 +97,6 @@ Optional<Decoder&> bom_sniff_to_decoder(StringView);
 // This will use the given decoder unless there is a byte order mark in the input, in which we will instead use the appropriate Unicode decoder.
 ErrorOr<String> convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(Decoder&, StringView);
 
+StringView get_output_encoding(StringView encoding);
+
 }
