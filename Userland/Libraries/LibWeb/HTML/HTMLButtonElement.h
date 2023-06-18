@@ -52,12 +52,20 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-button
+    // https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-button
+    virtual bool is_button() const override { return true; }
+
+    virtual bool is_submit_button() const override;
+
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
     // https://www.w3.org/TR/html-aria/#el-button
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::button; }
+
+    virtual DeprecatedString value() const override;
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);

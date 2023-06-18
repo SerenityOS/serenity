@@ -628,4 +628,5 @@ class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
 class XMLHttpRequestUpload;
+struct FormDataEntry;
 }

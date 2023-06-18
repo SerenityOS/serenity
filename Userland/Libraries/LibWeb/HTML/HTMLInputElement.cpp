@@ -1085,4 +1085,24 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     return {};
 }
 
+bool HTMLInputElement::is_button() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#submit-button-state-(type=submit):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#reset-button-state-(type=reset):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#button-state-(type=button):concept-button
+    return type_state() == TypeAttributeState::SubmitButton
+        || type_state() == TypeAttributeState::ImageButton
+        || type_state() == TypeAttributeState::ResetButton
+        || type_state() == TypeAttributeState::Button;
+}
+
+bool HTMLInputElement::is_submit_button() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#submit-button-state-(type=submit):concept-submit-button
+    // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):concept-submit-button
+    return type_state() == TypeAttributeState::SubmitButton
+        || type_state() == TypeAttributeState::ImageButton;
+}
+
 }
