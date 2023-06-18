@@ -46,7 +46,7 @@ TEST_CASE(jpg)
 
 TEST_CASE(webp_extended_lossless)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossless.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/extended-lossless.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
@@ -58,7 +58,7 @@ TEST_CASE(webp_extended_lossless)
 
 TEST_CASE(webp_extended_lossy)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("webp/extended-lossy.webp"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/extended-lossy.webp"sv)));
     auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(webp->initialize());
     auto icc_bytes = MUST(webp->icc_data());
