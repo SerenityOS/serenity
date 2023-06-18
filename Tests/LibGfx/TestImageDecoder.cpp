@@ -88,7 +88,7 @@ TEST_CASE(test_bmp_embedded_in_ico)
 
 TEST_CASE(test_jpeg_sof0_one_scan)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgb24.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/rgb24.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -103,7 +103,7 @@ TEST_CASE(test_jpeg_sof0_one_scan)
 
 TEST_CASE(test_jpeg_sof0_several_scans)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("several_scans.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/several_scans.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -114,7 +114,7 @@ TEST_CASE(test_jpeg_sof0_several_scans)
 
 TEST_CASE(test_jpeg_rgb_components)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgb_components.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/rgb_components.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -125,7 +125,7 @@ TEST_CASE(test_jpeg_rgb_components)
 
 TEST_CASE(test_jpeg_sof2_spectral_selection)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("spectral_selection.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/spectral_selection.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -136,7 +136,7 @@ TEST_CASE(test_jpeg_sof2_spectral_selection)
 
 TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("several_scans_odd_number_mcu.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/several_scans_odd_number_mcu.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -147,7 +147,7 @@ TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
 
 TEST_CASE(test_jpeg_sof2_successive_aproximation)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("successive_approximation.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/successive_approximation.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -158,7 +158,7 @@ TEST_CASE(test_jpeg_sof2_successive_aproximation)
 
 TEST_CASE(test_jpeg_sof1_12bits)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("12-bit.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/12-bit.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
@@ -169,7 +169,7 @@ TEST_CASE(test_jpeg_sof1_12bits)
 
 TEST_CASE(test_jpeg_sof2_12bits)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("12-bit-progressive.jpg"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/12-bit-progressive.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
