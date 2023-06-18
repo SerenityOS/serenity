@@ -35,7 +35,7 @@ public:
     virtual ~ReadableStream() override;
 
     bool locked() const;
-    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value view);
+    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value reason);
     WebIDL::ExceptionOr<ReadableStreamReader> get_reader();
 
     Optional<ReadableStreamController>& controller() { return m_controller; }
