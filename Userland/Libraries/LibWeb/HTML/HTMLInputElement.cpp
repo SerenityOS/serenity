@@ -244,7 +244,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
-ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
+WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
 {
     if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
@@ -272,7 +272,7 @@ ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
             return {};
 
         // 3. Submit the form owner from the element.
-        TRY(form->submit_form(this));
+        TRY(form->submit_form(*this));
     } else if (type_state() == TypeAttributeState::FileUpload) {
         show_the_picker_if_applicable(*this);
     } else {
