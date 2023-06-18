@@ -134,8 +134,8 @@ private:
     HTMLCanvasElement const& canvas_element() const;
 
     void stroke_internal(Gfx::Path const&);
-    void fill_internal(Gfx::Path&, StringView fill_rule);
-    void clip_internal(Gfx::Path&, StringView fill_rule);
+    void fill_internal(Gfx::Path&, Gfx::Painter::WindingRule winding_rule);
+    void clip_internal(Gfx::Path&, Gfx::Painter::WindingRule winding_rule);
 
     JS::NonnullGCPtr<HTMLCanvasElement> m_element;
     OwnPtr<Gfx::Painter> m_painter;

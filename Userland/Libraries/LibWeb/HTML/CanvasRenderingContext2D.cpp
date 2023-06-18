@@ -262,16 +262,15 @@ static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
     return Gfx::Painter::WindingRule::Nonzero;
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_rule_value)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, Gfx::Painter::WindingRule winding_rule)
 {
     draw_clipped([=, this](auto& painter) mutable {
         path.close_all_subpaths();
         auto& drawing_state = this->drawing_state();
-        auto fill_rule = parse_fill_rule(fill_rule_value);
         if (auto color = drawing_state.fill_style.as_color(); color.has_value()) {
-            painter.fill_path(path, *color, fill_rule);
+            painter.fill_path(path, *color, winding_rule);
         } else {
-            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), 1.0f, fill_rule);
+            painter.fill_path(path, drawing_state.fill_style.to_gfx_paint_style(), 1.0f, winding_rule);
         }
         return path.bounding_box();
     });
@@ -279,13 +278,13 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, StringView fill_ru
 
 void CanvasRenderingContext2D::fill(DeprecatedString const& fill_rule)
 {
-    return fill_internal(path(), fill_rule);
+    return fill_internal(path(), parse_fill_rule(fill_rule));
 }
 
 void CanvasRenderingContext2D::fill(Path2D& path, DeprecatedString const& fill_rule)
 {
     auto transformed_path = path.path().copy_transformed(drawing_state().transform);
-    return fill_internal(transformed_path, fill_rule);
+    return fill_internal(transformed_path, parse_fill_rule(fill_rule));
 }
 
 JS::GCPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
@@ -490,7 +489,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     return prepared_text;
 }
 
-void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, StringView fill_rule)
+void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, Gfx::Painter::WindingRule winding_rule)
 {
     // FIXME: This should calculate the new clip path by intersecting the given path with the current one.
     // See: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clip-dev
@@ -498,19 +497,19 @@ void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, StringView fill_ru
     if (drawing_state().clip.has_value()) {
         dbgln("FIXME: CRC2D: Calculate the new clip path by intersecting the given path with the current one.");
     }
-    drawing_state().clip = CanvasClip { path, parse_fill_rule(fill_rule) };
+    drawing_state().clip = CanvasClip { path, winding_rule };
 }
 
 void CanvasRenderingContext2D::clip(DeprecatedString const& fill_rule)
 {
     auto transformed_path = path().copy_transformed(drawing_state().transform);
-    return clip_internal(transformed_path, fill_rule);
+    return clip_internal(transformed_path, parse_fill_rule(fill_rule));
 }
 
 void CanvasRenderingContext2D::clip(Path2D& path, DeprecatedString const& fill_rule)
 {
     auto transformed_path = path.path().copy_transformed(drawing_state().transform);
-    return clip_internal(transformed_path, fill_rule);
+    return clip_internal(transformed_path, parse_fill_rule(fill_rule));
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
