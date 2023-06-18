@@ -12,6 +12,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
+#include <LibWeb/Streams/QueuingStrategy.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamBYOBReader.h>
@@ -184,6 +185,24 @@ bool readable_stream_has_default_reader(ReadableStream const& stream)
 
     // 4. Return false.
     return false;
+}
+
+// https://streams.spec.whatwg.org/#validate-and-normalize-high-water-mark
+WebIDL::ExceptionOr<double> extract_high_water_mark(QueuingStrategy const& strategy, double default_hwm)
+{
+    // 1. If strategy["highWaterMark"] does not exist, return defaultHWM.
+    if (!strategy.high_water_mark.has_value())
+        return default_hwm;
+
+    // 2. Let highWaterMark be strategy["highWaterMark"].
+    auto high_water_mark = strategy.high_water_mark.value();
+
+    // 3. If highWaterMark is NaN or highWaterMark < 0, throw a RangeError exception.
+    if (isnan(high_water_mark) || high_water_mark < 0)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Invalid value for high water mark"sv };
+
+    // 4. Return highWaterMark.
+    return high_water_mark;
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-close
