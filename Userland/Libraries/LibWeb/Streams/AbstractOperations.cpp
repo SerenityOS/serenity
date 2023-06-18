@@ -2721,4 +2721,64 @@ JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS:
     return vm.heap().allocate_without_realm<WebIDL::CallbackType>(property.as_object(), HTML::incumbent_settings_object(), operation_returns_promise);
 }
 
+// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source
+WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller_from_underlying_source(ReadableStream& stream, JS::Value underlying_source, UnderlyingSource const& underlying_source_dict, double high_water_mark)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let controller be a new ReadableByteStreamController.
+    auto controller = MUST_OR_THROW_OOM(stream.heap().allocate<ReadableByteStreamController>(realm, realm));
+
+    // 2. Let startAlgorithm be an algorithm that returns undefined.
+    StartAlgorithm start_algorithm = [] { return JS::js_undefined(); };
+
+    // 3. Let pullAlgorithm be an algorithm that returns a promise resolved with undefined.
+    PullAlgorithm pull_algorithm = [&realm]() {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. Let cancelAlgorithm be an algorithm that returns a promise resolved with undefined.
+    CancelAlgorithm cancel_algorithm = [&realm](auto const&) {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 5. If underlyingSourceDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["start"] with argument list « controller » and callback this value underlyingSource.
+    if (underlying_source_dict.start) {
+        start_algorithm = [controller, underlying_source, callback = underlying_source_dict.start]() -> WebIDL::ExceptionOr<JS::Value> {
+            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
+            return TRY(WebIDL::invoke_callback(*callback, underlying_source, controller)).release_value();
+        };
+    }
+
+    // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
+    if (underlying_source_dict.pull) {
+        pull_algorithm = [&realm, controller, underlying_source, callback = underlying_source_dict.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
+    if (underlying_source_dict.cancel) {
+        cancel_algorithm = [&realm, controller, underlying_source, callback = underlying_source_dict.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
+            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source, reason)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 8. Let autoAllocateChunkSize be underlyingSourceDict["autoAllocateChunkSize"], if it exists, or undefined otherwise.
+    auto auto_allocate_chunk_size = underlying_source_dict.auto_allocate_chunk_size.has_value()
+        ? JS::Value(underlying_source_dict.auto_allocate_chunk_size.value())
+        : JS::js_undefined();
+
+    // 9. If autoAllocateChunkSize is 0, then throw a TypeError exception.
+    if (auto_allocate_chunk_size.is_integral_number() && auto_allocate_chunk_size.as_double() == 0)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot use an auto allocate chunk size of 0"sv };
+
+    // 10. Perform ? SetUpReadableByteStreamController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark, autoAllocateChunkSize).
+    return set_up_readable_byte_stream_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, auto_allocate_chunk_size);
+}
+
 }
