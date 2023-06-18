@@ -493,6 +493,7 @@ set(SOURCES
     SecureContexts/AbstractOperations.cpp
     SRI/SRI.cpp
     Streams/AbstractOperations.cpp
+    Streams/ByteLengthQueuingStrategy.cpp
     Streams/CountQueuingStrategy.cpp
     Streams/ReadableByteStreamController.cpp
     Streams/ReadableStream.cpp

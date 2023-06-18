@@ -535,6 +535,7 @@ class Selection;
 }
 
 namespace Web::Streams {
+class ByteLengthQueuingStrategy;
 class CountQueuingStrategy;
 class ReadableByteStreamController;
 class ReadableStream;
