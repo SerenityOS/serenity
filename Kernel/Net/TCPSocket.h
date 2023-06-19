@@ -223,7 +223,8 @@ private:
     UnixDateTime m_last_retransmit_time;
     u32 m_retransmit_attempts { 0 };
 
-    // FIXME: Parse window size TCP option from the peer
+    // Default to maximum window size. receive_tcp_packet() will update from the
+    // peer's advertised window size.
     u32 m_send_window_size { 64 * KiB };
 
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
