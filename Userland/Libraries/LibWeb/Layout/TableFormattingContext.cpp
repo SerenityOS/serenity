@@ -261,27 +261,26 @@ void TableFormattingContext::compute_table_measures()
                 // Define the baseline border spacing as the sum of the horizontal border-spacing for any columns spanned by the cell, other than the one in which the cell originates.
                 auto baseline_border_spacing = border_spacing<RowOrColumn>() * (cell_span_value - 1);
 
-                // The contribution of the cell is the sum of:
-                // the min-content size of the column based on cells of span up to N-1
-                auto cell_min_contribution = rows_or_columns[cell_start_rc_index].min_size;
-                // and the product of:
-                // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
-                // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
-                cell_min_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size)
-                    * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
-
-                // The contribution of the cell is the sum of:
-                // the max-content size of the column based on cells of span up to N-1
-                auto cell_max_contribution = rows_or_columns[cell_start_rc_index].max_size;
-                // and the product of:
-                // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
-                // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
-                cell_max_contribution += (rows_or_columns[cell_start_rc_index].max_size / baseline_max_content_size)
-                    * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
-
-                // Spread contribution to all rows / columns, since we've weighted the gap to the desired spanned size by the the
+                // Add contribution from all rows / columns, since we've weighted the gap to the desired spanned size by the the
                 // ratio of the max-content size based on cells of span up to N-1 of the row / column to the baseline max-content width.
                 for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                    // The contribution of the cell is the sum of:
+                    // the min-content size of the column based on cells of span up to N-1
+                    auto cell_min_contribution = rows_or_columns[rc_index].min_size;
+                    // and the product of:
+                    // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
+                    // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
+                    cell_min_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
+                        * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+
+                    // The contribution of the cell is the sum of:
+                    // the max-content size of the column based on cells of span up to N-1
+                    auto cell_max_contribution = rows_or_columns[rc_index].max_size;
+                    // and the product of:
+                    // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
+                    // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
+                    cell_max_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
+                        * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
                     cell_min_contributions_by_rc_index[rc_index].append(cell_min_contribution);
                     cell_max_contributions_by_rc_index[rc_index].append(cell_max_contribution);
                 }
