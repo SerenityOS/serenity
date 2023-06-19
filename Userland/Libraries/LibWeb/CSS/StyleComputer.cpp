@@ -836,6 +836,16 @@ bool StyleComputer::expand_variables(DOM::Element& element, Optional<CSS::Select
 
     while (source.has_next_token()) {
         auto const& value = source.next_token();
+        if (value.is_block()) {
+            auto const& source_block = value.block();
+            Vector<Parser::ComponentValue> block_values;
+            Parser::TokenStream source_block_contents { source_block.values() };
+            if (!expand_variables(element, pseudo_element, property_name, dependencies, source_block_contents, block_values))
+                return false;
+            NonnullRefPtr<Parser::Block> block = Parser::Block::create(source_block.token(), move(block_values));
+            dest.empend(block);
+            continue;
+        }
         if (!value.is_function()) {
             dest.empend(value);
             continue;
