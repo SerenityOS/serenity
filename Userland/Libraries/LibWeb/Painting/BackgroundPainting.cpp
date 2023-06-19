@@ -316,7 +316,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             while (image_x < css_clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto image_device_rect = context.rounded_device_rect(image_rect);
-                if (image_device_rect != last_image_device_rect && image_device_rect.intersects(context.device_viewport_rect()))
+                if (image_device_rect != last_image_device_rect && !context.would_be_fully_clipped_by_painter(image_device_rect))
                     image.paint(context, image_device_rect, image_rendering);
                 last_image_device_rect = image_device_rect;
                 if (!repeat_x)
