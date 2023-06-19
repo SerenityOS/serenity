@@ -361,7 +361,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (!m_clipping_overflow) {
         context.painter().save();
-        context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
+        context.painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
         m_clipping_overflow = true;
     }
 
