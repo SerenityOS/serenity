@@ -15,7 +15,6 @@ namespace Kernel {
 
 static constexpr int buffer_descriptor_list_max_entries = 32;
 
-static constexpr u16 pcm_default_sample_rate = 44100;
 static constexpr u16 pcm_fixed_sample_rate = 48000;
 
 // Valid output range - with double-rate enabled, sample rate can go up to 96kHZ
@@ -125,7 +124,8 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize(Badge<AudioManagement>)
     }
     m_mixer_io_window->write16(NativeAudioMixerRegister::ExtendedAudioStatusControl, extended_audio_status);
 
-    TRY(set_pcm_output_sample_rate(m_variable_rate_pcm_supported ? pcm_default_sample_rate : pcm_fixed_sample_rate));
+    // Get the device's current sample rate
+    m_sample_rate = read_pcm_output_sample_rate();
 
     // Left and right volume of 0 means attenuation of 0 dB
     set_master_output_volume(0, 0, Muted::No);
@@ -144,6 +144,12 @@ void AC97::set_master_output_volume(u8 left_channel, u8 right_channel, Muted mut
     m_mixer_io_window->write16(NativeAudioMixerRegister::SetMasterOutputVolume, volume_value);
 }
 
+u32 AC97::read_pcm_output_sample_rate()
+{
+    auto const double_rate_shift = m_double_rate_pcm_enabled ? 1 : 0;
+    return static_cast<u32>(m_mixer_io_window->read16(NativeAudioMixerRegister::PCMFrontDACRate)) << double_rate_shift;
+}
+
 ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
 {
     if (m_sample_rate == sample_rate)
@@ -157,7 +163,7 @@ ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
         return ENOTSUP;
 
     m_mixer_io_window->write16(NativeAudioMixerRegister::PCMFrontDACRate, shifted_sample_rate);
-    m_sample_rate = static_cast<u32>(m_mixer_io_window->read16(NativeAudioMixerRegister::PCMFrontDACRate)) << double_rate_shift;
+    m_sample_rate = read_pcm_output_sample_rate();
 
     dmesgln_pci(*this, "PCM front DAC rate set to {} Hz", m_sample_rate);
 
