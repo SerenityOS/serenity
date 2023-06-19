@@ -78,7 +78,7 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     m_progressbar = add<GUI::Progressbar>();
     m_progressbar->set_fixed_height(20);
-    m_progressbar->set_max(0);
+    m_progressbar->set_min(0);
     m_progressbar->set_max(100);
 
     m_progress_label = add<GUI::Label>();
