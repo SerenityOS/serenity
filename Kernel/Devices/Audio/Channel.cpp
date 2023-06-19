@@ -15,7 +15,15 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioChannel>> AudioChannel::create(AudioController const& controller, size_t channel_index)
 {
-    return *TRY(DeviceManagement::try_create_device<AudioChannel>(controller, channel_index));
+    auto channel = TRY(DeviceManagement::try_create_device<AudioChannel>(controller, channel_index));
+
+    // FIXME: Ideally, we would want the audio controller to run a channel at a device's initial sample
+    //        rate instead of hardcoding 44.1 KHz here. However, most audio is provided at 44.1 KHz and as
+    //        long as Audio::Resampler introduces significant audio artifacts, let's set a sensible sample
+    //        rate here. Remove this after implementing a higher quality Audio::Resampler.
+    TRY(const_cast<AudioController&>(controller).set_pcm_output_sample_rate(channel_index, 44100));
+
+    return *channel;
 }
 
 AudioChannel::AudioChannel(AudioController const& controller, size_t channel_index)
