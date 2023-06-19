@@ -2,7 +2,7 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-14 are required at a minimum for c++20 support.
+Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-15 are required at a minimum for c++20 support.
 
 On Debian/Ubuntu required packages include, but are not limited to:
 
