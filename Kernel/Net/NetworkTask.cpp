@@ -435,7 +435,6 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
     switch (socket->state()) {
     case TCPSocket::State::Closed:
         dbgln("handle_tcp: unexpected flags in Closed state ({:x})", tcp_packet.flags());
-        // TODO: we may want to send an RST here, maybe as a configurable option
         return;
     case TCPSocket::State::TimeWait:
         dbgln("handle_tcp: unexpected flags in TimeWait state ({:x})", tcp_packet.flags());
