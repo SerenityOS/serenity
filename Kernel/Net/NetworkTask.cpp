@@ -434,8 +434,34 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
 
     switch (socket->state()) {
     case TCPSocket::State::Closed:
-        dbgln("handle_tcp: unexpected flags in Closed state ({:x})", tcp_packet.flags());
-        // TODO: we may want to send an RST here, maybe as a configurable option
+        // https://datatracker.ietf.org/doc/html/rfc9293#section-3.5.2
+        switch (tcp_packet.flags()) {
+        case TCPFlags::RST: {
+            // If the connection does not exist (CLOSED), then a reset is sent in response
+            // to any incoming segment except another reset. A SYN segment that does not
+            // match an existing connection is rejected by this means.
+            dbgln_if(TCP_DEBUG, "handle_tcp: RST received in Closed state, no action taken");
+            return;
+        }
+        case TCPFlags::ACK: {
+            // If the incoming segment has the ACK bit set, the reset takes its sequence
+            // number from the ACK field of the segment;
+            dbgln_if(TCP_DEBUG, "handle_tcp: Sending RST due to ACK packet received in Closed state ({:x})", tcp_packet.flags());
+            socket->set_sequence_number(tcp_packet.sequence_number());
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
+            return;
+        }
+        default:
+            // otherwise, the reset has sequence number zero and the ACK field is set to
+            // the sum of the sequence number and segment length of the incoming segment.
+            // The connection remains in the CLOSED state.
+            dbgln_if(TCP_DEBUG, "handle_tcp: Sending RST due to packet received in Closed state ({:x})", tcp_packet.flags());
+            socket->set_sequence_number(0);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
+            return;
+        }
         return;
     case TCPSocket::State::TimeWait:
         dbgln("handle_tcp: unexpected flags in TimeWait state ({:x})", tcp_packet.flags());
