@@ -403,6 +403,18 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         view().toggle_media_loop_state();
     });
 
+    auto* open_audio_action = new QAction("&Open Audio", this);
+    open_audio_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-sound.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_audio_action, &QAction::triggered, this, [this]() {
+        open_link(m_media_context_menu_url);
+    });
+
+    auto* open_audio_in_new_tab_action = new QAction("Open Audio in New &Tab", this);
+    open_audio_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_audio_in_new_tab_action, &QAction::triggered, this, [this]() {
+        open_link_in_new_tab(m_media_context_menu_url);
+    });
+
     auto* copy_audio_url_action = new QAction("Copy Audio &URL", this);
     copy_audio_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(copy_audio_url_action, &QAction::triggered, this, [this]() {
@@ -414,6 +426,9 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_audio_context_menu->addAction(m_media_context_menu_mute_unmute_action);
     m_audio_context_menu->addAction(m_media_context_menu_controls_action);
     m_audio_context_menu->addAction(m_media_context_menu_loop_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(open_audio_action);
+    m_audio_context_menu->addAction(open_audio_in_new_tab_action);
     m_audio_context_menu->addSeparator();
     m_audio_context_menu->addAction(copy_audio_url_action);
     m_audio_context_menu->addSeparator();
