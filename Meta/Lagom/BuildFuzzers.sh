@@ -14,7 +14,7 @@ die() {
 
 pick_clang() {
     local BEST_VERSION=0
-    for CLANG_CANDIDATE in clang clang-14 clang-15 clang-16 /opt/homebrew/opt/llvm/bin/clang ; do
+    for CLANG_CANDIDATE in clang clang-15 clang-16 /opt/homebrew/opt/llvm/bin/clang ; do
         if ! command -v $CLANG_CANDIDATE >/dev/null 2>&1; then
             continue
         fi
