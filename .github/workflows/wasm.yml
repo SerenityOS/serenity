@@ -24,7 +24,7 @@ jobs:
       - name: "Install emscripten"
         uses: mymindstorm/setup-emsdk@v12
         with:
-          version: 3.1.6
+          version: 3.1.25
       - name: "Check versions"
         run: |
           set +e
