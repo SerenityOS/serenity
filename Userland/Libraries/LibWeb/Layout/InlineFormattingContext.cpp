@@ -348,4 +348,19 @@ bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
     return true;
 }
 
+bool InlineFormattingContext::can_determine_size_of_child() const
+{
+    return parent().can_determine_size_of_child();
+}
+
+void InlineFormattingContext::determine_width_of_child(Box const& box, AvailableSpace const& available_space)
+{
+    return parent().determine_width_of_child(box, available_space);
+}
+
+void InlineFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
+{
+    return parent().determine_height_of_child(box, available_space);
+}
+
 }
