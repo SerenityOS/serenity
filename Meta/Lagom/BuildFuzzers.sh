@@ -73,7 +73,7 @@ if [ "$#" -gt "0" ] && [ "--oss-fuzz" = "$1" ] ; then
         -DLINKER_FLAGS="$LIB_FUZZING_ENGINE" \
         -DCMAKE_PREFIX_PATH=Build/tool-install
     ninja -C Build/fuzzers
-    cp Build/fuzzers/Fuzzers/Fuzz* "$OUT"/
+    cp Build/fuzzers/bin/Fuzz* "$OUT"/
 elif [ "$#" -gt "0" ] && [ "--standalone" = "$1" ] ; then
     echo "Building for standalone fuzz configuration..."
     cmake -GNinja -B Build/lagom-fuzzers-standalone \
