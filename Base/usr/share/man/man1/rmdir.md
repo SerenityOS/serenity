@@ -15,6 +15,7 @@ Remove given `directory(ies)`, if they are empty
 ## Options
 
 * `-p`, `--parents`:  Remove all directories in each given path
+* `-v`, `--verbose`: List each directory as it is removed
 
 ## Arguments
 

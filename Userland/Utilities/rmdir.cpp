@@ -16,16 +16,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio cpath"));
 
     bool remove_parents = false;
+    bool verbose = false;
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(remove_parents, "Remove all directories in each given path", "parents", 'p');
+    args_parser.add_option(verbose, "List each directory as it is removed", "verbose", 'v');
     args_parser.add_positional_argument(paths, "Directories to remove", "paths");
     args_parser.parse(arguments);
 
     int status = 0;
 
     auto remove_directory = [&](StringView path) {
+        if (verbose)
+            outln("rmdir: removing directory '{}'", path);
+
         auto maybe_error = Core::System::rmdir(path);
         if (maybe_error.is_error()) {
             warnln("Failed to remove '{}': {}", path, maybe_error.release_error());
