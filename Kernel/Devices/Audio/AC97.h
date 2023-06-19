@@ -162,6 +162,7 @@ private:
     virtual bool handle_irq(RegisterState const&) override;
 
     void set_master_output_volume(u8, u8, Muted);
+    u32 read_pcm_output_sample_rate();
     ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
     ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
