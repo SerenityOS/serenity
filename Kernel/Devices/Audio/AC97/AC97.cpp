@@ -86,8 +86,6 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize(Badge<AudioManagement>)
     dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", device_identifier().address(), m_mixer_io_window);
     dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", device_identifier().address(), m_bus_io_window);
 
-    m_audio_channel = TRY(AudioChannel::create(*this, 0));
-
     // Read out AC'97 codec revision and vendor
     auto extended_audio_id = m_mixer_io_window->read16(NativeAudioMixerRegister::ExtendedAudioID);
     m_codec_revision = static_cast<AC97Revision>(((extended_audio_id & ExtendedAudioMask::Revision) >> 10) & 0b11);
@@ -133,6 +131,8 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize(Badge<AudioManagement>)
 
     m_pcm_out_channel->reset();
     enable_irq();
+
+    m_audio_channel = TRY(AudioChannel::create(*this, 0));
     return {};
 }
 
