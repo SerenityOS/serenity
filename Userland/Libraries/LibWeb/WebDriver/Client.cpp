@@ -219,8 +219,10 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
         auto data = TRY(m_socket->read_some(buffer));
         TRY(m_remaining_request.try_append(StringView { data }));
 
-        if (m_socket->is_eof())
+        if (m_socket->is_eof()) {
+            die();
             break;
+        }
     }
 
     if (m_remaining_request.is_empty())
