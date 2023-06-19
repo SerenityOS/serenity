@@ -19,13 +19,6 @@ This program must be run as root.
 * `-g`, `--gid` _gid_: The group identifier for the new group. If not specified, an unused GID above `100` will be auto-generated.
 * `-U`, `--users` user-list: A comma-separated list of usernames to add as members of the new group
 
-## Exit Values
-
-* 0 - Success
-* 1 - Couldn't update the group file
-* 3 - Invalid argument to option
-* 4 - GID already in use
-
 ## Files
 
 * `/etc/group` - new group information (such GID) is appended to this file.
