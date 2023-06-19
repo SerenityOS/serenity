@@ -1447,6 +1447,8 @@ CSS::AlignItems FlexFormattingContext::alignment_for_item(Box const& box) const
     switch (box.computed_values().align_self()) {
     case CSS::AlignSelf::Auto:
         return flex_container().computed_values().align_items();
+    case CSS::AlignSelf::End:
+        return CSS::AlignItems::End;
     case CSS::AlignSelf::Normal:
         return CSS::AlignItems::Normal;
     case CSS::AlignSelf::SelfStart:
