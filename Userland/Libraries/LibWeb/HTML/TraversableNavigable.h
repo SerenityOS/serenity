@@ -36,6 +36,7 @@ public:
     };
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 
+    int get_the_used_step(int step) const;
     Vector<int> get_all_used_history_steps() const;
     void clear_the_forward_session_history();
 

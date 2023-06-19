@@ -171,6 +171,25 @@ TraversableNavigable::HistoryObjectLengthAndIndex TraversableNavigable::get_the_
     };
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-the-used-step
+int TraversableNavigable::get_the_used_step(int step) const
+{
+    // 1. Let steps be the result of getting all used history steps within traversable.
+    auto steps = get_all_used_history_steps();
+
+    // 2. Return the greatest item in steps that is less than or equal to step.
+    VERIFY(!steps.is_empty());
+    Optional<int> result;
+    for (size_t i = 0; i < steps.size(); i++) {
+        if (steps[i] <= step) {
+            if (!result.has_value() || (result.value() < steps[i])) {
+                result = steps[i];
+            }
+        }
+    }
+    return result.value();
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#clear-the-forward-session-history
 void TraversableNavigable::clear_the_forward_session_history()
 {
