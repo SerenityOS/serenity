@@ -38,13 +38,13 @@ public:
         return {};
     }
 
-    DeprecatedString key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
+    String key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
 
     void set_from(JsonObject const& object)
     {
         m_keys.clear();
         object.for_each_member([this](auto& name, auto&) {
-            m_keys.append(name);
+            m_keys.append(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
         });
         AK::quick_sort(m_keys);
         invalidate();
@@ -55,7 +55,7 @@ private:
     {
     }
 
-    Vector<DeprecatedString> m_keys;
+    Vector<String> m_keys;
 };
 
 RefPtr<HelpWindow> HelpWindow::s_the { nullptr };
@@ -88,7 +88,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto entry = LexicalPath::basename(example_path);
             auto doc_option = m_docs.get_object(entry);
             if (!doc_option.has_value()) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", example_path));
+                GUI::MessageBox::show_error(this, String::formatted("No documentation entry found for '{}'", example_path).release_value_but_fixme_should_propagate_errors());
                 return;
             }
             auto& doc = doc_option.value();
@@ -96,13 +96,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
             auto maybe_example_data = doc.get_object("example_data"sv);
             if (!maybe_example_data.has_value()) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No example data found for '{}'", example_path));
+                GUI::MessageBox::show_error(this, String::formatted("No example data found for '{}'", example_path).release_value_but_fixme_should_propagate_errors());
                 return;
             }
             auto& example_data = maybe_example_data.value();
 
             if (!example_data.has_object(name)) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Example '{}' not found for '{}'", name, example_path));
+                GUI::MessageBox::show_error(this, String::formatted("Example '{}' not found for '{}'", name, example_path).release_value_but_fixme_should_propagate_errors());
                 return;
             }
             auto& value = example_data.get_object(name).value();
@@ -110,13 +110,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto window = GUI::Window::construct(this);
             window->resize(size());
             window->set_icon(icon());
-            window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            window->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
             auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false).release_value_but_fixme_should_propagate_errors();
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, example_path));
+                GUI::MessageBox::show_error(this, String::formatted("Corrupted example '{}' in '{}'", name, example_path).release_value_but_fixme_should_propagate_errors());
                 return;
             }
 
@@ -124,7 +124,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->show();
         } else if (url.host() == "doc") {
             auto entry = LexicalPath::basename(url.serialize_path());
-            m_webview->load(URL::create_with_data("text/html", render(entry)));
+            m_webview->load(URL::create_with_data("text/html", render(entry).to_deprecated_string()));
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.host());
         }
@@ -135,11 +135,11 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             return;
 
         auto key = static_cast<HelpListModel*>(m_listview->model())->key(index);
-        m_webview->load(URL::create_with_data("text/html", render(key)));
+        m_webview->load(URL::create_with_data("text/html", render(key).to_deprecated_string()));
     };
 }
 
-DeprecatedString HelpWindow::render(StringView key)
+String HelpWindow::render(StringView key)
 {
     VERIFY(m_docs.has_object(key));
     auto& doc = m_docs.get_object(key).value();
@@ -192,7 +192,7 @@ DeprecatedString HelpWindow::render(StringView key)
     }
 
     auto document = Markdown::Document::parse(markdown_builder.string_view());
-    return document->render_to_html();
+    return String::from_deprecated_string(document->render_to_html()).release_value_but_fixme_should_propagate_errors();
 }
 
 void HelpWindow::set_docs(JsonObject&& docs)
