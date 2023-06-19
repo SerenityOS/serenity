@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Devices/Audio/AC97.h>
+#include <Kernel/Devices/Audio/AC97/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
