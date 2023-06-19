@@ -321,6 +321,9 @@ void TCPSocket::receive_tcp_packet(TCPPacket const& packet, u16 size)
                     if (old_adapter)
                         old_adapter->release_packet_buffer(*packet.buffer);
                     TCPPacket& tcp_packet = *(TCPPacket*)(packet.buffer->buffer->data() + packet.ipv4_payload_offset);
+                    if (m_send_window_size != tcp_packet.window_size()) {
+                        m_send_window_size = tcp_packet.window_size();
+                    }
                     auto payload_size = packet.buffer->buffer->data() + packet.buffer->buffer->size() - (u8*)tcp_packet.payload();
                     unacked_packets.size -= payload_size;
                     evaluate_block_conditions();
