@@ -371,9 +371,10 @@ struct CaseInsensitiveASCIIStringViewTraits : public Traits<StringView> {
 
 }
 
-// FIXME: Remove this when clang fully supports consteval (specifically in the context of default parameter initialization).
-// See: https://stackoverflow.com/questions/68789984/immediate-function-as-default-function-argument-initializer-in-clang
-#if defined(AK_COMPILER_CLANG)
+// FIXME: Remove this when clang on BSD distributions fully support consteval (specifically in the context of default parameter initialization).
+//        Note that this is fixed in clang-15, but is not yet picked up by all downstream distributions.
+//        See: https://github.com/llvm/llvm-project/issues/48230
+#if defined(AK_OS_BSD_GENERIC)
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL constexpr
 #else
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL consteval
