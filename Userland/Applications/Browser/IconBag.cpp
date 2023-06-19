@@ -14,6 +14,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.filetype_html = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"sv));
     icon_bag.filetype_text = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"sv));
     icon_bag.filetype_javascript = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"sv));
+    icon_bag.filetype_audio = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-sound.png"sv));
     icon_bag.filetype_image = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"sv));
     icon_bag.filetype_video = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-video.png"sv));
     icon_bag.bookmark_contour = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"sv));

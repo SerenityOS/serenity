@@ -16,6 +16,7 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> filetype_html { nullptr };
     RefPtr<Gfx::Bitmap> filetype_text { nullptr };
     RefPtr<Gfx::Bitmap> filetype_javascript { nullptr };
+    RefPtr<Gfx::Bitmap> filetype_audio { nullptr };
     RefPtr<Gfx::Bitmap> filetype_image { nullptr };
     RefPtr<Gfx::Bitmap> filetype_video { nullptr };
     RefPtr<Gfx::Bitmap> bookmark_contour { nullptr };

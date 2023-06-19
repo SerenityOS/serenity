@@ -393,6 +393,13 @@ Tab::Tab(BrowserWindow& window)
     m_audio_context_menu->add_action(*m_media_context_menu_controls_action);
     m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
     m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("&Open Audio", g_icon_bag.filetype_audio, [this](auto&) {
+        view().on_link_click(m_media_context_menu_url, "", 0);
+    }));
+    m_audio_context_menu->add_action(GUI::Action::create("Open Audio in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+        view().on_link_click(m_media_context_menu_url, "_blank", 0);
+    }));
+    m_audio_context_menu->add_separator();
     m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
     }));
