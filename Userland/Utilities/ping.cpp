@@ -33,6 +33,7 @@ static int max_ms;
 static DeprecatedString host;
 static int payload_size = -1;
 static bool quiet = false;
+static Optional<size_t> ttl;
 static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
@@ -90,10 +91,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
+    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
         warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), UINT32_MAX);
+        return 1;
+    }
+
+    if (ttl.has_value() && (ttl.value() < 1 || ttl.value() > 255)) {
+        warnln("invalid TTL argument: '{}': out of range: 1 <= value <= 255", ttl.value());
         return 1;
     }
 
@@ -112,6 +119,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+    if (ttl.has_value()) {
+        TRY(Core::System::setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl.value(), sizeof(ttl.value())));
+    }
 
     auto* hostent = gethostbyname(host.characters());
     if (!hostent) {
@@ -170,6 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& pong_packet = pong_packet_result.value();
             socklen_t peer_address_size = sizeof(peer_address);
             auto result = Core::System::recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+            uint8_t const pong_ttl = pong_packet[8];
             if (result.is_error()) {
                 if (result.error().code() == EAGAIN) {
                     if (!quiet)
@@ -220,11 +231,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             char addr_buf[INET_ADDRSTRLEN];
             if (!quiet)
-                outln("Pong from {}: id={}, seq={}{}, time={}ms, size={}",
+                outln("Pong from {}: id={}, seq={}{}, ttl={}, time={}ms, size={}",
                     inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                     ntohs(pong_hdr->un.echo.id),
                     ntohs(pong_hdr->un.echo.sequence),
                     pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence ? "(!)" : "",
+                    pong_ttl,
                     ms, result.value());
 
             // If this was a response to an earlier packet, we still need to wait for the current one.
