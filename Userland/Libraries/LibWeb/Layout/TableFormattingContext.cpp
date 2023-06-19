@@ -98,16 +98,19 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
     size_t x_width = 0, y_height = 0;
     size_t x_current = 0, y_current = 0;
 
+    // Implements https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
     auto process_row = [&](auto& row) {
         if (y_height == y_current)
             y_height++;
 
         x_current = 0;
-        while (x_current < x_width && grid.contains(GridPosition { x_current, y_current }))
-            x_current++;
 
         for (auto* child = row.first_child(); child; child = child->next_sibling()) {
             if (child->display().is_table_cell()) {
+                // Cells: While x_current is less than x_width and the slot with coordinate (x_current, y_current) already has a cell assigned to it, increase x_current by 1.
+                while (x_current < x_width && grid.contains(GridPosition { x_current, y_current }))
+                    x_current++;
+
                 Box const* box = static_cast<Box const*>(child);
                 if (x_current == x_width)
                     x_width++;
