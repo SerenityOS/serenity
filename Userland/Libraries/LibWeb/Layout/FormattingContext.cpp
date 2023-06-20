@@ -305,6 +305,22 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     return { w, h };
 }
 
+Optional<CSSPixels> FormattingContext::compute_auto_height_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout) const
+{
+    // NOTE: CSS 2.2 tells us to use the "auto height for block formatting context roots" here.
+    //       That's fine as long as the box is a BFC root.
+    if (creates_block_formatting_context(box)) {
+        if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+            return {};
+        return compute_auto_height_for_block_formatting_context_root(box);
+    }
+
+    // NOTE: For anything else, we use the fit-content height.
+    //       This should eventually be replaced by the new absolute positioning model:
+    //       https://www.w3.org/TR/css-position-3/#abspos-layout
+    return calculate_fit_content_height(box, available_space);
+}
+
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
 CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_root(Box const& root) const
 {
@@ -798,10 +814,6 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     // If all three of top, height, and bottom are auto:
     if (top.is_auto() && height.is_auto() && bottom.is_auto()) {
-        // (If we haven't done inside layout yet, we can't compute the auto height.)
-        if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
-            return;
-
         // First set any auto values for margin-top and margin-bottom to 0,
         if (margin_top.is_auto())
             margin_top = CSS::Length::make_px(0);
@@ -813,7 +825,10 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         top = CSS::Length::make_px(static_position.y());
 
         // and finally apply rule number three below.
-        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
+        auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
+        if (!maybe_height.has_value())
+            return;
+        height = CSS::Size::make_px(maybe_height.value());
         solve_for_bottom();
     }
 
@@ -853,12 +868,11 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
         // 1. If top and height are auto and bottom is not auto,
         if (top.is_auto() && height.is_auto() && !bottom.is_auto()) {
-            // (If we haven't done inside layout yet, we can't compute the auto height.)
-            if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
-                return;
-
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
+            auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
+            if (!maybe_height.has_value())
+                return;
+            height = CSS::Size::make_px(maybe_height.value());
 
             // and solve for top.
             solve_for_top();
@@ -875,12 +889,11 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
         // 3. If height and bottom are auto and top is not auto,
         else if (height.is_auto() && bottom.is_auto() && !top.is_auto()) {
-            // (If we haven't done inside layout yet, we can't compute the auto height.)
-            if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
-                return;
-
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
+            auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
+            if (!maybe_height.has_value())
+                return;
+            height = CSS::Size::make_px(maybe_height.value());
 
             // and solve for bottom.
             solve_for_bottom();
