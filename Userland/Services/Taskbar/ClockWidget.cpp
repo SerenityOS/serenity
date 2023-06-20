@@ -83,6 +83,10 @@ ClockWidget::ClockWidget()
     m_calendar = calendar_container.add<GUI::Calendar>();
     m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
 
+    m_calendar->on_scroll = [&] {
+        update_selected_calendar_button();
+    };
+
     m_calendar->on_tile_click = [&] {
         m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
