@@ -45,6 +45,8 @@ private:
     void position_calendar_window();
     void jump_to_current_date();
 
+    void update_selected_calendar_button();
+
     DeprecatedString m_time_format;
     RefPtr<GUI::Window> m_calendar_window;
     RefPtr<GUI::Calendar> m_calendar;
