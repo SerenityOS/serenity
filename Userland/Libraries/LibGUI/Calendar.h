@@ -64,6 +64,9 @@ public:
     void set_show_days_of_the_week(bool b) { m_show_days = b; }
     bool is_showing_days_of_the_week() const { return m_show_days; }
 
+    void show_previous_date();
+    void show_next_date();
+
     Gfx::IntSize unadjusted_tile_size() const { return m_unadjusted_tile_size; }
     void set_unadjusted_tile_size(int width, int height)
     {

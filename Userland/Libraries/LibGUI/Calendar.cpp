@@ -82,6 +82,38 @@ void Calendar::toggle_mode()
     invalidate_layout();
 }
 
+void Calendar::show_previous_date()
+{
+    unsigned view_month = m_view_month;
+    unsigned view_year = m_view_year;
+    if (m_mode == GUI::Calendar::Month) {
+        --view_month;
+        if (view_month == 0) {
+            view_month = 12;
+            --view_year;
+        }
+    } else {
+        --view_year;
+    }
+    update_tiles(view_year, view_month);
+}
+
+void Calendar::show_next_date()
+{
+    unsigned view_month = m_view_month;
+    unsigned view_year = m_view_year;
+    if (m_mode == GUI::Calendar::Month) {
+        ++view_month;
+        if (view_month == 13) {
+            view_month = 1;
+            ++view_year;
+        }
+    } else {
+        ++view_year;
+    }
+    update_tiles(view_year, view_month);
+}
+
 void Calendar::resize_event(GUI::ResizeEvent& event)
 {
     m_event_size.set_width(event.size().width() - (frame_thickness() * 2));
