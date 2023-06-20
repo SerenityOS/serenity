@@ -89,8 +89,13 @@ public:
         : m_storage(exchange(other.m_storage, nullptr))
     {
     }
-    // This function would violate the contract, as it would need to deallocate this FixedArray. As it also has no use case, we delete it.
-    FixedArray<T>& operator=(FixedArray<T>&&) = delete;
+
+    FixedArray<T>& operator=(FixedArray<T>&& other)
+    {
+        m_storage = other.m_storage;
+        other.m_storage = nullptr;
+        return *this;
+    }
 
     ~FixedArray()
     {
