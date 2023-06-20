@@ -104,7 +104,7 @@ void SVGSVGElement::update_fallback_view_box_for_svg_as_image()
             height = height_value->as_length().length().absolute_length_to_px().to_double();
     }
 
-    if (width.has_value() && height.has_value()) {
+    if (width.has_value() && width.value() > 0 && height.has_value() && height.value() > 0) {
         m_fallback_view_box_for_svg_as_image = ViewBox { 0, 0, width.value(), height.value() };
     } else {
         m_fallback_view_box_for_svg_as_image = {};
@@ -121,7 +121,8 @@ Optional<ViewBox> SVGSVGElement::view_box() const
     if (m_view_box.has_value())
         return m_view_box;
 
-    if (m_fallback_view_box_for_svg_as_image.has_value())
+    // NOTE: If the parent is a document, we're an <svg> element used as an image.
+    if (parent() && parent()->is_document() && m_fallback_view_box_for_svg_as_image.has_value())
         return m_fallback_view_box_for_svg_as_image;
 
     return {};
