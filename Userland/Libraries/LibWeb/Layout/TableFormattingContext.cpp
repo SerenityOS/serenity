@@ -500,27 +500,6 @@ void TableFormattingContext::distribute_width_to_columns()
     }
 }
 
-void TableFormattingContext::determine_intrisic_size_of_table_container(AvailableSpace const& available_space)
-{
-    auto& table_box_state = m_state.get_mutable(table_box());
-
-    if (available_space.width.is_min_content()) {
-        // The min-content width of a table is the width required to fit all of its columns min-content widths and its undistributable spaces.
-        CSSPixels grid_min = 0.0f;
-        for (auto& column : m_columns)
-            grid_min += column.min_size;
-        table_box_state.set_content_width(grid_min);
-    }
-
-    if (available_space.width.is_max_content()) {
-        // The max-content width of a table is the width required to fit all of its columns max-content widths and its undistributable spaces.
-        CSSPixels grid_max = 0.0f;
-        for (auto& column : m_columns)
-            grid_max += column.max_size;
-        table_box_state.set_content_width(grid_max);
-    }
-}
-
 void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
 {
     // First pass of row height calculation:
@@ -995,13 +974,12 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     // height specified on cells that span this row only (the algorithm starts by considering cells of span 2 on top of that assignment).
     compute_table_measures<Row>();
 
-    if (available_space.width.is_intrinsic_sizing_constraint() && !available_space.height.is_intrinsic_sizing_constraint()) {
-        determine_intrisic_size_of_table_container(available_space);
-        return;
-    }
-
     // Compute the width of the table.
     compute_table_width();
+
+    if (available_space.width.is_intrinsic_sizing_constraint() && !available_space.height.is_intrinsic_sizing_constraint()) {
+        return;
+    }
 
     // Distribute the width of the table among columns.
     distribute_width_to_columns();

@@ -41,7 +41,6 @@ private:
     void compute_table_measures();
     void compute_table_width();
     void distribute_width_to_columns();
-    void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
     void compute_table_height(LayoutMode layout_mode);
     void distribute_height_to_rows();
     void position_row_boxes(CSSPixels&);
