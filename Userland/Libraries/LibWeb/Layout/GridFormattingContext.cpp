@@ -758,30 +758,6 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     // 2. Size tracks to fit non-spanning items:
     increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, 1);
 
-    // https://www.w3.org/TR/css-grid-2/#auto-repeat
-    // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
-    // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
-    // or spanning across it. (This can result in all tracks being collapsed, if they’re all empty.)
-    if (dimension == GridDimension::Column // FIXME: Handle for columns
-        && grid_container().computed_values().grid_template_columns().track_list().size() == 1
-        && grid_container().computed_values().grid_template_columns().track_list().first().is_repeat()
-        && grid_container().computed_values().grid_template_columns().track_list().first().repeat().is_auto_fit()) {
-        for (size_t idx = 0; idx < m_grid_columns.size(); idx++) {
-            auto column_to_check = grid_container().computed_values().column_gap().is_auto() ? idx : idx / 2;
-            if (m_occupation_grid.is_occupied(column_to_check, 0))
-                continue;
-            if (!grid_container().computed_values().column_gap().is_auto() && idx % 2 != 0)
-                continue;
-
-            // A collapsed track is treated as having a fixed track sizing function of 0px
-            m_grid_columns[idx].base_size = 0;
-            m_grid_columns[idx].growth_limit = 0;
-
-            // FIXME: And the gutters on either side of it—including any space allotted through distributed
-            // alignment—collapse.
-        }
-    }
-
     // 3. Increase sizes to accommodate spanning items crossing content-sized tracks: Next, consider the
     // items with a span of 2 that do not span a track with a flexible sizing function.
     // Repeat incrementally for items with greater spans until all items have been considered.
@@ -1497,6 +1473,27 @@ void GridFormattingContext::resolve_items_box_metrics(GridDimension const dimens
     }
 }
 
+void GridFormattingContext::collapse_auto_fit_tracks_if_needed(GridDimension const dimension)
+{
+    // https://www.w3.org/TR/css-grid-2/#auto-repeat
+    // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
+    // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
+    // or spanning across it. (This can result in all tracks being collapsed, if they’re all empty.)
+    auto const& grid_computed_values = grid_container().computed_values();
+    auto const& tracks_definition = dimension == GridDimension::Column ? grid_computed_values.grid_template_columns().track_list() : grid_computed_values.grid_template_rows().track_list();
+    auto& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
+    if (tracks_definition.size() == 1 && tracks_definition.first().is_repeat() && tracks_definition.first().repeat().is_auto_fit()) {
+        for (size_t track_index = 0; track_index < tracks.size(); track_index++) {
+            if (m_occupation_grid.is_occupied(dimension == GridDimension::Column ? track_index : 0, dimension == GridDimension::Row ? track_index : 0))
+                continue;
+
+            // NOTE: A collapsed track is treated as having a fixed track sizing function of 0px
+            tracks[track_index].min_track_sizing_function = CSS::GridSize(CSS::Length::make_px(0));
+            tracks[track_index].max_track_sizing_function = CSS::GridSize(CSS::Length::make_px(0));
+        }
+    }
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
@@ -1512,6 +1509,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     initialize_grid_tracks_for_columns_and_rows(available_space);
 
     initialize_gap_tracks(available_space);
+
+    collapse_auto_fit_tracks_if_needed(GridDimension::Column);
+    collapse_auto_fit_tracks_if_needed(GridDimension::Row);
 
     for (auto& item : m_grid_items) {
         auto& box_state = m_state.get_mutable(item.box);
