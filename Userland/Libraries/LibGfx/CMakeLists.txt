@@ -39,6 +39,7 @@ set(SOURCES
     ImageFormats/ICOLoader.cpp
     ImageFormats/ImageDecoder.cpp
     ImageFormats/JPEGLoader.cpp
+    ImageFormats/JPEGWriter.cpp
     ImageFormats/PBMLoader.cpp
     ImageFormats/PGMLoader.cpp
     ImageFormats/PNGLoader.cpp
