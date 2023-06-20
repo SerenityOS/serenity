@@ -42,6 +42,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKStringImpl
     elif klass == 'AK::Variant':
         return AKVariant
+    elif klass == 'AK::Optional':
+        return AKOptional
     elif klass == 'AK::Vector':
         return AKVector
     elif klass == 'VirtualAddress':
@@ -227,6 +229,27 @@ class AKVariant:
     def prettyprint_type(cls, ty):
         names = ", ".join(handler_class_for_type(t).prettyprint_type(t) for t in AKVariant.resolve_types(ty))
         return f'AK::Variant<{names}>'
+
+
+class AKOptional:
+    def __init__(self, val):
+        self.val = val
+        self.has_value = bool(self.val["m_has_value"])
+        self.contained_type = self.val.type.strip_typedefs().template_argument(0)
+
+    def to_string(self):
+        return AKOptional.prettyprint_type(self.val.type)
+
+    def children(self):
+        if self.has_value:
+            data = self.val["m_storage"]
+            return [(self.contained_type.name, data.cast(self.contained_type.pointer()).referenced_value())]
+        return [("OptionalNone", "{}")]
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        template_type = type.template_argument(0)
+        return f'AK::Optional<{template_type}>'
 
 
 class AKVector:
