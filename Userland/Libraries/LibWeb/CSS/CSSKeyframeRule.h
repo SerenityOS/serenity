@@ -32,6 +32,16 @@ public:
     CSS::Percentage key() const { return m_key; }
     JS::NonnullGCPtr<CSSStyleDeclaration> style() const { return m_declarations; }
 
+    DeprecatedString key_text() const
+    {
+        return m_key.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    }
+
+    void set_key_text(DeprecatedString const& key_text)
+    {
+        dbgln("FIXME: CSSKeyframeRule::set_key_text is not implemented: {}", key_text);
+    }
+
 private:
     CSSKeyframeRule(JS::Realm& realm, CSS::Percentage key, CSSStyleDeclaration& declarations)
         : CSSRule(realm)
