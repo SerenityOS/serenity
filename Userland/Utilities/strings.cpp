@@ -99,11 +99,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringOffsetFormat string_offset_format { StringOffsetFormat::None };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(minimum_string_length, "Specify the minimum string length.", nullptr, 'n', "number");
+    args_parser.add_option(minimum_string_length, "Specify the minimum string length.", "bytes", 'n', "number");
     args_parser.add_option(show_paths, "Print the name of the file before each string.", "print-file-name", 'f');
     args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::Required,
         "Write offset relative to start of each file in (d)ec, (o)ct, or he(x) format.",
-        nullptr,
+        "radix",
         't',
         "format",
         [&string_offset_format](StringView value) {
