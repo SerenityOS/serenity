@@ -953,20 +953,21 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         pos_args.remove(0);
     }
 
+    HashMap<String, String> paths_to_unveil;
+
     for (auto const& input_filename : TRY(script.input_filenames())) {
-        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"sv : "r"sv));
+        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"_short_string : "r"_short_string));
     }
     for (auto const& output_filename : TRY(script.output_filenames())) {
-        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(output_filename)), "w"sv));
+        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(output_filename)), "w"_short_string));
     }
-    TRY(Core::System::unveil("/tmp"sv, "rwc"sv));
 
     Vector<File> inputs;
     for (auto const& filename : pos_args) {
         if (filename == "-"sv) {
             inputs.empend(TRY(File::create_from_stdin()));
         } else {
-            TRY(Core::System::unveil(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"sv : "r"sv));
+            TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"_short_string : "r"_short_string));
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
             if (edit_in_place)
                 inputs.empend(TRY(File::create_with_output_file(LexicalPath { filename }, move(file))));
@@ -974,6 +975,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 inputs.empend(TRY(File::create(LexicalPath { filename }, move(file))));
         }
     }
+
+    for (auto const& bucket : paths_to_unveil) {
+        TRY(Core::System::unveil(bucket.key, bucket.value));
+    }
+    TRY(Core::System::unveil("/tmp"sv, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if (inputs.is_empty()) {
