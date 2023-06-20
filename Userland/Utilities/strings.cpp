@@ -139,8 +139,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (paths.is_empty())
         paths.append("-"sv);
 
-    for (auto const& path : paths)
-        TRY(process_strings_in_file(path, show_paths, string_offset_format, minimum_string_length));
+    bool has_errors = false;
+    for (auto const& path : paths) {
+        auto maybe_error = process_strings_in_file(path, show_paths, string_offset_format, minimum_string_length);
+        if (maybe_error.is_error()) {
+            warnln("strings: '{}'. {}", path, strerror(maybe_error.error().code()));
+            has_errors = true;
+        }
+    }
 
-    return 0;
+    return has_errors ? 1 : 0;
 }
