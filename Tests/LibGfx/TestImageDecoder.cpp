@@ -492,11 +492,14 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
     // catdog-alert-2 tests the 1-bit-per-pixel case,
     // catdog-alert-3 tests the 2-bit-per-pixel case,
     // catdog-alert-8 and catdog-alert-13 both test the 4-bits-per-pixel case.
+    // catdog-alert-13-alpha-used-false is like catdog-alert-13, but with is_alpha_used set to false in the header
+    // (which has the effect of ignoring the alpha information in the palette and instead always setting alpha to 0xff).
     TestCase test_cases[] = {
         { "webp/catdog-alert-2.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0xf3, 0xe6, 0xd8, 0xff) },
         { "webp/catdog-alert-3.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0, 0, 0, 0) },
         { "webp/catdog-alert-8.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
         { "webp/catdog-alert-13.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
+        { "webp/catdog-alert-13-alpha-used-false.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 255) },
     };
 
     for (auto test_case : test_cases) {
