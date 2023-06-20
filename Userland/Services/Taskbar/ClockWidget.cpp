@@ -53,18 +53,7 @@ ClockWidget::ClockWidget()
     m_prev_date->set_fixed_size(24, 24);
     m_prev_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors());
     m_prev_date->on_click = [&](auto) {
-        unsigned view_month = m_calendar->view_month();
-        unsigned view_year = m_calendar->view_year();
-        if (m_calendar->mode() == GUI::Calendar::Month) {
-            view_month--;
-            if (m_calendar->view_month() == 1) {
-                view_month = 12;
-                view_year--;
-            }
-        } else {
-            view_year--;
-        }
-        m_calendar->update_tiles(view_year, view_month);
+        m_calendar->show_previous_date();
         if (m_calendar->mode() == GUI::Calendar::Year)
             m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
         else
@@ -87,18 +76,7 @@ ClockWidget::ClockWidget()
     m_next_date->set_fixed_size(24, 24);
     m_next_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors());
     m_next_date->on_click = [&](auto) {
-        unsigned view_month = m_calendar->view_month();
-        unsigned view_year = m_calendar->view_year();
-        if (m_calendar->mode() == GUI::Calendar::Month) {
-            view_month++;
-            if (m_calendar->view_month() == 12) {
-                view_month = 1;
-                view_year++;
-            }
-        } else {
-            view_year++;
-        }
-        m_calendar->update_tiles(view_year, view_month);
+        m_calendar->show_next_date();
         if (m_calendar->mode() == GUI::Calendar::Year)
             m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
         else
