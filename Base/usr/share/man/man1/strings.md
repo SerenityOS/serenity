@@ -5,7 +5,7 @@ strings - find printable strings in files
 ## Synopsis
 
 ```**sh
-$ strings [--bytes NUMBER] [--print-file-name] [--radix FORMAT] [PATHS...]  
+$ strings [--bytes NUMBER] [--print-file-name] [-o] [--radix FORMAT] [PATHS...]  
 ```
 
 ## Description
@@ -16,6 +16,7 @@ $ strings [--bytes NUMBER] [--print-file-name] [--radix FORMAT] [PATHS...]
 
 * `-n NUMBER`, `--bytes NUMBER`: Specify the minimum string length (4 is default).
 * `-f`, `--print-file-name`: Print the name of the file before each string.
+* `-o`: Equivalent to specifying `-t o`.
 * `-t FORMAT`, `--radix FORMAT`: Write each string preceded by its byte offset from the start of the file in the specified `FORMAT`, where `FORMAT` matches one of the following: `d` (decimal), `o` (octal), or `x` (hexidecimal).
 
 ## Examples
