@@ -28,6 +28,25 @@
 #    define TEST_INPUT(x) ("test-inputs/" x)
 #endif
 
+static Gfx::ImageFrameDescriptor expect_single_frame(Gfx::ImageDecoderPlugin& plugin_decoder)
+{
+    EXPECT_EQ(plugin_decoder.frame_count(), 1u);
+    EXPECT(!plugin_decoder.is_animated());
+    EXPECT(!plugin_decoder.loop_count());
+
+    auto frame = MUST(plugin_decoder.frame(0));
+    EXPECT_EQ(frame.duration, 0);
+    return frame;
+}
+
+static Gfx::ImageFrameDescriptor expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
+{
+    auto frame = expect_single_frame(plugin_decoder);
+    EXPECT_EQ(plugin_decoder.size(), size);
+    EXPECT_EQ(frame.image->size(), size);
+    return frame;
+}
+
 TEST_CASE(test_bmp)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgba32-1.bmp"sv)));
@@ -35,12 +54,7 @@ TEST_CASE(test_bmp)
     auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_gif)
@@ -79,11 +93,7 @@ TEST_CASE(test_bmp_embedded_in_ico)
     auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    MUST(plugin_decoder->frame(0));
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_jpeg_sof0_one_scan)
@@ -93,12 +103,7 @@ TEST_CASE(test_jpeg_sof0_one_scan)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_jpeg_sof0_several_scans)
@@ -108,8 +113,7 @@ TEST_CASE(test_jpeg_sof0_several_scans)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(592, 800));
+    expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
 
 TEST_CASE(test_jpeg_rgb_components)
@@ -119,8 +123,7 @@ TEST_CASE(test_jpeg_rgb_components)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(592, 800));
+    expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
 
 TEST_CASE(test_jpeg_sof2_spectral_selection)
@@ -130,8 +133,7 @@ TEST_CASE(test_jpeg_sof2_spectral_selection)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(592, 800));
+    expect_single_frame_of_size(*plugin_decoder, { 592, 800 });
 }
 
 TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
@@ -141,8 +143,7 @@ TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(600, 600));
+    expect_single_frame_of_size(*plugin_decoder, { 600, 600 });
 }
 
 TEST_CASE(test_jpeg_sof2_successive_aproximation)
@@ -152,8 +153,7 @@ TEST_CASE(test_jpeg_sof2_successive_aproximation)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(600, 800));
+    expect_single_frame_of_size(*plugin_decoder, { 600, 800 });
 }
 
 TEST_CASE(test_jpeg_sof1_12bits)
@@ -163,8 +163,7 @@ TEST_CASE(test_jpeg_sof1_12bits)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(320, 240));
+    expect_single_frame_of_size(*plugin_decoder, { 320, 240 });
 }
 
 TEST_CASE(test_jpeg_sof2_12bits)
@@ -174,8 +173,7 @@ TEST_CASE(test_jpeg_sof2_12bits)
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(320, 240));
+    expect_single_frame_of_size(*plugin_decoder, { 320, 240 });
 }
 
 TEST_CASE(test_pbm)
@@ -185,12 +183,7 @@ TEST_CASE(test_pbm)
     auto plugin_decoder = MUST(Gfx::PBMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_pgm)
@@ -200,12 +193,7 @@ TEST_CASE(test_pgm)
     auto plugin_decoder = MUST(Gfx::PGMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_png)
@@ -215,12 +203,7 @@ TEST_CASE(test_png)
     auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_ppm)
@@ -230,12 +213,7 @@ TEST_CASE(test_ppm)
     auto plugin_decoder = MUST(Gfx::PPMImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_targa_bottom_left)
@@ -245,12 +223,7 @@ TEST_CASE(test_targa_bottom_left)
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_targa_top_left)
@@ -260,12 +233,7 @@ TEST_CASE(test_targa_top_left)
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_targa_bottom_left_compressed)
@@ -275,12 +243,7 @@ TEST_CASE(test_targa_bottom_left_compressed)
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_targa_top_left_compressed)
@@ -290,12 +253,7 @@ TEST_CASE(test_targa_top_left_compressed)
     auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT(frame.duration == 0);
+    expect_single_frame(*plugin_decoder);
 }
 
 TEST_CASE(test_webp_simple_lossy)
@@ -305,14 +263,7 @@ TEST_CASE(test_webp_simple_lossy)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(240, 240));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(240, 240));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 240, 240 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -327,21 +278,13 @@ TEST_CASE(test_webp_simple_lossless)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(386, 395));
-
     // Ironically, simple-vp8l.webp is a much more complex file than extended-lossless.webp tested below.
     // extended-lossless.webp tests the decoding basics.
     // This here tests the predictor, color, and subtract green transforms,
     // as well as meta prefix images, one-element canonical code handling,
     // and handling of canonical codes with more than 288 elements.
     // This image uses all 13 predictor modes of the predictor transform.
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(386, 395));
-
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 386, 395 });
     EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0));
 
     // This pixel tests all predictor modes except 5, 7, 8, 9, and 13.
@@ -357,15 +300,7 @@ TEST_CASE(test_webp_simple_lossless_alpha_used_false)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(386, 395));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(386, 395));
-
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 386, 395 });
     EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0xff));
 }
 
@@ -377,14 +312,7 @@ TEST_CASE(test_webp_extended_lossy)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(417, 223));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -412,14 +340,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_horizontal_filter)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -436,14 +357,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_vertical_filter)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -460,14 +374,7 @@ TEST_CASE(test_webp_extended_lossy_alpha_gradient_filter)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -483,14 +390,7 @@ TEST_CASE(test_webp_extended_lossy_uncompressed_alpha)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(417, 223));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -508,14 +408,7 @@ TEST_CASE(test_webp_extended_lossy_negative_quantization_offset)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(264, 264));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(264, 264));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 264, 264 });
 
     // While VP8 YUV contents are defined bit-exact, the YUV->RGB conversion isn't.
     // So pixels changing by 1 or so below is fine if you change code.
@@ -533,14 +426,7 @@ TEST_CASE(test_webp_lossy_4)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1024, 772));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1024, 772));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 1024, 772 });
 
     // This image tests macroblocks that have `skip_coefficients` set to true, and it test a boolean entropy decoder edge case.
     EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x72, 0xc8, 0xf6, 255));
@@ -554,15 +440,7 @@ TEST_CASE(test_webp_lossy_4_with_partitions)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1024, 772));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(1024, 772));
-
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 1024, 772 });
     EXPECT_EQ(frame.image->get_pixel(780, 570), Gfx::Color(0x73, 0xc9, 0xf9, 255));
 }
 
@@ -573,14 +451,7 @@ TEST_CASE(test_webp_extended_lossless)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(417, 223));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 417, 223 });
 
     // Check some basic pixels.
     EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color(0, 0, 0, 0));
@@ -604,14 +475,7 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
 
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(256, 256));
-
-    auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(256, 256));
+    auto frame = expect_single_frame_of_size(*plugin_decoder, { 256, 256 });
 
     EXPECT_EQ(frame.image->get_pixel(100, 100), Gfx::Color(0x73, 0x37, 0x23, 0xff));
 }
@@ -641,11 +505,7 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
         auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
         MUST(plugin_decoder->initialize());
 
-        EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-        EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(32, 32));
-
-        auto frame = MUST(plugin_decoder->frame(0));
-        EXPECT_EQ(frame.image->size(), Gfx::IntSize(32, 32));
+        auto frame = expect_single_frame_of_size(*plugin_decoder, { 32, 32 });
 
         EXPECT_EQ(frame.image->get_pixel(4, 0), test_case.background_color);
         EXPECT_EQ(frame.image->get_pixel(5, 0), test_case.line_color);
@@ -668,12 +528,7 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_wid
         auto file = MUST(Core::MappedFile::map(MUST(String::formatted("{}{}", TEST_INPUT(""), file_name))));
         auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
         MUST(plugin_decoder->initialize());
-
-        EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-        EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(11, 11));
-
-        auto frame = MUST(plugin_decoder->frame(0));
-        EXPECT_EQ(frame.image->size(), Gfx::IntSize(11, 11));
+        expect_single_frame_of_size(*plugin_decoder, { 11, 11 });
     }
 }
 
