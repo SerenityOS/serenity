@@ -10,6 +10,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
@@ -151,6 +152,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
         TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
+        return 0;
+    } else if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame));
         return 0;
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
