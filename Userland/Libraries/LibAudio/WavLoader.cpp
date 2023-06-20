@@ -18,8 +18,6 @@
 
 namespace Audio {
 
-static constexpr size_t const maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
-
 WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
     : LoaderPlugin(move(stream))
 {
@@ -194,8 +192,7 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     auto riff = TRY(m_stream->read_value<RIFF::ChunkID>());
     CHECK(riff == RIFF::riff_magic, LoaderError::Category::Format, "RIFF header magic invalid");
 
-    u32 size = TRY(m_stream->read_value<LittleEndian<u32>>());
-    CHECK(size < maximum_wav_size, LoaderError::Category::Format, "File size too large");
+    TRY(m_stream->read_value<LittleEndian<u32>>()); // File size header
 
     auto wave = TRY(m_stream->read_value<RIFF::ChunkID>());
     CHECK(wave == RIFF::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
@@ -292,7 +289,6 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
 
     u32 data_size = TRY(m_stream->read_value<LittleEndian<u32>>());
     CHECK(found_data, LoaderError::Category::Format, "Found no data chunk");
-    CHECK(data_size < maximum_wav_size, LoaderError::Category::Format, "Data too large");
 
     m_total_samples = data_size / block_size_bytes;
 
