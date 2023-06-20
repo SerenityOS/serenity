@@ -18,7 +18,7 @@
 
 namespace Ladybird {
 
-static constexpr u32 UPDATE_RATE_MS = 50;
+static constexpr u32 UPDATE_RATE_MS = 10;
 
 struct AudioTask {
     enum class Type {
@@ -75,8 +75,6 @@ private:
     {
         auto duration = static_cast<double>(m_loader->total_samples()) / static_cast<double>(m_loader->sample_rate());
         m_duration = Duration::from_milliseconds(static_cast<i64>(duration * 1000.0));
-
-        m_samples_to_load_per_buffer = static_cast<size_t>(UPDATE_RATE_MS / 1000.0 * static_cast<double>(m_loader->sample_rate()));
     }
 
     enum class Paused {
@@ -90,7 +88,6 @@ private:
         auto const& device_info = devices->defaultAudioOutput();
 
         auto format = device_info.preferredFormat();
-        format.setSampleFormat(QAudioFormat::Int16);
         format.setChannelCount(2);
 
         auto audio_output = make<QAudioSink>(device_info, format);
@@ -167,38 +164,78 @@ private:
             return Paused::Yes;
         }
 
-        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, m_samples_to_load_per_buffer, audio_output.format().sampleRate()));
-        enqueue_samples(io_device, move(samples));
+        auto bytes_available = audio_output.bytesFree();
+        auto bytes_per_sample = audio_output.format().bytesPerSample();
+        auto channel_count = audio_output.format().channelCount();
+        auto samples_to_load = bytes_available / bytes_per_sample / channel_count;
+
+        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, samples_to_load, audio_output.format().sampleRate()));
+        enqueue_samples(audio_output, io_device, move(samples));
 
         m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader, audio_output.format().sampleRate());
         return Paused::No;
     }
 
-    void enqueue_samples(QIODevice& io_device, FixedArray<Audio::Sample> samples)
+    void enqueue_samples(QAudioSink const& audio_output, QIODevice& io_device, FixedArray<Audio::Sample> samples)
     {
-        auto buffer_size = samples.size() * 2 * sizeof(u16);
+        auto buffer_size = samples.size() * audio_output.format().bytesPerSample() * audio_output.format().channelCount();
+
         if (buffer_size > static_cast<size_t>(m_sample_buffer.size()))
             m_sample_buffer.resize(buffer_size);
 
         FixedMemoryStream stream { Bytes { m_sample_buffer.data(), buffer_size } };
 
-        for (auto& sample : samples) {
-            LittleEndian<i16> pcm;
-
-            pcm = static_cast<i16>(sample.left * NumericLimits<i16>::max());
-            MUST(stream.write_value(pcm));
-
-            pcm = static_cast<i16>(sample.right * NumericLimits<i16>::max());
-            MUST(stream.write_value(pcm));
+        for (auto const& sample : samples) {
+            switch (audio_output.format().sampleFormat()) {
+            case QAudioFormat::UInt8:
+                write_sample<u8>(stream, sample.left);
+                write_sample<u8>(stream, sample.right);
+                break;
+            case QAudioFormat::Int16:
+                write_sample<i16>(stream, sample.left);
+                write_sample<i16>(stream, sample.right);
+                break;
+            case QAudioFormat::Int32:
+                write_sample<i32>(stream, sample.left);
+                write_sample<i32>(stream, sample.right);
+                break;
+            case QAudioFormat::Float:
+                write_sample<float>(stream, sample.left);
+                write_sample<float>(stream, sample.right);
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
         }
 
         io_device.write(m_sample_buffer.data(), buffer_size);
     }
 
+    template<typename T>
+    void write_sample(FixedMemoryStream& stream, float sample)
+    {
+        // The values that need to be written to the stream vary depending on the output channel format, and isn't
+        // particularly well documented. The value derivations performed below were adapted from a Qt example:
+        // https://code.qt.io/cgit/qt/qtmultimedia.git/tree/examples/multimedia/audiooutput/audiooutput.cpp?h=6.4.2#n46
+        LittleEndian<T> pcm;
+
+        if constexpr (IsSame<T, u8>)
+            pcm = static_cast<u8>((sample + 1.0f) / 2 * NumericLimits<u8>::max());
+        else if constexpr (IsSame<T, i16>)
+            pcm = static_cast<i16>(sample * NumericLimits<i16>::max());
+        else if constexpr (IsSame<T, i32>)
+            pcm = static_cast<i32>(sample * NumericLimits<i32>::max());
+        else if constexpr (IsSame<T, float>)
+            pcm = sample;
+        else
+            static_assert(DependentFalse<T>);
+
+        MUST(stream.write_value(pcm));
+    }
+
     NonnullRefPtr<Audio::Loader> m_loader;
     AudioTaskQueue m_task_queue;
 
-    size_t m_samples_to_load_per_buffer { 0 };
     QByteArray m_sample_buffer;
 
     Duration m_duration;
