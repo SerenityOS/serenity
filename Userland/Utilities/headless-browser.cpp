@@ -198,6 +198,10 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
 
     if (mode == TestMode::Layout) {
         view.on_load_finish = [&](auto const&) {
+            // NOTE: We take a screenshot here to force the lazy layout of SVG-as-image documents to happen.
+            //       It also causes a lot more code to run, which is good for finding bugs. :^)
+            (void)view.take_screenshot();
+
             result = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
             loop.quit(0);
         };
@@ -440,6 +444,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (dump_layout_tree) {
         view->on_load_finish = [&](auto const&) {
+            (void)view->take_screenshot();
             auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
 
             out("{}", layout_tree);
