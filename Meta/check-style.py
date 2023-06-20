@@ -51,11 +51,18 @@ BAD_INCLUDE_LIBC = re.compile("# *include <LibC/")
 ANY_INCLUDE_PATTERN = re.compile('^ *# *include\\b.*[>"](?!\\)).*$', re.M)
 SYSTEM_INCLUDE_PATTERN = re.compile("^ *# *include *<([^>]+)>(?: /[*/].*)?$")
 LOCAL_INCLUDE_PATTERN = re.compile('^ *# *include *"([^>]+)"(?: /[*/].*)?$')
+
 INCLUDE_CHECK_EXCLUDES = {
     "Userland/Libraries/LibCodeComprehension/Cpp/Tests/",
     "Userland/Libraries/LibCpp/Tests/parser/",
     "Userland/Libraries/LibCpp/Tests/preprocessor/",
 }
+
+LOCAL_INCLUDE_SUFFIX_EXCLUDES = [
+    # Some Qt files are required to include their .moc files, which will be located in a deep
+    # subdirectory that we won't find from here.
+    '.moc',
+]
 
 
 def should_check_file(filename):
@@ -126,8 +133,13 @@ def run():
                     if filename not in errors_include_weird_format:
                         errors_include_weird_format.append(filename)
                     continue
+
                 relative_filename = local_match.group(1)
                 referenced_file = file_directory.joinpath(relative_filename)
+
+                if referenced_file.suffix in LOCAL_INCLUDE_SUFFIX_EXCLUDES:
+                    continue
+
                 if not referenced_file.exists():
                     print(f"In {filename}: Cannot find {referenced_file}")
                     if filename not in errors_include_missing_local:
