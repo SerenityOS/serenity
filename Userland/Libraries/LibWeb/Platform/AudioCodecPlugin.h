@@ -9,28 +9,31 @@
 #include <AK/FixedArray.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/Optional.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibAudio/Forward.h>
 
 namespace Web::Platform {
 
 class AudioCodecPlugin {
 public:
-    static void install_creation_hook(Function<ErrorOr<NonnullOwnPtr<AudioCodecPlugin>>()>);
-    static ErrorOr<NonnullOwnPtr<AudioCodecPlugin>> create();
+    using AudioCodecPluginCreator = Function<ErrorOr<NonnullOwnPtr<AudioCodecPlugin>>(NonnullRefPtr<Audio::Loader>)>;
+
+    static void install_creation_hook(AudioCodecPluginCreator);
+    static ErrorOr<NonnullOwnPtr<AudioCodecPlugin>> create(NonnullRefPtr<Audio::Loader>);
 
     virtual ~AudioCodecPlugin();
 
-    virtual size_t device_sample_rate() = 0;
-
-    virtual void enqueue_samples(FixedArray<Audio::Sample>) = 0;
-    virtual size_t remaining_samples() const = 0;
+    static ErrorOr<FixedArray<Audio::Sample>> read_samples_from_loader(Audio::Loader&, size_t samples_to_load, size_t device_sample_rate);
+    static Duration current_loader_position(Audio::Loader const&, size_t device_sample_rate);
 
     virtual void resume_playback() = 0;
     virtual void pause_playback() = 0;
-    virtual void playback_ended() = 0;
-
     virtual void set_volume(double) = 0;
+    virtual void seek(double) = 0;
+
+    virtual Duration duration() = 0;
+
+    Function<void(Duration)> on_playback_position_updated;
 
 protected:
     AudioCodecPlugin();

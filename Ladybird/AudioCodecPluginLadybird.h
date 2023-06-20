@@ -8,37 +8,35 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibAudio/Forward.h>
 #include <LibWeb/Platform/AudioCodecPlugin.h>
-
-class QAudioSink;
-class QIODevice;
-class QMediaDevices;
+#include <QObject>
 
 namespace Ladybird {
 
-class AudioCodecPluginLadybird final : public Web::Platform::AudioCodecPlugin {
+class AudioThread;
+
+class AudioCodecPluginLadybird final
+    : public QObject
+    , public Web::Platform::AudioCodecPlugin {
+    Q_OBJECT
+
 public:
-    static ErrorOr<NonnullOwnPtr<AudioCodecPluginLadybird>> create();
+    static ErrorOr<NonnullOwnPtr<AudioCodecPluginLadybird>> create(NonnullRefPtr<Audio::Loader>);
     virtual ~AudioCodecPluginLadybird() override;
-
-    virtual size_t device_sample_rate() override;
-
-    virtual void enqueue_samples(FixedArray<Audio::Sample>) override;
-    virtual size_t remaining_samples() const override;
 
     virtual void resume_playback() override;
     virtual void pause_playback() override;
-    virtual void playback_ended() override;
-
     virtual void set_volume(double) override;
+    virtual void seek(double) override;
+
+    virtual Duration duration() override;
 
 private:
-    AudioCodecPluginLadybird(NonnullOwnPtr<QMediaDevices>, NonnullOwnPtr<QAudioSink>);
+    explicit AudioCodecPluginLadybird(NonnullOwnPtr<AudioThread>);
 
-    NonnullOwnPtr<QMediaDevices> m_devices;
-    NonnullOwnPtr<QAudioSink> m_audio_output;
-    QIODevice* m_io_device { nullptr };
+    NonnullOwnPtr<AudioThread> m_audio_thread;
 };
 
 }
