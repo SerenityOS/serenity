@@ -240,6 +240,8 @@ private:
     void initialize_grid_tracks_for_columns_and_rows(AvailableSpace const&);
     void initialize_gap_tracks(AvailableSpace const&);
 
+    void collapse_auto_fit_tracks_if_needed(GridDimension const);
+
     template<typename Match>
     void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
 
