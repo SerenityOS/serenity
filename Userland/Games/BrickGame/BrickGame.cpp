@@ -612,7 +612,7 @@ void BrickGame::paint_paused_text(GUI::Painter& painter)
     painter.draw_text(frame_inner_rect(), paused_text, Gfx::TextAlignment::Center, Color::Black);
 }
 
-void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
+ErrorOr<void> BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
 {
     painter.fill_rect(rect, m_back_color);
     if (m_state == GameState::Active) {
@@ -645,9 +645,9 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
                 paint_cell(painter, cell_rect(position), (*m_brick_game)[board_position]);
             }
 
-        paint_sidebar_text(painter, 0, String::formatted("Score: {}", m_brick_game->score()).release_value_but_fixme_should_propagate_errors());
-        paint_sidebar_text(painter, 1, String::formatted("Level: {}", m_brick_game->level()).release_value_but_fixme_should_propagate_errors());
-        paint_sidebar_text(painter, 4, String::formatted("Hi-Score: {}", m_high_score).release_value_but_fixme_should_propagate_errors());
+        paint_sidebar_text(painter, 0, TRY(String::formatted("Score: {}", m_brick_game->score())));
+        paint_sidebar_text(painter, 1, TRY(String::formatted("Level: {}", m_brick_game->level())));
+        paint_sidebar_text(painter, 4, TRY(String::formatted("Hi-Score: {}", m_high_score)));
         paint_sidebar_text(painter, 12, "Next:"sv);
 
         auto const hint_rect = Gfx::IntRect {
@@ -669,6 +669,8 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
         if (m_brick_game->state() == Bricks::GameState::Paused)
             paint_paused_text(painter);
     }
+
+    return {};
 }
 
 void BrickGame::paint_event(GUI::PaintEvent& event)
@@ -677,7 +679,7 @@ void BrickGame::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    paint_game(painter, frame_inner_rect());
+    paint_game(painter, frame_inner_rect()).release_value_but_fixme_should_propagate_errors();
 }
 
 void BrickGame::game_over()
