@@ -96,8 +96,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(server->listen(ipv4_address.value(), port));
 
     out("Listening on ");
-    out("\033]8;;http://{}:{}\033\\", ipv4_address.value(), port);
-    out("{}:{}", ipv4_address.value(), port);
+    out("\033]8;;http://{}:{}\033\\", ipv4_address.value(), server->local_port());
+    out("{}:{}", ipv4_address.value(), server->local_port());
     outln("\033]8;;\033\\");
 
     TRY(Core::System::unveil("/etc/timezone", "r"));
