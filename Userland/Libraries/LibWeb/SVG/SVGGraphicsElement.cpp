@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
@@ -138,6 +140,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case("stroke-opacity"sv)) {
             if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::StrokeOpacity, stroke_opacity_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case(SVG::AttributeNames::opacity)) {
+            if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::Opacity, stroke_opacity_value.release_nonnull());
         }
     });
 }
