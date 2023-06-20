@@ -1,33 +1,38 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    DeprecatedString path;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
         "Show the 'real' path of a file, by resolving all symbolic links along the way.");
-    args_parser.add_positional_argument(path, "Path to resolve", "path");
+    args_parser.add_positional_argument(paths, "Path to resolve", "paths");
     args_parser.parse(arguments);
 
-    char* value = realpath(path.characters(), nullptr);
-    if (value == nullptr) {
-        perror("realpath");
-        return 1;
+    auto has_errors = false;
+    for (auto path : paths) {
+        auto resolved_path_or_error = FileSystem::real_path(path);
+        if (resolved_path_or_error.is_error()) {
+            warnln("realpath: {}: {}", path, strerror(resolved_path_or_error.error().code()));
+            has_errors = true;
+            continue;
+        }
+
+        outln("{}", resolved_path_or_error.release_value());
     }
-    outln("{}", value);
-    free(value);
-    return 0;
+
+    return has_errors ? 1 : 0;
 }
