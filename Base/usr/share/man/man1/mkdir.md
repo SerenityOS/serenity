@@ -17,6 +17,7 @@ Create a new empty directory for each of the given *directories*.
 * `-p`, `--parents`: Create parent directories if they don't exist
 * `-m`, `--mode`: Sets the permissions for the final directory (possibly altered by the process umask). The mode argument can be given in any of the formats
 accepted by the chmod(1) command. Addition and removal of permissions is relative to a default permission of 0777.
+* `-v`, `--verbose`: Print a message for each created directory
 
 ## Examples
 
