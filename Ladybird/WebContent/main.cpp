@@ -13,6 +13,7 @@
 #include "../WebSocketClientManagerLadybird.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -59,8 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
 
-    Web::Platform::AudioCodecPlugin::install_creation_hook([] {
-        return Ladybird::AudioCodecPluginLadybird::create();
+    Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
+        return Ladybird::AudioCodecPluginLadybird::create(move(loader));
     });
 
     Web::ResourceLoader::initialize(RequestManagerQt::create());

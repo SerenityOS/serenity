@@ -24,8 +24,7 @@ public:
     void play(Badge<HTMLAudioElement>);
     void pause(Badge<HTMLAudioElement>);
 
-    Duration position() const;
-    Duration duration() const;
+    Duration duration();
     void seek(double, MediaSeekMode);
 
     void update_volume();
@@ -43,9 +42,6 @@ private:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-
-    Optional<FixedArray<Audio::Sample>> get_next_samples();
-    void play_next_samples();
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-audiotrack-id
     String m_id;
@@ -66,8 +62,6 @@ private:
     JS::GCPtr<AudioTrackList> m_audio_track_list;
 
     NonnullOwnPtr<Platform::AudioCodecPlugin> m_audio_plugin;
-    NonnullRefPtr<Audio::Loader> m_loader;
-    NonnullRefPtr<Platform::Timer> m_sample_timer;
 };
 
 }

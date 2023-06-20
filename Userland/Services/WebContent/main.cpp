@@ -6,6 +6,7 @@
 
 #include "AudioCodecPluginSerenity.h"
 #include "ImageCodecPluginSerenity.h"
+#include <LibAudio/Loader.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
@@ -46,8 +47,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Web::Platform::ImageCodecPlugin::install(*new WebContent::ImageCodecPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
-    Web::Platform::AudioCodecPlugin::install_creation_hook([] {
-        return WebContent::AudioCodecPluginSerenity::create();
+    Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
+        return WebContent::AudioCodecPluginSerenity::create(move(loader));
     });
 
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));

@@ -5,60 +5,104 @@
  */
 
 #include <LibAudio/ConnectionToServer.h>
+#include <LibAudio/Loader.h>
+#include <LibAudio/Sample.h>
+#include <LibWeb/Platform/Timer.h>
 #include <WebContent/AudioCodecPluginSerenity.h>
 
 namespace WebContent {
 
-ErrorOr<NonnullOwnPtr<AudioCodecPluginSerenity>> AudioCodecPluginSerenity::create()
+// These constants and this implementation is based heavily on SoundPlayer::PlaybackManager.
+static constexpr u32 UPDATE_RATE_MS = 50;
+static constexpr u32 BUFFER_SIZE_MS = 100;
+static constexpr size_t ALWAYS_ENQUEUED_BUFFER_COUNT = 5;
+
+ErrorOr<NonnullOwnPtr<AudioCodecPluginSerenity>> AudioCodecPluginSerenity::create(NonnullRefPtr<Audio::Loader> loader)
 {
     auto connection = TRY(Audio::ConnectionToServer::try_create());
-    return adopt_nonnull_own_or_enomem(new (nothrow) AudioCodecPluginSerenity(move(connection)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) AudioCodecPluginSerenity(move(connection), move(loader)));
 }
 
-AudioCodecPluginSerenity::AudioCodecPluginSerenity(NonnullRefPtr<Audio::ConnectionToServer> connection)
+AudioCodecPluginSerenity::AudioCodecPluginSerenity(NonnullRefPtr<Audio::ConnectionToServer> connection, NonnullRefPtr<Audio::Loader> loader)
     : m_connection(move(connection))
+    , m_loader(move(loader))
+    , m_sample_timer(Web::Platform::Timer::create_repeating(UPDATE_RATE_MS, [this]() {
+        if (play_next_samples().is_error()) {
+            // FIXME: Propagate the error to the HTMLMediaElement.
+        } else {
+            if (on_playback_position_updated)
+                on_playback_position_updated(m_position);
+        }
+    }))
 {
+    auto duration = static_cast<double>(m_loader->total_samples()) / static_cast<double>(m_loader->sample_rate());
+    m_duration = Duration::from_milliseconds(static_cast<i64>(duration * 1000.0));
+
+    m_device_sample_rate = m_connection->get_sample_rate();
+    m_device_samples_per_buffer = static_cast<size_t>(BUFFER_SIZE_MS / 1000.0 * static_cast<double>(m_device_sample_rate));
+    m_samples_to_load_per_buffer = static_cast<size_t>(BUFFER_SIZE_MS / 1000.0 * static_cast<double>(m_loader->sample_rate()));
 }
 
 AudioCodecPluginSerenity::~AudioCodecPluginSerenity() = default;
 
-size_t AudioCodecPluginSerenity::device_sample_rate()
+ErrorOr<void> AudioCodecPluginSerenity::play_next_samples()
 {
-    if (!m_device_sample_rate.has_value())
-        m_device_sample_rate = m_connection->get_sample_rate();
-    return *m_device_sample_rate;
-}
+    while (m_connection->remaining_samples() < m_device_samples_per_buffer * ALWAYS_ENQUEUED_BUFFER_COUNT) {
+        bool all_samples_loaded = m_loader->loaded_samples() >= m_loader->total_samples();
+        bool audio_server_done = m_connection->remaining_samples() == 0;
 
-void AudioCodecPluginSerenity::enqueue_samples(FixedArray<Audio::Sample> samples)
-{
-    m_connection->async_enqueue(move(samples)).release_value_but_fixme_should_propagate_errors();
-}
+        if (all_samples_loaded && audio_server_done) {
+            pause_playback();
 
-size_t AudioCodecPluginSerenity::remaining_samples() const
-{
-    return m_connection->remaining_samples();
+            m_connection->clear_client_buffer();
+            m_connection->async_clear_buffer();
+            (void)m_loader->reset();
+
+            m_position = m_duration;
+            break;
+        }
+
+        auto samples = TRY(read_samples_from_loader(m_loader, m_samples_to_load_per_buffer, m_device_sample_rate));
+        TRY(m_connection->async_enqueue(move(samples)));
+
+        m_position = current_loader_position(m_loader, m_device_sample_rate);
+    }
+
+    return {};
 }
 
 void AudioCodecPluginSerenity::resume_playback()
 {
     m_connection->async_start_playback();
+    m_sample_timer->start();
 }
 
 void AudioCodecPluginSerenity::pause_playback()
 {
-    m_connection->async_start_playback();
-}
-
-void AudioCodecPluginSerenity::playback_ended()
-{
     m_connection->async_pause_playback();
-    m_connection->clear_client_buffer();
-    m_connection->async_clear_buffer();
+    m_sample_timer->stop();
 }
 
 void AudioCodecPluginSerenity::set_volume(double volume)
 {
     m_connection->async_set_self_volume(volume);
+}
+
+void AudioCodecPluginSerenity::seek(double position)
+{
+    auto duration = static_cast<double>(this->duration().to_milliseconds()) / 1000.0;
+    position = position / duration * static_cast<double>(m_loader->total_samples());
+
+    m_loader->seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
+    m_position = current_loader_position(m_loader, m_device_sample_rate);
+
+    if (on_playback_position_updated)
+        on_playback_position_updated(m_position);
+}
+
+Duration AudioCodecPluginSerenity::duration()
+{
+    return m_duration;
 }
 
 }
