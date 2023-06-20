@@ -146,6 +146,8 @@ protected:
     void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
     void compute_height_for_absolutely_positioned_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
 
+    [[nodiscard]] Optional<CSSPixels> compute_auto_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout) const;
+
     Type m_type {};
 
     FormattingContext* m_parent { nullptr };
