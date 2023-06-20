@@ -226,7 +226,7 @@ Tab::Tab(BrowserWindow& window)
         // If we are loading due to a redirect, we replace the current history entry
         // with the loaded URL
         if (is_redirect) {
-            m_history.replace_current(url, title());
+            m_history.replace_current(url, String::from_deprecated_string(title()).release_value_but_fixme_should_propagate_errors());
         }
 
         update_status();
@@ -236,7 +236,7 @@ Tab::Tab(BrowserWindow& window)
 
         // don't add to history if back or forward is pressed
         if (!m_is_history_navigation)
-            m_history.push(url, title());
+            m_history.push(url, String::from_deprecated_string(title()).release_value_but_fixme_should_propagate_errors());
         m_is_history_navigation = false;
 
         update_actions();
@@ -461,7 +461,7 @@ Tab::Tab(BrowserWindow& window)
     };
 
     view().on_title_change = [this](auto const& title) {
-        m_history.update_title(title);
+        m_history.update_title(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
         m_title = title;
 
         if (on_title_change)
