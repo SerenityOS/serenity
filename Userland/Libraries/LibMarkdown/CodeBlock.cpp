@@ -14,7 +14,7 @@
 
 namespace Markdown {
 
-DeprecatedString CodeBlock::render_to_html(bool) const
+String CodeBlock::render_to_html(bool) const
 {
     StringBuilder builder;
 
@@ -51,12 +51,12 @@ DeprecatedString CodeBlock::render_to_html(bool) const
 
     builder.append("</pre>\n"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
+Vector<String> CodeBlock::render_lines_for_terminal(size_t) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<String> lines;
 
     // Do not indent too much if we are in the synopsis
     auto indentation = "    "sv;
@@ -67,8 +67,8 @@ Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
     }
 
     for (auto const& line : m_code.split('\n'))
-        lines.append(DeprecatedString::formatted("{}{}", indentation, line));
-    lines.append("");
+        lines.append(String::formatted("{}{}", indentation, line).release_value_but_fixme_should_propagate_errors());
+    lines.append(String::from_utf8_short_string(""sv));
 
     return lines;
 }

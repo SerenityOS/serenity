@@ -269,11 +269,11 @@ DeprecatedString Text::render_to_html() const
     return builder.to_deprecated_string().trim(" \n\t"sv);
 }
 
-DeprecatedString Text::render_for_terminal() const
+String Text::render_for_terminal() const
 {
     StringBuilder builder;
     m_node->render_for_terminal(builder);
-    return builder.to_deprecated_string().trim(" \n\t"sv);
+    return builder.to_string().release_value_but_fixme_should_propagate_errors().trim(" \n\t"sv).release_value_but_fixme_should_propagate_errors();
 }
 
 RecursionDecision Text::walk(Visitor& visitor) const

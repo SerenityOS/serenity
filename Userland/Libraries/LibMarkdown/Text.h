@@ -147,7 +147,7 @@ public:
     size_t terminal_length() const;
 
     DeprecatedString render_to_html() const;
-    DeprecatedString render_for_terminal() const;
+    String render_for_terminal() const;
     RecursionDecision walk(Visitor&) const;
 
     static Text parse(StringView);

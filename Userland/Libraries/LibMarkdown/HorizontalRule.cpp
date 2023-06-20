@@ -12,18 +12,18 @@
 
 namespace Markdown {
 
-DeprecatedString HorizontalRule::render_to_html(bool) const
+String HorizontalRule::render_to_html(bool) const
 {
-    return "<hr />\n";
+    return String::from_utf8("<hr />\n"sv).release_value_but_fixme_should_propagate_errors();
 }
 
-Vector<DeprecatedString> HorizontalRule::render_lines_for_terminal(size_t view_width) const
+Vector<String> HorizontalRule::render_lines_for_terminal(size_t view_width) const
 {
     StringBuilder builder(view_width + 1);
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
     builder.append("\n\n"sv);
-    return Vector<DeprecatedString> { builder.to_deprecated_string() };
+    return Vector<String> { builder.to_string().release_value_but_fixme_should_propagate_errors() };
 }
 
 RecursionDecision HorizontalRule::walk(Visitor& visitor) const

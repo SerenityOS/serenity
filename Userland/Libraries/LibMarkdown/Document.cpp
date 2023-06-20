@@ -40,7 +40,7 @@ DeprecatedString Document::render_to_html(StringView extra_head_contents) const
 
 DeprecatedString Document::render_to_inline_html() const
 {
-    return m_container->render_to_html();
+    return m_container->render_to_html().to_deprecated_string();
 }
 
 DeprecatedString Document::render_for_terminal(size_t view_width) const

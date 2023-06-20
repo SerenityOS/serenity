@@ -10,12 +10,12 @@
 
 namespace Markdown {
 
-DeprecatedString Heading::render_to_html(bool) const
+String Heading::render_to_html(bool) const
 {
-    return DeprecatedString::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
+    return String::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level).release_value_but_fixme_should_propagate_errors();
 }
 
-Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
+Vector<String> Heading::render_lines_for_terminal(size_t) const
 {
     StringBuilder builder;
 
@@ -23,7 +23,7 @@ Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
     switch (m_level) {
     case 1:
     case 2:
-        builder.append(m_text.render_for_terminal().to_uppercase());
+        builder.append(m_text.render_for_terminal().to_deprecated_string().to_uppercase());
         builder.append("\033[0m"sv);
         break;
     default:
@@ -32,7 +32,7 @@ Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
         break;
     }
 
-    return Vector<DeprecatedString> { builder.to_deprecated_string() };
+    return Vector<String> { builder.to_string().release_value_but_fixme_should_propagate_errors() };
 }
 
 RecursionDecision Heading::walk(Visitor& visitor) const

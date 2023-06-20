@@ -12,11 +12,11 @@
 
 namespace Markdown {
 
-Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) const
+Vector<String> Table::render_lines_for_terminal(size_t view_width) const
 {
     auto unit_width_length = view_width == 0 ? 4 : ((float)(view_width - m_columns.size()) / (float)m_total_width);
     StringBuilder builder;
-    Vector<DeprecatedString> lines;
+    Vector<String> lines;
 
     auto write_aligned = [&](auto const& text, auto width, auto alignment) {
         size_t original_length = text.terminal_length();
@@ -31,7 +31,7 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
                 builder.append(' ');
         } else {
             // FIXME: We're using StringView literals to bypass the compile-time AK::Format checking here, since it can't handle the "}}"
-            builder.appendff(alignment == Alignment::Left ? "{:<{1}}"sv : "{:>{1}}"sv, string, (int)(width + (string.length() - original_length)));
+            builder.appendff(alignment == Alignment::Left ? "{:<{1}}"sv : "{:>{1}}"sv, string, (int)(width + (string.code_points().length() - original_length)));
         }
     };
 
@@ -44,12 +44,12 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
         write_aligned(col.header, width, col.alignment);
     }
 
-    lines.append(builder.to_deprecated_string());
+    lines.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
     builder.clear();
 
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    lines.append(builder.to_deprecated_string());
+    lines.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
     builder.clear();
 
     for (size_t i = 0; i < m_row_count; ++i) {
@@ -65,16 +65,16 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        lines.append(builder.to_deprecated_string());
+        lines.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
         builder.clear();
     }
 
-    lines.append("");
+    lines.append(String::from_utf8_short_string(""sv));
 
     return lines;
 }
 
-DeprecatedString Table::render_to_html(bool) const
+String Table::render_to_html(bool) const
 {
     auto alignment_string = [](Alignment alignment) {
         switch (alignment) {
@@ -114,7 +114,7 @@ DeprecatedString Table::render_to_html(bool) const
     builder.append("</tbody>"sv);
     builder.append("</table>"sv);
 
-    return builder.to_deprecated_string();
+    return builder.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
 RecursionDecision Table::walk(Visitor& visitor) const

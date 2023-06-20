@@ -17,7 +17,7 @@
 
 namespace Markdown {
 
-DeprecatedString ContainerBlock::render_to_html(bool tight) const
+String ContainerBlock::render_to_html(bool tight) const
 {
     StringBuilder builder;
 
@@ -29,7 +29,7 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
     // I don't like this edge case.
     if (m_blocks.size() != 0) {
         auto& block = m_blocks[m_blocks.size() - 1];
-        auto s = block->render_to_html(tight);
+        auto s = block->render_to_html(tight).to_deprecated_string();
         if (tight && dynamic_cast<Paragraph const*>(block.ptr())) {
             builder.append(s.substring_view(0, s.length() - 1));
         } else {
@@ -37,12 +37,12 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
         }
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-Vector<DeprecatedString> ContainerBlock::render_lines_for_terminal(size_t view_width) const
+Vector<String> ContainerBlock::render_lines_for_terminal(size_t view_width) const
 {
-    Vector<DeprecatedString> lines;
+    Vector<String> lines;
 
     for (auto& block : m_blocks) {
         for (auto& line : block->render_lines_for_terminal(view_width))
