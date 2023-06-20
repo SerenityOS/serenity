@@ -164,8 +164,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
-    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
+    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
+    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
 
     auto& box_state = m_state.get_mutable(box);
     box_state.border_left = computed_values.border_left().width;
@@ -291,8 +291,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 
     auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
     auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
-    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
-    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
+    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
+    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
@@ -371,8 +371,8 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     // non-replaced block-level elements are applied to determine the margins.
     auto margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length_for_resolve);
     auto margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length_for_resolve);
-    auto const padding_left = computed_values.padding().left().to_px(box, width_of_containing_block);
-    auto const padding_right = computed_values.padding().right().to_px(box, width_of_containing_block);
+    auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
+    auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).to_px(box);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())
