@@ -39,6 +39,7 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
     m_weekend_length = weekend_length;
 
     set_fill_with_background_color(true);
+    set_scrollbars_enabled(false);
 
     for (int i = 0; i < 7; i++) {
         Day day;
@@ -775,6 +776,17 @@ void Calendar::mousedown_event(GUI::MouseEvent& event)
             }
         }
     }
+}
+
+void Calendar::mousewheel_event(GUI::MouseEvent& event)
+{
+    if (event.wheel_delta_y() > 0)
+        show_next_date();
+    else
+        show_previous_date();
+
+    if (on_scroll)
+        on_scroll();
 }
 
 void Calendar::doubleclick_event(GUI::MouseEvent& event)
