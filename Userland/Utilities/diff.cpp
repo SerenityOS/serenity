@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (num_added > 1)
             sb.appendff(",{}", target_start + num_added - 1);
 
-        outln("Hunk: {}", sb.to_deprecated_string());
+        outln("{}", sb.to_deprecated_string());
         for (auto const& line : hunk.removed_lines) {
             if (color_output)
                 outln("\033[31;1m< {}\033[0m", line);
