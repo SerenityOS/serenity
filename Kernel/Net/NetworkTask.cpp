@@ -197,7 +197,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
         return;
     }
 
-    dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
+    dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}, ttl={}", packet.source(), packet.destination(), packet.ttl());
 
     NetworkingManagement::the().for_each([&](auto& adapter) {
         if (adapter.ipv4_address().is_zero() || !adapter.link_up())
@@ -257,7 +257,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             dbgln("Could not allocate packet buffer while sending ICMP packet");
             return;
         }
-        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
+        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, NetworkingManagement::default_ttl());
         memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
         auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
         response.header.set_type(ICMPType::EchoReply);
@@ -267,7 +267,6 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         if (size_t icmp_payload_size = icmp_packet_size - sizeof(ICMPEchoPacket))
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
-        // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
         adapter->send_packet(packet->bytes());
         adapter->release_packet_buffer(*packet);
     }
@@ -350,7 +349,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
         return;
     routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
         routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
-        buffer_size - ipv4_payload_offset, 0, 64);
+        buffer_size - ipv4_payload_offset, 0, NetworkingManagement::default_ttl());
 
     auto& rst_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
     rst_packet = {};

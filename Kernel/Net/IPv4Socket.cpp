@@ -69,6 +69,8 @@ IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> recei
         VERIFY(m_scratch_buffer);
     }
 
+    m_ttl = NetworkingManagement::default_ttl();
+
     all_sockets().with_exclusive([&](auto& table) {
         table.append(*this);
     });

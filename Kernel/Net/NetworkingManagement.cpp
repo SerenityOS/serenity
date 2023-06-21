@@ -20,6 +20,8 @@
 namespace Kernel {
 
 static Singleton<NetworkingManagement> s_the;
+// This configurable value is used as the default TTL for all packets sent by the kernel.
+u8 NetworkingManagement::m_default_ttl = 64;
 
 NetworkingManagement& NetworkingManagement::the()
 {
