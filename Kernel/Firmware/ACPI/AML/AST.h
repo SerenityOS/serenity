@@ -99,6 +99,8 @@ public:
     virtual void dump(size_t indent) const override;
     virtual ErrorOr<Value> evaluate() const override;
 
+    Vector<NonnullRefPtr<ASTNode>> const& element_list() const { return m_element_list; }
+
 private:
     u8 m_element_count { 0 };
     Vector<NonnullRefPtr<ASTNode>> m_element_list;
@@ -277,6 +279,8 @@ public:
 
     virtual void dump(size_t indent) const override;
     virtual ErrorOr<Value> evaluate() const override;
+
+    u64 value() const { return m_value; }
 
 private:
     u64 m_value { 0 };
