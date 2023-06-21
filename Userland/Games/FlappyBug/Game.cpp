@@ -71,9 +71,9 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.draw_scaled_bitmap(enclosing_int_rect(m_bug.rect()), *m_bug.current_bitmap(), m_bug.flapping_bitmap->rect());
 
     if (m_active) {
-        painter.draw_text(m_score_rect, DeprecatedString::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::White);
+        painter.draw_text(m_score_rect, String::formatted("{:.0}", m_difficulty).release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::TopLeft, Color::White);
     } else if (m_high_score.has_value()) {
-        auto message = DeprecatedString::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
+        auto message = String::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ").release_value_but_fixme_should_propagate_errors();
         painter.draw_text(m_text_rect, message, Gfx::TextAlignment::Center, Color::White);
     } else {
         painter.draw_text(m_text_rect, "Press any key to start"sv, Gfx::TextAlignment::Center, Color::White);
