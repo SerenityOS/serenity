@@ -94,16 +94,9 @@ public:
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
     bool has_shadow() const;
 
-    void set_opacity(float);
-    float opacity() const { return m_opacity; }
-
     bool is_opaque() const
     {
-        if (opacity() < 1.0f)
-            return false;
-        if (has_alpha_channel())
-            return false;
-        return true;
+        return !has_alpha_channel();
     }
 
     void set_dirty(bool re_render_shadow = false)
@@ -148,7 +141,6 @@ private:
 
     RefPtr<Core::Timer> m_flash_timer;
     size_t m_flash_counter { 0 };
-    float m_opacity { 1 };
     bool m_has_alpha_channel { false };
 };
 

@@ -358,14 +358,14 @@ void WindowFrame::PerScaleRenderedCache::paint(WindowFrame& frame, Gfx::Painter&
             // We have a top piece
             auto src_rect = rect.intersected(Gfx::Rect { frame_rect.location(), { frame_rect.width(), m_bottom_y } });
             if (!src_rect.is_empty())
-                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-frame_rect.location()), frame.opacity());
+                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-frame_rect.location()));
         }
         if (m_bottom_y < top_bottom_height) {
             // We have a bottom piece
             Gfx::IntRect rect_in_frame { frame_rect.x(), window_rect.bottom(), frame_rect.width(), top_bottom_height - m_bottom_y };
             auto src_rect = rect.intersected(rect_in_frame);
             if (!src_rect.is_empty())
-                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-rect_in_frame.x(), -rect_in_frame.y() + m_bottom_y), frame.opacity());
+                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-rect_in_frame.x(), -rect_in_frame.y() + m_bottom_y));
         }
     }
 
@@ -376,14 +376,14 @@ void WindowFrame::PerScaleRenderedCache::paint(WindowFrame& frame, Gfx::Painter&
             Gfx::IntRect rect_in_frame { frame_rect.x(), window_rect.y(), m_right_x, window_rect.height() };
             auto src_rect = rect.intersected(rect_in_frame);
             if (!src_rect.is_empty())
-                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.location()), frame.opacity());
+                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.location()));
         }
         if (m_right_x < left_right_width) {
             // We have a right piece
             Gfx::IntRect rect_in_frame { window_rect.right(), window_rect.y(), left_right_width - m_right_x, window_rect.height() };
             auto src_rect = rect.intersected(rect_in_frame);
             if (!src_rect.is_empty())
-                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.x() + m_right_x, -rect_in_frame.y()), frame.opacity());
+                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.x() + m_right_x, -rect_in_frame.y()));
         }
     }
 }
@@ -547,18 +547,6 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
     }
 
     m_shadow_dirty = false;
-}
-
-void WindowFrame::set_opacity(float opacity)
-{
-    if (m_opacity == opacity)
-        return;
-    bool was_opaque = is_opaque();
-    m_opacity = opacity;
-    if (was_opaque != is_opaque())
-        Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(render_rect());
-    WindowManager::the().notify_opacity_changed(m_window);
 }
 
 Gfx::IntRect WindowFrame::inflated_for_shadow(Gfx::IntRect const& frame_rect) const
