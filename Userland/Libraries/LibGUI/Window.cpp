@@ -159,7 +159,6 @@ void Window::show()
         m_fullscreen,
         m_frameless,
         m_forced_shadow,
-        m_opacity_when_windowless,
         m_alpha_hit_threshold,
         m_base_size,
         m_size_increment,
@@ -893,14 +892,6 @@ void Window::set_double_buffering_enabled(bool value)
 {
     VERIFY(!is_visible());
     m_double_buffering_enabled = value;
-}
-
-void Window::set_opacity(float opacity)
-{
-    m_opacity_when_windowless = opacity;
-    if (!is_visible())
-        return;
-    ConnectionToWindowServer::the().async_set_window_opacity(m_window_id, opacity);
 }
 
 void Window::set_alpha_hit_threshold(float threshold)

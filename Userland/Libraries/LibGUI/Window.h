@@ -75,8 +75,6 @@ public:
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     bool has_alpha_channel() const { return m_has_alpha_channel; }
-    void set_opacity(float);
-    float opacity() const { return m_opacity_when_windowless; }
 
     void set_alpha_hit_threshold(float);
     float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
@@ -291,7 +289,6 @@ private:
 
     RefPtr<Gfx::Bitmap const> m_icon;
     int m_window_id { 0 };
-    float m_opacity_when_windowless { 1.0f };
     float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
     WeakPtr<Widget> m_default_return_key_widget;
