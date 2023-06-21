@@ -1,13 +1,25 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/Error.h>
+#include <AK/Forward.h>
+#include <LibDiff/Hunks.h>
 
 namespace Diff {
+
 DeprecatedString generate_only_additions(StringView);
+
+enum class ColorOutput {
+    Yes,
+    No,
 };
+
+ErrorOr<void> write_normal(Hunk const& hunk, Stream& stream, ColorOutput color_output = ColorOutput::No);
+
+}
