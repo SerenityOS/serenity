@@ -160,22 +160,14 @@ private:
                     paused = Paused::Yes;
                     break;
 
-                case AudioTask::Type::Seek: {
+                case AudioTask::Type::Seek:
                     VERIFY(task.data.has_value());
-                    auto position = *task.data;
+                    m_position = Web::Platform::AudioCodecPlugin::set_loader_position(m_loader, *task.data, m_duration, audio_output->format().sampleRate());
 
-                    auto duration = static_cast<double>(this->duration().to_milliseconds()) / 1000.0;
-                    position = position / duration * static_cast<double>(m_loader->total_samples());
-
-                    m_loader->seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
-
-                    if (paused == Paused::Yes) {
-                        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader, audio_output->format().sampleRate());
+                    if (paused == Paused::Yes)
                         Q_EMIT playback_position_updated(m_position);
-                    }
 
                     break;
-                }
 
                 case AudioTask::Type::Volume:
                     VERIFY(task.data.has_value());

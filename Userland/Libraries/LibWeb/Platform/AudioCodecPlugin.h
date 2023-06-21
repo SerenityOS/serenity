@@ -24,6 +24,7 @@ public:
     virtual ~AudioCodecPlugin();
 
     static ErrorOr<FixedArray<Audio::Sample>> read_samples_from_loader(Audio::Loader&, size_t samples_to_load, size_t device_sample_rate);
+    static Duration set_loader_position(Audio::Loader&, double position, Duration duration, size_t device_sample_rate);
     static Duration current_loader_position(Audio::Loader const&, size_t device_sample_rate);
 
     virtual void resume_playback() = 0;
