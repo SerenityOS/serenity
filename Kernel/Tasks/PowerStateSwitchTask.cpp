@@ -149,7 +149,8 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     }
 
     dbgln("Attempting system shutdown...");
-
+    if (ACPI::is_enabled())
+        ACPI::Parser::the()->try_acpi_shutdown();
     arch_specific_poweroff();
 
     dbgln("shutdown attempts failed, applications will stop responding.");
