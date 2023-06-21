@@ -242,8 +242,14 @@ private:
 
     void collapse_auto_fit_tracks_if_needed(GridDimension const);
 
+    enum class SpaceDistributionPhase {
+        AccommodateMinimumContribution,
+        AccommodateMinContentContribution,
+        AccommodateMaxContentContribution
+    };
+
     template<typename Match>
-    void distribute_extra_space_across_spanned_tracks_base_size(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
+    void distribute_extra_space_across_spanned_tracks_base_size(GridDimension dimension, CSSPixels item_size_contribution, SpaceDistributionPhase phase, Vector<GridTrack&>& spanned_tracks, Match matcher);
 
     template<typename Match>
     void distribute_extra_space_across_spanned_tracks_growth_limit(CSSPixels item_size_contribution, Vector<GridTrack&>& spanned_tracks, Match matcher);
