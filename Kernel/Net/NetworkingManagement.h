@@ -38,11 +38,16 @@ public:
 
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;
 
+    static u8 default_ttl() { return NetworkingManagement::m_default_ttl; }
+    static void set_default_ttl(u8 ttl) { NetworkingManagement::m_default_ttl = ttl; }
+
 private:
     ErrorOr<NonnullRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
 
     SpinlockProtected<Vector<NonnullRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
     RefPtr<NetworkAdapter> m_loopback_adapter;
+
+    static u8 m_default_ttl;
 };
 
 }

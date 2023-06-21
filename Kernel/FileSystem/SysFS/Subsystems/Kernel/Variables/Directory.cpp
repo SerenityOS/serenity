@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/DefaultTTL.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.h>
@@ -23,6 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelVariablesDirectory> SysFSGlobalK
         list.append(SysFSDumpKmallocStacks::must_create(*global_variables_directory));
         list.append(SysFSUBSANDeadly::must_create(*global_variables_directory));
         list.append(SysFSCoredumpDirectory::must_create(*global_variables_directory));
+        list.append(SysFSDefaultTTL::must_create(*global_variables_directory));
         return {};
     }));
     return global_variables_directory;
