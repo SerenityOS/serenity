@@ -1,8 +1,8 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x214 children: not-inline
-      TableWrapper <(anonymous)> at (8,8) content-size 588x214 [BFC] children: not-inline
-        Box <table.table> at (108,108) content-size 588x14 table-box [TFC] children: not-inline
-          Box <tbody> at (108,108) content-size 584x10 table-row-group children: not-inline
-            Box <tr> at (110,110) content-size 584x10 table-row children: not-inline
-              BlockContainer <td.cell> at (111,115) content-size 582x0 table-cell [BFC] children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 584x214 [BFC] children: not-inline
+        Box <table.table> at (108,108) content-size 584x14 table-box [TFC] children: not-inline
+          Box <tbody> at (108,108) content-size 580x10 table-row-group children: not-inline
+            Box <tr> at (110,110) content-size 580x10 table-row children: not-inline
+              BlockContainer <td.cell> at (111,115) content-size 578x0 table-cell [BFC] children: not-inline

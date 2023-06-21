@@ -332,12 +332,16 @@ void TableFormattingContext::compute_table_width()
     // not the table wrapper box itself.
     CSSPixels width_of_table_wrapper_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
 
+    // Compute undistributable space due to border spacing: https://www.w3.org/TR/css-tables-3/#computing-undistributable-space.
+    auto undistributable_space = (m_columns.size() + 1) * border_spacing_horizontal();
+
     // The row/column-grid width minimum (GRIDMIN) width is the sum of the min-content width
     // of all the columns plus cell spacing or borders.
     CSSPixels grid_min = 0.0f;
     for (auto& column : m_columns) {
         grid_min += column.min_size;
     }
+    grid_min += undistributable_space;
 
     // The row/column-grid width maximum (GRIDMAX) width is the sum of the max-content width
     // of all the columns plus cell spacing or borders.
@@ -345,6 +349,7 @@ void TableFormattingContext::compute_table_width()
     for (auto& column : m_columns) {
         grid_max += column.max_size;
     }
+    grid_max += undistributable_space;
 
     // The used min-width of a table is the greater of the resolved min-width, CAPMIN, and GRIDMIN.
     auto used_min_width = max(grid_min, compute_capmin());
@@ -367,9 +372,7 @@ void TableFormattingContext::compute_table_width()
             used_width = min(used_width, computed_values.max_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 
-    // Compute undistributable space due to border spacing: https://www.w3.org/TR/css-tables-3/#computing-undistributable-space.
-    auto undistributable_space = (m_columns.size() + 1) * border_spacing_horizontal();
-    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right + undistributable_space);
+    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right);
 }
 
 void TableFormattingContext::distribute_width_to_columns()
