@@ -1836,4 +1836,26 @@ void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPt
     environment_settings.clean_up_after_running_script();
 }
 
+void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time)
+{
+    if (display_time.has_value() && !m_display_time.has_value()) {
+        if (potentially_playing()) {
+            m_tracking_mouse_position_while_playing = true;
+            on_paused();
+        }
+    } else if (!display_time.has_value() && m_display_time.has_value()) {
+        if (m_tracking_mouse_position_while_playing) {
+            m_tracking_mouse_position_while_playing = false;
+            on_playing();
+        }
+    }
+
+    m_display_time = move(display_time);
+}
+
+double HTMLMediaElement::layout_display_time(Badge<Painting::MediaPaintable>) const
+{
+    return m_display_time.value_or(current_time());
+}
+
 }

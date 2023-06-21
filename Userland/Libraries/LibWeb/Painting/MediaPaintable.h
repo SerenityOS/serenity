@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/PixelUnits.h>
 
@@ -43,6 +44,7 @@ private:
     };
 
     virtual bool wants_mouse_events() const override { return true; }
+    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
     virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
     virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers) override;
 
@@ -52,6 +54,15 @@ private:
     static void paint_control_bar_timestamp(PaintContext&, Components const&);
     static void paint_control_bar_speaker(PaintContext&, HTML::HTMLMediaElement const&, Components const& components, Optional<DevicePixelPoint> const& mouse_position);
     static void paint_control_bar_volume(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);
+
+    enum class Temporary {
+        Yes,
+        No,
+    };
+    static void set_current_time(HTML::HTMLMediaElement& media_element, CSSPixelRect timeline_rect, CSSPixelPoint mouse_position, Temporary);
+    static void set_volume(HTML::HTMLMediaElement& media_element, CSSPixelRect volume_rect, CSSPixelPoint mouse_position);
+
+    static bool rect_is_hovered(HTML::HTMLMediaElement const& media_element, Optional<DevicePixelRect> const& rect, Optional<DevicePixelPoint> const& mouse_position, Optional<HTML::HTMLMediaElement::MouseTrackingComponent> const& allowed_mouse_tracking_component = {});
 };
 
 }
