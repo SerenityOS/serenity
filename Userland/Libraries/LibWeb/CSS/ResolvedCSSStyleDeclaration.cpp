@@ -559,18 +559,14 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return NumberStyleValue::create(layout_node.computed_values().fill_opacity());
     case PropertyID::FillRule:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().fill_rule()));
-    case PropertyID::FlexBasis: {
-        switch (layout_node.computed_values().flex_basis().type) {
-        case FlexBasis::Content:
-            return IdentifierStyleValue::create(ValueID::Content);
-        case FlexBasis::LengthPercentage:
-            return style_value_for_length_percentage(*layout_node.computed_values().flex_basis().length_percentage);
-        case FlexBasis::Auto:
-            return IdentifierStyleValue::create(ValueID::Auto);
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        break;
+    case PropertyID::FlexBasis:
+        return layout_node.computed_values().flex_basis().visit(
+            [](CSS::FlexBasisContent const&) -> ErrorOr<RefPtr<StyleValue const>> {
+                return IdentifierStyleValue::create(ValueID::Content);
+            },
+            [&](CSS::Size const& size) -> ErrorOr<RefPtr<StyleValue const>> {
+                return style_value_for_size(size);
+            });
     case PropertyID::FlexDirection:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_direction()));
     case PropertyID::FlexGrow:
@@ -837,7 +833,6 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     default:
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Computed style for the '{}' property was requested", string_from_property_id(property_id));
         return nullptr;
-    }
     }
 }
 

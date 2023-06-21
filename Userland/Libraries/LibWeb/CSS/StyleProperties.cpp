@@ -327,26 +327,14 @@ Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
     return value_id_to_flex_wrap(value->to_identifier());
 }
 
-Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
+Optional<CSS::FlexBasis> StyleProperties::flex_basis() const
 {
     auto value = property(CSS::PropertyID::FlexBasis);
 
     if (value->is_identifier() && value->to_identifier() == CSS::ValueID::Content)
-        return { { CSS::FlexBasis::Content, {} } };
+        return CSS::FlexBasisContent {};
 
-    if (value->has_auto())
-        return { { CSS::FlexBasis::Auto, {} } };
-
-    if (value->is_percentage())
-        return { { CSS::FlexBasis::LengthPercentage, value->as_percentage().percentage() } };
-
-    if (value->is_length())
-        return { { CSS::FlexBasis::LengthPercentage, value->as_length().length() } };
-
-    if (value->is_calculated())
-        return { { CSS::FlexBasis::LengthPercentage, CSS::LengthPercentage { value->as_calculated() } } };
-
-    return {};
+    return size_value(CSS::PropertyID::FlexBasis);
 }
 
 float StyleProperties::flex_grow() const

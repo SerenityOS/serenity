@@ -27,18 +27,6 @@ template<typename T>
     return ::max(min, ::min(value, max));
 }
 
-// FIXME: This is a hack helper, remove it when no longer needed.
-static CSS::Size to_css_size(CSS::LengthPercentage const& length_percentage)
-{
-    if (length_percentage.is_auto())
-        return CSS::Size::make_auto();
-    if (length_percentage.is_length())
-        return CSS::Size::make_length(length_percentage.length());
-    if (length_percentage.is_calculated())
-        return CSS::Size::make_calculated(length_percentage.calculated());
-    return CSS::Size::make_percentage(length_percentage.percentage());
-}
-
 CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, CSS::Size const& size) const
 {
     auto containing_block_width = containing_block_width_for(box);
@@ -537,41 +525,30 @@ void FlexFormattingContext::determine_available_space_for_items(AvailableSpace c
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#propdef-flex-basis
-CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem const& item) const
+CSS::FlexBasis FlexFormattingContext::used_flex_basis_for_item(FlexItem const& item) const
 {
     auto flex_basis = item.box->computed_values().flex_basis();
 
-    if (flex_basis.type == CSS::FlexBasis::Auto) {
+    if (flex_basis.has<CSS::Size>() && flex_basis.get<CSS::Size>().is_auto()) {
         // https://drafts.csswg.org/css-flexbox-1/#valdef-flex-basis-auto
         // When specified on a flex item, the auto keyword retrieves the value of the main size property as the used flex-basis.
         // If that value is itself auto, then the used value is content.
         auto const& main_size = is_row_layout() ? item.box->computed_values().width() : item.box->computed_values().height();
 
         if (main_size.is_auto()) {
-            flex_basis.type = CSS::FlexBasis::Content;
+            flex_basis = CSS::FlexBasisContent {};
         } else {
-            flex_basis.type = CSS::FlexBasis::LengthPercentage;
-            if (main_size.is_length()) {
-                flex_basis.length_percentage = main_size.length();
-            } else if (main_size.is_percentage()) {
-                flex_basis.length_percentage = main_size.percentage();
-            } else if (main_size.is_calculated()) {
-                flex_basis.length_percentage = CSS::LengthPercentage { main_size.calculated() };
-            } else {
-                // FIXME: Support other size values!
-                dbgln("FIXME: Unsupported main size for flex-basis: {}", main_size);
-                flex_basis.type = CSS::FlexBasis::Content;
-            }
+            flex_basis = main_size;
         }
     }
 
     // For example, percentage values of flex-basis are resolved against the flex item’s containing block
     // (i.e. its flex container); and if that containing block’s size is indefinite,
     // the used value for flex-basis is content.
-    if (flex_basis.type == CSS::FlexBasis::LengthPercentage
-        && flex_basis.length_percentage->is_percentage()
+    if (flex_basis.has<CSS::Size>()
+        && flex_basis.get<CSS::Size>().is_percentage()
         && !has_definite_main_size(flex_container())) {
-        flex_basis.type = CSS::FlexBasis::Content;
+        flex_basis = CSS::FlexBasisContent {};
     }
 
     return flex_basis;
@@ -609,20 +586,21 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     item.flex_base_size = [&] {
         item.used_flex_basis = used_flex_basis_for_item(item);
 
-        item.used_flex_basis_is_definite = [&](CSS::FlexBasisData const& flex_basis) -> bool {
-            if (flex_basis.type != CSS::FlexBasis::LengthPercentage)
+        item.used_flex_basis_is_definite = [&](CSS::FlexBasis const& flex_basis) -> bool {
+            if (!flex_basis.has<CSS::Size>())
                 return false;
-            if (flex_basis.length_percentage->is_auto())
+            auto const& size = flex_basis.get<CSS::Size>();
+            if (size.is_auto() || size.is_min_content() || size.is_max_content() || size.is_fit_content())
                 return false;
-            if (flex_basis.length_percentage->is_length())
+            if (size.is_length())
                 return true;
 
             bool can_resolve_percentages = is_row_layout()
                 ? m_flex_container_state.has_definite_width()
                 : m_flex_container_state.has_definite_height();
 
-            if (flex_basis.length_percentage->is_calculated()) {
-                auto const& calc_value = *flex_basis.length_percentage->calculated();
+            if (size.is_calculated()) {
+                auto const& calc_value = size.calculated();
                 if (calc_value.resolves_to_percentage())
                     return can_resolve_percentages;
                 if (calc_value.resolves_to_length()) {
@@ -632,15 +610,16 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
                 }
                 return false;
             }
-            VERIFY(flex_basis.length_percentage->is_percentage());
+            VERIFY(size.is_percentage());
             return can_resolve_percentages;
-        }(item.used_flex_basis);
+        }(*item.used_flex_basis);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (item.used_flex_basis_is_definite) {
+            auto const& size = item.used_flex_basis->get<CSS::Size>();
             if (is_row_layout())
-                return get_pixel_width(child_box, to_css_size(item.used_flex_basis.length_percentage.value()));
-            return get_pixel_height(child_box, to_css_size(item.used_flex_basis.length_percentage.value()));
+                return get_pixel_width(child_box, size);
+            return get_pixel_height(child_box, size);
         }
 
         // B. If the flex item has ...
@@ -648,7 +627,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    - a used flex basis of content, and
         //    - a definite cross size,
         if (item.box->has_preferred_aspect_ratio()
-            && item.used_flex_basis.type == CSS::FlexBasis::Content
+            && item.used_flex_basis->has<CSS::FlexBasisContent>()
             && has_definite_cross_size(item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
             return adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(
@@ -662,7 +641,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    and the flex container is being sized under a min-content or max-content constraint
         //    (e.g. when performing automatic table layout [CSS21]), size the item under that constraint.
         //    The flex base size is the item’s resulting main size.
-        if (item.used_flex_basis.type == CSS::FlexBasis::Content && m_available_space_for_items->main.is_intrinsic_sizing_constraint()) {
+        if (item.used_flex_basis->has<CSS::FlexBasisContent>() && m_available_space_for_items->main.is_intrinsic_sizing_constraint()) {
             if (m_available_space_for_items->main.is_min_content())
                 return calculate_min_content_main_size(item);
             return calculate_max_content_main_size(item);
@@ -672,7 +651,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //    the available main size is infinite, and the flex item’s inline axis is parallel to the main axis,
         //    lay the item out using the rules for a box in an orthogonal flow [CSS3-WRITING-MODES].
         //    The flex base size is the item’s max-content main size.
-        if (item.used_flex_basis.type == CSS::FlexBasis::Content
+        if (item.used_flex_basis->has<CSS::FlexBasisContent>()
             // FIXME: && main_size is infinite && inline axis is parallel to the main axis
             && false && false) {
             TODO();
@@ -704,7 +683,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //       This means that *all* intrinsic heights computed within a flex formatting context will
         //       automatically use the fit-content width in case a used width is not known yet.
 
-        if (item.used_flex_basis.type == CSS::FlexBasis::Content) {
+        if (item.used_flex_basis->has<CSS::FlexBasisContent>()) {
             return calculate_max_content_main_size(item);
         }
 

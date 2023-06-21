@@ -53,7 +53,7 @@ private:
 
     struct FlexItem {
         JS::NonnullGCPtr<Box> box;
-        CSS::FlexBasisData used_flex_basis {};
+        Optional<CSS::FlexBasis> used_flex_basis {};
         bool used_flex_basis_is_definite { false };
         CSSPixels flex_base_size { 0 };
         CSSPixels hypothetical_main_size { 0 };
@@ -214,7 +214,7 @@ private:
 
     virtual void parent_context_did_dimension_child_root_box() override;
 
-    CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;
+    CSS::FlexBasis used_flex_basis_for_item(FlexItem const&) const;
 
     LayoutState::UsedValues& m_flex_container_state;
 

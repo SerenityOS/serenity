@@ -69,7 +69,7 @@ public:
     Optional<CSS::ListStylePosition> list_style_position() const;
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
-    Optional<CSS::FlexBasisData> flex_basis() const;
+    Optional<CSS::FlexBasis> flex_basis() const;
     float flex_grow() const;
     float flex_shrink() const;
     int order() const;
