@@ -259,16 +259,16 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
         switch ((GenericAddressStructure::AccessSize)structure.access_size) {
         case GenericAddressStructure::AccessSize::Byte:
-            *Memory::map_typed<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::Word:
-            *Memory::map_typed<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::DWord:
-            *Memory::map_typed<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::QWord: {
-            *Memory::map_typed<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         }
         default:
