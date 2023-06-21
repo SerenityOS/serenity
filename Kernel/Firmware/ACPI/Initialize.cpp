@@ -33,8 +33,6 @@ UNMAP_AFTER_INIT void initialize()
     InterruptNumber irq_line = facp_table_or_error.value()->sci_int;
 
     Parser::must_initialize(rsdp.value(), facp.value(), irq_line);
-    if (kernel_command_line().acpi_feature_level() == AcpiFeatureLevel::Enabled)
-        Parser::the()->enable_aml_parsing();
 }
 
 bool is_enabled()

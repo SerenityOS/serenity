@@ -180,7 +180,7 @@ struct [[gnu::packed]] HPET {
 struct [[gnu::packed]] FADT {
     SDTHeader h;
     u32 firmware_ctrl;
-    u32 dsdt_ptr;
+    u32 dsdt;
     u8 reserved;
     u8 preferred_pm_profile;
     u16 sci_int;
@@ -330,6 +330,10 @@ struct [[gnu::packed]] DSDT {
     SDTHeader h;
     unsigned char definition_block[];
 };
+
+// The SSDT and DSDT are different names for the same table structure
+using SSDT = DSDT;
+
 }
 
 }
