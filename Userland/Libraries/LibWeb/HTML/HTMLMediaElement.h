@@ -96,8 +96,18 @@ public:
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
 
+    enum class MouseTrackingComponent {
+        Timeline,
+        Volume,
+    };
+    void set_layout_mouse_tracking_component(Badge<Painting::MediaPaintable>, Optional<MouseTrackingComponent> mouse_tracking_component) { m_mouse_tracking_component = move(mouse_tracking_component); }
+    Optional<MouseTrackingComponent> const& layout_mouse_tracking_component(Badge<Painting::MediaPaintable>) const { return m_mouse_tracking_component; }
+
     void set_layout_mouse_position(Badge<Painting::MediaPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
     Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::MediaPaintable>) const { return m_mouse_position; }
+
+    void set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time);
+    double layout_display_time(Badge<Painting::MediaPaintable>) const;
 
     struct CachedLayoutBoxes {
         Optional<CSSPixelRect> control_box_rect;
@@ -259,7 +269,10 @@ private:
     bool m_seek_in_progress = false;
 
     // Cached state for layout.
+    Optional<MouseTrackingComponent> m_mouse_tracking_component;
+    bool m_tracking_mouse_position_while_playing { false };
     Optional<CSSPixelPoint> m_mouse_position;
+    Optional<double> m_display_time;
     mutable CachedLayoutBoxes m_layout_boxes;
 };
 
