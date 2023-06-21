@@ -18,6 +18,9 @@ public:
 
     static HashTable<NavigableContainer*>& all_instances();
 
+    JS::GCPtr<Navigable> content_navigable() { return m_content_navigable; }
+    JS::GCPtr<Navigable const> content_navigable() const { return m_content_navigable.ptr(); }
+
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
     BrowsingContext const* nested_browsing_context() const { return m_nested_browsing_context; }
 
@@ -42,6 +45,9 @@ protected:
     void create_new_nested_browsing_context();
 
     JS::GCPtr<BrowsingContext> m_nested_browsing_context;
+
+    // https://html.spec.whatwg.org/multipage/document-sequences.html#content-navigable
+    JS::GCPtr<Navigable> m_content_navigable { nullptr };
 
 private:
     virtual bool is_navigable_container() const override { return true; }
