@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/DOMParserPrototype.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/HTML/DOMParser.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
@@ -37,13 +38,14 @@ JS::ThrowCompletionOr<void> DOMParser::initialize(JS::Realm& realm)
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
-    auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
-    document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
+    JS::GCPtr<DOM::Document> document;
 
     // 2. Switch on type:
     if (type == Bindings::DOMParserSupportedType::Text_Html) {
         // -> "text/html"
         // 1. Set document's type to "html".
+        document = HTML::HTMLDocument::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
+        document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
         document->set_document_type(DOM::Document::Type::HTML);
 
         // 2. Create an HTML parser parser, associated with document.
@@ -56,6 +58,8 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
         parser->run("about:blank"sv);
     } else {
         // -> Otherwise
+        document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
+        document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
 
         // 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.
         XML::Parser parser(string, { .resolve_external_resource = resolve_xml_resource });
@@ -76,7 +80,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
     }
 
     // 3. Return document.
-    return document;
+    return *document;
 }
 
 }

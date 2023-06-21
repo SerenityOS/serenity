@@ -49,6 +49,7 @@
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
@@ -243,7 +244,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    and navigation id is navigationParams's id.
-    auto document = TRY(Document::create(window->realm()));
+    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
     document->m_type = type;
     document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
@@ -2658,7 +2659,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
         // 1. If doc does not yet have an associated inert template document, then:
         if (!m_associated_inert_template_document) {
             // 1. Let new doc be a new Document (whose browsing context is null). This is "a Document created by this algorithm" for the purposes of the step above.
-            auto new_document = DOM::Document::create(realm()).release_value_but_fixme_should_propagate_errors();
+            auto new_document = HTML::HTMLDocument::create(realm()).release_value_but_fixme_should_propagate_errors();
             new_document->m_created_for_appropriate_template_contents = true;
 
             // 2. If doc is an HTML document, mark new doc as an HTML document also.

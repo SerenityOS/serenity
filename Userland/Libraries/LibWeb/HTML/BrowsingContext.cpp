@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/RemoteBrowsingContext.h>
@@ -203,7 +204,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create(window->realm()).release_value_but_fixme_should_propagate_errors();
+    auto document = HTML::HTMLDocument::create(window->realm()).release_value_but_fixme_should_propagate_errors();
 
     // Non-standard
     document->set_window(*window);
@@ -361,7 +362,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         verify_cast<WindowEnvironmentSettingsObject>(Bindings::host_defined_environment_settings_object(window->realm())).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
 
     // 14. Let document be a new Document, with:
-    auto document = TRY(DOM::Document::create(window->realm()));
+    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
 
     // Non-standard
     document->set_window(*window);
