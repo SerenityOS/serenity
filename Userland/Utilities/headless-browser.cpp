@@ -20,6 +20,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <LibDiff/Format.h>
 #include <LibDiff/Generator.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Bitmap.h>
@@ -246,54 +247,18 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     if (actual_trimmed == expectation_trimmed)
         return TestResult::Pass;
 
-    bool color_output = isatty(STDOUT_FILENO);
+    auto const color_output = isatty(STDOUT_FILENO) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
-    if (color_output)
+    if (color_output == Diff::ColorOutput::Yes)
         outln("\n\033[33;1mTest failed\033[0m: {}", input_path);
     else
         outln("\nTest failed: {}", input_path);
 
     auto hunks = Diff::from_text(expectation, actual);
+    auto out = TRY(Core::File::standard_output());
     for (auto const& hunk : hunks) {
-        auto original_start = hunk.original_start_line;
-        auto target_start = hunk.target_start_line;
-        auto num_added = hunk.added_lines.size();
-        auto num_removed = hunk.removed_lines.size();
-
-        StringBuilder builder;
-        // Source line(s)
-        builder.appendff("{}", original_start);
-        if (num_removed > 1)
-            builder.appendff(",{}", original_start + num_removed - 1);
-
-        // Action
-        if (num_added > 0 && num_removed > 0)
-            builder.append('c');
-        else if (num_added > 0)
-            builder.append('a');
-        else
-            builder.append('d');
-
-        // Target line(s)
-        builder.appendff("{}", target_start);
-        if (num_added > 1)
-            builder.appendff(",{}", target_start + num_added - 1);
-
-        outln("Hunk: {}", builder.string_view());
-        for (auto const& line : hunk.removed_lines) {
-            if (color_output)
-                outln("\033[31;1m< {}\033[0m", line);
-            else
-                outln("< {}", line);
-        }
-        if (num_added > 0 && num_removed > 0)
-            outln("---");
-        for (auto const& line : hunk.added_lines) {
-            if (color_output)
-                outln("\033[32;1m> {}\033[0m", line);
-            else
-                outln("> {}", line);
-        }
+        TRY(out->write_formatted("Hunk: "));
+        TRY(Diff::write_normal(hunk, *out, color_output));
     }
 
     return TestResult::Fail;
