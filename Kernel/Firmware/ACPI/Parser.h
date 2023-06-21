@@ -64,9 +64,7 @@ public:
     void try_acpi_reboot();
     bool can_reboot();
     void try_acpi_shutdown();
-    bool can_shutdown() { return false; }
-
-    void enable_aml_parsing();
+    bool can_shutdown();
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
@@ -94,6 +92,8 @@ private:
     u8 get_table_revision(PhysicalAddress);
     void process_fadt_data();
     void process_dsdt();
+
+    bool extract_s5_contents(u16& SLP_TYPa, u16& SLP_TYPb);
 
     bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
     void access_generic_address(Structures::GenericAddressStructure const&, u32 value);

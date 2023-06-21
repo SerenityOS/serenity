@@ -25,6 +25,8 @@ public:
     virtual void dump(size_t indent) const = 0;
 
     virtual bool is_define_method() const { return false; }
+    virtual bool is_define_package() const { return false; }
+    virtual bool is_integer_data() const { return false; }
 };
 
 class DefinitionBlock final : public ASTNode {
@@ -94,6 +96,10 @@ public:
     }
 
     virtual void dump(size_t indent) const override;
+
+    virtual bool is_define_package() const override { return true; }
+
+    Vector<NonnullRefPtr<ASTNode>> const& element_list() const { return m_element_list; }
 
 private:
     u8 m_element_count { 0 };
@@ -324,6 +330,10 @@ public:
     }
 
     virtual void dump(size_t indent) const override;
+
+    virtual bool is_integer_data() const override { return true; }
+
+    u64 value() const { return m_value; }
 
 private:
     u64 m_value { 0 };
