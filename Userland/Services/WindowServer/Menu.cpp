@@ -501,7 +501,7 @@ void Menu::start_activation_animation(MenuItem& item)
     auto window = Window::construct(*this, WindowType::Menu);
     window->set_frameless(true);
     window->set_hit_testing_enabled(false);
-    window->set_opacity(0.8f); // start out transparent so we don't have to recompute occlusions
+    window->set_has_alpha_channel(true);
     window->set_rect(item.rect().translated(m_menu_window->rect().location()));
     window->set_event_filter([](Core::Event&) {
         // ignore all events
@@ -509,8 +509,11 @@ void Menu::start_activation_animation(MenuItem& item)
     });
 
     VERIFY(window->backing_store());
+
+    NonnullRefPtr<Gfx::Bitmap> original_bitmap = *menu_window()->backing_store();
+    Gfx::IntRect item_rect = item.rect();
     Gfx::Painter painter(*window->backing_store());
-    painter.blit({}, *menu_window()->backing_store(), item.rect(), 1.0f, false);
+    painter.blit({}, original_bitmap, item_rect, 0.8f, true); // start out transparent so we don't have to recompute occlusions
     window->invalidate();
 
     struct AnimationInfo {
@@ -525,7 +528,7 @@ void Menu::start_activation_animation(MenuItem& item)
     };
     auto animation = adopt_own(*new AnimationInfo(move(window)));
     auto& timer = animation->timer;
-    timer = Core::Timer::create_repeating(50, [animation = animation.ptr(), animation_ref = move(animation)] {
+    timer = Core::Timer::create_repeating(50, [animation = animation.ptr(), animation_ref = move(animation), original_bitmap, item_rect] {
         VERIFY(animation->step % 2 == 0);
         animation->step -= 2;
         if (animation->step == 0) {
@@ -536,7 +539,10 @@ void Menu::start_activation_animation(MenuItem& item)
         }
 
         float opacity = (float)animation->step / 10.0f;
-        animation->window->set_opacity(opacity);
+        Gfx::Painter painter(*animation->window->backing_store());
+        painter.clear_rect({ {}, animation->window->rect().size() }, Color::Transparent);
+        painter.blit({}, original_bitmap, item_rect, opacity, true);
+        animation->window->invalidate();
     }).release_value_but_fixme_should_propagate_errors();
     timer->start();
 }
