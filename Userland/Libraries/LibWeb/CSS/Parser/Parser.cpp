@@ -7339,15 +7339,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_as_css_value(PropertyID property_id)
 Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
-        auto const& function = component_value.function();
-        if (function.name().equals_ignoring_ascii_case("calc"sv)) {
-            auto calculated_style_value = parse_calculated_value(function.values());
-            if (calculated_style_value.is_error() || calculated_style_value.value().is_null()) {
-                // FIXME: Propagate error
-                return {};
-            }
-            return GridSize(LengthPercentage { *calculated_style_value.release_value() });
-        }
+        if (auto maybe_dynamic = parse_dynamic_value(component_value); !maybe_dynamic.is_error() && maybe_dynamic.value())
+            return GridSize(LengthPercentage(maybe_dynamic.release_value()->as_calculated()));
+
         return {};
     }
     auto token = component_value.token();
