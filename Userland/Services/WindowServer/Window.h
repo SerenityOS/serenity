@@ -153,9 +153,6 @@ public:
 
     DeprecatedString computed_title() const;
 
-    float opacity() const { return m_opacity; }
-    void set_opacity(float);
-
     void set_hit_testing_enabled(bool value)
     {
         m_hit_testing_enabled = value;
@@ -327,11 +324,7 @@ public:
 
     bool is_opaque() const
     {
-        if (opacity() < 1.0f)
-            return false;
-        if (has_alpha_channel())
-            return false;
-        return true;
+        return !has_alpha_channel();
     }
 
     Gfx::DisjointIntRectSet& opaque_rects() { return m_opaque_rects; }
@@ -444,7 +437,6 @@ private:
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };
     i32 m_client_id { -1 };
-    float m_opacity { 1 };
     float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;

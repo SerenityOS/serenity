@@ -103,7 +103,7 @@ private:
     virtual void remove_menu_item(i32 menu_id, i32 identifier) override;
     virtual void flash_menubar_menu(i32, i32) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,
-        bool, bool, bool, bool, bool, float, float, Gfx::IntSize, Gfx::IntSize, Gfx::IntSize,
+        bool, bool, bool, bool, bool, float, Gfx::IntSize, Gfx::IntSize, Gfx::IntSize,
         Optional<Gfx::IntSize> const&, i32, i32, DeprecatedString const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
     virtual void set_window_title(i32, DeprecatedString const&) override;
@@ -121,7 +121,6 @@ private:
     virtual void invalidate_rect(i32, Vector<Gfx::IntRect> const&, bool) override;
     virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&) override;
     virtual void set_global_mouse_tracking(bool) override;
-    virtual void set_window_opacity(i32, float) override;
     virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize, Gfx::IntSize, bool) override;
     virtual void set_window_has_alpha_channel(i32, bool) override;
     virtual void set_window_alpha_hit_threshold(i32, float) override;
