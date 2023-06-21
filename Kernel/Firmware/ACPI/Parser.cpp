@@ -17,6 +17,7 @@
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/AML/Parser.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -153,12 +154,6 @@ bool Parser::handle_irq(RegisterState const&)
     TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
-{
-    // FIXME: When enabled, do other things to "parse AML".
-    m_can_process_bytecode = true;
-}
-
 UNMAP_AFTER_INIT void Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
@@ -204,17 +199,77 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
 
 UNMAP_AFTER_INIT void Parser::process_dsdt()
 {
-    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+
+    PhysicalAddress dsdt_address;
+    // Extended physical address of the DSDT. If this field contains a nonzero value which can be used by the OSPM,
+    // then the DSDT field must be ignored by the OSPM.
+    if (fadt->h.revision >= 2 && fadt->x_dsdt != 0) {
+        dsdt_address = PhysicalAddress(fadt->x_dsdt);
+    } else {
+        dsdt_address = PhysicalAddress(fadt->dsdt);
+    }
 
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
-    m_sdt_pointers.append(PhysicalAddress(sdt->dsdt_ptr));
+    m_sdt_pointers.append(dsdt_address);
 
-    auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
+    // Check if AML support has been explicitly disabled
+    if (kernel_command_line().acpi_feature_level() != AcpiFeatureLevel::Enabled)
+        return;
+
+    auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(dsdt_address);
     if (dsdt_or_error.is_error()) {
         dmesgln("ACPI: DSDT is unmappable");
         return;
     }
-    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
+    // Remap including the full definition block
+    dsdt_or_error = Memory::map_typed<Structures::DSDT>(dsdt_address, dsdt_or_error.value()->h.length);
+    if (dsdt_or_error.is_error()) {
+        dmesgln("ACPI: DSDT is unmappable");
+        return;
+    }
+    auto dsdt = dsdt_or_error.release_value();
+    dmesgln("ACPI: Using DSDT @ {} of length {} bytes", dsdt_address, dsdt->h.length);
+
+    AML::Namespace root_namespace;
+
+    auto integers_are_64bit = dsdt->h.revision >= 2 ? AML::IntegerBitness::IntegersAre64Bit : AML::IntegerBitness::IntegersAre32Bit;
+    auto definition_block_length = dsdt->h.length - sizeof(Structures::SDTHeader);
+    AML::Parser parser(root_namespace, { dsdt->definition_block, definition_block_length }, integers_are_64bit);
+
+    auto result = parser.populate_namespace();
+    if (result.is_error()) {
+        dmesgln("ACPI: Unable to parse DSDT AML: {}", result.error());
+        return;
+    }
+
+    auto failed = false;
+    enumerate_static_tables([&](StringView signature, PhysicalAddress table_address, size_t length) {
+        if (signature != "SSDT")
+            return;
+        auto ssdt_or_error = Memory::map_typed<Structures::SSDT>(table_address, length);
+        if (ssdt_or_error.is_error()) {
+            dmesgln("ACPI: SSDT is unmappable");
+            failed = true;
+            return;
+        }
+        auto ssdt = ssdt_or_error.release_value();
+
+        auto integers_are_64bit = ssdt->h.revision >= 2 ? AML::IntegerBitness::IntegersAre64Bit : AML::IntegerBitness::IntegersAre32Bit;
+        auto definition_block_length = length - sizeof(Structures::SDTHeader);
+        AML::Parser parser(root_namespace, { ssdt->definition_block, definition_block_length }, integers_are_64bit);
+
+        auto result = parser.populate_namespace();
+        if (result.is_error()) {
+            dmesgln("ACPI: Unable to parse SSDT AML: {}", result.error());
+            failed = true;
+            return;
+        }
+    });
+    if (failed)
+        return;
+
+    m_root_namespace = move(root_namespace);
 }
 
 bool Parser::can_reboot()
