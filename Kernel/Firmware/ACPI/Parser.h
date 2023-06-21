@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
+#include <Kernel/Firmware/ACPI/AML/Namespace.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -102,8 +104,9 @@ private:
     Vector<PhysicalAddress> m_sdt_pointers;
     PhysicalAddress m_fadt;
 
+    Optional<AML::Namespace> m_root_namespace;
+
     bool m_xsdt_supported { false };
-    bool m_can_process_bytecode { false };
     FADTFlags::HardwareFeatures m_hardware_flags;
     FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
