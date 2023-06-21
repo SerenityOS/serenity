@@ -636,8 +636,10 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
                 return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
                 return EAFNOSUPPORT;
-            if (!(route.rt_flags & RTF_UP))
-                return EINVAL; // FIXME: Find the correct value to return
+            if (!adapter->link_up())
+                return ENETDOWN;
+            if ((adapter->ipv4_address().to_u32() & adapter->ipv4_netmask().to_u32()) != (((sockaddr_in&)route.rt_gateway).sin_addr.s_addr & adapter->ipv4_netmask().to_u32()))
+                return ENETUNREACH;
 
             auto destination = IPv4Address(((sockaddr_in&)route.rt_dst).sin_addr.s_addr);
             auto gateway = IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr);
