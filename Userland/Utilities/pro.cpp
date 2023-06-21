@@ -235,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u64 previous_downloaded_size = 0;
     u64 current_bytes_per_second_speed = 0;
     u32 const report_time_in_ms = 100;
-    u32 const speed_update_time_in_ms = 4000;
+    u32 const speed_update_time_in_ms = 1000;
 
     auto previous_report_time = MonotonicTime::now();
     auto previous_speed_update_time = previous_report_time;
