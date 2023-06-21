@@ -40,6 +40,18 @@ ErrorOr<FixedArray<Audio::Sample>> AudioCodecPlugin::read_samples_from_loader(Au
     return FixedArray<Audio::Sample>::create(resampler.resample(buffer_or_error.release_value()).span());
 }
 
+Duration AudioCodecPlugin::set_loader_position(Audio::Loader& loader, double position, Duration duration, size_t device_sample_rate)
+{
+    if (loader.total_samples() == 0)
+        return current_loader_position(loader, device_sample_rate);
+
+    auto duration_value = static_cast<double>(duration.to_milliseconds()) / 1000.0;
+    position = position / duration_value * static_cast<double>(loader.total_samples() - 1);
+
+    loader.seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
+    return current_loader_position(loader, device_sample_rate);
+}
+
 Duration AudioCodecPlugin::current_loader_position(Audio::Loader const& loader, size_t device_sample_rate)
 {
     auto samples_played = static_cast<double>(loader.loaded_samples());
