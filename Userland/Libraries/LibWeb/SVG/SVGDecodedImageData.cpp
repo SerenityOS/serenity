@@ -70,6 +70,9 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     // Perform some DOM surgery to make the SVG root element be the first child of the Document.
     // FIXME: This is a huge hack until we figure out how to actually parse separate SVG files.
     auto* svg_root = document->body()->first_child_of_type<SVG::SVGSVGElement>();
+    if (!svg_root)
+        return Error::from_string_literal("SVGDecodedImageData: Invalid SVG input");
+
     svg_root->remove();
     document->remove_all_children();
 
