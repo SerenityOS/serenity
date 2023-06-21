@@ -23,6 +23,9 @@
 
 namespace Web::CSS {
 
+struct FlexBasisContent { };
+using FlexBasis = Variant<FlexBasisContent, Size>;
+
 struct AspectRatio {
     bool use_natural_aspect_ratio_if_available;
     Optional<Ratio> preferred_ratio;
@@ -59,6 +62,7 @@ public:
     static CSS::Visibility visibility() { return CSS::Visibility::Visible; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
+    static CSS::FlexBasis flex_basis() { return CSS::Size::make_auto(); }
     static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::AlignContent align_content() { return CSS::AlignContent::Stretch; }
@@ -164,17 +168,6 @@ struct TransformOrigin {
     CSS::LengthPercentage y { Percentage(50) };
 };
 
-enum class FlexBasis {
-    Content,
-    LengthPercentage,
-    Auto,
-};
-
-struct FlexBasisData {
-    CSS::FlexBasis type { CSS::FlexBasis::Auto };
-    Optional<CSS::LengthPercentage> length_percentage;
-};
-
 struct ShadowData {
     Color color {};
     CSS::Length offset_x { Length::make_px(0) };
@@ -246,7 +239,7 @@ public:
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
-    FlexBasisData const& flex_basis() const { return m_noninherited.flex_basis; }
+    FlexBasis const& flex_basis() const { return m_noninherited.flex_basis; }
     float flex_grow() const { return m_noninherited.flex_grow; }
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     int order() const { return m_noninherited.order; }
@@ -398,7 +391,7 @@ protected:
         Vector<BackgroundLayerData> background_layers;
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
         CSS::FlexWrap flex_wrap { InitialValues::flex_wrap() };
-        CSS::FlexBasisData flex_basis {};
+        CSS::FlexBasis flex_basis { InitialValues::flex_basis() };
         float flex_grow { InitialValues::flex_grow() };
         float flex_shrink { InitialValues::flex_shrink() };
         int order { InitialValues::order() };
@@ -492,7 +485,7 @@ public:
     BorderData& border_bottom() { return m_noninherited.border_bottom; }
     void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
     void set_flex_wrap(CSS::FlexWrap value) { m_noninherited.flex_wrap = value; }
-    void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = move(value); }
+    void set_flex_basis(FlexBasis value) { m_noninherited.flex_basis = move(value); }
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_order(int value) { m_noninherited.order = value; }
