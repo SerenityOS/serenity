@@ -1,0 +1,17 @@
+#import <DOM/DocumentFragment.idl>
+#import <DOM/InnerHTML.idl>
+
+// https://dom.spec.whatwg.org/#shadowroot
+[Exposed=Window]
+interface ShadowRoot : DocumentFragment {
+    readonly attribute ShadowRootMode mode;
+    // FIXME: readonly attribute boolean delegatesFocus;
+    // FIXME: readonly attribute SlotAssignmentMode slotAssignment;
+    readonly attribute Element host;
+    // FIXME: attribute EventHandler onslotchange;
+};
+
+ShadowRoot includes InnerHTML;
+
+enum ShadowRootMode { "open", "closed" };
+enum SlotAssignmentMode { "manual", "named" };

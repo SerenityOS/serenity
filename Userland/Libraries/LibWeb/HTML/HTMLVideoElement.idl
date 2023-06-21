@@ -1,0 +1,14 @@
+#import <HTML/HTMLMediaElement.idl>
+
+// https://html.spec.whatwg.org/multipage/media.html#htmlvideoelement
+[Exposed=Window]
+interface HTMLVideoElement : HTMLMediaElement {
+
+    [HTMLConstructor] constructor();
+
+    readonly attribute unsigned long videoWidth;
+    readonly attribute unsigned long videoHeight;
+    [CEReactions, Reflect] attribute USVString poster;
+    [CEReactions, Reflect=playsinline] attribute boolean playsInline;
+
+};

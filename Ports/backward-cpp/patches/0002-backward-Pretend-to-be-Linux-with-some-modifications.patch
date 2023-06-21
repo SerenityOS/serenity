@@ -1,0 +1,69 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrew Kaster <andrewdkaster@gmail.com>
+Date: Sat, 11 Mar 2023 15:17:34 -0700
+Subject: [PATCH] backward: Pretend to be Linux, with some modifications
+
+---
+ backward.hpp | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/backward.hpp b/backward.hpp
+index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e09e3731c 100644
+--- a/backward.hpp
++++ b/backward.hpp
+@@ -63,7 +63,7 @@
+ #elif defined(BACKWARD_SYSTEM_UNKNOWN)
+ #elif defined(BACKWARD_SYSTEM_WINDOWS)
+ #else
+-#if defined(__linux) || defined(__linux__)
++#if defined(__linux) || defined(__linux__) || defined(__serenity__)
+ #define BACKWARD_SYSTEM_LINUX
+ #elif defined(__APPLE__)
+ #define BACKWARD_SYSTEM_DARWIN
+@@ -213,7 +213,9 @@
+ #endif
+ #include <signal.h>
+ #include <sys/stat.h>
++#ifndef __serenity__
+ #include <syscall.h>
++#endif
+ #include <unistd.h>
+ 
+ #if BACKWARD_HAS_BFD == 1
+@@ -737,7 +739,7 @@ public:
+ protected:
+   void load_thread_info() {
+ #ifdef BACKWARD_SYSTEM_LINUX
+-#ifndef __ANDROID__
++#if !defined(__ANDROID__) && !defined(__serenity__)
+     _thread_id = static_cast<size_t>(syscall(SYS_gettid));
+ #else
+     _thread_id = static_cast<size_t>(gettid());
+@@ -4140,7 +4142,9 @@ public:
+       SIGBUS,  // Bus error (bad memory access)
+       SIGFPE,  // Floating point exception
+       SIGILL,  // Illegal Instruction
++#if !defined(__serenity__)
+       SIGIOT,  // IOT trap. A synonym for SIGABRT
++#endif
+       SIGQUIT, // Quit from keyboard
+       SIGSEGV, // Invalid memory reference
+       SIGSYS,  // Bad argument to routine (SVr4)
+@@ -4231,6 +4235,8 @@ public:
+     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__rip);
+ #elif defined(__APPLE__)
+     error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__eip);
++#elif defined(__serenity__) && defined(__x86_64__)
++    error_addr = reinterpret_cast<void*>(uctx->uc_mcontext.rip);
+ #else
+ #warning ":/ sorry, ain't know no nothing none not of your architecture!"
+ #endif
+@@ -4245,7 +4251,7 @@ public:
+     printer.address = true;
+     printer.print(st, stderr);
+ 
+-#if _XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L
++#if (_XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L) && !defined(__serenity__)
+     psiginfo(info, nullptr);
+ #else
+     (void)info;

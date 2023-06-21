@@ -1,0 +1,215 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sun, 11 Dec 2022 17:18:09 +0000
+Subject: [PATCH] Add SerenityOS target
+
+Named "serenity" within the code to match what LLVM says.
+---
+ zig/lib/std/target.zig            | 6 ++++++
+ zig/lib/std/zig/CrossTarget.zig   | 2 ++
+ zig/src/codegen/llvm.zig          | 2 ++
+ zig/src/codegen/llvm/bindings.zig | 1 +
+ zig/src/libc_installation.zig     | 6 +++++-
+ zig/src/link/Elf.zig              | 9 +++++++++
+ zig/src/target.zig                | 5 ++++-
+ zig/src/type.zig                  | 1 +
+ zig/src/zig_llvm.h                | 3 ++-
+ 9 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/zig/lib/std/target.zig b/zig/lib/std/target.zig
+index 49a7bd1c7dd1334067ed3b867f5ada7b99538355..af7b14be8e01509280d59b0196ff3a3040a48bf6 100644
+--- a/zig/lib/std/target.zig
++++ b/zig/lib/std/target.zig
+@@ -60,6 +60,7 @@ pub const Target = struct {
+             glsl450,
+             vulkan,
+             plan9,
++            serenity,
+             other,
+ 
+             pub fn isDarwin(tag: Tag) bool {
+@@ -267,6 +268,7 @@ pub const Target = struct {
+                     .glsl450, // TODO: GLSL versions
+                     .vulkan,
+                     .plan9,
++                    .serenity,
+                     .other,
+                     => return .{ .none = {} },
+ 
+@@ -410,6 +412,7 @@ pub const Target = struct {
+                 .openbsd,
+                 .haiku,
+                 .solaris,
++                .serenity,
+                 => true,
+ 
+                 .linux,
+@@ -563,6 +566,7 @@ pub const Target = struct {
+                 .watchos,
+                 .driverkit,
+                 .shadermodel,
++                .serenity,
+                 => return .none,
+             }
+         }
+@@ -1740,6 +1744,8 @@ pub const Target = struct {
+             // TODO revisit when multi-arch for Haiku is available
+             .haiku => return copy(&result, "/system/runtime_loader"),
+ 
++            .serenity => return copy(&result, "/usr/lib/Loader.so"),
++
+             // TODO go over each item in this list and either move it to the above list, or
+             // implement the standard dynamic linker path code for it.
+             .ananas,
+diff --git a/zig/lib/std/zig/CrossTarget.zig b/zig/lib/std/zig/CrossTarget.zig
+index aad0cb42f252d04b858133ba6ec598aa043f1c1c..a401ba49ee7afde0279c537a890cd33d3fe4815e 100644
+--- a/zig/lib/std/zig/CrossTarget.zig
++++ b/zig/lib/std/zig/CrossTarget.zig
+@@ -137,6 +137,7 @@ fn updateOsVersionRange(self: *CrossTarget, os: Target.Os) void {
+         .glsl450,
+         .vulkan,
+         .plan9,
++        .serenity,
+         .other,
+         => {
+             self.os_version_min = .{ .none = {} };
+@@ -693,6 +694,7 @@ fn parseOs(result: *CrossTarget, diags: *ParseOptions.Diagnostics, text: []const
+         .plan9,
+         .driverkit,
+         .shadermodel,
++        .serenity,
+         .other,
+         => return error.InvalidOperatingSystemVersion,
+ 
+diff --git a/zig/src/codegen/llvm.zig b/zig/src/codegen/llvm.zig
+index e3ae805402e063341519ebeb7ee62c8717e45697..ba4f2c0840f15b7776f4d8768d3a525551069484 100644
+--- a/zig/src/codegen/llvm.zig
++++ b/zig/src/codegen/llvm.zig
+@@ -143,6 +143,7 @@ pub fn targetTriple(allocator: Allocator, target: std.Target) ![:0]u8 {
+         .watchos => "watchos",
+         .driverkit => "driverkit",
+         .shadermodel => "shadermodel",
++        .serenity => "serenity",
+         .opencl,
+         .glsl450,
+         .vulkan,
+@@ -246,6 +247,7 @@ pub fn targetOs(os_tag: std.Target.Os.Tag) llvm.OSType {
+         .emscripten => .Emscripten,
+         .driverkit => .DriverKit,
+         .shadermodel => .ShaderModel,
++        .serenity => .Serenity,
+     };
+ }
+ 
+diff --git a/zig/src/codegen/llvm/bindings.zig b/zig/src/codegen/llvm/bindings.zig
+index 90d0f51c7b36f7f3df19594933034f483a24c757..f11d1a6743493e18d5b4c2c6f19356d249f88cba 100644
+--- a/zig/src/codegen/llvm/bindings.zig
++++ b/zig/src/codegen/llvm/bindings.zig
+@@ -1287,6 +1287,7 @@ pub const OSType = enum(c_int) {
+     WASI,
+     Emscripten,
+     ShaderModel,
++    Serenity,
+ };
+ 
+ pub const ArchType = enum(c_int) {
+diff --git a/zig/src/libc_installation.zig b/zig/src/libc_installation.zig
+index 0a50f970123fbf2298cdf3666a1e7d6a59130e20..af50f4ebfaa783328513d9d9086cdfa9aee83b76 100644
+--- a/zig/src/libc_installation.zig
++++ b/zig/src/libc_installation.zig
+@@ -8,6 +8,7 @@ const build_options = @import("build_options");
+ const is_darwin = builtin.target.isDarwin();
+ const is_windows = builtin.target.os.tag == .windows;
+ const is_haiku = builtin.target.os.tag == .haiku;
++const is_serenity = builtin.target.os.tag == .serenity;
+ 
+ const log = std.log.scoped(.libc_installation);
+ 
+@@ -205,6 +206,9 @@ pub const LibCInstallation = struct {
+             try self.findNativeIncludeDirPosix(args);
+             try self.findNativeCrtBeginDirHaiku(args);
+             self.crt_dir = try args.allocator.dupeZ(u8, "/system/develop/lib");
++        } else if (is_serenity) {
++            try self.findNativeIncludeDirPosix(args);
++            self.crt_dir = try args.allocator.dupeZ(u8, "/usr/lib");
+         } else if (std.process.can_spawn) {
+             try self.findNativeIncludeDirPosix(args);
+             switch (builtin.target.os.tag) {
+@@ -308,7 +312,7 @@ pub const LibCInstallation = struct {
+         const include_dir_example_file = if (is_haiku) "posix/stdlib.h" else "stdlib.h";
+         const sys_include_dir_example_file = if (is_windows)
+             "sys\\types.h"
+-        else if (is_haiku)
++        else if (is_haiku or is_serenity)
+             "errno.h"
+         else
+             "sys/errno.h";
+diff --git a/zig/src/link/Elf.zig b/zig/src/link/Elf.zig
+index ebb1cbdfb8efc867d34e0315256e6efa4c90a035..46c61a10fefd8aa2efe43c023e261e97197dc4b3 100644
+--- a/zig/src/link/Elf.zig
++++ b/zig/src/link/Elf.zig
+@@ -3152,6 +3152,15 @@ const CsuObjects = struct {
+                     .static_pie  => result.set( "rcrt0.o", null, "crtbegin.o",  "crtend.o",  null ),
+                     // zig fmt: on
+                 },
++                .serenity => switch (mode) {
++                    // zig fmt: off
++                    .dynamic_lib => result.set( "crt0_shared.o", "crti.o", null, null, "crtn.o" ),
++                    .dynamic_exe,
++                    .dynamic_pie,
++                    .static_exe,
++                    .static_pie  => result.set( "crt0.o",        "crti.o", null, null, "crtn.o" ),
++                    // zig fmt: on
++                },
+                 .haiku => switch (mode) {
+                     // zig fmt: off
+                     .dynamic_lib => result.set( null,          "crti.o", "crtbeginS.o", "crtendS.o", "crtn.o" ),
+diff --git a/zig/src/target.zig b/zig/src/target.zig
+index 836791a1d1d7c69655d056b39ed58f2399ed12f4..02c9a23d9ac0dfa870defba94c8b302a5dab7927 100644
+--- a/zig/src/target.zig
++++ b/zig/src/target.zig
+@@ -187,7 +187,7 @@ pub fn libcNeedsLibUnwind(target: std.Target) bool {
+ }
+ 
+ pub fn requiresPIE(target: std.Target) bool {
+-    return target.isAndroid() or target.isDarwin() or target.os.tag == .openbsd;
++    return target.isAndroid() or target.isDarwin() or target.os.tag == .openbsd or target.os.tag == .serenity;
+ }
+ 
+ /// This function returns whether non-pic code is completely invalid on the given target.
+@@ -472,6 +472,9 @@ pub fn libcFullLinkFlags(target: std.Target) []const []const u8 {
+             "-lpthread",
+             "-lc",
+         },
++        .serenity => &[_][]const u8{
++            "-lc",
++        },
+         else => switch (target.abi) {
+             .android => &[_][]const u8{
+                 "-lm",
+diff --git a/zig/src/type.zig b/zig/src/type.zig
+index 1aefa8f7a1c77ddf58b1cb7271b57db6618704fb..13f8dc1879ed37e0452c78c698b72fcb3b955ec2 100644
+--- a/zig/src/type.zig
++++ b/zig/src/type.zig
+@@ -6772,6 +6772,7 @@ pub const CType = enum {
+             .ananas,
+             .fuchsia,
+             .minix,
++	    .serenity,
+             => switch (target.cpu.arch) {
+                 .msp430 => switch (self) {
+                     .short, .ushort, .int, .uint => return 16,
+diff --git a/zig/src/zig_llvm.h b/zig/src/zig_llvm.h
+index 7f9bd0a1619d30239a1ab92c3b9675d8c1bdb987..dc1561421fa0afedf892ddbdf698b57aeb83af72 100644
+--- a/zig/src/zig_llvm.h
++++ b/zig/src/zig_llvm.h
+@@ -468,7 +468,8 @@ enum ZigLLVM_OSType {
+     ZigLLVM_WASI,       // Experimental WebAssembly OS
+     ZigLLVM_Emscripten,
+     ZigLLVM_ShaderModel, // DirectX ShaderModel
+-    ZigLLVM_LastOSType = ZigLLVM_ShaderModel
++    ZigLLVM_Serenity,    // Well hello friends! :^)
++    ZigLLVM_LastOSType = ZigLLVM_Serenity
+ };
+ 
+ // Synchronize with target.cpp::abi_list

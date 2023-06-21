@@ -1,0 +1,29 @@
+#import <DOM/EventTarget.idl>
+#import <DOM/EventHandler.idl>
+
+// https://websockets.spec.whatwg.org/#websocket
+[Exposed=(Window,Worker), UseNewAKString]
+interface WebSocket : EventTarget {
+
+    constructor(USVString url, optional (DOMString or sequence<DOMString>) protocols);
+
+    readonly attribute USVString url;
+
+    const unsigned short CONNECTING = 0;
+    const unsigned short OPEN = 1;
+    const unsigned short CLOSING = 2;
+    const unsigned short CLOSED = 3;
+    readonly attribute unsigned short readyState;
+    // readonly attribute unsigned long long bufferedAmount;
+
+    attribute EventHandler onopen;
+    attribute EventHandler onerror;
+    attribute EventHandler onclose;
+    readonly attribute DOMString extensions;
+    readonly attribute DOMString protocol;
+    undefined close(optional unsigned short code, optional USVString reason);
+
+    attribute EventHandler onmessage;
+    attribute DOMString binaryType;
+    undefined send((BufferSource or Blob or USVString) data);
+};

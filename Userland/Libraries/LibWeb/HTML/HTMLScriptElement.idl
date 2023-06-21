@@ -1,0 +1,23 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/scripting.html#htmlscriptelement
+[Exposed=Window]
+interface HTMLScriptElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect=nomodule] attribute boolean noModule;
+    [CEReactions, Reflect] attribute boolean defer;
+    [CEReactions, Reflect=crossorigin] attribute DOMString? crossOrigin;
+    [CEReactions, Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect=referrerpolicy] attribute DOMString referrerPolicy;
+
+    static boolean supports(DOMString type);
+
+    [CEReactions, Reflect] attribute DOMString charset;
+    [CEReactions, Reflect] attribute DOMString event;
+    [CEReactions, Reflect=for] attribute DOMString htmlFor;
+
+};

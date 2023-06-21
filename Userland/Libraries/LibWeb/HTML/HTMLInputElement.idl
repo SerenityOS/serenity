@@ -1,0 +1,53 @@
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLFormElement.idl>
+#import <FileAPI/FileList.idl>
+
+// https://html.spec.whatwg.org/multipage/input.html#htmlinputelement
+[Exposed=Window]
+interface HTMLInputElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    readonly attribute HTMLFormElement? form;
+    attribute FileList? files;
+
+    [CEReactions, Reflect] attribute DOMString accept;
+    [CEReactions, Reflect] attribute DOMString alt;
+    [CEReactions, Reflect] attribute DOMString max;
+    [CEReactions, Reflect] attribute DOMString min;
+    [CEReactions, Reflect] attribute DOMString pattern;
+    [CEReactions, Reflect] attribute DOMString placeholder;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString step;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect=dirname] attribute DOMString dirName;
+    [CEReactions, Reflect=value] attribute DOMString defaultValue;
+
+    [CEReactions] attribute DOMString type;
+    attribute boolean indeterminate;
+
+    [CEReactions, LegacyNullToEmptyString] attribute DOMString value;
+
+    [ImplementedAs=checked_binding] attribute boolean checked;
+
+    [CEReactions, Reflect] attribute boolean disabled;
+    [CEReactions, Reflect=checked] attribute boolean defaultChecked;
+    [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
+    [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
+    [CEReactions, Reflect] attribute boolean multiple;
+    [CEReactions, Reflect=readonly] attribute boolean readOnly;
+    [CEReactions, Reflect] attribute boolean required;
+
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
+
+    boolean checkValidity();
+    boolean reportValidity();
+    undefined setCustomValidity(DOMString error);
+
+    undefined select();
+    undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+
+    undefined showPicker();
+
+};

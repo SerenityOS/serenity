@@ -1,0 +1,5 @@
+[Exposed=(Window,Worker)]
+interface CanvasPattern {
+  // opaque object
+  // FIXME: undefined setTransform(optional DOMMatrix2DInit transform = {});
+};

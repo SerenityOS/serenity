@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Mon, 16 May 2022 15:45:32 +0430
+Subject: [PATCH] Stub out some wctype functions
+
+---
+ gettext-tools/gnulib-lib/fnmatch.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/gettext-tools/gnulib-lib/fnmatch.c b/gettext-tools/gnulib-lib/fnmatch.c
+index 3937ce3..84aa6e6 100644
+--- a/gettext-tools/gnulib-lib/fnmatch.c
++++ b/gettext-tools/gnulib-lib/fnmatch.c
+@@ -106,6 +106,18 @@ extern int fnmatch (const char *pattern, const char *string, int flags);
+ # define CHAR_CLASS_MAX_LENGTH 256
+ #endif
+ 
++#ifdef __serenity__
++wctype_t wctype(const char*)
++{
++    asm("int3");
++}
++
++int iswctype(wint_t, wctype_t)
++{
++    asm("int3");
++}
++#endif
++
+ #define IS_CHAR_CLASS(string) wctype (string)
+ 
+ /* Avoid depending on library functions or files

@@ -1,0 +1,29 @@
+#import <DOM/Document.idl>
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmlobjectelement
+[Exposed=Window]
+interface HTMLObjectElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions] attribute DOMString data;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
+    [CEReactions, Reflect] attribute DOMString width;
+    [CEReactions, Reflect] attribute DOMString height;
+
+    readonly attribute Document? contentDocument;
+
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString archive;
+    [CEReactions, Reflect] attribute DOMString code;
+    [CEReactions, Reflect] attribute boolean declare;
+    [CEReactions, Reflect] attribute DOMString standby;
+    [CEReactions, Reflect=codetype] attribute DOMString codeType;
+
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
+
+    Document? getSVGDocument();
+};

@@ -1,0 +1,30 @@
+// https://w3c.github.io/uievents/#mouseevent
+[Exposed=Window, UseNewAKString]
+interface MouseEvent : UIEvent {
+
+    readonly attribute double offsetX;
+    readonly attribute double offsetY;
+    readonly attribute double clientX;
+    readonly attribute double clientY;
+    readonly attribute double screenX;
+    readonly attribute double screenY;
+    readonly attribute double x;
+    readonly attribute double y;
+    readonly attribute double pageX;
+    readonly attribute double pageY;
+
+    readonly attribute short button;
+    readonly attribute unsigned short buttons;
+};
+
+dictionary MouseEventInit : EventModifierInit {
+
+    // FIXME: offsetX and offsetY shouldn't be here.
+    double offsetX = 0;
+    double offsetY = 0;
+    double clientX = 0;
+    double clientY = 0;
+
+    short button = 0;
+
+};

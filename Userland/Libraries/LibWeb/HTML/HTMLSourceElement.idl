@@ -1,0 +1,17 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#htmlsourceelement
+[Exposed=Window]
+interface HTMLSourceElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString srcset;
+    [CEReactions, Reflect] attribute DOMString sizes;
+    [CEReactions, Reflect] attribute DOMString media;
+    // FIXME: [CEReactions, Reflect] attribute unsigned long width;
+    // FIXME: [CEReactions, Reflect] attribute unsigned long height;
+
+};

@@ -1,0 +1,13 @@
+#import <HTML/NavigatorID.idl>
+#import <HTML/NavigatorLanguage.idl>
+#import <HTML/NavigatorOnLine.idl>
+#import <HTML/NavigatorConcurrentHardware.idl>
+
+// https://html.spec.whatwg.org/multipage/workers.html#workernavigator
+[Exposed=Worker]
+interface WorkerNavigator {};
+
+WorkerNavigator includes NavigatorID;
+WorkerNavigator includes NavigatorLanguage;
+WorkerNavigator includes NavigatorOnLine;
+WorkerNavigator includes NavigatorConcurrentHardware;

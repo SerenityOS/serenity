@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/String.h>
+#include <AK/WeakPtr.h>
+#include <LibCore/Object.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/ColorFilterer.h>
+#include <LibGUI/Event.h>
+#include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
+
+namespace GUI {
+
+namespace CommonMenus {
+
+ErrorOr<NonnullRefPtr<Menu>> make_accessibility_menu(GUI::ColorFilterer&);
+
+};
+
+class Menu final : public Core::Object {
+    C_OBJECT(Menu)
+public:
+    virtual ~Menu() override;
+
+    void realize_menu_if_needed();
+
+    static Menu* from_menu_id(int);
+    int menu_id() const { return m_menu_id; }
+
+    String const& name() const { return m_name; }
+    void set_name(String);
+
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
+    void set_icon(Gfx::Bitmap const*);
+
+    Action* action_at(size_t);
+
+    ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
+    ErrorOr<void> try_add_separator();
+    ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(String name);
+
+    void add_action(NonnullRefPtr<Action>);
+    void add_separator();
+    Menu& add_submenu(String name);
+    void remove_all_actions();
+
+    ErrorOr<void> add_recent_files_list(Function<void(Action&)>);
+
+    void popup(Gfx::IntPoint screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
+    void dismiss();
+
+    void visibility_did_change(Badge<ConnectionToWindowServer>, bool visible);
+
+    void set_children_actions_enabled(bool enabled);
+
+    Function<void(bool)> on_visibility_change;
+
+    bool is_visible() const { return m_visible; }
+
+    Vector<NonnullOwnPtr<MenuItem>> const& items() const { return m_items; }
+
+private:
+    friend class Menubar;
+
+    explicit Menu(String name = {});
+
+    int realize_menu(RefPtr<Action> default_action = nullptr);
+    void unrealize_menu();
+    void realize_if_needed(RefPtr<Action> const& default_action);
+
+    void realize_menu_item(MenuItem&, int item_id);
+
+    void set_parent(Menu& menu, int submenu_index);
+    void update_parent_menu_item();
+
+    int m_menu_id { -1 };
+    String m_name;
+    RefPtr<Gfx::Bitmap const> m_icon;
+    Vector<NonnullOwnPtr<MenuItem>> m_items;
+    WeakPtr<Action> m_current_default_action;
+    bool m_visible { false };
+    WeakPtr<Menu> m_parent_menu;
+    int m_index_in_parent_menu { -1 };
+
+    Function<void(Action&)> m_recent_files_callback;
+};
+
+}

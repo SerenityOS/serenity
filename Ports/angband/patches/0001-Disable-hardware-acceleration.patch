@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Sun, 17 Oct 2021 15:44:23 +0200
+Subject: [PATCH] Disable hardware acceleration
+
+We don't support this, so disable it.
+---
+ src/main-sdl2.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/main-sdl2.c b/src/main-sdl2.c
+index a678c29..51a343c 100644
+--- a/src/main-sdl2.c
++++ b/src/main-sdl2.c
+@@ -4867,7 +4867,7 @@ static void start_window(struct window *window)
+ 
+ 	if (window->config == NULL) {
+ 		window->renderer = SDL_CreateRenderer(window->window,
+-				-1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
++				-1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
+ 	} else {
+ 		/* this is necessary for subwindows to have their own textures */
+ 		window->config->renderer_flags |= SDL_RENDERER_TARGETTEXTURE;
+@@ -5894,9 +5894,7 @@ static enum parser_error config_window_renderer(struct parser *parser)
+ 	WINDOW_INIT_OK;
+ 	const char *type = parser_getsym(parser, "type");
+ 
+-	if (streq(type, "hardware")) {
+-		window->config->renderer_flags = SDL_RENDERER_ACCELERATED;
+-	} else if (streq(type, "software")) {
++	if (streq(type, "software")) {
+ 		window->config->renderer_flags = SDL_RENDERER_SOFTWARE;
+ 	} else {
+ 		return PARSE_ERROR_INVALID_VALUE;

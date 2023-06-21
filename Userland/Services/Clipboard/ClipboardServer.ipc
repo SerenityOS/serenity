@@ -1,0 +1,7 @@
+#include <LibCore/AnonymousBuffer.h>
+
+endpoint ClipboardServer
+{
+    get_clipboard_data() => (Core::AnonymousBuffer data, [UTF8] DeprecatedString mime_type, HashMap<DeprecatedString,DeprecatedString> metadata)
+    set_clipboard_data(Core::AnonymousBuffer data, [UTF8] DeprecatedString mime_type, HashMap<DeprecatedString,DeprecatedString> metadata) =|
+}

@@ -1,0 +1,94 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sat, 1 Oct 2022 20:05:58 +0000
+Subject: [PATCH] llvm: Implement bigint-to-LLVM int for 32-bit compiler builds
+
+The conversion to DoubleLimb is necessary due to LLVM only accepting
+64-bit limbs for big integers. Since we need some space to store it, we
+also have to allocate. This is an unfortunate penalty that 32-bit
+compiler builds have to take.
+---
+ zig/lib/std/math/big/int.zig | 21 +++++++++++++++++++++
+ zig/src/codegen/llvm.zig     | 28 ++++++++++++++++++++++++++--
+ 2 files changed, 47 insertions(+), 2 deletions(-)
+
+diff --git a/zig/lib/std/math/big/int.zig b/zig/lib/std/math/big/int.zig
+index 534e8a570d675aba91f8623a08859aa2d7d533fd..30db3f36df0311faef1eaba3d69a9785d9e50296 100644
+--- a/zig/lib/std/math/big/int.zig
++++ b/zig/lib/std/math/big/int.zig
+@@ -1899,6 +1899,27 @@ pub const Const = struct {
+         };
+     }
+ 
++    /// Convert each limb to a DoubleLimb and write it to `double_limbs`.
++    /// Return the slice of limbs that was used.
++    /// Asserts `double_limbs` is big enough to store the value.
++    pub fn toDoubleLimb(self: Const, double_limbs: []DoubleLimb) ![]DoubleLimb {
++        // TODO: Add tests (and check if this works on big-endian)!
++        assert(double_limbs.len >= (try std.math.divCeil(usize, self.limbs.len, 2)));
++
++        var i: usize = 0;
++        var double_limb_i: usize = 0;
++        while (i < self.limbs.len) : ({
++            i += 2;
++            double_limb_i += 1;
++        }) {
++            const most_significant: Limb = if (i + 1 == self.limbs.len) 0 else self.limbs[i + 1];
++            const least_significant = self.limbs[i];
++            double_limbs[double_limb_i] = @intCast(DoubleLimb, least_significant) | (@intCast(DoubleLimb, most_significant) << @bitSizeOf(Limb));
++        }
++
++        return double_limbs[0..double_limb_i];
++    }
++
+     pub fn dump(self: Const) void {
+         for (self.limbs[0..self.limbs.len]) |limb| {
+             std.debug.print("{x} ", .{limb});
+diff --git a/zig/src/codegen/llvm.zig b/zig/src/codegen/llvm.zig
+index 4115a4870ea3f8731b929afd65f5111bee1f2983..e3ae805402e063341519ebeb7ee62c8717e45697 100644
+--- a/zig/src/codegen/llvm.zig
++++ b/zig/src/codegen/llvm.zig
+@@ -3241,8 +3241,20 @@ pub const DeclGen = struct {
+                                 @intCast(c_uint, bigint.limbs.len),
+                                 bigint.limbs.ptr,
+                             );
++                        } else {
++                            // Because LLVM only accepts 64-bit limbs for constIntOfArbitraryPrecision, we must convert to double-limb here (and allocate to do so).
++                            // You (yes, you!) can fix this by making LLVM accept 32-bit limbs for creating an integer of arbitrary precision.
++                            const double_limb_count = math.divCeil(usize, bigint.limbs.len, 2) catch return Error.CodegenFail;
++                            var double_limb_space = try dg.gpa.alloc(math.big.DoubleLimb, double_limb_count);
++                            defer dg.gpa.free(double_limb_space);
++
++                            _ = bigint.toDoubleLimb(double_limb_space) catch return Error.CodegenFail;
++
++                            break :v llvm_type.constIntOfArbitraryPrecision(
++                                @intCast(c_uint, double_limb_count),
++                                double_limb_space.ptr,
++                            );
+                         }
+-                        @panic("TODO implement bigint to llvm int for 32-bit compiler builds");
+                     };
+                     if (!bigint.positive) {
+                         return llvm.constNeg(unsigned_val);
+@@ -3269,8 +3281,20 @@ pub const DeclGen = struct {
+                             @intCast(c_uint, bigint.limbs.len),
+                             bigint.limbs.ptr,
+                         );
++                    } else {
++                        // Because LLVM only accepts 64-bit limbs for constIntOfArbitraryPrecision, we must convert to double-limb here (and allocate to do so).
++                        // You (yes, you!) can fix this by making LLVM accept 32-bit limbs for creating an integer of arbitrary precision.
++                        const double_limb_count = math.divCeil(usize, bigint.limbs.len, 2) catch return Error.CodegenFail;
++                        var double_limb_space = try dg.gpa.alloc(math.big.DoubleLimb, double_limb_count);
++                        defer dg.gpa.free(double_limb_space);
++
++                        _ = bigint.toDoubleLimb(double_limb_space) catch return Error.CodegenFail;
++
++                        break :v llvm_type.constIntOfArbitraryPrecision(
++                            @intCast(c_uint, double_limb_count),
++                            double_limb_space.ptr,
++                        );
+                     }
+-                    @panic("TODO implement bigint to llvm int for 32-bit compiler builds");
+                 };
+                 if (!bigint.positive) {
+                     return llvm.constNeg(unsigned_val);

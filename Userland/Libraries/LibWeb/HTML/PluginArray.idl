@@ -1,0 +1,9 @@
+#import <HTML/Plugin.idl>
+
+[Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
+interface PluginArray {
+    undefined refresh();
+    readonly attribute unsigned long length;
+    getter Plugin? item(unsigned long index);
+    getter Plugin? namedItem(DOMString name);
+};

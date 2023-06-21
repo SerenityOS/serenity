@@ -1,0 +1,140 @@
+diff --git a/tools/wpt/browser.py b/tools/wpt/browser.py
+index 5e8bfdab1..779b3b427 100644
+--- a/tools/wpt/browser.py
++++ b/tools/wpt/browser.py
+@@ -1918,6 +1918,27 @@ class WebKit(Browser):
+     def version(self, binary=None, webdriver_binary=None):
+         return None
+
++class Ladybird(Browser):
++    product = "ladybird"
++    requirements = None
++
++    def download(self, dest=None, channel=None, rename=None):
++        raise NotImplementedError
++
++    def install(self, dest=None, channel=None):
++        raise NotImplementedError
++
++    def find_binary(self, venv_path=None, channel=None):
++        return None
++
++    def find_webdriver(self, venv_path=None, channel=None):
++        return None
++
++    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
++        raise NotImplementedError
++
++    def version(self, binary=None, webdriver_binary=None):
++        return None
+
+ class WebKitTestRunner(Browser):
+     """Interface for WebKitTestRunner.
+diff --git a/tools/wpt/run.py b/tools/wpt/run.py
+index 58e0004f9..8eb5399d3 100644
+--- a/tools/wpt/run.py
++++ b/tools/wpt/run.py
+@@ -110,7 +110,7 @@ otherwise install OpenSSL and ensure that it's on your $PATH.""")
+ def check_environ(product):
+     if product not in ("android_weblayer", "android_webview", "chrome",
+                        "chrome_android", "chrome_ios", "content_shell",
+-                       "firefox", "firefox_android", "servo", "wktr"):
++                       "firefox", "firefox_android", "servo", "wktr", "ladybird"):
+         config_builder = serve.build_config(os.path.join(wpt_root, "config.json"))
+         # Override the ports to avoid looking for free ports
+         config_builder.ssl = {"type": "none"}
+@@ -687,6 +687,15 @@ class WebKit(BrowserSetup):
+     def setup_kwargs(self, kwargs):
+         pass
+
++class Ladybird(BrowserSetup):
++    name = "ladybird"
++    browser_cls = browser.Ladybird
++
++    def install(self, channel=None):
++        raise NotImplementedError
++
++    def setup_kwargs(self, kwargs):
++        pass
+
+ class WebKitTestRunner(BrowserSetup):
+     name = "wktr"
+@@ -777,6 +786,7 @@ product_setup = {
+     "wktr": WebKitTestRunner,
+     "webkitgtk_minibrowser": WebKitGTKMiniBrowser,
+     "epiphany": Epiphany,
++    "ladybird": Ladybird
+ }
+
+
+diff --git a/tools/wptrunner/wptrunner/browsers/__init__.py b/tools/wptrunner/wptrunner/browsers/__init__.py
+index 9724bb957..4d1045769 100644
+--- a/tools/wptrunner/wptrunner/browsers/__init__.py
++++ b/tools/wptrunner/wptrunner/browsers/__init__.py
+@@ -43,4 +43,5 @@ product_list = ["android_weblayer",
+                 "webkit",
+                 "webkitgtk_minibrowser",
+                 "wktr",
+-                "epiphany"]
++                "epiphany",
++                "ladybird"]
+diff --git a/tools/wptrunner/wptrunner/browsers/ladybird.py b/tools/wptrunner/wptrunner/browsers/ladybird.py
+new file mode 100644
+index 000000000..cfcf285b4
+--- /dev/null
++++ b/tools/wptrunner/wptrunner/browsers/ladybird.py
+@@ -0,0 +1,54 @@
++from .base import WebDriverBrowser, require_arg
++from .base import get_timeout_multiplier
++from ..executors import executor_kwargs as base_executor_kwargs
++from ..executors.executorwebdriver import (WebDriverTestharnessExecutor,  # noqa: F401
++                                           WebDriverRefTestExecutor,  # noqa: F401
++                                           WebDriverCrashtestExecutor)  # noqa: F401
++from ..executors.base import WdspecExecutor
++
++__wptrunner__ = {
++    "product": "ladybird",
++    "check_args": "check_args",
++    "browser": "LadybirdBrowser",
++    "browser_kwargs": "browser_kwargs",
++    "executor_kwargs": "executor_kwargs",
++    "env_options": "env_options",
++    "env_extras": "env_extras",
++    "timeout_multiplier": "get_timeout_multiplier",
++    "executor": {
++        # "testharness": "WebDriverTestharnessExecutor",
++        "reftest": "WebDriverRefTestExecutor",
++        # "wdspec": "WdspecExecutor",
++        # "crashtest": "WebDriverCrashtestExecutor"
++    }
++}
++
++def check_args(**kwargs):
++    pass
++
++def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
++    return {}
++
++def executor_kwargs(logger, test_type, test_environment, run_info_data,
++                    **kwargs):
++    executor_kwargs = base_executor_kwargs(test_type, test_environment, run_info_data, **kwargs)
++    executor_kwargs["capabilities"] = {}
++    return executor_kwargs
++
++def env_options():
++    return {}
++
++def env_extras(**kwargs):
++    return []
++
++class LadybirdBrowser(WebDriverBrowser):
++    def __init__(self, logger, webdriver_args=None,
++                 host="localhost", port=None, base_path="/", env=None, **kwargs):
++        webdriver_bin = "WebDriver"
++
++        super().__init__(logger, "binary???", webdriver_bin, webdriver_args=webdriver_args,
++                         host=host, port=port, base_path=base_path, env=env, **kwargs)
++        self.host = "localhost"
++
++    def make_command(self):
++        return [self.webdriver_binary, "--port", str(self.port)] + self.webdriver_args

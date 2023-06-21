@@ -1,0 +1,120 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andreas Kling <awesomekling@gmail.com>
+Date: Mon, 16 May 2022 15:08:53 +0200
+Subject: [PATCH] libstdc++: Support SerenityOS
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+During the toolchain build, SerenityOS libraries are not available, so
+we have to manually tell libstdc++ about what our LibC supports.
+
+In most places, we take the Newlib code paths.
+
+Co-Authored-By: Gunnar Beutner <gbeutner@serenityos.org>
+Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
+Co-Authored-By: Itamar <itamar8910@gmail.com>
+Co-Authored-By: James Mintram <me@jamesrm.com>
+Co-Authored-By: Martin Bříza <m@rtinbriza.cz>
+Co-Authored-By: Nico Weber <thakis@chromium.org>
+Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
+Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+---
+ libstdc++-v3/acinclude.m4   |  4 ++--
+ libstdc++-v3/configure      | 11 ++++++++---
+ libstdc++-v3/configure.host |  3 +++
+ libstdc++-v3/crossconfig.m4 |  2 +-
+ 4 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
+index 5136c0571e8cb14fd7fd37ac0301a28f32289cc7..6dec4849fb3d86891818b1abac495cf729af64c5 100644
+--- a/libstdc++-v3/acinclude.m4
++++ b/libstdc++-v3/acinclude.m4
+@@ -1381,7 +1381,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
+         ac_has_nanosleep=yes
+         ac_has_sched_yield=yes
+         ;;
+-      freebsd*|netbsd*|dragonfly*|rtems*)
++      freebsd*|netbsd*|dragonfly*|rtems*|serenity*)
+         ac_has_clock_monotonic=yes
+         ac_has_clock_realtime=yes
+         ac_has_nanosleep=yes
+@@ -2418,7 +2418,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
+       dragonfly* | freebsd*)
+ 	enable_clocale_flag=dragonfly
+ 	;;
+-      openbsd*)
++      openbsd* | serenity*)
+ 	enable_clocale_flag=newlib
+ 	;;
+       *)
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306169afe53 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -11910,6 +11910,11 @@ else
+     lt_cv_dlopen_libs=
+     ;;
+ 
++  serenity*)
++    lt_cv_dlopen="dlopen"
++    lt_cv_dlopen_libs=""
++    ;;
++
+   darwin*)
+   # if libdl is installed we need to link against it
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
+@@ -16514,7 +16519,7 @@ fi
+       dragonfly* | freebsd*)
+ 	enable_clocale_flag=dragonfly
+ 	;;
+-      openbsd*)
++      openbsd* | serenity*)
+ 	enable_clocale_flag=newlib
+ 	;;
+       *)
+@@ -20609,7 +20614,7 @@ fi
+         ac_has_nanosleep=yes
+         ac_has_sched_yield=yes
+         ;;
+-      freebsd*|netbsd*|dragonfly*|rtems*)
++      freebsd*|netbsd*|dragonfly*|rtems*|serenity*)
+         ac_has_clock_monotonic=yes
+         ac_has_clock_realtime=yes
+         ac_has_nanosleep=yes
+@@ -29295,7 +29300,7 @@ case "${host}" in
+     # This is a freestanding configuration; there is nothing to do here.
+     ;;
+ 
+-  avr*-*-*)
++  avr*-*-* | *serenity*)
+     $as_echo "#define HAVE_ACOSF 1" >>confdefs.h
+ 
+     $as_echo "#define HAVE_ASINF 1" >>confdefs.h
+diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
+index ec32980aa0db898623804980af65dad588e4d9f5..e060300f3777fbd38795954ca75e9c4809cfc4e3 100644
+--- a/libstdc++-v3/configure.host
++++ b/libstdc++-v3/configure.host
+@@ -297,6 +297,9 @@ case "${host_os}" in
+     # Use libatomic if necessary and avoid libstdc++ specific atomicity support
+     atomicity_dir="cpu/generic/atomicity_builtins"
+     ;;
++  serenity*)
++    os_include_dir="os/newlib"
++    ;;
+   solaris2*)
+     os_include_dir="os/solaris"
+     ;;
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index b3269cb88e077425be95bfe6c424b08106cab93f..3bba9653675c98ae76caf6cb77bbc483886dc80b 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -9,7 +9,7 @@ case "${host}" in
+     # This is a freestanding configuration; there is nothing to do here.
+     ;;
+ 
+-  avr*-*-*)
++  avr*-*-* | *serenity*)
+     AC_DEFINE(HAVE_ACOSF)
+     AC_DEFINE(HAVE_ASINF)
+     AC_DEFINE(HAVE_ATAN2F)

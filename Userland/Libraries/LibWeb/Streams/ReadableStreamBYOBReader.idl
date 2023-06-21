@@ -1,0 +1,11 @@
+#import <Streams/ReadableStreamGenericReader.idl>
+
+[Exposed=*]
+interface ReadableStreamBYOBReader {
+    // FIXME: Implement
+    // constructor(ReadableStream stream);
+
+    // Promise<ReadableStreamReadResult> read(ArrayBufferView view);
+    // undefined releaseLock();
+};
+ReadableStreamBYOBReader includes ReadableStreamGenericReader;

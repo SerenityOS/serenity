@@ -1,0 +1,8 @@
+#import <DOM/Node.idl>
+
+[Exposed=Window]
+interface NodeList {
+    getter Node? item(unsigned long index);
+    readonly attribute unsigned long length;
+    iterable<Node>;
+};

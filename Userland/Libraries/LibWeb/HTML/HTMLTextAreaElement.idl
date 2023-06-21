@@ -1,0 +1,18 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#htmltextareaelement
+[Exposed=Window]
+interface HTMLTextAreaElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString placeholder;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString wrap;
+    readonly attribute DOMString type;
+
+    [CEReactions, Reflect] attribute boolean disabled;
+    [CEReactions, Reflect=readonly] attribute boolean readOnly;
+    [CEReactions, Reflect] attribute boolean required;
+
+};

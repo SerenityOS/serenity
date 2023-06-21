@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Dan MacDonald <allcoms@gmail.com>
+Date: Sun, 8 Dec 2019 17:30:52 +0000
+Subject: [PATCH] Add Serenity to Makefile
+
+- Add `-lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex`
+- Disable RTTI
+---
+ Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 527a3d0..fa1b849 100644
+--- a/Makefile
++++ b/Makefile
+@@ -58,7 +58,7 @@ c_objects   = $(addprefix $(BUILD_DIR)/,$(c_sources:=.o))
+ objects     = $(c_objects) $(cpp_objects)
+ deps        = $(addprefix $(BUILD_DIR)/,$(c_sources:=.d) $(cpp_sources:=.d))
+ 
+-LDLIBS := $(shell sdl2-config --libs) -lrt
++LDLIBS := -lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex
+ 
+ ifeq ($(INCLUDE_DEBUGGER),1)
+     LDLIBS += -lreadline
+@@ -105,12 +105,12 @@ else ifneq ($(MAKECMDGOALS),clean)
+ endif
+ 
+ ifneq ($(findstring debug,$(CONF)),)
+-    compile_flags += -ggdb
++    compile_flags += -ggdb -fno-rtti
+ endif
+ ifneq ($(findstring release,$(CONF)),)
+     # Including -Ofast when linking (by including $(optimizations)) gives a
+     # different binary size. Might be worth investigating why.
+-    compile_flags += $(optimizations) -DOPTIMIZING
++    compile_flags += $(optimizations) -DOPTIMIZING -fno-rtti
+     link_flags    += $(optimizations) -fuse-linker-plugin
+ endif
+ 

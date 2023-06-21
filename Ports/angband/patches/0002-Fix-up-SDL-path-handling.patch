@@ -1,0 +1,71 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tim Schumacher <timschumi@gmx.de>
+Date: Wed, 6 Apr 2022 02:25:34 +0200
+Subject: [PATCH] Fix up SDL path handling
+
+Fix up some copy-paste and logic mistakes in the configure script that
+prevent us from setting a prefix for the SDL installation.
+---
+ configure | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/configure b/configure
+index c56ed42..d6e8e85 100755
+--- a/configure
++++ b/configure
+@@ -5863,14 +5863,14 @@ $as_echo_n "checking for SDL2 - version >= $min_sdl2_version... " >&6; }
+   if test "$SDL2_CONFIG" = "no" ; then
+     no_sdl2=yes
+   else
+-    SDL2_CFLAGS=`$SDL2_CONFIG $sdl2conf_args --cflags`
+-    SDL2_LIBS=`$SDL2_CONFIG $sdl2conf_args --libs`
++    SDL2_CFLAGS=`$SDL2_CONFIG $sdl2_args --cflags`
++    SDL2_LIBS=`$SDL2_CONFIG $sdl2_args --libs`
+ 
+     sdl2_major_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+     sdl2_minor_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl2_micro_version=`$SDL2_CONFIG $sdl2_config_args --version | \
++    sdl2_micro_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdl2test" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6024,9 +6024,7 @@ rm -f core conftest.err conftest.$ac_objext \
+ 	if test "$SDL2_CONFIG" != "no"; then
+ 		hold_CPPFLAGS="${CPPFLAGS}"
+ 		hold_LIBS="${LIBS}"
+-		SDL2_CFLAGS=`${SDL2_CONFIG} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL2_CFLAGS}"
+-		SDL2_LIBS=`${SDL2_CONFIG} --libs`
+ 		LIBS="${LIBS} ${SDL2_LIBS}"
+ 		if test "$enable_sdl2" = "yes"; then
+ 			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL2_image" >&5
+@@ -6278,14 +6276,14 @@ $as_echo_n "checking for SDL - version >= $min_sdl_version... " >&6; }
+   if test "$SDL_CONFIG" = "no" ; then
+     no_sdl=yes
+   else
+-    SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
+-    SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
++    SDL_CFLAGS=`$SDL_CONFIG $sdl_args --cflags`
++    SDL_LIBS=`$SDL_CONFIG $sdl_args --libs`
+ 
+     sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+     sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl_micro_version=`$SDL_CONFIG $sdl_config_args --version | \
++    sdl_micro_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdltest" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6439,9 +6437,7 @@ rm -f core conftest.err conftest.$ac_objext \
+ 	if test "$SDL_CONFIG" != "no"; then
+ 		hold_CPPFLAGS="${CPPFLAGS}"
+ 		hold_LIBS="${LIBS}"
+-		SDL_CFLAGS=`${SDL_CONFIG} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL_CFLAGS}"
+-		SDL_LIBS=`${SDL_CONFIG} --libs`
+ 		LIBS="${LIBS} ${SDL_LIBS}"
+ 		if test "$enable_sdl" = "yes"; then
+ 			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5

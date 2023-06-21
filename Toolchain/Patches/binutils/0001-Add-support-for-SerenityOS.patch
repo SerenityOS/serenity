@@ -1,0 +1,240 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Mon, 27 Mar 2023 19:24:04 +1100
+Subject: [PATCH] Add support for SerenityOS
+
+Teaches the assembler, BFD, and the linker about the SerenityOS target
+triple.
+
+We set '/' to not start a comment in GAS, as the QEMU port uses it for
+division in constant expressions in assembly files (cf. as --divide).
+
+`/usr/lib/Loader.so` is set as the default ELF interpreter.
+
+On AArch64, we set `COMMONPAGESIZE` to enable RELRO support.
+---
+ bfd/config.bfd                       | 10 ++++++++++
+ gas/config/tc-i386.c                 |  3 ++-
+ gas/config/te-serenity.h             |  3 +++
+ gas/configure.tgt                    |  2 ++
+ ld/Makefile.am                       |  4 ++++
+ ld/Makefile.in                       |  6 ++++++
+ ld/configure.tgt                     |  6 ++++++
+ ld/emulparams/aarch64serenity.sh     |  5 +++++
+ ld/emulparams/elf_serenity.sh        |  1 +
+ ld/emulparams/elf_x86_64_serenity.sh |  2 ++
+ 10 files changed, 41 insertions(+), 1 deletion(-)
+ create mode 100644 gas/config/te-serenity.h
+ create mode 100644 ld/emulparams/aarch64serenity.sh
+ create mode 100644 ld/emulparams/elf_serenity.sh
+ create mode 100644 ld/emulparams/elf_x86_64_serenity.sh
+
+diff --git a/bfd/config.bfd b/bfd/config.bfd
+index 1b0111fd410dcef529bc4d94e2c314678cdd4a2b..e488c40982f8ddb62861aa333dffeb06341f56f8 100644
+--- a/bfd/config.bfd
++++ b/bfd/config.bfd
+@@ -285,6 +285,11 @@ case "${targ}" in
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
+     want64=true
+     ;;
++  aarch64-*-serenity*)
++    targ_defvec=aarch64_elf64_le_vec
++    targ_selvecs=
++    want64=true
++    ;;
+   aarch64-*-linux* | aarch64-*-netbsd*)
+     targ_defvec=aarch64_elf64_le_vec
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_le_vec aarch64_pe_le_vec"
+@@ -736,6 +741,11 @@ case "${targ}" in
+     targ_selvecs="i386_elf32_vec iamcu_elf32_vec x86_64_elf32_vec"
+     want64=true
+     ;;
++  x86_64-*-serenity*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
+ #endif
+   i[3-7]86-*-lynxos*)
+     targ_defvec=i386_elf32_vec
+diff --git a/gas/config/tc-i386.c b/gas/config/tc-i386.c
+index 66d5ea5a99da47a61bf18623f6bd09b10c5f124d..5bc391ab7c3ee5028b91e5652e978daef0bc33d1 100644
+--- a/gas/config/tc-i386.c
++++ b/gas/config/tc-i386.c
+@@ -492,7 +492,8 @@ const char extra_symbol_chars[] = "*%-([{}"
+      && !defined (TE_Haiku)				\
+      && !defined (TE_FreeBSD)				\
+      && !defined (TE_DragonFly)				\
+-     && !defined (TE_NetBSD))
++     && !defined (TE_NetBSD)				\
++     && !defined (TE_SerenityOS))
+ /* This array holds the chars that always start a comment.  If the
+    pre-processor is disabled, these aren't very useful.  The option
+    --divide will remove '/' from this list.  */
+diff --git a/gas/config/te-serenity.h b/gas/config/te-serenity.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..f38faf598cba7f561ed9528ee37328228ee55bdc
+--- /dev/null
++++ b/gas/config/te-serenity.h
+@@ -0,0 +1,3 @@
++#include "te-generic.h"
++
++#define TE_SerenityOS 1
+diff --git a/gas/configure.tgt b/gas/configure.tgt
+index 765ba73633df54b51eec560002cc234ce98205c3..563d61e5fd50d7936a357cc46740ebe114961fde 100644
+--- a/gas/configure.tgt
++++ b/gas/configure.tgt
+@@ -134,6 +134,7 @@ case ${generic_target} in
+       aarch64*-linux-gnu_ilp32)		arch=aarch64:32 ;;
+     esac ;;
+   aarch64*-*-netbsd*)			fmt=elf em=nbsd;;
++  aarch64*-*-serenity*)			fmt=elf em=serenity ;;
+   aarch64*-*-openbsd*)			fmt=elf;;
+   aarch64*-*-pe*)			fmt=coff em=pepaarch64 ;;
+   alpha-*-*vms*)			fmt=evax ;;
+@@ -264,6 +265,7 @@ case ${generic_target} in
+   i386-*-*nt*)				fmt=coff em=pe ;;
+   i386-*-rdos*)				fmt=elf ;;
+   i386-*-darwin*)			fmt=macho ;;
++  i386-*-serenity)			fmt=elf em=serenity ;;
+ 
+   ia16-*-elf*)				fmt=elf ;;
+ 
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..715b8156c183b12325a78937db6881350a9d0377 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -389,6 +389,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eaarch64linux32b.c \
+ 	eaarch64linuxb.c \
+ 	eaarch64pe.c \
++	eaarch64serenity.c \
+ 	eelf32_x86_64.c \
+ 	eelf32b4300.c \
+ 	eelf32bmip.c \
+@@ -457,6 +458,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eelf_x86_64_cloudabi.c \
+ 	eelf_x86_64_fbsd.c \
+ 	eelf_x86_64_haiku.c \
++	eelf_x86_64_serenity.c \
+ 	eelf_x86_64_sol2.c \
+ 	ehppa64linux.c \
+ 	ei386pep.c \
+@@ -881,6 +883,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32_x86_64.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32b4300.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32bmip.Pc@am__quote@
+@@ -949,6 +952,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_sol2.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ehppa64linux.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ei386pep.Pc@am__quote@
+diff --git a/ld/Makefile.in b/ld/Makefile.in
+index 3d5685d6bae1ce6258f053190da8d84f9eaba463..64acb70753a26aa36b1e6bec17244821662f6dd9 100644
+--- a/ld/Makefile.in
++++ b/ld/Makefile.in
+@@ -889,6 +889,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eaarch64linux32b.c \
+ 	eaarch64linuxb.c \
+ 	eaarch64pe.c \
++	eaarch64serenity.c \
+ 	eelf32_x86_64.c \
+ 	eelf32b4300.c \
+ 	eelf32bmip.c \
+@@ -957,6 +958,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eelf_x86_64_cloudabi.c \
+ 	eelf_x86_64_fbsd.c \
+ 	eelf_x86_64_haiku.c \
++	eelf_x86_64_serenity.c \
+ 	eelf_x86_64_sol2.c \
+ 	ehppa64linux.c \
+ 	ei386pep.c \
+@@ -1266,6 +1268,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaix5ppc.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaix5rs6.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaixppc.Po@am__quote@
+@@ -1465,6 +1468,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_serenity.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_sol2.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eh8300elf.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eh8300elf_linux.Po@am__quote@
+@@ -2555,6 +2559,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32_x86_64.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32b4300.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32bmip.Pc@am__quote@
+@@ -2623,6 +2628,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_sol2.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ehppa64linux.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ei386pep.Pc@am__quote@
+diff --git a/ld/configure.tgt b/ld/configure.tgt
+index de04a44b8125f08095b792285be5ddbaf41e95f2..56c8fda33834d4aa288d6b9c63596d09c44b0989 100644
+--- a/ld/configure.tgt
++++ b/ld/configure.tgt
+@@ -97,6 +97,9 @@ aarch64-*-freebsd*)	targ_emul=aarch64fbsd
+ aarch64-*-fuchsia*)	targ_emul=aarch64elf
+ 			targ_extra_emuls="aarch64elfb armelf armelfb"
+ 			;;
++aarch64-*-serenity*)	targ_emul=aarch64serenity
++			targ_extra_emuls=aarch64elf
++			;;
+ aarch64_be-*-linux-gnu_ilp32)
+ 			targ_emul=aarch64linux32b
+ 			targ_extra_libpath="aarch64linuxb aarch64linux aarch64linux32 armelfb_linux_eabi armelf_linux_eabi"
+@@ -1012,6 +1015,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+ x86_64-*-redox*)	targ_emul=elf_x86_64
+ 			targ_extra_emuls=elf_i386
+ 			;;
++x86_64-*-serenity*)	targ_emul=elf_x86_64_serenity
++			targ_extra_emuls="elf_x86_64 elf_i386"
++			;;
+ x86_64-*-solaris2*)	targ_emul=elf_x86_64_sol2
+ 			targ_extra_emuls="elf_x86_64 elf_i386_sol2 elf_i386_ldso elf_i386 elf_iamcu"
+ 			targ_extra_libpath=$targ_extra_emuls
+diff --git a/ld/emulparams/aarch64serenity.sh b/ld/emulparams/aarch64serenity.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..23aed1440a033e2ac06536f43c1bacaf98832b92
+--- /dev/null
++++ b/ld/emulparams/aarch64serenity.sh
+@@ -0,0 +1,5 @@
++source_sh ${srcdir}/emulparams/aarch64elf.sh
++source_sh ${srcdir}/emulparams/elf_serenity.sh
++
++COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
++unset EMBEDDED
+diff --git a/ld/emulparams/elf_serenity.sh b/ld/emulparams/elf_serenity.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..c434bacaa7fa16a9bb1c4934ad061230fbf56825
+--- /dev/null
++++ b/ld/emulparams/elf_serenity.sh
+@@ -0,0 +1 @@
++ELF_INTERPRETER_NAME=\"/usr/lib/Loader.so\"
+diff --git a/ld/emulparams/elf_x86_64_serenity.sh b/ld/emulparams/elf_x86_64_serenity.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..536af1e31d761b22e3e40cafd339d5bf7a285756
+--- /dev/null
++++ b/ld/emulparams/elf_x86_64_serenity.sh
+@@ -0,0 +1,2 @@
++source_sh ${srcdir}/emulparams/elf_x86_64.sh
++source_sh ${srcdir}/emulparams/elf_serenity.sh

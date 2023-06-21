@@ -1,0 +1,5 @@
+#import <DOM/Document.idl>
+
+[Exposed=Window]
+interface XMLDocument : Document {
+};

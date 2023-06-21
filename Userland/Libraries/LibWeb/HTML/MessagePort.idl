@@ -1,0 +1,18 @@
+#import <DOM/EventTarget.idl>
+#import <DOM/EventHandler.idl>
+
+// https://html.spec.whatwg.org/multipage/web-messaging.html#messageport
+[Exposed=(Window,Worker,AudioWorklet), Transferable]
+interface MessagePort : EventTarget {
+    undefined postMessage(any message);
+    undefined start();
+    undefined close();
+
+    // event handlers
+    attribute EventHandler onmessage;
+    attribute EventHandler onmessageerror;
+};
+
+dictionary StructuredSerializeOptions {
+    sequence<object> transfer = [];
+};

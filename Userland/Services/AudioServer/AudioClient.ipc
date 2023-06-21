@@ -1,0 +1,8 @@
+#include <LibCore/AnonymousBuffer.h>
+
+endpoint AudioClient
+{
+    main_mix_muted_state_changed(bool muted) =|
+    main_mix_volume_changed(double volume) =|
+    client_volume_changed(double volume) =|
+}

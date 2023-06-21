@@ -1,0 +1,11 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmldialogelement
+[Exposed=Window]
+interface HTMLDialogElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute boolean open;
+
+};

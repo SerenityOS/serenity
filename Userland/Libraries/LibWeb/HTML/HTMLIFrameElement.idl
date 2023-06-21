@@ -1,0 +1,30 @@
+#import <HTML/HTMLElement.idl>
+#import <DOM/Document.idl>
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmliframeelement
+[Exposed=Window]
+interface HTMLIFrameElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString srcdoc;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString allow;
+    [CEReactions, Reflect] attribute DOMString width;
+    [CEReactions, Reflect] attribute DOMString height;
+    [CEReactions, Reflect=allowfullscreen] attribute boolean allowFullscreen;
+
+    readonly attribute Document? contentDocument;
+
+    readonly attribute WindowProxy? contentWindow;
+
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString scrolling;
+    [CEReactions, Reflect=frameborder] attribute DOMString frameBorder;
+
+    [CEReactions, LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
+    [CEReactions, LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
+
+    Document? getSVGDocument();
+};

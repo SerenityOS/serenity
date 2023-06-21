@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2020, the SerenityOS developers.
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <AK/Debug.h>
+#include <AK/Format.h>
+#include <LibGfx/ImageFormats/GIFLoader.h>
+#include <stddef.h>
+#include <stdint.h>
+
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
+{
+    auto decoder_or_error = Gfx::GIFImageDecoderPlugin::create({ data, size });
+    if (decoder_or_error.is_error())
+        return 0;
+    auto decoder = decoder_or_error.release_value();
+    if (decoder->initialize().is_error()) {
+        return 0;
+    }
+    auto& gif_decoder = *decoder;
+    auto bitmap_or_error = decoder->frame(0);
+    if (!bitmap_or_error.is_error()) {
+        auto const& bitmap = bitmap_or_error.value().image;
+        // Looks like a valid GIF. Try to load the other frames:
+        dbgln_if(GIF_DEBUG, "bitmap size: {}", bitmap->size());
+        dbgln_if(GIF_DEBUG, "codec size: {}", gif_decoder.size());
+        dbgln_if(GIF_DEBUG, "is_animated: {}", gif_decoder.is_animated());
+        dbgln_if(GIF_DEBUG, "loop_count: {}", gif_decoder.loop_count());
+        dbgln_if(GIF_DEBUG, "frame_count: {}", gif_decoder.frame_count());
+        for (size_t i = 0; i < gif_decoder.frame_count(); ++i) {
+            auto ifd = gif_decoder.frame(i).release_value_but_fixme_should_propagate_errors();
+            dbgln_if(GIF_DEBUG, "frame #{} size: {}", i, ifd.image->size());
+            dbgln_if(GIF_DEBUG, "frame #{} duration: {}", i, ifd.duration);
+        }
+        dbgln_if(GIF_DEBUG, "Done.");
+    }
+
+    return 0;
+}

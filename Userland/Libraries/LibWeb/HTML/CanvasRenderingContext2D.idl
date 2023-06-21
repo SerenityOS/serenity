@@ -1,0 +1,38 @@
+#import <HTML/HTMLCanvasElement.idl>
+#import <HTML/Canvas/CanvasCompositing.idl>
+#import <HTML/Canvas/CanvasDrawImage.idl>
+#import <HTML/Canvas/CanvasDrawPath.idl>
+#import <HTML/Canvas/CanvasFillStrokeStyles.idl>
+#import <HTML/Canvas/CanvasImageData.idl>
+#import <HTML/Canvas/CanvasImageSmoothing.idl>
+#import <HTML/Canvas/CanvasPath.idl>
+#import <HTML/Canvas/CanvasPathDrawingStyles.idl>
+#import <HTML/Canvas/CanvasRect.idl>
+#import <HTML/Canvas/CanvasState.idl>
+#import <HTML/Canvas/CanvasText.idl>
+#import <HTML/Canvas/CanvasTransform.idl>
+
+enum ImageSmoothingQuality { "low", "medium", "high" };
+
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
+[Exposed=Window]
+interface CanvasRenderingContext2D {
+    [ImplementedAs=canvas_for_binding] readonly attribute HTMLCanvasElement canvas;
+};
+
+CanvasRenderingContext2D includes CanvasState;
+CanvasRenderingContext2D includes CanvasTransform;
+CanvasRenderingContext2D includes CanvasCompositing;
+CanvasRenderingContext2D includes CanvasImageSmoothing;
+CanvasRenderingContext2D includes CanvasFillStrokeStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasShadowStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasFilters;
+CanvasRenderingContext2D includes CanvasRect;
+CanvasRenderingContext2D includes CanvasDrawPath;
+// FIXME: CanvasRenderingContext2D includes CanvasUserInterface;
+CanvasRenderingContext2D includes CanvasText;
+CanvasRenderingContext2D includes CanvasDrawImage;
+CanvasRenderingContext2D includes CanvasImageData;
+CanvasRenderingContext2D includes CanvasPathDrawingStyles;
+// FIXME: CanvasRenderingContext2D includes CanvasTextDrawingStyles;
+CanvasRenderingContext2D includes CanvasPath;

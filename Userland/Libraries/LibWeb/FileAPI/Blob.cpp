@@ -1,0 +1,385 @@
+/*
+ * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <AK/GenericLexer.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/BlobPrototype.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/Infra/Strings.h>
+#include <LibWeb/Streams/AbstractOperations.h>
+#include <LibWeb/Streams/ReadableStreamDefaultReader.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
+
+namespace Web::FileAPI {
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, String type)
+{
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
+}
+
+// https://w3c.github.io/FileAPI/#convert-line-endings-to-native
+ErrorOr<String> convert_line_endings_to_native(StringView string)
+{
+    // 1. Let native line ending be be the code point U+000A LF.
+    auto native_line_ending = "\n"sv;
+
+    // 2. If the underlying platform’s conventions are to represent newlines as a carriage return and line feed sequence, set native line ending to the code point U+000D CR followed by the code point U+000A LF.
+    // NOTE: this step is a no-op since LibWeb does not compile on Windows, which is the only platform we know of that that uses a carriage return and line feed sequence for line endings.
+
+    // 3. Set result to the empty string.
+    StringBuilder result;
+
+    // 4. Let position be a position variable for s, initially pointing at the start of s.
+    auto lexer = GenericLexer { string };
+
+    // 5. Let token be the result of collecting a sequence of code points that are not equal to U+000A LF or U+000D CR from s given position.
+    // 6. Append token to result.
+    TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
+
+    // 7. While position is not past the end of s:
+    while (!lexer.is_eof()) {
+        // 1. If the code point at position within s equals U+000D CR:
+        if (lexer.peek() == '\r') {
+            // 1. Append native line ending to result.
+            TRY(result.try_append(native_line_ending));
+
+            // 2. Advance position by 1.
+            lexer.ignore(1);
+
+            // 3. If position is not past the end of s and the code point at position within s equals U+000A LF advance position by 1.
+            if (!lexer.is_eof() && lexer.peek() == '\n')
+                lexer.ignore(1);
+        }
+        // 2. Otherwise if the code point at position within s equals U+000A LF, advance position by 1 and append native line ending to result.
+        else if (lexer.peek() == '\n') {
+            lexer.ignore(1);
+            TRY(result.try_append(native_line_ending));
+        }
+
+        // 3. Let token be the result of collecting a sequence of code points that are not equal to U+000A LF or U+000D CR from s given position.
+        // 4. Append token to result.
+        TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
+    }
+    // 5. Return result.
+    return result.to_string();
+}
+
+// https://w3c.github.io/FileAPI/#process-blob-parts
+ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optional<BlobPropertyBag> const& options)
+{
+    // 1. Let bytes be an empty sequence of bytes.
+    ByteBuffer bytes {};
+
+    // 2. For each element in parts:
+    for (auto const& blob_part : blob_parts) {
+        TRY(blob_part.visit(
+            // 1. If element is a USVString, run the following sub-steps:
+            [&](String const& string) -> ErrorOr<void> {
+                // 1. Let s be element.
+                auto s = string;
+
+                // 2. If the endings member of options is "native", set s to the result of converting line endings to native of element.
+                if (options.has_value() && options->endings == Bindings::EndingType::Native)
+                    s = TRY(convert_line_endings_to_native(s));
+
+                // NOTE: The AK::String is always UTF-8.
+                // 3. Append the result of UTF-8 encoding s to bytes.
+                return bytes.try_append(s.bytes());
+            },
+            // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
+            [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+                auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+                return bytes.try_append(data_buffer.bytes());
+            },
+            // 3. If element is a Blob, append the bytes it represents to bytes.
+            [&](JS::Handle<Blob> const& blob) -> ErrorOr<void> {
+                return bytes.try_append(blob->bytes());
+            }));
+    }
+    // 3. Return bytes.
+    return bytes;
+}
+
+bool is_basic_latin(StringView view)
+{
+    for (auto code_point : view) {
+        if (code_point < 0x0020 || code_point > 0x007E)
+            return false;
+    }
+    return true;
+}
+
+Blob::Blob(JS::Realm& realm)
+    : PlatformObject(realm)
+{
+}
+
+Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, String type)
+    : PlatformObject(realm)
+    , m_byte_buffer(move(byte_buffer))
+    , m_type(move(type))
+{
+}
+
+Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer)
+    : PlatformObject(realm)
+    , m_byte_buffer(move(byte_buffer))
+{
+}
+
+Blob::~Blob() = default;
+
+JS::ThrowCompletionOr<void> Blob::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::BlobPrototype>(realm, "Blob"));
+
+    return {};
+}
+
+// https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+{
+    auto& vm = realm.vm();
+
+    // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size set to 0, and with type set to the empty string.
+    if (!blob_parts.has_value() && !options.has_value())
+        return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm));
+
+    ByteBuffer byte_buffer {};
+    // 2. Let bytes be the result of processing blob parts given blobParts and options.
+    if (blob_parts.has_value()) {
+        byte_buffer = TRY_OR_THROW_OOM(realm.vm(), process_blob_parts(blob_parts.value(), options));
+    }
+
+    auto type = String {};
+    // 3. If the type member of the options argument is not the empty string, run the following sub-steps:
+    if (options.has_value() && !options->type.is_empty()) {
+        // 1. If the type member is provided and is not the empty string, let t be set to the type dictionary member.
+        //    If t contains any characters outside the range U+0020 to U+007E, then set t to the empty string and return from these substeps.
+        //    NOTE: t is set to empty string at declaration.
+        if (!options->type.is_empty()) {
+            if (is_basic_latin(options->type))
+                type = options->type;
+        }
+
+        // 2. Convert every character in t to ASCII lowercase.
+        if (!type.is_empty())
+            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(type));
+    }
+
+    // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
+}
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::construct_impl(JS::Realm& realm, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+{
+    return Blob::create(realm, blob_parts, options);
+}
+
+// https://w3c.github.io/FileAPI/#dfn-slice
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
+{
+    auto& vm = realm().vm();
+
+    // 1. The optional start parameter is a value for the start point of a slice() call, and must be treated as a byte-order position, with the zeroth position representing the first byte.
+    //    User agents must process slice() with start normalized according to the following:
+    i64 relative_start;
+    if (!start.has_value()) {
+        // a. If the optional start parameter is not used as a parameter when making this call, let relativeStart be 0.
+        relative_start = 0;
+    } else {
+        auto start_value = start.value();
+        // b. If start is negative, let relativeStart be max((size + start), 0).
+        if (start_value < 0) {
+            relative_start = max((size() + start_value), 0);
+        }
+        // c. Else, let relativeStart be min(start, size).
+        else {
+            relative_start = min(start_value, size());
+        }
+    }
+
+    // 2. The optional end parameter is a value for the end point of a slice() call. User agents must process slice() with end normalized according to the following:
+    i64 relative_end;
+    if (!end.has_value()) {
+        // a. If the optional end parameter is not used as a parameter when making this call, let relativeEnd be size.
+        relative_end = size();
+    } else {
+        auto end_value = end.value();
+        // b. If end is negative, let relativeEnd be max((size + end), 0).
+        if (end_value < 0) {
+            relative_end = max((size() + end_value), 0);
+        }
+        // c Else, let relativeEnd be min(end, size).
+        else {
+            relative_end = min(end_value, size());
+        }
+    }
+
+    // 3. The optional contentType parameter is used to set the ASCII-encoded string in lower case representing the media type of the Blob.
+    //    User agents must process the slice() with contentType normalized according to the following:
+    String relative_content_type;
+    if (!content_type.has_value()) {
+        // a. If the contentType parameter is not provided, let relativeContentType be set to the empty string.
+        relative_content_type = String {};
+    } else {
+        // b. Else let relativeContentType be set to contentType and run the substeps below:
+
+        // 1. If relativeContentType contains any characters outside the range of U+0020 to U+007E, then set relativeContentType to the empty string and return from these substeps.
+        //    NOTE: contentType is set to empty string at declaration.
+        if (is_basic_latin(content_type.value())) {
+            // 2. Convert every character in relativeContentType to ASCII lowercase.
+            relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(content_type.value()));
+        }
+    }
+
+    // 4. Let span be max((relativeEnd - relativeStart), 0).
+    auto span = max((relative_end - relative_start), 0);
+
+    // 5. Return a new Blob object S with the following characteristics:
+    // a. S refers to span consecutive bytes from this, beginning with the byte at byte-order position relativeStart.
+    // b. S.size = span.
+    // c. S.type = relativeContentType.
+    auto byte_buffer = TRY_OR_THROW_OOM(vm, m_byte_buffer.slice(relative_start, span));
+    return MUST_OR_THROW_OOM(heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type)));
+}
+
+// https://w3c.github.io/FileAPI/#dom-blob-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::stream()
+{
+    // The stream() method, when invoked, must return the result of calling get stream on this.
+    return this->get_stream();
+}
+
+// https://w3c.github.io/FileAPI/#blob-get-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream()
+{
+    auto& realm = this->realm();
+
+    // 1. Let stream be a new ReadableStream created in blob’s relevant Realm.
+    auto stream = MUST_OR_THROW_OOM(realm.heap().allocate<Streams::ReadableStream>(realm, realm));
+
+    // 2. Set up stream with byte reading support.
+    TRY(set_up_readable_stream_controller_with_byte_reading_support(stream));
+
+    // FIXME: 3. Run the following steps in parallel:
+    {
+        // 1. While not all bytes of blob have been read:
+        //    NOTE: for simplicity the chunk is the entire buffer for now.
+        {
+            // 1. Let bytes be the byte sequence that results from reading a chunk from blob, or failure if a chunk cannot be read.
+            auto bytes = m_byte_buffer;
+
+            // 2. Queue a global task on the file reading task source given blob’s relevant global object to perform the following steps:
+            HTML::queue_global_task(HTML::Task::Source::FileReading, realm.global_object(), [stream, bytes = move(bytes)]() {
+                // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
+                auto& environment_settings_object = Bindings::host_defined_environment_settings_object(stream->realm());
+                environment_settings_object.prepare_to_run_script();
+
+                ScopeGuard guard = [&]() {
+                    // See above NOTE.
+                    environment_settings_object.clean_up_after_running_script();
+                };
+
+                // 1. If bytes is failure, then error stream with a failure reason and abort these steps.
+                // 2. Let chunk be a new Uint8Array wrapping an ArrayBuffer containing bytes. If creating the ArrayBuffer throws an exception, then error stream with that exception and abort these steps.
+                auto array_buffer = JS::ArrayBuffer::create(stream->realm(), bytes);
+                auto chunk = JS::Uint8Array::create(stream->realm(), bytes.size(), *array_buffer);
+
+                // 3. Enqueue chunk in stream.
+                auto maybe_error = Bindings::throw_dom_exception_if_needed(stream->realm().vm(), [&]() {
+                    return readable_stream_enqueue(*stream->controller(), chunk);
+                });
+
+                if (maybe_error.is_error()) {
+                    readable_stream_error(*stream, maybe_error.release_error().value().value());
+                    return;
+                }
+
+                // FIXME: Close the stream now that we have finished enqueuing all chunks to the stream. Without this, ReadableStream.read will never resolve the second time around with 'done' set.
+                //        Nowhere in the spec seems to mention this - but testing against other implementations the stream does appear to be closed after reading all data (closed callback is fired).
+                //        Probably there is a better way of doing this.
+                readable_stream_close(*stream);
+            });
+        }
+    }
+
+    // 4. Return stream.
+    return stream;
+}
+
+// https://w3c.github.io/FileAPI/#dom-blob-text
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // 1. Let stream be the result of calling get stream on this.
+    auto stream = TRY(this->get_stream());
+
+    // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
+    if (reader_or_exception.is_exception()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
+        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
+        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+    }
+    auto reader = reader_or_exception.release_value();
+
+    // 3. Let promise be the result of reading all bytes from stream with reader
+    auto promise = TRY(reader->read_all_bytes_deprecated());
+
+    // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
+    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+        auto const& object = first_argument.as_object();
+        VERIFY(is<JS::ArrayBuffer>(object));
+        auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
+
+        auto decoder = TextCodec::decoder_for("UTF-8"sv);
+        auto utf8_text = TRY_OR_THROW_OOM(vm, TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, buffer));
+        return JS::PrimitiveString::create(vm, move(utf8_text));
+    });
+}
+
+// https://w3c.github.io/FileAPI/#dom-blob-arraybuffer
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::array_buffer()
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // 1. Let stream be the result of calling get stream on this.
+    auto stream = TRY(this->get_stream());
+
+    // 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
+    auto reader_or_exception = acquire_readable_stream_default_reader(*stream);
+    if (reader_or_exception.is_exception()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, reader_or_exception.exception());
+        auto promise_capability = WebIDL::create_rejected_promise(realm, *throw_completion.value());
+        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+    }
+    auto reader = reader_or_exception.release_value();
+
+    // 3. Let promise be the result of reading all bytes from stream with reader.
+    auto promise = TRY(reader->read_all_bytes_deprecated());
+
+    // 4. Return the result of transforming promise by a fulfillment handler that returns a new ArrayBuffer whose contents are its first argument.
+    return WebIDL::upon_fulfillment(*promise, [&](auto const& first_argument) -> WebIDL::ExceptionOr<JS::Value> {
+        auto const& object = first_argument.as_object();
+        VERIFY(is<JS::ArrayBuffer>(object));
+        auto const& buffer = static_cast<const JS::ArrayBuffer&>(object).buffer();
+
+        return JS::ArrayBuffer::create(realm, buffer);
+    });
+}
+
+}

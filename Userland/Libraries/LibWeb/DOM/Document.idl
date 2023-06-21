@@ -1,0 +1,121 @@
+#import <CSS/StyleSheetList.idl>
+#import <DOM/Comment.idl>
+#import <DOM/DOMImplementation.idl>
+#import <DOM/DocumentFragment.idl>
+#import <DOM/DocumentType.idl>
+#import <DOM/Element.idl>
+#import <DOM/Event.idl>
+#import <DOM/EventHandler.idl>
+#import <DOM/HTMLCollection.idl>
+#import <DOM/Node.idl>
+#import <DOM/NodeFilter.idl>
+#import <DOM/NodeIterator.idl>
+#import <DOM/NodeList.idl>
+#import <DOM/ParentNode.idl>
+#import <DOM/ProcessingInstruction.idl>
+#import <DOM/Range.idl>
+#import <DOM/Text.idl>
+#import <DOM/TreeWalker.idl>
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLHeadElement.idl>
+#import <HTML/HTMLScriptElement.idl>
+#import <HTML/Location.idl>
+#import <Selection/Selection.idl>
+
+// https://dom.spec.whatwg.org/#document
+[Exposed=Window]
+interface Document : Node {
+    constructor();
+
+    boolean hasFocus();
+
+    [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
+    attribute USVString domain;
+
+    readonly attribute DOMImplementation implementation;
+
+    [ImplementedAs=url_string] readonly attribute USVString URL;
+    readonly attribute USVString documentURI;
+
+    readonly attribute DOMString characterSet;
+    readonly attribute DOMString charset;
+    readonly attribute DOMString inputEncoding;
+    readonly attribute DOMString contentType;
+
+    readonly attribute Window? defaultView;
+
+    [CEReactions] Document open(optional DOMString unused1, optional DOMString unused2);
+    WindowProxy? open(USVString url, DOMString name, DOMString features);
+    [CEReactions] undefined close();
+    [CEReactions] undefined write(DOMString... text);
+    [CEReactions] undefined writeln(DOMString... text);
+
+    attribute DOMString cookie;
+
+    readonly attribute USVString referrer;
+
+    readonly attribute Element? activeElement;
+
+    Element? getElementById(DOMString id);
+    HTMLCollection getElementsByName(DOMString name);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+    HTMLCollection getElementsByClassName(DOMString className);
+
+    [SameObject] readonly attribute HTMLCollection applets;
+    [SameObject] readonly attribute HTMLCollection anchors;
+    [SameObject] readonly attribute HTMLCollection images;
+    [SameObject] readonly attribute HTMLCollection embeds;
+    [SameObject] readonly attribute HTMLCollection plugins;
+    [SameObject] readonly attribute HTMLCollection links;
+    [SameObject] readonly attribute HTMLCollection forms;
+    [SameObject] readonly attribute HTMLCollection scripts;
+
+    // FIXME: Should return an HTMLAllCollection
+    readonly attribute HTMLCollection all;
+
+    [CEReactions, NewObject] Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
+    [CEReactions, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
+    DocumentFragment createDocumentFragment();
+    Text createTextNode(DOMString data);
+    Comment createComment(DOMString data);
+    [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
+
+    [NewObject] Attr createAttribute(DOMString localName);
+    [NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
+
+    Range createRange();
+    Event createEvent(DOMString interface);
+
+    [CEReactions, NewObject] Node importNode(Node node, optional boolean deep = false);
+    [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
+
+    [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
+
+    readonly attribute DOMString compatMode;
+    readonly attribute DocumentType? doctype;
+
+    readonly attribute Element? documentElement;
+    [CEReactions] attribute HTMLElement? body;
+    readonly attribute HTMLHeadElement? head;
+    readonly attribute HTMLScriptElement? currentScript;
+
+    readonly attribute DOMString readyState;
+
+    [CEReactions] attribute DOMString title;
+
+    boolean queryCommandSupported(DOMString commandId);
+    readonly boolean hidden;
+    readonly DOMString visibilityState;
+
+    [NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+    [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+
+    Selection? getSelection();
+};
+
+dictionary ElementCreationOptions {
+    DOMString is;
+};
+Document includes ParentNode;
+Document includes GlobalEventHandlers;

@@ -1,0 +1,146 @@
+compile_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
+compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
+compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
+compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
+compile_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
+compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
+
+set(SOURCES
+    AboutDialog.cpp
+    AbstractButton.cpp
+    AbstractScrollableWidget.cpp
+    AbstractSlider.cpp
+    AbstractTableView.cpp
+    AbstractThemePreview.cpp
+    AbstractView.cpp
+    AbstractZoomPanWidget.cpp
+    Action.cpp
+    ActionGroup.cpp
+    Application.cpp
+    AutocompleteProvider.cpp
+    BoxLayout.cpp
+    Breadcrumbbar.cpp
+    Button.cpp
+    Calendar.cpp
+    CheckBox.cpp
+    Clipboard.cpp
+    ColorInput.cpp
+    ColorPicker.cpp
+    ColumnsView.cpp
+    ComboBox.cpp
+    CommandPalette.cpp
+    CommonActions.cpp
+    CommonLocationsProvider.cpp
+    CommonMenus.cpp
+    ConnectionToWindowManagerServer.cpp
+    ConnectionToWindowServer.cpp
+    Desktop.cpp
+    Dialog.cpp
+    DisplayLink.cpp
+    DragOperation.cpp
+    EditingEngine.cpp
+    EmojiInputDialog.cpp
+    Event.cpp
+    FileIconProvider.cpp
+    FilePicker.cpp
+    FileSystemModel.cpp
+    FilteringProxyModel.cpp
+    FontPicker.cpp
+    Frame.cpp
+    GitCommitLexer.cpp
+    GitCommitSyntaxHighlighter.cpp
+    GlyphMapWidget.cpp
+    GML/AutocompleteProvider.cpp
+    GML/Lexer.cpp
+    GML/Parser.cpp
+    GML/SyntaxHighlighter.cpp
+    GroupBox.cpp
+    HeaderView.cpp
+    Icon.cpp
+    IconView.cpp
+    ImageWidget.cpp
+    IncrementalSearchBanner.cpp
+    INILexer.cpp
+    INISyntaxHighlighter.cpp
+    InputBox.cpp
+    JsonArrayModel.cpp
+    Label.cpp
+    Layout.cpp
+    LazyWidget.cpp
+    LinkLabel.cpp
+    ListView.cpp
+    Menu.cpp
+    Menubar.cpp
+    MenuItem.cpp
+    MessageBox.cpp
+    Model.cpp
+    ModelIndex.cpp
+    ModelSelection.cpp
+    MouseTracker.cpp
+    MultiView.cpp
+    Notification.cpp
+    OpacitySlider.cpp
+    Painter.cpp
+    PasswordInputDialog.cpp
+    PathBreadcrumbbar.cpp
+    PersistentModelIndex.cpp
+    Process.cpp
+    ProcessChooser.cpp
+    Progressbar.cpp
+    RadioButton.cpp
+    RegularEditingEngine.cpp
+    ResizeCorner.cpp
+    RunningProcessesModel.cpp
+    ScreenLayout.cpp
+    ScrollableContainerWidget.cpp
+    Scrollbar.cpp
+    SeparatorWidget.cpp
+    SettingsWindow.cpp
+    Shortcut.cpp
+    Slider.cpp
+    SortingProxyModel.cpp
+    SpinBox.cpp
+    Splitter.cpp
+    StackWidget.cpp
+    Statusbar.cpp
+    TableView.cpp
+    TabWidget.cpp
+    TextBox.cpp
+    TextDocument.cpp
+    TextEditor.cpp
+    Toolbar.cpp
+    ToolbarContainer.cpp
+    Tray.cpp
+    TreeView.cpp
+    TreeViewModel.cpp
+    UndoStack.cpp
+    ValueSlider.cpp
+    Variant.cpp
+    VimEditingEngine.cpp
+    Widget.cpp
+    Window.cpp
+    Wizards/AbstractWizardPage.cpp
+    Wizards/CoverWizardPage.cpp
+    Wizards/WizardDialog.cpp
+    Wizards/WizardPage.cpp
+)
+
+set(GENERATED_SOURCES
+    ../../Services/Clipboard/ClipboardClientEndpoint.h
+    ../../Services/Clipboard/ClipboardServerEndpoint.h
+    ../../Services/NotificationServer/NotificationClientEndpoint.h
+    ../../Services/NotificationServer/NotificationServerEndpoint.h
+    ../../Services/WindowServer/WindowClientEndpoint.h
+    ../../Services/WindowServer/WindowManagerClientEndpoint.h
+    ../../Services/WindowServer/WindowManagerServerEndpoint.h
+    ../../Services/WindowServer/WindowServerEndpoint.h
+    AboutDialogGML.h
+    EmojiInputDialogGML.h
+    FilePickerDialogGML.h
+    FontPickerDialogGML.h
+    IncrementalSearchBannerGML.h
+    PasswordInputDialogGML.h
+)
+
+serenity_lib(LibGUI gui)
+target_link_libraries(LibGUI PRIVATE LibCore LibFileSystem LibGfx LibIPC LibThreading LibRegex LibSyntax LibConfig LibUnicode)

@@ -1,0 +1,6 @@
+add_subdirectory(Audio)
+add_subdirectory(ClipboardHistory)
+add_subdirectory(Network)
+add_subdirectory(ResourceGraph)
+add_subdirectory(WorkspacePicker)
+add_subdirectory(Keymap)

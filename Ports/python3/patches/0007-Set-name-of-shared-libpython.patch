@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Julian=20Offenh=C3=A4user?= <offenhaeuser@protonmail.com>
+Date: Fri, 10 Feb 2023 22:48:34 +0100
+Subject: [PATCH] Set name of shared libpython
+
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 143ff27f07a8605510bca258bee3e621c95d34b8..1d30d0acfacfeeb31b4953e6512c51741cf9554c 100755
+--- a/configure
++++ b/configure
+@@ -6737,7 +6737,7 @@ $as_echo "#define Py_ENABLE_SHARED 1" >>confdefs.h
+ 	      PY3LIBRARY=libpython3.so
+ 	  fi
+           ;;
+-    Linux*|GNU*|NetBSD*|FreeBSD*|DragonFly*|OpenBSD*|VxWorks*)
++    Linux*|GNU*|NetBSD*|FreeBSD*|DragonFly*|OpenBSD*|VxWorks*|SerenityOS*)
+ 	  LDLIBRARY='libpython$(LDVERSION).so'
+ 	  BLDLIBRARY='-L. -lpython$(LDVERSION)'
+ 	  RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}

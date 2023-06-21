@@ -1,0 +1,67 @@
+#include <AK/URL.h>
+#include <LibCore/AnonymousBuffer.h>
+#include <LibGfx/ShareableBitmap.h>
+#include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/Page/Page.h>
+
+endpoint WebContentClient
+{
+    did_start_loading(URL url, bool is_redirect) =|
+    did_finish_loading(URL url) =|
+    did_request_navigate_back() =|
+    did_request_navigate_forward() =|
+    did_request_refresh() =|
+    did_paint(Gfx::IntRect content_rect, i32 bitmap_id) =|
+    did_invalidate_content_rect(Gfx::IntRect content_rect) =|
+    did_change_selection() =|
+    did_request_cursor_change(i32 cursor_type) =|
+    did_layout(Gfx::IntSize content_size) =|
+    did_change_title(DeprecatedString title) =|
+    did_request_scroll(i32 x_delta, i32 y_delta) =|
+    did_request_scroll_to(Gfx::IntPoint scroll_position) =|
+    did_request_scroll_into_view(Gfx::IntRect rect) =|
+    did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString title) =|
+    did_leave_tooltip_area() =|
+    did_hover_link(URL url) =|
+    did_unhover_link() =|
+    did_click_link(URL url, DeprecatedString target, unsigned modifiers) =|
+    did_middle_click_link(URL url, DeprecatedString target, unsigned modifiers) =|
+    did_request_context_menu(Gfx::IntPoint content_position) =|
+    did_request_link_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers) =|
+    did_request_image_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
+    did_request_media_context_menu(Gfx::IntPoint content_position, DeprecatedString target, unsigned modifiers, Web::Page::MediaContextMenu menu) =|
+    did_request_alert(String message) =|
+    did_request_confirm(String message) =|
+    did_request_prompt(String message, String default_) =|
+    did_request_set_prompt_text(String message) =|
+    did_request_accept_dialog() =|
+    did_request_dismiss_dialog() =|
+    did_get_source(URL url, DeprecatedString source) =|
+    did_get_dom_tree(DeprecatedString dom_tree) =|
+    did_get_dom_node_properties(i32 node_id, DeprecatedString computed_style, DeprecatedString resolved_style, DeprecatedString custom_properties, DeprecatedString node_box_sizing_json) =|
+    did_get_accessibility_tree(DeprecatedString accessibility_tree) =|
+    did_change_favicon(Gfx::ShareableBitmap favicon) =|
+    did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
+    did_request_named_cookie(URL url, DeprecatedString name) => (Optional<Web::Cookie::Cookie> cookie)
+    did_request_cookie(URL url, u8 source) => (DeprecatedString cookie)
+    did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
+    did_update_cookie(Web::Cookie::Cookie cookie) =|
+    did_update_resource_count(i32 count_waiting) =|
+    did_request_new_tab(Web::HTML::ActivateTab activate_tab) => (String handle)
+    did_request_activate_tab() =|
+    did_close_browsing_context() =|
+    did_request_restore_window() =|
+    did_request_reposition_window(Gfx::IntPoint position) => (Gfx::IntPoint window_position)
+    did_request_resize_window(Gfx::IntSize size) => (Gfx::IntSize window_size)
+    did_request_maximize_window() => (Gfx::IntRect window_rect)
+    did_request_minimize_window() => (Gfx::IntRect window_rect)
+    did_request_fullscreen_window() => (Gfx::IntRect window_rect)
+    did_request_file(DeprecatedString path, i32 request_id) =|
+    did_finish_handling_input_event(bool event_was_accepted) =|
+
+    did_output_js_console_message(i32 message_index) =|
+    did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|
+
+}

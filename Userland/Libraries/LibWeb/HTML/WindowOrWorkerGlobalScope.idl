@@ -1,0 +1,41 @@
+#import <Fetch/Request.idl>
+#import <Fetch/Response.idl>
+#import <HTML/MessagePort.idl>
+
+// FIXME: Support VoidFunction in the IDL parser
+callback VoidFunction = undefined ();
+
+// https://html.spec.whatwg.org/#timerhandler
+typedef (DOMString or Function) TimerHandler;
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
+interface mixin WindowOrWorkerGlobalScope {
+    [Replaceable] readonly attribute USVString origin;
+    readonly attribute boolean isSecureContext;
+    readonly attribute boolean crossOriginIsolated;
+
+    // FIXME: undefined reportError(any e);
+
+    // base64 utility methods
+    DOMString btoa(DOMString data);
+    ByteString atob(DOMString data);
+
+    // timers
+    long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
+    undefined clearTimeout(optional long id = 0);
+    long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
+    undefined clearInterval(optional long id = 0);
+
+    // microtask queuing
+    undefined queueMicrotask(VoidFunction callback);
+
+    // ImageBitmap
+    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});
+    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
+
+    // structured cloning
+    any structuredClone(any value, optional StructuredSerializeOptions options = {});
+
+    // https://fetch.spec.whatwg.org/#fetch-method
+    [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init = {});
+};

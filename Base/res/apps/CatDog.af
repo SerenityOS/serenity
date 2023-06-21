@@ -1,0 +1,4 @@
+[App]
+Name=CatDog
+Executable=/bin/CatDog
+Category=Demos

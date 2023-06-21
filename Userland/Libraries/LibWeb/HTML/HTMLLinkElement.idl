@@ -1,0 +1,23 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmllinkelement
+[Exposed=Window]
+interface HTMLLinkElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString href;
+    [CEReactions, Reflect] attribute DOMString hreflang;
+    [CEReactions, Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect] attribute DOMString media;
+    [CEReactions, Reflect] attribute DOMString rel;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect=imagesrcset] attribute DOMString imageSrcset;
+    [CEReactions, Reflect=imagesizes] attribute DOMString imageSizes;
+    [CEReactions, Reflect] attribute boolean disabled;
+
+    [CEReactions, Reflect] attribute DOMString charset;
+    [CEReactions, Reflect] attribute DOMString rev;
+    [CEReactions, Reflect] attribute DOMString target;
+
+};

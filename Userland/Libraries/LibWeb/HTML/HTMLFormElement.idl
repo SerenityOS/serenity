@@ -1,0 +1,28 @@
+#import <DOM/HTMLCollection.idl>
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
+[Exposed=Window]
+interface HTMLFormElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString rel;
+    [CEReactions] attribute DOMString method;
+    [CEReactions, Reflect=accept-charset] attribute DOMString acceptCharset;
+    [CEReactions, Reflect=novalidate] attribute boolean noValidate;
+    [CEReactions] attribute USVString action;
+    [CEReactions, Reflect] attribute DOMString target;
+
+    undefined submit();
+    [CEReactions] undefined reset();
+    boolean checkValidity();
+    boolean reportValidity();
+
+    // FIXME: Should be a HTMLFormControlsCollection
+    [SameObject] readonly attribute HTMLCollection elements;
+
+    readonly attribute unsigned long length;
+
+};

@@ -1,0 +1,44 @@
+#import <CSS/ElementCSSInlineStyle.idl>
+#import <HTML/DOMStringMap.idl>
+#import <DOM/EventHandler.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlelement
+[Exposed=Window]
+interface HTMLElement : Element {
+
+    [HTMLConstructor] constructor();
+
+    [Reflect, CEReactions] attribute DOMString title;
+    [Reflect, CEReactions] attribute DOMString lang;
+    [CEReactions] attribute DOMString dir;
+
+    [Reflect, CEReactions] attribute boolean hidden;
+
+    attribute DOMString contentEditable;
+
+    undefined click();
+
+    // FIXME: Support the optional FocusOptions parameter.
+    undefined focus();
+
+    undefined blur();
+
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
+
+    readonly attribute long offsetTop;
+    readonly attribute long offsetLeft;
+    readonly attribute long offsetWidth;
+    readonly attribute long offsetHeight;
+};
+
+HTMLElement includes GlobalEventHandlers;
+HTMLElement includes HTMLOrSVGElement;
+
+interface mixin HTMLOrSVGElement {
+    [SameObject] readonly attribute DOMStringMap dataset;
+
+    [CEReactions, Reflect] attribute boolean autofocus;
+    [CEReactions] attribute long tabIndex;
+};
+
+HTMLElement includes ElementCSSInlineStyle;

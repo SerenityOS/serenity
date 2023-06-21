@@ -1,0 +1,62 @@
+#import <HTML/AudioTrackList.idl>
+#import <HTML/HTMLElement.idl>
+#import <HTML/MediaError.idl>
+#import <HTML/TimeRanges.idl>
+#import <HTML/VideoTrackList.idl>
+
+enum CanPlayTypeResult {
+    "",
+    "maybe",
+    "probably"
+};
+
+// https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement
+[Exposed=Window]
+interface HTMLMediaElement : HTMLElement {
+
+    // error state
+    readonly attribute MediaError? error;
+
+    // network state
+    [Reflect, CEReactions] attribute DOMString src;
+    readonly attribute USVString currentSrc;
+    [Reflect=crossorigin, CEReactions] attribute DOMString? crossOrigin;
+    const unsigned short NETWORK_EMPTY = 0;
+    const unsigned short NETWORK_IDLE = 1;
+    const unsigned short NETWORK_LOADING = 2;
+    const unsigned short NETWORK_NO_SOURCE = 3;
+    readonly attribute unsigned short networkState;
+    readonly attribute TimeRanges buffered;
+    undefined load();
+    CanPlayTypeResult canPlayType(DOMString type);
+
+    // ready state
+    const unsigned short HAVE_NOTHING = 0;
+    const unsigned short HAVE_METADATA = 1;
+    const unsigned short HAVE_CURRENT_DATA = 2;
+    const unsigned short HAVE_FUTURE_DATA = 3;
+    const unsigned short HAVE_ENOUGH_DATA = 4;
+    readonly attribute unsigned short readyState;
+    readonly attribute boolean seeking;
+
+    // playback state
+    attribute double currentTime;
+    undefined fastSeek(double time);
+    readonly attribute unrestricted double duration;
+    readonly attribute boolean paused;
+    readonly attribute boolean ended;
+    [Reflect, CEReactions] attribute boolean autoplay;
+    [Reflect, CEReactions] attribute boolean loop;
+    Promise<undefined> play();
+    undefined pause();
+
+    // controls
+    [Reflect, CEReactions] attribute boolean controls;
+    attribute double volume;
+    attribute boolean muted;
+    [Reflect=muted, CEReactions] attribute boolean defaultMuted;
+
+    // tracks
+    [SameObject] readonly attribute AudioTrackList audioTracks;
+    [SameObject] readonly attribute VideoTrackList videoTracks;
+};

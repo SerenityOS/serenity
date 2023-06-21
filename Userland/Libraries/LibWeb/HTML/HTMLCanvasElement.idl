@@ -1,0 +1,19 @@
+#import <HTML/CanvasRenderingContext2D.idl>
+#import <HTML/HTMLElement.idl>
+#import <WebGL/WebGLRenderingContext.idl>
+
+typedef (CanvasRenderingContext2D or WebGLRenderingContext) RenderingContext;
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlcanvaselement
+[Exposed=Window]
+interface HTMLCanvasElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    RenderingContext? getContext(DOMString contextId, optional any options = null);
+    [CEReactions] attribute unsigned long width;
+    [CEReactions] attribute unsigned long height;
+
+    USVString toDataURL(optional DOMString type = "image/png", optional double quality);
+
+};

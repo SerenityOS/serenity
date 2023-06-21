@@ -1,0 +1,7 @@
+#import <SVG/SVGElement.idl>
+#import <SVG/SVGAnimatedNumber.idl>
+
+[Exposed=Window]
+interface SVGStopElement : SVGElement {
+  [SameObject] readonly attribute SVGAnimatedNumber offset;
+};

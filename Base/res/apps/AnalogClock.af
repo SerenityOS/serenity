@@ -1,0 +1,4 @@
+[App]
+Name=Analog Clock
+Executable=/bin/AnalogClock
+Category=Utilities

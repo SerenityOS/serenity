@@ -1,0 +1,26 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/tables.html#htmltablecellelement
+[Exposed=Window]
+interface HTMLTableCellElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions] attribute unsigned long colSpan;
+    [CEReactions] attribute unsigned long rowSpan;
+    [CEReactions, Reflect] attribute DOMString headers;
+    [CEReactions, Reflect] attribute DOMString abbr;
+
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString axis;
+    [CEReactions, Reflect] attribute DOMString height;
+    [CEReactions, Reflect] attribute DOMString width;
+
+    [CEReactions, Reflect=char] attribute DOMString ch;
+    [CEReactions, Reflect=charoff] attribute DOMString chOff;
+    [CEReactions, Reflect=nowrap] attribute boolean noWrap;
+    [CEReactions, Reflect=valign] attribute DOMString vAlign;
+
+    [CEReactions, LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+
+};

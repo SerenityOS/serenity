@@ -1,0 +1,179 @@
+parameters:
+  os: 'Linux'
+  fuzzer: 'NoFuzz'
+  lagom_lints: false
+
+jobs:
+  - job: 'Lagom_${{ parameters.os }}_${{ parameters.fuzzer }}'
+    timeoutInMinutes: 0 # Setting to 0 means the maximum allowed timeout is used.
+
+    variables:
+    - name: SERENITY_CCACHE_DIR
+      value: $(Build.SourcesDirectory)/.ccache
+
+    - name: job_pool
+      ${{ if or(eq(parameters.os, 'Linux'), eq(parameters.os, 'Android')) }}:
+        value: ubuntu-22.04
+      ${{ if eq(parameters.os, 'macOS') }}:
+        value: macos-12
+
+    - name: toolchain
+      ${{ if eq(parameters.fuzzer, 'Fuzz') }}:
+        value: clang
+      ${{ if eq(parameters.fuzzer, 'NoFuzz') }}:
+        value: gcc
+
+    - name: host-cc
+      ${{ if eq(parameters.os, 'macOS') }}:
+        value: $(brew --prefix llvm@15)/bin/clang
+      ${{ if not(eq(parameters.os, 'macOS')) }}:
+        value: gcc-12
+
+    - name: host-cxx
+      ${{ if eq(parameters.os, 'macOS') }}:
+        value: $(brew --prefix llvm@15)/bin/clang++
+      ${{ if not(eq(parameters.os, 'macOS')) }}:
+        value: g++-12
+
+    - name: ndk_version # only relevant for Android
+      value: '25.2.9519653'
+
+    pool:
+      vmImage: $(job_pool)
+
+    steps:
+    - template: Setup.yml
+      parameters:
+        os: '${{ parameters.os }}'
+
+    - template: Caches.yml
+      parameters:
+        os: '${{ parameters.os }}'
+        arch: 'Lagom'
+        toolchain: '$(toolchain)'
+        download_cache_path: 'Meta/Lagom/Build'
+        serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
+        with_remote_data_caches: true
+        ${{ if eq(parameters.os, 'macOS') }}:
+          ccache_version: 2
+          serenity_ccache_size: '2G'
+
+    - ${{ if eq(parameters.os, 'Android') }}:
+      - script: |
+          yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "ndk;$(ndk_version)"
+        displayName: "Install NDK $(ndk_version)"
+
+      - script: |
+          set -e
+          cmake -GNinja -B tools-build \
+            -DBUILD_LAGOM=OFF \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DCMAKE_C_COMPILER=$(host-cc) \
+            -DCMAKE_CXX_COMPILER=$(host-cxx) \
+            -DCMAKE_INSTALL_PREFIX=tool-install \
+            -Dpackage=LagomTools
+          ninja -C tools-build install
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_NATIVE_API_LEVEL=30 \
+            -DANDROID_NDK=$ANDROID_SDK_ROOT/ndk/$(ndk_version) \
+            -DANDROID_STL=c++_shared \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/$(ndk_version)/build/cmake/android.toolchain.cmake \
+            -DLagomTools_DIR=$(Build.SourcesDirectory)/Meta/Lagom/tool-install/share/LagomTools
+        displayName: 'Create Build Environment'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
+    - ${{ elseif eq(parameters.fuzzer, 'Fuzz') }}:
+      - script: |
+          set -e
+          cmake -GNinja -B tools-build \
+              -DBUILD_LAGOM=OFF \
+              -DENABLE_LAGOM_CCACHE=ON \
+              -DCMAKE_INSTALL_PREFIX=tool-install \
+              -Dpackage=LagomTools
+          ninja -C tools-build install
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DENABLE_FUZZERS_LIBFUZZER=ON \
+            -DENABLE_ADDRESS_SANITIZER=ON \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_PREFIX_PATH=tool-install
+        displayName: 'Create Build Environment'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+    - ${{ elseif eq(parameters.fuzzer, 'NoFuzz') }}:
+      - script: |
+          set -e
+          cmake -GNinja -B Build \
+            -DBUILD_LAGOM=ON \
+            -DENABLE_LAGOM_CCACHE=ON \
+            -DENABLE_LAGOM_LADYBIRD=ON \
+            -DINCLUDE_WASM_SPEC_TESTS=ON \
+            -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
+            -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DENABLE_ADDRESS_SANITIZER=ON \
+            -DCMAKE_C_COMPILER=$(host-cc) \
+            -DCMAKE_CXX_COMPILER=$(host-cxx)
+        displayName: 'Create Build Environment'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+        env:
+          PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
+    - script: |
+        set -e
+        cmake --build .
+        cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
+      displayName: 'Build'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      env:
+        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
+    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), not(eq(parameters.os, 'Android')) ) }}:
+      - script: |
+          set -e
+          ninja test
+        displayName: 'Test'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        env:
+          SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
+          CTEST_OUTPUT_ON_FAILURE: 1
+          # FIXME: enable detect_stack_use_after_return=1 #7420
+          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=0'
+          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+
+    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'Linux') ) }}:
+      - script: |
+          ./run.sh
+        displayName: 'WPT'
+        workingDirectory: $(Build.SourcesDirectory)/Tests/LibWeb/WPT/
+        env:
+          SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
+          QT_QPA_PLATFORM: 'offscreen'
+
+    - ${{ if eq(parameters.lagom_lints, true) }}:
+      - script: |
+          set -e
+          ./Meta/check-markdown.sh
+          ./Meta/lint-gml-format.sh
+          git ls-files '*.ipc' | xargs ./Meta/Lagom/Build/bin/IPCMagicLinter
+        displayName: 'Run lints that require Lagom'
+        workingDirectory: $(Build.SourcesDirectory)/
+        env:
+          MARKDOWN_CHECK_BINARY: ./Meta/Lagom/Build/bin/markdown-check
+          GML_FORMAT: ./Meta/Lagom/Build/bin/gml-format
+          # FIXME: enable detect_stack_use_after_return=1 #7420
+          ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=0'
+          UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+
+    - script: |
+        CCACHE_DIR='$(SERENITY_CCACHE_DIR)' ccache -s
+      displayName: 'Cache Stats'

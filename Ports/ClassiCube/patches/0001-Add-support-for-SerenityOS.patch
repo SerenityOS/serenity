@@ -1,0 +1,161 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: cflip <cflip@cflip.net>
+Date: Fri, 14 Oct 2022 21:28:37 -0600
+Subject: [PATCH] Add support for SerenityOS
+
+---
+ Core.h           |  8 ++++++++
+ Drawer2D.c       |  1 +
+ Http_Worker.c    |  3 +++
+ Logger.c         | 19 ++++++++++++++++++-
+ Makefile         |  9 ++++++++-
+ Platform_Posix.c |  6 +++++-
+ 6 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/Core.h b/Core.h
+index bdefce2fb420bc1d30ab7d1448d2501d6ba247ee..29eb2973727cb4b98bb01fdf02c65240017f86f5 100644
+--- a/Core.h
++++ b/Core.h
+@@ -239,6 +239,14 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
+ #define CC_BUILD_CURL
+ #define CC_BUILD_OPENAL
+ #define CC_BUILD_SDL
++#elif defined __serenity__
++#define CC_BUILD_SERENITY
++#define CC_BUILD_POSIX
++#define CC_BUILD_GL
++#define CC_BUILD_GL11
++#define CC_BUILD_CURL
++#define CC_BUILD_OPENAL
++#define CC_BUILD_SDL
+ #elif defined __EMSCRIPTEN__
+ #define CC_BUILD_WEB
+ #define CC_BUILD_GL
+diff --git a/Drawer2D.c b/Drawer2D.c
+index f66b9024aa2b27ea87cf332873d9156fccdc63fe..5bfbdd030c72f2ee9471c7b5444f6499b91ca64b 100644
+--- a/Drawer2D.c
++++ b/Drawer2D.c
+@@ -811,6 +811,7 @@ static cc_string font_candidates[] = {
+ 	String_FromConst(""),                /* replaced with font_default */
+ 	String_FromConst("Arial"),           /* preferred font on all platforms */
+ 	String_FromConst("Liberation Sans"), /* ice looking fallbacks for linux */
++	String_FromConst("Liberation Serif"),
+ 	String_FromConst("Nimbus Sans"),
+ 	String_FromConst("Bitstream Charter"),
+ 	String_FromConst("Cantarell"),
+diff --git a/Http_Worker.c b/Http_Worker.c
+index 936361eb04a8a5e56820ca827a8e72020da17451..514494fc516960fc17824406a2c49d72cf31f7f4 100644
+--- a/Http_Worker.c
++++ b/Http_Worker.c
+@@ -254,6 +254,9 @@ static const cc_string curlAlt = String_FromConst("/usr/pkg/lib/libcurl.so");
+ #elif defined CC_BUILD_BSD
+ static const cc_string curlLib = String_FromConst("libcurl.so");
+ static const cc_string curlAlt = String_FromConst("libcurl.so");
++#elif defined CC_BUILD_SERENITY
++static const cc_string curlLib = String_FromConst("/usr/local/lib/libcurl.so");
++static const cc_string curlAlt = String_FromConst("/usr/local/lib/libcurl.so");
+ #else
+ static const cc_string curlLib = String_FromConst("libcurl.so.4");
+ static const cc_string curlAlt = String_FromConst("libcurl.so.3");
+diff --git a/Logger.c b/Logger.c
+index 14ff7d6ab8455294b83bb36fb29ea6994a883c25..4eb3d1d4ad63a24d9030a98c1fc02816369ef728 100644
+--- a/Logger.c
++++ b/Logger.c
+@@ -16,7 +16,7 @@
+ #define NOIME
+ #include <windows.h>
+ #include <imagehlp.h>
+-#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU
++#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU || defined CC_BUILD_SERENITY
+ #include <signal.h>
+ /* OpenBSD doesn't provide sys/ucontext.h */
+ #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
+@@ -343,6 +343,10 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
+ 	}
+ 	String_AppendConst(trace, _NL);
+ }
++#elif defined CC_BUILD_SERENITY
++void Logger_Backtrace(cc_string* trace, void* ctx) {
++	/* FIXME: Implement */
++}
+ #elif defined CC_BUILD_POSIX
+ #include <execinfo.h>
+ void Logger_Backtrace(cc_string* trace, void* ctx) {
+@@ -667,6 +671,19 @@ static void PrintRegisters(cc_string* str, void* ctx) {
+ 	#error "Unknown CPU architecture"
+ #endif
+ }
++#elif defined CC_BUILD_SERENITY
++static void PrintRegisters(cc_string* str, void* ctx) {
++	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
++#if defined __i386__
++	#define REG_GET(reg, ign) &r.e##reg
++	Dump_X86()
++#elif defined __x86_64__
++	#define REG_GET(reg, ign) &r.r##reg
++	Dump_X64()
++#else
++	#error "Unknown CPU architecture"
++#endif
++}
+ #endif
+ static void DumpRegisters(void* ctx) {
+ 	cc_string str; char strBuffer[768];
+diff --git a/Makefile b/Makefile
+index 6c7152071c94116b4cf3d175fa8bd0c0652b77ff..73d6e386dedd38b9ffd558aa13ce3f0390bd601e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,7 +4,6 @@ OBJECTS:=$(C_OBJECTS)
+ ENAME=ClassiCube
+ DEL=rm
+ JOBS=1
+-CC=cc
+ CFLAGS=-g -pipe -fno-math-errno
+ LDFLAGS=-g -rdynamic
+ 
+@@ -92,6 +91,12 @@ LDFLAGS=-g
+ LIBS=-lm -lexecinfo -lGL -lnetwork -lstdc++ -lbe -lgame -ltracker
+ endif
+ 
++ifeq ($(PLAT),serenity)
++CFLAGS=-g -pipe -fno-math-errno
++LDFLAGS=-g
++LIBS=-lgl -lSDL2
++endif
++
+ ifeq ($(OS),Windows_NT)
+ DEL=del
+ endif
+@@ -120,6 +125,8 @@ dragonfly:
+ 	$(MAKE) $(ENAME) PLAT=dragonfly -j$(JOBS)
+ haiku:
+ 	$(MAKE) $(ENAME) PLAT=haiku -j$(JOBS)
++serenity:
++	$(MAKE) $(ENAME) PLAT=serenity -j$(JOBS)
+ 	
+ clean:
+ 	$(DEL) $(OBJECTS)
+diff --git a/Platform_Posix.c b/Platform_Posix.c
+index 2a410f00d96460decb16bd703caa5163d4e2ff63..31f9cc7e3e60a31e336e025bfefa0865984dc7b8 100644
+--- a/Platform_Posix.c
++++ b/Platform_Posix.c
+@@ -445,6 +445,10 @@ void Platform_LoadSysFonts(void) {
+ 	static const cc_string dirs[] = {
+ 		String_FromConst("/system/data/fonts")
+ 	};
++#elif defined CC_BUILD_SERENITY
++	static const cc_string dirs[] = {
++		String_FromConst("/res/fonts")
++	};
+ #elif defined CC_BUILD_DARWIN
+ 	static const cc_string dirs[] = {
+ 		String_FromConst("/System/Library/Fonts"),
+@@ -700,7 +704,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
+ 	*len = String_CalcLen(path, NATIVE_STR_LEN);
+ 	return 0;
+ }
+-#elif defined CC_BUILD_LINUX
++#elif defined CC_BUILD_LINUX || defined CC_BUILD_SERENITY
+ static cc_result Process_RawGetExePath(char* path, int* len) {
+ 	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
+ 	return *len == -1 ? errno : 0;

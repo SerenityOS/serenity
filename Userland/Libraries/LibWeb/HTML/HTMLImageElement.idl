@@ -1,0 +1,27 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#htmlimageelement
+[Exposed=Window, LegacyFactoryFunction=Image(optional unsigned long width, optional unsigned long height)]
+interface HTMLImageElement : HTMLElement {
+
+    [HTMLConstructor] constructor();
+
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString alt;
+    [CEReactions, Reflect] attribute DOMString srcset;
+    [CEReactions, Reflect] attribute DOMString sizes;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
+    [CEReactions, Reflect=ismap] attribute boolean isMap;
+
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
+
+    [CEReactions] attribute unsigned long width;
+    [CEReactions] attribute unsigned long height;
+    readonly attribute unsigned long naturalWidth;
+    readonly attribute unsigned long naturalHeight;
+
+    readonly attribute boolean complete;
+
+};

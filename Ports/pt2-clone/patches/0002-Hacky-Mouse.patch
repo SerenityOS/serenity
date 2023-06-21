@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Tue, 5 Apr 2022 14:55:01 +0200
+Subject: [PATCH] Hacky Mouse
+
+Set video.useDesktopMouseCoords to false.
+---
+ src/pt2_visuals.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pt2_visuals.c b/src/pt2_visuals.c
+index 40527f5..0b73b9a 100644
+--- a/src/pt2_visuals.c
++++ b/src/pt2_visuals.c
+@@ -2416,7 +2416,7 @@ bool setupVideo(void)
+ 		SDL_ShowCursor(SDL_FALSE);
+ 
+ 	// Workaround: SDL_GetGlobalMouseState() doesn't work with KMSDRM/Wayland
+-	video.useDesktopMouseCoords = true;
++	video.useDesktopMouseCoords = false;
+ 	const char *videoDriver = SDL_GetCurrentVideoDriver();
+ 	if (videoDriver != NULL && (strcmp("KMSDRM", videoDriver) == 0 || strcmp("wayland", videoDriver) == 0))
+ 		video.useDesktopMouseCoords = false;

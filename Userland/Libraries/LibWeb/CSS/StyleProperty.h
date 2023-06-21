@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/DeprecatedString.h>
+#include <LibWeb/CSS/PropertyID.h>
+
+namespace Web::CSS {
+
+enum class Important {
+    No,
+    Yes,
+};
+
+struct StyleProperty {
+    ~StyleProperty();
+
+    Important important { Important::No };
+    CSS::PropertyID property_id;
+    NonnullRefPtr<StyleValue const> value;
+    DeprecatedString custom_name {};
+};
+
+}
