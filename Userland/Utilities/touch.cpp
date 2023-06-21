@@ -239,16 +239,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (update_mtime && !update_atime)
         atime.tv_nsec = UTIME_OMIT;
 
+    auto has_errors = false;
     for (auto path : paths) {
         if (FileSystem::exists(path)) {
-            if (utimensat(AT_FDCWD, path.characters(), times, 0) == -1)
-                err("failed to touch '{}': {}", path, strerror(errno));
+            if (utimensat(AT_FDCWD, path.characters(), times, 0) == -1) {
+                warnln("failed to touch '{}': {}", path, strerror(errno));
+                has_errors = true;
+            }
         } else if (!no_create_file) {
-            int fd = TRY(Core::System::open(path, O_CREAT, 0100644));
-            if (futimens(fd, times) == -1)
-                err("failed to touch '{}': {}", path, strerror(errno));
-            TRY(Core::System::close(fd));
+            auto error_or_fd = Core::System::open(path, O_CREAT, 0100644);
+            if (error_or_fd.is_error()) {
+                warnln("failed to open '{}': {}", path, strerror(error_or_fd.error().code()));
+                has_errors = true;
+                continue;
+            }
+
+            if (futimens(error_or_fd.value(), times) == -1) {
+                warnln("failed to touch '{}': {}", path, strerror(errno));
+                has_errors = true;
+                continue;
+            }
+            (void)Core::System::close(error_or_fd.value());
         }
     }
-    return 0;
+    return has_errors ? 1 : 0;
 }
