@@ -257,7 +257,8 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
     }
     case GenericAddressStructure::AddressSpace::SystemMemory: {
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
-        switch ((GenericAddressStructure::AccessSize)structure.access_size) {
+        auto access_size = structure.access_size ?: (structure.bit_width / 8);
+        switch ((GenericAddressStructure::AccessSize)access_size) {
         case GenericAddressStructure::AccessSize::Byte:
             *Memory::map_typed_writable<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
