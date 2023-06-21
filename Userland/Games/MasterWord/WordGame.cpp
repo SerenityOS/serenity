@@ -42,7 +42,7 @@ void WordGame::reset()
     if (maybe_word.has_value())
         m_current_word = maybe_word.value();
     else {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters), "MasterWord"sv);
+        GUI::MessageBox::show(window(), String::formatted("Could not get a random {} letter word. Defaulting to 5.", m_num_letters).release_value_but_fixme_should_propagate_errors(), "MasterWord"sv);
         if (m_num_letters != 5) {
             m_num_letters = 5;
             reset();
@@ -55,7 +55,7 @@ void WordGame::reset()
 
 void WordGame::pick_font()
 {
-    DeprecatedString best_font_name;
+    String best_font_name;
     auto best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
@@ -63,7 +63,7 @@ void WordGame::pick_font()
             return;
         auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_letter_height && size > best_font_size) {
-            best_font_name = font.qualified_name();
+            best_font_name = String::from_deprecated_string(font.qualified_name()).release_value_but_fixme_should_propagate_errors();
             best_font_size = size;
         }
     });
@@ -81,18 +81,18 @@ void WordGame::resize_event(GUI::ResizeEvent&)
 void WordGame::keydown_event(GUI::KeyEvent& event)
 {
     // If we can still add a letter and the key was alpha
-    if (m_current_guess.length() < m_num_letters && is_ascii_alpha(event.code_point())) {
-        m_current_guess = DeprecatedString::formatted("{}{}", m_current_guess, event.text().to_uppercase());
+    if (m_current_guess.bytes_as_string_view().length() < m_num_letters && is_ascii_alpha(event.code_point())) {
+        m_current_guess = String::formatted("{}{}", m_current_guess, event.text().to_uppercase()).release_value_but_fixme_should_propagate_errors();
         m_last_word_invalid = false;
     }
     // If backspace pressed and already have some letters entered
-    else if (event.key() == KeyCode::Key_Backspace && m_current_guess.length() > 0) {
-        m_current_guess = m_current_guess.substring(0, m_current_guess.length() - 1);
+    else if (event.key() == KeyCode::Key_Backspace && m_current_guess.bytes_as_string_view().length() > 0) {
+        m_current_guess = String::from_utf8(m_current_guess.bytes_as_string_view().substring_view(0, m_current_guess.bytes_as_string_view().length() - 1)).release_value_but_fixme_should_propagate_errors();
         m_last_word_invalid = false;
     }
     // If return pressed
     else if (event.key() == KeyCode::Key_Return) {
-        if (m_current_guess.length() < m_num_letters) {
+        if (m_current_guess.bytes_as_string_view().length() < m_num_letters) {
             show_message("Not enough letters"sv);
             m_last_word_invalid = true;
         } else if (!is_in_dictionary(m_current_guess)) {
@@ -109,7 +109,7 @@ void WordGame::keydown_event(GUI::KeyEvent& event)
                 GUI::MessageBox::show(window(), "You win!"sv, "MasterWord"sv);
                 reset();
             } else if (m_guesses.size() == m_max_guesses) {
-                GUI::MessageBox::show(window(), DeprecatedString::formatted("You lose!\nThe word was {}", m_current_word), "MasterWord"sv);
+                GUI::MessageBox::show(window(), String::formatted("You lose!\nThe word was {}", m_current_word).release_value_but_fixme_should_propagate_errors(), "MasterWord"sv);
                 reset();
             }
         }
@@ -146,10 +146,10 @@ void WordGame::paint_event(GUI::PaintEvent& event)
                     break;
                 }
 
-                painter.draw_text(this_rect, m_guesses[guess_index].text.substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
+                painter.draw_text(this_rect, m_guesses[guess_index].text.bytes_as_string_view().substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
             } else if (guess_index == m_guesses.size()) {
-                if (letter_index < m_current_guess.length())
-                    painter.draw_text(this_rect, m_current_guess.substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
+                if (letter_index < m_current_guess.bytes_as_string_view().length())
+                    painter.draw_text(this_rect, m_current_guess.bytes_as_string_view().substring_view(letter_index, 1), font(), Gfx::TextAlignment::Center, m_text_color);
                 if (m_last_word_invalid) {
                     painter.fill_rect(this_rect, m_word_not_in_dict_color);
                 }
@@ -169,7 +169,7 @@ Gfx::IntRect WordGame::letter_rect(size_t guess_number, size_t letter_number) co
 
 bool WordGame::is_in_dictionary(AK::StringView guess)
 {
-    return !m_check_guesses || !m_words.ensure(guess.length()).find(guess).is_end();
+    return !m_check_guesses || !m_words.ensure(guess.length()).find(String::from_utf8(guess).release_value_but_fixme_should_propagate_errors()).is_end();
 }
 
 void WordGame::read_words()
@@ -184,7 +184,7 @@ void WordGame::read_words()
         while (!words_file->is_eof()) {
             auto current_word = TRY(words_file->read_line(buffer));
             if (!current_word.starts_with('#') and current_word.length() > 0)
-                m_words.ensure(current_word.length()).append(current_word.to_uppercase_string());
+                m_words.ensure(current_word.length()).append(String::from_deprecated_string(current_word.to_uppercase_string()).release_value_but_fixme_should_propagate_errors());
         }
 
         return {};
@@ -196,7 +196,7 @@ void WordGame::read_words()
     }
 }
 
-Optional<DeprecatedString> WordGame::random_word(size_t length)
+Optional<String> WordGame::random_word(size_t length)
 {
     auto words_for_length = m_words.get(length);
     if (words_for_length.has_value()) {
@@ -278,10 +278,10 @@ void WordGame::add_guess(AK::StringView guess)
     AK::Vector<LetterState> letter_states;
 
     auto number_correct_for_letter = [this, &guess](StringView letter) -> size_t {
-        VERIFY(m_current_word.length() == guess.length());
+        VERIFY(m_current_word.bytes_as_string_view().length() == guess.length());
         auto correct_count = 0;
-        for (size_t i = 0; i < m_current_word.length(); ++i) {
-            if (m_current_word.substring_view(i, 1) == letter && guess.substring_view(i, 1) == letter)
+        for (size_t i = 0; i < m_current_word.bytes_as_string_view().length(); ++i) {
+            if (m_current_word.bytes_as_string_view().substring_view(i, 1) == letter && guess.substring_view(i, 1) == letter)
                 ++correct_count;
         }
         return correct_count;
@@ -290,7 +290,7 @@ void WordGame::add_guess(AK::StringView guess)
     for (size_t letter_index = 0; letter_index < m_num_letters; ++letter_index) {
         auto guess_letter = guess.substring_view(letter_index, 1);
 
-        if (m_current_word[letter_index] == guess_letter[0])
+        if (m_current_word.bytes_as_string_view()[letter_index] == guess_letter[0])
             letter_states.append(Correct);
         else if (m_current_word.contains(guess_letter)) {
             auto occurrences_in_word = m_current_word.count(guess_letter);
@@ -304,7 +304,7 @@ void WordGame::add_guess(AK::StringView guess)
             letter_states.append(Incorrect);
     }
 
-    m_guesses.append({ guess, letter_states });
+    m_guesses.append({ String::from_utf8(guess).release_value_but_fixme_should_propagate_errors(), letter_states });
     update();
 }
 
