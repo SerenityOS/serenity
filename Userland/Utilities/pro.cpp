@@ -233,11 +233,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool following_url = false;
 
     u64 previous_downloaded_size = 0;
+    u64 current_bytes_per_second_speed = 0;
     u32 const report_time_in_ms = 100;
     u32 const speed_update_time_in_ms = 4000;
 
-    timeval previous_time, current_time, time_diff;
-    gettimeofday(&previous_time, nullptr);
+    auto previous_report_time = MonotonicTime::now();
+    auto previous_speed_update_time = previous_report_time;
 
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
@@ -260,6 +261,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("* Skipping adding Authorization header, request was not for the HTTP protocol.");
     }
 
+    auto update_progress = [&](Optional<u64> maybe_total_size, u64 downloaded_size, bool force_update) {
+        auto current_time = MonotonicTime::now();
+        if (!force_update && (current_time - previous_report_time).to_milliseconds() < report_time_in_ms)
+            return;
+
+        previous_report_time = current_time;
+        warn("\r\033[2K");
+        if (maybe_total_size.has_value()) {
+            warn("\033]9;{};{};\033\\", downloaded_size, maybe_total_size.value());
+            warn("Download progress: {} / {}", human_readable_size(downloaded_size), human_readable_size(maybe_total_size.value()));
+        } else {
+            warn("Download progress: {} / ???", human_readable_size(downloaded_size));
+        }
+
+        auto time_diff_ms = (current_time - previous_speed_update_time).to_milliseconds();
+        if ((force_update && previous_downloaded_size == 0) || time_diff_ms > speed_update_time_in_ms) {
+            auto size_diff = downloaded_size - previous_downloaded_size;
+            previous_speed_update_time = current_time;
+            previous_downloaded_size = downloaded_size;
+            current_bytes_per_second_speed = size_diff * 1000 / time_diff_ms;
+        }
+
+        if (previous_downloaded_size == 0)
+            warn(" at --.-B/s");
+        else
+            warn(" at {}/s", human_readable_size(current_bytes_per_second_speed));
+    };
+
     Function<void()> setup_request = [&] {
         if (!request) {
             warnln("Failed to start request for '{}'", url_str);
@@ -275,27 +304,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         request->on_progress = [&](Optional<u64> maybe_total_size, u64 downloaded_size) {
-            gettimeofday(&current_time, nullptr);
-            timersub(&current_time, &previous_time, &time_diff);
-            auto time_diff_ms = time_diff.tv_sec * 1000 + time_diff.tv_usec / 1000;
-            if (time_diff_ms < report_time_in_ms)
-                return;
-
-            warn("\r\033[2K");
-            if (maybe_total_size.has_value()) {
-                warn("\033]9;{};{};\033\\", downloaded_size, maybe_total_size.value());
-                warn("Download progress: {} / {}", human_readable_size(downloaded_size), human_readable_size(maybe_total_size.value()));
-            } else {
-                warn("Download progress: {} / ???", human_readable_size(downloaded_size));
-            }
-
-            auto size_diff = downloaded_size - previous_downloaded_size;
-            if (time_diff_ms > speed_update_time_in_ms) {
-                previous_time = current_time;
-                previous_downloaded_size = downloaded_size;
-            }
-
-            warn(" at {}/s", human_readable_size(((float)size_diff / (float)time_diff_ms) * 1000));
+            update_progress(move(maybe_total_size), downloaded_size, false);
         };
         request->on_headers_received = [&](auto& response_headers, auto status_code) {
             if (received_actual_headers)
@@ -386,9 +395,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     warnln("Request returned error {}", status_code_value);
             }
         };
-        request->on_finish = [&](bool success, auto) {
+        request->on_finish = [&](bool success, u64 total_size) {
             if (following_url)
                 return;
+
+            if (success)
+                update_progress(total_size, total_size, true);
 
             warn("\033]9;-1;\033\\");
             warnln();
