@@ -127,6 +127,12 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     VERIFY(do_reboot == DoReboot::No);
 
     dbgln("Attempting system shutdown...");
+    if (ACPI::is_enabled()) {
+        auto result = ACPI::Parser::the()->try_acpi_shutdown();
+        if (result.is_error()) {
+            dbgln("ACPI shutdown failed: {}", result.error());
+        }
+    }
     arch_specific_poweroff(PowerOffOrRebootReason::NoReason);
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
     Processor::halt();
