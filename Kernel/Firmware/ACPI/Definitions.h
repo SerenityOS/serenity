@@ -163,6 +163,11 @@ struct [[gnu::packed]] GenericAddressStructure {
     u8 bit_offset;
     u8 access_size;
     u64 address;
+
+    [[nodiscard]] bool is_nonzero() const
+    {
+        return address_space != 0 || bit_width != 0 || bit_offset != 0 || access_size != 0 || address != 0;
+    }
 };
 
 struct [[gnu::packed]] HPET {
@@ -335,5 +340,11 @@ struct [[gnu::packed]] DSDT {
 using SSDT = DSDT;
 
 }
+
+static constexpr size_t PM1_CNT_SLP_TYP_offset = 10;
+static constexpr u16 PM1_CNT_SLP_EN = 1u << 13;
+
+static constexpr size_t SLEEP_CONTROL_SLP_TYP_offset = 2;
+static constexpr u8 SLEEP_CONTROL_SLP_EN = 1u << 5;
 
 }

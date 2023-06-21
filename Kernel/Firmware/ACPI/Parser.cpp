@@ -380,9 +380,104 @@ void Parser::try_acpi_reboot()
     Processor::halt();
 }
 
+bool Parser::extract_s5_contents(u16& SLP_TYPa, u16& SLP_TYPb)
+{
+    VERIFY(m_root_namespace.has_value());
+    if (!m_root_namespace->contains_node({ "_S5"sv }))
+        return false;
+    auto s5_object = MUST(m_root_namespace->get_node({ "_S5"sv }));
+    if (!s5_object->is_define_package())
+        return false;
+    auto elements = static_cast<AML::DefinePackage&>(*s5_object).element_list();
+    if (elements.size() < 2)
+        return false;
+    if (!elements[0]->is_integer_data() || !elements[1]->is_integer_data())
+        return false;
+    SLP_TYPa = static_cast<AML::IntegerData&>(*elements[0]).value();
+    SLP_TYPb = static_cast<AML::IntegerData&>(*elements[1]).value();
+    return true;
+}
+
+bool Parser::can_shutdown()
+{
+    if (!m_root_namespace.has_value())
+        return false;
+    u16 SLP_TYPa;
+    u16 SLP_TYPb;
+    return extract_s5_contents(SLP_TYPa, SLP_TYPb);
+}
+
 void Parser::try_acpi_shutdown()
 {
-    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
+    if (!can_shutdown()) {
+        dmesgln("ACPI: Shutdown not supported!");
+        return;
+    }
+
+    auto fadt_or_error = Memory::map_typed<Structures::FADT>(m_fadt);
+    if (fadt_or_error.is_error()) {
+        dmesgln("ACPI: Failed mapping FADT {}", fadt_or_error.error());
+        return;
+    }
+    auto fadt = fadt_or_error.release_value();
+
+    InterruptDisabler disabler;
+    // 16.1.7 Transitioning from the Working to the Soft Off State
+    // 1. OSPM executes the _PTS control method, passing the argument 5.
+    if (m_root_namespace->contains_node({ "_PTS"sv })) {
+        // NOTE: It is technically legal to not call the _PTS method even on machines where it exists (QEMU for example, does not have one),
+        // due to the below paragraph from the ACPI specification, but since manufacturers are known to not follow the specification very
+        // closely, we should still strive to eventually support executing it
+        // "During a catastrophic failure (where the integrity of the AML code interpreter or driver structure is questionable), if OSPM
+        // decides to shut the system off, it will not issue a _PTS, but will immediately issue a SLP_TYP of “soft off” and then set the
+        // SLP_EN bit, or directly write the HW-reduced ACPI Sleep Type value and the SLP_EN bit to the Sleep Control Register. Hence,
+        // the hardware should not rely solely on the _PTS control method to sequence the system to the “soft off” state"
+        dbgln("FIXME: Implement AML method execution for _PTS shutdown call");
+    }
+
+    // 2. OSPM prepares its components to shut down (flushing disk caches).
+    // NOTE: This is done by the caller
+
+    // 3. If not a HW-reduced ACPI platform, OSPM writes SLP_TYPa (from the \_S5 object) with the
+    // SLP_ENa bit set to the PM1a_CNT register.
+    u16 SLP_TYPa;
+    u16 SLP_TYPb;
+    auto success = extract_s5_contents(SLP_TYPa, SLP_TYPb);
+    VERIFY(success); // can_shutdown() already checked this works
+    if (!m_hardware_flags.hardware_reduced_acpi) {
+        u16 const PM1a_CNT_shutdown_value = PM1_CNT_SLP_EN | (SLP_TYPa << PM1_CNT_SLP_TYP_offset);
+        // X_PM1a_CNT_BLK ... If this field contains a nonzero value which can be used by the OSPM,
+        // then the PM1a_CNT_BLK field must be ignored by the OSPM.
+        if (fadt->h.revision >= 2 && fadt->x_pm1a_cnt_blk.is_nonzero())
+            access_generic_address(fadt->x_pm1a_cnt_blk, PM1a_CNT_shutdown_value);
+#if ARCH(X86_64)
+        else if (fadt->PM1a_CNT_BLK != 0)
+            IO::out16(fadt->PM1a_CNT_BLK, PM1a_CNT_shutdown_value);
+#endif
+    }
+
+    // 4. OSPM writes SLP_TYPb (from the \_S5 object) with the SLP_ENb bit set to the PM1b_CNT
+    // register, or writes the HW-reduced ACPI Sleep Type value for S5 and the SLP_EN bit to the
+    // Sleep Control Register.
+    if (fadt->h.revision >= 5 && m_hardware_flags.hardware_reduced_acpi && fadt->sleep_control.is_nonzero()) {
+        // NOTE: One would assume that the 'HW-reduced ACPI Sleep Type value' is SLP_TYPb, given
+        // that it's mentioned next to SLP_TYPb, and is not actually defined anywhere else in the
+        // ACPI specification, but in practice this value is actually SLP_TYPa.
+        access_generic_address(fadt->sleep_control, SLEEP_CONTROL_SLP_EN | (SLP_TYPa << SLEEP_CONTROL_SLP_TYP_offset));
+    } else {
+        u16 const PM1b_CNT_shutdown_value = PM1_CNT_SLP_EN | (SLP_TYPb << PM1_CNT_SLP_TYP_offset);
+        // X_PM1b_CNT_BLK ... If this field contains a nonzero value which can be used by the OSPM,
+        // then the PM1b_CNT_BLK field must be ignored by the OSPM.
+        if (fadt->h.revision >= 2 && fadt->x_pm1b_cnt_blk.is_nonzero())
+            access_generic_address(fadt->x_pm1b_cnt_blk, PM1b_CNT_shutdown_value);
+#if ARCH(X86_64)
+        else if (fadt->PM1b_CNT_BLK != 0)
+            IO::out16(fadt->PM1b_CNT_BLK, PM1b_CNT_shutdown_value);
+#endif
+    }
+
+    // 5. The system enters the Soft Off state.
+    Processor::halt();
 }
 
 size_t Parser::get_table_size(PhysicalAddress table_header)
