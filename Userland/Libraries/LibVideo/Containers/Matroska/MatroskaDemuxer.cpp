@@ -5,7 +5,7 @@
  */
 
 #include "MatroskaDemuxer.h"
-#include "AK/Debug.h"
+#include <AK/Debug.h>
 
 namespace Video::Matroska {
 

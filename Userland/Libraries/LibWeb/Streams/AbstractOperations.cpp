@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
@@ -513,7 +515,8 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStr
             readable_stream_default_controller_error(controller, throw_completion.value().value());
 
             // 2. Return enqueueResult.
-            return enqueue_result;
+            // Note: We need to return the throw_completion object here, as enqueue needs to throw the same object that the controller is errored with
+            return throw_completion;
         }
     }
 
@@ -602,7 +605,7 @@ bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultCo
     VERIFY(desired_size.has_value());
 
     // 7. If desiredSize > 0, return true.
-    if (desired_size.release_value() > 0)
+    if (desired_size.release_value() > 0.0)
         return true;
 
     // 8. Return false.
@@ -612,14 +615,19 @@ bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultCo
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-clear-algorithms
 void readable_stream_default_controller_clear_algorithms(ReadableStreamDefaultController& controller)
 {
+    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
+    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
+    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
+    (void)controller;
+
     // 1. Set controller.[[pullAlgorithm]] to undefined.
-    controller.set_pull_algorithm({});
+    // controller.set_pull_algorithm({});
 
     // 2. Set controller.[[cancelAlgorithm]] to undefined.
-    controller.set_cancel_algorithm({});
+    // controller.set_cancel_algorithm({});
 
     // 3. Set controller.[[strategySizeAlgorithm]] to undefined.
-    controller.set_strategy_size_algorithm({});
+    // controller.set_strategy_size_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
@@ -643,7 +651,7 @@ void readable_stream_default_controller_error(ReadableStreamDefaultController& c
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-get-desired-size
-Optional<float> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController& controller)
+Optional<double> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController& controller)
 {
     auto stream = controller.stream();
 
@@ -655,7 +663,7 @@ Optional<float> readable_stream_default_controller_get_desired_size(ReadableStre
 
     // 3. If state is "closed", return 0.
     if (stream->is_closed())
-        return 0.0f;
+        return 0.0;
 
     // 4. Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
     return controller.strategy_hwm() - controller.queue_total_size();
@@ -760,15 +768,15 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 5. If underlyingSourceDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["start"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.start) {
-        start_algorithm = [&, callback = underlying_source.start]() -> WebIDL::ExceptionOr<JS::Value> {
+        start_algorithm = [controller, underlying_source_value, callback = underlying_source.start]() -> WebIDL::ExceptionOr<JS::Value> {
             // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            return WebIDL::invoke_callback(*callback, underlying_source_value, controller);
+            return TRY(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
         };
     }
 
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.pull) {
-        pull_algorithm = [&, callback = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        pull_algorithm = [&realm, controller, underlying_source_value, callback = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             // Note: callback return a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -777,7 +785,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source.cancel) {
-        cancel_algorithm = [&, callback = underlying_source.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        cancel_algorithm = [&realm, controller, underlying_source_value, callback = underlying_source.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             // Note: callback return a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -847,11 +855,16 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(Re
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-algorithms
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController& controller)
 {
+    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
+    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
+    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
+    (void)controller;
+
     // 1. Set controller.[[pullAlgorithm]] to undefined.
-    controller.set_pull_algorithm({});
+    // controller.set_pull_algorithm({});
 
     // 2. Set controller.[[cancelAlgorithm]] to undefined.
-    controller.set_cancel_algorithm({});
+    // controller.set_cancel_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-pending-pull-intos
@@ -942,7 +955,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from
     auto& realm = controller.realm();
 
     // 1. Assert: controller.[[queueTotalSize]] > 0.
-    VERIFY(controller.queue_total_size() > 0);
+    VERIFY(controller.queue_total_size() > 0.0);
 
     // 2. Let entry be controller.[[queue]][0].
     // 3. Remove entry from controller.[[queue]].
@@ -988,7 +1001,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(Rea
     VERIFY(controller.stream()->state() == ReadableStream::State::Readable);
 
     // 2. If controller.[[queueTotalSize]] is 0 and controller.[[closeRequested]] is true,
-    if (controller.queue_total_size() == 0 && controller.close_requested()) {
+    if (controller.queue_total_size() == 0.0 && controller.close_requested()) {
         // 1. Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
         readable_byte_stream_controller_clear_algorithms(controller);
 
@@ -1158,6 +1171,397 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDe
         // 6. Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
         WebIDL::mark_promise_as_handled(*writer.closed_promise());
     }
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
+WebIDL::ExceptionOr<void> set_up_readable_byte_stream_controller(ReadableStream& stream, ReadableByteStreamController& controller, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm, double high_water_mark, JS::Value auto_allocate_chunk_size)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream.[[controller]] is undefined.
+    VERIFY(!stream.controller().has_value());
+
+    // 2. If autoAllocateChunkSize is not undefined,
+    if (!auto_allocate_chunk_size.is_undefined()) {
+        // 1. Assert: ! IsInteger(autoAllocateChunkSize) is true.
+        VERIFY(auto_allocate_chunk_size.is_integral_number());
+
+        // 2. Assert: autoAllocateChunkSize is positive.
+        VERIFY(auto_allocate_chunk_size.as_double() > 0);
+    }
+
+    // 3. Set controller.[[stream]] to stream.
+    controller.set_stream(stream);
+
+    // 4. Set controller.[[pullAgain]] and controller.[[pulling]] to false.
+    controller.set_pull_again(false);
+    controller.set_pulling(false);
+
+    // 5. Set controller.[[byobRequest]] to null.
+    controller.set_byob_request({});
+
+    // 6. Perform ! ResetQueue(controller).
+    reset_queue(controller);
+
+    // 7. Set controller.[[closeRequested]] and controller.[[started]] to false.
+    controller.set_close_requested(false);
+    controller.set_started(false);
+
+    // 8. Set controller.[[strategyHWM]] to highWaterMark.
+    controller.set_strategy_hwm(high_water_mark);
+
+    // 9. Set controller.[[pullAlgorithm]] to pullAlgorithm.
+    controller.set_pull_algorithm(move(pull_algorithm));
+
+    // 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+    controller.set_cancel_algorithm(move(cancel_algorithm));
+
+    // 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
+    if (auto_allocate_chunk_size.is_integral_number())
+        controller.set_auto_allocate_chunk_size(auto_allocate_chunk_size.as_double());
+
+    // 12. Set controller.[[pendingPullIntos]] to a new empty list.
+    controller.pending_pull_intos().clear();
+
+    // 13. Set stream.[[controller]] to controller.
+    stream.set_controller(ReadableStreamController { controller });
+
+    // 14. Let startResult be the result of performing startAlgorithm.
+    auto start_result = TRY(start_algorithm());
+
+    // 15. Let startPromise be a promise resolved with startResult.
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
+
+    // 16. Upon fulfillment of startPromise,
+    WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Set controller.[[started]] to true.
+        controller.set_started(true);
+
+        // 2. Assert: controller.[[pulling]] is false.
+        VERIFY(!controller.pulling());
+
+        // 3. Assert: controller.[[pullAgain]] is false.
+        VERIFY(!controller.pull_again());
+
+        // 4. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+        TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+
+        return JS::js_undefined();
+    });
+
+    // 17. Upon rejection of startPromise with reason r,
+    WebIDL::upon_rejection(start_promise, [&](auto const& r) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Perform ! ReadableByteStreamControllerError(controller, r).
+        readable_byte_stream_controller_error(controller, r);
+
+        return JS::js_undefined();
+    });
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#readablestream-enqueue
+WebIDL::ExceptionOr<void> readable_stream_enqueue(ReadableStreamController& controller, JS::Value chunk)
+{
+    // 1. If stream.[[controller]] implements ReadableStreamDefaultController,
+    if (controller.has<JS::NonnullGCPtr<ReadableStreamDefaultController>>()) {
+        // 1. Perform ! ReadableStreamDefaultControllerEnqueue(stream.[[controller]], chunk).
+        return readable_stream_default_controller_enqueue(controller.get<JS::NonnullGCPtr<ReadableStreamDefaultController>>(), chunk);
+    }
+    // 2. Otherwise,
+    else {
+        // 1. Assert: stream.[[controller]] implements ReadableByteStreamController.
+        VERIFY(controller.has<JS::NonnullGCPtr<ReadableByteStreamController>>());
+        auto readable_byte_controller = controller.get<JS::NonnullGCPtr<ReadableByteStreamController>>();
+
+        // FIXME: 2. Assert: chunk is an ArrayBufferView.
+
+        // 3. Let byobView be the current BYOB request view for stream.
+        auto byob_view = readable_byte_controller->byob_request();
+
+        // 4. If byobView is non-null, and chunk.[[ViewedArrayBuffer]] is byobView.[[ViewedArrayBuffer]], then:
+        if (byob_view) {
+            // FIXME: 1. Assert: chunk.[[ByteOffset]] is byobView.[[ByteOffset]].
+            // FIXME: 2. Assert: chunk.[[ByteLength]] ≤ byobView.[[ByteLength]].
+            // FIXME: 3. Perform ? ReadableByteStreamControllerRespond(stream.[[controller]], chunk.[[ByteLength]]).
+            TODO();
+        }
+
+        // 5. Otherwise, perform ? ReadableByteStreamControllerEnqueue(stream.[[controller]], chunk).
+        return readable_byte_stream_controller_enqueue(readable_byte_controller, chunk);
+    }
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteStreamController& controller, JS::Value chunk)
+{
+    auto& vm = controller.vm();
+    auto& realm = controller.realm();
+
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. If controller.[[closeRequested]] is true or stream.[[state]] is not "readable", return.
+    if (controller.close_requested() || stream->state() != ReadableStream ::State::Readable)
+        return {};
+
+    // 3. Let buffer be chunk.[[ViewedArrayBuffer]].
+    auto* typed_array = TRY(JS::typed_array_from(vm, chunk));
+    auto* buffer = typed_array->viewed_array_buffer();
+
+    // 4. Let byteOffset be chunk.[[ByteOffset]].
+    auto byte_offset = typed_array->byte_offset();
+
+    // 5. Let byteLength be chunk.[[ByteLength]].
+    auto byte_length = typed_array->byte_length();
+
+    // 6. If ! IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    if (buffer->is_detached()) {
+        auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Buffer is detached"sv));
+        return JS::throw_completion(error);
+    }
+
+    // 7. Let transferredBuffer be ? TransferArrayBuffer(buffer).
+    auto transferred_buffer = TRY(transfer_array_buffer(realm, *buffer));
+
+    // 8. If controller.[[pendingPullIntos]] is not empty,
+    if (!controller.pending_pull_intos().is_empty()) {
+        // 1. Let firstPendingPullInto be controller.[[pendingPullIntos]][0].
+        auto& first_pending_pull_into = controller.pending_pull_intos().first();
+
+        // 2. If ! IsDetachedBuffer(firstPendingPullInto’s buffer) is true, throw a TypeError exception.
+        if (first_pending_pull_into.buffer->is_detached()) {
+            auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Buffer is detached"sv));
+            return JS::throw_completion(error);
+        }
+
+        // 3. Perform ! ReadableByteStreamControllerInvalidateBYOBRequest(controller).
+        readable_byte_stream_controller_invalidate_byob_request(controller);
+
+        // 4. Set firstPendingPullInto’s buffer to ! TransferArrayBuffer(firstPendingPullInto’s buffer).
+        first_pending_pull_into.buffer = TRY(transfer_array_buffer(realm, first_pending_pull_into.buffer));
+
+        // 5. If firstPendingPullInto’s reader type is "none", perform ? ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(controller, firstPendingPullInto).
+        if (first_pending_pull_into.reader_type == ReaderType::None)
+            TRY(readable_byte_stream_controller_enqueue_detached_pull_into_queue(controller, first_pending_pull_into));
+    }
+
+    // 9. If ! ReadableStreamHasDefaultReader(stream) is true,
+    if (readable_stream_has_default_reader(*stream)) {
+        // 1. Perform ! ReadableByteStreamControllerProcessReadRequestsUsingQueue(controller).
+        TRY(readable_byte_stream_controller_process_read_requests_using_queue(controller));
+
+        // 2. If ! ReadableStreamGetNumReadRequests(stream) is 0,
+        if (readable_stream_get_num_read_requests(*stream) == 0) {
+            // 1. Assert: controller.[[pendingPullIntos]] is empty.
+            VERIFY(controller.pending_pull_intos().is_empty());
+
+            // 2. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, transferredBuffer, byteOffset, byteLength).
+            readable_byte_stream_controller_enqueue_chunk_to_queue(controller, transferred_buffer, byte_offset, byte_length);
+        }
+        // 3. Otherwise.
+        else {
+            // 1. Assert: controller.[[queue]] is empty.
+            VERIFY(controller.queue().is_empty());
+
+            // 2. If controller.[[pendingPullIntos]] is not empty,
+            if (!controller.pending_pull_intos().is_empty()) {
+                // 1. Assert: controller.[[pendingPullIntos]][0]'s reader type is "default".
+                VERIFY(controller.pending_pull_intos().first().reader_type == ReaderType::Default);
+
+                // 2. Perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+                readable_byte_stream_controller_shift_pending_pull_into(controller);
+            }
+
+            // 3. Let transferredView be ! Construct(%Uint8Array%, « transferredBuffer, byteOffset, byteLength »).
+            auto transferred_view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), transferred_buffer, JS::Value(byte_offset), JS::Value(byte_length)));
+
+            // 4. Perform ! ReadableStreamFulfillReadRequest(stream, transferredView, false).
+            readable_stream_fulfill_read_request(*stream, transferred_view, false);
+        }
+    }
+    // 10. Otherwise, if ! ReadableStreamHasBYOBReader(stream) is true,
+    else if (readable_stream_has_byob_reader(*stream)) {
+        // FIXME: 1. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, transferredBuffer, byteOffset, byteLength).
+        // FIXME: 2. Perform ! ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
+        TODO();
+    }
+    // 11. Otherwise,
+    else {
+        // 1. Assert: ! IsReadableStreamLocked(stream) is false.
+        VERIFY(!is_readable_stream_locked(*stream));
+
+        // 2. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, transferredBuffer, byteOffset, byteLength).
+        readable_byte_stream_controller_enqueue_chunk_to_queue(controller, transferred_buffer, byte_offset, byte_length);
+    }
+
+    // 12. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+    TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#transfer-array-buffer
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> transfer_array_buffer(JS::Realm& realm, JS::ArrayBuffer& buffer)
+{
+    auto& vm = realm.vm();
+
+    // 1. Assert: ! IsDetachedBuffer(O) is false.
+    VERIFY(!buffer.is_detached());
+
+    // 2. Let arrayBufferData be O.[[ArrayBufferData]].
+    // 3. Let arrayBufferByteLength be O.[[ArrayBufferByteLength]].
+    auto array_buffer = buffer.buffer();
+
+    // 4. Perform ? DetachArrayBuffer(O).
+    TRY(JS::detach_array_buffer(vm, buffer));
+
+    // 5. Return a new ArrayBuffer object, created in the current Realm, whose [[ArrayBufferData]] internal slot value is arrayBufferData and whose [[ArrayBufferByteLength]] internal slot value is arrayBufferByteLength.
+    return JS::ArrayBuffer::create(realm, array_buffer);
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerenqueuedetachedpullintotoqueue
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_detached_pull_into_queue(ReadableByteStreamController& controller, PullIntoDescriptor& pull_into_descriptor)
+{
+    // 1. Assert: pullIntoDescriptor’s reader type is "none".
+    VERIFY(pull_into_descriptor.reader_type == ReaderType::None);
+
+    // 2. If pullIntoDescriptor’s bytes filled > 0, perform ? ReadableByteStreamControllerEnqueueClonedChunkToQueue(controller, pullIntoDescriptor’s buffer, pullIntoDescriptor’s byte offset, pullIntoDescriptor’s bytes filled).
+    if (pull_into_descriptor.bytes_filled > 0)
+        TRY(readable_byte_stream_controller_enqueue_cloned_chunk_to_queue(controller, pull_into_descriptor.buffer, pull_into_descriptor.byte_offset, pull_into_descriptor.bytes_filled));
+
+    // 3. Perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+    readable_byte_stream_controller_shift_pending_pull_into(controller);
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerprocessreadrequestsusingqueue
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_process_read_requests_using_queue(ReadableByteStreamController& controller)
+{
+    // 1. Let reader be controller.[[stream]].[[reader]].
+    auto reader = controller.stream()->reader();
+
+    // 2. Assert: reader implements ReadableStreamDefaultReader.
+    VERIFY(reader->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>());
+
+    // 3. While reader.[[readRequests]] is not empty,
+    auto readable_stream_default_reader = reader->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>();
+    while (!readable_stream_default_reader->read_requests().is_empty()) {
+        // 1. If controller.[[queueTotalSize]] is 0, return.
+        if (controller.queue_total_size() == 0.0)
+            return {};
+
+        // 2. Let readRequest be reader.[[readRequests]][0].
+        // 3. Remove readRequest from reader.[[readRequests]].
+        auto read_request = readable_stream_default_reader->read_requests().take_first();
+
+        // 4. Perform ! ReadableByteStreamControllerFillReadRequestFromQueue(controller, readRequest).
+        TRY(readable_byte_stream_controller_fill_read_request_from_queue(controller, read_request));
+    }
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue-chunk-to-queue
+void readable_byte_stream_controller_enqueue_chunk_to_queue(ReadableByteStreamController& controller, JS::NonnullGCPtr<JS::ArrayBuffer> buffer, u32 byte_offset, u32 byte_length)
+{
+    // 1. Append a new readable byte stream queue entry with buffer buffer, byte offset byteOffset, and byte length byteLength to controller.[[queue]].
+    controller.queue().append(ReadableByteStreamQueueEntry {
+        .buffer = buffer,
+        .byte_offset = byte_offset,
+        .byte_length = byte_length,
+    });
+
+    // 2. Set controller.[[queueTotalSize]] to controller.[[queueTotalSize]] + byteLength.
+    controller.set_queue_total_size(controller.queue_total_size() + byte_length);
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerenqueueclonedchunktoqueue
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue_cloned_chunk_to_queue(ReadableByteStreamController& controller, JS::ArrayBuffer& buffer, u64 byte_offset, u64 byte_length)
+{
+    auto& vm = controller.vm();
+
+    // 1. Let cloneResult be CloneArrayBuffer(buffer, byteOffset, byteLength, %ArrayBuffer%).
+    auto clone_result = JS::clone_array_buffer(vm, buffer, byte_offset, byte_length);
+
+    // 2. If cloneResult is an abrupt completion,
+    if (clone_result.is_throw_completion()) {
+        auto throw_completion = Bindings::throw_dom_exception_if_needed(vm, [&] { return clone_result; }).throw_completion();
+
+        // 1. Perform ! ReadableByteStreamControllerError(controller, cloneResult.[[Value]]).
+        readable_byte_stream_controller_error(controller, throw_completion.value().value());
+
+        // 2. Return cloneResult.
+        // Note: We need to return the throw_completion object here, as enqueue needs to throw the same object that the controller is errored with
+        return throw_completion;
+    }
+
+    // 3. Perform ! ReadableByteStreamControllerEnqueueChunkToQueue(controller, cloneResult.[[Value]], 0, byteLength).
+    readable_byte_stream_controller_enqueue_chunk_to_queue(controller, *clone_result.release_value(), 0, byte_length);
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-shift-pending-pull-into
+PullIntoDescriptor readable_byte_stream_controller_shift_pending_pull_into(ReadableByteStreamController& controller)
+{
+    // 1. Assert: controller.[[byobRequest]] is null.
+    VERIFY(!controller.byob_request());
+
+    // 2. Let descriptor be controller.[[pendingPullIntos]][0].
+    // 3. Remove descriptor from controller.[[pendingPullIntos]].
+    auto descriptor = controller.pending_pull_intos().take_first();
+
+    // 4. Return descriptor.
+    return descriptor;
+}
+
+// https://streams.spec.whatwg.org/#readablestream-set-up-with-byte-reading-support
+WebIDL::ExceptionOr<void> set_up_readable_stream_controller_with_byte_reading_support(ReadableStream& stream, Optional<PullAlgorithm>&& pull_algorithm, Optional<CancelAlgorithm>&& cancel_algorithm, double high_water_mark)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let startAlgorithm be an algorithm that returns undefined.
+    StartAlgorithm start_algorithm = [] { return JS::js_undefined(); };
+
+    // 2. Let pullAlgorithmWrapper be an algorithm that runs these steps:
+    PullAlgorithm pull_algorithm_wrapper = [&realm, pull_algorithm = move(pull_algorithm)]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        // 1. Let result be the result of running pullAlgorithm, if pullAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        if (pull_algorithm.has_value())
+            result = TRY(pull_algorithm.value()());
+
+        // 2. If result is a Promise, then return result.
+        if (result != nullptr)
+            return JS::NonnullGCPtr(*result);
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 3. Let cancelAlgorithmWrapper be an algorithm that runs these steps:
+    CancelAlgorithm cancel_algorithm_wrapper = [&realm, cancel_algorithm = move(cancel_algorithm)](auto const& c) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        // 1. Let result be the result of running cancelAlgorithm, if cancelAlgorithm was given, or null otherwise. If this throws an exception e, return a promise rejected with e.
+        JS::GCPtr<JS::PromiseCapability> result = nullptr;
+        if (cancel_algorithm.has_value())
+            result = TRY(cancel_algorithm.value()(c));
+
+        // 2. If result is a Promise, then return result.
+        if (result != nullptr)
+            return JS::NonnullGCPtr(*result);
+
+        // 3. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. Perform ! InitializeReadableStream(stream).
+    // 5. Let controller be a new ReadableByteStreamController.
+    auto controller = MUST_OR_THROW_OOM(stream.heap().allocate<ReadableByteStreamController>(realm, realm));
+
+    // 6. Perform ! SetUpReadableByteStreamController(stream, controller, startAlgorithm, pullAlgorithmWrapper, cancelAlgorithmWrapper, highWaterMark, undefined).
+    TRY(set_up_readable_byte_stream_controller(stream, controller, move(start_algorithm), move(pull_algorithm_wrapper), move(cancel_algorithm_wrapper), high_water_mark, JS::js_undefined()));
 
     return {};
 }
@@ -1935,15 +2339,15 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 6. If underlyingSinkDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["start"] with argument list « controller » and callback this value underlyingSink.
     if (underlying_sink.start) {
-        start_algorithm = [&, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::Value> {
+        start_algorithm = [controller, underlying_sink_value, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::Value> {
             // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            return WebIDL::invoke_callback(*callback, underlying_sink_value, controller);
+            return TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, controller)).release_value();
         };
     }
 
     // 7. If underlyingSinkDict["write"] exists, then set writeAlgorithm to an algorithm which takes an argument chunk and returns the result of invoking underlyingSinkDict["write"] with argument list « chunk, controller » and callback this value underlyingSink.
     if (underlying_sink.write) {
-        write_algorithm = [&, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        write_algorithm = [&realm, controller, underlying_sink_value, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             // Note: callback return a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -1952,7 +2356,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 8. If underlyingSinkDict["close"] exists, then set closeAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["close"] with argument list «» and callback this value underlyingSink.
     if (underlying_sink.close) {
-        close_algorithm = [&, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        close_algorithm = [&realm, controller, underlying_sink_value, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             // Note: callback return a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -1961,7 +2365,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 9. If underlyingSinkDict["abort"] exists, then set abortAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSinkDict["abort"] with argument list « reason » and callback this value underlyingSink.
     if (underlying_sink.abort) {
-        abort_algorithm = [&, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        abort_algorithm = [&realm, controller, underlying_sink_value, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             // Note: callback return a promise, so invoke_callback will never return an abrupt completion
             auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
@@ -2023,17 +2427,22 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_ne
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-clear-algorithms
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController& controller)
 {
+    // FIXME: This AO can be invoked from within one of the algorithms below. If we clear them, it invokes SafeFunction's
+    //        destructor, which asserts we are not currently invoking the function (as it clears the storage). We need to
+    //        figure out how to delay this, as these algorithms may keep objects alive that can otherwise be GC'd.
+    (void)controller;
+
     // 1. Set controller.[[writeAlgorithm]] to undefined.
-    controller.set_write_algorithm({});
+    // controller.set_write_algorithm({});
 
     // 2. Set controller.[[closeAlgorithm]] to undefined.
-    controller.set_close_algorithm({});
+    // controller.set_close_algorithm({});
 
     // 3. Set controller.[[abortAlgorithm]] to undefined.
-    controller.set_abort_algorithm({});
+    // controller.set_abort_algorithm({});
 
     // 4. Set controller.[[strategySizeAlgorithm]] to undefined.
-    controller.set_strategy_size_algorithm({});
+    // controller.set_strategy_size_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-close

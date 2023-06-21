@@ -8,14 +8,17 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Optional.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
+#include <LibGfx/Rect.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <math.h>
 
@@ -82,7 +85,28 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
 
+    double volume() const { return m_volume; }
+    WebIDL::ExceptionOr<void> set_volume(double);
+
+    bool muted() const { return m_muted; }
+    void set_muted(bool);
+
+    double effective_media_volume() const;
+
+    JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
+
+    void set_layout_mouse_position(Badge<Painting::MediaPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
+    Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::MediaPaintable>) const { return m_mouse_position; }
+
+    struct CachedLayoutBoxes {
+        Optional<CSSPixelRect> control_box_rect;
+        Optional<CSSPixelRect> playback_button_rect;
+        Optional<CSSPixelRect> timeline_rect;
+        Optional<CSSPixelRect> speaker_button_rect;
+        Optional<CSSPixelRect> volume_rect;
+    };
+    CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::MediaPaintable>) const { return m_layout_boxes; }
 
 protected:
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
@@ -103,6 +127,8 @@ protected:
     // Override in subclasses to handle implementation-specific seeking behavior. When seeking is complete,
     // subclasses must invoke set_current_playback_position() to unblock the user agent.
     virtual void on_seek(double, MediaSeekMode) { m_seek_in_progress = false; }
+
+    virtual void on_volume_change() { }
 
 private:
     friend SourceElementSelector;
@@ -127,6 +153,8 @@ private:
     void set_show_poster(bool);
     void set_paused(bool);
     void set_duration(double);
+
+    void volume_or_muted_attribute_changed();
 
     bool blocked() const;
     bool is_eligible_for_autoplay() const;
@@ -198,6 +226,15 @@ private:
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-paused
     bool m_paused { true };
 
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-volume
+    double m_volume { 1.0 };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-muted
+    bool m_muted { false };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-audiotracks
+    JS::GCPtr<AudioTrackList> m_audio_tracks;
+
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-videotracks
     JS::GCPtr<VideoTrackList> m_video_tracks;
 
@@ -220,6 +257,10 @@ private:
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 
     bool m_seek_in_progress = false;
+
+    // Cached state for layout.
+    Optional<CSSPixelPoint> m_mouse_position;
+    mutable CachedLayoutBoxes m_layout_boxes;
 };
 
 }

@@ -239,52 +239,38 @@ DeprecatedString Path::to_deprecated_string() const
 
 void Path::segmentize_path()
 {
-    Vector<SplitLineSegment> segments;
+    Vector<FloatLine> segments;
     float min_x = 0;
     float min_y = 0;
     float max_x = 0;
     float max_y = 0;
 
+    bool first = true;
     auto add_point_to_bbox = [&](Gfx::FloatPoint point) {
         float x = point.x();
         float y = point.y();
-        min_x = min(min_x, x);
-        min_y = min(min_y, y);
-        max_x = max(max_x, x);
-        max_y = max(max_y, y);
+        if (first) {
+            min_x = max_x = x;
+            min_y = max_y = y;
+            first = false;
+        } else {
+            min_x = min(min_x, x);
+            min_y = min(min_y, y);
+            max_x = max(max_x, x);
+            max_y = max(max_y, y);
+        }
     };
 
     auto add_line = [&](auto const& p0, auto const& p1) {
-        float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
-        auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
-        if (p0.y() < p1.y()) {
-            swap(ymin, ymax);
-            swap(x_of_ymin, x_of_ymax);
-        }
-
-        segments.append({ FloatPoint(p0.x(), p0.y()),
-            FloatPoint(p1.x(), p1.y()),
-            slope == 0 ? 0 : 1 / slope,
-            x_of_ymin,
-            ymax, ymin, x_of_ymax });
-
+        segments.append({ p0, p1 });
         add_point_to_bbox(p1);
     };
 
     FloatPoint cursor { 0, 0 };
-    bool first = true;
-
     for (auto& segment : m_segments) {
         switch (segment->type()) {
         case Segment::Type::MoveTo:
-            if (first) {
-                min_x = segment->point().x();
-                min_y = segment->point().y();
-                max_x = segment->point().x();
-                max_y = segment->point().y();
-            } else {
-                add_point_to_bbox(segment->point());
-            }
+            add_point_to_bbox(segment->point());
             cursor = segment->point();
             break;
         case Segment::Type::LineTo: {
@@ -324,11 +310,6 @@ void Path::segmentize_path()
 
         first = false;
     }
-
-    // sort segments by ymax
-    quick_sort(segments, [](auto const& line0, auto const& line1) {
-        return line1.maximum_y < line0.maximum_y;
-    });
 
     m_split_lines = move(segments);
     m_bounding_box = Gfx::FloatRect { min_x, min_y, max_x - min_x, max_y - min_y };
@@ -382,6 +363,166 @@ void Path::add_path(Path const& other)
 {
     m_segments.extend(other.m_segments);
     invalidate_split_lines();
+}
+
+template<typename T>
+struct RoundTrip {
+    RoundTrip(ReadonlySpan<T> span)
+        : m_span(span)
+    {
+    }
+
+    size_t size() const
+    {
+        return m_span.size() * 2 - 1;
+    }
+
+    T const& operator[](size_t index) const
+    {
+        // Follow the path:
+        if (index < m_span.size())
+            return m_span[index];
+        // Then in reverse:
+        if (index < size())
+            return m_span[size() - index - 1];
+        // Then wrap around again:
+        return m_span[index - size() + 1];
+    }
+
+private:
+    ReadonlySpan<T> m_span;
+};
+
+Path Path::stroke_to_fill(float thickness) const
+{
+    // Note: This convolves a polygon with the path using the algorithm described
+    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
+
+    auto& lines = split_lines();
+    if (lines.is_empty())
+        return Path {};
+
+    // Paths can be disconnected, which a pain to deal with, so split it up.
+    Vector<Vector<FloatPoint>> segments;
+    segments.append({ lines.first().a() });
+    for (auto& line : lines) {
+        if (line.a() == segments.last().last()) {
+            segments.last().append(line.b());
+        } else {
+            segments.append({ line.a(), line.b() });
+        }
+    }
+
+    // Note: This is the same as the tolerance from bezier curve splitting.
+    constexpr auto flatness = 0.015f;
+    auto pen_vertex_count = max(
+        static_cast<int>(ceilf(AK::Pi<float> / acosf(1 - (2 * flatness) / thickness))), 4);
+    if (pen_vertex_count % 2 == 1)
+        pen_vertex_count += 1;
+
+    Vector<FloatPoint, 128> pen_vertices;
+    pen_vertices.ensure_capacity(pen_vertex_count);
+
+    // Generate vertices for the pen (going counterclockwise). The pen does not necessarily need
+    // to be a circle (or an approximation of one), but other shapes are untested.
+    float theta = 0;
+    float theta_delta = (AK::Pi<float> * 2) / pen_vertex_count;
+    for (int i = 0; i < pen_vertex_count; i++) {
+        float sin_theta;
+        float cos_theta;
+        AK::sincos(theta, sin_theta, cos_theta);
+        pen_vertices.unchecked_append({ cos_theta * thickness / 2, sin_theta * thickness / 2 });
+        theta -= theta_delta;
+    }
+
+    auto wrapping_index = [](auto& vertices, auto index) {
+        return vertices[(index + vertices.size()) % vertices.size()];
+    };
+
+    auto angle_between = [](auto p1, auto p2) {
+        auto delta = p2 - p1;
+        return atan2f(delta.y(), delta.x());
+    };
+
+    struct ActiveRange {
+        float start;
+        float end;
+
+        bool in_range(float angle) const
+        {
+            // Note: Since active ranges go counterclockwise start > end unless we wrap around at 180 degrees
+            return ((angle <= start && angle >= end)
+                || (start < end && angle <= start)
+                || (start < end && angle >= end));
+        }
+    };
+
+    Vector<ActiveRange, 128> active_ranges;
+    active_ranges.ensure_capacity(pen_vertices.size());
+    for (auto i = 0; i < pen_vertex_count; i++) {
+        active_ranges.unchecked_append({ angle_between(wrapping_index(pen_vertices, i - 1), pen_vertices[i]),
+            angle_between(pen_vertices[i], wrapping_index(pen_vertices, i + 1)) });
+    }
+
+    auto clockwise = [](float current_angle, float target_angle) {
+        if (target_angle < 0)
+            target_angle += AK::Pi<float> * 2;
+        if (current_angle < 0)
+            current_angle += AK::Pi<float> * 2;
+        if (target_angle < current_angle)
+            target_angle += AK::Pi<float> * 2;
+        return (target_angle - current_angle) <= AK::Pi<float>;
+    };
+
+    Path convolution;
+    for (auto& segment : segments) {
+        RoundTrip<FloatPoint> shape { segment };
+
+        bool first = true;
+        auto add_vertex = [&](auto v) {
+            if (first) {
+                convolution.move_to(v);
+                first = false;
+            } else {
+                convolution.line_to(v);
+            }
+        };
+
+        auto shape_idx = 0u;
+
+        auto slope = [&] {
+            return angle_between(shape[shape_idx], shape[shape_idx + 1]);
+        };
+
+        auto start_slope = slope();
+        // Note: At least one range must be active.
+        auto active = *active_ranges.find_first_index_if([&](auto& range) {
+            return range.in_range(start_slope);
+        });
+
+        while (shape_idx < shape.size()) {
+            add_vertex(shape[shape_idx] + pen_vertices[active]);
+            auto slope_now = slope();
+            auto range = active_ranges[active];
+            if (range.in_range(slope_now)) {
+                shape_idx++;
+            } else {
+                if (clockwise(slope_now, range.end)) {
+                    if (active == static_cast<size_t>(pen_vertex_count - 1))
+                        active = 0;
+                    else
+                        active++;
+                } else {
+                    if (active == 0)
+                        active = pen_vertex_count - 1;
+                    else
+                        active--;
+                }
+            }
+        }
+    }
+
+    return convolution;
 }
 
 }

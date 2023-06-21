@@ -71,7 +71,7 @@ public:
         return 1;
     }
 
-    virtual String column_name(int index) const override
+    virtual ErrorOr<String> column_name(int index) const override
     {
         if constexpr (IsTwoDimensional)
             return m_column_names[index];
@@ -92,11 +92,11 @@ public:
         return {};
     }
 
-    virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
+    virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
     {
         if (index.data().as_string().contains(term.as_string(), CaseSensitivity::CaseInsensitive))
-            return TriState::True;
-        return TriState::False;
+            return { TriState::True };
+        return { TriState::False };
     }
 
     virtual bool is_searchable() const override { return true; }

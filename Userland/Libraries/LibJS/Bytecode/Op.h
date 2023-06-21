@@ -383,11 +383,10 @@ enum class EnvironmentMode {
     Var,
 };
 
-class CreateEnvironment final : public Instruction {
+class CreateLexicalEnvironment final : public Instruction {
 public:
-    explicit CreateEnvironment(EnvironmentMode mode)
-        : Instruction(Type::CreateEnvironment)
-        , m_mode(mode)
+    explicit CreateLexicalEnvironment()
+        : Instruction(Type::CreateLexicalEnvironment)
     {
     }
 
@@ -395,9 +394,6 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
-
-private:
-    EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
 class EnterObjectEnvironment final : public Instruction {
@@ -714,6 +710,7 @@ public:
     enum class CallType {
         Call,
         Construct,
+        DirectEval,
     };
 
     Call(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
@@ -776,9 +773,28 @@ private:
 
 class NewFunction final : public Instruction {
 public:
-    explicit NewFunction(FunctionNode const& function_node)
+    explicit NewFunction(FunctionNode const& function_node, Optional<Register> home_object = {})
         : Instruction(Type::NewFunction)
         , m_function_node(function_node)
+        , m_home_object(move(home_object))
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register);
+
+private:
+    FunctionNode const& m_function_node;
+    Optional<Register> m_home_object;
+};
+
+class BlockDeclarationInstantiation final : public Instruction {
+public:
+    explicit BlockDeclarationInstantiation(ScopeNode const& scope_node)
+        : Instruction(Type::BlockDeclarationInstantiation)
+        , m_scope_node(scope_node)
     {
     }
 
@@ -788,7 +804,7 @@ public:
     void replace_references_impl(Register, Register) { }
 
 private:
-    FunctionNode const& m_function_node;
+    ScopeNode const& m_scope_node;
 };
 
 class Return final : public Instruction {
@@ -823,6 +839,19 @@ class Decrement final : public Instruction {
 public:
     Decrement()
         : Instruction(Type::Decrement)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
+class ToNumeric final : public Instruction {
+public:
+    ToNumeric()
+        : Instruction(Type::ToNumeric)
     {
     }
 
@@ -922,11 +951,10 @@ private:
     Label m_target;
 };
 
-class LeaveEnvironment final : public Instruction {
+class LeaveLexicalEnvironment final : public Instruction {
 public:
-    LeaveEnvironment(EnvironmentMode mode)
-        : Instruction(Type::LeaveEnvironment)
-        , m_mode(mode)
+    LeaveLexicalEnvironment()
+        : Instruction(Type::LeaveLexicalEnvironment)
     {
     }
 
@@ -934,9 +962,6 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
-
-private:
-    EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
 class LeaveUnwindContext final : public Instruction {

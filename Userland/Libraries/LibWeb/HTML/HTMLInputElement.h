@@ -58,12 +58,12 @@ public:
 
     DeprecatedString type() const;
     TypeAttributeState type_state() const { return m_type; }
-    void set_type(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
 
     DeprecatedString default_value() const { return attribute(HTML::AttributeNames::value); }
     DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
-    DeprecatedString value() const;
+    virtual DeprecatedString value() const override;
     WebIDL::ExceptionOr<void> set_value(DeprecatedString);
 
     Optional<DeprecatedString> placeholder_value() const;
@@ -120,6 +120,12 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-button
+    virtual bool is_button() const override;
+
+    // https://html.spec.whatwg.org/multipage/forms.html#concept-submit-button
+    virtual bool is_submit_button() const override;
+
     virtual void reset_algorithm() override;
 
     virtual void form_associated_element_was_inserted() override;
@@ -140,6 +146,7 @@ private:
     virtual bool is_html_input_element() const final { return true; }
 
     // ^DOM::EventTarget
+    virtual void did_lose_focus() override;
     virtual void did_receive_focus() override;
     virtual void legacy_pre_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior() override;
@@ -153,7 +160,7 @@ private:
 
     static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
-    ErrorOr<void> run_input_activation_behavior();
+    WebIDL::ExceptionOr<void> run_input_activation_behavior();
     void set_checked_within_group();
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm

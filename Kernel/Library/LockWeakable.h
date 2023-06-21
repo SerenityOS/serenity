@@ -12,7 +12,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/ScopedCritical.h>
+#include <Kernel/Library/ScopedCritical.h>
 
 namespace AK {
 

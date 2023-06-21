@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
@@ -40,21 +42,32 @@ void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, Deprec
     }
 }
 
-Optional<Gfx::PaintStyle const&> SVGGraphicsElement::fill_paint_style(SVGPaintContext const& paint_context) const
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::svg_paint_computed_value_to_gfx_paint_style(SVGPaintContext const& paint_context, Optional<CSS::SVGPaint> const& paint_value) const
 {
     // FIXME: This entire function is an ad-hoc hack:
-    if (!layout_node())
+    if (!paint_value.has_value() || !paint_value->is_url())
         return {};
-    auto& fill = layout_node()->computed_values().fill();
-    if (!fill.has_value() || !fill->is_url())
-        return {};
-    auto& url = fill->as_url();
+    auto& url = paint_value->as_url();
     auto gradient = document().get_element_by_id(url.fragment());
     if (!gradient)
         return {};
     if (is<SVG::SVGGradientElement>(*gradient))
         return static_cast<SVG::SVGGradientElement const&>(*gradient).to_gfx_paint_style(paint_context);
     return {};
+}
+
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::fill_paint_style(SVGPaintContext const& paint_context) const
+{
+    if (!layout_node())
+        return {};
+    return svg_paint_computed_value_to_gfx_paint_style(paint_context, layout_node()->computed_values().fill());
+}
+
+Optional<Gfx::PaintStyle const&> SVGGraphicsElement::stroke_paint_style(SVGPaintContext const& paint_context) const
+{
+    if (!layout_node())
+        return {};
+    return svg_paint_computed_value_to_gfx_paint_style(paint_context, layout_node()->computed_values().stroke());
 }
 
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
@@ -97,7 +110,7 @@ Gfx::AffineTransform SVGGraphicsElement::get_transform() const
 {
     // FIXME: It would be nice to do this using the SVGContext, however, then layout/hit testing knows nothing about the transform.
     Gfx::AffineTransform transform = m_transform;
-    for (auto* svg_ancestor = first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->first_ancestor_of_type<SVGGraphicsElement>()) {
+    for (auto* svg_ancestor = shadow_including_first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->shadow_including_first_ancestor_of_type<SVGGraphicsElement>()) {
         transform = Gfx::AffineTransform { svg_ancestor->m_transform }.multiply(transform);
     }
     return transform;
@@ -118,14 +131,34 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
             if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case("fill-rule"sv)) {
+            if (auto fill_rule_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillRule).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::FillRule, fill_rule_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("fill-opacity"sv)) {
             if (auto fill_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::FillOpacity, fill_opacity_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("stroke-opacity"sv)) {
             if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::StrokeOpacity, stroke_opacity_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case(SVG::AttributeNames::opacity)) {
+            if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::Opacity, stroke_opacity_value.release_nonnull());
         }
     });
+}
+
+Optional<FillRule> SVGGraphicsElement::fill_rule() const
+{
+    if (!layout_node())
+        return {};
+    switch (layout_node()->computed_values().fill_rule()) {
+    case CSS::FillRule::Nonzero:
+        return FillRule::Nonzero;
+    case CSS::FillRule::Evenodd:
+        return FillRule::Evenodd;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 Optional<Gfx::Color> SVGGraphicsElement::fill_color() const
@@ -174,21 +207,19 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         return {};
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-    if (auto width = layout_node()->computed_values().stroke_width(); width.has_value()) {
-        // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
-        // FIXME: This isn't right, but it's something.
-        CSSPixels viewport_width = 0;
-        CSSPixels viewport_height = 0;
-        if (auto* svg_svg_element = first_ancestor_of_type<SVGSVGElement>()) {
-            if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
-                viewport_width = svg_svg_layout_node->computed_values().width().to_px(*svg_svg_layout_node, 0);
-                viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
-            }
+    auto width = layout_node()->computed_values().stroke_width();
+    // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
+    // FIXME: This isn't right, but it's something.
+    CSSPixels viewport_width = 0;
+    CSSPixels viewport_height = 0;
+    if (auto* svg_svg_element = shadow_including_first_ancestor_of_type<SVGSVGElement>()) {
+        if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
+            viewport_width = svg_svg_layout_node->computed_values().width().to_px(*svg_svg_layout_node, 0);
+            viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
         }
-        auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
-        return width->to_px(*layout_node(), scaled_viewport_size).value();
     }
-    return {};
+    auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
+    return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 
 }

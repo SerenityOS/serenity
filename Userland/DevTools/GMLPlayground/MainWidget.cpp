@@ -24,6 +24,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/VimEditingEngine.h>
@@ -62,7 +63,7 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
 
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
 {
-    auto main_widget = TRY(try_make_ref_counted<MainWidget>());
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget()));
     TRY(main_widget->load_from_gml(gml_playground_window_gml));
     main_widget->m_icon = icon;
 
@@ -70,6 +71,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     main_widget->m_splitter = main_widget->find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
     main_widget->m_editor = main_widget->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
     main_widget->m_preview_frame_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame");
+    main_widget->m_statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     main_widget->m_preview_window = TRY(GUI::Window::try_create(main_widget));
     main_widget->m_preview_window->set_title("Preview - GML Playground");
@@ -98,6 +100,16 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     };
 
     return main_widget;
+}
+
+MainWidget::MainWidget()
+{
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        m_statusbar->set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 }
 
 void MainWidget::update_title()
@@ -161,11 +173,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(&window, {}, "/usr/src/serenity/Userland/Applications"sv, Core::File::OpenMode::Read,
-            Vector {
+        FileSystemAccessClient::OpenFileOptions options {
+            .path = "/usr/src/serenity/Userland/Applications"sv,
+            .allowed_file_types = Vector {
                 GUI::FileTypeFilter { "GML Files", { { "gml" } } },
                 GUI::FileTypeFilter::all_files(),
-            });
+            }
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
         if (response.is_error())
             return;
 
@@ -200,7 +215,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(m_editor->paste_action()));
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(m_editor->select_all_action()));
-    TRY(edit_menu->try_add_action(m_editor->go_to_line_action()));
+    TRY(edit_menu->try_add_action(m_editor->go_to_line_or_column_action()));
     TRY(edit_menu->try_add_separator());
 
     auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {

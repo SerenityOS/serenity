@@ -57,19 +57,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    statusbar.set_text(0, "Score: 0");
+    statusbar.set_text(0, TRY("Score: 0"_string));
 
     DeprecatedString player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 
-    game.on_status_change = [&](const AK::StringView& status) {
+    game.on_status_change = [&](String const& status) {
         statusbar.set_override_text(status);
     };
 
     app->on_action_enter = [&](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        statusbar.set_override_text(move(text));
+        statusbar.set_override_text(action.status_tip());
     };
 
     app->on_action_leave = [&](GUI::Action&) {

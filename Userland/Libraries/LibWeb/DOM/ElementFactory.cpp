@@ -65,6 +65,7 @@
 #include <LibWeb/HTML/HTMLSourceElement.h>
 #include <LibWeb/HTML/HTMLSpanElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
+#include <LibWeb/HTML/HTMLSummaryElement.h>
 #include <LibWeb/HTML/HTMLTableCaptionElement.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableColElement.h>
@@ -96,7 +97,11 @@
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/SVGStopElement.h>
+#include <LibWeb/SVG/SVGStyleElement.h>
+#include <LibWeb/SVG/SVGSymbolElement.h>
 #include <LibWeb/SVG/SVGTextContentElement.h>
+#include <LibWeb/SVG/SVGTitleElement.h>
+#include <LibWeb/SVG/SVGUseElement.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
@@ -378,6 +383,8 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_html_element(JS::Re
         return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLSpanElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name == HTML::TagNames::style)
         return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLStyleElement>(realm, document, move(qualified_name)));
+    if (lowercase_tag_name == HTML::TagNames::summary)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLSummaryElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name == HTML::TagNames::caption)
         return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLTableCaptionElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name.is_one_of(Web::HTML::TagNames::td, Web::HTML::TagNames::th))
@@ -405,7 +412,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_html_element(JS::Re
     if (lowercase_tag_name == HTML::TagNames::video)
         return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLVideoElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name.is_one_of(
-            HTML::TagNames::article, HTML::TagNames::section, HTML::TagNames::nav, HTML::TagNames::aside, HTML::TagNames::hgroup, HTML::TagNames::header, HTML::TagNames::footer, HTML::TagNames::address, HTML::TagNames::dt, HTML::TagNames::dd, HTML::TagNames::figure, HTML::TagNames::figcaption, HTML::TagNames::main, HTML::TagNames::em, HTML::TagNames::strong, HTML::TagNames::small, HTML::TagNames::s, HTML::TagNames::cite, HTML::TagNames::dfn, HTML::TagNames::abbr, HTML::TagNames::ruby, HTML::TagNames::rt, HTML::TagNames::rp, HTML::TagNames::code, HTML::TagNames::var, HTML::TagNames::samp, HTML::TagNames::kbd, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::i, HTML::TagNames::b, HTML::TagNames::u, HTML::TagNames::mark, HTML::TagNames::bdi, HTML::TagNames::bdo, HTML::TagNames::wbr, HTML::TagNames::summary, HTML::TagNames::noscript,
+            HTML::TagNames::article, HTML::TagNames::section, HTML::TagNames::nav, HTML::TagNames::aside, HTML::TagNames::hgroup, HTML::TagNames::header, HTML::TagNames::footer, HTML::TagNames::address, HTML::TagNames::dt, HTML::TagNames::dd, HTML::TagNames::figure, HTML::TagNames::figcaption, HTML::TagNames::main, HTML::TagNames::em, HTML::TagNames::strong, HTML::TagNames::small, HTML::TagNames::s, HTML::TagNames::cite, HTML::TagNames::dfn, HTML::TagNames::abbr, HTML::TagNames::ruby, HTML::TagNames::rt, HTML::TagNames::rp, HTML::TagNames::code, HTML::TagNames::var, HTML::TagNames::samp, HTML::TagNames::kbd, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::i, HTML::TagNames::b, HTML::TagNames::u, HTML::TagNames::mark, HTML::TagNames::bdi, HTML::TagNames::bdo, HTML::TagNames::wbr, HTML::TagNames::noscript,
             // Obsolete
             HTML::TagNames::acronym, HTML::TagNames::basefont, HTML::TagNames::big, HTML::TagNames::center, HTML::TagNames::nobr, HTML::TagNames::noembed, HTML::TagNames::noframes, HTML::TagNames::plaintext, HTML::TagNames::rb, HTML::TagNames::rtc, HTML::TagNames::strike, HTML::TagNames::tt))
         return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLElement>(realm, document, move(qualified_name)));
@@ -450,8 +457,16 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGGElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::stop)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGStopElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::style)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGStyleElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::symbol)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGSymbolElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::text)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTextContentElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::title)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTitleElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::use)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGUseElement>(realm, document, move(qualified_name)));
 
     return nullptr;
 }

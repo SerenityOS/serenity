@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/LayoutState.h>
@@ -63,6 +64,38 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics 
     return *new_used_values_ptr;
 }
 
+static void measure_scrollable_overflow(LayoutState const& state, Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge)
+{
+    auto const* maybe_box_state = state.used_values_per_layout_node.get(&box).value_or(nullptr);
+    if (!maybe_box_state)
+        return;
+    auto const& box_state = *maybe_box_state;
+    auto scroll_container_border_box = CSSPixelRect {
+        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
+        { box_state.border_box_width(), box_state.border_box_height() }
+    };
+
+    bottom_edge = max(bottom_edge, scroll_container_border_box.bottom());
+    right_edge = max(right_edge, scroll_container_border_box.right());
+
+    if (box.children_are_inline()) {
+        if (!box_state.line_boxes.is_empty()) {
+            bottom_edge = max(bottom_edge, scroll_container_border_box.y() + box_state.line_boxes.last().bottom());
+            for (auto& line_box : box_state.line_boxes) {
+                if (line_box.fragments().is_empty())
+                    continue;
+                right_edge = max(right_edge, scroll_container_border_box.x() + line_box.fragments().last().width());
+            }
+        }
+    } else {
+        // FIXME: Only check boxes for whom `box` is the containing block.
+        box.for_each_child_of_type<Box>([&](Box const& child) {
+            measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+            return IterationDecision::Continue;
+        });
+    }
+}
+
 void LayoutState::commit()
 {
     // Only the top-level LayoutState should ever be committed.
@@ -75,10 +108,10 @@ void LayoutState::commit()
         auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
 
         // Transfer box model metrics.
-        node.box_model().inset = { used_values.inset_top.value(), used_values.inset_right.value(), used_values.inset_bottom.value(), used_values.inset_left.value() };
-        node.box_model().padding = { used_values.padding_top.value(), used_values.padding_right.value(), used_values.padding_bottom.value(), used_values.padding_left.value() };
-        node.box_model().border = { used_values.border_top.value(), used_values.border_right.value(), used_values.border_bottom.value(), used_values.border_left.value() };
-        node.box_model().margin = { used_values.margin_top.value(), used_values.margin_right.value(), used_values.margin_bottom.value(), used_values.margin_left.value() };
+        node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
+        node.box_model().padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
+        node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
+        node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
 
         node.set_paintable(node.create_paintable());
 
@@ -88,8 +121,10 @@ void LayoutState::commit()
             auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
-            paintable_box.set_overflow_data(move(used_values.overflow_data));
             paintable_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
+            if (used_values.override_borders_data().has_value()) {
+                paintable_box.set_override_borders_data(used_values.override_borders_data().value());
+            }
 
             if (is<Layout::BlockContainer>(box)) {
                 for (auto& line_box : used_values.line_boxes) {
@@ -103,127 +138,30 @@ void LayoutState::commit()
         }
     }
 
-    for (auto* text_node : text_nodes)
-        text_node->set_paintable(text_node->create_paintable());
-}
+    // Measure overflow in scroll containers.
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        if (!used_values.node().is_box())
+            continue;
+        auto const& box = static_cast<Layout::Box const&>(used_values.node());
+        if (!box.is_scroll_container())
+            continue;
+        CSSPixels bottom_edge = 0;
+        CSSPixels right_edge = 0;
+        measure_scrollable_overflow(*this, box, bottom_edge, right_edge);
 
-CSSPixels box_baseline(LayoutState const& state, Box const& box)
-{
-    auto const& box_state = state.get(box);
+        auto padding_box = box.paintable_box()->absolute_padding_box_rect();
 
-    // https://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align
-    auto const& vertical_align = box.computed_values().vertical_align();
-    if (vertical_align.has<CSS::VerticalAlign>()) {
-        switch (vertical_align.get<CSS::VerticalAlign>()) {
-        case CSS::VerticalAlign::Top:
-            // Top: Align the top of the aligned subtree with the top of the line box.
-            return box_state.border_box_top();
-        case CSS::VerticalAlign::Bottom:
-            // Bottom: Align the bottom of the aligned subtree with the bottom of the line box.
-            return box_state.content_height() + box_state.margin_box_top();
-        case CSS::VerticalAlign::TextTop:
-            // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
-            return box.computed_values().font_size();
-        case CSS::VerticalAlign::TextBottom:
-            // TextTop: Align the bottom of the box with the bottom of the parent's content area (see 10.6.1).
-            return box_state.content_height() - (box.containing_block()->font().pixel_metrics().descent * 2);
-        default:
-            break;
+        if (bottom_edge > padding_box.height() || right_edge > padding_box.width()) {
+            Painting::PaintableBox::OverflowData overflow_data;
+            overflow_data.scrollable_overflow_rect = padding_box;
+            overflow_data.scrollable_overflow_rect.set_size(right_edge, bottom_edge);
+            const_cast<Painting::PaintableBox&>(*box.paintable_box()).set_overflow_data(overflow_data);
         }
     }
 
-    if (!box_state.line_boxes.is_empty())
-        return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
-    if (box.has_children() && !box.children_are_inline()) {
-        auto const* child_box = box.last_child_of_type<Box>();
-        VERIFY(child_box);
-        return box_baseline(state, *child_box);
-    }
-    return box_state.margin_box_height();
-}
-
-CSSPixelRect margin_box_rect(Box const& box, LayoutState const& state)
-{
-    auto const& box_state = state.get(box);
-    return {
-        box_state.offset.translated(-box_state.margin_box_left(), -box_state.margin_box_top()),
-        {
-            box_state.margin_box_left() + box_state.content_width() + box_state.margin_box_right(),
-            box_state.margin_box_top() + box_state.content_height() + box_state.margin_box_bottom(),
-        },
-    };
-}
-
-CSSPixelRect border_box_rect(Box const& box, LayoutState const& state)
-{
-    auto const& box_state = state.get(box);
-    return {
-        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
-        {
-            box_state.border_box_left() + box_state.content_width() + box_state.border_box_right(),
-            box_state.border_box_top() + box_state.content_height() + box_state.border_box_bottom(),
-        },
-    };
-}
-
-CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
-{
-    auto rect = border_box_rect(box, state);
-    if (&box == &ancestor_box)
-        return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
-            return rect;
-        auto const& current_state = state.get(static_cast<Box const&>(*current));
-        rect.translate_by(current_state.offset);
-    }
-    // If we get here, ancestor_box was not a containing block ancestor of `box`!
-    VERIFY_NOT_REACHED();
-}
-
-CSSPixelRect content_box_rect(Box const& box, LayoutState const& state)
-{
-    auto const& box_state = state.get(box);
-    return CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-}
-
-CSSPixelRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
-{
-    auto rect = content_box_rect(box, state);
-    if (&box == &ancestor_box)
-        return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
-            return rect;
-        auto const& current_state = state.get(static_cast<Box const&>(*current));
-        rect.translate_by(current_state.offset);
-    }
-    // If we get here, ancestor_box was not a containing block ancestor of `box`!
-    VERIFY_NOT_REACHED();
-}
-
-CSSPixelRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
-{
-    auto rect = margin_box_rect(box, state);
-    if (&box == &ancestor_box)
-        return rect;
-    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
-        if (current == &ancestor_box)
-            return rect;
-        auto const& current_state = state.get(static_cast<Box const&>(*current));
-        rect.translate_by(current_state.offset);
-    }
-    // If we get here, ancestor_box was not a containing block ancestor of `box`!
-    VERIFY_NOT_REACHED();
-}
-
-CSSPixelRect absolute_content_rect(Box const& box, LayoutState const& state)
-{
-    auto const& box_state = state.get(box);
-    CSSPixelRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
-    for (auto* block = box.containing_block(); block; block = block->containing_block())
-        rect.translate_by(state.get(*block).offset);
-    return rect;
+    for (auto* text_node : text_nodes)
+        text_node->set_paintable(text_node->create_paintable());
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, UsedValues const* containing_block_used_values)
@@ -359,9 +297,10 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
 void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
+    VERIFY(isfinite(width.to_double()));
     if (width < 0) {
         // Negative widths are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
-        dbgln("FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
         width = 0;
     }
     m_content_width = width;
@@ -370,9 +309,10 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
 
 void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
+    VERIFY(isfinite(height.to_double()));
     if (height < 0) {
         // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
-        dbgln("FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
         height = 0;
     }
     m_content_height = height;
@@ -446,6 +386,20 @@ void LayoutState::UsedValues::set_indefinite_content_width()
 
 void LayoutState::UsedValues::set_indefinite_content_height()
 {
+    m_has_definite_height = false;
+}
+
+void LayoutState::UsedValues::set_min_content_width()
+{
+    width_constraint = SizeConstraint::MinContent;
+    m_content_width = 0;
+    m_has_definite_height = false;
+}
+
+void LayoutState::UsedValues::set_max_content_width()
+{
+    width_constraint = SizeConstraint::MaxContent;
+    m_content_width = INFINITY;
     m_has_definite_height = false;
 }
 

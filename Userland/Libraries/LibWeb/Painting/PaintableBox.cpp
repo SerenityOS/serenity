@@ -45,10 +45,7 @@ void PaintableBox::invalidate_stacking_context()
 
 bool PaintableBox::is_out_of_view(PaintContext& context) const
 {
-    return !context.enclosing_device_rect(absolute_paint_rect())
-                .to_type<int>()
-                .translated(context.painter().translation())
-                .intersects(context.painter().clip_rect());
+    return context.would_be_fully_clipped_by_painter(context.enclosing_device_rect(absolute_paint_rect()));
 }
 
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
@@ -169,7 +166,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Overlay && should_clip_rect)
         context.painter().restore();
 
-    if (phase == PaintPhase::Overlay && layout_box().dom_node() && layout_box().document().inspected_node() == layout_box().dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_box().document().inspected_layout_node() == &layout_box()) {
         auto content_rect = absolute_rect();
 
         auto margin_box = box_model().margin_box();
@@ -222,7 +219,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 
 void PaintableBox::paint_border(PaintContext& context) const
 {
-    auto borders_data = BordersData {
+    auto borders_data = m_override_borders_data.has_value() ? m_override_borders_data.value() : BordersData {
         .top = box_model().border.top == 0 ? CSS::BorderData() : computed_values().border_top(),
         .right = box_model().border.right == 0 ? CSS::BorderData() : computed_values().border_right(),
         .bottom = box_model().border.bottom == 0 ? CSS::BorderData() : computed_values().border_bottom(),
@@ -296,7 +293,14 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     auto resolved_box_shadow_data = resolve_box_shadow_data();
     if (resolved_box_shadow_data.is_empty())
         return;
-    Painting::paint_box_shadow(context, absolute_border_box_rect(), normalized_border_radii_data(), resolved_box_shadow_data);
+    auto borders_data = BordersData {
+        .top = computed_values().border_top(),
+        .right = computed_values().border_right(),
+        .bottom = computed_values().border_bottom(),
+        .left = computed_values().border_left(),
+    };
+    Painting::paint_box_shadow(context, absolute_border_box_rect(), absolute_padding_box_rect(),
+        borders_data, normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
@@ -327,7 +331,7 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
         auto overflow_x = computed_values().overflow_x();
         auto overflow_y = computed_values().overflow_y();
 
-        if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
+        if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
             if (m_clip_rect.has_value()) {
                 m_clip_rect->intersect(absolute_padding_box_rect());
             } else {
@@ -354,7 +358,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (!m_clipping_overflow) {
         context.painter().save();
-        context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
+        context.painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
         m_clipping_overflow = true;
     }
 
@@ -511,7 +515,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
 
-        if (text_node.document().inspected_node() == &text_node.dom_node())
+        if (text_node.document().inspected_layout_node() == &text_node)
             context.painter().draw_rect(fragment_absolute_device_rect.to_type<int>(), Color::Magenta);
 
         auto text = text_node.text_for_rendering();

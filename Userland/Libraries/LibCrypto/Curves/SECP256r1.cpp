@@ -40,10 +40,10 @@ static void export_big_endian(u256 const& value, Bytes data)
     u64 c = AK::convert_between_host_and_big_endian(value.high().low());
     u64 d = AK::convert_between_host_and_big_endian(value.high().high());
 
-    ByteReader::store(data.offset_pointer(0 * sizeof(u64)), d);
-    ByteReader::store(data.offset_pointer(1 * sizeof(u64)), c);
-    ByteReader::store(data.offset_pointer(2 * sizeof(u64)), b);
     ByteReader::store(data.offset_pointer(3 * sizeof(u64)), a);
+    ByteReader::store(data.offset_pointer(2 * sizeof(u64)), b);
+    ByteReader::store(data.offset_pointer(1 * sizeof(u64)), c);
+    ByteReader::store(data.offset_pointer(0 * sizeof(u64)), d);
 }
 
 static u256 select(u256 const& left, u256 const& right, bool condition)

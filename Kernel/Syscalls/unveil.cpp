@@ -10,8 +10,8 @@
 #include <Kernel/API/Unveil.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/KLexicalPath.h>
-#include <Kernel/Process.h>
+#include <Kernel/Library/KLexicalPath.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -48,6 +48,13 @@ private:
 
 using Result = ErrorOr<File>;
 
+struct OpenFileOptions {
+    StringView window_title = {};
+    DeprecatedString path = Core::StandardPaths::home_directory();
+    Core::File::OpenMode requested_access = Core::File::OpenMode::Read;
+    Optional<Vector<GUI::FileTypeFilter>> allowed_file_types = {};
+};
+
 class Client final
     : public IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
     , public FileSystemAccessClientEndpoint {
@@ -56,7 +63,7 @@ class Client final
 public:
     Result request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
     Result request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::File::OpenMode requested_access);
-    Result open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::File::OpenMode requested_access = Core::File::OpenMode::Read, Optional<Vector<GUI::FileTypeFilter>> const& = {});
+    Result open_file(GUI::Window* parent_window, OpenFileOptions const& = {});
     Result save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access = Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
 
     void set_silence_errors(u32 flags) { m_silenced_errors = flags; }

@@ -49,7 +49,7 @@ Length Length::make_auto()
 
 Length Length::make_px(CSSPixels value)
 {
-    return Length(value.value(), Type::Px);
+    return Length(value.to_double(), Type::Px);
 }
 
 Length Length::percentage_of(Percentage const& percentage) const
@@ -59,38 +59,46 @@ Length Length::percentage_of(Percentage const& percentage) const
         return *this;
     }
 
-    return Length { static_cast<double>(percentage.as_fraction()) * raw_value(), m_type };
+    // HACK: We round to 3 decimal places to emulate what happens in browsers that used fixed point math.
+    // FIXME: Remove this when converting CSSPixels to a fixed-point type.
+    //        https://github.com/SerenityOS/serenity/issues/18566
+    auto value = percentage.as_fraction() * raw_value();
+    value *= 1000;
+    value = round(value);
+    value /= 1000;
+
+    return Length { value, m_type };
 }
 
 CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
 {
     switch (m_type) {
     case Type::Em:
-        return m_value * font_metrics.font_size;
+        return m_value * font_metrics.font_size.to_double();
     case Type::Rem:
-        return m_value * root_font_metrics.font_size;
+        return m_value * root_font_metrics.font_size.to_double();
     case Type::Ex:
-        return m_value * font_metrics.x_height;
+        return m_value * font_metrics.x_height.to_double();
     case Type::Rex:
-        return m_value * root_font_metrics.x_height;
+        return m_value * root_font_metrics.x_height.to_double();
     case Type::Cap:
-        return m_value * font_metrics.cap_height;
+        return m_value * font_metrics.cap_height.to_double();
     case Type::Rcap:
-        return m_value * root_font_metrics.cap_height;
+        return m_value * root_font_metrics.cap_height.to_double();
     case Type::Ch:
-        return m_value * font_metrics.zero_advance;
+        return m_value * font_metrics.zero_advance.to_double();
     case Type::Rch:
-        return m_value * root_font_metrics.zero_advance;
+        return m_value * root_font_metrics.zero_advance.to_double();
     case Type::Ic:
         // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
-        return m_value * font_metrics.font_size;
+        return m_value * font_metrics.font_size.to_double();
     case Type::Ric:
         // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
-        return m_value * root_font_metrics.font_size;
+        return m_value * root_font_metrics.font_size.to_double();
     case Type::Lh:
-        return m_value * font_metrics.line_height;
+        return m_value * font_metrics.line_height.to_double();
     case Type::Rlh:
-        return m_value * root_font_metrics.line_height;
+        return m_value * root_font_metrics.line_height.to_double();
     default:
         VERIFY_NOT_REACHED();
     }
@@ -134,6 +142,23 @@ CSSPixels Length::viewport_relative_length_to_px(CSSPixelRect const& viewport_re
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+Length::ResolutionContext Length::ResolutionContext::for_layout_node(Layout::Node const& node)
+{
+    auto const* root_element = node.document().document_element();
+    VERIFY(root_element);
+    VERIFY(root_element->layout_node());
+    return Length::ResolutionContext {
+        .viewport_rect = node.browsing_context().viewport_rect(),
+        .font_metrics = { node.computed_values().font_size(), node.font().pixel_metrics(), node.line_height() },
+        .root_font_metrics = { root_element->layout_node()->computed_values().font_size(), root_element->layout_node()->font().pixel_metrics(), root_element->layout_node()->line_height() },
+    };
+}
+
+CSSPixels Length::to_px(ResolutionContext const& context) const
+{
+    return to_px(context.viewport_rect, context.font_metrics, context.root_font_metrics);
 }
 
 CSSPixels Length::to_px(Layout::Node const& layout_node) const

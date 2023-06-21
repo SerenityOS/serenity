@@ -55,6 +55,15 @@ public:
 
     // Returns the kernel command line as a StringView into the given buffer.
     StringView query_kernel_command_line(Bytes buffer);
+
+    struct MemoryRange {
+        u32 base;
+        u32 size;
+    };
+    // Returns the RAM available to the CPU in the first 1GB of the physical address space.
+    // FIXME: Remove in favor of parsing the device tree.
+    MemoryRange query_lower_arm_memory_range();
+    MemoryRange query_videocore_memory_range();
 };
 
 }

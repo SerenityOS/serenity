@@ -10,9 +10,9 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
-#include <Kernel/ThreadTracer.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 

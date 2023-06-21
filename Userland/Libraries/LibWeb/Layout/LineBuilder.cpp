@@ -25,10 +25,11 @@ LineBuilder::~LineBuilder()
         update_last_line();
 }
 
-void LineBuilder::break_line(Optional<CSSPixels> next_item_width)
+void LineBuilder::break_line(ForcedBreak forced_break, Optional<CSSPixels> next_item_width)
 {
-    auto last_line_box = ensure_last_line_box();
+    auto& last_line_box = ensure_last_line_box();
     last_line_box.m_has_break = true;
+    last_line_box.m_has_forced_break = forced_break == ForcedBreak::Yes;
 
     update_last_line();
     size_t break_count = 0;
@@ -135,7 +136,7 @@ CSSPixels LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
 
 bool LineBuilder::should_break(CSSPixels next_item_width)
 {
-    if (!isfinite(m_available_width_for_current_line.value()))
+    if (!isfinite(m_available_width_for_current_line.to_double()))
         return false;
 
     auto const& line_boxes = m_containing_block_state.line_boxes;
@@ -170,18 +171,24 @@ void LineBuilder::update_last_line()
 
     CSSPixels excess_horizontal_space = m_available_width_for_current_line - line_box.width();
 
-    switch (text_align) {
-    case CSS::TextAlign::Center:
-    case CSS::TextAlign::LibwebCenter:
-        x_offset += excess_horizontal_space / 2;
-        break;
-    case CSS::TextAlign::Right:
-        x_offset += excess_horizontal_space;
-        break;
-    case CSS::TextAlign::Left:
-    case CSS::TextAlign::Justify:
-    default:
-        break;
+    // If (after justification, if any) the inline contents of a line box are too long to fit within it,
+    // then the contents are start-aligned: any content that doesn't fit overflows the line box’s end edge.
+    if (excess_horizontal_space > 0) {
+        switch (text_align) {
+        case CSS::TextAlign::Center:
+        case CSS::TextAlign::LibwebCenter:
+            x_offset += excess_horizontal_space / 2;
+            break;
+        case CSS::TextAlign::Right:
+        case CSS::TextAlign::LibwebRight:
+            x_offset += excess_horizontal_space;
+            break;
+        case CSS::TextAlign::Left:
+        case CSS::TextAlign::LibwebLeft:
+        case CSS::TextAlign::Justify:
+        default:
+            break;
+        }
     }
 
     auto strut_baseline = [&] {
@@ -211,7 +218,7 @@ void LineBuilder::update_last_line()
                 fragment_baseline = CSSPixels(font_metrics.ascent) + half_leading;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
-                fragment_baseline = box_baseline(m_layout_state, box);
+                fragment_baseline = m_context.box_baseline(box);
             }
 
             // Remember the baseline used for this fragment. This will be used when painting the fragment.
@@ -223,7 +230,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     fragment_baseline += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    fragment_baseline += static_cast<double>(length_percentage->percentage().as_fraction()) * line_height;
+                    fragment_baseline += length_percentage->percentage().as_fraction() * line_height.to_double();
             }
 
             line_box_baseline = max(line_box_baseline, fragment_baseline);
@@ -277,7 +284,7 @@ void LineBuilder::update_last_line()
                     auto vertical_align_amount = length_percentage->length().to_px(fragment.layout_node());
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 } else if (length_percentage->is_percentage()) {
-                    auto vertical_align_amount = static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
+                    auto vertical_align_amount = length_percentage->percentage().as_fraction() * m_context.containing_block().line_height().to_double();
                     new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
                 }
             }
@@ -305,7 +312,7 @@ void LineBuilder::update_last_line()
                 if (length_percentage->is_length())
                     bottom_of_inline_box += length_percentage->length().to_px(fragment.layout_node());
                 else if (length_percentage->is_percentage())
-                    bottom_of_inline_box += static_cast<double>(length_percentage->percentage().as_fraction()) * m_context.containing_block().line_height();
+                    bottom_of_inline_box += length_percentage->percentage().as_fraction() * m_context.containing_block().line_height().to_double();
             }
         }
 

@@ -1,0 +1,6 @@
+#import <DOM/Document.idl>
+
+[Exposed=Window]
+interface HTMLDocument : Document {
+};
+

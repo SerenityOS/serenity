@@ -8,8 +8,8 @@
 
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
-#include <Kernel/DoubleBuffer.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/DoubleBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4SocketTuple.h>

@@ -31,6 +31,7 @@ public:
 
     bool is_token() const { return m_value.has<Token>(); }
     bool is(Token::Type type) const { return is_token() && token().is(type); }
+    bool is_delim(u32 delim) const { return is(Token::Type::Delim) && token().delim() == delim; }
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 

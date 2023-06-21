@@ -52,7 +52,7 @@ private:
     virtual void did_request_context_menu(Gfx::IntPoint) override;
     virtual void did_request_link_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned) override;
     virtual void did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override;
-    virtual void did_request_video_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, bool, bool, bool) override;
+    virtual void did_request_media_context_menu(Gfx::IntPoint, DeprecatedString const&, unsigned, Web::Page::MediaContextMenu const&) override;
     virtual void did_get_source(AK::URL const&, DeprecatedString const&) override;
     virtual void did_get_dom_tree(DeprecatedString const&) override;
     virtual void did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;

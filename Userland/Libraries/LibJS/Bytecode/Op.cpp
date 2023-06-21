@@ -48,10 +48,8 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, PropertyKey name, Bytecode::Interpreter& interpreter, PropertyKind kind)
+static ThrowCompletionOr<void> put_by_property_key(VM& vm, Object* object, Value value, PropertyKey name, PropertyKind kind)
 {
-    auto& vm = interpreter.vm();
-
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
         VERIFY(value.is_function());
@@ -72,9 +70,9 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
         break;
     }
     case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
+        bool succeeded = TRY(object->internal_set(name, value, object));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
         break;
     }
     case PropertyKind::Spread:
@@ -411,17 +409,14 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
-ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> CreateLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto& old_environment) {
         GCPtr<Environment> environment = new_declarative_environment(*old_environment).ptr();
         swap(old_environment, environment);
         return environment;
     };
-    if (m_mode == EnvironmentMode::Lexical)
-        interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
-    else if (m_mode == EnvironmentMode::Var)
-        interpreter.saved_variable_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().variable_environment));
+    interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
     return {};
 }
 
@@ -492,18 +487,39 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto object = TRY(interpreter.accumulator().to_object(vm));
-    interpreter.accumulator() = TRY(object->get(interpreter.current_executable().get_identifier(m_property)));
+
+    auto const& name = interpreter.current_executable().get_identifier(m_property);
+    auto base_value = interpreter.accumulator();
+
+    // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
+    GCPtr<Object> base_obj;
+    if (base_value.is_string()) {
+        auto string_value = TRY(base_value.as_string().get(vm, name));
+        if (string_value.has_value()) {
+            interpreter.accumulator() = *string_value;
+            return {};
+        }
+        base_obj = vm.current_realm()->intrinsics().string_prototype();
+    } else if (base_value.is_number()) {
+        base_obj = vm.current_realm()->intrinsics().number_prototype();
+    } else if (base_value.is_boolean()) {
+        base_obj = vm.current_realm()->intrinsics().boolean_prototype();
+    } else {
+        base_obj = TRY(base_value.to_object(vm));
+    }
+
+    interpreter.accumulator() = TRY(base_obj->internal_get(name, base_value));
     return {};
 }
 
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    auto value = interpreter.accumulator();
-    return put_by_property_key(object, value, name, interpreter, m_kind);
+    return put_by_property_key(vm, object, value, name, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -661,7 +677,12 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     auto argument_values = argument_list_evaluation(interpreter);
 
     Value return_value;
-    if (m_type == CallType::Call)
+    if (m_type == CallType::DirectEval) {
+        if (callee == interpreter.realm().intrinsics().eval_function())
+            return_value = TRY(perform_eval(vm, argument_values[0].value_or(JS::js_undefined()), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
+        else
+            return_value = TRY(call(vm, function, this_value, move(argument_values)));
+    } else if (m_type == CallType::Call)
         return_value = TRY(call(vm, function, this_value, move(argument_values)));
     else
         return_value = TRY(construct(vm, function, move(argument_values)));
@@ -727,6 +748,10 @@ ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+    if (m_home_object.has_value()) {
+        auto home_object_value = interpreter.reg(m_home_object.value());
+        static_cast<ECMAScriptFunctionObject&>(interpreter.accumulator().as_function()).set_home_object(&home_object_value.as_object());
+    }
     return {};
 }
 
@@ -780,6 +805,12 @@ ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
+void NewFunction::replace_references_impl(Register from, Register to)
+{
+    if (m_home_object == from)
+        m_home_object = to;
+}
+
 void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
 {
     if (&m_entry_point.block() == &from)
@@ -816,12 +847,9 @@ ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter& interp
     return {};
 }
 
-ThrowCompletionOr<void> LeaveEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> LeaveLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    if (m_mode == EnvironmentMode::Lexical)
-        interpreter.vm().running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
-    if (m_mode == EnvironmentMode::Var)
-        interpreter.vm().running_execution_context().variable_environment = interpreter.saved_variable_environment_stack().take_last();
+    interpreter.vm().running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
     return {};
 }
 
@@ -874,9 +902,13 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
-    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
+    auto property_key = TRY(property_key_value.to_property_key(vm));
 
     interpreter.accumulator() = TRY(object->get(property_key));
     return {};
@@ -885,17 +917,25 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    return put_by_property_key(object, interpreter.accumulator(), property_key, interpreter, m_kind);
+    return put_by_property_key(vm, object, value, property_key, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
-    auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
+    auto property_key = TRY(property_key_value.to_property_key(vm));
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, property_key, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
@@ -981,7 +1021,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     result_object->define_direct_property(vm.names.done, JS::Value(false), default_attributes);
 
                     if (key.is_number())
-                        result_object->define_direct_property(vm.names.value, JS::Value(key.as_number()), default_attributes);
+                        result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::number(key.as_number()))), default_attributes);
                     else if (key.is_string())
                         result_object->define_direct_property(vm.names.value, PrimitiveString::create(vm, key.as_string()), default_attributes);
                     else
@@ -1076,6 +1116,22 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = TRY(interpreter.accumulator().to_numeric(interpreter.vm()));
+    return {};
+}
+
+ThrowCompletionOr<void> BlockDeclarationInstantiation::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto old_environment = vm.running_execution_context().lexical_environment;
+    interpreter.saved_lexical_environment_stack().append(old_environment);
+    vm.running_execution_context().lexical_environment = new_declarative_environment(*old_environment);
+    m_scope_node.block_declaration_instantiation(vm, vm.running_execution_context().lexical_environment);
+    return {};
+}
+
 DeprecatedString Load::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("Load {}", m_src);
@@ -1160,12 +1216,9 @@ DeprecatedString DeleteVariable::to_deprecated_string_impl(Bytecode::Executable 
     return DeprecatedString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-DeprecatedString CreateEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
+DeprecatedString CreateLexicalEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto mode_string = m_mode == EnvironmentMode::Lexical
-        ? "Lexical"
-        : "Variable";
-    return DeprecatedString::formatted("CreateEnvironment mode:{}", mode_string);
+    return "CreateLexicalEnvironment"sv;
 }
 
 DeprecatedString CreateVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
@@ -1239,10 +1292,23 @@ DeprecatedString JumpUndefined::to_deprecated_string_impl(Bytecode::Executable c
 
 DeprecatedString Call::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    if (m_expression_string.has_value())
-        return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc] ({})", m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+    StringView type;
+    switch (m_type) {
+    case Call::CallType::Call:
+        type = ""sv;
+        break;
+    case Call::CallType::Construct:
+        type = " (Construct)"sv;
+        break;
+    case Call::CallType::DirectEval:
+        type = " (DirectEval)"sv;
+        break;
+    }
 
-    return DeprecatedString::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
+    if (m_expression_string.has_value())
+        return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+
+    return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
 }
 
 DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const&) const
@@ -1252,7 +1318,9 @@ DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const
 
 DeprecatedString NewFunction::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return "NewFunction";
+    if (m_home_object.has_value())
+        return DeprecatedString::formatted("NewFunction home_object:{}", m_home_object.value());
+    return "NewFunction"sv;
 }
 
 DeprecatedString NewClass::to_deprecated_string_impl(Bytecode::Executable const&) const
@@ -1298,12 +1366,9 @@ DeprecatedString ScheduleJump::to_deprecated_string_impl(Bytecode::Executable co
     return DeprecatedString::formatted("ScheduleJump {}", m_target);
 }
 
-DeprecatedString LeaveEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
+DeprecatedString LeaveLexicalEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto mode_string = m_mode == EnvironmentMode::Lexical
-        ? "Lexical"
-        : "Variable";
-    return DeprecatedString::formatted("LeaveEnvironment env:{}", mode_string);
+    return "LeaveLexicalEnvironment"sv;
 }
 
 DeprecatedString LeaveUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const
@@ -1416,6 +1481,16 @@ DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable co
 DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ToNumeric"sv;
+}
+
+DeprecatedString BlockDeclarationInstantiation::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "BlockDeclarationInstantiation"sv;
 }
 
 }

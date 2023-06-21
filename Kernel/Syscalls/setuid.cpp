@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/POSIX/sys/limits.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

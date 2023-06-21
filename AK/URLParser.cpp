@@ -553,7 +553,8 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     report_validation_error();
                 state = State::FileHost;
             } else if (base_url.has_value() && base_url->m_scheme == "file") {
-                url->m_host = base_url->m_host;
+                url->m_paths = base_url->m_paths;
+                url->m_paths.remove(url->m_paths.size() - 1);
                 auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                 if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_paths[0]))
                     url->append_path(base_url->m_paths[0], URL::ApplyPercentEncoding::No);

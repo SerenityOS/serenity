@@ -95,10 +95,32 @@ void TextEditor::create_actions()
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
-        m_go_to_line_action = Action::create(
-            "Go to Line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        m_go_to_line_or_column_action = Action::create(
+            "Go to Line/Column...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
-                if (InputBox::show(window(), value, "Line:"sv, "Go to Line"sv) == InputBox::ExecResult::OK) {
+                if (InputBox::show(window(), value, "Enter the line, or line:column:"sv, "Go to Line/Column"sv) == InputBox::ExecResult::OK) {
+                    // If there is a `:` in the string, the format is expected to be `line:column`. E.g: `123:45`
+                    if (value.contains(':')) {
+                        auto line_and_column_or_error = value.split(':');
+                        if (line_and_column_or_error.is_error()) {
+                            return;
+                        }
+
+                        auto line_and_column = line_and_column_or_error.value();
+                        if (line_and_column.size() != 2) {
+                            return;
+                        }
+
+                        auto line_target = AK::StringUtils::convert_to_uint(line_and_column.at(0));
+                        auto column_target = AK::StringUtils::convert_to_uint(line_and_column.at(1));
+                        if (line_target.has_value() && column_target.has_value()) {
+                            set_cursor_and_focus_line(line_target.value() - 1, column_target.value());
+                        }
+
+                        return;
+                    }
+
+                    // If there is no `:` in the string, we just treat the integer as the line
                     auto line_target = AK::StringUtils::convert_to_uint(value.bytes_as_string_view());
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
@@ -181,7 +203,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
         for_each_visual_line(line_index, [&](Gfx::IntRect const& rect, auto& view, size_t start_of_line, [[maybe_unused]] bool is_last_visual_line) {
-            if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line)
+            if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line && position.y() >= 0)
                 return IterationDecision::Continue;
 
             column_index = start_of_line;
@@ -1104,7 +1126,7 @@ void TextEditor::keydown_event(KeyEvent& event)
                 erase_count = grapheme_break_position - m_cursor.column();
             }
             TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
-            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
             return;
         }
         if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
@@ -1114,7 +1136,7 @@ void TextEditor::keydown_event(KeyEvent& event)
                 erase_count = document().first_word_break_after({ m_cursor.line() + 1, 0 }).column();
             }
             TextRange erased_range(m_cursor, { m_cursor.line() + 1, erase_count });
-            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+            execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.end());
             return;
         }
         return;
@@ -1150,14 +1172,14 @@ void TextEditor::keydown_event(KeyEvent& event)
             // Backspace within line
             TextRange erased_range({ m_cursor.line(), m_cursor.column() - erase_count }, m_cursor);
             auto erased_text = document().text_in_range(erased_range);
-            execute<RemoveTextCommand>(erased_text, erased_range);
+            execute<RemoveTextCommand>(erased_text, erased_range, erased_range.end());
             return;
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
             // Backspace at column 0; merge with previous line
             size_t previous_length = line(m_cursor.line() - 1).length();
             TextRange erased_range({ m_cursor.line() - 1, previous_length }, m_cursor);
-            execute<RemoveTextCommand>("\n", erased_range);
+            execute<RemoveTextCommand>("\n", erased_range, erased_range.end());
             return;
         }
         return;
@@ -1256,7 +1278,7 @@ void TextEditor::unindent_line()
 void TextEditor::delete_previous_word()
 {
     TextRange to_erase(document().first_word_before(m_cursor, true), m_cursor);
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, to_erase.end());
 }
 
 void TextEditor::delete_current_line()
@@ -1278,7 +1300,7 @@ void TextEditor::delete_current_line()
     }
 
     TextRange erased_range(start, end);
-    execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+    execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, m_cursor);
 }
 
 void TextEditor::delete_previous_char()
@@ -1295,14 +1317,14 @@ void TextEditor::delete_previous_char()
         to_erase.set_start({ m_cursor.line() - 1, prev_line_len });
     }
 
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, to_erase.end());
 }
 
 void TextEditor::delete_from_line_start_to_cursor()
 {
     TextPosition start(m_cursor.line(), current_line().first_non_whitespace_column());
     TextRange to_erase(start, m_cursor);
-    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase, m_cursor);
 }
 
 void TextEditor::do_delete()
@@ -1316,13 +1338,13 @@ void TextEditor::do_delete()
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
         TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + 1 });
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
         return;
     }
     if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
         // Delete at end of line; merge with next line
         TextRange erased_range(m_cursor, { m_cursor.line() + 1, 0 });
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.start());
         return;
     }
 }
@@ -1733,7 +1755,7 @@ void TextEditor::delete_selection()
     auto selection = normalized_selection();
     auto selected = selected_text();
     m_selection.clear();
-    execute<RemoveTextCommand>(selected, selection);
+    execute<RemoveTextCommand>(selected, selection, selection.end());
     did_update_selection();
     did_change();
     set_cursor(selection.start());
@@ -1743,7 +1765,7 @@ void TextEditor::delete_selection()
 void TextEditor::delete_text_range(TextRange range)
 {
     auto normalized_range = range.normalized();
-    execute<RemoveTextCommand>(document().text_in_range(normalized_range), normalized_range);
+    execute<RemoveTextCommand>(document().text_in_range(normalized_range), normalized_range, normalized_range.end());
     did_change();
     set_cursor(normalized_range.start());
     update();
@@ -1769,7 +1791,7 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
         TextPosition start(original_cursor_position.line() - 1, 0);
         TextPosition end(original_cursor_position.line() - 1, clear_length);
         TextRange erased_range(start, end);
-        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range, erased_range.end());
         set_cursor(original_cursor_position);
     }
 }
@@ -1965,7 +1987,7 @@ void TextEditor::context_menu_event(ContextMenuEvent& event)
         m_context_menu->add_action(insert_emoji_action());
         if (is_multi_line()) {
             m_context_menu->add_separator();
-            m_context_menu->add_action(go_to_line_action());
+            m_context_menu->add_action(go_to_line_or_column_action());
         }
         if (!m_custom_context_menu_actions.is_empty()) {
             m_context_menu->add_separator();

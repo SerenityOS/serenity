@@ -59,7 +59,7 @@ Clipboard::DataAndType Clipboard::fetch_data_and_type() const
 {
     auto response = connection().get_clipboard_data();
     auto type = response.mime_type();
-    auto metadata = response.metadata();
+    auto& metadata = response.metadata();
 
     auto metadata_clone_or_error = metadata.clone();
     if (metadata_clone_or_error.is_error())
@@ -71,7 +71,7 @@ Clipboard::DataAndType Clipboard::fetch_data_and_type() const
     if (data.is_error())
         return {};
 
-    return { data.release_value(), type, metadata };
+    return { data.release_value(), type, metadata_clone_or_error.release_value() };
 }
 
 RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const

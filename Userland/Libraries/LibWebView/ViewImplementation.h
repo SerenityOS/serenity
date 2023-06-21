@@ -30,6 +30,11 @@ enum class IsLayoutTestMode {
     Yes
 };
 
+enum class UseJavaScriptBytecode {
+    No,
+    Yes
+};
+
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -74,9 +79,10 @@ public:
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
 
-    void toggle_video_play_state();
-    void toggle_video_loop_state();
-    void toggle_video_controls_state();
+    void toggle_media_play_state();
+    void toggle_media_mute_state();
+    void toggle_media_loop_state();
+    void toggle_media_controls_state();
 
     enum class ScreenshotType {
         Visible,
@@ -90,7 +96,7 @@ public:
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position, Gfx::ShareableBitmap const&)> on_image_context_menu_request;
-    Function<void(const AK::URL&, Gfx::IntPoint screen_position, bool, bool, bool)> on_video_context_menu_request;
+    Function<void(Gfx::IntPoint screen_position, Web::Page::MediaContextMenu const&)> on_media_context_menu_request;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void()> on_link_unhover;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
@@ -166,10 +172,10 @@ protected:
     void request_repaint();
     void handle_resize();
 
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) {};
+    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No) { }
 
 #if !defined(AK_OS_SERENITY)
-    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No);
+    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No);
 #endif
 
     void handle_web_content_process_crash();
@@ -200,6 +206,9 @@ protected:
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     Gfx::IntSize m_backup_bitmap_size;
+
+    size_t m_crash_count = 0;
+    RefPtr<Core::Timer> m_repeated_crash_timer;
 };
 
 }

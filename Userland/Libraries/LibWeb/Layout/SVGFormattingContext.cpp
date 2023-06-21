@@ -7,10 +7,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
+#include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -157,21 +159,21 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             auto path_transform = dom_node.get_transform();
 
             double viewbox_scale = 1;
-            auto& maybe_view_box = svg_svg_element.view_box();
+            auto maybe_view_box = svg_svg_element.view_box();
             if (maybe_view_box.has_value()) {
                 // FIXME: This should allow just one of width or height to be specified.
                 // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.
                 if (!svg_box_state.has_definite_width() || !svg_box_state.has_definite_height()) {
-                    dbgln("FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
+                    dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Attempting to layout indefinitely sized SVG with a viewbox -- this likely won't work!");
                 }
 
                 auto view_box = maybe_view_box.value();
-                auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width().value() / view_box.width : 1;
-                auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height().value() / view_box.height : 1;
+                auto scale_width = svg_box_state.has_definite_width() ? svg_box_state.content_width() / view_box.width : 1;
+                auto scale_height = svg_box_state.has_definite_height() ? svg_box_state.content_height() / view_box.height : 1;
 
                 // The initial value for preserveAspectRatio is xMidYMid meet.
                 auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
-                auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
+                auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width.to_double(), scale_height.to_double() }, svg_box_state);
                 path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<double>().to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
                 viewbox_scale = viewbox_transform.scale_factor;
             }
@@ -186,6 +188,10 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         } else if (is<SVGSVGBox>(descendant)) {
             SVGFormattingContext nested_context(m_state, descendant, this);
             nested_context.run(descendant, layout_mode, available_space);
+        } else if (is<SVGTextBox>(descendant)) {
+            auto const& svg_text_box = static_cast<SVGTextBox const&>(descendant);
+            // NOTE: This hack creates a layout state to ensure the existence of a paintable box node in LayoutState::commit(), even when none of the values from UsedValues impact the SVG text.
+            m_state.get_mutable(svg_text_box);
         }
 
         return IterationDecision::Continue;

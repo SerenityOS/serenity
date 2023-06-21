@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,13 +23,13 @@ public:
     {
     }
 
-    explicit Percentage(float value)
+    explicit Percentage(double value)
         : m_value(value)
     {
     }
 
-    float value() const { return m_value; }
-    float as_fraction() const { return m_value * 0.01f; }
+    double value() const { return m_value; }
+    double as_fraction() const { return m_value * 0.01; }
 
     ErrorOr<String> to_string() const
     {
@@ -38,8 +38,17 @@ public:
 
     bool operator==(Percentage const& other) const { return m_value == other.m_value; }
 
+    int operator<=>(Percentage const& other) const
+    {
+        if (m_value < other.m_value)
+            return -1;
+        if (m_value > other.m_value)
+            return 1;
+        return 0;
+    }
+
 private:
-    float m_value;
+    double m_value;
 };
 
 }

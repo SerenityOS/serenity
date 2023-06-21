@@ -289,18 +289,43 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
     ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_a_calc_function_node(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_min_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_max_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_clamp_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_abs_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_sign_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_sin_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_cos_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_tan_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_asin_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_acos_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_atan_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_atan2_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_pow_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_sqrt_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_hypot_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_log_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_exp_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_round_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_mod_function(Function const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_rem_function(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
-    ErrorOr<RefPtr<StyleValue>> parse_numeric_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_identifier_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_color_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_rect_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_ratio_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_string_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_image_value(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_paint_value(TokenStream<ComponentValue>&);
     template<typename ParseFunction>
     ErrorOr<RefPtr<StyleValue>> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
     ErrorOr<RefPtr<StyleValue>> parse_simple_comma_separated_value_list(PropertyID, Vector<ComponentValue> const&);
 
     ErrorOr<RefPtr<StyleValue>> parse_filter_value_list_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_aspect_ratio_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_background_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_single_background_position_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>&, PropertyID);
@@ -317,6 +342,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_font_family_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_list_style_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_overflow_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_place_content_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
         No,
         Yes,
@@ -334,6 +360,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_grid_template_areas_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_grid_shorthand_value(Vector<ComponentValue> const&);
 
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calculation(Vector<ComponentValue> const&);
 

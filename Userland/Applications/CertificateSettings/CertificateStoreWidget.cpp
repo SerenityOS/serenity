@@ -34,15 +34,15 @@ ErrorOr<void> CertificateStoreModel::load()
     return {};
 }
 
-String CertificateStoreModel::column_name(int column) const
+ErrorOr<String> CertificateStoreModel::column_name(int column) const
 {
     switch (column) {
     case Column::IssuedTo:
-        return "Issued To"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Issued To"_string);
     case Column::IssuedBy:
-        return "Issued By"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Issued By"_string);
     case Column::Expire:
-        return "Expiration Date"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Expiration Date"_string);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -92,15 +92,17 @@ ErrorOr<size_t> CertificateStoreModel::add(Vector<Certificate> const& certificat
 
 ErrorOr<void> CertificateStoreWidget::import_pem()
 {
-    auto fsac_result = FileSystemAccessClient::Client::the().open_file(window(), "Import");
+    FileSystemAccessClient::OpenFileOptions options {
+        .window_title = "Import"sv,
+        .allowed_file_types = Vector {
+            GUI::FileTypeFilter { "Certificate Files", { { "pem", "crt" } } },
+        },
+    };
+    auto fsac_result = FileSystemAccessClient::Client::the().open_file(window(), options);
     if (fsac_result.is_error())
         return {};
 
     auto fsac_file = fsac_result.release_value();
-    auto filename = fsac_file.filename();
-    if (!(filename.ends_with_bytes(".pem"sv) || filename.ends_with_bytes(".crt"sv)))
-        return Error::from_string_view("File is not a .pem or .crt file."sv);
-
     auto data = TRY(fsac_file.release_stream()->read_until_eof());
     auto count = TRY(m_root_ca_model->add(TRY(DefaultRootCACertificates::parse_pem_root_certificate_authorities(data))));
 

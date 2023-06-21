@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <Kernel/DoubleBuffer.h>
-#include <Kernel/KBuffer.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/DoubleBuffer.h>
+#include <Kernel/Library/KBuffer.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/Socket.h>

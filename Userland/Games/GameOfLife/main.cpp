@@ -24,8 +24,6 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 
-char const* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
@@ -40,6 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
+
+    auto click_tip = TRY("Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells"_string);
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gameoflife"sv));
 
@@ -66,6 +66,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& statusbar = *main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(click_tip);
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     auto& columns_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("columns_spinbox");
     auto& rows_spinbox = *main_widget->find_descendant_of_type_named<GUI::SpinBox>("rows_spinbox");
@@ -147,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_widget->on_running_state_change = [&]() {
         if (board_widget->is_running()) {
-            statusbar.set_text("Running...");
+            statusbar.set_text("Running..."_string.release_value_but_fixme_should_propagate_errors());
             toggle_running_toolbar_button->set_icon(*paused_icon);
             main_widget->set_override_cursor(Gfx::StandardCursor::None);
         } else {
@@ -171,7 +177,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_widget->on_stall = [&] {
         toggle_running_action->activate();
-        statusbar.set_text("Stalled...");
+        statusbar.set_text("Stalled..."_string.release_value_but_fixme_should_propagate_errors());
     };
 
     board_widget->on_cell_toggled = [&](auto, auto, auto) {

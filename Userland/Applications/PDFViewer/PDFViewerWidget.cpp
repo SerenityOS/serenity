@@ -64,7 +64,7 @@ public:
         return Columns::Page;
     }
 
-    String column_name(int index) const override
+    ErrorOr<String> column_name(int index) const override
     {
         switch (index) {
         case 0:
@@ -210,7 +210,13 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(&window);
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = Vector {
+                GUI::FileTypeFilter { "PDF Files", { { "pdf" } } },
+                GUI::FileTypeFilter::all_files(),
+            },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
         if (!response.is_error())
             open_file(response.value().filename(), response.value().release_stream());
     })));
@@ -317,12 +323,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
-    m_page_view_mode_single->set_status_tip("Show single page at a time");
+    m_page_view_mode_single->set_status_tip("Show single page at a time"_string.release_value_but_fixme_should_propagate_errors());
 
     m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
-    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time");
+    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string.release_value_but_fixme_should_propagate_errors());
 
     if (m_viewer->page_view_mode() == PDFViewer::PageViewMode::Single) {
         m_page_view_mode_single->set_checked(true);

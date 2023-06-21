@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Kernel/Storage/SD/Registers.h>
-#include <Kernel/Storage/SD/SDHostController.h>
+#include <Kernel/Devices/Storage/SD/Registers.h>
+#include <Kernel/Devices/Storage/SD/SDHostController.h>
 
 namespace Kernel::RPi {
 

@@ -29,6 +29,8 @@ Heap::~Heap()
 
 ErrorOr<void> Heap::open()
 {
+    VERIFY(!m_file);
+
     size_t file_size = 0;
     struct stat stat_buffer;
     if (stat(name().characters(), &stat_buffer) != 0) {
@@ -118,8 +120,12 @@ ErrorOr<ByteBuffer> Heap::read_storage(Block::Index index)
 ErrorOr<void> Heap::write_storage(Block::Index index, ReadonlyBytes data)
 {
     dbgln_if(SQL_DEBUG, "{}({}, {} bytes)", __FUNCTION__, index, data.size());
-    VERIFY(index > 0);
-    VERIFY(data.size() > 0);
+    if (index == 0)
+        return Error::from_string_view("Writing to zero block is not allowed"sv);
+    if (data.is_empty())
+        return Error::from_string_view("Writing empty data is not allowed"sv);
+    if (m_free_block_indices.contains_slow(index))
+        return Error::from_string_view("Invalid write to a free block index"sv);
 
     // Split up the storage across multiple blocks if necessary, creating a chain
     u32 remaining_size = static_cast<u32>(data.size());
@@ -176,7 +182,7 @@ ErrorOr<ByteBuffer> Heap::read_raw_block(Block::Index index)
 
 ErrorOr<Block> Heap::read_block(Block::Index index)
 {
-    dbgln_if(SQL_DEBUG, "Read heap block {}", index);
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, index);
 
     auto buffer = TRY(read_raw_block(index));
     auto size_in_bytes = *reinterpret_cast<u32*>(buffer.offset_pointer(0));
@@ -204,7 +210,7 @@ ErrorOr<void> Heap::write_raw_block(Block::Index index, ReadonlyBytes data)
 
 ErrorOr<void> Heap::write_raw_block_to_wal(Block::Index index, ByteBuffer&& data)
 {
-    dbgln_if(SQL_DEBUG, "{}(): adding raw block {} to WAL", __FUNCTION__, index);
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, index);
     VERIFY(index < m_next_block);
     VERIFY(data.size() == Block::SIZE);
 
@@ -215,6 +221,7 @@ ErrorOr<void> Heap::write_raw_block_to_wal(Block::Index index, ByteBuffer&& data
 
 ErrorOr<void> Heap::write_block(Block const& block)
 {
+    dbgln_if(SQL_DEBUG, "{}({})", __FUNCTION__, block.index());
     VERIFY(block.index() < m_next_block);
     VERIFY(block.next_block() < m_next_block);
     VERIFY(block.size_in_bytes() > 0);

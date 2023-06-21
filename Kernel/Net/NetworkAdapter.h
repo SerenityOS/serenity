@@ -13,14 +13,14 @@
 #include <AK/MACAddress.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

@@ -10,8 +10,8 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/Definitions.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
-#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::VirtIO {

@@ -55,7 +55,8 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             return;
         }
         if (name == HTML::AttributeNames::bgcolor) {
-            auto color = Color::from_string(value);
+            // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
+            auto color = parse_legacy_color_value(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
             return;
@@ -72,14 +73,16 @@ JS::GCPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-caption
-void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
+WebIDL::ExceptionOr<void> HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
 {
     // On setting, the first caption element child of the table element, if any, must be removed,
     // and the new value, if not null, must be inserted as the first node of the table element.
     delete_caption();
 
     if (caption)
-        MUST(pre_insert(*caption, first_child()));
+        TRY(pre_insert(*caption, first_child()));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-createcaption

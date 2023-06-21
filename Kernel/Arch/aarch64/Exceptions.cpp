@@ -8,7 +8,7 @@
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/Processor.h>
 #include <Kernel/Arch/aarch64/Registers.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 
 extern "C" uintptr_t vector_table_el1;
 

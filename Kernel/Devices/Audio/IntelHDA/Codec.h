@@ -14,7 +14,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/Devices/Audio/IntelHDA/Format.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel::Audio::IntelHDA {
 

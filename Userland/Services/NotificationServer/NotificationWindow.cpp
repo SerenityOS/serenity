@@ -41,7 +41,6 @@ static void update_notification_window_locations(Gfx::IntRect const& screen_rect
 NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& text, DeprecatedString const& title, Gfx::ShareableBitmap const& icon)
 {
     m_id = client_id;
-    s_windows.set(m_id, this);
 
     set_window_type(GUI::WindowType::Notification);
     set_resizable(false);
@@ -54,6 +53,8 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
             || (window->m_original_rect.y() > lowest_notification_rect_on_screen.value().y()))
             lowest_notification_rect_on_screen = window->m_original_rect;
     }
+
+    s_windows.set(m_id, this);
 
     Gfx::IntRect rect;
     rect.set_width(220);

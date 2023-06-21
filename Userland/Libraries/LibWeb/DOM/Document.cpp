@@ -42,12 +42,14 @@
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
@@ -79,6 +81,8 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/SVG/SVGElement.h>
+#include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/UIEvents/EventNames.h>
@@ -240,7 +244,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    and navigation id is navigationParams's id.
-    auto document = TRY(Document::create(window->realm()));
+    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
     document->m_type = type;
     document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
@@ -610,20 +614,40 @@ Element const* Document::document_element() const
     return first_child_of_type<Element>();
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#the-html-element-2
 HTML::HTMLHtmlElement* Document::html_element()
 {
+    // The html element of a document is its document element, if it's an html element, and null otherwise.
     auto* html = document_element();
     if (is<HTML::HTMLHtmlElement>(html))
         return verify_cast<HTML::HTMLHtmlElement>(html);
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#the-head-element-2
 HTML::HTMLHeadElement* Document::head()
 {
+    // The head element of a document is the first head element that is a child of the html element, if there is one,
+    // or null otherwise.
     auto* html = html_element();
     if (!html)
         return nullptr;
     return html->first_child_of_type<HTML::HTMLHeadElement>();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#the-title-element-2
+JS::GCPtr<HTML::HTMLTitleElement> Document::title_element()
+{
+    // The title element of a document is the first title element in the document (in tree order), if there is one, or
+    // null otherwise.
+    JS::GCPtr<HTML::HTMLTitleElement> title_element = nullptr;
+
+    for_each_in_subtree_of_type<HTML::HTMLTitleElement>([&](auto& title_element_in_tree) {
+        title_element = title_element_in_tree;
+        return IterationDecision::Break;
+    });
+
+    return title_element;
 }
 
 HTML::HTMLElement* Document::body()
@@ -660,52 +684,100 @@ WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#document.title
 DeprecatedString Document::title() const
 {
-    auto* head_element = head();
-    if (!head_element)
-        return {};
+    auto value = DeprecatedString::empty();
 
-    auto* title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
-    if (!title_element)
-        return {};
-
-    auto raw_title = title_element->text_content();
-
-    StringBuilder builder;
-    bool last_was_space = false;
-    for (auto code_point : Utf8View(raw_title)) {
-        if (is_ascii_space(code_point)) {
-            last_was_space = true;
-        } else {
-            if (last_was_space && !builder.is_empty())
-                builder.append(' ');
-            builder.append_code_point(code_point);
-            last_was_space = false;
-        }
+    // 1. If the document element is an SVG svg element, then let value be the child text content of the first SVG title
+    //    element that is a child of the document element.
+    if (auto const* document_element = this->document_element(); is<SVG::SVGElement>(document_element)) {
+        if (auto const* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>())
+            value = title_element->child_text_content();
     }
-    return builder.to_deprecated_string();
+
+    // 2. Otherwise, let value be the child text content of the title element, or the empty string if the title element
+    //    is null.
+    else if (auto title_element = this->title_element()) {
+        value = title_element->text_content();
+    }
+
+    // 3. Strip and collapse ASCII whitespace in value.
+    auto title = Infra::strip_and_collapse_whitespace(value).release_value_but_fixme_should_propagate_errors();
+
+    // 4. Return value.
+    return title.to_deprecated_string();
 }
 
-void Document::set_title(DeprecatedString const& title)
+// https://html.spec.whatwg.org/multipage/dom.html#document.title
+WebIDL::ExceptionOr<void> Document::set_title(DeprecatedString const& title)
 {
-    auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
-    if (!head_element)
-        return;
+    auto* document_element = this->document_element();
 
-    JS::GCPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
-    if (!title_element) {
-        title_element = &static_cast<HTML::HTMLTitleElement&>(*DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors());
-        MUST(head_element->append_child(*title_element));
+    // -> If the document element is an SVG svg element
+    if (is<SVG::SVGElement>(document_element)) {
+        JS::GCPtr<Element> element;
+
+        // 1. If there is an SVG title element that is a child of the document element, let element be the first such
+        //    element.
+        if (auto* title_element = document_element->first_child_of_type<SVG::SVGTitleElement>()) {
+            element = title_element;
+        }
+        // 2. Otherwise:
+        else {
+            // 1. Let element be the result of creating an element given the document element's node document, title,
+            //    and the SVG namespace.
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::SVG));
+
+            // 2. Insert element as the first child of the document element.
+            document_element->insert_before(*element, nullptr);
+        }
+
+        // 3. String replace all with the given value within element.
+        element->string_replace_all(title);
     }
 
-    title_element->remove_all_children(true);
-    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title).release_allocated_value_but_fixme_should_propagate_errors()));
+    // -> If the document element is in the HTML namespace
+    else if (document_element && document_element->namespace_() == Namespace::HTML) {
+        auto title_element = this->title_element();
+        auto* head_element = this->head();
+
+        // 1. If the title element is null and the head element is null, then return.
+        if (title_element == nullptr && head_element == nullptr)
+            return {};
+
+        JS::GCPtr<Element> element;
+
+        // 2. If the title element is non-null, let element be the title element.
+        if (title_element) {
+            element = title_element;
+        }
+        // 3. Otherwise:
+        else {
+            // 1. Let element be the result of creating an element given the document element's node document, title,
+            //    and the HTML namespace.
+            element = TRY(DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML));
+
+            // 2. Append element to the head element.
+            TRY(head_element->append_child(*element));
+        }
+
+        // 4. String replace all with the given value within element.
+        element->string_replace_all(title);
+    }
+
+    // -> Otherwise
+    else {
+        // Do nothing.
+        return {};
+    }
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
             page->client().page_did_change_title(title);
     }
+
+    return {};
 }
 
 void Document::tear_down_layout_tree()
@@ -985,18 +1057,29 @@ Layout::Viewport* Document::layout_node()
     return static_cast<Layout::Viewport*>(Node::layout_node());
 }
 
-void Document::set_inspected_node(Node* node)
+void Document::set_inspected_node(Node* node, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    if (m_inspected_node.ptr() == node)
+    if (m_inspected_node.ptr() == node && m_inspected_pseudo_element == pseudo_element)
         return;
 
-    if (m_inspected_node && m_inspected_node->layout_node())
-        m_inspected_node->layout_node()->set_needs_display();
+    if (auto layout_node = inspected_layout_node())
+        layout_node->set_needs_display();
 
     m_inspected_node = node;
+    m_inspected_pseudo_element = pseudo_element;
 
-    if (m_inspected_node && m_inspected_node->layout_node())
-        m_inspected_node->layout_node()->set_needs_display();
+    if (auto layout_node = inspected_layout_node())
+        layout_node->set_needs_display();
+}
+
+Layout::Node* Document::inspected_layout_node()
+{
+    if (!m_inspected_node)
+        return nullptr;
+    if (!m_inspected_pseudo_element.has_value() || !m_inspected_node->is_element())
+        return m_inspected_node->layout_node();
+    auto& element = static_cast<Element&>(*m_inspected_node);
+    return element.get_pseudo_element_node(m_inspected_pseudo_element.value());
 }
 
 static Node* find_common_ancestor(Node* a, Node* b)
@@ -1242,7 +1325,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
         if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
     }
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
@@ -1270,7 +1353,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
     if (options.has<ElementCreationOptions>()) {
         auto const& element_creation_options = options.get<ElementCreationOptions>();
         if (!element_creation_options.is.is_null())
-            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+            is_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element_creation_options.is));
     }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
@@ -1667,6 +1750,11 @@ void Document::completely_finish_loading()
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
             container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
         });
+    }
+
+    for (auto& document_observer : m_document_observers) {
+        if (document_observer->document_fully_loaded)
+            document_observer->document_fully_loaded();
     }
 }
 
@@ -2151,7 +2239,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
     auto registry = window().custom_elements().release_value_but_fixme_should_propagate_errors();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
-    auto converted_local_name = String::from_utf8(local_name).release_value_but_fixme_should_propagate_errors();
+    auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
     auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name, converted_local_name);
     if (maybe_definition)
         return maybe_definition;
@@ -2230,6 +2318,45 @@ HTML::PolicyContainer Document::policy_container() const
     return m_policy_container;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#descendant-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::descendant_navigables()
+{
+    // 1. Let navigables be new list.
+    Vector<JS::Handle<HTML::Navigable>> navigables;
+
+    // 2. Let navigableContainers be a list of all shadow-including descendants of document that are navigable containers, in shadow-including tree order.
+    // 3. For each navigableContainer of navigableContainers:
+    for_each_shadow_including_descendant([&](DOM::Node& node) {
+        if (is<HTML::NavigableContainer>(node)) {
+            auto& navigable_container = static_cast<HTML::NavigableContainer&>(node);
+            // 1. If navigableContainer's content navigable is null, then continue.
+            if (!navigable_container.content_navigable())
+                return IterationDecision::Continue;
+
+            // 2. Extend navigables with navigableContainer's content navigable's active document's inclusive descendant navigables.
+            navigables.extend(navigable_container.content_navigable()->active_document()->inclusive_descendant_navigables());
+        }
+        return IterationDecision::Continue;
+    });
+
+    // 4. Return navigables.
+    return navigables;
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#inclusive-descendant-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::inclusive_descendant_navigables()
+{
+    // 1. Let navigables be « document's node navigable ».
+    Vector<JS::Handle<HTML::Navigable>> navigables;
+    navigables.append(*navigable());
+
+    // 2. Extend navigables with document's descendant navigables.
+    navigables.extend(descendant_navigables());
+
+    // 3. Return navigables.
+    return navigables;
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
 Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
 {
@@ -2279,6 +2406,39 @@ void Document::discard()
     // 7. Set document's browsing context to null.
     tear_down_layout_tree();
     m_browsing_context = nullptr;
+
+    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+
+    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+}
+
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
+void Document::destroy()
+{
+    // 1. Destroy the active documents of each of document's descendant navigables.
+    for (auto navigable : descendant_navigables()) {
+        if (auto document = navigable->active_document())
+            document->destroy();
+    }
+
+    // 2. Set document's salvageable state to false.
+    m_salvageable = false;
+
+    // FIXME: 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 4. Abort document.
+    abort();
+
+    // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
+        return task.document() == this;
+    });
+
+    // 6. Set document's browsing context to null.
+    m_browsing_context = nullptr;
+
+    // 7. Set document's node navigable's active session history entry's document state's document to null.
+    navigable()->active_session_history_entry()->document_state->set_document(nullptr);
 
     // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
 
@@ -2499,7 +2659,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
         // 1. If doc does not yet have an associated inert template document, then:
         if (!m_associated_inert_template_document) {
             // 1. Let new doc be a new Document (whose browsing context is null). This is "a Document created by this algorithm" for the purposes of the step above.
-            auto new_document = DOM::Document::create(realm()).release_value_but_fixme_should_propagate_errors();
+            auto new_document = HTML::HTMLDocument::create(realm()).release_value_but_fixme_should_propagate_errors();
             new_document->m_created_for_appropriate_template_contents = true;
 
             // 2. If doc is an HTML document, mark new doc as an HTML document also.

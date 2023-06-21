@@ -75,6 +75,9 @@ enum class SQLErrorCode {
 };
 
 class [[nodiscard]] Result {
+    AK_MAKE_NONCOPYABLE(Result);
+    AK_MAKE_DEFAULT_MOVABLE(Result);
+
 public:
     ALWAYS_INLINE Result(SQLCommand command)
         : m_command(command)
@@ -100,9 +103,6 @@ public:
     {
     }
 
-    Result(Result&&) = default;
-    Result& operator=(Result&&) = default;
-
     SQLCommand command() const { return m_command; }
     SQLErrorCode error() const { return m_error; }
     DeprecatedString error_string() const;
@@ -120,8 +120,6 @@ public:
     }
 
 private:
-    AK_MAKE_NONCOPYABLE(Result);
-
     SQLCommand m_command { SQLCommand::Unknown };
 
     SQLErrorCode m_error { SQLErrorCode::NoError };

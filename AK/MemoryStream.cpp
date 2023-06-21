@@ -198,19 +198,28 @@ ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle
     if (m_chunks.size() == 0)
         return Optional<size_t> {};
 
-    // Ensure that we don't have to trim away more than one block.
-    VERIFY(m_read_offset < chunk_size);
-    VERIFY(m_chunks.size() * chunk_size - m_write_offset < chunk_size);
+    // Ensure that we don't have empty chunks at the beginning of the stream. Our trimming implementation
+    // assumes this to be the case, since this should be held up by `cleanup_unused_chunks()` at all times.
+    VERIFY(m_read_offset < CHUNK_SIZE);
 
-    auto chunk_count = m_chunks.size();
+    auto empty_chunks_at_end = ((m_chunks.size() * CHUNK_SIZE - m_write_offset) / CHUNK_SIZE);
+    auto chunk_count = m_chunks.size() - empty_chunks_at_end;
     auto search_spans = TRY(FixedArray<ReadonlyBytes>::create(chunk_count));
 
     for (size_t i = 0; i < chunk_count; i++) {
         search_spans[i] = m_chunks[i].span();
     }
 
+    auto used_size_of_last_chunk = m_write_offset % CHUNK_SIZE;
+
+    // The case where the stored write offset is actually the used space is the only case where a result of zero
+    // actually is zero. In other cases (i.e. our write offset is beyond the size of a chunk) the write offset
+    // already points to the beginning of the next chunk, in that case a result of zero indicates "use the last chunk in full".
+    if (m_write_offset >= CHUNK_SIZE && used_size_of_last_chunk == 0)
+        used_size_of_last_chunk = CHUNK_SIZE;
+
     // Trimming is done first to ensure that we don't unintentionally shift around if the first and last chunks are the same.
-    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(m_write_offset % chunk_size);
+    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(used_size_of_last_chunk);
     search_spans[0] = search_spans[0].slice(m_read_offset);
 
     return AK::memmem(search_spans.begin(), search_spans.end(), needle);
@@ -220,9 +229,9 @@ ErrorOr<ReadonlyBytes> AllocatingMemoryStream::next_read_range()
 {
     VERIFY(m_write_offset >= m_read_offset);
 
-    size_t const chunk_index = m_read_offset / chunk_size;
-    size_t const chunk_offset = m_read_offset % chunk_size;
-    size_t const read_size = min(chunk_size - m_read_offset % chunk_size, m_write_offset - m_read_offset);
+    size_t const chunk_index = m_read_offset / CHUNK_SIZE;
+    size_t const chunk_offset = m_read_offset % CHUNK_SIZE;
+    size_t const read_size = min(CHUNK_SIZE - m_read_offset % CHUNK_SIZE, m_write_offset - m_read_offset);
 
     if (read_size == 0)
         return ReadonlyBytes { static_cast<u8*>(nullptr), 0 };
@@ -236,12 +245,12 @@ ErrorOr<Bytes> AllocatingMemoryStream::next_write_range()
 {
     VERIFY(m_write_offset >= m_read_offset);
 
-    size_t const chunk_index = m_write_offset / chunk_size;
-    size_t const chunk_offset = m_write_offset % chunk_size;
-    size_t const write_size = chunk_size - m_write_offset % chunk_size;
+    size_t const chunk_index = m_write_offset / CHUNK_SIZE;
+    size_t const chunk_offset = m_write_offset % CHUNK_SIZE;
+    size_t const write_size = CHUNK_SIZE - m_write_offset % CHUNK_SIZE;
 
     if (chunk_index >= m_chunks.size())
-        TRY(m_chunks.try_append(TRY(Chunk::create_uninitialized(chunk_size))));
+        TRY(m_chunks.try_append(TRY(Chunk::create_uninitialized(CHUNK_SIZE))));
 
     VERIFY(chunk_index < m_chunks.size());
 
@@ -251,12 +260,12 @@ ErrorOr<Bytes> AllocatingMemoryStream::next_write_range()
 void AllocatingMemoryStream::cleanup_unused_chunks()
 {
     // FIXME: Move these all at once.
-    while (m_read_offset >= chunk_size) {
+    while (m_read_offset >= CHUNK_SIZE) {
         VERIFY(m_write_offset >= m_read_offset);
 
         auto buffer = m_chunks.take_first();
-        m_read_offset -= chunk_size;
-        m_write_offset -= chunk_size;
+        m_read_offset -= CHUNK_SIZE;
+        m_write_offset -= CHUNK_SIZE;
 
         m_chunks.append(move(buffer));
     }

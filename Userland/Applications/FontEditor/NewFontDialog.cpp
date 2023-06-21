@@ -122,13 +122,19 @@ private:
 
 REGISTER_WIDGET(FontEditor, GlyphPreviewWidget);
 
-NewFontDialog::NewFontDialog(GUI::Window* parent_window)
-    : GUI::WizardDialog(parent_window)
+ErrorOr<NonnullRefPtr<NewFontDialog>> NewFontDialog::create(GUI::Window* parent_window)
 {
-    set_title("New Font");
+    auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NewFontDialog(parent_window)));
+    TRY(dialog->build());
+    return dialog;
+}
 
-    m_font_properties_page = GUI::WizardPage::construct("Typeface properties", "Edit details about this font.");
-    m_font_properties_page->body_widget().load_from_gml(new_font_dialog_page_1_gml).release_value_but_fixme_should_propagate_errors();
+ErrorOr<void> NewFontDialog::build()
+{
+    TRY(GUI::WizardDialog::build());
+
+    m_font_properties_page = TRY(GUI::WizardPage::create("Typeface properties"sv, "Edit details about this font."sv));
+    TRY(m_font_properties_page->body_widget().load_from_gml(new_font_dialog_page_1_gml));
 
     m_name_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::TextBox>("family_textbox");
@@ -136,14 +142,16 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     m_slope_combobox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("slope_combobox");
     m_presentation_spinbox = m_font_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
 
+    TRY(m_font_weight_list.try_ensure_capacity(Gfx::font_weight_names.size()));
     for (auto& it : Gfx::font_weight_names)
-        m_font_weight_list.append(it.name);
-    m_weight_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_font_weight_list));
+        m_font_weight_list.unchecked_append(TRY(String::from_utf8(it.name)));
+    m_weight_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_weight_list)));
     m_weight_combobox->set_selected_index(3);
 
+    TRY(m_font_slope_list.try_ensure_capacity(Gfx::font_slope_names.size()));
     for (auto& it : Gfx::font_slope_names)
-        m_font_slope_list.append(it.name);
-    m_slope_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_font_slope_list));
+        m_font_slope_list.unchecked_append(TRY(String::from_utf8(it.name)));
+    m_slope_combobox->set_model(TRY(GUI::ItemListModel<String>::try_create(m_font_slope_list)));
     m_slope_combobox->set_selected_index(0);
 
     m_presentation_spinbox->set_value(12);
@@ -155,8 +163,8 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
         return m_glyph_properties_page;
     };
 
-    m_glyph_properties_page = GUI::WizardPage::construct("Glyph properties", "Edit details about this font.");
-    m_glyph_properties_page->body_widget().load_from_gml(new_font_dialog_page_2_gml).release_value_but_fixme_should_propagate_errors();
+    m_glyph_properties_page = TRY(GUI::WizardPage::create("Glyph properties"sv, "Edit details about this font."sv));
+    TRY(m_glyph_properties_page->body_widget().load_from_gml(new_font_dialog_page_2_gml));
     m_glyph_properties_page->set_is_final_page(true);
 
     m_glyph_height_spinbox = m_glyph_properties_page->body_widget().find_descendant_of_type_named<GUI::SpinBox>("height_spinbox");
@@ -197,6 +205,15 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     };
 
     push_page(*m_font_properties_page);
+
+    return {};
+}
+
+NewFontDialog::NewFontDialog(GUI::Window* parent_window)
+    : GUI::WizardDialog(parent_window)
+{
+    set_title("New Font");
+    set_icon(parent_window->icon());
 }
 
 void NewFontDialog::save_metadata()

@@ -28,6 +28,18 @@ static HashTable<Navigable*>& all_navigables()
     return set;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#child-navigable
+Vector<JS::Handle<Navigable>> Navigable::child_navigables() const
+{
+    Vector<JS::Handle<Navigable>> results;
+    for (auto& entry : all_navigables()) {
+        if (entry->parent() == this)
+            results.append(entry);
+    }
+
+    return results;
+}
+
 Navigable::Navigable()
 {
     all_navigables().set(this);
@@ -101,6 +113,33 @@ JS::GCPtr<SessionHistoryEntry> Navigable::get_the_target_history_entry(int targe
     }
 
     return result;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#activate-history-entry
+void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
+{
+    // FIXME: 1. Save persisted state to the navigable's active session history entry.
+
+    // 2. Let newDocument be entry's document.
+    JS::GCPtr<DOM::Document> new_document = entry->document_state->document().ptr();
+
+    // 3. Assert: newDocument's is initial about:blank is false, i.e., we never traverse
+    //    back to the initial about:blank Document because it always gets replaced when we
+    //    navigate away from it.
+    VERIFY(!new_document->is_initial_about_blank());
+
+    // 4. Set navigable's active session history entry to entry.
+    m_active_session_history_entry = entry;
+
+    // 5. Make active newDocument.
+    new_document->make_active();
+
+    // Not in the spec:
+    if (is<TraversableNavigable>(*this) && parent() == nullptr) {
+        if (auto* page = active_browsing_context()->page()) {
+            page->client().page_did_start_loading(entry->url, false);
+        }
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
@@ -891,7 +930,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
                 target_step = traversable->current_session_history_step();
             }
 
-            // FIXME: 10. Apply the history step targetStep to traversable.
+            // 10. Apply the history step targetStep to traversable.
+            traversable->apply_the_history_step(target_step);
         }).release_value_but_fixme_should_propagate_errors();
     });
 
@@ -909,6 +949,21 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&
     (void)initiator_origin;
     (void)csp_navigation_type;
     TODO();
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#reload
+void Navigable::reload()
+{
+    // 1. Set navigable's active session history entry's document state's reload pending to true.
+    active_session_history_entry()->document_state->set_reload_pending(true);
+
+    // 2. Let traversable be navigable's traversable navigable.
+    auto traversable = traversable_navigable();
+
+    // FIXME: 3. Append the following session history traversal steps to traversable:
+
+    // 1. Apply pending history changes to traversable with true.
+    traversable->apply_pending_history_changes();
 }
 
 }

@@ -7,10 +7,10 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Try.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 
@@ -83,6 +83,7 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
         }
         TRY(process.name().with([&](auto& process_name) { return process_object.add("name"sv, process_name->view()); }));
         TRY(process_object.add("executable"sv, process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
+        TRY(process_object.add("creation_time"sv, process.creation_time().nanoseconds_since_epoch()));
 
         size_t amount_virtual = 0;
         size_t amount_resident = 0;

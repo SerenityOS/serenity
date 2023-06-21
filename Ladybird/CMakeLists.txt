@@ -73,7 +73,7 @@ add_compile_options(-Wno-user-defined-literals)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg Multimedia)
 
 set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 
@@ -103,6 +103,7 @@ qt_add_executable(ladybird ${SOURCES}
 target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets Qt::Svg LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
@@ -113,7 +114,7 @@ qt_add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
+target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS LibDiff)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
@@ -166,8 +167,8 @@ endif()
 include(CTest)
 if (BUILD_TESTING)
     add_test(
-        NAME Layout
-        COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Layout/layout_test.sh ${CMAKE_CURRENT_BINARY_DIR}
+        NAME LibWeb
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
     )
-    set_tests_properties(Layout PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+    set_tests_properties(LibWeb PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()

@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -16,7 +17,7 @@
 #include <unistd.h>
 
 struct Count {
-    DeprecatedString name;
+    StringView name;
     bool exists { true };
     unsigned lines { 0 };
     unsigned characters { 0 };
@@ -40,24 +41,26 @@ static void wc_out(Count const& count)
     outln("{:>14}", count.name);
 }
 
-static Count get_count(DeprecatedString const& file_specifier)
+static ErrorOr<Count> get_count(StringView file_specifier)
 {
     Count count;
-    FILE* file_pointer = nullptr;
-    if (file_specifier == "-") {
-        count.name = "";
-        file_pointer = stdin;
-    } else {
-        count.name = file_specifier;
-        if ((file_pointer = fopen(file_specifier.characters(), "r")) == nullptr) {
-            warnln("wc: unable to open {}", file_specifier);
-            count.exists = false;
-            return count;
-        }
+
+    auto maybe_file = Core::File::open_file_or_standard_stream(file_specifier, Core::File::OpenMode::Read);
+
+    if (maybe_file.is_error()) {
+        warnln("wc: unable to open {}", file_specifier.is_empty() ? "stdin"sv : file_specifier);
+        count.exists = false;
+        return count;
     }
 
+    auto file = TRY(Core::InputBufferedFile::create(maybe_file.release_value()));
+
+    count.name = file_specifier;
+
     bool start_a_new_word = true;
-    for (int ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer)) {
+
+    u8 ch;
+    for (Bytes bytes = TRY(file->read_some({ &ch, 1 })); bytes.size() != 0; bytes = TRY(file->read_some(bytes))) {
         count.bytes++;
         if (is_ascii_space(ch)) {
             start_a_new_word = true;
@@ -69,15 +72,12 @@ static Count get_count(DeprecatedString const& file_specifier)
         }
     }
 
-    if (file_pointer != stdin)
-        fclose(file_pointer);
-
     return count;
 }
 
 static Count get_total_count(Vector<Count> const& counts)
 {
-    Count total_count { "total" };
+    Count total_count { "total"sv };
     for (auto& count : counts) {
         total_count.lines += count.lines;
         total_count.words += count.words;
@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<DeprecatedString> file_specifiers;
+    Vector<StringView> file_specifiers;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');
@@ -105,12 +105,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<Count> counts;
     for (auto const& file_specifier : file_specifiers)
-        counts.append(get_count(file_specifier));
+        counts.append(TRY(get_count(file_specifier)));
 
     TRY(Core::System::pledge("stdio"));
 
     if (file_specifiers.is_empty())
-        counts.append(get_count("-"));
+        counts.append(TRY(get_count(""sv)));
     else if (file_specifiers.size() > 1)
         counts.append(get_total_count(counts));
 

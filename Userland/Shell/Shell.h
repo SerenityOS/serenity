@@ -109,6 +109,7 @@ public:
     void set_live_formatting(bool value) { m_should_format_live = value; }
 
     void setup_signals();
+    void setup_keybinds();
 
     struct SourcePosition {
         DeprecatedString source_file;
@@ -462,7 +463,11 @@ private:
 
 #undef __ENUMERATE_SHELL_BUILTIN
 
+            "."sv, // Needs to be aliased to "source" in POSIX mode.
+        // clang-format off
+        // Clang-format does not properly indent this, it gives it 4 spaces too few.
             ":"sv, // POSIX-y name for "noop".
+        // clang-format on
     };
 
     bool m_should_ignore_jobs_on_next_exit { false };

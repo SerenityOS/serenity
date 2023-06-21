@@ -8,7 +8,7 @@
 
 #include <LibC/sys/arch/aarch64/regs.h>
 
-#include <Kernel/ExecutionMode.h>
+#include <Kernel/Security/ExecutionMode.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()

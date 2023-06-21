@@ -14,6 +14,7 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
+#include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Print.h>
@@ -211,34 +212,10 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
-            auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
-            if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(TRY(executable_result.error().to_string()));
-                return ReturnEarly::No;
-            }
-
-            auto executable = executable_result.release_value();
-            executable->name = source_name;
-            if (s_opt_bytecode) {
-                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline(JS::Bytecode::Interpreter::OptimizationLevel::Optimize);
-                passes.perform(*executable);
-                dbgln("Optimisation passes took {}us", passes.elapsed());
-            }
-
-            if (JS::Bytecode::g_dump_bytecode)
-                executable->dump();
-
-            if (s_run_bytecode) {
-                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
-                auto result_or_error = bytecode_interpreter.run_and_return_frame(*executable, nullptr);
-                if (result_or_error.value.is_error())
-                    result = result_or_error.value.release_error();
-                else
-                    result = result_or_error.frame->registers[0];
-            } else {
-                return ReturnEarly::Yes;
-            }
+        if (s_run_bytecode) {
+            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
+            bytecode_interpreter.set_optimizations_enabled(s_opt_bytecode);
+            result = bytecode_interpreter.run(*script_or_module);
         } else {
             result = interpreter.run(*script_or_module);
         }
@@ -598,6 +575,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
+    bool disable_debug_printing = false;
+    bool use_test262_global = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
 
@@ -613,33 +592,39 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
+    args_parser.add_option(disable_debug_printing, "Disable debug output", "disable-debug-output", {});
     args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script");
+    args_parser.add_option(use_test262_global, "Use test262 global ($262)", "use-test262-global", {});
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     bool syntax_highlight = !disable_syntax_highlight;
 
+    AK::set_debug_enabled(!disable_debug_printing);
     s_history_path = TRY(String::formatted("{}/.js-history", Core::StandardPaths::home_directory()));
 
     g_vm = TRY(JS::VM::create());
     g_vm->enable_default_host_import_module_dynamically_hook();
 
-    // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
-    // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
-    // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
-    // might want to revisit at a later point and disable warnings for promises created this way.
-    g_vm->on_promise_unhandled_rejection = [](auto& promise) {
-        warn("WARNING: A promise was rejected without any handlers");
-        warn(" (result: ");
-        (void)print(promise.result(), PrintTarget::StandardError);
-        warnln(")");
-    };
-    g_vm->on_promise_rejection_handled = [](auto& promise) {
-        warn("WARNING: A handler was added to an already rejected promise");
-        warn(" (result: ");
-        (void)print(promise.result(), PrintTarget::StandardError);
-        warnln(")");
-    };
+    if (!disable_debug_printing) {
+        // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
+        // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
+        // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
+        // might want to revisit at a later point and disable warnings for promises created this way.
+        g_vm->on_promise_unhandled_rejection = [](auto& promise) {
+            warn("WARNING: A promise was rejected without any handlers");
+            warn(" (result: ");
+            (void)print(promise.result(), PrintTarget::StandardError);
+            warnln(")");
+        };
+        g_vm->on_promise_rejection_handled = [](auto& promise) {
+            warn("WARNING: A handler was added to an already rejected promise");
+            warn(" (result: ");
+            (void)print(promise.result(), PrintTarget::StandardError);
+            warnln(")");
+        };
+    }
+
     OwnPtr<JS::Interpreter> interpreter;
 
     // FIXME: Figure out some way to interrupt the interpreter now that vm.exception() is gone.
@@ -857,7 +842,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(repl(*interpreter));
         s_editor->save_history(s_history_path.to_deprecated_string());
     } else {
-        interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
+        if (use_test262_global) {
+            interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*g_vm);
+        } else {
+            interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
+        }
+
         auto& console_object = *interpreter->realm().intrinsics().console_object();
         ReplConsoleClient console_client(console_object.console());
         console_object.console().set_client(console_client);

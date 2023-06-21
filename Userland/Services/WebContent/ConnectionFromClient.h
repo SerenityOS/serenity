@@ -74,6 +74,7 @@ private:
     virtual void inspect_accessibility_tree() override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
+    virtual Messages::WebContentServer::DumpTextResponse dump_text() override;
     virtual void set_content_filters(Vector<String> const&) override;
     virtual void set_autoplay_allowed_on_all_websites() override;
     virtual void set_autoplay_allowlist(Vector<String> const& allowlist) override;
@@ -95,9 +96,10 @@ private:
     virtual void confirm_closed(bool accepted) override;
     virtual void prompt_closed(Optional<String> const& response) override;
 
-    virtual void toggle_video_play_state() override;
-    virtual void toggle_video_loop_state() override;
-    virtual void toggle_video_controls_state() override;
+    virtual void toggle_media_play_state() override;
+    virtual void toggle_media_mute_state() override;
+    virtual void toggle_media_loop_state() override;
+    virtual void toggle_media_controls_state() override;
 
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 

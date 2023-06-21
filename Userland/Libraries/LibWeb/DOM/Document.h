@@ -136,28 +136,36 @@ public:
     Node* hovered_node() { return m_hovered_node.ptr(); }
     Node const* hovered_node() const { return m_hovered_node.ptr(); }
 
-    void set_inspected_node(Node*);
+    void set_inspected_node(Node*, Optional<CSS::Selector::PseudoElement>);
     Node* inspected_node() { return m_inspected_node.ptr(); }
     Node const* inspected_node() const { return m_inspected_node.ptr(); }
+    Layout::Node* inspected_layout_node();
+    Layout::Node const* inspected_layout_node() const { return const_cast<Document*>(this)->inspected_layout_node(); }
 
     Element* document_element();
     Element const* document_element() const;
 
     HTML::HTMLHtmlElement* html_element();
     HTML::HTMLHeadElement* head();
+    JS::GCPtr<HTML::HTMLTitleElement> title_element();
     HTML::HTMLElement* body();
 
-    const HTML::HTMLHtmlElement* html_element() const
+    HTML::HTMLHtmlElement const* html_element() const
     {
         return const_cast<Document*>(this)->html_element();
     }
 
-    const HTML::HTMLHeadElement* head() const
+    HTML::HTMLHeadElement const* head() const
     {
         return const_cast<Document*>(this)->head();
     }
 
-    const HTML::HTMLElement* body() const
+    JS::GCPtr<HTML::HTMLTitleElement const> title_element() const
+    {
+        return const_cast<Document*>(this)->title_element();
+    }
+
+    HTML::HTMLElement const* body() const
     {
         return const_cast<Document*>(this)->body();
     }
@@ -165,7 +173,7 @@ public:
     WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     DeprecatedString title() const;
-    void set_title(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_title(DeprecatedString const&);
 
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
@@ -437,6 +445,11 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
     Vector<JS::Handle<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
 
+    Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
+    Vector<JS::Handle<HTML::Navigable>> inclusive_descendant_navigables();
+
+    void destroy();
+
     // https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
     void discard();
 
@@ -494,6 +507,7 @@ private:
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
     JS::GCPtr<Node> m_hovered_node;
     JS::GCPtr<Node> m_inspected_node;
+    Optional<CSS::Selector::PseudoElement> m_inspected_pseudo_element;
     JS::GCPtr<Node> m_active_favicon;
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;

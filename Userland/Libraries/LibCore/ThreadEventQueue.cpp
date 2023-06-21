@@ -18,17 +18,12 @@ namespace Core {
 struct ThreadEventQueue::Private {
     struct QueuedEvent {
         AK_MAKE_NONCOPYABLE(QueuedEvent);
+        AK_MAKE_DEFAULT_MOVABLE(QueuedEvent);
 
     public:
         QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
             : receiver(receiver)
             , event(move(event))
-        {
-        }
-
-        QueuedEvent(QueuedEvent&& other)
-            : receiver(other.receiver)
-            , event(move(other.event))
         {
         }
 

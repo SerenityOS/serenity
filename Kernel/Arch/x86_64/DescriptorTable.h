@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()

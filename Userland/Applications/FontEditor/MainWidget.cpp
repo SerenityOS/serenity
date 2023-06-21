@@ -116,23 +116,29 @@ ErrorOr<void> MainWidget::create_actions()
     m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, g_resources.new_font, [this](auto&) {
         if (!request_close())
             return;
-        auto new_font_wizard = NewFontDialog::construct(window());
-        if (new_font_wizard->exec() != GUI::Dialog::ExecResult::OK)
+        auto maybe_wizard = NewFontDialog::create(window());
+        if (maybe_wizard.is_error())
+            return show_error(maybe_wizard.release_error(), "Creating font wizard failed"sv);
+        auto wizard = maybe_wizard.release_value();
+        if (wizard->exec() != GUI::Dialog::ExecResult::OK)
             return;
-        auto maybe_font = new_font_wizard->create_font();
+        auto maybe_font = wizard->create_font();
         if (maybe_font.is_error())
             return show_error(maybe_font.release_error(), "Creating new font failed"sv);
         if (auto result = initialize({}, move(maybe_font.value())); result.is_error())
             show_error(result.release_error(), "Initializing new font failed"sv);
     });
-    m_new_action->set_status_tip("Create a new font");
+    m_new_action->set_status_tip(TRY("Create a new font"_string));
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         if (!request_close())
             return;
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Open", "/res/fonts"sv, Core::File::OpenMode::Read,
-            { { GUI::FileTypeFilter { "Bitmap Font Files", { { "font" } } },
-                GUI::FileTypeFilter::all_files() } });
+        FileSystemAccessClient::OpenFileOptions options {
+            .window_title = "Open"sv,
+            .path = "/res/fonts"sv,
+            .allowed_file_types = { { GUI::FileTypeFilter { "Bitmap Font Files", { { "font" } } }, GUI::FileTypeFilter::all_files() } },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), options);
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -215,7 +221,7 @@ ErrorOr<void> MainWidget::create_actions()
         if (m_font_preview_window)
             m_font_preview_window->show();
     });
-    m_open_preview_action->set_status_tip("Preview the current font");
+    m_open_preview_action->set_status_tip(TRY("Preview the current font"_string));
 
     bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
     m_font_metadata_groupbox->set_visible(show_metadata);
@@ -224,7 +230,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
     m_show_metadata_action->set_checked(show_metadata);
-    m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
+    m_show_metadata_action->set_status_tip(TRY("Show or hide metadata about the current font"_string));
 
     bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
     m_unicode_block_container->set_visible(show_unicode_blocks);
@@ -237,7 +243,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
-    m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
+    m_show_unicode_blocks_action->set_status_tip(TRY("Show or hide the Unicode block list"_string));
 
     bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_toolbar_container->set_visible(show_toolbar);
@@ -246,7 +252,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
     m_show_toolbar_action->set_checked(show_toolbar);
-    m_show_toolbar_action->set_status_tip("Show or hide the toolbar");
+    m_show_toolbar_action->set_status_tip(TRY("Show or hide the toolbar"_string));
 
     bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
     m_statusbar->set_visible(show_statusbar);
@@ -256,7 +262,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
     });
     m_show_statusbar_action->set_checked(show_statusbar);
-    m_show_statusbar_action->set_status_tip("Show or hide the status bar");
+    m_show_statusbar_action->set_status_tip(TRY("Show or hide the status bar"_string));
 
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
     m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
@@ -265,7 +271,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
     m_highlight_modifications_action->set_checked(highlight_modifications);
-    m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs");
+    m_highlight_modifications_action->set_status_tip(TRY("Show or hide highlights on modified glyphs"_string));
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
     m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
@@ -274,7 +280,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
     });
     m_show_system_emoji_action->set_checked(show_system_emoji);
-    m_show_system_emoji_action->set_status_tip("Show or hide system emoji");
+    m_show_system_emoji_action->set_status_tip(TRY("Show or hide system emoji"_string));
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
         String input;
@@ -290,17 +296,17 @@ ErrorOr<void> MainWidget::create_actions()
             m_glyph_map_widget->scroll_to_glyph(code_point);
         }
     });
-    m_go_to_glyph_action->set_status_tip("Go to the specified code point");
+    m_go_to_glyph_action->set_status_tip(TRY("Go to the specified code point"_string));
 
     m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, g_resources.previous_glyph, [this](auto&) {
         m_glyph_map_widget->select_previous_existing_glyph();
     });
-    m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
+    m_previous_glyph_action->set_status_tip(TRY("Seek the previous visible glyph"_string));
 
     m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, g_resources.next_glyph, [this](auto&) {
         m_glyph_map_widget->select_next_existing_glyph();
     });
-    m_next_glyph_action->set_status_tip("Seek the next visible glyph");
+    m_next_glyph_action->set_status_tip(TRY("Seek the next visible glyph"_string));
 
     i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
     m_glyph_editor_widget->set_scale(scale);
@@ -308,17 +314,17 @@ ErrorOr<void> MainWidget::create_actions()
         set_scale_and_save(5);
     });
     m_scale_five_action->set_checked(scale == 5);
-    m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font");
+    m_scale_five_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
     m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [this](auto&) {
         set_scale_and_save(10);
     });
     m_scale_ten_action->set_checked(scale == 10);
-    m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font");
+    m_scale_ten_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
     m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [this](auto&) {
         set_scale_and_save(15);
     });
     m_scale_fifteen_action->set_checked(scale == 15);
-    m_scale_fifteen_action->set_status_tip("Scale the editor in proportion to the current font");
+    m_scale_fifteen_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
 
     m_glyph_editor_scale_actions.add_action(*m_scale_five_action);
     m_glyph_editor_scale_actions.add_action(*m_scale_ten_action);
@@ -364,7 +370,7 @@ ErrorOr<void> MainWidget::create_actions()
         }
         GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
     });
-    m_copy_text_action->set_status_tip("Copy to clipboard as text");
+    m_copy_text_action->set_status_tip(TRY("Copy to clipboard as text"_string));
 
     return {};
 }
@@ -641,10 +647,7 @@ ErrorOr<void> MainWidget::create_widgets()
     };
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
@@ -933,41 +936,46 @@ void MainWidget::update_statusbar()
     if (!m_statusbar->is_visible())
         return;
 
-    auto glyph = m_glyph_map_widget->active_glyph();
-    StringBuilder builder;
-    builder.appendff("U+{:04X} (", glyph);
+    auto format_statusbar = [this]() -> ErrorOr<void> {
+        auto glyph = m_glyph_map_widget->active_glyph();
+        StringBuilder builder;
 
-    if (auto abbreviation = Unicode::code_point_abbreviation(glyph); abbreviation.has_value()) {
-        builder.append(*abbreviation);
-    } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
-        // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
-        // For now, replace RTL glyphs with U+FFFD, the replacement character.
-        builder.append_code_point(0xFFFD);
-    } else {
-        builder.append_code_point(glyph);
-    }
+        TRY(builder.try_appendff("U+{:04X} (", glyph));
+        if (auto abbreviation = Unicode::code_point_abbreviation(glyph); abbreviation.has_value())
+            TRY(builder.try_append(*abbreviation));
+        // FIXME: Bidirectional text cannot currently be isolated; for now, replace RTL glyphs with U+FFFD.
+        else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL)
+            TRY(builder.try_append_code_point(0xFFFD));
+        else
+            TRY(builder.try_append_code_point(glyph));
 
-    builder.append(')');
+        builder.append(')');
 
-    auto glyph_name = Unicode::code_point_display_name(glyph);
-    if (glyph_name.has_value()) {
-        builder.appendff(" {}", glyph_name.value());
-    }
+        auto glyph_name = Unicode::code_point_display_name(glyph);
+        if (glyph_name.has_value())
+            TRY(builder.try_appendff(" {}", glyph_name.value()));
 
-    if (m_font->contains_raw_glyph(glyph))
-        builder.appendff(" [{}x{}]", m_font->raw_glyph_width(glyph), m_font->glyph_height());
-    else if (Gfx::Emoji::emoji_for_code_point(glyph))
-        builder.appendff(" [emoji]");
-    m_statusbar->set_text(builder.to_deprecated_string());
+        if (m_font->contains_raw_glyph(glyph))
+            TRY(builder.try_appendff(" [{}x{}]", m_font->raw_glyph_width(glyph), m_font->glyph_height()));
+        else if (Gfx::Emoji::emoji_for_code_point(glyph))
+            TRY(builder.try_appendff(" [emoji]"));
 
-    builder.clear();
+        m_statusbar->set_text(0, TRY(builder.to_string()));
 
-    auto selection = m_glyph_map_widget->selection().normalized();
-    if (selection.size() > 1)
-        builder.appendff("{} glyphs selected", selection.size());
-    else
-        builder.appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last);
-    m_statusbar->set_text(1, builder.to_deprecated_string());
+        builder.clear();
+
+        auto selection = m_glyph_map_widget->selection().normalized();
+        if (selection.size() > 1)
+            TRY(builder.try_appendff("{} glyphs selected", selection.size()));
+        else
+            TRY(builder.try_appendff("U+{:04X}-U+{:04X}", m_range.first, m_range.last));
+        m_statusbar->set_text(1, TRY(builder.to_string()));
+
+        return {};
+    }();
+
+    if (format_statusbar.is_error())
+        warnln("Formatting status bar failed");
 }
 
 void MainWidget::update_preview()
@@ -1045,7 +1053,7 @@ ErrorOr<void> MainWidget::cut_selected_glyphs()
 void MainWidget::paste_glyphs()
 {
     auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
-    if (!mime_type.starts_with("glyph/"sv))
+    if (!mime_type.starts_with("glyph/x-fonteditor"sv))
         return;
 
     auto glyph_count = metadata.get("count").value().to_uint().value_or(0);

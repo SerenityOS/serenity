@@ -66,7 +66,7 @@ enum class StorageFormat {
     RGBA8888,
 };
 
-static StorageFormat determine_storage_format(BitmapFormat format)
+inline StorageFormat determine_storage_format(BitmapFormat format)
 {
     switch (format) {
     case BitmapFormat::BGRx8888:
@@ -211,6 +211,9 @@ public:
 
     [[nodiscard]] bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888 || m_format == BitmapFormat::RGBA8888; }
     [[nodiscard]] BitmapFormat format() const { return m_format; }
+
+    // Call only for BGRx8888 and BGRA8888 bitmaps.
+    void strip_alpha_channel();
 
     void set_mmap_name(DeprecatedString const&);
 

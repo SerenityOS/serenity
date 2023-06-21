@@ -8,7 +8,7 @@ set(SOURCES
     Color.cpp
     CursorParams.cpp
     DeltaE.cpp
-    FillPathImplementation.cpp
+    EdgeFlagPathRasterizer.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
@@ -33,6 +33,7 @@ set(SOURCES
     ICC/WellKnownProfiles.cpp
     ImageFormats/BMPLoader.cpp
     ImageFormats/BMPWriter.cpp
+    ImageFormats/BooleanDecoder.cpp
     ImageFormats/DDSLoader.cpp
     ImageFormats/GIFLoader.cpp
     ImageFormats/ICOLoader.cpp

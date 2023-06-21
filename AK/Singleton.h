@@ -11,8 +11,8 @@
 #include <AK/Noncopyable.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
+#    include <Kernel/Library/ScopedCritical.h>
 #    include <Kernel/Locking/SpinlockProtected.h>
-#    include <Kernel/ScopedCritical.h>
 #elif defined(AK_OS_WINDOWS)
 // Forward declare to avoid pulling Windows.h into every file in existence.
 extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long);

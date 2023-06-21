@@ -16,13 +16,13 @@ Angle::Angle(int value, Type type)
 {
 }
 
-Angle::Angle(float value, Type type)
+Angle::Angle(double value, Type type)
     : m_type(type)
     , m_value(value)
 {
 }
 
-Angle Angle::make_degrees(float value)
+Angle Angle::make_degrees(double value)
 {
     return { value, Type::Deg };
 }
@@ -34,22 +34,27 @@ Angle Angle::percentage_of(Percentage const& percentage) const
 
 ErrorOr<String> Angle::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}deg", to_degrees());
 }
 
-float Angle::to_degrees() const
+double Angle::to_degrees() const
 {
     switch (m_type) {
     case Type::Deg:
         return m_value;
     case Type::Grad:
-        return m_value * (360.0f / 400.0f);
+        return m_value * (360.0 / 400.0);
     case Type::Rad:
-        return m_value * (180.0f / AK::Pi<float>);
+        return m_value * (180.0 / AK::Pi<double>);
     case Type::Turn:
-        return m_value * 360.0f;
+        return m_value * 360.0;
     }
     VERIFY_NOT_REACHED();
+}
+
+double Angle::to_radians() const
+{
+    return to_degrees() * (AK::Pi<double> / 180.0);
 }
 
 StringView Angle::unit_name() const

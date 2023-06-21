@@ -115,10 +115,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 24. Let fromBuf be O.[[ArrayBufferData]].
+    auto& from_buf = array_buffer_object->buffer();
+
     // 25. Let toBuf be new.[[ArrayBufferData]].
+    auto& to_buf = new_array_buffer_object->buffer();
+
     // 26. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
-    // FIXME: Implement this to specification
-    array_buffer_object->buffer().span().slice(first, new_length).copy_to(new_array_buffer_object->buffer().span());
+    copy_data_block_bytes(to_buf, 0, from_buf, first, new_length);
 
     // 27. Return new.
     return new_array_buffer_object;

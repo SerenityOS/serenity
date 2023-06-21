@@ -405,9 +405,9 @@ void Game::let_player_play_card()
     auto& player = current_player();
 
     if (&player == &m_players[0])
-        on_status_change("Select a card to play.");
+        on_status_change("Select a card to play."_string.release_value_but_fixme_should_propagate_errors());
     else
-        on_status_change(DeprecatedString::formatted("Waiting for {} to play a card...", player));
+        on_status_change(String::formatted("Waiting for {} to play a card...", player).release_value_but_fixme_should_propagate_errors());
 
     if (player.is_human) {
         m_human_can_play = true;
@@ -455,7 +455,7 @@ void Game::advance_game()
 
     if (m_state == State::Play && game_ended()) {
         m_state = State::GameEnded;
-        on_status_change("Game ended.");
+        on_status_change("Game ended."_string.release_value_but_fixme_should_propagate_errors());
         advance_game();
         return;
     }
@@ -699,7 +699,7 @@ void Game::card_clicked_during_play(size_t card_index, Card& card)
         card.set_inverted(true);
         update(card.rect());
         m_inverted_card = card;
-        on_status_change(DeprecatedString::formatted("You can't play this card: {}", explanation));
+        on_status_change(String::formatted("You can't play this card: {}", explanation).release_value_but_fixme_should_propagate_errors());
         continue_game_after_delay();
         return;
     }

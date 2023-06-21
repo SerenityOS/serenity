@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/Graphics/DisplayConnector.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

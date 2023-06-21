@@ -6,9 +6,9 @@
 
 #include <AK/Userspace.h>
 #include <Kernel/API/Jail.h>
-#include <Kernel/Jail.h>
-#include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
+#include <Kernel/Library/StdLib.h>
+#include <Kernel/Security/Jail.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
@@ -39,14 +40,17 @@
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
-#include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -130,6 +134,12 @@ ColorStyleValue const& StyleValue::as_color() const
 {
     VERIFY(is_color());
     return static_cast<ColorStyleValue const&>(*this);
+}
+
+CompositeStyleValue const& StyleValue::as_composite() const
+{
+    VERIFY(is_composite());
+    return static_cast<CompositeStyleValue const&>(*this);
 }
 
 ConicGradientStyleValue const& StyleValue::as_conic_gradient() const
@@ -240,6 +250,12 @@ InitialStyleValue const& StyleValue::as_initial() const
     return static_cast<InitialStyleValue const&>(*this);
 }
 
+IntegerStyleValue const& StyleValue::as_integer() const
+{
+    VERIFY(is_integer());
+    return static_cast<IntegerStyleValue const&>(*this);
+}
+
 LengthStyleValue const& StyleValue::as_length() const
 {
     VERIFY(is_length());
@@ -270,10 +286,10 @@ ListStyleStyleValue const& StyleValue::as_list_style() const
     return static_cast<ListStyleStyleValue const&>(*this);
 }
 
-NumericStyleValue const& StyleValue::as_numeric() const
+NumberStyleValue const& StyleValue::as_number() const
 {
-    VERIFY(is_numeric());
-    return static_cast<NumericStyleValue const&>(*this);
+    VERIFY(is_number());
+    return static_cast<NumberStyleValue const&>(*this);
 }
 
 OverflowStyleValue const& StyleValue::as_overflow() const
@@ -288,6 +304,12 @@ PercentageStyleValue const& StyleValue::as_percentage() const
     return static_cast<PercentageStyleValue const&>(*this);
 }
 
+PlaceContentStyleValue const& StyleValue::as_place_content() const
+{
+    VERIFY(is_place_content());
+    return static_cast<PlaceContentStyleValue const&>(*this);
+}
+
 PositionStyleValue const& StyleValue::as_position() const
 {
     VERIFY(is_position());
@@ -298,6 +320,12 @@ RadialGradientStyleValue const& StyleValue::as_radial_gradient() const
 {
     VERIFY(is_radial_gradient());
     return static_cast<RadialGradientStyleValue const&>(*this);
+}
+
+RatioStyleValue const& StyleValue::as_ratio() const
+{
+    VERIFY(is_ratio());
+    return static_cast<RatioStyleValue const&>(*this);
 }
 
 RectStyleValue const& StyleValue::as_rect() const
@@ -395,8 +423,8 @@ int StyleValue::to_font_weight() const
             return Gfx::FontWeight::Regular;
         }
     }
-    if (has_integer()) {
-        return to_integer();
+    if (is_number()) {
+        return round_to<int>(as_number().number());
     }
     if (is_calculated()) {
         auto maybe_weight = const_cast<CalculatedStyleValue&>(as_calculated()).resolve_integer();

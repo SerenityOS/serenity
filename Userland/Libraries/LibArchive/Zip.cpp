@@ -75,7 +75,7 @@ Optional<Zip> Zip::try_create(ReadonlyBytes buffer)
     };
 }
 
-ErrorOr<bool> Zip::for_each_member(Function<IterationDecision(ZipMember const&)> callback)
+ErrorOr<bool> Zip::for_each_member(Function<ErrorOr<IterationDecision>(ZipMember const&)> callback)
 {
     size_t member_offset = m_members_start_offset;
     for (size_t i = 0; i < m_member_count; i++) {
@@ -94,7 +94,7 @@ ErrorOr<bool> Zip::for_each_member(Function<IterationDecision(ZipMember const&)>
         member.modification_date = central_directory_record.modification_date;
         member.is_directory = central_directory_record.external_attributes & zip_directory_external_attribute || member.name.bytes_as_string_view().ends_with('/'); // FIXME: better directory detection
 
-        if (callback(member) == IterationDecision::Break)
+        if (TRY(callback(member)) == IterationDecision::Break)
             return false;
 
         member_offset += central_directory_record.size();

@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 #ifdef __cplusplus
 #    include <AK/Types.h>
-#    include <Kernel/BootInfo.h>
+#    include <Kernel/Boot/BootInfo.h>
 #endif
 
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))

@@ -328,6 +328,43 @@ BENCHMARK_CASE(years_to_days_since_epoch_benchmark)
     }
 }
 
+TEST_CASE(days_since_epoch)
+{
+    EXPECT_EQ(days_since_epoch(1970, 1, 1), 0);
+    EXPECT_EQ(days_since_epoch(1970, 1, 2), 1);
+    EXPECT_EQ(days_since_epoch(1970, 2, 1), 31);
+    EXPECT_EQ(days_since_epoch(1970, 2, 27), 57);
+    EXPECT_EQ(days_since_epoch(1970, 2, 28), 58);
+    EXPECT_EQ(days_since_epoch(1970, 2, 29), 59); // doesn't really exist
+    EXPECT_EQ(days_since_epoch(1970, 3, 1), 59);
+    EXPECT_EQ(days_since_epoch(1971, 1, 1), 365);
+    EXPECT_EQ(days_since_epoch(1972, 1, 1), 730);
+    EXPECT_EQ(days_since_epoch(1972, 2, 1), 761);
+    EXPECT_EQ(days_since_epoch(1972, 2, 27), 787);
+    EXPECT_EQ(days_since_epoch(1972, 2, 28), 788);
+    EXPECT_EQ(days_since_epoch(1972, 2, 29), 789);
+    EXPECT_EQ(days_since_epoch(1972, 3, 1), 790);
+
+    // At least shouldn't crash:
+    EXPECT_EQ(days_since_epoch(1971, 1, 0), 364);
+    EXPECT_EQ(days_since_epoch(1971, 0, 1), 365);
+    EXPECT_EQ(days_since_epoch(1971, 0, 0), 365);
+    EXPECT_EQ(days_since_epoch(1971, 13, 3), 365);
+
+    // I can't easily verify that these values are perfectly exact and correct, but they're close enough.
+    // Also, for these "years" the most important thing is to avoid crashing (i.e. signed overflow UB).
+    // Observe that these are very close to the naive guess of 365.2425 days per year.
+    EXPECT_EQ(days_since_epoch(0, 1, 1), -719528);
+    EXPECT_EQ(days_since_epoch(-1'000'000, 1, 1), -365962028);
+    EXPECT_EQ(days_since_epoch(-2'147'483'648, 1, 1), -784353015833); // Guess: 784353015832
+    EXPECT_EQ(days_since_epoch(1'000'000, 1, 1), 364522972);
+    EXPECT_EQ(days_since_epoch(2'147'483'647, 1, 1), 784351576412);   // Guess: 784351576411
+    EXPECT_EQ(days_since_epoch(2'147'483'647, 12, 31), 784351576776); // Guess: 784351576777
+    EXPECT_EQ(days_since_epoch(2'147'483'647, 12, 255), 784351577000);
+    // FIXME shouldn't crash: EXPECT_EQ(days_since_epoch(2'147'483'647, 255, 255), 784351577000);
+    // FIXME: Restrict interface to only take sensible types, and ensure callers pass only sensible values for that type.
+}
+
 TEST_CASE(div_floor_by)
 {
     EXPECT_EQ(AK::Detail::floor_div_by<4>(-5), -2);
@@ -489,4 +526,98 @@ TEST_CASE(user_defined_literals)
     static_assert(100_ms <= 100'000_us, "LE UDL (eq)");
     static_assert(100_ms <= 100'001_us, "LE UDL (lt)");
     static_assert(1_sec != 2_sec, "NE UDL");
+}
+
+TEST_CASE(from_unix_time_parts_common_values)
+{
+    // Non-negative "common" values.
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 0, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 0, 1).offset_to_epoch(), 0, 1'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 0, 999).offset_to_epoch(), 0, 999'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 1, 2).offset_to_epoch(), 1, 2'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 59, 0).offset_to_epoch(), 59, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 1, 0, 0).offset_to_epoch(), 60, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 59, 0, 0).offset_to_epoch(), 3540, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 1, 0, 0, 0).offset_to_epoch(), 3600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 23, 0, 0, 0).offset_to_epoch(), 82800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 2, 0, 0, 0, 0).offset_to_epoch(), 86400, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 2, 1, 0, 0, 0, 0).offset_to_epoch(), 2678400, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 2, 27, 0, 0, 0, 0).offset_to_epoch(), 4924800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 2, 28, 0, 0, 0, 0).offset_to_epoch(), 5011200, 0);
+    // Note that this day does *not* exist:
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 2, 29, 0, 0, 0, 0).offset_to_epoch(), 5097600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 3, 0, 0, 0, 0, 0).offset_to_epoch(), 5011200, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 3, 1, 0, 0, 0, 0).offset_to_epoch(), 5097600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 3, 2, 0, 0, 0, 0).offset_to_epoch(), 5184000, 0);
+
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1971, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 31536000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 63072000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 2, 1, 0, 0, 0, 0).offset_to_epoch(), 65750400, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 2, 27, 0, 0, 0, 0).offset_to_epoch(), 67996800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 2, 28, 0, 0, 0, 0).offset_to_epoch(), 68083200, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 2, 29, 0, 0, 0, 0).offset_to_epoch(), 68169600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1972, 3, 1, 0, 0, 0, 0).offset_to_epoch(), 68256000, 0);
+
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2023, 5, 24, 18, 44, 40, 0).offset_to_epoch(), 1684953880, 0);
+}
+
+TEST_CASE(from_unix_time_parts_negative)
+{
+    // Negative "common" values. These aren't really that well-defined, but we must make sure we don't crash.
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 0, 23, 0, 0, 0).offset_to_epoch(), -3600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 0, 24, 0, 0, 0).offset_to_epoch(), 0, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 0, 31, 0, 0, 0, 0).offset_to_epoch(), 0, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 11, 30, 0, 0, 0, 0).offset_to_epoch(), 28771200, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 12, 1, 0, 0, 0, 0).offset_to_epoch(), 28857600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 12, 31, 0, 0, 0, 0).offset_to_epoch(), 31449600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1971, 0, 0, 0, 0, 0, 0).offset_to_epoch(), 31536000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1971, 0, 1, 0, 0, 0, 0).offset_to_epoch(), 31536000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1971, 1, 0, 0, 0, 0, 0).offset_to_epoch(), 31449600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1971, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 31536000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1969, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -31536000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 3, 1, 0, 0, 0, 0).offset_to_epoch(), -57974400, 0);
+    // Leap day!
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 2, 29, 0, 0, 0, 0).offset_to_epoch(), -58060800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 2, 28, 0, 0, 0, 0).offset_to_epoch(), -58147200, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 2, 27, 0, 0, 0, 0).offset_to_epoch(), -58233600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 2, 1, 0, 0, 0, 0).offset_to_epoch(), -60480000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1968, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -63158400, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1967, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -94694400, 0);
+}
+
+TEST_CASE(from_milliseconds)
+{
+    EXPECT_DURATION(Duration::from_milliseconds(0), 0, 0);
+    EXPECT_DURATION(Duration::from_milliseconds(42), 0, 42'000'000);
+    EXPECT_DURATION(Duration::from_milliseconds(-1), -1, 999'000'000);
+    EXPECT_DURATION(Duration::from_milliseconds(-1'000'000'000), -1'000'000, 0);
+    EXPECT_DURATION(Duration::from_milliseconds(1'000'000'000), 1'000'000, 0);
+    EXPECT_DURATION(Duration::from_milliseconds(9223372036854775807), 9223372036854775, 807'000'000);
+    EXPECT_DURATION(Duration::from_milliseconds((i64)-0x8000'0000'0000'0000), -9223372036854776, 192'000'000);
+}
+
+TEST_CASE(from_unix_time_parts_overflow)
+{
+    // Negative overflow
+    // I can't easily verify that these values are perfectly exact and correct, but they're close enough.
+    // Also, for these "years" the most important thing is to avoid crashing (i.e. signed overflow UB).
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(0, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -62167219200, 0);                    // Guess: -62167195440, off by 23760 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-1'000'000, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -31619119219200, 0);        // Guess: -31619119195440, off by the same 23760 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 1, 1, 0, 0, 0, 0).offset_to_epoch(), -67768100567971200, 0); // Guess: -67768100567916336, off by 54864 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 1, 0, 0, 0, 0, 0).offset_to_epoch(), -67768100568057600, 0); // Guess: -67768100568002736, off by the same 54864 seconds
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(-2'147'483'648, 0, 0, 0, 0, 0, 0).offset_to_epoch(), -67768100567971200, 0);
+
+    // Positive overflow
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 0, 65535).offset_to_epoch(), 65, 535'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 0, 255, 0).offset_to_epoch(), 255, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 0, 255, 0, 0).offset_to_epoch(), 15300, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 1, 255, 0, 0, 0).offset_to_epoch(), 918000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 1, 255, 0, 0, 0, 0).offset_to_epoch(), 21945600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 12, 1, 0, 0, 0, 0).offset_to_epoch(), 28857600, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1970, 255, 1, 0, 0, 0, 0).offset_to_epoch(), 0, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(1'000'000, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 31494784780800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 1, 1, 0, 0, 0, 0).offset_to_epoch(), 67767976201996800, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 12, 255, 0, 0, 0, 0).offset_to_epoch(), 67767976252800000, 0);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 12, 255, 255, 255, 255, 65535).offset_to_epoch(), 67767976253733620, 535'000'000);
+    EXPECT_DURATION(UnixDateTime::from_unix_time_parts(2'147'483'647, 255, 255, 255, 255, 255, 65535).offset_to_epoch(), 67767976202930420, 535'000'000);
 }

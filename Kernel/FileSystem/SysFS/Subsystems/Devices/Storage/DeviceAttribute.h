@@ -8,7 +8,7 @@
 
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 
 namespace Kernel {
 

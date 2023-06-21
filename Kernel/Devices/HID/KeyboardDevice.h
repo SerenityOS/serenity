@@ -14,7 +14,7 @@
 #include <Kernel/Devices/HID/Device.h>
 #include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 

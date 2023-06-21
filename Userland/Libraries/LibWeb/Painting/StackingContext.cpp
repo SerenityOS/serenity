@@ -13,6 +13,7 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -28,11 +29,12 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
         paintable->paint(context, phase);
 }
 
-StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
+StackingContext::StackingContext(Layout::Box& box, StackingContext* parent, size_t index_in_tree_order)
     : m_box(box)
     , m_transform(combine_transformations(m_box->computed_values().transformations()))
     , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
+    , m_index_in_tree_order(index_in_tree_order)
 {
     VERIFY(m_parent != this);
     if (m_parent)
@@ -45,7 +47,7 @@ void StackingContext::sort()
         auto a_z_index = a->m_box->computed_values().z_index().value_or(0);
         auto b_z_index = b->m_box->computed_values().z_index().value_or(0);
         if (a_z_index == b_z_index)
-            return a->m_box->is_before(b->m_box);
+            return a->m_index_in_tree_order < b->m_index_in_tree_order;
         return a_z_index < b_z_index;
     });
 
@@ -232,17 +234,17 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     auto count = transformation.values.size();
     auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
-            [this, reference_length](CSS::LengthPercentage const& value) -> float {
+            [this, reference_length](CSS::LengthPercentage const& value) -> double {
                 if (reference_length.has_value()) {
-                    return value.resolved(m_box, reference_length.value()).to_px(m_box).value();
+                    return value.resolved(m_box, reference_length.value()).to_px(m_box).to_float();
                 }
 
-                return value.length().to_px(m_box).value();
+                return value.length().to_px(m_box).to_float();
             },
             [this](CSS::AngleOrCalculated const& value) {
-                return value.resolved(m_box).to_degrees() * static_cast<float>(M_DEG2RAD);
+                return value.resolved(m_box).to_degrees() * M_DEG2RAD;
             },
-            [](float value) {
+            [](double value) {
                 return value;
             });
     };
@@ -412,10 +414,12 @@ void StackingContext::paint(PaintContext& context) const
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
-        if (destination_rect.size() == bitmap->size())
+        if (destination_rect.size() == bitmap->size()) {
             context.painter().blit(destination_rect.location(), *bitmap, bitmap->rect(), opacity);
-        else
-            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, Gfx::Painter::ScalingMode::BilinearBlend);
+        } else {
+            auto scaling_mode = CSS::to_gfx_scaling_mode(m_box->computed_values().image_rendering(), bitmap->rect(), destination_rect);
+            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, scaling_mode);
+        }
     } else {
         Gfx::PainterStateSaver saver(context.painter());
         context.painter().translate(affine_transform.translation().to_rounded<int>());
@@ -430,7 +434,7 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
     auto reference_box = paintable_box().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.to_px(m_box, reference_box.width());
     auto y = reference_box.top() + style_value.y.to_px(m_box, reference_box.height());
-    return { static_cast<float>(x.value()), static_cast<float>(y.value()) };
+    return { x.to_float(), y.to_float() };
 }
 
 template<typename U, typename Callback>
@@ -471,14 +475,14 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     auto transform_origin = this->transform_origin().to_type<CSSPixels>();
     // NOTE: This CSSPixels -> Float -> CSSPixels conversion is because we can't AffineTransform::map() a CSSPixelPoint.
     Gfx::FloatPoint offset_position {
-        position.x().value() - transform_origin.x().value(),
-        position.y().value() - transform_origin.y().value()
+        (position.x() - transform_origin.x()).to_float(),
+        (position.y() - transform_origin.y()).to_float()
     };
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
     // FIXME: Support more overflow variations.
     if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
             return {};
     }
 
@@ -501,7 +505,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -541,7 +545,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
         if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -562,7 +566,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
             // FIXME: Support more overflow variations.
             if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
                     return TraversalDecision::SkipChildrenAndContinue;
             }
 
@@ -591,7 +595,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
+    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y())) {
         return HitTestResult {
             .paintable = const_cast<PaintableBox&>(paintable_box()),
         };

@@ -9,9 +9,9 @@
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 

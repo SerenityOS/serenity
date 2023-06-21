@@ -7,14 +7,18 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Boot/CommandLine.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
+#include <Kernel/Devices/GPU/Console/VGATextModeConsole.h>
+#include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
 #include <Kernel/Devices/Generic/FullDevice.h>
 #include <Kernel/Devices/Generic/MemoryDevice.h>
@@ -26,34 +30,30 @@
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/Graphics/Console/VGATextModeConsole.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/Process.h>
-#include <Kernel/Random.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Storage/StorageManagement.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
+#include <Kernel/Tasks/WorkQueue.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 
 #if ARCH(X86_64)
@@ -186,14 +186,25 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
 #elif ARCH(AARCH64)
     // FIXME: For the aarch64 platforms, we should get the information by parsing a device tree instead of using multiboot.
+    auto [ram_base, ram_size] = RPi::Mailbox::the().query_lower_arm_memory_range();
+    auto [vcmem_base, vcmem_size] = RPi::Mailbox::the().query_videocore_memory_range();
     multiboot_memory_map_t mmap[] = {
-        { sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)0x0,
-            (u64)0x3F000000,
-            MULTIBOOT_MEMORY_AVAILABLE }
+        {
+            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+            (u64)ram_base,
+            (u64)ram_size,
+            MULTIBOOT_MEMORY_AVAILABLE,
+        },
+        {
+            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+            (u64)vcmem_base,
+            (u64)vcmem_size,
+            MULTIBOOT_MEMORY_RESERVED,
+        },
+        // FIXME: VideoCore only reports the first 1GB of RAM, the rest only shows up in the device tree.
     };
     multiboot_memory_map = mmap;
-    multiboot_memory_map_count = 1;
+    multiboot_memory_map_count = 2;
 
     multiboot_modules = nullptr;
     multiboot_modules_count = 0;
@@ -380,7 +391,7 @@ void init_stage2(void*)
     if (!PCI::Access::is_disabled()) {
         USB::USBManagement::initialize();
     }
-    FirmwareSysFSDirectory::initialize();
+    SysFSFirmwareDirectory::initialize();
 
     if (!PCI::Access::is_disabled()) {
         VirtIO::detect();

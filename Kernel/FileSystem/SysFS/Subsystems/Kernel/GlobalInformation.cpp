@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

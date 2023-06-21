@@ -33,7 +33,8 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
 {
     for_each_attribute([&](auto& name, auto& value) {
         if (name == HTML::AttributeNames::bgcolor) {
-            auto color = Color::from_string(value);
+            // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
+            auto color = parse_legacy_color_value(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
             return;
@@ -64,9 +65,9 @@ unsigned int HTMLTableCellElement::col_span() const
     return attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
 }
 
-void HTMLTableCellElement::set_col_span(unsigned int value)
+WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value)));
+    return set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value));
 }
 
 unsigned int HTMLTableCellElement::row_span() const
@@ -74,9 +75,9 @@ unsigned int HTMLTableCellElement::row_span() const
     return attribute(HTML::AttributeNames::rowspan).to_uint().value_or(1);
 }
 
-void HTMLTableCellElement::set_row_span(unsigned int value)
+WebIDL::ExceptionOr<void> HTMLTableCellElement::set_row_span(unsigned int value)
 {
-    MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
+    return set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value));
 }
 
 Optional<ARIA::Role> HTMLTableCellElement::default_role() const

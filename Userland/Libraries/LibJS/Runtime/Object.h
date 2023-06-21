@@ -36,7 +36,7 @@ struct PrivateElement {
 
     PrivateName key;
     Kind kind { Kind::Field };
-    Value value;
+    Handle<Value> value;
 };
 
 class Object : public Cell {
@@ -211,6 +211,9 @@ private:
 
     Object* prototype() { return shape().prototype(); }
     Object const* prototype() const { return shape().prototype(); }
+
+    // True if this object has lazily allocated intrinsic properties.
+    bool m_has_intrinsic_accessors { false };
 
     GCPtr<Shape> m_shape;
     Vector<Value> m_storage;

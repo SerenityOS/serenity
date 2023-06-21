@@ -8,8 +8,8 @@
 
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/KBufferBuilder.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {

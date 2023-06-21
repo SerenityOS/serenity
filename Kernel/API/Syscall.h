@@ -79,14 +79,14 @@ enum class NeedsBigProcessLock {
     S(fchmod, NeedsBigProcessLock::No)                     \
     S(fchown, NeedsBigProcessLock::No)                     \
     S(fcntl, NeedsBigProcessLock::No)                      \
-    S(fork, NeedsBigProcessLock::Yes)                      \
+    S(fork, NeedsBigProcessLock::No)                       \
     S(fstat, NeedsBigProcessLock::No)                      \
     S(fstatvfs, NeedsBigProcessLock::No)                   \
     S(fsync, NeedsBigProcessLock::No)                      \
     S(ftruncate, NeedsBigProcessLock::No)                  \
     S(futex, NeedsBigProcessLock::Yes)                     \
     S(futimens, NeedsBigProcessLock::No)                   \
-    S(get_dir_entries, NeedsBigProcessLock::Yes)           \
+    S(get_dir_entries, NeedsBigProcessLock::No)            \
     S(get_root_session_id, NeedsBigProcessLock::No)        \
     S(get_stack_bounds, NeedsBigProcessLock::No)           \
     S(get_thread_name, NeedsBigProcessLock::No)            \
@@ -193,7 +193,7 @@ enum class NeedsBigProcessLock {
     S(sysconf, NeedsBigProcessLock::No)                    \
     S(times, NeedsBigProcessLock::No)                      \
     S(umask, NeedsBigProcessLock::No)                      \
-    S(umount, NeedsBigProcessLock::Yes)                    \
+    S(umount, NeedsBigProcessLock::No)                     \
     S(uname, NeedsBigProcessLock::No)                      \
     S(unlink, NeedsBigProcessLock::No)                     \
     S(unveil, NeedsBigProcessLock::No)                     \

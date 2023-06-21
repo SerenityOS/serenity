@@ -19,10 +19,10 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibFileSystem/FileSystem.h>
@@ -221,7 +221,7 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
     }
 
     StringBuilder resolved_base_path_builder;
-    resolved_base_path_builder.append(Core::DeprecatedFile::real_path_for(base));
+    resolved_base_path_builder.append(FileSystem::real_path(base).release_value_but_fixme_should_propagate_errors());
     if (S_ISDIR(statbuf.st_mode))
         resolved_base_path_builder.append('/');
 
@@ -340,7 +340,7 @@ DeprecatedString Shell::resolve_path(DeprecatedString path) const
     if (!path.starts_with('/'))
         path = DeprecatedString::formatted("{}/{}", cwd, path);
 
-    return Core::DeprecatedFile::real_path_for(path);
+    return FileSystem::real_path(path).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
@@ -531,15 +531,16 @@ DeprecatedString Shell::resolve_alias(StringView name) const
 
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
 {
-    auto parts = name.split_view('/');
-    auto path = name.to_deprecated_string();
-    if (parts.size() > 1) {
-        auto file = Core::DeprecatedFile::open(path.characters(), Core::OpenMode::ReadOnly);
-        if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
+    auto parts = name.find('/');
+    if (parts.has_value()) {
+        auto file_or_error = Core::File::open(name, Core::File::OpenMode::Read);
+        if (!file_or_error.is_error()
+            && !FileSystem::is_directory(file_or_error.value()->fd())
+            && !Core::System::access(name, X_OK).is_error())
             return RunnablePath { RunnablePath::Kind::Executable, name };
     }
 
-    auto* found = binary_search(cached_path.span(), path, nullptr, RunnablePathComparator {});
+    auto* found = binary_search(cached_path.span(), name, nullptr, RunnablePathComparator {});
     if (!found)
         return {};
 
@@ -938,11 +939,21 @@ void Shell::execute_process(Vector<char const*>&& argv)
         }
         if (saved_errno == ENOENT) {
             do {
-                auto file_result = Core::DeprecatedFile::open(argv[0], Core::OpenMode::ReadOnly);
+                auto path_as_string_or_error = String::from_utf8({ argv[0], strlen(argv[0]) });
+                if (path_as_string_or_error.is_error())
+                    break;
+                auto file_result = Core::File::open(path_as_string_or_error.value(), Core::File::OpenMode::Read);
                 if (file_result.is_error())
                     break;
-                auto& file = file_result.value();
-                auto line = file->read_line();
+                auto buffered_file_result = Core::InputBufferedFile::create(file_result.release_value());
+                if (buffered_file_result.is_error())
+                    break;
+                auto file = buffered_file_result.release_value();
+                Array<u8, 1 * KiB> line_buf;
+                auto line_or_error = file->read_line(line_buf);
+                if (line_or_error.is_error())
+                    break;
+                auto line = line_or_error.release_value();
                 if (!line.starts_with("#!"sv))
                     break;
                 GenericLexer shebang_lexer { line.substring_view(2) };
@@ -1411,7 +1422,7 @@ void Shell::cache_path()
         cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
-    // TODO: Can we make this rely on Core::DeprecatedFile::resolve_executable_from_environment()?
+    // TODO: Can we make this rely on Core::System::resolve_executable_from_environment()?
     DeprecatedString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
@@ -2064,11 +2075,25 @@ bool Shell::has_history_event(StringView source)
     return visitor.has_history_event;
 }
 
+void Shell::setup_keybinds()
+{
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = parse(editor.line(), false);
+        if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
+            return true;
+
+        return EDITOR_INTERNAL_FUNCTION(finish)(editor);
+    });
+}
+
 bool Shell::read_single_line()
 {
     while (true) {
         restore_ios();
         bring_cursor_to_beginning_of_a_line();
+        m_editor->initialize();
+        setup_keybinds();
+
         auto line_result = m_editor->get_line(prompt());
 
         if (line_result.is_error()) {
@@ -2281,14 +2306,6 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
         cache_path();
     }
 
-    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
-        auto ast = parse(editor.line(), false);
-        if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
-            return true;
-
-        return EDITOR_INTERNAL_FUNCTION(finish)(editor);
-    });
-
     start_timer(3000);
 }
 
@@ -2425,28 +2442,47 @@ void Shell::possibly_print_error() const
             }
         };
         int line = -1;
-        DeprecatedString current_line;
+        // FIXME: Support arbitrarily long lines?
+        auto line_buf_or_error = ByteBuffer::create_uninitialized(4 * KiB);
+        if (line_buf_or_error.is_error()) {
+            warnln("Shell: Internal error while trying to display source information: {} (while allocating line buffer for {})", line_buf_or_error.error(), source_position.source_file);
+            return;
+        }
+        auto line_buf = line_buf_or_error.release_value();
+        StringView current_line;
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
         if (!source_position.source_file.is_null()) {
-            auto file = Core::DeprecatedFile::open(source_position.source_file, Core::OpenMode::ReadOnly);
-            if (file.is_error()) {
-                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file.error(), source_position.source_file);
+            auto file_or_error = Core::File::open(source_position.source_file, Core::File::OpenMode::Read);
+            if (file_or_error.is_error()) {
+                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file_or_error.error(), source_position.source_file);
                 return;
             }
+            auto file = Core::InputBufferedFile::create(file_or_error.release_value());
             while (line < line_to_skip_to) {
-                if (file.value()->eof())
+                if (file.value()->is_eof())
                     return;
-                current_line = file.value()->read_line();
+                auto current_line_or_error = file.value()->read_line(line_buf);
+                if (current_line_or_error.is_error()) {
+                    warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
+                    return;
+                }
+                current_line = current_line_or_error.release_value();
                 ++line;
             }
 
             for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
                 do_line(line, current_line);
-                if (file.value()->eof())
-                    current_line = "";
-                else
-                    current_line = file.value()->read_line();
+                if (file.value()->is_eof()) {
+                    current_line = ""sv;
+                } else {
+                    auto current_line_or_error = file.value()->read_line(line_buf);
+                    if (current_line_or_error.is_error()) {
+                        warnln("Shell: Internal error while trying to display source information: {} (while reading line {} of '{}')", current_line_or_error.error(), line, source_position.source_file);
+                        return;
+                    }
+                    current_line = current_line_or_error.release_value();
+                }
             }
         } else if (!source_position.literal_source_text.is_empty()) {
             GenericLexer lexer { source_position.literal_source_text };
@@ -2460,7 +2496,7 @@ void Shell::possibly_print_error() const
             for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
                 do_line(line, current_line);
                 if (lexer.is_eof())
-                    current_line = "";
+                    current_line = ""sv;
                 else
                     current_line = lexer.consume_line();
             }

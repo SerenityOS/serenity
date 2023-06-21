@@ -2,7 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x560.0625 children: not-inline
       Box <div.grid-container> at (8,8) content-size 784x560.0625 [GFC] children: not-inline
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-one-one> at (108.640625,8) content-size 101.515625x244.65625 [BFC] children: inline
           line 0 width: 31.546875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -48,7 +48,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 148, length: 8, rect: [108.640625,235 61.609375x17.46875]
               "ut orci."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-one-two> at (108.640625,252.65625) content-size 101.515625x315.40625 [BFC] children: inline
           line 0 width: 98.65625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -106,7 +106,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 176, length: 3, rect: [108.640625,548.65625 20.546875x17.46875]
               "at."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
         BlockContainer <div.grid-item.item-span-two> at (8,8) content-size 100.640625x560.0625 [BFC] children: inline
           line 0 width: 50.96875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -182,5 +182,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 218, length: 9, rect: [8,409 68.296875x17.46875]
               "orci leo."
           TextNode <#text>
-        BlockContainer <(anonymous)> at (8,8) content-size 0x0 [BFC] children: inline
+        BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>

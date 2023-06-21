@@ -6,9 +6,9 @@
 
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
-#include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

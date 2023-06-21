@@ -164,7 +164,7 @@ ErrorOr<void> MainWidget::setup()
             return;
 
         m_run_script_action->set_enabled(false);
-        m_statusbar->set_text(1, "Disconnected"sv);
+        m_statusbar->set_text(1, "Disconnected"_string.release_value_but_fixme_should_propagate_errors());
 
         if (m_connection_id.has_value()) {
             m_sql_client->disconnect(*m_connection_id);
@@ -172,7 +172,7 @@ ErrorOr<void> MainWidget::setup()
         }
 
         if (auto connection_id = m_sql_client->connect(database_name); connection_id.has_value()) {
-            m_statusbar->set_text(1, DeprecatedString::formatted("Connected to: {}", database_name));
+            m_statusbar->set_text(1, String::formatted("Connected to: {}", database_name).release_value_but_fixme_should_propagate_errors());
             m_connection_id = *connection_id;
             m_run_script_action->set_enabled(true);
         } else {
@@ -245,15 +245,12 @@ ErrorOr<void> MainWidget::setup()
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
-    m_statusbar->set_text(1, "Disconnected"sv);
+    m_statusbar->set_text(1, TRY("Disconnected"_string));
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0,000  Col 000"sv) + font().max_glyph_width());
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
@@ -351,7 +348,7 @@ void MainWidget::open_new_script()
 
 void MainWidget::open_script_from_file(LexicalPath const& file_path)
 {
-    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_deprecated_string(file_path.title()).release_value_but_fixme_should_propagate_errors());
+    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_utf8(file_path.title()).release_value_but_fixme_should_propagate_errors());
 
     if (auto result = editor.open_script_from_file(file_path); result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, result.error()));
@@ -425,8 +422,8 @@ void MainWidget::on_editor_change()
 void MainWidget::update_statusbar(ScriptEditor* editor)
 {
     if (!editor) {
-        m_statusbar->set_text(0, "");
-        m_statusbar->set_text(2, "");
+        m_statusbar->set_text(0, {});
+        m_statusbar->set_text(2, {});
         return;
     }
 
@@ -437,8 +434,8 @@ void MainWidget::update_statusbar(ScriptEditor* editor)
         builder.appendff("Selected: {:'d} {} ({:'d} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
-    m_statusbar->set_text(0, builder.to_deprecated_string());
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", editor->cursor().line() + 1, editor->cursor().column()));
+    m_statusbar->set_text(0, builder.to_string().release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(2, String::formatted("Ln {:'d}  Col {:'d}", editor->cursor().line() + 1, editor->cursor().column()).release_value_but_fixme_should_propagate_errors());
 }
 
 void MainWidget::update_editor_actions(ScriptEditor* editor)

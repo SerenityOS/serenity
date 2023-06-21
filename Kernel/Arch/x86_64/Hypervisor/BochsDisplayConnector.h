@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Try.h>
-#include <Kernel/Graphics/Bochs/Definitions.h>
-#include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
-#include <Kernel/Graphics/DisplayConnector.h>
+#include <Kernel/Devices/GPU/Bochs/Definitions.h>
+#include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
+#include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>

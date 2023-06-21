@@ -96,6 +96,7 @@ public:
         BorderRadiusShorthand,
         Calculated,
         Color,
+        Composite,
         ConicGradient,
         Content,
         CustomIdent,
@@ -116,14 +117,17 @@ public:
         Image,
         Inherit,
         Initial,
+        Integer,
         Length,
         LinearGradient,
         ListStyle,
-        Numeric,
+        Number,
         Overflow,
         Percentage,
+        PlaceContent,
         Position,
         RadialGradient,
+        Ratio,
         Rect,
         Resolution,
         Shadow,
@@ -149,6 +153,7 @@ public:
     bool is_border_radius_shorthand() const { return type() == Type::BorderRadiusShorthand; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
+    bool is_composite() const { return type() == Type::Composite; }
     bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
     bool is_custom_ident() const { return type() == Type::CustomIdent; }
@@ -169,14 +174,17 @@ public:
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
+    bool is_integer() const { return type() == Type::Integer; }
     bool is_length() const { return type() == Type::Length; }
     bool is_linear_gradient() const { return type() == Type::LinearGradient; }
     bool is_list_style() const { return type() == Type::ListStyle; }
-    bool is_numeric() const { return type() == Type::Numeric; }
+    bool is_number() const { return type() == Type::Number; }
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
+    bool is_place_content() const { return type() == Type::PlaceContent; }
     bool is_position() const { return type() == Type::Position; }
     bool is_radial_gradient() const { return type() == Type::RadialGradient; }
+    bool is_ratio() const { return type() == Type::Ratio; }
     bool is_rect() const { return type() == Type::Rect; }
     bool is_resolution() const { return type() == Type::Resolution; }
     bool is_shadow() const { return type() == Type::Shadow; }
@@ -201,6 +209,7 @@ public:
     BorderStyleValue const& as_border() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
+    CompositeStyleValue const& as_composite() const;
     ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
     CustomIdentStyleValue const& as_custom_ident() const;
@@ -221,14 +230,17 @@ public:
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
     InitialStyleValue const& as_initial() const;
+    IntegerStyleValue const& as_integer() const;
     LengthStyleValue const& as_length() const;
     LinearGradientStyleValue const& as_linear_gradient() const;
     ListStyleStyleValue const& as_list_style() const;
-    NumericStyleValue const& as_numeric() const;
+    NumberStyleValue const& as_number() const;
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
+    PlaceContentStyleValue const& as_place_content() const;
     PositionStyleValue const& as_position() const;
     RadialGradientStyleValue const& as_radial_gradient() const;
+    RatioStyleValue const& as_ratio() const;
     RectStyleValue const& as_rect() const;
     ResolutionStyleValue const& as_resolution() const;
     ShadowStyleValue const& as_shadow() const;
@@ -271,14 +283,17 @@ public:
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
     InitialStyleValue& as_initial() { return const_cast<InitialStyleValue&>(const_cast<StyleValue const&>(*this).as_initial()); }
+    IntegerStyleValue& as_integer() { return const_cast<IntegerStyleValue&>(const_cast<StyleValue const&>(*this).as_integer()); }
     LengthStyleValue& as_length() { return const_cast<LengthStyleValue&>(const_cast<StyleValue const&>(*this).as_length()); }
     LinearGradientStyleValue& as_linear_gradient() { return const_cast<LinearGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_linear_gradient()); }
     ListStyleStyleValue& as_list_style() { return const_cast<ListStyleStyleValue&>(const_cast<StyleValue const&>(*this).as_list_style()); }
-    NumericStyleValue& as_numeric() { return const_cast<NumericStyleValue&>(const_cast<StyleValue const&>(*this).as_numeric()); }
+    NumberStyleValue& as_number() { return const_cast<NumberStyleValue&>(const_cast<StyleValue const&>(*this).as_number()); }
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
+    PlaceContentStyleValue& as_place_content() { return const_cast<PlaceContentStyleValue&>(const_cast<StyleValue const&>(*this).as_place_content()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     RadialGradientStyleValue& as_radial_gradient() { return const_cast<RadialGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_radial_gradient()); }
+    RatioStyleValue& as_ratio() { return const_cast<RatioStyleValue&>(const_cast<StyleValue const&>(*this).as_ratio()); }
     RectStyleValue& as_rect() { return const_cast<RectStyleValue&>(const_cast<StyleValue const&>(*this).as_rect()); }
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     ShadowStyleValue& as_shadow() { return const_cast<ShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_shadow()); }
@@ -293,18 +308,11 @@ public:
 
     bool has_auto() const;
     virtual bool has_color() const { return false; }
-    virtual bool has_length() const { return false; }
-    virtual bool has_rect() const { return false; }
-    virtual bool has_number() const { return false; }
-    virtual bool has_integer() const { return false; }
 
     virtual ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
 
     virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const { return {}; }
     ValueID to_identifier() const;
-    virtual Length to_length() const { VERIFY_NOT_REACHED(); }
-    virtual float to_number() const { return 0; }
-    virtual float to_integer() const { return 0; }
     virtual ErrorOr<String> to_string() const = 0;
 
     [[nodiscard]] int to_font_weight() const;

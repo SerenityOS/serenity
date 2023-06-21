@@ -69,7 +69,17 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                         layer.spread_distance.to_px(layout_node()),
                         layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
                 }
-                paint_box_shadow(context, absolute_fragment_rect, border_radii_data, resolved_box_shadow_data);
+                auto borders_data = BordersData {
+                    .top = computed_values().border_top(),
+                    .right = computed_values().border_right(),
+                    .bottom = computed_values().border_bottom(),
+                    .left = computed_values().border_left(),
+                };
+                auto absolute_fragment_rect_bordered = absolute_fragment_rect.inflated(
+                    borders_data.top.width, borders_data.right.width,
+                    borders_data.bottom.width, borders_data.left.width);
+                paint_box_shadow(context, absolute_fragment_rect_bordered, absolute_fragment_rect,
+                    borders_data, border_radii_data, resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;
@@ -114,9 +124,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    // FIXME: We check for a non-null dom_node(), since pseudo-elements have a null one and were getting
-    //        highlighted incorrectly. A better solution will be needed if we want to inspect them too.
-    if (phase == PaintPhase::Overlay && layout_node().dom_node() && layout_node().document().inspected_node() == layout_node().dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.

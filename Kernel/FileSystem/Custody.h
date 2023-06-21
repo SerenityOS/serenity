@@ -10,7 +10,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 

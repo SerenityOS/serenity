@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/File.h>
 #include <LibGUI/Model.h>
 #include <LibPartition/PartitionTable.h>
 
@@ -27,7 +28,7 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_partition_table->partitions_count(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
-    virtual String column_name(int) const override;
+    virtual ErrorOr<String> column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
 
     ErrorOr<void> set_device_path(DeprecatedString const&);
@@ -36,6 +37,7 @@ private:
     PartitionModel() = default;
 
     OwnPtr<Partition::PartitionTable> m_partition_table;
+    OwnPtr<Core::File> m_backing_file;
 };
 
 }

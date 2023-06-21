@@ -29,6 +29,31 @@ public:
     virtual void on_error(JS::Value error) = 0;
 };
 
+class ReadLoopReadRequest : public ReadRequest {
+public:
+    // successSteps, which is an algorithm accepting a byte sequence
+    using SuccessSteps = JS::SafeFunction<void(ByteBuffer)>;
+
+    // failureSteps, which is an algorithm accepting a JavaScript value
+    using FailureSteps = JS::SafeFunction<void(JS::Value error)>;
+
+    ReadLoopReadRequest(JS::VM& vm, JS::Realm& realm, ReadableStreamDefaultReader& reader, SuccessSteps success_steps, FailureSteps failure_steps);
+
+    virtual void on_chunk(JS::Value chunk) override;
+
+    virtual void on_close() override;
+
+    virtual void on_error(JS::Value error) override;
+
+private:
+    JS::VM& m_vm;
+    JS::Realm& m_realm;
+    ReadableStreamDefaultReader& m_reader;
+    ByteBuffer m_bytes;
+    SuccessSteps m_success_steps;
+    FailureSteps m_failure_steps;
+};
+
 // https://streams.spec.whatwg.org/#readablestreamdefaultreader
 class ReadableStreamDefaultReader final
     : public Bindings::PlatformObject
@@ -41,6 +66,10 @@ public:
     virtual ~ReadableStreamDefaultReader() override = default;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> read();
+
+    WebIDL::ExceptionOr<void> read_all_bytes(ReadLoopReadRequest::SuccessSteps, ReadLoopReadRequest::FailureSteps);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> read_all_bytes_deprecated();
+
     WebIDL::ExceptionOr<void> release_lock();
 
     SinglyLinkedList<NonnullRefPtr<ReadRequest>>& read_requests() { return m_read_requests; }

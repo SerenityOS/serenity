@@ -30,17 +30,18 @@ public:
     inline void for_each_property(Callback callback) const
     {
         for (size_t i = 0; i < m_property_values.size(); ++i) {
-            if (m_property_values[i])
-                callback((CSS::PropertyID)i, *m_property_values[i]);
+            if (m_property_values[i].has_value())
+                callback((CSS::PropertyID)i, *m_property_values[i]->style);
         }
     }
 
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }
 
-    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value);
+    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration = nullptr);
     NonnullRefPtr<StyleValue const> property(CSS::PropertyID) const;
     RefPtr<StyleValue const> maybe_null_property(CSS::PropertyID) const;
+    CSS::CSSStyleDeclaration const* property_source_declaration(CSS::PropertyID) const;
 
     CSS::Size size_value(CSS::PropertyID) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;
@@ -49,6 +50,9 @@ public:
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
     Optional<CSS::TextJustify> text_justify() const;
+    CSS::Length border_spacing_horizontal() const;
+    CSS::Length border_spacing_vertical() const;
+    Optional<CSS::CaptionSide> caption_side() const;
     CSS::Clip clip() const;
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;
@@ -62,9 +66,10 @@ public:
     Optional<CSS::TextTransform> text_transform() const;
     Vector<CSS::ShadowData> text_shadow() const;
     Optional<CSS::ListStyleType> list_style_type() const;
+    Optional<CSS::ListStylePosition> list_style_position() const;
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
-    Optional<CSS::FlexBasisData> flex_basis() const;
+    Optional<CSS::FlexBasis> flex_basis() const;
     float flex_grow() const;
     float flex_shrink() const;
     int order() const;
@@ -104,6 +109,7 @@ public:
     float stop_opacity() const;
     float fill_opacity() const;
     float stroke_opacity() const;
+    Optional<CSS::FillRule> fill_rule() const;
 
     Gfx::Font const& computed_font() const
     {
@@ -129,7 +135,11 @@ public:
 private:
     friend class StyleComputer;
 
-    Array<RefPtr<StyleValue const>, to_underlying(CSS::last_property_id) + 1> m_property_values;
+    struct StyleAndSourceDeclaration {
+        NonnullRefPtr<StyleValue const> style;
+        CSS::CSSStyleDeclaration const* declaration = nullptr;
+    };
+    Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
     Vector<CSS::ShadowData> shadow(CSS::PropertyID) const;
 

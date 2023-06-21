@@ -111,7 +111,7 @@ private:
     void update_bookmark_button(StringView url);
     void start_download(const URL& url);
     void view_source(const URL& url, DeprecatedString const& source);
-    void update_status(Optional<DeprecatedString> text_override = {}, i32 count_waiting = 0);
+    void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
     enum class MayAppendTLD {
@@ -143,11 +143,13 @@ private:
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
 
+    RefPtr<GUI::Menu> m_audio_context_menu;
     RefPtr<GUI::Menu> m_video_context_menu;
-    RefPtr<GUI::Action> m_video_context_menu_play_pause_action;
-    RefPtr<GUI::Action> m_video_context_menu_controls_action;
-    RefPtr<GUI::Action> m_video_context_menu_loop_action;
-    URL m_video_context_menu_url;
+    RefPtr<GUI::Action> m_media_context_menu_play_pause_action;
+    RefPtr<GUI::Action> m_media_context_menu_mute_unmute_action;
+    RefPtr<GUI::Action> m_media_context_menu_controls_action;
+    RefPtr<GUI::Action> m_media_context_menu_loop_action;
+    URL m_media_context_menu_url;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;

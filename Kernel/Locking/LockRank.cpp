@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Locking/LockRank.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Thread.h>
 
 // Note: These stubs can't be in LockRank.h as that would create
 // a cyclic dependency in the header include graph of the Kernel.

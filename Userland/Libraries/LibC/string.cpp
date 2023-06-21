@@ -126,6 +126,8 @@ int memcmp(void const* v1, void const* v2, size_t n)
     return 0;
 }
 
+// Not in POSIX, originated in BSD
+// https://man.openbsd.org/timingsafe_memcmp.3
 int timingsafe_memcmp(void const* b1, void const* b2, size_t len)
 {
     return AK::timing_safe_compare(b1, b2, len) ? 1 : 0;
@@ -175,18 +177,31 @@ void* memmove(void* dest, void const* src, size_t n)
     return dest;
 }
 
-void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
+// https://linux.die.net/man/3/memmem (GNU extension)
+void* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
-    return AK::memmem(haystack, haystack_length, needle, needle_length);
+    return const_cast<void*>(AK::memmem(haystack, haystack_length, needle, needle_length));
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcpy.html
 char* strcpy(char* dest, char const* src)
 {
     char* original_dest = dest;
-    while ((*dest++ = *src++) != '\0')
-        ;
+    while ((*dest = *src) != '\0') {
+        dest++;
+        src++;
+    }
     return original_dest;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/stpcpy.html
+char* stpcpy(char* dest, char const* src)
+{
+    while ((*dest = *src) != '\0') {
+        dest++;
+        src++;
+    }
+    return dest;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
@@ -200,6 +215,8 @@ char* strncpy(char* dest, char const* src, size_t n)
     return dest;
 }
 
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.openbsd.org/strlcpy.3
 size_t strlcpy(char* dest, char const* src, size_t n)
 {
     size_t i;
@@ -231,6 +248,7 @@ char* index(char const* str, int c)
     return strchr(str, c);
 }
 
+// https://linux.die.net/man/3/strchrnul (GNU extension)
 char* strchrnul(char const* str, int c)
 {
     char ch = c;
@@ -334,7 +352,7 @@ char* strerror(int errnum)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strsignal.html
 char* strsignal(int signum)
 {
-    if (signum >= NSIG) {
+    if (signum <= 0 || signum >= NSIG || !sys_siglist[signum]) {
         dbgln("strsignal() missing string for signum={}", signum);
         return const_cast<char*>("Unknown signal");
     }
@@ -484,6 +502,8 @@ char* strsep(char** str, char const* delim)
     return begin;
 }
 
+// Not in POSIX, originated in BSD but also supported on Linux.
+// https://man.openbsd.org/explicit_bzero.3
 void explicit_bzero(void* ptr, size_t size)
 {
     secure_zero(ptr, size);

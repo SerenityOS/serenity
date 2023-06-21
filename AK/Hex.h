@@ -11,7 +11,7 @@
 #include <AK/StringView.h>
 
 #ifdef KERNEL
-#    include <Kernel/KString.h>
+#    include <Kernel/Library/KString.h>
 #else
 #    include <AK/DeprecatedString.h>
 #endif

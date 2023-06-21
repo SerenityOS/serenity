@@ -7,7 +7,7 @@
 #include <AK/IntrusiveList.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

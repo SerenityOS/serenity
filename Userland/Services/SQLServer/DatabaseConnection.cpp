@@ -38,10 +38,11 @@ ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(StringView
         return Error::from_string_view("Invalid database name"sv);
 
     auto database = TRY(find_or_create_database(database_path, database_name));
-
-    if (auto result = database->open(); result.is_error()) {
-        warnln("Could not open database: {}", result.error().error_string());
-        return Error::from_string_view("Could not open database"sv);
+    if (!database->is_open()) {
+        if (auto result = database->open(); result.is_error()) {
+            warnln("Could not open database: {}", result.error().error_string());
+            return Error::from_string_view("Could not open database"sv);
+        }
     }
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) DatabaseConnection(move(database), move(database_name), client_id));

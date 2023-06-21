@@ -40,7 +40,7 @@ ErrorOr<void> CanvasPathClipper::apply_clip(Gfx::Painter& painter)
     painter.blit(actual_save_rect.location(), *m_saved_clip_region, m_saved_clip_region->rect(), 1.0f, false);
     Gfx::AntiAliasingPainter aa_painter { painter };
     auto fill_offset = m_bounding_box.location() - actual_save_rect.location();
-    aa_painter.fill_path(m_canvas_clip.path, TRY(Gfx::BitmapPaintStyle::create(clip_area, fill_offset)), m_canvas_clip.winding_rule);
+    aa_painter.fill_path(m_canvas_clip.path, TRY(Gfx::BitmapPaintStyle::create(clip_area, fill_offset)), 1.0f, m_canvas_clip.winding_rule);
     return {};
 }
 }

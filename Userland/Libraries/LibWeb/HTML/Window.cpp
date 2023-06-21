@@ -476,12 +476,12 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     // FIXME: device-aspect-ratio
     case CSS::MediaFeatureID::DeviceHeight:
         if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().height().value()));
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().height().to_double()));
         }
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::DeviceWidth:
         if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().width().value()));
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().width().to_double()));
         }
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::DisplayMode:
@@ -621,7 +621,23 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Window::session_storage()
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
 bool Window::has_transient_activation() const
 {
-    // FIXME: Implement this.
+    // The transient activation duration is expected be at most a few seconds, so that the user can possibly
+    // perceive the link between an interaction with the page and the page calling the activation-gated API.
+    auto transient_activation_duration = 5;
+
+    // When the current high resolution time given W
+    auto unsafe_shared_time = HighResolutionTime::unsafe_shared_current_time();
+    auto current_time = HighResolutionTime::relative_high_resolution_time(unsafe_shared_time, realm().global_object());
+
+    // is greater than or equal to the last activation timestamp in W
+    if (current_time >= m_last_activation_timestamp) {
+        // and less than the last activation timestamp in W plus the transient activation duration
+        if (current_time < m_last_activation_timestamp + transient_activation_duration) {
+            // then W is said to have transient activation.
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -1016,7 +1032,7 @@ i32 Window::inner_width() const
     // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
     if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().width().value();
+        return browsing_context->viewport_rect().width().to_int();
     return 0;
 }
 
@@ -1026,7 +1042,7 @@ i32 Window::inner_height() const
     // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
     if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().height().value();
+        return browsing_context->viewport_rect().height().to_int();
     return 0;
 }
 
@@ -1036,7 +1052,7 @@ double Window::scroll_x() const
     // The scrollX attribute must return the x-coordinate, relative to the initial containing block origin,
     // of the left of the viewport, or zero if there is no viewport.
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().x().value();
+        return page->top_level_browsing_context().viewport_scroll_offset().x().to_double();
     return 0;
 }
 
@@ -1046,7 +1062,7 @@ double Window::scroll_y() const
     // The scrollY attribute must return the y-coordinate, relative to the initial containing block origin,
     // of the top of the viewport, or zero if there is no viewport.
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().y().value();
+        return page->top_level_browsing_context().viewport_scroll_offset().y().to_double();
     return 0;
 }
 

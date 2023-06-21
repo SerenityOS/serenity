@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::ACPI {
 
@@ -325,13 +325,6 @@ struct [[gnu::packed]] DSDT {
     SDTHeader h;
     unsigned char definition_block[];
 };
-}
-
-class Parser;
-
-namespace StaticParsing {
-Optional<PhysicalAddress> find_rsdp();
-Optional<PhysicalAddress> find_table(PhysicalAddress rsdp, StringView signature);
 }
 
 }

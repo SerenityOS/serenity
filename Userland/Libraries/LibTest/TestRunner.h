@@ -132,17 +132,17 @@ inline void print_modifiers(Vector<Modifier> modifiers)
         auto code = [&] {
             switch (modifier) {
             case BG_RED:
-                return "\033[48;2;255;0;102m";
+                return "\033[41m";
             case BG_GREEN:
-                return "\033[48;2;102;255;0m";
+                return "\033[42m";
             case FG_RED:
-                return "\033[38;2;255;0;102m";
+                return "\033[31m";
             case FG_GREEN:
-                return "\033[38;2;102;255;0m";
+                return "\033[32m";
             case FG_ORANGE:
-                return "\033[38;2;255;102;0m";
+                return "\033[33m";
             case FG_GRAY:
-                return "\033[38;2;135;139;148m";
+                return "\033[90m";
             case FG_BLACK:
                 return "\033[30m";
             case FG_BOLD:

@@ -261,14 +261,25 @@ struct SArguments {
         if (delimiter == '\n' || delimiter == '\\')
             return SedError::parsing_error(lexer, "\\n and \\ cannot be used as delimiters."sv);
 
-        auto pattern = lexer.consume_until(delimiter);
+        auto pattern = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
+
         if (pattern.is_empty())
             return SedError::parsing_error(lexer, "Substitution patterns cannot be empty."sv);
 
         if (!lexer.consume_specific(delimiter))
             return SedError::parsing_error(lexer, generic_error_message);
 
-        auto replacement = lexer.consume_until(delimiter);
+        auto replacement = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
 
         // According to Posix, "s/x/y" is an invalid substitution command.
         // It must have a closing delimiter: "s/x/y/"
@@ -612,14 +623,7 @@ enum class CycleDecision {
 // In most cases, just an input to sed. However, files are also written to when the -i option is used.
 class File {
     AK_MAKE_NONCOPYABLE(File);
-
-    File(LexicalPath input_file_path, NonnullOwnPtr<Core::InputBufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
-        : m_input_file_path(move(input_file_path))
-        , m_file(move(file))
-        , m_output(move(output))
-        , m_output_temp_file(move(temp_file))
-    {
-    }
+    AK_MAKE_DEFAULT_MOVABLE(File);
 
 public:
     // Used for -i mode.
@@ -655,9 +659,6 @@ public:
             nullptr,
         };
     }
-
-    File(File&&) = default;
-    File& operator=(File&&) = default;
 
     ErrorOr<bool> has_next() const
     {
@@ -696,6 +697,14 @@ public:
     }
 
 private:
+    File(LexicalPath input_file_path, NonnullOwnPtr<Core::InputBufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
+        : m_input_file_path(move(input_file_path))
+        , m_file(move(file))
+        , m_output(move(output))
+        , m_output_temp_file(move(temp_file))
+    {
+    }
+
     LexicalPath m_input_file_path;
     NonnullOwnPtr<Core::InputBufferedFile> m_file;
 
@@ -944,20 +953,21 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         pos_args.remove(0);
     }
 
+    HashMap<String, String> paths_to_unveil;
+
     for (auto const& input_filename : TRY(script.input_filenames())) {
-        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"sv : "r"sv));
+        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"_short_string : "r"_short_string));
     }
     for (auto const& output_filename : TRY(script.output_filenames())) {
-        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(output_filename)), "w"sv));
+        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(output_filename)), "w"_short_string));
     }
-    TRY(Core::System::unveil("/tmp"sv, "rwc"sv));
 
     Vector<File> inputs;
     for (auto const& filename : pos_args) {
         if (filename == "-"sv) {
             inputs.empend(TRY(File::create_from_stdin()));
         } else {
-            TRY(Core::System::unveil(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"sv : "r"sv));
+            TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"_short_string : "r"_short_string));
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
             if (edit_in_place)
                 inputs.empend(TRY(File::create_with_output_file(LexicalPath { filename }, move(file))));
@@ -965,6 +975,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 inputs.empend(TRY(File::create(LexicalPath { filename }, move(file))));
         }
     }
+
+    for (auto const& bucket : paths_to_unveil) {
+        TRY(Core::System::unveil(bucket.key, bucket.value));
+    }
+    TRY(Core::System::unveil("/tmp"sv, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if (inputs.is_empty()) {

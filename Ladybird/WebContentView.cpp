@@ -34,6 +34,7 @@
 #include <LibWebView/WebContentClient.h>
 #include <QApplication>
 #include <QCursor>
+#include <QGuiApplication>
 #include <QIcon>
 #include <QInputDialog>
 #include <QLineEdit>
@@ -50,7 +51,7 @@
 
 bool is_using_dark_system_theme(QWidget&);
 
-WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setMouseTracking(true);
@@ -71,7 +72,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
         update_viewport_rect();
     });
 
-    create_client(enable_callgrind_profiling);
+    create_client(enable_callgrind_profiling, use_javascript_bytecode);
 }
 
 WebContentView::~WebContentView() = default;
@@ -511,12 +512,12 @@ void WebContentView::update_palette(PaletteMode mode)
     client().async_update_system_theme(make_system_theme_from_qt_palette(*this, mode));
 }
 
-void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
 {
     m_client_state = {};
 
     auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
-    auto new_client = launch_web_content_process(candidate_web_content_paths, enable_callgrind_profiling).release_value_but_fixme_should_propagate_errors();
+    auto new_client = launch_web_content_process(candidate_web_content_paths, enable_callgrind_profiling, WebView::IsLayoutTestMode::No, use_javascript_bytecode).release_value_but_fixme_should_propagate_errors();
 
     m_client_state.client = new_client;
     m_client_state.client->on_web_content_process_crash = [this] {
@@ -532,8 +533,24 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
     update_palette();
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
-    // FIXME: Get the screen rect.
-    // client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
+    auto screens = QGuiApplication::screens();
+
+    if (!screens.empty()) {
+        Vector<Gfx::IntRect> screen_rects;
+
+        for (auto const& screen : screens) {
+            auto geometry = screen->geometry();
+
+            screen_rects.append(Gfx::IntRect(geometry.x(), geometry.y(), geometry.width(), geometry.height()));
+        }
+
+        // FIXME: Update the screens again when QGuiApplication::screenAdded/Removed signals are emitted
+
+        // NOTE: The first item in QGuiApplication::screens is always the primary screen.
+        //       This is not specified in the documentation but QGuiApplication::primaryScreen
+        //       always returns the first item in the list if it isn't empty.
+        client().async_update_screen_rects(screen_rects, 0);
+    }
 
     if (!m_webdriver_content_ipc_path.is_empty())
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);

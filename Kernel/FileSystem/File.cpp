@@ -8,7 +8,7 @@
 #include <AK/Userspace.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

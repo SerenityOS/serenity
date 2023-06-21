@@ -30,9 +30,16 @@ static int netmask_to_cidr(IPv4Address const& address)
     return 32 - count_trailing_zeroes_safe(address_in_host_representation);
 }
 
-NetworkSettingsWidget::NetworkSettingsWidget()
+ErrorOr<NonnullRefPtr<NetworkSettingsWidget>> NetworkSettingsWidget::try_create()
 {
-    load_from_gml(network_settings_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) NetworkSettingsWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> NetworkSettingsWidget::setup()
+{
+    TRY(load_from_gml(network_settings_gml));
 
     m_adapters_combobox = *find_descendant_of_type_named<GUI::ComboBox>("adapters_combobox");
     m_enabled_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("enabled_checkbox");
@@ -63,12 +70,12 @@ NetworkSettingsWidget::NetworkSettingsWidget()
         set_modified(true);
     };
 
-    auto config_file = Core::ConfigFile::open_for_system("Network").release_value_but_fixme_should_propagate_errors();
+    auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
 
-    auto proc_net_adapters_file = Core::File::open("/sys/kernel/net/adapters"sv, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
-    auto data = proc_net_adapters_file->read_until_eof().release_value_but_fixme_should_propagate_errors();
+    auto proc_net_adapters_file = TRY(Core::File::open("/sys/kernel/net/adapters"sv, Core::File::OpenMode::Read));
+    auto data = TRY(proc_net_adapters_file->read_until_eof());
     JsonParser parser(data);
-    JsonValue proc_net_adapters_json = parser.parse().release_value_but_fixme_should_propagate_errors();
+    JsonValue proc_net_adapters_json = TRY(parser.parse());
 
     // FIXME: This should be done before creating a window.
     if (proc_net_adapters_json.as_array().is_empty()) {
@@ -102,7 +109,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
         index++;
     });
 
-    m_adapters_combobox->set_model(GUI::ItemListModel<DeprecatedString>::create(m_adapter_names));
+    m_adapters_combobox->set_model(TRY(GUI::ItemListModel<DeprecatedString>::try_create(m_adapter_names)));
     m_adapters_combobox->on_change = [this](DeprecatedString const& text, GUI::ModelIndex const&) {
         on_switch_adapter(text);
     };
@@ -110,6 +117,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     dbgln("{} in {}", selected_adapter, m_adapter_names);
     m_adapters_combobox->set_selected_index(selected_adapter);
     on_switch_adapter(m_adapter_names[selected_adapter_index]);
+    return {};
 }
 
 void NetworkSettingsWidget::on_switch_adapter(DeprecatedString const& adapter)

@@ -23,15 +23,15 @@
 #endif
 
 #include <Kernel/Arch/CurrentTime.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/InterruptDisabler.h>
-#include <Kernel/PerformanceManager.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/PerformanceManager.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/TimerQueue.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {
 

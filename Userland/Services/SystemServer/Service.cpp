@@ -121,6 +121,27 @@ ErrorOr<void> Service::activate()
     return {};
 }
 
+ErrorOr<void> Service::change_privileges()
+{
+    // NOTE: Dropping privileges makes sense when SystemServer is running
+    // for a root session.
+    // This could happen when we need to spawn a Service to serve a client with non-user UID/GID.
+    // However, in case the user explicitly specified a username via the User= option, then we must
+    // try to login as at that user, so we can't ignore the failure when it was requested to change
+    // privileges.
+    if (auto current_uid = getuid(); m_account.has_value() && m_account.value().uid() != current_uid) {
+        if (current_uid != 0 && !m_must_login)
+            return {};
+        auto& account = m_account.value();
+        if (auto error_or_void = account.login(); error_or_void.is_error()) {
+            dbgln("Failed to drop privileges (tried to change to GID={}, UID={}), due to {}\n", account.gid(), account.uid(), error_or_void.error());
+            exit(1);
+        }
+        TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
+    }
+    return {};
+}
+
 ErrorOr<void> Service::spawn(int socket_fd)
 {
     if (!FileSystem::exists(m_executable_path)) {
@@ -198,14 +219,7 @@ ErrorOr<void> Service::spawn(int socket_fd)
             TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, socket_takeover_builder.string_view(), true));
         }
 
-        if (m_account.has_value() && m_account.value().uid() != getuid()) {
-            auto& account = m_account.value();
-            if (auto error_or_void = account.login(); error_or_void.is_error()) {
-                dbgln("Failed to drop privileges (GID={}, UID={}), due to {}\n", account.gid(), account.uid(), error_or_void.error());
-                exit(1);
-            }
-            TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
-        }
+        TRY(change_privileges());
 
         TRY(m_environment.view().for_each_split_view(' ', SplitBehavior::Nothing, [&](auto env) {
             return Core::System::putenv(env);
@@ -227,14 +241,17 @@ ErrorOr<void> Service::spawn(int socket_fd)
     return {};
 }
 
-ErrorOr<void> Service::did_exit(int exit_code)
+ErrorOr<void> Service::did_exit(int status)
 {
     using namespace AK::TimeLiterals;
 
     VERIFY(m_pid > 0);
     VERIFY(!m_multi_instance);
 
-    dbgln("Service {} has exited with exit code {}", name(), exit_code);
+    if (WIFEXITED(status))
+        dbgln("Service {} has exited with exit code {}", name(), WEXITSTATUS(status));
+    if (WIFSIGNALED(status))
+        dbgln("Service {} terminated due to signal {}", name(), WTERMSIG(status));
 
     s_service_map.remove(m_pid);
     m_pid = -1;
@@ -243,7 +260,7 @@ ErrorOr<void> Service::did_exit(int exit_code)
         return {};
 
     auto run_time = m_run_timer.elapsed_time();
-    bool exited_successfully = exit_code == 0;
+    bool exited_successfully = WIFEXITED(status) == 0;
 
     if (!exited_successfully && run_time < 1_sec) {
         switch (m_restart_attempts) {
@@ -290,10 +307,12 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     m_user = config.read_entry(name, "User");
     if (!m_user.is_null()) {
         auto result = Core::Account::from_name(m_user, Core::Account::Read::PasswdOnly);
-        if (result.is_error())
+        if (result.is_error()) {
             warnln("Failed to resolve user {}: {}", m_user, result.error());
-        else
+        } else {
+            m_must_login = true;
             m_account = result.value();
+        }
     }
 
     m_working_directory = config.read_entry(name, "WorkingDirectory");

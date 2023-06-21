@@ -122,20 +122,19 @@ int SourceModel::row_count(GUI::ModelIndex const&) const
     return m_source_lines.size();
 }
 
-String SourceModel::column_name(int column) const
+ErrorOr<String> SourceModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? "% Samples"_string.release_value_but_fixme_should_propagate_errors() : "# Samples"_string.release_value_but_fixme_should_propagate_errors();
+        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
     case Column::SourceCode:
-        return "Source Code"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Source Code"_string);
     case Column::Location:
-        return "Location"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Location"_string);
     case Column::LineNumber:
         return "Line"_short_string;
     default:
         VERIFY_NOT_REACHED();
-        return {};
     }
 }
 

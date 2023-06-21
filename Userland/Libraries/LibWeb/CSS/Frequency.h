@@ -20,26 +20,38 @@ public:
     static Optional<Type> unit_from_name(StringView);
 
     Frequency(int value, Type type);
-    Frequency(float value, Type type);
-    static Frequency make_hertz(float);
+    Frequency(double value, Type type);
+    static Frequency make_hertz(double);
     Frequency percentage_of(Percentage const&) const;
 
     ErrorOr<String> to_string() const;
-    float to_hertz() const;
+    double to_hertz() const;
 
     Type type() const { return m_type; }
-    float raw_value() const { return m_value; }
+    double raw_value() const { return m_value; }
 
     bool operator==(Frequency const& other) const
     {
         return m_type == other.m_type && m_value == other.m_value;
     }
 
+    int operator<=>(Frequency const& other) const
+    {
+        auto this_hertz = to_hertz();
+        auto other_hertz = other.to_hertz();
+
+        if (this_hertz < other_hertz)
+            return -1;
+        if (this_hertz > other_hertz)
+            return 1;
+        return 0;
+    }
+
 private:
     StringView unit_name() const;
 
     Type m_type;
-    float m_value { 0 };
+    double m_value { 0 };
 };
 
 }

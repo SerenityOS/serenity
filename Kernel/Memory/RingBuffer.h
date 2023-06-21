@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Kernel/PhysicalAddress.h>
-#include <Kernel/UserOrKernelBuffer.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::Memory {
 

@@ -12,9 +12,9 @@
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

@@ -8,9 +8,9 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/PhysicalAddress.h>
-#include <Kernel/WaitQueue.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 

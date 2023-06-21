@@ -34,9 +34,10 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
 {
     m_headers.extend(m_data.take_first());
 
-    m_page = GUI::WizardPage::construct(
-        "CSV Export Options",
-        "Please select the options for the csv file you wish to export to");
+    m_page = GUI::WizardPage::create(
+        "CSV Export Options"sv,
+        "Please select the options for the csv file you wish to export to"sv)
+                 .release_value_but_fixme_should_propagate_errors();
 
     m_page->body_widget().load_from_gml(csv_export_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
@@ -180,7 +181,7 @@ void CSVExportDialogPage::update_preview()
 
 ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, DeprecatedString filename, Workbook& workbook)
 {
-    auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
+    auto wizard = TRY(GUI::WizardDialog::create(GUI::Application::the()->active_window()));
     wizard->set_title("File Export Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
@@ -213,9 +214,9 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
     } else if (mime == "application/x-sheets+json") {
         return export_worksheet();
     } else {
-        auto page = GUI::WizardPage::construct(
-            "Export File Format",
-            DeprecatedString::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(filename)));
+        auto page = TRY(GUI::WizardPage::create(
+            "Export File Format"sv,
+            TRY(String::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(filename)))));
 
         page->on_next_page = [] { return nullptr; };
 

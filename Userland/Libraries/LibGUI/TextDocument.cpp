@@ -754,15 +754,12 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
 
     target.set_column(target.column() - modifier);
 
-    if (target.column() == 0)
-        return target;
-
-    while (target.column() < line.length()) {
+    while (target.column() > 0) {
         if (auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
             auto view_between_target_and_index = line.view().substring_view(*index, target.column() - *index);
 
             if (should_continue_beyond_word(view_between_target_and_index)) {
-                target.set_column(*index - 1);
+                target.set_column(*index == 0 ? 0 : *index - 1);
                 continue;
             }
 
@@ -963,10 +960,11 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString const& text, TextRange const& range)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString const& text, TextRange const& range, TextPosition const& original_cursor_position)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
+    , m_original_cursor_position(original_cursor_position)
 {
 }
 
@@ -1006,8 +1004,8 @@ void RemoveTextCommand::redo()
 
 void RemoveTextCommand::undo()
 {
-    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
-    m_document.set_all_cursors(new_cursor);
+    m_document.insert_at(m_range.start(), m_text);
+    m_document.set_all_cursors(m_original_cursor_position);
 }
 
 InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor, DeprecatedString&& text, InsertPosition pos)

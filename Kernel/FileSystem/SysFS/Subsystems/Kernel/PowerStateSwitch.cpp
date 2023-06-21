@@ -15,9 +15,9 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

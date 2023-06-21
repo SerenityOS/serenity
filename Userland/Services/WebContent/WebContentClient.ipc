@@ -4,6 +4,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWeb/Page/Page.h>
 
 endpoint WebContentClient
 {
@@ -30,7 +31,7 @@ endpoint WebContentClient
     did_request_context_menu(Gfx::IntPoint content_position) =|
     did_request_link_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers) =|
     did_request_image_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
-    did_request_video_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping) =|
+    did_request_media_context_menu(Gfx::IntPoint content_position, DeprecatedString target, unsigned modifiers, Web::Page::MediaContextMenu menu) =|
     did_request_alert(String message) =|
     did_request_confirm(String message) =|
     did_request_prompt(String message, String default_) =|

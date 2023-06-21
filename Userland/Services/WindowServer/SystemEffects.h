@@ -15,14 +15,16 @@ namespace WindowServer {
 enum class TileWindow : u8 {
     TileImmediately,
     ShowTileOverlay,
-    Never
+    Never,
+    __Count
 };
 
 enum class ShowGeometry : u8 {
     OnMoveAndResize,
     OnMoveOnly,
     OnResizeOnly,
-    Never
+    Never,
+    __Count
 };
 
 enum class Effects : size_t {

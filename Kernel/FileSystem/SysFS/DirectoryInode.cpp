@@ -38,13 +38,11 @@ InodeMetadata SysFSDirectoryInode::metadata() const
 
 ErrorOr<void> SysFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(fs().m_lock);
     return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
 ErrorOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
 {
-    MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return ENOENT;

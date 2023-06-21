@@ -8,7 +8,7 @@
  * You may want to invoke the checker like this:
  * $ ninja -C Build/lagom
  * $ export SERENITY_SOURCE_DIR=/path/to/serenity
- * $ find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.md' -print0 | xargs -0 Build/lagom/markdown-check README.md CONTRIBUTING.md
+ * $ find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.md' -print0 | xargs -0 Build/lagom/bin/markdown-check README.md CONTRIBUTING.md
  */
 
 #include <AK/Format.h>

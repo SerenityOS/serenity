@@ -201,7 +201,8 @@ void Node::set_text_content(DeprecatedString const& content)
 
     // Otherwise, do nothing.
 
-    set_needs_style_update(true);
+    document().invalidate_style();
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
@@ -486,6 +487,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     // FIXME: This will need to become smarter when we implement the :has() selector.
     invalidate_style();
+
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
@@ -1759,7 +1762,7 @@ ErrorOr<String> Node::name_or_description(NameOrDescription target, Document con
                 TRY(Node::append_without_space(total_accumulated_text, after->computed_values().content().data));
 
             // iii. For each child node of the current node:
-            element->for_each_child([&total_accumulated_text, current_node, target, &document, visited_nodes](
+            element->for_each_child([&total_accumulated_text, current_node, target, &document, &visited_nodes](
                                         DOM::Node const& child_node) mutable {
                 if (visited_nodes.contains(child_node.id()))
                     return;

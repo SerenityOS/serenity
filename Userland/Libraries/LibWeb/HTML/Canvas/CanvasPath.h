@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Path.h>
+#include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -35,8 +36,17 @@ protected:
     {
     }
 
+    explicit CanvasPath(Bindings::PlatformObject& self, CanvasState const& canvas_state)
+        : m_self(self)
+        , m_canvas_state(canvas_state)
+    {
+    }
+
 private:
+    Gfx::AffineTransform active_transform() const;
+
     JS::NonnullGCPtr<Bindings::PlatformObject> m_self;
+    Optional<CanvasState const&> m_canvas_state;
     Gfx::Path m_path;
 };
 

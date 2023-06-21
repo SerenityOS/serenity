@@ -34,7 +34,7 @@ public:
     virtual bool is_connection_open() const override { return false; }
     virtual Gfx::Palette palette() const override { return m_host_page.client().palette(); }
     virtual DevicePixelRect screen_rect() const override { return {}; }
-    virtual double device_pixels_per_css_pixel() const override { return m_host_page.client().device_pixels_per_css_pixel(); }
+    virtual double device_pixels_per_css_pixel() const override { return 1.0; }
     virtual CSS::PreferredColorScheme preferred_color_scheme() const override { return m_host_page.client().preferred_color_scheme(); }
     virtual void request_file(FileRequest) override { }
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) override { }
@@ -70,6 +70,9 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     // Perform some DOM surgery to make the SVG root element be the first child of the Document.
     // FIXME: This is a huge hack until we figure out how to actually parse separate SVG files.
     auto* svg_root = document->body()->first_child_of_type<SVG::SVGSVGElement>();
+    if (!svg_root)
+        return Error::from_string_literal("SVGDecodedImageData: Invalid SVG input");
+
     svg_root->remove();
     document->remove_all_children();
 
@@ -142,7 +145,7 @@ Optional<float> SVGDecodedImageData::intrinsic_aspect_ratio() const
     auto width = intrinsic_width();
     auto height = intrinsic_height();
     if (width.has_value() && height.has_value())
-        return (width.value() / height.value()).value();
+        return width->to_float() / height->to_float();
 
     if (auto const& viewbox = m_root_element->view_box(); viewbox.has_value())
         return viewbox->width / viewbox->height;

@@ -77,22 +77,19 @@ jobs:
           mkdir -p libjs-test262/Build/CLDR
 
       - name: TimeZoneData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
       - name: UnicodeData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
       - name: UnicodeLocale cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
@@ -128,7 +125,7 @@ jobs:
       - name: Run test-wasm
         working-directory: libjs-test262/Build
         run: |
-          _deps/lagom-build/test-wasm --per-file _deps/lagom-build/Userland/Libraries/LibWasm/Tests > ../../libjs-website/wasm/data/per-file-master.json || true
+          _deps/lagom-build/bin/test-wasm --per-file _deps/lagom-build/Userland/Libraries/LibWasm/Tests > ../../libjs-website/wasm/data/per-file-master.json || true
           jq -nc -f /dev/stdin <<-EOF --slurpfile previous ../../libjs-website/wasm/data/results.json --slurpfile details ../../libjs-website/wasm/data/per-file-master.json > wasm-new-results.json
             \$details[0] as \$details | \$previous[0] + [{
               "commit_timestamp": $(git -C ../.. log -1 --format=%ct),
@@ -153,7 +150,7 @@ jobs:
           mv wasm-new-results.json ../../libjs-website/wasm/data/results.json
 
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        uses: JamesIves/github-pages-deploy-action@v4.4.2
         with:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org

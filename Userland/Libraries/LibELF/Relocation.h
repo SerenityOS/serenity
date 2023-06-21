@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 
 namespace ELF {
 

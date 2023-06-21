@@ -21,7 +21,7 @@ public:
     void set_selected(bool);
 
     DeprecatedString value() const;
-    void set_value(DeprecatedString);
+    WebIDL::ExceptionOr<void> set_value(DeprecatedString);
 
     DeprecatedString text() const;
     void set_text(DeprecatedString);

@@ -55,6 +55,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
         auto exe_path = FileSystem::real_path(exe_link).release_value_but_fixme_should_propagate_errors();
 
         if (prompt == ShouldPrompt::Yes) {
+            VERIFY(window_server_client_id != -1 && parent_window_id != -1);
             auto exe_name = LexicalPath::basename(exe_path.to_deprecated_string());
             auto text = String::formatted("Allow {} ({}) to {} \"{}\"?", exe_name, pid, access_string, path).release_value_but_fixme_should_propagate_errors();
             auto result = GUI::MessageBox::try_show({}, window_server_client_id, parent_window_id, text, "File Permissions Requested"sv).release_value_but_fixme_should_propagate_errors();
@@ -87,9 +88,9 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
     }
 }
 
-void ConnectionFromClient::request_file_read_only_approved(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path)
+void ConnectionFromClient::request_file_read_only_approved(i32 request_id, DeprecatedString const& path)
 {
-    request_file_handler(request_id, window_server_client_id, parent_window_id, path, Core::File::OpenMode::Read, ShouldPrompt::No);
+    request_file_handler(request_id, -1, -1, path, Core::File::OpenMode::Read, ShouldPrompt::No);
 }
 
 void ConnectionFromClient::request_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& path, Core::File::OpenMode requested_access)

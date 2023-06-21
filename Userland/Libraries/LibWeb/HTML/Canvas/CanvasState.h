@@ -78,6 +78,7 @@ public:
         float line_width { 1 };
         bool image_smoothing_enabled { true };
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
+        float global_alpha = { 1 };
         Optional<CanvasClip> clip;
     };
     DrawingState& drawing_state() { return m_drawing_state; }

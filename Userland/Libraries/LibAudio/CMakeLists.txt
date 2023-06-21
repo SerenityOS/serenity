@@ -2,6 +2,7 @@ set(SOURCES
     GenericTypes.cpp
     SampleFormats.cpp
     Loader.cpp
+    RIFFTypes.cpp
     WavLoader.cpp
     FlacLoader.cpp
     WavWriter.cpp

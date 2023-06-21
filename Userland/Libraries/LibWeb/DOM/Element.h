@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/ScrollOptions.h>
 #include <LibWeb/HTML/TagNames.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
@@ -89,11 +90,11 @@ public:
     bool has_attributes() const;
     DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
-    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    virtual WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
     WebIDL::ExceptionOr<void> set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node_ns(Attr&);
-    void remove_attribute(DeprecatedFlyString const& name);
+    virtual void remove_attribute(DeprecatedFlyString const& name);
     WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const;
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
@@ -305,6 +306,9 @@ public:
 
     void set_custom_element_state(CustomElementState value) { m_custom_element_state = value; }
     void setup_custom_element_from_constructor(HTML::CustomElementDefinition& custom_element_definition, Optional<String> const& is_value);
+
+    void scroll(HTML::ScrollToOptions const&);
+    void scroll(double x, double y);
 
 protected:
     Element(Document&, DOM::QualifiedName);

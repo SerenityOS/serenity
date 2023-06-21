@@ -6,11 +6,11 @@
 
 #include <AK/Error.h>
 #include <AK/Try.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

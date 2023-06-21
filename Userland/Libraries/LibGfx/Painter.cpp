@@ -965,17 +965,14 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
 
         for (int row = first_row; row < last_row; ++row) {
             for (int x = 0; x < (last_column - first_column); ++x) {
-                u8 alpha = color_for_format(src_format, src[x]).alpha();
-                if (alpha == 0xff) {
-                    auto color = filter(Color::from_argb(src[x]));
-                    if (color.alpha() == 0xff)
-                        dst[x] = color.value();
-                    else
-                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
-                } else if (!alpha)
+                auto source_color = color_for_format(src_format, src[x]);
+                if (source_color.alpha() == 0)
                     continue;
+                auto filtered_color = filter(source_color);
+                if (filtered_color.alpha() == 0xff)
+                    dst[x] = filtered_color.value();
                 else
-                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
             }
             dst += dst_skip;
             src += src_skip;
@@ -984,17 +981,14 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
         for (int row = first_row; row < last_row; ++row) {
             ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x < (last_column - first_column); ++x) {
-                u8 alpha = color_for_format(src_format, src[x / s]).alpha();
-                if (alpha == 0xff) {
-                    auto color = filter(color_for_format(src_format, src[x / s]));
-                    if (color.alpha() == 0xff)
-                        dst[x] = color.value();
-                    else
-                        dst[x] = color_for_format(dst_format, dst[x]).blend(color).value();
-                } else if (!alpha)
+                auto source_color = color_for_format(src_format, src[x / s]);
+                if (source_color.alpha() == 0)
                     continue;
+                auto filtered_color = filter(source_color);
+                if (filtered_color.alpha() == 0xff)
+                    dst[x] = filtered_color.value();
                 else
-                    dst[x] = color_for_format(dst_format, dst[x]).blend(filter(color_for_format(src_format, src[x / s]))).value();
+                    dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
             }
             dst += dst_skip;
         }
@@ -1430,9 +1424,13 @@ FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Font const& f
 
         FloatRect rect(point.x(), point.y(), scaled_width, scaled_height);
         draw_scaled_bitmap(rect.to_rounded<int>(), *glyph.bitmap(), glyph.bitmap()->rect(), 1.0f, ScalingMode::BilinearBlend);
-    } else {
+    } else if (color.alpha() != 255) {
         blit_filtered(glyph_position.blit_position, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
             return pixel.multiply(color);
+        });
+    } else {
+        blit_filtered(glyph_position.blit_position, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
+            return color.with_alpha(pixel.alpha());
         });
     }
 }
@@ -2323,10 +2321,12 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
     auto start = p1;
     auto end = p2;
 
+    bool start_swapped = false;
     if (theta_delta < 0) {
         swap(start, end);
         theta_1 = theta_1 + theta_delta;
         theta_delta = fabsf(theta_delta);
+        start_swapped = true;
     }
 
     auto relative_start = start - center;
@@ -2351,6 +2351,13 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
         p.set_y(original_x * sin_x_axis + original_y * cos_x_axis);
     };
 
+    auto emit_point = [&](auto p0, auto p1) {
+        // NOTE: If we swap the start/end we must swap the emitted points, so correct winding orders can be calculated.
+        if (start_swapped)
+            swap(p0, p1);
+        callback(p0, p1);
+    };
+
     for (float theta = theta_1; theta <= theta_1 + theta_delta; theta += theta_step) {
         float s, c;
         AK::sincos(theta, s, c);
@@ -2358,12 +2365,12 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
         next_point.set_y(b * s);
         rotate_point(next_point);
 
-        callback(current_point + center, next_point + center);
+        emit_point(current_point + center, next_point + center);
 
         current_point = next_point;
     }
 
-    callback(current_point + center, end);
+    emit_point(current_point + center, end);
 }
 
 // static
@@ -2589,6 +2596,9 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
 
         // FIXME: Painter should have an affine transform as part of its state and handle all of this instead.
 
+        if (opacity == 0.0f)
+            return;
+
         auto inverse_transform = transform.inverse();
         if (!inverse_transform.has_value())
             return;
@@ -2619,6 +2629,8 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
                 auto source_color = bitmap.get_pixel(source_point);
                 if (source_color.alpha() == 0)
                     continue;
+                if (opacity != 1.0f)
+                    source_color = source_color.with_opacity(opacity);
                 set_physical_pixel(point + clipped_bounding_rect.location(), source_color, true);
             }
         }

@@ -6,6 +6,7 @@
 
 #include "AutoplaySettingsWidget.h"
 #include <Applications/BrowserSettings/AutoplaySettingsWidgetGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Button.h>
@@ -14,8 +15,6 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
-
-static constexpr bool default_allow_autoplay_on_all_websites = false;
 
 ErrorOr<String> AutoplayAllowlistModel::filter_list_file_path() const
 {
@@ -38,7 +37,7 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
     TRY(widget->load_from_gml(autoplay_settings_widget_gml));
 
     widget->m_allow_autoplay_on_all_websites_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("allow_autoplay_on_all_websites_checkbox");
-    widget->m_allow_autoplay_on_all_websites_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, default_allow_autoplay_on_all_websites), GUI::AllowCallback::No);
+    widget->m_allow_autoplay_on_all_websites_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "AllowAutoplayOnAllWebsites"sv, Browser::default_allow_autoplay_on_all_websites), GUI::AllowCallback::No);
     widget->m_allow_autoplay_on_all_websites_checkbox->on_checked = [widget](auto) {
         widget->set_modified(true);
     };
@@ -86,5 +85,5 @@ void AutoplaySettingsWidget::apply_settings()
 void AutoplaySettingsWidget::reset_default_values()
 {
     m_allowlist_model->reset_default_values();
-    m_allow_autoplay_on_all_websites_checkbox->set_checked(default_allow_autoplay_on_all_websites);
+    m_allow_autoplay_on_all_websites_checkbox->set_checked(Browser::default_allow_autoplay_on_all_websites);
 }

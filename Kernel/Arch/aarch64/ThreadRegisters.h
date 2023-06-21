@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AddressSpace.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

@@ -10,7 +10,7 @@
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Thread.h>
 
 extern bool g_in_early_boot;
 

@@ -22,6 +22,8 @@ set(SOURCES
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
+    CSS/CSSKeyframeRule.cpp
+    CSS/CSSKeyframesRule.cpp
     CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
     CSS/CSSRule.cpp
@@ -77,6 +79,7 @@ set(SOURCES
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/StyleValues/CalculatedStyleValue.cpp
     CSS/StyleValues/ColorStyleValue.cpp
+    CSS/StyleValues/CompositeStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
@@ -93,11 +96,13 @@ set(SOURCES
     CSS/StyleValues/GridTrackSizeListStyleValue.cpp
     CSS/StyleValues/IdentifierStyleValue.cpp
     CSS/StyleValues/ImageStyleValue.cpp
+    CSS/StyleValues/IntegerStyleValue.cpp
     CSS/StyleValues/LengthStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
     CSS/StyleValues/ListStyleStyleValue.cpp
-    CSS/StyleValues/NumericStyleValue.cpp
+    CSS/StyleValues/NumberStyleValue.cpp
     CSS/StyleValues/OverflowStyleValue.cpp
+    CSS/StyleValues/PlaceContentStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
@@ -157,6 +162,7 @@ set(SOURCES
     DOM/ShadowRoot.cpp
     DOM/StaticNodeList.cpp
     DOM/StaticRange.cpp
+    DOM/StyleElementUtils.cpp
     DOM/Text.cpp
     DOM/Text.idl
     DOM/TreeWalker.cpp
@@ -208,6 +214,8 @@ set(SOURCES
     Geometry/DOMRectReadOnly.cpp
     HTML/AnimatedBitmapDecodedImageData.cpp
     HTML/AttributeNames.cpp
+    HTML/AudioTrack.cpp
+    HTML/AudioTrackList.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextGroup.cpp
     HTML/Canvas/CanvasDrawImage.cpp
@@ -256,6 +264,7 @@ set(SOURCES
     HTML/HTMLDialogElement.cpp
     HTML/HTMLDirectoryElement.cpp
     HTML/HTMLDivElement.cpp
+    HTML/HTMLDocument.cpp
     HTML/HTMLElement.cpp
     HTML/HTMLEmbedElement.cpp
     HTML/HTMLFieldSetElement.cpp
@@ -300,6 +309,7 @@ set(SOURCES
     HTML/HTMLSourceElement.cpp
     HTML/HTMLSpanElement.cpp
     HTML/HTMLStyleElement.cpp
+    HTML/HTMLSummaryElement.cpp
     HTML/HTMLTableCaptionElement.cpp
     HTML/HTMLTableCellElement.cpp
     HTML/HTMLTableColElement.cpp
@@ -351,6 +361,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/SessionHistoryEntry.cpp
+    HTML/SharedImageRequest.cpp
     HTML/SourceSet.cpp
     HTML/Storage.cpp
     HTML/StructuredSerialize.cpp
@@ -380,6 +391,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     IntersectionObserver/IntersectionObserver.cpp
+    Layout/AudioBox.cpp
     Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
@@ -415,11 +427,8 @@ set(SOURCES
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGSVGBox.cpp
-    Layout/TableBox.cpp
-    Layout/TableCellBox.cpp
+    Layout/SVGTextBox.cpp
     Layout/TableFormattingContext.cpp
-    Layout/TableRowBox.cpp
-    Layout/TableRowGroupBox.cpp
     Layout/TableWrapper.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
@@ -427,8 +436,6 @@ set(SOURCES
     Loader/ContentFilter.cpp
     Loader/FileRequest.cpp
     Loader/FrameLoader.cpp
-    Loader/ImageLoader.cpp
-    Loader/ImageResource.cpp
     Loader/LoadRequest.cpp
     Loader/ProxyMappings.cpp
     Loader/Resource.cpp
@@ -440,6 +447,7 @@ set(SOURCES
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/Page.cpp
+    Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
     Painting/BorderRadiusCornerClipper.cpp
@@ -452,6 +460,7 @@ set(SOURCES
     Painting/InlinePaintable.cpp
     Painting/LabelablePaintable.cpp
     Painting/MarkerPaintable.cpp
+    Painting/MediaPaintable.cpp
     Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp
     Painting/Paintable.cpp
@@ -462,6 +471,7 @@ set(SOURCES
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
+    Painting/SVGTextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp
@@ -469,6 +479,7 @@ set(SOURCES
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp
+    Platform/AudioCodecPlugin.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp
@@ -483,6 +494,8 @@ set(SOURCES
     SecureContexts/AbstractOperations.cpp
     SRI/SRI.cpp
     Streams/AbstractOperations.cpp
+    Streams/ByteLengthQueuingStrategy.cpp
+    Streams/CountQueuingStrategy.cpp
     Streams/ReadableByteStreamController.cpp
     Streams/ReadableStream.cpp
     Streams/ReadableStreamBYOBReader.cpp
@@ -520,7 +533,11 @@ set(SOURCES
     SVG/SVGRadialGradientElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/SVGStopElement.cpp
+    SVG/SVGStyleElement.cpp
+    SVG/SVGSymbolElement.cpp
     SVG/SVGTextContentElement.cpp
+    SVG/SVGTitleElement.cpp
+    SVG/SVGUseElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
@@ -587,7 +604,7 @@ set(GENERATED_SOURCES
 serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
-target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibVideo LibWasm LibXML LibIDL)
+target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
 generate_js_bindings(LibWeb)

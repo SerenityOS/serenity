@@ -16,7 +16,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto engine = TRY(ChessEngine::try_create(TRY(Core::File::standard_input()), TRY(Core::File::standard_output())));
+    auto infile = TRY(Core::File::standard_input());
+    TRY(infile->set_blocking(false));
+    auto outfile = TRY(Core::File::standard_output());
+    TRY(outfile->set_blocking(false));
+    auto engine = TRY(ChessEngine::try_create(move(infile), move(outfile)));
     engine->on_quit = [&](auto status_code) {
         loop.quit(status_code);
     };

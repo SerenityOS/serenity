@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AudioCodecPluginSerenity.h"
 #include "ImageCodecPluginSerenity.h"
+#include <LibAudio/Loader.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
@@ -25,7 +27,7 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath thread"));
+    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath thread proc"));
 
     // This must be first; we can't check if /tmp/webdriver exists once we've unveiled other paths.
     auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
@@ -35,6 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/usr/lib", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
@@ -43,6 +46,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new WebContent::ImageCodecPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
+
+    Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
+        return WebContent::AudioCodecPluginSerenity::create(move(loader));
+    });
 
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));

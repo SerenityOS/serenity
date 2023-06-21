@@ -71,18 +71,20 @@ void HTMLCanvasElement::reset_context_to_default_state()
         });
 }
 
-void HTMLCanvasElement::set_width(unsigned value)
+WebIDL::ExceptionOr<void> HTMLCanvasElement::set_width(unsigned value)
 {
-    MUST(set_attribute(HTML::AttributeNames::width, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::width, DeprecatedString::number(value)));
     m_bitmap = nullptr;
     reset_context_to_default_state();
+    return {};
 }
 
-void HTMLCanvasElement::set_height(unsigned value)
+WebIDL::ExceptionOr<void> HTMLCanvasElement::set_height(unsigned value)
 {
-    MUST(set_attribute(HTML::AttributeNames::height, DeprecatedString::number(value)));
+    TRY(set_attribute(HTML::AttributeNames::height, DeprecatedString::number(value)));
     m_bitmap = nullptr;
     reset_context_to_default_state();
+    return {};
 }
 
 JS::GCPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

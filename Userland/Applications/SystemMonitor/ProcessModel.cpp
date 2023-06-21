@@ -71,11 +71,11 @@ int ProcessModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String ProcessModel::column_name(int column) const
+ErrorOr<String> ProcessModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return {};
+        return String {};
     case Column::PID:
         return "PID"_short_string;
     case Column::TID:
@@ -95,7 +95,7 @@ String ProcessModel::column_name(int column) const
     case Column::Virtual:
         return "Virtual"_short_string;
     case Column::Physical:
-        return "Physical"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Physical"_string);
     case Column::DirtyPrivate:
         return "Private"_short_string;
     case Column::CleanInode:
@@ -107,11 +107,11 @@ String ProcessModel::column_name(int column) const
     case Column::CPU:
         return "CPU"_short_string;
     case Column::Processor:
-        return "Processor"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Processor"_string);
     case Column::Name:
         return "Name"_short_string;
     case Column::Syscalls:
-        return "Syscalls"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Syscalls"_string);
     case Column::InodeFaults:
         return "F:Inode"_short_string;
     case Column::ZeroFaults:
@@ -121,15 +121,15 @@ String ProcessModel::column_name(int column) const
     case Column::IPv4SocketReadBytes:
         return "IPv4 In"_short_string;
     case Column::IPv4SocketWriteBytes:
-        return "IPv4 Out"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("IPv4 Out"_string);
     case Column::UnixSocketReadBytes:
         return "Unix In"_short_string;
     case Column::UnixSocketWriteBytes:
-        return "Unix Out"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Unix Out"_string);
     case Column::FileReadBytes:
         return "File In"_short_string;
     case Column::FileWriteBytes:
-        return "File Out"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("File Out"_string);
     case Column::Pledge:
         return "Pledge"_short_string;
     case Column::Veil:
@@ -306,17 +306,17 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::CowFaults:
             return thread.current_state.cow_faults;
         case Column::IPv4SocketReadBytes:
-            return thread.current_state.ipv4_socket_read_bytes;
+            return human_readable_size_long(thread.current_state.ipv4_socket_read_bytes, UseThousandsSeparator::Yes);
         case Column::IPv4SocketWriteBytes:
-            return thread.current_state.ipv4_socket_write_bytes;
+            return human_readable_size_long(thread.current_state.ipv4_socket_write_bytes, UseThousandsSeparator::Yes);
         case Column::UnixSocketReadBytes:
-            return thread.current_state.unix_socket_read_bytes;
+            return human_readable_size_long(thread.current_state.unix_socket_read_bytes, UseThousandsSeparator::Yes);
         case Column::UnixSocketWriteBytes:
-            return thread.current_state.unix_socket_write_bytes;
+            return human_readable_size_long(thread.current_state.unix_socket_write_bytes, UseThousandsSeparator::Yes);
         case Column::FileReadBytes:
-            return thread.current_state.file_read_bytes;
+            return human_readable_size_long(thread.current_state.file_read_bytes, UseThousandsSeparator::Yes);
         case Column::FileWriteBytes:
-            return thread.current_state.file_write_bytes;
+            return human_readable_size_long(thread.current_state.file_write_bytes, UseThousandsSeparator::Yes);
         case Column::Pledge:
             return thread.current_state.pledge;
         case Column::Veil:

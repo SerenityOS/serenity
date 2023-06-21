@@ -39,7 +39,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
+    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode);
     virtual ~WebContentView() override;
 
     Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_tab_open_request;
@@ -96,7 +96,7 @@ signals:
 
 private:
     // ^WebView::ViewImplementation
-    virtual void create_client(WebView::EnableCallgrindProfiling = WebView::EnableCallgrindProfiling::No) override;
+    virtual void create_client(WebView::EnableCallgrindProfiling = WebView::EnableCallgrindProfiling::No, WebView::UseJavaScriptBytecode = WebView::UseJavaScriptBytecode::No) override;
     virtual void update_zoom() override;
     virtual Gfx::IntRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;

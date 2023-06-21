@@ -42,9 +42,9 @@ DeprecatedString HTMLAnchorElement::hyperlink_element_utils_href() const
     return attribute(HTML::AttributeNames::href);
 }
 
-void HTMLAnchorElement::set_hyperlink_element_utils_href(DeprecatedString href)
+WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(DeprecatedString href)
 {
-    MUST(set_attribute(HTML::AttributeNames::href, move(href)));
+    return set_attribute(HTML::AttributeNames::href, move(href));
 }
 
 void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)

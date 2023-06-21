@@ -6,7 +6,7 @@
  */
 
 #include <AK/TypedTransfer.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Version.h>
 
 namespace Kernel {

@@ -728,6 +728,7 @@ ErrorOr<size_t> Ext2FSInode::write_bytes_locked(off_t offset, size_t count, User
 
 ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
+    MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
 
     u8 buffer[max_block_size];

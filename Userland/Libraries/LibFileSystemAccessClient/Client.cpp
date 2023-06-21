@@ -28,21 +28,11 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     auto const id = get_new_id();
     m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, Core::File::OpenMode::Read });
 
-    auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
-    auto child_window_server_client_id = expose_window_server_client_id();
-    auto parent_window_id = parent_window->window_id();
-
-    GUI::ConnectionToWindowServer::the().add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
-
-    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
-        GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
-    });
-
     if (path.starts_with('/')) {
-        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
+        async_request_file_read_only_approved(id, path);
     } else {
         auto full_path = LexicalPath::join(TRY(FileSystem::current_working_directory()), path).string();
-        async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
+        async_request_file_read_only_approved(id, full_path);
     }
 
     return handle_promise(id);
@@ -73,10 +63,10 @@ Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& 
     return handle_promise(id);
 }
 
-Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::File::OpenMode requested_access, Optional<Vector<GUI::FileTypeFilter>> const& allowed_file_types)
+Result Client::open_file(GUI::Window* parent_window, OpenFileOptions const& options)
 {
     auto const id = get_new_id();
-    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, requested_access });
+    m_promises.set(id, RequestData { { Core::Promise<Result>::construct() }, parent_window, options.requested_access });
 
     auto parent_window_server_client_id = GUI::ConnectionToWindowServer::the().expose_client_id();
     auto child_window_server_client_id = expose_window_server_client_id();
@@ -88,7 +78,7 @@ Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& win
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, window_title, path, requested_access, allowed_file_types);
+    async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, options.window_title, options.path, options.requested_access, options.allowed_file_types);
 
     return handle_promise(id);
 }
@@ -141,7 +131,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
             break;
         [[fallthrough]];
     default:
-        auto maybe_message = ErrorOr<String>({});
+        ErrorOr<String> maybe_message = String {};
         if (error == ECONNRESET)
             maybe_message = String::formatted("FileSystemAccessClient: {}", Error::from_errno(error));
         else

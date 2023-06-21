@@ -85,8 +85,15 @@ int File::open_mode_to_options(OpenMode mode)
         flags |= O_EXCL;
     if (!has_flag(mode, OpenMode::KeepOnExec))
         flags |= O_CLOEXEC;
-    if (!has_flag(mode, OpenMode::Nonblocking))
+    if (has_flag(mode, OpenMode::Nonblocking))
         flags |= O_NONBLOCK;
+
+    // Some open modes, like `ReadWrite` imply the ability to create the file if it doesn't exist.
+    // Certain applications may not want this privledge, and for compability reasons, this is
+    // the easiest way to add this option.
+    if (has_flag(mode, OpenMode::DontCreate))
+        flags &= ~O_CREAT;
+
     return flags;
 }
 
@@ -180,6 +187,15 @@ ErrorOr<void> File::truncate(size_t length)
         return Error::from_string_literal("Length is larger than the maximum supported length");
 
     return System::ftruncate(m_fd, length);
+}
+
+ErrorOr<void> File::set_blocking(bool enabled)
+{
+    // NOTE: This works fine on Serenity, but some systems out there don't support changing the blocking state of certain POSIX objects (message queues, pipes, etc) after their creation.
+    // Therefore, this method shouldn't be used in Lagom.
+    // https://github.com/SerenityOS/serenity/pull/18965#discussion_r1207951840
+    int value = enabled ? 0 : 1;
+    return System::ioctl(fd(), FIONBIO, &value);
 }
 
 }

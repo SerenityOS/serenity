@@ -43,7 +43,7 @@ index 5f03f1c61902a191de87b49f0dcbdfec4a872d34..92c4bfcccb6bf45fcd8df748d346c8ec
  
 diff --git a/zig/lib/std/c/serenity.zig b/zig/lib/std/c/serenity.zig
 new file mode 100644
-index 0000000000000000000000000000000000000000..057813c1b13fcedc87271003220c42da7ef36e0e
+index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460c79bd3ba
 --- /dev/null
 +++ b/zig/lib/std/c/serenity.zig
 @@ -0,0 +1,396 @@
@@ -51,10 +51,10 @@ index 0000000000000000000000000000000000000000..057813c1b13fcedc87271003220c42da
 +pub const SerenityConstants = @import("serenity/constants.zig");
 +
 +pub const fd_t = c_int;
-+pub const dev_t = u32;
++pub const dev_t = u64;
 +pub const ino_t = u64;
 +pub const off_t = i64;
-+pub const nlink_t = u32;
++pub const nlink_t = u64;
 +
 +pub const E = enum(i32) {
 +    SUCCESS = SerenityConstants.ESUCCESS,
@@ -144,7 +144,7 @@ index 0000000000000000000000000000000000000000..057813c1b13fcedc87271003220c42da
 +pub const PATH_MAX = SerenityConstants.PATH_MAX;
 +
 +pub const time_t = i64;
-+pub const timespec = struct {
++pub const timespec = extern struct {
 +    tv_sec: time_t,
 +    tv_nsec: c_long,
 +};
@@ -222,14 +222,14 @@ index 0000000000000000000000000000000000000000..057813c1b13fcedc87271003220c42da
 +
 +pub const IOV_MAX = SerenityConstants.IOV_MAX;
 +
-+pub const pthread_mutex_t = struct {
++pub const pthread_mutex_t = extern struct {
 +    lock: u32 = 0,
 +    owner: ?std.c.pthread_t = null,
 +    level: c_int = 0,
 +    type: c_int = 0, // __PTHREAD_MUTEX_NORMAL
 +};
 +
-+pub const pthread_cond_t = struct {
++pub const pthread_cond_t = extern struct {
 +    mutex: ?*pthread_mutex_t = null,
 +    value: u32 = 0,
 +    clockid: c_int = CLOCK.MONOTONIC_COARSE, // clockid_t
@@ -238,10 +238,10 @@ index 0000000000000000000000000000000000000000..057813c1b13fcedc87271003220c42da
 +pub const uid_t = u32;
 +pub const gid_t = u32;
 +
-+pub const blksize_t = u32;
-+pub const blkcnt_t = u32;
++pub const blksize_t = u64;
++pub const blkcnt_t = u64;
 +
-+pub const Stat = struct {
++pub const Stat = extern struct {
 +    dev: dev_t,
 +    ino: ino_t,
 +    mode: mode_t,

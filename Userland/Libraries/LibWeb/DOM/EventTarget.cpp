@@ -6,6 +6,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -30,7 +31,9 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
@@ -751,6 +754,53 @@ void EventTarget::element_event_handler_attribute_changed(FlyString const& local
 
 bool EventTarget::dispatch_event(Event& event)
 {
+    // https://html.spec.whatwg.org/multipage/interaction.html#activation-triggering-input-event
+    auto is_activation_triggering_input_event = [&]() -> bool {
+        // An activation triggering input event is any event whose isTrusted attribute is true and whose type is one of:
+        if (!event.is_trusted())
+            return false;
+
+        // keydown, provided the key is neither the Esc key nor a shortcut key reserved by the user agent.
+        if (event.type() == UIEvents::EventNames::keydown)
+            return static_cast<UIEvents::KeyboardEvent*>(&event)->key_code() != KeyCode::Key_Escape;
+
+        // mousedown.
+        if (event.type() == UIEvents::EventNames::mousedown)
+            return true;
+
+        // FIXME:
+        // pointerdown, provided the event's pointerType is "mouse".
+        // pointerup, provided the event's pointerType is not "mouse".
+        // touchend.
+
+        return false;
+    };
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#user-activation-processing-model
+    // When a user interaction causes firing of an activation triggering input event in a Document document,
+    // the user agent must perform the following activation notification steps before dispatching the event:
+
+    // FIXME: 1. Assert: document is fully active.
+    // FIXME: 2. Let windows be « document's relevant global object ».
+    // FIXME: 3. Extend windows with the active window of each of document's ancestor navigables.
+    // FIXME: 4. Extend windows with the active window of each of document's descendant navigables,
+    //           filtered to include only those navigables whose active document's origin is same origin with document's origin.
+    // FIXME: 5. For each window in windows, set window's last activation timestamp to the current high resolution time.
+
+    // FIXME: This is ad-hoc, but works for now.
+    if (is_activation_triggering_input_event()) {
+        auto unsafe_shared_time = HighResolutionTime::unsafe_shared_current_time();
+        auto current_time = HighResolutionTime::relative_high_resolution_time(unsafe_shared_time, realm().global_object());
+
+        if (is<HTML::Window>(this)) {
+            static_cast<HTML::Window*>(this)->set_last_activation_timestamp(current_time);
+        } else if (is<DOM::Element>(this)) {
+            auto const* element = static_cast<DOM::Element const*>(this);
+            auto& window = element->document().window();
+            window.set_last_activation_timestamp(current_time);
+        }
+    }
+
     return EventDispatcher::dispatch(*this, event);
 }
 

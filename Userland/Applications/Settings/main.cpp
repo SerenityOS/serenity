@@ -133,7 +133,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         auto& app = *(NonnullRefPtr<Desktop::AppFile>*)index.internal_data();
-        statusbar->set_text(app->description());
+        statusbar->set_text(String::from_deprecated_string(app->description()).release_value_but_fixme_should_propagate_errors());
     };
 
     window->set_icon(app_icon.bitmap_for_size(16));

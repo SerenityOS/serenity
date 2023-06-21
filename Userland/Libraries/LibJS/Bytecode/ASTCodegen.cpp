@@ -29,266 +29,22 @@ Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Gener
 
 Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Optional<Bytecode::CodeGenerationError> maybe_error;
-    size_t pushed_scope_count = 0;
-    auto const failing_completion = Completion(Completion::Type::Throw, {}, {});
-
     // Note: SwitchStatement has its own codegen, but still calls into this function to handle the scoping of the switch body.
     auto is_switch_statement = is<SwitchStatement>(*this);
+    bool did_create_lexical_environment = false;
+
     if (is<BlockStatement>(*this) || is_switch_statement) {
-        // Perform the steps of BlockDeclarationInstantiation.
         if (has_lexical_declarations()) {
-            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
-            pushed_scope_count++;
+            generator.block_declaration_instantiation(*this);
+            did_create_lexical_environment = true;
         }
-
-        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
-            auto is_constant_declaration = declaration.is_constant_declaration();
-            // NOTE: Nothing in the callback throws an exception.
-            MUST(declaration.for_each_bound_name([&](auto const& name) {
-                auto index = generator.intern_identifier(name);
-                // NOTE: BlockDeclarationInstantiation takes as input the new lexical environment that was created and checks if there is a binding for the current name only in this new scope.
-                //       For example: `{ let a = 1; { let a = 2; } }`. The second `a` will shadow the first `a` instead of re-initializing or setting it.
-                if (is_constant_declaration || !generator.has_binding_in_current_scope(index)) {
-                    generator.register_binding(index);
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
-                }
-            }));
-
-            if (is<FunctionDeclaration>(declaration)) {
-                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-                auto const& name = function_declaration.name();
-                auto index = generator.intern_identifier(name);
-                generator.emit<Bytecode::Op::NewFunction>(function_declaration);
-                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
-            }
-
-            return {};
-        });
-
         if (is_switch_statement)
             return {};
-
     } else if (is<Program>(*this)) {
-        // Perform the steps of GlobalDeclarationInstantiation.
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Global, Bytecode::Generator::SurroundingScopeKind::Global);
-        pushed_scope_count++;
-
-        // 1. Let lexNames be the LexicallyDeclaredNames of script.
-        // 2. Let varNames be the VarDeclaredNames of script.
-        // 3. For each element name of lexNames, do
-        (void)for_each_lexically_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
-            auto identifier = generator.intern_identifier(name);
-            // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
-            // b. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-            if (generator.has_binding(identifier)) {
-                // FIXME: Throw an actual SyntaxError instance.
-                generator.emit<Bytecode::Op::NewString>(generator.intern_string(DeprecatedString::formatted("SyntaxError: toplevel variable already declared: {}", name)));
-                generator.emit<Bytecode::Op::Throw>();
-                return {};
-            }
-
-            // FIXME: c. If hasRestrictedGlobalProperty is true, throw a SyntaxError exception.
-            //        d. If hasRestrictedGlobal is true, throw a SyntaxError exception.
-            return {};
-        });
-
-        // 4. For each element name of varNames, do
-        (void)for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
-            auto identifier = generator.intern_identifier(name);
-            // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-            if (generator.has_binding(identifier)) {
-                // FIXME: Throw an actual SyntaxError instance.
-                generator.emit<Bytecode::Op::NewString>(generator.intern_string(DeprecatedString::formatted("SyntaxError: toplevel variable already declared: {}", name)));
-                generator.emit<Bytecode::Op::Throw>();
-            }
-            return {};
-        });
-
-        // 5. Let varDeclarations be the VarScopedDeclarations of script.
-        // 6. Let functionsToInitialize be a new empty List.
-        Vector<FunctionDeclaration const&> functions_to_initialize;
-
-        // 7. Let declaredFunctionNames be a new empty List.
-        HashTable<DeprecatedFlyString> declared_function_names;
-
-        // 8. For each element d of varDeclarations, in reverse List order, do
-        (void)for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
-            // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
-            // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
-            // Note: This is checked in for_each_var_function_declaration_in_reverse_order.
-            // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
-            // iii. Let fn be the sole element of the BoundNames of d.
-
-            // iv. If fn is not an element of declaredFunctionNames, then
-            if (declared_function_names.set(function.name()) != AK::HashSetResult::InsertedNewEntry)
-                return {};
-
-            // FIXME: 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
-            // FIXME: 2. If fnDefinable is false, throw a TypeError exception.
-
-            // 3. Append fn to declaredFunctionNames.
-            // Note: Already done in step iv. above.
-
-            // 4. Insert d as the first element of functionsToInitialize.
-            functions_to_initialize.prepend(function);
-            return {};
-        });
-
-        // 9. Let declaredVarNames be a new empty List.
-        HashTable<DeprecatedFlyString> declared_var_names;
-
-        // 10. For each element d of varDeclarations, do
-        (void)for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
-            // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
-            // Note: This is done in for_each_var_scoped_variable_declaration.
-
-            // i. For each String vn of the BoundNames of d, do
-            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
-                // 1. If vn is not an element of declaredFunctionNames, then
-                if (declared_function_names.contains(name))
-                    return {};
-
-                // FIXME: a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
-                // FIXME: b. If vnDefinable is false, throw a TypeError exception.
-
-                // c. If vn is not an element of declaredVarNames, then
-                // i. Append vn to declaredVarNames.
-                declared_var_names.set(name);
-                return {};
-            });
-        });
-
-        // 11. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
-        // 12. NOTE: Annex B.3.2.2 adds additional steps at this point.
-
-        // 12. Let strict be IsStrict of script.
-        // 13. If strict is false, then
-        if (!verify_cast<Program>(*this).is_strict_mode()) {
-            // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
-            // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within script, do
-            (void)for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
-                // i. Let F be StringValue of the BindingIdentifier of f.
-                auto& function_name = function_declaration.name();
-
-                // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for script, then
-                // Note: This step is already performed during parsing and for_each_function_hoistable_with_annexB_extension so this always passes here.
-
-                // 1. If env.HasLexicalDeclaration(F) is false, then
-                auto index = generator.intern_identifier(function_name);
-                if (generator.has_binding(index, Bytecode::Generator::BindingMode::Lexical))
-                    return;
-
-                // FIXME: a. Let fnDefinable be ? env.CanDeclareGlobalVar(F).
-                // b. If fnDefinable is true, then
-                // i. NOTE: A var binding for F is only instantiated here if it is neither a VarDeclaredName nor the name of another FunctionDeclaration.
-                // ii. If declaredFunctionOrVarNames does not contain F, then
-                if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
-                    // i. Perform ? env.CreateGlobalVarBinding(F, false).
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false, true);
-
-                    // ii. Append F to declaredFunctionOrVarNames.
-                    declared_function_names.set(function_name);
-                }
-
-                // iii. When the FunctionDeclaration f is evaluated, perform the following steps in place of the FunctionDeclaration Evaluation algorithm provided in 15.2.6:
-                //     i. Let genv be the running execution context's VariableEnvironment.
-                //     ii. Let benv be the running execution context's LexicalEnvironment.
-                //     iii. Let fobj be ! benv.GetBindingValue(F, false).
-                //     iv. Perform ? genv.SetMutableBinding(F, fobj, false).
-                //     v. Return unused.
-                function_declaration.set_should_do_additional_annexB_steps();
-            });
-        }
-
-        // 15. For each element d of lexDeclarations, do
-        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
-            // a. NOTE: Lexically declared names are only instantiated here but not initialized.
-            // b. For each element dn of the BoundNames of d, do
-            return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
-                auto identifier = generator.intern_identifier(name);
-                // i. If IsConstantDeclaration of d is true, then
-                generator.register_binding(identifier);
-                if (declaration.is_constant_declaration()) {
-                    // 1. Perform ? env.CreateImmutableBinding(dn, true).
-                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
-                } else {
-                    // ii. Else,
-                    // 1. Perform ? env.CreateMutableBinding(dn, false).
-                    generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-                }
-
-                return {};
-            });
-        });
-
-        // 16. For each Parse Node f of functionsToInitialize, do
-        for (auto& function_declaration : functions_to_initialize) {
-            // FIXME: Do this more correctly.
-            // a. Let fn be the sole element of the BoundNames of f.
-            // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
-            generator.emit<Bytecode::Op::NewFunction>(function_declaration);
-
-            // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-            auto const& name = function_declaration.name();
-            auto index = generator.intern_identifier(name);
-            if (!generator.has_binding(index)) {
-                generator.register_binding(index, Bytecode::Generator::BindingMode::Var);
-                generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
-            }
-            generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
-        }
-
-        // 17. For each String vn of declaredVarNames, do
-        for (auto& var_name : declared_var_names) {
-            // a. Perform ? env.CreateGlobalVarBinding(vn, false).
-            auto index = generator.intern_identifier(var_name);
-            generator.register_binding(index, Bytecode::Generator::BindingMode::Var);
-            generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false, true);
-        }
+        // GlobalDeclarationInstantiation is handled by the C++ AO.
     } else {
-        // Perform the steps of FunctionDeclarationInstantiation.
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Var, Bytecode::Generator::SurroundingScopeKind::Function);
-        pushed_scope_count++;
-        if (has_lexical_declarations()) {
-            generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Function);
-            pushed_scope_count++;
-        }
-
-        // FIXME: Implement this boi correctly.
-        (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
-            auto is_constant_declaration = declaration.is_constant_declaration();
-            // NOTE: Nothing in the callback throws an exception.
-            MUST(declaration.for_each_bound_name([&](auto const& name) {
-                auto index = generator.intern_identifier(name);
-                if (is_constant_declaration || !generator.has_binding(index)) {
-                    generator.register_binding(index);
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
-                }
-            }));
-
-            if (is<FunctionDeclaration>(declaration)) {
-                auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-                if (auto result = function_declaration.generate_bytecode(generator); result.is_error()) {
-                    maybe_error = result.release_error();
-                    // To make `for_each_lexically_scoped_declaration` happy.
-                    return failing_completion;
-                }
-                auto const& name = function_declaration.name();
-                auto index = generator.intern_identifier(name);
-                if (!generator.has_binding(index)) {
-                    generator.register_binding(index);
-                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, false);
-                }
-                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
-            }
-
-            return {};
-        });
+        // FunctionDeclarationInstantiation is handled by the C++ AO.
     }
-
-    if (maybe_error.has_value())
-        return maybe_error.release_value();
 
     for (auto& child : children()) {
         TRY(child->generate_bytecode(generator));
@@ -296,7 +52,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
             break;
     }
 
-    for (size_t i = 0; i < pushed_scope_count; ++i)
+    if (did_create_lexical_environment)
         generator.end_variable_scope();
 
     return {};
@@ -1000,13 +756,12 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
                 has_lexical_environment = true;
 
                 // FIXME: Is Block correct?
-                generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
+                generator.begin_variable_scope();
 
                 bool is_const = variable_declaration.is_constant_declaration();
                 // NOTE: Nothing in the callback throws an exception.
                 MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                     auto index = generator.intern_identifier(name);
-                    generator.register_binding(index);
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_const);
                 }));
             }
@@ -1043,8 +798,16 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
             Bytecode::Label { end_block });
     }
 
+    if (m_update) {
+        generator.switch_to_basic_block(*update_block_ptr);
+        TRY(m_update->generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { *test_block_ptr },
+            {});
+    }
+
     generator.switch_to_basic_block(*body_block_ptr);
-    generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr }, label_set);
+    generator.begin_continuable_scope(Bytecode::Label { m_update ? *update_block_ptr : *test_block_ptr }, label_set);
     generator.begin_breakable_scope(Bytecode::Label { end_block }, label_set);
     TRY(m_body->generate_bytecode(generator));
     generator.end_breakable_scope();
@@ -1055,14 +818,11 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
             generator.emit<Bytecode::Op::Jump>().set_targets(
                 Bytecode::Label { *update_block_ptr },
                 {});
-
-            generator.switch_to_basic_block(*update_block_ptr);
-            TRY(m_update->generate_bytecode(generator));
+        } else {
+            generator.emit<Bytecode::Op::Jump>().set_targets(
+                Bytecode::Label { *test_block_ptr },
+                {});
         }
-
-        generator.emit<Bytecode::Op::Jump>().set_targets(
-            Bytecode::Label { *test_block_ptr },
-            {});
     }
 
     generator.switch_to_basic_block(end_block);
@@ -1082,6 +842,8 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
 
     auto object_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(object_reg);
+
+    generator.push_home_object(object_reg);
 
     for (auto& property : m_properties) {
         Bytecode::Op::PropertyKind property_kind;
@@ -1124,6 +886,8 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
     }
 
     generator.emit<Bytecode::Op::Load>(object_reg);
+
+    generator.pop_home_object();
     return {};
 }
 
@@ -1197,13 +961,13 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
     Optional<Bytecode::IdentifierTableIndex> name_identifier;
 
     if (has_name) {
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical);
+        generator.begin_variable_scope();
 
         name_identifier = generator.intern_identifier(name());
         generator.emit<Bytecode::Op::CreateVariable>(*name_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
     }
 
-    generator.emit<Bytecode::Op::NewFunction>(*this);
+    generator.emit_new_function(*this);
 
     if (has_name) {
         generator.emit<Bytecode::Op::SetVariable>(*name_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
@@ -1503,15 +1267,80 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
 Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
-        if (declarator->init())
+        if (declarator->init()) {
             TRY(declarator->init()->generate_bytecode(generator));
-        else
+            TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+        } else if (m_declaration_kind != DeclarationKind::Var) {
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-        TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+            TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
+        }
     }
 
     return {};
 }
+
+static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expression(Bytecode::Generator& generator, MemberExpression const& member_expression, Bytecode::Register this_reg)
+{
+    // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+    if (is<SuperExpression>(member_expression.object())) {
+        // 1. Let env be GetThisEnvironment().
+        // 2. Let actualThis be ? env.GetThisBinding().
+        generator.emit<Bytecode::Op::ResolveThisBinding>();
+        generator.emit<Bytecode::Op::Store>(this_reg);
+
+        Optional<Bytecode::Register> computed_property_value_register;
+
+        if (member_expression.is_computed()) {
+            // SuperProperty : super [ Expression ]
+            // 3. Let propertyNameReference be ? Evaluation of Expression.
+            // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+            TRY(member_expression.property().generate_bytecode(generator));
+            computed_property_value_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(*computed_property_value_register);
+        }
+
+        // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+        // https://tc39.es/ecma262/#sec-makesuperpropertyreference
+        // 1. Let env be GetThisEnvironment().
+        // 2. Assert: env.HasSuperBinding() is true.
+        // 3. Let baseValue be ? env.GetSuperBase().
+        generator.emit<Bytecode::Op::ResolveSuperBase>();
+
+        // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+        if (computed_property_value_register.has_value()) {
+            // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+            // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
+            auto super_base_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(super_base_register);
+            generator.emit<Bytecode::Op::Load>(*computed_property_value_register);
+            generator.emit<Bytecode::Op::GetByValue>(super_base_register);
+        } else {
+            // 3. Let propertyKey be StringValue of IdentifierName.
+            auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+        }
+    } else {
+        TRY(member_expression.object().generate_bytecode(generator));
+        generator.emit<Bytecode::Op::Store>(this_reg);
+        if (member_expression.is_computed()) {
+            TRY(member_expression.property().generate_bytecode(generator));
+            generator.emit<Bytecode::Op::GetByValue>(this_reg);
+        } else {
+            auto identifier_table_ref = [&] {
+                if (is<PrivateIdentifier>(member_expression.property()))
+                    return generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string());
+                return generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
+            }();
+
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+        }
+    }
+
+    return {};
+}
+
+static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::Generator& generator, OptionalChain const& optional_chain, Bytecode::Register current_value_register, Bytecode::Register current_base_register);
 
 Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
@@ -1525,56 +1354,11 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     } else if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
-
-        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
-        if (is<SuperExpression>(member_expression.object())) {
-            // 1. Let env be GetThisEnvironment().
-            // 2. Let actualThis be ? env.GetThisBinding().
-            generator.emit<Bytecode::Op::ResolveThisBinding>();
-            generator.emit<Bytecode::Op::Store>(this_reg);
-
-            Optional<Bytecode::Register> computed_property_value_register;
-
-            if (member_expression.is_computed()) {
-                // SuperProperty : super [ Expression ]
-                // 3. Let propertyNameReference be ? Evaluation of Expression.
-                // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
-                TRY(member_expression.property().generate_bytecode(generator));
-                computed_property_value_register = generator.allocate_register();
-                generator.emit<Bytecode::Op::Store>(*computed_property_value_register);
-            }
-
-            // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-
-            // https://tc39.es/ecma262/#sec-makesuperpropertyreference
-            // 1. Let env be GetThisEnvironment().
-            // 2. Assert: env.HasSuperBinding() is true.
-            // 3. Let baseValue be ? env.GetSuperBase().
-            generator.emit<Bytecode::Op::ResolveSuperBase>();
-
-            // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-            if (computed_property_value_register.has_value()) {
-                // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-                // FIXME: This does ToPropertyKey out of order, which is observable by Symbol.toPrimitive!
-                generator.emit<Bytecode::Op::GetByValue>(*computed_property_value_register);
-            } else {
-                // 3. Let propertyKey be StringValue of IdentifierName.
-                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-            }
-        } else {
-            TRY(member_expression.object().generate_bytecode(generator));
-            generator.emit<Bytecode::Op::Store>(this_reg);
-            if (member_expression.is_computed()) {
-                TRY(member_expression.property().generate_bytecode(generator));
-                generator.emit<Bytecode::Op::GetByValue>(this_reg);
-            } else {
-                auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-                generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
-            }
-        }
-
+        TRY(get_base_and_value_from_member_expression(generator, member_expression, this_reg));
         generator.emit<Bytecode::Op::Store>(callee_reg);
+    } else if (is<OptionalChain>(*m_callee)) {
+        auto& optional_chain = static_cast<OptionalChain const&>(*m_callee);
+        TRY(generate_optional_chain(generator, optional_chain, callee_reg, this_reg));
     } else {
         // FIXME: this = global object in sloppy mode.
         TRY(m_callee->generate_bytecode(generator));
@@ -1586,6 +1370,8 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     Bytecode::Op::Call::CallType call_type;
     if (is<NewExpression>(*this)) {
         call_type = Bytecode::Op::Call::CallType::Construct;
+    } else if (m_callee->is_identifier() && static_cast<Identifier const&>(*m_callee).string() == "eval"sv) {
+        call_type = Bytecode::Op::Call::CallType::DirectEval;
     } else {
         call_type = Bytecode::Op::Call::CallType::Call;
     }
@@ -2140,8 +1926,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     auto raw_strings_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(raw_strings_reg);
 
-    generator.emit<Bytecode::Op::Load>(strings_reg);
-    generator.emit<Bytecode::Op::PutById>(raw_strings_reg, generator.intern_identifier("raw"));
+    generator.emit<Bytecode::Op::PutById>(strings_reg, generator.intern_identifier("raw"));
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto this_reg = generator.allocate_register();
@@ -2163,6 +1948,7 @@ Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Byteco
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
     if (!m_prefixed) {
         previous_value_for_postfix_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::ToNumeric>();
         generator.emit<Bytecode::Op::Store>(*previous_value_for_postfix_reg);
     }
 
@@ -2232,12 +2018,11 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         if (!m_finalizer)
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
 
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
+        generator.begin_variable_scope();
         TRY(m_handler->parameter().visit(
             [&](DeprecatedFlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
                 if (!parameter.is_empty()) {
                     auto parameter_identifier = generator.intern_identifier(parameter);
-                    generator.register_binding(parameter_identifier);
                     generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
                     generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize);
                 }
@@ -2456,7 +2241,7 @@ Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode:
     generator.end_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
 
     if (!generator.is_current_block_terminated())
-        generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+        generator.emit<Bytecode::Op::LeaveLexicalEnvironment>();
 
     return {};
 }
@@ -2509,11 +2294,10 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
             MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                 // i. Perform ! newEnv.CreateMutableBinding(name, false).
                 auto identifier = generator.intern_identifier(name);
-                generator.register_binding(identifier);
                 generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
             }));
             // d. Set the running execution context's LexicalEnvironment to newEnv.
-            // NOTE: Done by CreateEnvironment.
+            // NOTE: Done by CreateLexicalEnvironment.
         }
     } else {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
@@ -2657,7 +2441,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
         // iv. Perform ForDeclarationBindingInstantiation of lhs with argument iterationEnv.
         // v. Set the running execution context's LexicalEnvironment to iterationEnv.
-        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical);
+        generator.begin_variable_scope();
         has_lexical_binding = true;
 
         // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
@@ -2668,7 +2452,6 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         // NOTE: Nothing in the callback throws an exception.
         MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
             auto identifier = generator.intern_identifier(name);
-            generator.register_binding(identifier, Bytecode::Generator::BindingMode::Lexical);
             // a. If IsConstantDeclaration of LetOrConst is true, then
             if (variable_declaration.is_constant_declaration()) {
                 // i. Perform ! environment.CreateImmutableBinding(name, true).
@@ -2825,4 +2608,93 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
     VERIFY_NOT_REACHED();
 }
+
+Bytecode::CodeGenerationErrorOr<void> ClassFieldInitializerStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_expression->generate_bytecode(generator));
+    generator.perform_needed_unwinds<Bytecode::Op::Return>();
+    generator.emit<Bytecode::Op::Return>();
+    return {};
+}
+
+static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::Generator& generator, OptionalChain const& optional_chain, Bytecode::Register current_value_register, Bytecode::Register current_base_register)
+{
+    if (is<MemberExpression>(optional_chain.base())) {
+        auto& member_expression = static_cast<MemberExpression const&>(optional_chain.base());
+        TRY(get_base_and_value_from_member_expression(generator, member_expression, current_base_register));
+    } else if (is<OptionalChain>(optional_chain.base())) {
+        auto& sub_optional_chain = static_cast<OptionalChain const&>(optional_chain.base());
+        TRY(generate_optional_chain(generator, sub_optional_chain, current_value_register, current_base_register));
+    } else {
+        TRY(optional_chain.base().generate_bytecode(generator));
+    }
+
+    generator.emit<Bytecode::Op::Store>(current_value_register);
+
+    auto& load_undefined_and_jump_to_end_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
+    for (auto& reference : optional_chain.references()) {
+        auto is_optional = reference.visit([](auto& ref) { return ref.mode; }) == OptionalChain::Mode::Optional;
+        if (is_optional) {
+            auto& not_nullish_block = generator.make_block();
+            generator.emit<Bytecode::Op::JumpNullish>(
+                Bytecode::Label { load_undefined_and_jump_to_end_block },
+                Bytecode::Label { not_nullish_block });
+            generator.switch_to_basic_block(not_nullish_block);
+        }
+
+        TRY(reference.visit(
+            [&](OptionalChain::Call const& call) -> Bytecode::CodeGenerationErrorOr<void> {
+                TRY(arguments_to_array_for_call(generator, call.arguments));
+                generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, current_value_register, current_base_register);
+
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+
+                generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+
+                generator.emit<Bytecode::Op::Load>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::ComputedReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+                TRY(ref.expression->generate_bytecode(generator));
+                generator.emit<Bytecode::Op::GetByValue>(current_base_register);
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::MemberReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+                generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(ref.identifier->string()));
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+                return {};
+            },
+            [&](OptionalChain::PrivateMemberReference const&) -> Bytecode::CodeGenerationErrorOr<void> {
+                return Bytecode::CodeGenerationError {
+                    &optional_chain,
+                    "Unimplemented reference: PrivateMemberReference"sv,
+                };
+            }));
+    }
+
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(load_undefined_and_jump_to_end_block);
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(end_block);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> OptionalChain::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto current_base_register = generator.allocate_register();
+    auto current_value_register = generator.allocate_register();
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    generator.emit<Bytecode::Op::Store>(current_base_register);
+    return generate_optional_chain(generator, *this, current_value_register, current_base_register);
+}
+
 }

@@ -24,7 +24,11 @@ public:
     ALWAYS_INLINE Error(Error&&) = default;
     ALWAYS_INLINE Error& operator=(Error&&) = default;
 
-    [[nodiscard]] static Error from_errno(int code) { return Error(code); }
+    [[nodiscard]] static Error from_errno(int code)
+    {
+        VERIFY(code != 0);
+        return Error(code);
+    }
 
     // NOTE: For calling this method from within kernel code, we will simply print
     // the error message and return the errno code.

@@ -1888,7 +1888,11 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::wait_for_navigation_to
         return {};
 
     // FIXME: 3. Start a timer. If this algorithm has not completed before timer reaches the session’s session page load timeout in milliseconds, return an error with error code timeout.
-    // FIXME: 4. If there is an ongoing attempt to navigate the current browsing context that has not yet matured, wait for navigation to mature.
+
+    // 4. If there is an ongoing attempt to navigate the current browsing context that has not yet matured, wait for navigation to mature.
+    Web::Platform::EventLoopPlugin::the().spin_until([&] {
+        return !m_page_client.page().has_ongoing_navigation();
+    });
 
     // 5. Let readiness target be the document readiness state associated with the current session’s page loading strategy, which can be found in the table of page load strategies.
     auto readiness_target = [this]() {

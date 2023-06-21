@@ -10,12 +10,14 @@
     "align-items": [
         "baseline",
         "center",
+        "end",
         "flex-end",
         "flex-start",
         "normal",
         "safe",
         "self-end",
         "self-start",
+        "start",
         "stretch",
         "unsafe"
     ],
@@ -23,14 +25,28 @@
         "auto",
         "baseline",
         "center",
+        "end",
         "flex-end",
         "flex-start",
         "normal",
         "safe",
         "self-end",
         "self-start",
+        "start",
         "stretch",
         "unsafe"
+    ],
+    "animation-fill-mode": [
+        "backwards",
+        "both",
+        "forwards",
+        "none"
+    ],
+    "animation-direction": [
+        "alternate",
+        "alternate-reverse",
+        "normal",
+        "reverse"
     ],
     "appearance": [
         "auto",
@@ -67,6 +83,10 @@
     "box-sizing": [
         "border-box",
         "content-box"
+    ],
+    "caption-side": [
+        "top",
+        "bottom"
     ],
     "clear": [
         "none",
@@ -111,6 +131,10 @@
         "all-scroll",
         "zoom-in",
         "zoom-out"
+    ],
+    "fill-rule": [
+        "nonzero",
+        "evenodd"
     ],
     "flex-direction": [
         "row",
@@ -167,6 +191,8 @@
         "decimal",
         "decimal-leading-zero",
         "disc",
+        "disclosure-closed",
+        "disclosure-open",
         "lower-alpha",
         "lower-latin",
         "lower-roman",
@@ -175,6 +201,10 @@
         "upper-alpha",
         "upper-latin",
         "upper-roman"
+    ],
+    "list-style-position": [
+        "inside",
+        "outside"
     ],
     "overflow": [
         "auto",
@@ -212,7 +242,9 @@
         "justify",
         "left",
         "right",
-        "-libweb-center"
+        "-libweb-center",
+        "-libweb-left",
+        "-libweb-right"
     ],
     "text-decoration-line": [
         "blink",

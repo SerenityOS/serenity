@@ -20,7 +20,7 @@
 #include <Kernel/Arch/x86_64/SIMDState.h>
 #include <Kernel/Arch/x86_64/TSS.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()

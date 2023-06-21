@@ -39,12 +39,9 @@ ErrorOr<size_t> PCIDeviceExpansionROMSysFSComponent::read_bytes(off_t offset, si
     if (unsigned_offset >= m_option_rom_size)
         return 0;
 
-    auto blob = TRY(try_to_generate_buffer(unsigned_offset, count));
-    if (static_cast<size_t>(offset) >= blob->size())
-        return 0;
-
-    ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
-    TRY(buffer.write(blob->data() + offset, nread));
+    ssize_t nread = min(static_cast<off_t>(m_option_rom_size - offset), static_cast<off_t>(count));
+    auto blob = TRY(try_to_generate_buffer(unsigned_offset, nread));
+    TRY(buffer.write(blob->bytes()));
     return nread;
 }
 

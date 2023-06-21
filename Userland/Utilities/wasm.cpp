@@ -6,6 +6,7 @@
  */
 
 #include <AK/MemoryStream.h>
+#include <AK/StackInfo.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -25,7 +26,8 @@ static OwnPtr<Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
-static Wasm::DebuggerBytecodeInterpreter g_interpreter;
+static StackInfo g_stack_info;
+static Wasm::DebuggerBytecodeInterpreter g_interpreter(g_stack_info);
 
 static void sigint_handler(int)
 {

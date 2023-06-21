@@ -44,11 +44,14 @@ JS::ThrowCompletionOr<void> TextDecoder::initialize(JS::Realm& realm)
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
-WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
+WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(Optional<JS::Handle<JS::Object>> const& input) const
 {
+    if (!input.has_value())
+        return TRY_OR_THROW_OOM(vm(), m_decoder.to_utf8({}));
+
     // FIXME: Implement the streaming stuff.
 
-    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*input.cell());
+    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*input->cell());
     if (data_buffer_or_error.is_error())
         return WebIDL::OperationError::create(realm(), "Failed to copy bytes from ArrayBuffer");
     auto& data_buffer = data_buffer_or_error.value();

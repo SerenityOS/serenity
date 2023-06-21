@@ -15,6 +15,9 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
@@ -43,22 +46,30 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
     return adopt_ref(*new StyleProperties(*this));
 }
 
-void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value)
+void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value, CSS::CSSStyleDeclaration const* source_declaration)
 {
-    m_property_values[to_underlying(id)] = move(value);
+    m_property_values[to_underlying(id)] = StyleAndSourceDeclaration { move(value), source_declaration };
 }
 
 NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID property_id) const
 {
     auto value = m_property_values[to_underlying(property_id)];
     // By the time we call this method, all properties have values assigned.
-    VERIFY(!value.is_null());
-    return value.release_nonnull();
+    VERIFY(value.has_value());
+    return value->style;
 }
 
 RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
 {
-    return m_property_values[to_underlying(property_id)];
+    auto value = m_property_values[to_underlying(property_id)];
+    if (value.has_value())
+        return value->style;
+    return {};
+}
+
+CSS::CSSStyleDeclaration const* StyleProperties::property_source_declaration(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)].map([](auto& value) { return value.declaration; }).value_or(nullptr);
 }
 
 CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
@@ -72,6 +83,8 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
             return CSS::Size::make_min_content();
         case ValueID::MaxContent:
             return CSS::Size::make_max_content();
+        case ValueID::FitContent:
+            return CSS::Size::make_fit_content();
         case ValueID::None:
             return CSS::Size::make_none();
         default:
@@ -85,11 +98,11 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     if (value->is_percentage())
         return CSS::Size::make_percentage(value->as_percentage().percentage());
 
-    if (value->has_length()) {
-        auto length = value->to_length();
+    if (value->is_length()) {
+        auto length = value->as_length().length();
         if (length.is_auto())
             return CSS::Size::make_auto();
-        return CSS::Size::make_length(value->to_length());
+        return CSS::Size::make_length(length);
     }
 
     // FIXME: Support `fit-content(<length>)`
@@ -112,8 +125,8 @@ Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id
     if (value->is_percentage())
         return value->as_percentage().percentage();
 
-    if (value->has_length())
-        return value->to_length();
+    if (value->is_length())
+        return value->as_length().length();
 
     if (value->has_auto())
         return LengthPercentage { Length::make_auto() };
@@ -162,13 +175,13 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Length
         return font_metrics.line_height;
 
     if (line_height->is_length()) {
-        auto line_height_length = line_height->to_length();
+        auto line_height_length = line_height->as_length().length();
         if (!line_height_length.is_auto())
             return line_height_length.to_px(viewport_rect, font_metrics, root_font_metrics);
     }
 
-    if (line_height->is_numeric())
-        return Length(line_height->to_number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
+    if (line_height->is_number())
+        return Length(line_height->as_number().number(), Length::Type::Em).to_px(viewport_rect, font_metrics, root_font_metrics);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -192,13 +205,13 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
         return layout_node.font().pixel_metrics().line_spacing();
 
     if (line_height->is_length()) {
-        auto line_height_length = line_height->to_length();
+        auto line_height_length = line_height->as_length().length();
         if (!line_height_length.is_auto())
             return line_height_length.to_px(layout_node);
     }
 
-    if (line_height->is_numeric())
-        return Length(line_height->to_number(), Length::Type::Em).to_px(layout_node);
+    if (line_height->is_number())
+        return Length(line_height->as_number().number(), Length::Type::Em).to_px(layout_node);
 
     if (line_height->is_percentage()) {
         // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
@@ -207,6 +220,15 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
     }
 
     if (line_height->is_calculated()) {
+        if (line_height->as_calculated().resolves_to_number()) {
+            auto resolved = line_height->as_calculated().resolve_number();
+            if (!resolved.has_value()) {
+                dbgln("FIXME: Failed to resolve calc() line-height (number): {}", line_height->as_calculated().to_string().release_value_but_fixme_should_propagate_errors());
+                return layout_node.font().pixel_metrics().line_spacing();
+            }
+            return Length(resolved.value(), Length::Type::Em).to_px(layout_node);
+        }
+
         auto resolved = line_height->as_calculated().resolve_length(layout_node);
         if (!resolved.has_value()) {
             dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string().release_value_but_fixme_should_propagate_errors());
@@ -223,13 +245,12 @@ Optional<int> StyleProperties::z_index() const
     auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
-    if (value->has_integer()) {
+    if (value->is_integer()) {
         // Clamp z-index to the range of a signed 32-bit integer for consistency with other engines.
-        // NOTE: Casting between 32-bit float and 32-bit integer is finicky here, since INT32_MAX is not representable as a 32-bit float!
-        auto integer = value->to_integer();
-        if (integer >= static_cast<float>(NumericLimits<int>::max()))
+        auto integer = value->as_integer().integer();
+        if (integer >= NumericLimits<int>::max())
             return NumericLimits<int>::max();
-        if (integer <= static_cast<float>(NumericLimits<int>::min()))
+        if (integer <= NumericLimits<int>::min())
             return NumericLimits<int>::min();
         return static_cast<int>(integer);
     }
@@ -240,8 +261,8 @@ static float resolve_opacity_value(CSS::StyleValue const& value)
 {
     float unclamped_opacity = 1.0f;
 
-    if (value.has_number()) {
-        unclamped_opacity = value.to_number();
+    if (value.is_number()) {
+        unclamped_opacity = value.as_number().number();
     } else if (value.is_calculated()) {
         auto& calculated = value.as_calculated();
         if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
@@ -288,6 +309,12 @@ float StyleProperties::stop_opacity() const
     return resolve_opacity_value(*value);
 }
 
+Optional<CSS::FillRule> StyleProperties::fill_rule() const
+{
+    auto value = property(CSS::PropertyID::FillRule);
+    return value_id_to_fill_rule(value->to_identifier());
+}
+
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
 {
     auto value = property(CSS::PropertyID::FlexDirection);
@@ -300,50 +327,38 @@ Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
     return value_id_to_flex_wrap(value->to_identifier());
 }
 
-Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
+Optional<CSS::FlexBasis> StyleProperties::flex_basis() const
 {
     auto value = property(CSS::PropertyID::FlexBasis);
 
     if (value->is_identifier() && value->to_identifier() == CSS::ValueID::Content)
-        return { { CSS::FlexBasis::Content, {} } };
+        return CSS::FlexBasisContent {};
 
-    if (value->has_auto())
-        return { { CSS::FlexBasis::Auto, {} } };
-
-    if (value->is_percentage())
-        return { { CSS::FlexBasis::LengthPercentage, value->as_percentage().percentage() } };
-
-    if (value->has_length())
-        return { { CSS::FlexBasis::LengthPercentage, value->to_length() } };
-
-    if (value->is_calculated())
-        return { { CSS::FlexBasis::LengthPercentage, CSS::LengthPercentage { value->as_calculated() } } };
-
-    return {};
+    return size_value(CSS::PropertyID::FlexBasis);
 }
 
 float StyleProperties::flex_grow() const
 {
     auto value = property(CSS::PropertyID::FlexGrow);
-    if (!value->has_number())
+    if (!value->is_number())
         return 0;
-    return value->to_number();
+    return value->as_number().number();
 }
 
 float StyleProperties::flex_shrink() const
 {
     auto value = property(CSS::PropertyID::FlexShrink);
-    if (!value->has_number())
+    if (!value->is_number())
         return 1;
-    return value->to_number();
+    return value->as_number().number();
 }
 
 int StyleProperties::order() const
 {
     auto value = property(CSS::PropertyID::Order);
-    if (!value->has_integer())
+    if (!value->is_integer())
         return 0;
-    return value->to_integer();
+    return value->as_integer().integer();
 }
 
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
@@ -352,10 +367,34 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
     return value_id_to_image_rendering(value->to_identifier());
 }
 
+CSS::Length StyleProperties::border_spacing_horizontal() const
+{
+    auto value = property(CSS::PropertyID::BorderSpacing);
+    if (value->is_length())
+        return value->as_length().length();
+    auto const& list = value->as_value_list();
+    return list.value_at(0, false)->as_length().length();
+}
+
+CSS::Length StyleProperties::border_spacing_vertical() const
+{
+    auto value = property(CSS::PropertyID::BorderSpacing);
+    if (value->is_length())
+        return value->as_length().length();
+    auto const& list = value->as_value_list();
+    return list.value_at(1, false)->as_length().length();
+}
+
+Optional<CSS::CaptionSide> StyleProperties::caption_side() const
+{
+    auto value = property(CSS::PropertyID::CaptionSide);
+    return value_id_to_caption_side(value->to_identifier());
+}
+
 CSS::Clip StyleProperties::clip() const
 {
     auto value = property(CSS::PropertyID::Clip);
-    if (!value->has_rect())
+    if (!value->is_rect())
         return CSS::Clip::make_auto();
     return CSS::Clip(value->as_rect().rect());
 }
@@ -388,16 +427,29 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         transformation.function = transformation_style_value.transform_function();
         Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
-            if (transformation_value->is_length()) {
-                values.append({ transformation_value->to_length() });
+            if (transformation_value->is_calculated()) {
+                auto& calculated = transformation_value->as_calculated();
+                if (calculated.resolves_to_length()) {
+                    dbgln("FIXME: Unable to resolve length with no layout node! {}", calculated.to_string());
+                } else if (calculated.resolves_to_percentage()) {
+                    values.append({ calculated.resolve_percentage().value() });
+                } else if (calculated.resolves_to_number()) {
+                    values.append({ calculated.resolve_number().value() });
+                } else if (calculated.resolves_to_angle()) {
+                    values.append({ calculated.resolve_angle().value() });
+                } else {
+                    dbgln("FIXME: Unsupported calc value in transform! {}", calculated.to_string());
+                }
+            } else if (transformation_value->is_length()) {
+                values.append({ transformation_value->as_length().length() });
             } else if (transformation_value->is_percentage()) {
                 values.append({ transformation_value->as_percentage().percentage() });
-            } else if (transformation_value->is_numeric()) {
-                values.append({ transformation_value->to_number() });
+            } else if (transformation_value->is_number()) {
+                values.append({ transformation_value->as_number().number() });
             } else if (transformation_value->is_angle()) {
                 values.append({ transformation_value->as_angle().angle() });
             } else {
-                dbgln("FIXME: Unsupported value in transform!");
+                dbgln("FIXME: Unsupported value in transform! {}", transformation_value->to_string());
             }
         }
         transformation.values = move(values);
@@ -409,7 +461,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
 static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue const& value)
 {
     if (value.is_length())
-        return value.to_length();
+        return value.as_length().length();
     if (value.is_percentage())
         return value.as_percentage().percentage();
     return {};
@@ -505,17 +557,17 @@ bool StyleProperties::operator==(StyleProperties const& other) const
         return false;
 
     for (size_t i = 0; i < m_property_values.size(); ++i) {
-        auto const& my_ptr = m_property_values[i];
-        auto const& other_ptr = other.m_property_values[i];
-        if (!my_ptr) {
-            if (other_ptr)
+        auto const& my_style = m_property_values[i];
+        auto const& other_style = other.m_property_values[i];
+        if (!my_style.has_value()) {
+            if (other_style.has_value())
                 return false;
             continue;
         }
-        if (!other_ptr)
+        if (!other_style.has_value())
             return false;
-        auto const& my_value = *my_ptr;
-        auto const& other_value = *other_ptr;
+        auto const& my_value = *my_style->style;
+        auto const& other_value = *other_style->style;
         if (my_value.type() != other_value.type())
             return false;
         if (my_value != other_value)
@@ -677,6 +729,12 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
     return value_id_to_list_style_type(value->to_identifier());
 }
 
+Optional<CSS::ListStylePosition> StyleProperties::list_style_position() const
+{
+    auto value = property(CSS::PropertyID::ListStylePosition);
+    return value_id_to_list_style_position(value->to_identifier());
+}
+
 Optional<CSS::Overflow> StyleProperties::overflow_x() const
 {
     return overflow(CSS::PropertyID::OverflowX);
@@ -744,10 +802,13 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
         return value_id_to_vertical_align(value->to_identifier()).release_value();
 
     if (value->is_length())
-        return CSS::LengthPercentage(value->to_length());
+        return CSS::LengthPercentage(value->as_length().length());
 
     if (value->is_percentage())
         return CSS::LengthPercentage(value->as_percentage().percentage());
+
+    if (value->is_calculated())
+        return LengthPercentage { const_cast<CalculatedStyleValue&>(value->as_calculated()) };
 
     VERIFY_NOT_REACHED();
 }

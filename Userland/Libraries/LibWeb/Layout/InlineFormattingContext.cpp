@@ -18,8 +18,6 @@
 
 namespace Web::Layout {
 
-constexpr double text_justification_threshold = 0.1;
-
 InlineFormattingContext::InlineFormattingContext(LayoutState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
     , m_containing_block_state(state.get(containing_block))
@@ -41,17 +39,18 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space = parent().space_used_by_floats(y_in_root);
-    if (box_in_root_rect.x() >= space.left) {
+    auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
+    auto left_side_floats_limit_to_right = space_and_containing_margin.left_total_containing_margin + space_and_containing_margin.left_used_space;
+    if (box_in_root_rect.x() >= left_side_floats_limit_to_right) {
         // The left edge of the containing block is to the right of the rightmost left-side float.
         // We start placing inline content at the left edge of the containing block.
         return 0;
     }
     // The left edge of the containing block is to the left of the rightmost left-side float.
     // We adjust the inline content insertion point by the overlap between the containing block and the float.
-    return space.left - box_in_root_rect.x();
+    return left_side_floats_limit_to_right - max(CSSPixels(0), box_in_root_rect.x());
 }
 
 CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
@@ -110,14 +109,12 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     box_state.border_bottom = computed_values.border_bottom().width;
     box_state.margin_bottom = computed_values.margin().bottom().to_px(box, width_of_containing_block);
 
-    if (is<ReplacedBox>(box)) {
-        auto& replaced = verify_cast<ReplacedBox>(box);
-
-        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced, *m_available_space));
-        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced, *m_available_space));
+    if (box_is_sized_as_replaced_element(box)) {
+        box_state.set_content_width(compute_width_for_replaced_element(box, *m_available_space));
+        box_state.set_content_height(compute_height_for_replaced_element(box, *m_available_space));
 
         if (is<SVGSVGBox>(box))
-            (void)layout_inside(replaced, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
+            (void)layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
         return;
     }
 
@@ -152,9 +149,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     }
 
     CSSPixels width = unconstrained_width;
-    auto computed_max_width = box.computed_values().max_width();
-    if (!computed_max_width.is_none()) {
-        auto max_width = computed_max_width.to_px(box, width_of_containing_block);
+    if (!should_treat_max_width_as_none(box, m_available_space->width)) {
+        auto max_width = box.computed_values().max_width().to_px(box, width_of_containing_block);
         width = min(width, max_width);
     }
 
@@ -193,13 +189,13 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         break;
     }
 
-    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
-
-    // Only justify the text if the excess horizontal space is less than or
-    // equal to 10%, or if we are not looking at the last line box.
-    if (is_last_line && excess_horizontal_space / m_available_space->width.to_px().value() > text_justification_threshold)
+    // https://www.w3.org/TR/css-text-3/#text-align-property
+    // Unless otherwise specified by text-align-last, the last line before a forced break or the end of the block is start-aligned.
+    // FIXME: Support text-align-last.
+    if (is_last_line || line_box.m_has_forced_break)
         return;
 
+    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
     CSSPixels excess_horizontal_space_including_whitespace = excess_horizontal_space;
     size_t whitespace_count = 0;
     for (auto& fragment : line_box.fragments()) {
@@ -209,7 +205,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         }
     }
 
-    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<double>(whitespace_count)) : 0;
+    CSSPixels justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / whitespace_count) : 0;
 
     // This is the amount that each fragment will be offset by. If a whitespace
     // fragment is shorter than the justified space width, it increases to push
@@ -251,7 +247,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak:
-            line_builder.break_line();
+            line_builder.break_line(LineBuilder::ForcedBreak::Yes);
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
@@ -321,10 +317,10 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
 bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root());
     CSSPixels y_in_root = box_in_root_rect.y() + y;
-    auto space = parent().space_used_by_floats(y_in_root);
-    return space.left > 0 || space.right > 0;
+    auto space_and_containing_margin = parent().space_used_and_containing_margin_for_floats(y_in_root);
+    return space_and_containing_margin.left_used_space > 0 || space_and_containing_margin.right_used_space > 0;
 }
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
@@ -350,6 +346,21 @@ bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
     if (bottom_left_edge > top_right_edge)
         return false;
     return true;
+}
+
+bool InlineFormattingContext::can_determine_size_of_child() const
+{
+    return parent().can_determine_size_of_child();
+}
+
+void InlineFormattingContext::determine_width_of_child(Box const& box, AvailableSpace const& available_space)
+{
+    return parent().determine_width_of_child(box, available_space);
+}
+
+void InlineFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
+{
+    return parent().determine_height_of_child(box, available_space);
 }
 
 }

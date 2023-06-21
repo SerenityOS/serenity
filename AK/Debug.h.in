@@ -10,6 +10,10 @@
 #    cmakedefine01 AFLACLOADER_DEBUG
 #endif
 
+#ifndef AUDIO_DEBUG
+#    cmakedefine01 AUDIO_DEBUG
+#endif
+
 #ifndef AWAVLOADER_DEBUG
 #    cmakedefine01 AWAVLOADER_DEBUG
 #endif
@@ -242,6 +246,10 @@
 #    cmakedefine01 LIBWEB_CSS_DEBUG
 #endif
 
+#ifndef LIBWEB_CSS_ANIMATION_DEBUG
+#    cmakedefine01 LIBWEB_CSS_ANIMATION_DEBUG
+#endif
+
 #ifndef LINE_EDITOR_DEBUG
 #    cmakedefine01 LINE_EDITOR_DEBUG
 #endif
@@ -466,8 +474,16 @@
 #    cmakedefine01 UTF8_DEBUG
 #endif
 
+#ifndef VPX_DEBUG
+#    cmakedefine01 VPX_DEBUG
+#endif
+
 #ifndef WASI_DEBUG
 #    cmakedefine01 WASI_DEBUG
+#endif
+
+#ifndef WASI_FINE_GRAINED_DEBUG
+#    cmakedefine01 WASI_FINE_GRAINED_DEBUG
 #endif
 
 #ifndef WASM_BINPARSER_DEBUG

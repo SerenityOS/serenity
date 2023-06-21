@@ -14,15 +14,20 @@
 namespace GUI {
 
 class CoverWizardPage : public AbstractWizardPage {
-    C_OBJECT(CoverWizardPage);
+    C_OBJECT_ABSTRACT(CoverWizardPage);
+
+    static ErrorOr<NonnullRefPtr<CoverWizardPage>> create(StringView title, StringView subtitle);
 
     ImageWidget& banner_image_widget() { return *m_banner_image_widget; }
 
-    void set_header_text(DeprecatedString const& text);
-    void set_body_text(DeprecatedString const& text);
+    void set_header_text(String);
+    void set_body_text(String);
+
+protected:
+    virtual ErrorOr<void> build(String title, String subtitle);
 
 private:
-    explicit CoverWizardPage();
+    CoverWizardPage() = default;
 
     RefPtr<ImageWidget> m_banner_image_widget;
     RefPtr<Widget> m_content_widget;

@@ -122,13 +122,13 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         StringBuilder builder;
         builder.appendff("{}\n", error.get_without_side_effects(object.vm().names.message).to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
         for (auto const& frame : trace.in_reverse()) {
-            if (frame.source_range.filename().contains("runtime.js"sv)) {
+            if (frame.source_range().filename().contains("runtime.js"sv)) {
                 if (frame.function_name == "<unknown>")
-                    builder.appendff("  in a builtin function at line {}, column {}\n", frame.source_range.start.line, frame.source_range.start.column);
+                    builder.appendff("  in a builtin function at line {}, column {}\n", frame.source_range().start.line, frame.source_range().start.column);
                 else
                     builder.appendff("  while evaluating builtin '{}'\n", frame.function_name);
-            } else if (frame.source_range.filename().starts_with("cell "sv)) {
-                builder.appendff("  in cell '{}', at line {}, column {}\n", frame.source_range.filename().substring_view(5), frame.source_range.start.line, frame.source_range.start.column);
+            } else if (frame.source_range().filename().starts_with("cell "sv)) {
+                builder.appendff("  in cell '{}', at line {}, column {}\n", frame.source_range().filename().substring_view(5), frame.source_range().start.line, frame.source_range().start.column);
             }
         }
         return builder.to_deprecated_string();
@@ -162,12 +162,12 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
     return mime_data;
 }
 
-String SheetModel::column_name(int index) const
+ErrorOr<String> SheetModel::column_name(int index) const
 {
     if (index < 0)
-        return {};
+        return String {};
 
-    return String::from_deprecated_string(m_sheet->column(index)).release_value_but_fixme_should_propagate_errors();
+    return TRY(String::from_deprecated_string(m_sheet->column(index)));
 }
 
 bool SheetModel::is_editable(const GUI::ModelIndex& index) const

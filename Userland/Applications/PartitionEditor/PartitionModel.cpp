@@ -6,7 +6,6 @@
 
 #include <AK/NumberFormat.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/GUIDPartitionTable.h>
 #include <LibPartition/MBRPartitionTable.h>
@@ -18,17 +17,17 @@ NonnullRefPtr<PartitionModel> PartitionModel::create()
     return adopt_ref(*new PartitionModel);
 }
 
-String PartitionModel::column_name(int column) const
+ErrorOr<String> PartitionModel::column_name(int column) const
 {
     switch (column) {
     case Column::Partition:
-        return "Partition"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Partition"_string);
     case Column::StartBlock:
-        return "Start Block"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Start Block"_string);
     case Column::EndBlock:
-        return "End Block"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("End Block"_string);
     case Column::TotalBlocks:
-        return "Total Blocks"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Total Blocks"_string);
     case Column::Size:
         return "Size"_short_string;
     default:
@@ -68,28 +67,33 @@ GUI::Variant PartitionModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
 
 ErrorOr<void> PartitionModel::set_device_path(DeprecatedString const& path)
 {
-    auto file = TRY(Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly));
+    auto strong_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto weak_file = TRY(Core::File::adopt_fd(strong_file->fd(), Core::File::OpenMode::Read, Core::File::ShouldCloseFileDescriptor::No));
+    auto device = TRY(Partition::PartitionableDevice::create(move(weak_file)));
 
-    auto mbr_table_or_error = Partition::MBRPartitionTable::try_to_initialize(file);
+    auto mbr_table_or_error = Partition::MBRPartitionTable::try_to_initialize(TRY(device.clone_owned()));
     if (!mbr_table_or_error.is_error()) {
         dbgln("Found MBR partition table on {}", path);
         m_partition_table = move(mbr_table_or_error.value());
+        m_backing_file = move(strong_file);
         invalidate();
         return {};
     }
 
-    auto ebr_table_or_error = Partition::EBRPartitionTable::try_to_initialize(file);
+    auto ebr_table_or_error = Partition::EBRPartitionTable::try_to_initialize(TRY(device.clone_owned()));
     if (!ebr_table_or_error.is_error()) {
         dbgln("Found EBR partition table on {}", path);
         m_partition_table = move(ebr_table_or_error.value());
+        m_backing_file = move(strong_file);
         invalidate();
         return {};
     }
 
-    auto guid_table_or_error = Partition::GUIDPartitionTable::try_to_initialize(file);
+    auto guid_table_or_error = Partition::GUIDPartitionTable::try_to_initialize(TRY(device.clone_owned()));
     if (!guid_table_or_error.is_error()) {
         dbgln("Found GUID partition table on {}", path);
         m_partition_table = move(guid_table_or_error.value());
+        m_backing_file = move(strong_file);
         invalidate();
         return {};
     }

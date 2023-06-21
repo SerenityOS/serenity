@@ -12,7 +12,7 @@
 #include <Kernel/Devices/KCOVInstance.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 
 namespace Kernel {
 

@@ -37,7 +37,6 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font/Font.h>
-#include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/SyntaxHighlighter.h>
@@ -70,10 +69,9 @@ MainWidget::MainWidget()
     if (font_entry != "default")
         m_editor->set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
 
-    m_editor->on_change = Core::debounce([this] {
+    m_editor->on_change = Core::debounce(100, [this] {
         update_preview();
-    },
-        100);
+    });
 
     m_editor->on_modified_change = [this](bool modified) {
         window()->set_modified(modified);
@@ -237,10 +235,7 @@ MainWidget::MainWidget()
     m_statusbar->segment(2).set_menu(m_line_column_statusbar_menu);
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        m_statusbar->set_override_text(move(text));
+        m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
@@ -322,7 +317,7 @@ MainWidget::MainWidget()
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
     m_open_folder_action->set_enabled(!m_path.is_empty());
-    m_open_folder_action->set_status_tip("Open the current file location in File Manager");
+    m_open_folder_action->set_status_tip("Open the current file location in File Manager"_string.release_value_but_fixme_should_propagate_errors());
 
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
@@ -351,7 +346,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
         m_page_view = web_view_container.add<WebView::OutOfProcessWebView>();
         m_page_view->on_link_hover = [this](auto& url) {
             if (url.is_valid())
-                m_statusbar->set_text(url.to_deprecated_string());
+                m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
             else
                 update_statusbar();
         };
@@ -562,8 +557,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_visualize_trailing_whitespace_action->set_checked(true);
-    m_visualize_trailing_whitespace_action->set_status_tip("Visualize trailing whitespace");
-    m_visualize_leading_whitespace_action->set_status_tip("Visualize leading whitespace");
+    m_visualize_trailing_whitespace_action->set_status_tip(TRY("Visualize trailing whitespace"_string));
+    m_visualize_leading_whitespace_action->set_status_tip(TRY("Visualize leading whitespace"_string));
 
     TRY(view_menu->try_add_action(*m_visualize_trailing_whitespace_action));
     TRY(view_menu->try_add_action(*m_visualize_leading_whitespace_action));
@@ -573,7 +568,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_cursor_line_highlighting_action->set_checked(true);
-    m_cursor_line_highlighting_action->set_status_tip("Highlight the current line");
+    m_cursor_line_highlighting_action->set_status_tip(TRY("Highlight the current line"_string));
 
     TRY(view_menu->try_add_action(*m_cursor_line_highlighting_action));
 
@@ -586,7 +581,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_relative_line_number_action->set_checked(show_relative_line_number);
     m_editor->set_relative_line_number(show_relative_line_number);
 
-    m_relative_line_number_action->set_status_tip("Set relative line number");
+    m_relative_line_number_action->set_status_tip(TRY("Set relative line number"_string));
 
     TRY(view_menu->try_add_action(*m_relative_line_number_action));
 
@@ -601,12 +596,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_short_string));
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
-        m_statusbar->set_text(1, "Plain Text");
+        m_statusbar->set_text(1, "Plain Text"_string.release_value_but_fixme_should_propagate_errors());
         m_editor->set_syntax_highlighter({});
         m_editor->update();
     });
     m_plain_text_highlight->set_checked(true);
-    m_statusbar->set_text(1, "Plain Text");
+    m_statusbar->set_text(1, TRY("Plain Text"_string));
     syntax_actions.add_action(*m_plain_text_highlight);
     TRY(syntax_menu->try_add_action(*m_plain_text_highlight));
 
@@ -941,13 +936,13 @@ void MainWidget::update_statusbar()
         auto word_count = m_editor->number_of_words();
         builder.appendff("{:'d} {} ({:'d} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
-    m_statusbar->set_text(0, builder.to_deprecated_string());
+    m_statusbar->set_text(0, builder.to_string().release_value_but_fixme_should_propagate_errors());
 
     if (m_editor && m_editor->syntax_highlighter()) {
         auto language = m_editor->syntax_highlighter()->language();
-        m_statusbar->set_text(1, Syntax::language_to_string(language));
+        m_statusbar->set_text(1, String::from_utf8(Syntax::language_to_string(language)).release_value_but_fixme_should_propagate_errors());
     }
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
+    m_statusbar->set_text(2, String::formatted("Ln {:'d}  Col {:'d}", m_editor->cursor().line() + 1, m_editor->cursor().column()).release_value_but_fixme_should_propagate_errors());
 }
 
 void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResults show_message)

@@ -13,8 +13,8 @@
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Panic.h>
-#include <Kernel/StdLib.h>
+#include <Kernel/Library/Panic.h>
+#include <Kernel/Library/StdLib.h>
 
 namespace Kernel {
 

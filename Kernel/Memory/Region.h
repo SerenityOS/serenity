@@ -11,7 +11,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/LockRank.h>
 #include <Kernel/Memory/PageFaultResponse.h>

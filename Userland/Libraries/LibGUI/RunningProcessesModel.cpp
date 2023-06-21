@@ -45,11 +45,11 @@ int RunningProcessesModel::column_count(const GUI::ModelIndex&) const
     return Column::__Count;
 }
 
-String RunningProcessesModel::column_name(int column_index) const
+ErrorOr<String> RunningProcessesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::Icon:
-        return {};
+        return String {};
     case Column::PID:
         return "PID"_short_string;
     case Column::UID:

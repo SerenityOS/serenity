@@ -190,7 +190,7 @@ public:
     Action& cut_action() { return *m_cut_action; }
     Action& copy_action() { return *m_copy_action; }
     Action& paste_action() { return *m_paste_action; }
-    Action& go_to_line_action() { return *m_go_to_line_action; }
+    Action& go_to_line_or_column_action() { return *m_go_to_line_or_column_action; }
     Action& select_all_action() { return *m_select_all_action; }
     Action& insert_emoji_action() { return *m_insert_emoji_action; }
 
@@ -426,7 +426,7 @@ private:
     RefPtr<Action> m_cut_action;
     RefPtr<Action> m_copy_action;
     RefPtr<Action> m_paste_action;
-    RefPtr<Action> m_go_to_line_action;
+    RefPtr<Action> m_go_to_line_or_column_action;
     RefPtr<Action> m_select_all_action;
     RefPtr<Action> m_insert_emoji_action;
     Core::ElapsedTimer m_triple_click_timer;

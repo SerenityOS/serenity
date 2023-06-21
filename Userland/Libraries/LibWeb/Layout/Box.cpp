@@ -47,6 +47,10 @@ static bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
 // https://www.w3.org/TR/css-overflow-3/#scroll-container
 bool Box::is_scroll_container() const
 {
+    // NOTE: This isn't in the spec, but we want the viewport to behave like a scroll container.
+    if (is_viewport())
+        return true;
+
     return overflow_value_makes_box_a_scroll_container(computed_values().overflow_x())
         || overflow_value_makes_box_a_scroll_container(computed_values().overflow_y());
 }
@@ -85,6 +89,14 @@ JS::GCPtr<Painting::Paintable> Box::create_paintable() const
 Painting::PaintableBox const* Box::paintable_box() const
 {
     return static_cast<Painting::PaintableBox const*>(Node::paintable());
+}
+
+Optional<float> Box::preferred_aspect_ratio() const
+{
+    auto computed_aspect_ratio = computed_values().aspect_ratio();
+    if (computed_aspect_ratio.use_natural_aspect_ratio_if_available && natural_aspect_ratio().has_value())
+        return natural_aspect_ratio();
+    return computed_aspect_ratio.preferred_ratio.map([](CSS::Ratio const& ratio) { return ratio.value(); });
 }
 
 }

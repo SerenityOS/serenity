@@ -102,8 +102,17 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<HT
         .property_key = property_key,
     };
 
+    // SameValue(e.[[Property]], P) can never be true at step 2.1 if P is not a string due to the different type, so we can return early.
+    if (!property_key.is_string()) {
+        return {};
+    }
+    auto const& property_key_string = property_key.as_string();
+
     // 2. For each e of CrossOriginProperties(O):
     for (auto const& entry : cross_origin_properties(object_const_variant)) {
+        if (entry.property != property_key_string)
+            continue;
+        // 1. If SameValue(e.[[Property]], P) is true, then:
         auto& cross_origin_property_descriptor_map = object.visit([](auto* o) -> CrossOriginPropertyDescriptorMap& { return o->cross_origin_property_descriptor_map(); });
 
         // 1. If the value of the [[CrossOriginPropertyDescriptorMap]] internal slot of O contains an entry whose key is crossOriginKey, then return that entry's value.

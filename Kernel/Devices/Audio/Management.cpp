@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Devices/Audio/AC97.h>
+#include <Kernel/Devices/Audio/AC97/AC97.h>
 #include <Kernel/Devices/Audio/IntelHDA/Controller.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Sections.h>

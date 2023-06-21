@@ -68,15 +68,12 @@ class BackgroundStyleValue;
 class BorderRadiusShorthandStyleValue;
 class BorderRadiusStyleValue;
 class BorderStyleValue;
-class CalculatedStyleValue;
-class Clip;
-class ColorStyleValue;
-class ConicGradientStyleValue;
-class ContentStyleValue;
 class CSSConditionRule;
 class CSSFontFaceRule;
 class CSSGroupingRule;
 class CSSImportRule;
+class CSSKeyframeRule;
+class CSSKeyframesRule;
 class CSSMediaRule;
 class CSSRule;
 class CSSRuleList;
@@ -84,6 +81,12 @@ class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
 class CSSSupportsRule;
+class CalculatedStyleValue;
+class Clip;
+class ColorStyleValue;
+class CompositeStyleValue;
+class ConicGradientStyleValue;
+class ContentStyleValue;
 class CustomIdentStyleValue;
 class Display;
 class DisplayStyleValue;
@@ -114,6 +117,7 @@ class IdentifierStyleValue;
 class ImageStyleValue;
 class InheritStyleValue;
 class InitialStyleValue;
+class IntegerStyleValue;
 class Length;
 class LengthBox;
 class LengthOrCalculated;
@@ -127,14 +131,17 @@ class MediaQuery;
 class MediaQueryList;
 class MediaQueryListEvent;
 class Number;
-class NumericStyleValue;
+class NumberStyleValue;
 class OverflowStyleValue;
 class Percentage;
 class PercentageOrCalculated;
 class PercentageStyleValue;
+class PlaceContentStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
 class RadialGradientStyleValue;
+class Ratio;
+class RatioStyleValue;
 class RectStyleValue;
 class Resolution;
 class ResolutionStyleValue;
@@ -150,16 +157,17 @@ class StyleSheetList;
 class StyleValue;
 class StyleValueList;
 class Supports;
+class SVGPaint;
 class TextDecorationStyleValue;
 class Time;
 class TimeOrCalculated;
 class TimePercentage;
 class TimeStyleValue;
 class TransformationStyleValue;
+class URLStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
-class URLStyleValue;
 
 enum class MediaFeatureID;
 enum class PropertyID;
@@ -282,6 +290,8 @@ class DOMRectReadOnly;
 }
 
 namespace Web::HTML {
+class AudioTrack;
+class AudioTrackList;
 class BrowsingContext;
 class BrowsingContextGroup;
 class CanvasRenderingContext2D;
@@ -358,6 +368,7 @@ class HTMLSlotElement;
 class HTMLSourceElement;
 class HTMLSpanElement;
 class HTMLStyleElement;
+class HTMLSummaryElement;
 class HTMLTableCaptionElement;
 class HTMLTableCellElement;
 class HTMLTableColElement;
@@ -392,6 +403,7 @@ class Path2D;
 class Plugin;
 class PluginArray;
 class PromiseRejectionEvent;
+class SharedImageRequest;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
@@ -434,6 +446,7 @@ class IntersectionObserver;
 }
 
 namespace Web::Layout {
+class AudioBox;
 class BlockContainer;
 class BlockFormattingContext;
 class Box;
@@ -473,9 +486,11 @@ class PerformanceTiming;
 }
 
 namespace Web::Painting {
+class AudioPaintable;
 class ButtonPaintable;
 class CheckBoxPaintable;
 class LabelablePaintable;
+class MediaPaintable;
 class Paintable;
 class PaintableBox;
 class PaintableWithLines;
@@ -499,6 +514,7 @@ class AutoplayAllowlist;
 }
 
 namespace Web::Platform {
+class AudioCodecPlugin;
 class Timer;
 }
 
@@ -519,6 +535,8 @@ class Selection;
 }
 
 namespace Web::Streams {
+class ByteLengthQueuingStrategy;
+class CountQueuingStrategy;
 class ReadableByteStreamController;
 class ReadableStream;
 class ReadableStreamBYOBReader;
@@ -531,6 +549,8 @@ class WritableStream;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
+struct PullIntoDescriptor;
+struct QueuingStrategyInit;
 struct UnderlyingSink;
 struct UnderlyingSource;
 }
@@ -552,6 +572,7 @@ class SVGPolygonElement;
 class SVGPolylineElement;
 class SVGRectElement;
 class SVGSVGElement;
+class SVGTitleElement;
 }
 
 namespace Web::UIEvents {
@@ -610,4 +631,5 @@ class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
 class XMLHttpRequestUpload;
+struct FormDataEntry;
 }

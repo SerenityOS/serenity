@@ -70,7 +70,8 @@ Object::Object(Shape& shape)
 
 Object::~Object()
 {
-    s_intrinsics.remove(this);
+    if (m_has_intrinsic_accessors)
+        s_intrinsics.remove(this);
 }
 
 ThrowCompletionOr<void> Object::initialize(Realm&)
@@ -508,7 +509,7 @@ ThrowCompletionOr<void> Object::private_field_add(PrivateName const& name, Value
         m_private_elements = make<Vector<PrivateElement>>();
 
     // 4. Append PrivateElement { [[Key]]: P, [[Kind]]: field, [[Value]]: value } to O.[[PrivateElements]].
-    m_private_elements->empend(name, PrivateElement::Kind::Field, value);
+    m_private_elements->empend(name, PrivateElement::Kind::Field, make_handle(value));
 
     // 5. Return unused.
     return {};
@@ -559,14 +560,14 @@ ThrowCompletionOr<Value> Object::private_get(PrivateName const& name)
     // 3. If entry.[[Kind]] is either field or method, then
     if (entry->kind != PrivateElement::Kind::Accessor) {
         // a. Return entry.[[Value]].
-        return value;
+        return value.value();
     }
 
     // Assert: entry.[[Kind]] is accessor.
-    VERIFY(value.is_accessor());
+    VERIFY(value.value().is_accessor());
 
     // 6. Let getter be entry.[[Get]].
-    auto* getter = value.as_accessor().getter();
+    auto* getter = value.value().as_accessor().getter();
 
     // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
     if (!getter)
@@ -591,7 +592,7 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     // 3. If entry.[[Kind]] is field, then
     if (entry->kind == PrivateElement::Kind::Field) {
         // a. Set entry.[[Value]] to value.
-        entry->value = value;
+        entry->value = make_handle(value);
         return {};
     }
     // 4. Else if entry.[[Kind]] is method, then
@@ -606,10 +607,10 @@ ThrowCompletionOr<void> Object::private_set(PrivateName const& name, Value value
     VERIFY(entry->kind == PrivateElement::Kind::Accessor);
 
     auto& accessor = entry->value;
-    VERIFY(accessor.is_accessor());
+    VERIFY(accessor.value().is_accessor());
 
     // c. Let setter be entry.[[Set]].
-    auto* setter = accessor.as_accessor().setter();
+    auto* setter = accessor.value().as_accessor().setter();
 
     // b. If entry.[[Set]] is undefined, throw a TypeError exception.
     if (!setter)
@@ -1086,8 +1087,10 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key
         if (!metadata.has_value())
             return {};
 
-        if (auto accessor = find_intrinsic_accessor(this, property_key); accessor.has_value())
-            const_cast<Object&>(*this).m_storage[metadata->offset] = (*accessor)(shape().realm());
+        if (m_has_intrinsic_accessors) {
+            if (auto accessor = find_intrinsic_accessor(this, property_key); accessor.has_value())
+                const_cast<Object&>(*this).m_storage[metadata->offset] = (*accessor)(shape().realm());
+        }
 
         value = m_storage[metadata->offset];
         attributes = metadata->attributes;
@@ -1116,7 +1119,7 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
         return;
     }
 
-    if (property_key.is_string()) {
+    if (m_has_intrinsic_accessors && property_key.is_string()) {
         if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
             intrinsics->value.remove(property_key.as_string());
     }
@@ -1158,7 +1161,7 @@ void Object::storage_delete(PropertyKey const& property_key)
     if (property_key.is_number())
         return m_indexed_properties.remove(property_key.as_number());
 
-    if (property_key.is_string()) {
+    if (m_has_intrinsic_accessors && property_key.is_string()) {
         if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
             intrinsics->value.remove(property_key.as_string());
     }
@@ -1217,6 +1220,7 @@ void Object::define_intrinsic_accessor(PropertyKey const& property_key, Property
 
     storage_set(property_key, { {}, attributes });
 
+    m_has_intrinsic_accessors = true;
     auto& intrinsics = s_intrinsics.ensure(this);
     intrinsics.set(property_key.as_string(), move(accessor));
 }
@@ -1350,11 +1354,6 @@ void Object::visit_edges(Cell::Visitor& visitor)
     m_indexed_properties.for_each_value([&visitor](auto& value) {
         visitor.visit(value);
     });
-
-    if (m_private_elements) {
-        for (auto& private_element : *m_private_elements)
-            visitor.visit(private_element.value);
-    }
 }
 
 // 7.1.1.1 OrdinaryToPrimitive ( O, hint ), https://tc39.es/ecma262/#sec-ordinarytoprimitive

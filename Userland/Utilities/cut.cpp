@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -120,22 +121,22 @@ static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
     return true;
 }
 
-static void process_line_bytes(char* line, size_t length, Vector<Range> const& ranges)
+static void process_line_bytes(StringView line, Vector<Range> const& ranges)
 {
     for (auto& i : ranges) {
-        if (i.m_from >= length)
+        if (i.m_from >= line.length())
             continue;
 
-        auto to = min(i.m_to, length);
+        auto to = min(i.m_to, line.length());
         auto sub_string = DeprecatedString(line).substring(i.m_from - 1, to - i.m_from + 1);
         out("{}", sub_string);
     }
     outln();
 }
 
-static void process_line_fields(char* line, size_t length, Vector<Range> const& ranges, char delimiter)
+static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter)
 {
-    auto string_split = DeprecatedString(line, length).split(delimiter);
+    auto string_split = DeprecatedString(line).split(delimiter);
     Vector<DeprecatedString> output_fields;
 
     for (auto& range : ranges) {
@@ -224,44 +225,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (files.is_empty())
-        files.append(DeprecatedString());
+        files.append(""sv);
 
     /* Process each file */
-    for (auto& file : files) {
-        FILE* fp = stdin;
-        if (!file.is_null()) {
-            fp = fopen(DeprecatedString(file).characters(), "r");
-            if (!fp) {
-                warnln("cut: Could not open file '{}'", file);
-                continue;
-            }
+    for (auto const filename : files) {
+        auto maybe_file = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read);
+        if (maybe_file.is_error()) {
+            warnln("cut: Could not open file '{}'", filename.is_empty() ? "stdin"sv : filename);
+            continue;
         }
+        auto file = TRY(Core::InputBufferedFile::create(maybe_file.release_value()));
 
-        char* line = nullptr;
-        ssize_t line_length = 0;
-        size_t line_capacity = 0;
-        while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
-            if (line_length < 0) {
-                warnln("cut: Failed to read line from file '{}'", file);
-                break;
-            }
-            line[line_length - 1] = '\0';
-            line_length--;
+        Array<u8, PAGE_SIZE> buffer;
+        while (!file->is_eof()) {
+            auto line = TRY(file->read_line(buffer));
 
             if (selected_bytes) {
-                process_line_bytes(line, line_length, disjoint_ranges);
+                process_line_bytes(line, disjoint_ranges);
             } else if (selected_fields) {
-                process_line_fields(line, line_length, disjoint_ranges, delimiter[0]);
+                process_line_fields(line, disjoint_ranges, delimiter[0]);
             } else {
                 VERIFY_NOT_REACHED();
             }
         }
-
-        if (line)
-            free(line);
-
-        if (!file.is_null())
-            fclose(fp);
     }
 
     return 0;

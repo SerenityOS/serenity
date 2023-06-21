@@ -11,13 +11,13 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCSpeaker.h>
 #endif
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <LibVT/Color.h>

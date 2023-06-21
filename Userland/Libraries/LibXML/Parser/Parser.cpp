@@ -71,7 +71,9 @@ size_t Parser::s_debug_indent_level { 0 };
 void Parser::append_node(NonnullOwnPtr<Node> node)
 {
     if (m_entered_node) {
-        m_entered_node->content.get<Node::Element>().children.append(move(node));
+        auto& entered_element = m_entered_node->content.get<Node::Element>();
+        entered_element.children.append(move(node));
+        enter_node(*entered_element.children.last());
     } else {
         m_root_node = move(node);
         enter_node(*m_root_node);
@@ -612,6 +614,7 @@ ErrorOr<void, ParseError> Parser::parse_element()
     //           | STag content ETag
     if (auto result = parse_empty_element_tag(); !result.is_error()) {
         append_node(result.release_value());
+        leave_node();
         rollback.disarm();
         return {};
     }
@@ -620,7 +623,6 @@ ErrorOr<void, ParseError> Parser::parse_element()
     auto& node = *start_tag;
     auto& tag = node.content.get<Node::Element>();
     append_node(move(start_tag));
-    enter_node(node);
     ScopeGuard quit {
         [&] {
             leave_node();

@@ -232,7 +232,7 @@ void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
 
 void PageHost::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
 {
-    m_client.async_did_request_scroll_to({ scroll_position.x().value(), scroll_position.y().value() });
+    m_client.async_did_request_scroll_to({ scroll_position.x().to_int(), scroll_position.y().to_int() });
 }
 
 void PageHost::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect)
@@ -246,7 +246,7 @@ void PageHost::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect)
 
 void PageHost::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, DeprecatedString const& title)
 {
-    m_client.async_did_enter_tooltip_area({ content_position.x().value(), content_position.y().value() }, title);
+    m_client.async_did_enter_tooltip_area({ content_position.x().to_int(), content_position.y().to_int() }, title);
 }
 
 void PageHost::page_did_leave_tooltip_area()
@@ -334,19 +334,24 @@ void PageHost::prompt_closed(Optional<String> response)
     page().prompt_closed(move(response));
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_play_state()
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_play_state()
 {
-    return page().toggle_video_play_state();
+    return page().toggle_media_play_state();
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_loop_state()
+void PageHost::toggle_media_mute_state()
 {
-    return page().toggle_video_loop_state();
+    page().toggle_media_mute_state();
 }
 
-Web::WebIDL::ExceptionOr<void> PageHost::toggle_video_controls_state()
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_loop_state()
 {
-    return page().toggle_video_controls_state();
+    return page().toggle_media_loop_state();
+}
+
+Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_controls_state()
+{
+    return page().toggle_media_controls_state();
 }
 
 void PageHost::page_did_request_accept_dialog()
@@ -367,12 +372,12 @@ void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
 void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    m_client.async_did_request_image_context_menu({ content_position.x().value(), content_position.y().value() }, url, target, modifiers, bitmap);
+    m_client.async_did_request_image_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, url, target, modifiers, bitmap);
 }
 
-void PageHost::page_did_request_video_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, bool is_playing, bool has_user_agent_controls, bool is_looping)
+void PageHost::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
 {
-    m_client.async_did_request_video_context_menu({ content_position.x().value(), content_position.y().value() }, url, target, modifiers, is_playing, has_user_agent_controls, is_looping);
+    m_client.async_did_request_media_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, target, modifiers, move(menu));
 }
 
 Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)

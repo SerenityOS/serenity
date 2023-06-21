@@ -156,10 +156,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->update_statusbar();
 
     GUI::Application::the()->on_action_enter = [widget](GUI::Action& action) {
-        auto text = action.status_tip();
-        if (text.is_empty())
-            text = Gfx::parse_ampersand_string(action.text());
-        widget->m_statusbar->set_override_text(move(text));
+        widget->m_statusbar->set_override_text(action.status_tip());
     };
 
     GUI::Application::the()->on_action_leave = [widget](GUI::Action&) {
@@ -1615,9 +1612,9 @@ void HackStudioWidget::update_statusbar()
         builder.appendff("Selected: {:'d} {} ({:'d} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
-    m_statusbar->set_text(0, builder.to_deprecated_string());
-    m_statusbar->set_text(1, Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText)));
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+    m_statusbar->set_text(0, builder.to_string().release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(1, String::from_utf8(Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText))).release_value_but_fixme_should_propagate_errors());
+    m_statusbar->set_text(2, String::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()).release_value_but_fixme_should_propagate_errors());
 }
 
 void HackStudioWidget::handle_external_file_deletion(DeprecatedString const& filepath)
@@ -1868,7 +1865,7 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font const> font)
     Config::write_i32("HackStudio"sv, "EditorFont"sv, "Size"sv, m_editor_font->presentation_size());
 }
 
-void HackStudioWidget::open_coredump(DeprecatedString const& coredump_path)
+void HackStudioWidget::open_coredump(StringView coredump_path)
 {
     open_project("/usr/src/serenity");
     m_mode = Mode::Coredump;

@@ -49,10 +49,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
-#include <LibWeb/Layout/TableBox.h>
-#include <LibWeb/Layout/TableCellBox.h>
-#include <LibWeb/Layout/TableRowBox.h>
-#include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
@@ -133,6 +129,8 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
 
+    DeprecatedString old_value;
+
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
         auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value));
@@ -143,12 +141,15 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 5. Change attribute to value.
     else {
+        old_value = attribute->value();
         attribute->set_value(value);
     }
 
     parse_attribute(attribute->local_name(), value);
 
-    invalidate_style_after_attribute_change(name);
+    if (value != old_value) {
+        invalidate_style_after_attribute_change(name);
+    }
 
     return {};
 }
@@ -320,20 +321,14 @@ JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProp
 
 JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
 {
-    if (display.is_table_inside())
-        return document.heap().allocate_without_realm<Layout::TableBox>(document, element, move(style));
+    if (display.is_table_inside() || display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group() || display.is_table_row())
+        return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
 
     if (display.is_list_item())
         return document.heap().allocate_without_realm<Layout::ListItemBox>(document, element, move(style));
 
-    if (display.is_table_row())
-        return document.heap().allocate_without_realm<Layout::TableRowBox>(document, element, move(style));
-
     if (display.is_table_cell())
-        return document.heap().allocate_without_realm<Layout::TableCellBox>(document, element, move(style));
-
-    if (display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
-        return document.heap().allocate_without_realm<Layout::TableRowGroupBox>(document, element, move(style));
+        return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
@@ -407,10 +402,10 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
         auto const& new_value = new_style.properties()[i];
-        if (!old_value && !new_value)
+        if (!old_value.has_value() && !new_value.has_value())
             continue;
 
-        bool const property_value_changed = (!old_value || !new_value) || *old_value != *new_value;
+        bool const property_value_changed = (!old_value.has_value() || !new_value.has_value()) || *old_value->style != *new_value->style;
         if (!property_value_changed)
             continue;
 
@@ -423,7 +418,7 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         // OPTIMIZATION: Special handling for CSS `visibility`:
         if (property_id == CSS::PropertyID::Visibility) {
             // We don't need to relayout if the visibility changes from visible to hidden or vice versa. Only collapse requires relayout.
-            if ((old_value && old_value->to_identifier() == CSS::ValueID::Collapse) != (new_value && new_value->to_identifier() == CSS::ValueID::Collapse))
+            if ((old_value.has_value() && old_value->style->to_identifier() == CSS::ValueID::Collapse) != (new_value.has_value() && new_value->style->to_identifier() == CSS::ValueID::Collapse))
                 invalidation.relayout = true;
             // Of course, we still have to repaint on any visibility change.
             invalidation.repaint = true;
@@ -476,7 +471,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
         auto maybe_value = element_computed_style->property(property_id);
         if (!maybe_value.has_value())
             continue;
-        properties->set_property(property_id, maybe_value.release_value().value);
+        properties->set_property(property_id, maybe_value.release_value().value, nullptr);
     }
 
     return properties;
@@ -781,7 +776,7 @@ int Element::client_width() const
     //    return the viewport width excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().width().value();
+        return document().browsing_context()->viewport_rect().width().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -793,7 +788,7 @@ int Element::client_width() const
 
     // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
     // ignoring any transforms that apply to the element and its ancestors.
-    return paintable_box()->absolute_padding_box_rect().width().value();
+    return paintable_box()->absolute_padding_box_rect().width().to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientheight
@@ -806,7 +801,7 @@ int Element::client_height() const
     //    return the viewport height excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().height().value();
+        return document().browsing_context()->viewport_rect().height().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -818,7 +813,7 @@ int Element::client_height() const
 
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return paintable_box()->absolute_padding_box_rect().height().value();
+    return paintable_box()->absolute_padding_box_rect().height().to_int();
 }
 
 void Element::children_changed()
@@ -946,7 +941,7 @@ double Element::scroll_top() const
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().y().value();
+    return box->scroll_offset().y().to_double();
 }
 
 double Element::scroll_left() const
@@ -988,7 +983,7 @@ double Element::scroll_left() const
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().x().value();
+    return box->scroll_offset().x().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -1024,8 +1019,10 @@ void Element::set_scroll_left(double x)
     // 8. If the element is the root element invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        }
 
         return;
     }
@@ -1033,8 +1030,10 @@ void Element::set_scroll_left(double x)
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
+        }
 
         return;
     }
@@ -1088,8 +1087,10 @@ void Element::set_scroll_top(double y)
     // 8. If the element is the root element invoke scroll() on window with scrollX on window as first argument and y as second argument, and terminate these steps.
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        }
 
         return;
     }
@@ -1097,8 +1098,10 @@ void Element::set_scroll_top(double y)
     // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with scrollX as first argument and y as second argument, and terminate these steps.
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
-        if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        if (auto* page = document.page()) {
+            if (document.browsing_context() == &page->top_level_browsing_context())
+                page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
+        }
 
         return;
     }
@@ -1132,8 +1135,8 @@ int Element::scroll_width() const
 
     // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_width = document.browsing_context()->viewport_rect().width().value();
-    auto viewport_scroll_width = document.browsing_context()->size().width().value();
+    auto viewport_width = document.browsing_context()->viewport_rect().width().to_int();
+    auto viewport_scroll_width = document.browsing_context()->size().width().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area width, viewport width).
@@ -1150,7 +1153,7 @@ int Element::scroll_width() const
         return 0;
 
     // 7. Return the width of the element’s scrolling area.
-    return paintable_box()->border_box_width().value();
+    return paintable_box()->border_box_width().to_int();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollheight
@@ -1165,8 +1168,8 @@ int Element::scroll_height() const
 
     // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_height = document.browsing_context()->viewport_rect().height().value();
-    auto viewport_scroll_height = document.browsing_context()->size().height().value();
+    auto viewport_height = document.browsing_context()->viewport_rect().height().to_int();
+    auto viewport_scroll_height = document.browsing_context()->size().height().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area height, viewport height).
@@ -1183,7 +1186,7 @@ int Element::scroll_height() const
         return 0;
 
     // 7. Return the height of the element’s scrolling area.
-    return paintable_box()->border_box_height().value();
+    return paintable_box()->border_box_height().to_int();
 }
 
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
@@ -1385,7 +1388,8 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!layout_node)
         return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
-    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+    if (element.document().browsing_context() == &page->top_level_browsing_context())
+        page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
 
     return {};
 }
@@ -1768,6 +1772,18 @@ HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properti
     if (!pseudo_element.has_value())
         return m_custom_properties;
     return m_pseudo_element_custom_properties[to_underlying(pseudo_element.value())];
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-scroll
+void Element::scroll(double x, double y)
+{
+    dbgln("FIXME: Implement Element::scroll(x: {}, y: {}", x, y);
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-scroll
+void Element::scroll(HTML::ScrollToOptions const&)
+{
+    dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
 }
 
 }

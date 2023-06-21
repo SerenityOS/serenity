@@ -80,7 +80,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
     auto& script = script_record.parse_node();
 
     // 12. Let result be Completion(GlobalDeclarationInstantiation(script, globalEnv)).
-    auto instantiation_result = script.global_declaration_instantiation(*this, global_environment);
+    auto instantiation_result = script.global_declaration_instantiation(vm, global_environment);
     Completion result = instantiation_result.is_throw_completion() ? instantiation_result.throw_completion() : normal_completion({});
 
     // 13. If result.[[Type]] is normal, then
@@ -134,7 +134,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
 
     VM::InterpreterExecutionScope scope(*this);
 
-    TRY(vm.link_and_eval_module({}, module));
+    TRY(vm.link_and_eval_module(Badge<JS::Interpreter> {}, module));
 
     vm.run_queued_promise_jobs();
 

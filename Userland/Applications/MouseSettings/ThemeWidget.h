@@ -25,7 +25,7 @@ public:
     virtual int row_count(const GUI::ModelIndex&) const override { return m_cursors.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
-    virtual String column_name(int column_index) const override;
+    virtual ErrorOr<String> column_name(int column_index) const override;
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
     virtual void invalidate() override;
 
@@ -63,15 +63,17 @@ private:
 };
 
 class ThemeWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(ThemeWidget)
+    C_OBJECT_ABSTRACT(ThemeWidget)
 public:
+    static ErrorOr<NonnullRefPtr<ThemeWidget>> try_create();
     virtual ~ThemeWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    ThemeWidget();
+    ThemeWidget() = default;
+    ErrorOr<void> setup();
 
     RefPtr<GUI::TableView> m_cursors_tableview;
     RefPtr<GUI::ComboBox> m_theme_name_box;

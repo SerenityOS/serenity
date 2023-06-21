@@ -192,7 +192,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     m_open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(&window);
+        auto image_files = GUI::FileTypeFilter::image_files();
+        image_files.extensions->append("pp");
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, { .allowed_file_types = Vector { image_files, GUI::FileTypeFilter::all_files() } });
         if (response.is_error())
             return;
         open_image(response.release_value());
@@ -455,7 +457,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
         "&Load Color Palette...", g_icon_bag.load_color_palette, [&](auto&) {
-            auto response = FileSystemAccessClient::Client::the().open_file(&window, "Load Color Palette");
+            FileSystemAccessClient::OpenFileOptions options {
+                .window_title = "Load Color Palette"sv,
+                .allowed_file_types = Vector {
+                    { "Palette Files", { { "palette" } } },
+                    GUI::FileTypeFilter::all_files(),
+                },
+            };
+            auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
             if (response.is_error())
                 return;
 
@@ -673,6 +682,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (editor->image().selection().is_empty())
                 return;
             auto crop_rect = editor->image().rect().intersected(editor->image().selection().bounding_rect());
+            // FIXME: It is only possible to hit this condition, as transforming the image (crop, rotate etc.), does not update the selection.
+            //        We should ensure that image transformations also transform the selection, so that its relative size and position are maintained.
+            if (crop_rect.is_empty())
+                return;
             auto image_crop_or_error = editor->image().crop(crop_rect);
             if (image_crop_or_error.is_error()) {
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop image: {}", image_crop_or_error.release_error())));
@@ -1286,13 +1299,12 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_tab_widget->set_tab_title(image_editor, title);
     };
 
-    image_editor.on_modified_change = Core::debounce([&](auto const modified) {
+    image_editor.on_modified_change = Core::debounce(100, [&](auto const modified) {
         m_tab_widget->set_tab_modified(image_editor, modified);
         update_window_modified();
         m_histogram_widget->image_changed();
         m_vectorscope_widget->image_changed();
-    },
-        100);
+    });
 
     image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {
         auto const& image_size = current_image_editor()->image().size();
@@ -1327,11 +1339,10 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_show_rulers_action->set_checked(show_rulers);
     };
 
-    image_editor.on_scale_change = Core::debounce([this](float scale) {
+    image_editor.on_scale_change = Core::debounce(100, [this](float scale) {
         m_zoom_combobox->set_text(DeprecatedString::formatted("{}%", roundf(scale * 100)));
         current_image_editor()->update_tool_cursor();
-    },
-        100);
+    });
 
     image_editor.on_primary_color_change = [&](Color color) {
         m_palette_widget->set_primary_color(color);
@@ -1422,7 +1433,7 @@ void MainWidget::update_status_bar(DeprecatedString appended_text)
         builder.append(" "sv);
         builder.append(appended_text);
     }
-    m_statusbar->set_override_text(builder.to_deprecated_string());
+    m_statusbar->set_override_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 }

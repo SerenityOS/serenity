@@ -13,13 +13,13 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
-#include <Kernel/InterruptDisabler.h>
-#include <Kernel/Process.h>
-#include <Kernel/Random.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Security/Random.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/Thread.h>
 
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
@@ -28,7 +28,7 @@
 #include <Kernel/Arch/x86_64/CPUID.h>
 #include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
-#include <Kernel/ScopedCritical.h>
+#include <Kernel/Library/ScopedCritical.h>
 
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>

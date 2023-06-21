@@ -272,82 +272,63 @@ void Glyf::Glyph::rasterize_impl(Gfx::PathRasterizer& rasterizer, Gfx::AffineTra
     Gfx::Path path;
     PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, transform);
 
-    int last_contour_end = -1;
-    i32 contour_index = 0;
-    u32 contour_size = 0;
-    Optional<Gfx::FloatPoint> contour_start = {};
-    Optional<Gfx::FloatPoint> last_offcurve_point = {};
-
-    // Render glyph
-    while (true) {
-        if (!contour_start.has_value()) {
-            if (contour_index >= m_num_contours) {
+    u32 current_point_index = 0;
+    for (u16 contour_index = 0; contour_index < m_num_contours; contour_index++) {
+        u32 current_contour_last_point_index = be_u16(m_slice.offset_pointer(contour_index * 2));
+        Optional<Gfx::FloatPoint> start_off_curve_point;
+        Optional<Gfx::FloatPoint> start_on_curve_point;
+        Optional<Gfx::FloatPoint> unprocessed_off_curve_point;
+        while (current_point_index <= current_contour_last_point_index) {
+            auto current_point = point_iterator.next();
+            current_point_index++;
+            if (!current_point.has_value())
                 break;
-            }
-            int current_contour_end = be_u16(m_slice.offset_pointer(contour_index++ * 2));
-            contour_size = current_contour_end - last_contour_end;
-            last_contour_end = current_contour_end;
-            auto opt_item = point_iterator.next();
-            VERIFY(opt_item.has_value());
-            contour_start = opt_item.value().point;
-            path.move_to(contour_start.value());
-            contour_size--;
-        } else if (!last_offcurve_point.has_value()) {
-            if (contour_size > 0) {
-                auto opt_item = point_iterator.next();
-                // FIXME: Should we draw a line to the first point here?
-                if (!opt_item.has_value()) {
-                    break;
+
+            if (current_point->on_curve) {
+                if (!start_on_curve_point.has_value()) {
+                    start_on_curve_point = current_point->point;
+                    path.move_to(current_point->point);
                 }
-                auto item = opt_item.value();
-                contour_size--;
-                if (item.on_curve) {
-                    path.line_to(item.point);
-                } else if (contour_size > 0) {
-                    auto opt_next_item = point_iterator.next();
-                    // FIXME: Should we draw a quadratic bezier to the first point here?
-                    if (!opt_next_item.has_value()) {
-                        break;
-                    }
-                    auto next_item = opt_next_item.value();
-                    contour_size--;
-                    if (next_item.on_curve) {
-                        path.quadratic_bezier_curve_to(item.point, next_item.point);
-                    } else {
-                        auto mid_point = (item.point + next_item.point) * 0.5f;
-                        path.quadratic_bezier_curve_to(item.point, mid_point);
-                        last_offcurve_point = next_item.point;
-                    }
+
+                if (unprocessed_off_curve_point.has_value()) {
+                    path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), current_point->point);
+                    unprocessed_off_curve_point = {};
                 } else {
-                    path.quadratic_bezier_curve_to(item.point, contour_start.value());
-                    contour_start = {};
+                    path.line_to(current_point->point);
                 }
             } else {
-                path.line_to(contour_start.value());
-                contour_start = {};
+                if (!start_on_curve_point.has_value() && !start_off_curve_point.has_value()) {
+                    // If "off curve" point comes first it needs to be saved to use while closing the path
+                    start_off_curve_point = current_point->point;
+                }
+
+                if (unprocessed_off_curve_point.has_value()) {
+                    // Two subsequent "off curve" points create implied "on-curve" point lying between them
+                    auto implied_point = (unprocessed_off_curve_point.value() + current_point->point) * 0.5f;
+                    if (!start_on_curve_point.has_value()) {
+                        start_on_curve_point = implied_point;
+                        path.move_to(implied_point);
+                    }
+                    path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), implied_point);
+                }
+                unprocessed_off_curve_point = current_point->point;
             }
+        }
+
+        if (start_off_curve_point.has_value()) {
+            // Close the path creating "implied" point if both first and last points were "off curve"
+            if (unprocessed_off_curve_point.has_value()) {
+                auto implied_point = (start_off_curve_point.value() + unprocessed_off_curve_point.value()) * 0.5f;
+                path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), implied_point);
+            }
+
+            // Add bezier curve from new "implied point" to first "on curve" point in the path
+            path.quadratic_bezier_curve_to(start_off_curve_point.value(), start_on_curve_point.value());
+        } else if (unprocessed_off_curve_point.has_value()) {
+            // Add bezier curve to first "on curve" point using last "off curve" point
+            path.quadratic_bezier_curve_to(unprocessed_off_curve_point.value(), start_on_curve_point.value());
         } else {
-            auto point0 = last_offcurve_point.value();
-            last_offcurve_point = {};
-            if (contour_size > 0) {
-                auto opt_item = point_iterator.next();
-                // FIXME: Should we draw a quadratic bezier to the first point here?
-                if (!opt_item.has_value()) {
-                    break;
-                }
-                auto item = opt_item.value();
-                contour_size--;
-                if (item.on_curve) {
-                    path.quadratic_bezier_curve_to(point0, item.point);
-                } else {
-                    auto mid_point = (point0 + item.point) * 0.5f;
-                    path.quadratic_bezier_curve_to(point0, mid_point);
-                    last_offcurve_point = item.point;
-                }
-            } else {
-                path.quadratic_bezier_curve_to(point0, contour_start.value());
-                contour_start = {};
-            }
+            path.line_to(start_on_curve_point.value());
         }
     }
 

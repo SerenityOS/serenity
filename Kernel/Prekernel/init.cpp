@@ -7,10 +7,10 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/Multiboot.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Boot/Multiboot.h>
+#include <Kernel/Memory/PhysicalAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
 #include <LibELF/Relocation.h>
 

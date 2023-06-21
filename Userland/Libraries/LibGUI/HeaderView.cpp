@@ -265,7 +265,7 @@ void HeaderView::paint_horizontal(Painter& painter)
         bool hovered = section == m_hovered_section && model()->is_column_sortable(section);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
 
-        auto text = model()->column_name(section);
+        auto text = model()->column_name(section).release_value_but_fixme_should_propagate_errors();
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.translate_by(1, 1);
@@ -358,7 +358,7 @@ Menu& HeaderView::ensure_context_menu()
         int section_count = this->section_count();
         for (int section = 0; section < section_count; ++section) {
             auto& column_data = this->section_data(section);
-            auto name = model()->column_name(section).to_deprecated_string();
+            auto name = model()->column_name(section).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             column_data.visibility_action = Action::create_checkable(name, [this, section](auto& action) {
                 set_section_visible(section, action.is_checked());
             });

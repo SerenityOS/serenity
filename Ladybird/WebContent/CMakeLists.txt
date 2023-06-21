@@ -6,6 +6,7 @@ set(WEBCONTENT_SOURCES
     ${WEBCONTENT_SOURCE_DIR}/PageHost.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp
+    ../AudioCodecPluginLadybird.cpp
     ../EventLoopImplementationQt.cpp
     ../FontPluginQt.cpp
     ../ImageCodecPluginLadybird.cpp
@@ -25,4 +26,4 @@ qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(WebContent PRIVATE Qt::Core Qt::Gui Qt::Network LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket)
+target_link_libraries(WebContent PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Multimedia LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket)

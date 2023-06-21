@@ -45,6 +45,8 @@ private:
 /// and reading back the written data afterwards.
 class AllocatingMemoryStream final : public Stream {
 public:
+    static constexpr size_t CHUNK_SIZE = 4096;
+
     virtual ErrorOr<Bytes> read_some(Bytes) override;
     virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
     virtual ErrorOr<void> discard(size_t) override;
@@ -59,7 +61,6 @@ public:
 private:
     // Note: We set the inline buffer capacity to zero to make moving chunks as efficient as possible.
     using Chunk = AK::Detail::ByteBuffer<0>;
-    static constexpr size_t chunk_size = 4096;
 
     ErrorOr<ReadonlyBytes> next_read_range();
     ErrorOr<Bytes> next_write_range();

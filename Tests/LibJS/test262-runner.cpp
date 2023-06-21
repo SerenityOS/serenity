@@ -32,7 +32,6 @@
 #endif
 
 static DeprecatedString s_current_test = "";
-static bool s_use_bytecode = false;
 static bool s_enable_bytecode_optimizations = false;
 static bool s_parse_only = false;
 static DeprecatedString s_harness_file_directory;
@@ -79,35 +78,10 @@ static Result<ScriptOrModuleProgram, TestError> parse_program(JS::Realm& realm, 
 template<typename InterpreterT>
 static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrModuleProgram& program)
 {
-    auto result = JS::ThrowCompletionOr<JS::Value> { JS::js_undefined() };
-    if constexpr (IsSame<InterpreterT, JS::Interpreter>) {
-        result = program.visit(
-            [&](auto& visitor) {
-                return interpreter.run(*visitor);
-            });
-    } else {
-        auto program_node = program.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program const> {
-                return visitor->parse_node();
-            });
-
-        auto& vm = interpreter.vm();
-
-        if (auto unit_result = JS::Bytecode::Generator::generate(program_node); unit_result.is_error()) {
-            if (auto error_string = unit_result.error().to_string(); error_string.is_error())
-                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
-            else if (error_string = String::formatted("TODO({})", error_string.value()); error_string.is_error())
-                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
-            else
-                result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), error_string.release_value()));
-        } else {
-            auto unit = unit_result.release_value();
-            auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;
-            auto& passes = JS::Bytecode::Interpreter::optimization_pipeline(optimization_level);
-            passes.perform(*unit);
-            result = interpreter.run(*unit);
-        }
-    }
+    auto result = program.visit(
+        [&](auto& visitor) {
+            return interpreter.run(*visitor);
+        });
 
     if (result.is_error()) {
         auto error_value = *result.throw_completion().value();
@@ -242,11 +216,11 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
         return program_or_error.release_error();
 
     OwnPtr<JS::Bytecode::Interpreter> bytecode_interpreter = nullptr;
-    if (s_use_bytecode)
+    if (JS::Bytecode::Interpreter::enabled())
         bytecode_interpreter = make<JS::Bytecode::Interpreter>(realm);
 
     auto run_with_interpreter = [&](ScriptOrModuleProgram& program) {
-        if (s_use_bytecode)
+        if (JS::Bytecode::Interpreter::enabled())
             return run_program(*bytecode_interpreter, program);
         return run_program(*ast_interpreter, program);
     };
@@ -597,17 +571,20 @@ int main(int argc, char** argv)
     int timeout = 10;
     bool enable_debug_printing = false;
     bool disable_core_dumping = false;
+    bool use_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("LibJS test262 runner for streaming tests");
     args_parser.add_option(s_harness_file_directory, "Directory containing the harness files", "harness-location", 'l', "harness-files");
-    args_parser.add_option(s_use_bytecode, "Use the bytecode interpreter", "use-bytecode", 'b');
+    args_parser.add_option(use_bytecode, "Use the bytecode interpreter", "use-bytecode", 'b');
     args_parser.add_option(s_enable_bytecode_optimizations, "Enable the bytecode optimization passes", "enable-bytecode-optimizations", 'e');
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
     args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
     args_parser.parse(arguments);
+
+    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {

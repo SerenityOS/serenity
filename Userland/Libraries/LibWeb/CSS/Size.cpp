@@ -64,6 +64,12 @@ Size Size::make_fit_content(Length available_space)
     return Size { Type::FitContent, move(available_space) };
 }
 
+Size Size::make_fit_content()
+{
+    // NOTE: We use "auto" as a stand-in for "stretch" here.
+    return Size { Type::FitContent, Length::make_auto() };
+}
+
 Size Size::make_none()
 {
     return Size { Type::None, Length::make_auto() };

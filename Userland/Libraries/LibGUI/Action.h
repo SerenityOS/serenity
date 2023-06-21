@@ -12,6 +12,7 @@
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibCore/Object.h>
@@ -88,8 +89,8 @@ public:
     DeprecatedString tooltip() const { return m_tooltip.value_or(m_text); }
     void set_tooltip(DeprecatedString);
 
-    DeprecatedString const& status_tip() const { return m_status_tip; }
-    void set_status_tip(DeprecatedString status_tip) { m_status_tip = move(status_tip); }
+    Optional<String> status_tip() const;
+    void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
 
     Shortcut const& shortcut() const { return m_shortcut; }
     Shortcut const& alternate_shortcut() const { return m_alternate_shortcut; }
@@ -134,7 +135,7 @@ public:
     ActionGroup const* group() const { return m_action_group.ptr(); }
     void set_group(Badge<ActionGroup>, ActionGroup*);
 
-    HashTable<MenuItem*> menu_items() const { return m_menu_items; }
+    HashTable<MenuItem*> const& menu_items() const { return m_menu_items; }
 
 private:
     Action(DeprecatedString, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
@@ -150,7 +151,7 @@ private:
 
     DeprecatedString m_text;
     Optional<DeprecatedString> m_tooltip;
-    DeprecatedString m_status_tip;
+    String m_status_tip;
     RefPtr<Gfx::Bitmap const> m_icon;
     Shortcut m_shortcut;
     Shortcut m_alternate_shortcut;

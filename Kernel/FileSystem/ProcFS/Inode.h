@@ -11,7 +11,7 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/ProcFS/Definitions.h>
 #include <Kernel/FileSystem/ProcFS/FileSystem.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

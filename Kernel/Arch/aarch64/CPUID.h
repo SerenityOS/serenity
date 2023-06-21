@@ -11,7 +11,7 @@
 #include <AK/Types.h>
 #include <AK/UFixedBigInt.h>
 #include <Kernel/Arch/aarch64/Registers.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()

@@ -6,8 +6,8 @@
 
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Jails.h>
-#include <Kernel/Jail.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Jail.h>
 
 namespace Kernel {
 

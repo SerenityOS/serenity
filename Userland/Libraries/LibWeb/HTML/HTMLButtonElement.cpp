@@ -32,7 +32,7 @@ HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName
         case TypeAttributeState::Submit:
             // Submit Button
             // Submit element's form owner from element.
-            form()->submit_form(this).release_value_but_fixme_should_propagate_errors();
+            form()->submit_form(*this).release_value_but_fixme_should_propagate_errors();
             break;
         case TypeAttributeState::Reset:
             // Reset Button
@@ -87,9 +87,9 @@ HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
     return HTMLButtonElement::TypeAttributeState::Submit;
 }
 
-void HTMLButtonElement::set_type(DeprecatedString const& type)
+WebIDL::ExceptionOr<void> HTMLButtonElement::set_type(DeprecatedString const& type)
 {
-    MUST(set_attribute(HTML::AttributeNames::type, type));
+    return set_attribute(HTML::AttributeNames::type, type);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
@@ -97,6 +97,22 @@ i32 HTMLButtonElement::default_tab_index_value() const
 {
     // See the base function for the spec comments.
     return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#concept-submit-button
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-submit-button
+bool HTMLButtonElement::is_submit_button() const
+{
+    // If the type attribute is in the Submit Button state, the element is specifically a submit button.
+    return type_state() == TypeAttributeState::Submit;
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element:concept-fe-value
+DeprecatedString HTMLButtonElement::value() const
+{
+    if (!has_attribute(AttributeNames::value))
+        return DeprecatedString::empty();
+    return attribute(AttributeNames::value);
 }
 
 }

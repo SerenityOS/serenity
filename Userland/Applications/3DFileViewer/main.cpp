@@ -378,7 +378,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File"_short_string);
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window);
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = { { GUI::FileTypeFilter { "Object Files", { { "obj" } } }, GUI::FileTypeFilter::all_files() } },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(window, options);
         if (response.is_error())
             return;
 

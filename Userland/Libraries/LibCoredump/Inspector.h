@@ -17,7 +17,7 @@ class Inspector : public Debug::ProcessInspector {
     AK_MAKE_NONMOVABLE(Inspector);
 
 public:
-    static OwnPtr<Inspector> create(DeprecatedString const& coredump_path, Function<void(float)> on_progress = {});
+    static OwnPtr<Inspector> create(StringView coredump_path, Function<void(float)> on_progress = {});
     virtual ~Inspector() override = default;
 
     // ^Debug::ProcessInspector

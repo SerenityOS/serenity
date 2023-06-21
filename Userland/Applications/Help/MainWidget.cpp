@@ -110,7 +110,7 @@ MainWidget::MainWidget()
                 return;
             }
             m_history.push(path.string());
-            auto string_path = String::from_utf8(path.string());
+            auto string_path = String::from_deprecated_string(path.string());
             if (string_path.is_error())
                 return;
             open_page(string_path.value());
@@ -134,9 +134,12 @@ MainWidget::MainWidget()
     };
     m_web_view->on_link_hover = [this](URL const& url) {
         if (url.is_valid())
-            m_statusbar->set_text(url.to_deprecated_string());
+            m_statusbar->set_text(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
         else
             m_statusbar->set_text({});
+    };
+    m_web_view->on_link_unhover = [this] {
+        m_statusbar->set_text({});
     };
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) {
@@ -230,7 +233,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
     m_manual_model = TRY(ManualModel::create());
     m_browse_view->set_model(*m_manual_model);
-    m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));
+    m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model, GUI::FilteringProxyModel::FilteringOptions::SortByScore));
     m_search_view->set_model(*m_filter_model);
     m_filter_model->set_filter_term(""sv);
 

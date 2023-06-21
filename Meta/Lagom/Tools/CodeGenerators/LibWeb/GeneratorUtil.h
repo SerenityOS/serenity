@@ -1,34 +1,34 @@
 /*
  * Copyright (c) 2019-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, Samuel Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <ctype.h>
 
-DeprecatedString title_casify(DeprecatedString const& dashy_name)
+ErrorOr<String> title_casify(StringView dashy_name)
 {
-    auto parts = dashy_name.split('-');
+    auto parts = dashy_name.split_view('-');
     StringBuilder builder;
     for (auto& part : parts) {
         if (part.is_empty())
             continue;
-        builder.append(toupper(part[0]));
+        TRY(builder.try_append(toupper(part[0])));
         if (part.length() == 1)
             continue;
-        builder.append(part.substring_view(1, part.length() - 1));
+        TRY(builder.try_append(part.substring_view(1, part.length() - 1)));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString camel_casify(StringView dashy_name)
+ErrorOr<String> camel_casify(StringView dashy_name)
 {
     auto parts = dashy_name.split_view('-');
     StringBuilder builder;
@@ -41,17 +41,19 @@ DeprecatedString camel_casify(StringView dashy_name)
             ch = toupper(ch);
         else
             first = false;
-        builder.append(ch);
+        TRY(builder.try_append(ch));
         if (part.length() == 1)
             continue;
-        builder.append(part.substring_view(1, part.length() - 1));
+        TRY(builder.try_append(part.substring_view(1, part.length() - 1)));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-DeprecatedString snake_casify(DeprecatedString const& dashy_name)
+ErrorOr<String> snake_casify(StringView dashy_name)
 {
-    return dashy_name.replace("-"sv, "_"sv, ReplaceMode::All);
+    // FIXME: We don't really need to convert dashy_name to a String first, but currently
+    //        all the `replace` functions that take a StringView return DeprecatedString.
+    return TRY(String::from_utf8(dashy_name)).replace("-"sv, "_"sv, ReplaceMode::All);
 }
 
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)

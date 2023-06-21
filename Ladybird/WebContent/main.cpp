@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "../AudioCodecPluginLadybird.h"
 #include "../EventLoopImplementationQt.h"
 #include "../FontPluginQt.h"
 #include "../ImageCodecPluginLadybird.h"
@@ -12,12 +13,14 @@
 #include "../WebSocketClientManagerLadybird.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <LibIPC/ConnectionFromClient.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -57,6 +60,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
 
+    Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
+        return Ladybird::AudioCodecPluginLadybird::create(move(loader));
+    });
+
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());
 
@@ -64,11 +71,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
+    bool use_javascript_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
+    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
     args_parser.parse(arguments);
+
+    JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 

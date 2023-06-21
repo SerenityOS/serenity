@@ -244,7 +244,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
-ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
+WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
 {
     if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
@@ -272,7 +272,7 @@ ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
             return {};
 
         // 3. Submit the form owner from the element.
-        TRY(form->submit_form(this));
+        TRY(form->submit_form(*this));
     } else if (type_state() == TypeAttributeState::FileUpload) {
         show_the_picker_if_applicable(*this);
     } else {
@@ -297,11 +297,6 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
-
-        // FIXME: This should only fire when the input is "committed", whatever that means.
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
-        change_event->set_bubbles(true);
-        dispatch_event(change_event);
     });
 }
 
@@ -487,6 +482,17 @@ void HTMLInputElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
 }
 
+void HTMLInputElement::did_lose_focus()
+{
+    // The change event fires when the value is committed, if that makes sense for the control,
+    // or else when the control loses focus
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
+        change_event->set_bubbles(true);
+        dispatch_event(change_event);
+    });
+}
+
 void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
@@ -554,9 +560,9 @@ DeprecatedString HTMLInputElement::type() const
     VERIFY_NOT_REACHED();
 }
 
-void HTMLInputElement::set_type(DeprecatedString const& type)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_type(DeprecatedString const& type)
 {
-    MUST(set_attribute(HTML::AttributeNames::type, type));
+    return set_attribute(HTML::AttributeNames::type, type);
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-simple-colour
@@ -1077,6 +1083,26 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     // https://www.w3.org/TR/html-aria/#el-input-time
     // https://www.w3.org/TR/html-aria/#el-input-week
     return {};
+}
+
+bool HTMLInputElement::is_button() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#submit-button-state-(type=submit):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#reset-button-state-(type=reset):concept-button
+    // https://html.spec.whatwg.org/multipage/input.html#button-state-(type=button):concept-button
+    return type_state() == TypeAttributeState::SubmitButton
+        || type_state() == TypeAttributeState::ImageButton
+        || type_state() == TypeAttributeState::ResetButton
+        || type_state() == TypeAttributeState::Button;
+}
+
+bool HTMLInputElement::is_submit_button() const
+{
+    // https://html.spec.whatwg.org/multipage/input.html#submit-button-state-(type=submit):concept-submit-button
+    // https://html.spec.whatwg.org/multipage/input.html#image-button-state-(type=image):concept-submit-button
+    return type_state() == TypeAttributeState::SubmitButton
+        || type_state() == TypeAttributeState::ImageButton;
 }
 
 }

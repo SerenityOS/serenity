@@ -28,7 +28,7 @@ public:
 
     void setup(DeprecatedString player_name, int hand_number = 0);
 
-    Function<void(DeprecatedString const&)> on_status_change;
+    Function<void(String const&)> on_status_change;
 
 private:
     Game();

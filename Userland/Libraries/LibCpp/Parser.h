@@ -50,6 +50,8 @@ private:
         Constructor,
         Destructor,
         UsingNamespace,
+        Typedef,
+        UsingType,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
@@ -82,6 +84,8 @@ private:
     bool match_constructor(StringView class_name);
     bool match_destructor(StringView class_name);
     bool match_using_namespace_declaration();
+    bool match_typedef_declaration();
+    bool match_using_type_declaration();
 
     Optional<Vector<NonnullRefPtr<Parameter const>>> parse_parameter_list(ASTNode const& parent);
     Optional<Token> consume_whitespace();
@@ -122,6 +126,8 @@ private:
     NonnullRefPtr<Constructor const> parse_constructor(ASTNode const& parent);
     NonnullRefPtr<Destructor const> parse_destructor(ASTNode const& parent);
     NonnullRefPtr<UsingNamespaceDeclaration const> parse_using_namespace_declaration(ASTNode const& parent);
+    NonnullRefPtr<TypedefDeclaration const> parse_typedef_declaration(ASTNode const& parent);
+    NonnullRefPtr<TypedefDeclaration const> parse_using_type_declaration(ASTNode const& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);

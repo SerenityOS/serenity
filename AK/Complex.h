@@ -9,10 +9,6 @@
 #include <AK/Concepts.h>
 #include <AK/Math.h>
 
-#ifdef __cplusplus
-#    if __cplusplus >= 201103L
-#        define COMPLEX_NOEXCEPT noexcept
-#    endif
 namespace AK {
 
 template<AK::Concepts::Arithmetic T>
@@ -36,18 +32,18 @@ public:
     {
     }
 
-    constexpr T real() const COMPLEX_NOEXCEPT { return m_real; }
+    constexpr T real() const noexcept { return m_real; }
 
-    constexpr T imag() const COMPLEX_NOEXCEPT { return m_imag; }
+    constexpr T imag() const noexcept { return m_imag; }
 
-    constexpr T magnitude_squared() const COMPLEX_NOEXCEPT { return m_real * m_real + m_imag * m_imag; }
+    constexpr T magnitude_squared() const noexcept { return m_real * m_real + m_imag * m_imag; }
 
-    constexpr T magnitude() const COMPLEX_NOEXCEPT
+    constexpr T magnitude() const noexcept
     {
         return hypot(m_real, m_imag);
     }
 
-    constexpr T phase() const COMPLEX_NOEXCEPT
+    constexpr T phase() const noexcept
     {
         return atan2(m_imag, m_real);
     }
@@ -281,12 +277,10 @@ static constexpr Complex<T> cexp(Complex<T> const& a)
 }
 }
 
-#    if USING_AK_GLOBALLY
+#if USING_AK_GLOBALLY
 using AK::approx_eq;
 using AK::cexp;
 using AK::Complex;
 using AK::complex_imag_unit;
 using AK::complex_real_unit;
-#    endif
-
 #endif

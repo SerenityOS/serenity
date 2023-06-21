@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -94,9 +95,13 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::En
         auto timer = Core::ElapsedTimer::start_new();
 
         // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
-        auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
-
-        evaluation_status = interpreter->run(*m_script_record, lexical_environment_override);
+        if (JS::Bytecode::Interpreter::enabled()) {
+            auto interpreter = JS::Bytecode::Interpreter(m_script_record->realm());
+            evaluation_status = interpreter.run(*m_script_record, lexical_environment_override);
+        } else {
+            auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
+            evaluation_status = interpreter->run(*m_script_record, lexical_environment_override);
+        }
 
         // FIXME: If ScriptEvaluation does not complete because the user agent has aborted the running script, leave evaluationStatus as null.
 

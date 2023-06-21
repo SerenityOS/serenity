@@ -153,6 +153,11 @@ static ErrorOr<void> read_max_val(TContext& context)
 {
     context.format_details.max_val = TRY(read_number(*context.stream));
 
+    if (context.format_details.max_val == 0) {
+        context.state = TContext::State::Error;
+        return Error::from_string_literal("The image has a maximum value of 0");
+    }
+
     if (context.format_details.max_val > 255) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);
         context.state = TContext::State::Error;

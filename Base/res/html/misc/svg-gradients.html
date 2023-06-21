@@ -31,6 +31,24 @@
 </svg>
 <br>
 <br>
+<b>MDN radialGradient example (gradientUnits=objectBoundingBox)</b>
+<br>
+<svg width="200" height="200"
+  viewBox="0 0 10 10"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <radialGradient id="myGradient">
+      <stop offset="10%" stop-color="gold" />
+      <stop offset="95%" stop-color="red" />
+    </radialGradient>
+  </defs>
+
+  <!-- using my radial gradient -->
+  <circle cx="5" cy="5" r="4" fill="url('#myGradient')" />
+</svg>
+<br>
+<br>
 <b>Simple radialGradient gradientUnits=objectBoundingBox</b><br>
 <svg height="150" width="500">
   <defs>
@@ -131,4 +149,37 @@
     </linearGradient>
   </defs>
   <rect x="115" y="15" width="170" height="110" fill="url(#grad7)" transform="rotate(45 200 70)" />
+</svg>
+<br>
+<b>Linear gradient + transform with fill-opacity</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad7" x1="0" y1="0" x2="70%" y2="0">
+      <stop offset="0" stop-color="blue"/>
+      <stop offset="1" stop-color="magenta"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="170" height="110" fill="url(#grad7)" fill-opacity="0.5" transform="rotate(5 200 70)" />
+</svg>
+<br>
+<b>Stroke linear gradient + transform</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad7" x1="0" y1="0" x2="70%" y2="0">
+      <stop offset="0" stop-color="blue"/>
+      <stop offset="1" stop-color="magenta"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="170" height="110" stroke="url(#grad7)" fill="none" transform="rotate(45 200 70)" />
+</svg>
+<br>
+<b>Stroke linear gradient + transform with stroke-opacity</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad7" x1="0" y1="0" x2="70%" y2="0">
+      <stop offset="0" stop-color="blue"/>
+      <stop offset="1" stop-color="magenta"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="170" height="110" stroke="url(#grad7)" stroke-opacity="0.5" stroke-width="10" fill="none" transform="rotate(5 200 70)" />
 </svg>

@@ -73,21 +73,81 @@ TEST_CASE(allocating_memory_stream_offset_of_oob)
     AllocatingMemoryStream stream;
     // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
     //       So we have to assume some things about the behavior of this class:
-    //       - The chunk size is 4096 bytes.
     //       - A chunk is moved to the end when it's fully read from
     //       - A free chunk is used as-is, no new ones are allocated if one exists.
 
-    // First, fill exactly one chunk.
-    for (size_t i = 0; i < 256; ++i)
+    // First, fill exactly one chunk (in groups of 16 bytes).
+    for (size_t i = 0; i < AllocatingMemoryStream::CHUNK_SIZE / 16; ++i)
         MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
 
     // Then discard it all.
-    MUST(stream.discard(4096));
+    MUST(stream.discard(AllocatingMemoryStream::CHUNK_SIZE));
     // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
     MUST(stream.write_until_depleted("Well Hello Friends! :^)"sv.bytes()));
 
     {
         auto offset = MUST(stream.offset_of("A"sv.bytes()));
         EXPECT(!offset.has_value());
+    }
+}
+
+TEST_CASE(allocating_memory_stream_offset_of_after_chunk_reorder)
+{
+    AllocatingMemoryStream stream;
+
+    // First, fill exactly one chunk (in groups of 16 bytes). This chunk will be reordered.
+    for (size_t i = 0; i < AllocatingMemoryStream::CHUNK_SIZE / 16; ++i)
+        MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
+
+    // Append a few additional bytes to create a second chunk.
+    MUST(stream.write_until_depleted("BCDEFGHIJKLMNOPQ"sv.bytes()));
+
+    // Read back the first chunk, which should reorder it to the end of the list.
+    // The chunk that we wrote to the second time is now the first one.
+    MUST(stream.discard(AllocatingMemoryStream::CHUNK_SIZE));
+
+    {
+        auto offset = MUST(stream.offset_of("A"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("B"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("Q"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 15ul);
+    }
+}
+
+TEST_CASE(allocating_memory_stream_offset_of_with_write_offset_multiple_of_chunk_size)
+{
+    // This tests a specific edge case where we would erroneously trim the last searched block
+    // to size 0 if the current write offset is a multiple of the chunk size.
+
+    AllocatingMemoryStream stream;
+
+    // First, fill exactly one chunk (in groups of 16 bytes).
+    for (size_t i = 0; i < (AllocatingMemoryStream::CHUNK_SIZE / 16) - 1; ++i)
+        MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
+    MUST(stream.write_until_depleted("BCDEFGHIJKLMNOPQ"sv.bytes()));
+
+    // Read a few bytes from the beginning to ensure that we are trying to slice into the zero-sized block.
+    MUST(stream.discard(32));
+
+    {
+        auto offset = MUST(stream.offset_of("B"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), AllocatingMemoryStream::CHUNK_SIZE - 32 - 16);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("Q"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), AllocatingMemoryStream::CHUNK_SIZE - 32 - 1);
     }
 }

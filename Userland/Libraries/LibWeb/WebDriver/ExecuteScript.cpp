@@ -331,19 +331,21 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
     auto& vm = window->vm();
     auto start = MonotonicTime::now();
 
-    // 4. Let promise be a new Promise.
-    auto promise = JS::Promise::create(realm);
-
-    // FIXME: 5 Run the following substeps in parallel:
-    auto result = [&] {
-        // NOTE: We need to push an execution context in order to make create_resolving_functions() succeed.
-        vm.push_execution_context(settings_object.realm_execution_context());
-
-        // 1. Let resolvingFunctions be CreateResolvingFunctions(promise).
-        auto resolving_functions = promise->create_resolving_functions();
-
+    // NOTE: We need to push an execution context in order to make create_resolving_functions() succeed.
+    vm.push_execution_context(settings_object.realm_execution_context());
+    ScopeGuard pop_guard = [&] {
         VERIFY(&settings_object.realm_execution_context() == &vm.running_execution_context());
         vm.pop_execution_context();
+    };
+
+    // 4. Let promise be a new Promise.
+    auto promise_capability = WebIDL::create_promise(realm);
+    JS::NonnullGCPtr promise { verify_cast<JS::Promise>(*promise_capability->promise()) };
+
+    // FIXME: 5 Run the following substeps in parallel:
+    [&] {
+        // 1. Let resolvingFunctions be CreateResolvingFunctions(promise).
+        auto resolving_functions = promise->create_resolving_functions();
 
         // 2. Append resolvingFunctions.[[Resolve]] to arguments.
         arguments.append(resolving_functions.resolve);
@@ -357,27 +359,27 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
         //       In order to preserve legacy behavior, the return value only influences the command if it is a
         //       "thenable"  object or if determining this produces an exception.
         if (script_result.is_throw_completion())
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseRejected, *script_result.throw_completion().value() };
+            return;
 
         // 5. If Type(scriptResult.[[Value]]) is not Object, then abort these steps.
         if (!script_result.value().is_object())
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseResolved, JS::js_null() };
+            return;
 
         // 6. Let then be Get(scriptResult.[[Value]], "then").
         auto then = script_result.value().as_object().get(vm.names.then);
 
         // 7. If then.[[Type]] is not normal, then reject promise with value then.[[Value]], and abort these steps.
         if (then.is_throw_completion())
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseRejected, *then.throw_completion().value() };
+            return;
 
         // 8. If IsCallable(then.[[Type]]) is false, then abort these steps.
         if (!then.value().is_function())
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseResolved, JS::js_null() };
+            return;
 
         // 9. Let scriptPromise be PromiseResolve(Promise, scriptResult.[[Value]]).
         auto script_promise_or_error = JS::promise_resolve(vm, realm.intrinsics().promise_constructor(), script_result.value());
         if (script_promise_or_error.is_throw_completion())
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseRejected, *script_promise_or_error.throw_completion().value() };
+            return;
         auto& script_promise = static_cast<JS::Promise&>(*script_promise_or_error.value());
 
         vm.custom_data()->spin_event_loop_until([&] {
@@ -390,26 +392,37 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
 
         // 10. Upon fulfillment of scriptPromise with value v, resolve promise with value v.
         if (script_promise.state() == JS::Promise::State::Fulfilled)
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseResolved, script_promise.result() };
+            WebIDL::resolve_promise(realm, promise_capability, script_promise.result());
 
         // 11. Upon rejection of scriptPromise with value r, reject promise with value r.
         if (script_promise.state() == JS::Promise::State::Rejected)
-            return ExecuteScriptResult { ExecuteScriptResultType::PromiseRejected, script_promise.result() };
-
-        return ExecuteScriptResult { ExecuteScriptResultType::Timeout, script_promise.result() };
+            WebIDL::reject_promise(realm, promise_capability, script_promise.result());
     }();
 
-    // 6. If promise is still pending and session script timeout milliseconds is reached, return error with error code script timeout.
-    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
-    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
-    auto json_value_or_error = json_clone(realm, result.value);
+    // FIXME: 6. If promise is still pending and session script timeout milliseconds is reached, return error with error code script timeout.
+
+    vm.custom_data()->spin_event_loop_until([&] {
+        return promise->state() != JS::Promise::State::Pending;
+    });
+
+    auto json_value_or_error = json_clone(realm, promise->result());
     if (json_value_or_error.is_error()) {
         auto error_object = JsonObject {};
         error_object.set("name", "Error");
         error_object.set("message", "Could not clone result value");
         return { ExecuteScriptResultType::JavaScriptError, move(error_object) };
     }
-    return { result.type, json_value_or_error.release_value() };
+
+    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
+    if (promise->state() == JS::Promise::State::Fulfilled) {
+        return { ExecuteScriptResultType::PromiseResolved, json_value_or_error.release_value() };
+    }
+    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
+    if (promise->state() == JS::Promise::State::Rejected) {
+        return { ExecuteScriptResultType::PromiseRejected, json_value_or_error.release_value() };
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 }

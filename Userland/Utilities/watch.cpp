@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <spawn.h>
 #include <stdio.h>
-#include <sys/time.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -28,10 +27,12 @@ static bool flag_beep_on_fail = false;
 static int volatile exit_code = 0;
 static volatile pid_t child_pid = -1;
 
-static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, struct timeval const& interval)
+static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, Duration const& interval)
 {
     StringBuilder builder;
-    builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
+    auto interval_seconds = interval.to_truncated_seconds();
+    auto interval_fractional_seconds = (interval.to_truncated_milliseconds() % 1000) / 100;
+    builder.appendff("Every {}.{}s: \x1b[1m", interval_seconds, interval_fractional_seconds);
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
     return builder.to_deprecated_string();
@@ -44,22 +45,6 @@ static DeprecatedString build_header_string(Vector<DeprecatedString> const& comm
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
     return builder.to_deprecated_string();
-}
-
-static struct timeval get_current_time()
-{
-    struct timespec ts;
-    struct timeval tv;
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-    timespec_to_timeval(ts, tv);
-    return tv;
-}
-
-static int64_t usecs_from(struct timeval const& start, struct timeval const& end)
-{
-    struct timeval diff;
-    timeval_sub(end, start, diff);
-    return 1000000 * diff.tv_sec + diff.tv_usec;
 }
 
 static void handle_signal(int signal)
@@ -188,29 +173,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         TRY(Core::System::pledge("stdio proc exec"));
 
-        struct timeval interval;
+        Duration interval;
         if (opt_interval <= 0) {
-            interval = { 0, 100000 };
+            interval = Duration::from_milliseconds(100);
         } else {
-            interval = { opt_interval, 0 };
+            interval = Duration::from_seconds(opt_interval);
         }
 
-        auto now = get_current_time();
+        auto now = MonotonicTime::now();
         auto next_run_time = now;
         header = build_header_string(command, interval);
         while (true) {
-            int usecs_to_sleep = usecs_from(now, next_run_time);
-            while (usecs_to_sleep > 0) {
-                usleep(usecs_to_sleep);
-                now = get_current_time();
-                usecs_to_sleep = usecs_from(now, next_run_time);
-            }
+            auto duration_to_sleep = (next_run_time - now).to_timespec();
+            timespec remaining_sleep {};
+            do {
+                clock_nanosleep(CLOCK_MONOTONIC, 0, &duration_to_sleep, &remaining_sleep);
+            } while (remaining_sleep.tv_sec || remaining_sleep.tv_nsec);
 
             watch_callback();
 
-            now = get_current_time();
-            timeval_add(next_run_time, interval, next_run_time);
-            if (usecs_from(now, next_run_time) < 0) {
+            now = MonotonicTime::now();
+            next_run_time = next_run_time + interval;
+            if (next_run_time < now) {
                 // The next execution is overdue, so we set next_run_time to now to prevent drift.
                 next_run_time = now;
             }

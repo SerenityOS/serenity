@@ -21,6 +21,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -90,7 +91,7 @@ void Tab::view_source(const URL& url, DeprecatedString const& source)
     window->show();
 }
 
-void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_waiting)
+void Tab::update_status(Optional<String> text_override, i32 count_waiting)
 {
     if (text_override.has_value()) {
         m_statusbar->set_text(*text_override);
@@ -98,7 +99,7 @@ void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_wait
     }
 
     if (m_loaded) {
-        m_statusbar->set_text("");
+        m_statusbar->set_text({});
         return;
     }
 
@@ -106,10 +107,10 @@ void Tab::update_status(Optional<DeprecatedString> text_override, i32 count_wait
 
     if (count_waiting == 0) {
         // ex: "Loading google.com"
-        m_statusbar->set_text(DeprecatedString::formatted("Loading {}", m_navigating_url->host()));
+        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->host()).release_value_but_fixme_should_propagate_errors());
     } else {
         // ex: "google.com is waiting on 5 resources"
-        m_statusbar->set_text(DeprecatedString::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv));
+        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv).release_value_but_fixme_should_propagate_errors());
     }
 }
 
@@ -124,7 +125,7 @@ Tab::Tab(BrowserWindow& window)
 
     m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
 
-    auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
+    auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
 
     content_filters_changed();
@@ -373,68 +374,103 @@ Tab::Tab(BrowserWindow& window)
         m_image_context_menu->popup(screen_position);
     };
 
-    m_video_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
-        view().toggle_video_play_state();
+    m_media_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
+        view().toggle_media_play_state();
     });
-    m_video_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
-        view().toggle_video_controls_state();
+    m_media_context_menu_mute_unmute_action = GUI::Action::create("&Mute", g_icon_bag.mute, [this](auto&) {
+        view().toggle_media_mute_state();
     });
-    m_video_context_menu_loop_action = GUI::Action::create_checkable("&Loop Video", [this](auto&) {
-        view().toggle_video_loop_state();
+    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
+        view().toggle_media_controls_state();
+    });
+    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop", [this](auto&) {
+        view().toggle_media_loop_state();
     });
 
+    m_audio_context_menu = GUI::Menu::construct();
+    m_audio_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_mute_unmute_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_controls_action);
+    m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("&Open Audio", g_icon_bag.filetype_audio, [this](auto&) {
+        view().on_link_click(m_media_context_menu_url, "", 0);
+    }));
+    m_audio_context_menu->add_action(GUI::Action::create("Open Audio in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+        view().on_link_click(m_media_context_menu_url, "_blank", 0);
+    }));
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
+    }));
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+        start_download(m_media_context_menu_url);
+    }));
+    m_audio_context_menu->add_separator();
+    m_audio_context_menu->add_action(window.inspect_dom_node_action());
+
     m_video_context_menu = GUI::Menu::construct();
-    m_video_context_menu->add_action(*m_video_context_menu_play_pause_action);
-    m_video_context_menu->add_action(*m_video_context_menu_controls_action);
-    m_video_context_menu->add_action(*m_video_context_menu_loop_action);
+    m_video_context_menu->add_action(*m_media_context_menu_play_pause_action);
+    m_video_context_menu->add_action(*m_media_context_menu_mute_unmute_action);
+    m_video_context_menu->add_action(*m_media_context_menu_controls_action);
+    m_video_context_menu->add_action(*m_media_context_menu_loop_action);
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Open Video", g_icon_bag.filetype_video, [this](auto&) {
-        view().on_link_click(m_video_context_menu_url, "", 0);
+        view().on_link_click(m_media_context_menu_url, "", 0);
     }));
     m_video_context_menu->add_action(GUI::Action::create("Open Video in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_video_context_menu_url, "_blank", 0);
+        view().on_link_click(m_media_context_menu_url, "_blank", 0);
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL", g_icon_bag.copy, [this](auto&) {
-        GUI::Clipboard::the().set_plain_text(m_video_context_menu_url.to_deprecated_string());
+        GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
-        start_download(m_video_context_menu_url);
+        start_download(m_media_context_menu_url);
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(window.inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto& video_url, auto widget_position, bool is_playing, bool has_user_agent_controls, bool is_looping) {
-        m_video_context_menu_url = video_url;
+    view().on_media_context_menu_request = [this](auto widget_position, Web::Page::MediaContextMenu const& menu) {
+        m_media_context_menu_url = menu.media_url;
 
-        if (is_playing) {
-            m_video_context_menu_play_pause_action->set_icon(g_icon_bag.play);
-            m_video_context_menu_play_pause_action->set_text("&Play"sv);
+        if (menu.is_playing) {
+            m_media_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
+            m_media_context_menu_play_pause_action->set_text("&Pause"sv);
         } else {
-            m_video_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
-            m_video_context_menu_play_pause_action->set_text("&Pause"sv);
+            m_media_context_menu_play_pause_action->set_icon(g_icon_bag.play);
+            m_media_context_menu_play_pause_action->set_text("&Play"sv);
         }
 
-        m_video_context_menu_controls_action->set_checked(has_user_agent_controls);
-        m_video_context_menu_loop_action->set_checked(is_looping);
+        if (menu.is_muted) {
+            m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.unmute);
+            m_media_context_menu_mute_unmute_action->set_text("Un&mute"sv);
+        } else {
+            m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.mute);
+            m_media_context_menu_mute_unmute_action->set_text("&Mute"sv);
+        }
+
+        m_media_context_menu_controls_action->set_checked(menu.has_user_agent_controls);
+        m_media_context_menu_loop_action->set_checked(menu.is_looping);
 
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
-        m_video_context_menu->popup(screen_position);
+
+        if (menu.is_video)
+            m_video_context_menu->popup(screen_position);
+        else
+            m_audio_context_menu->popup(screen_position);
     };
 
     view().on_link_middle_click = [this](auto& href, auto&, auto) {
         view().on_link_click(href, "_blank", 0);
     };
 
-    view().on_title_change = [this](auto& title) {
-        if (title.is_null()) {
-            m_history.update_title(url().to_deprecated_string());
-            m_title = url().to_deprecated_string();
-        } else {
-            m_history.update_title(title);
-            m_title = title;
-        }
+    view().on_title_change = [this](auto const& title) {
+        m_history.update_title(title);
+        m_title = title;
+
         if (on_title_change)
             on_title_change(m_title);
     };
@@ -512,7 +548,7 @@ Tab::Tab(BrowserWindow& window)
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     view().on_link_hover = [this](auto& url) {
-        update_status(url.to_deprecated_string());
+        update_status(String::from_deprecated_string(url.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
     };
 
     view().on_link_unhover = [this]() {
@@ -565,7 +601,7 @@ Tab::Tab(BrowserWindow& window)
             }
         },
         this);
-    take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
+    take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"_string.release_value_but_fixme_should_propagate_errors());
 
     auto take_full_screenshot_action = GUI::Action::create(
         "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
@@ -575,7 +611,7 @@ Tab::Tab(BrowserWindow& window)
             }
         },
         this);
-    take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
+    take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"_string.release_value_but_fixme_should_propagate_errors());
 
     m_page_context_menu = GUI::Menu::construct();
     m_page_context_menu->add_action(window.go_back_action());
@@ -707,7 +743,7 @@ void Tab::did_become_active()
     };
 
     BookmarksBarWidget::the().on_bookmark_hover = [this](auto&, auto& url) {
-        m_statusbar->set_text(url);
+        m_statusbar->set_text(String::from_deprecated_string(url).release_value_but_fixme_should_propagate_errors());
     };
 
     BookmarksBarWidget::the().on_bookmark_change = [this]() {
@@ -868,13 +904,13 @@ void Tab::show_storage_inspector()
     if (on_get_local_storage_entries) {
         auto local_storage_entries = on_get_local_storage_entries();
         m_storage_widget->clear_local_storage_entries();
-        m_storage_widget->set_local_storage_entries(local_storage_entries);
+        m_storage_widget->set_local_storage_entries(move(local_storage_entries));
     }
 
     if (on_get_session_storage_entries) {
         auto session_storage_entries = on_get_session_storage_entries();
         m_storage_widget->clear_session_storage_entries();
-        m_storage_widget->set_session_storage_entries(session_storage_entries);
+        m_storage_widget->set_session_storage_entries(move(session_storage_entries));
     }
 
     auto* window = m_storage_widget->window();

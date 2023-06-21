@@ -384,7 +384,10 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     // File menu
     auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(&window);
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = { { GUI::FileTypeFilter { "Video Files", { { "mkv", "webm" } } }, GUI::FileTypeFilter::all_files() } },
+        };
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, options);
         if (response.is_error())
             return;
 

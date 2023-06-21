@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSImportRule.h>
+#include <LibWeb/CSS/CSSKeyframesRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSRuleList.h>
@@ -141,6 +142,38 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
         case CSSRule::Type::Supports:
             static_cast<CSSSupportsRule const&>(*rule).for_each_effective_style_rule(callback);
             break;
+        case CSSRule::Type::Keyframe:
+        case CSSRule::Type::Keyframes:
+            break;
+        }
+    }
+}
+
+void CSSRuleList::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const
+{
+    for (auto const& rule : m_rules) {
+        switch (rule->type()) {
+        case CSSRule::Type::FontFace:
+            break;
+        case CSSRule::Type::Import: {
+            auto const& import_rule = static_cast<CSSImportRule const&>(*rule);
+            if (import_rule.loaded_style_sheet())
+                import_rule.loaded_style_sheet()->for_each_effective_keyframes_at_rule(callback);
+            break;
+        }
+        case CSSRule::Type::Media:
+            static_cast<CSSMediaRule const&>(*rule).for_each_effective_keyframes_at_rule(callback);
+            break;
+        case CSSRule::Type::Style:
+            break;
+        case CSSRule::Type::Supports:
+            static_cast<CSSSupportsRule const&>(*rule).for_each_effective_keyframes_at_rule(callback);
+            break;
+        case CSSRule::Type::Keyframe:
+            break;
+        case CSSRule::Type::Keyframes:
+            callback(static_cast<CSSKeyframesRule const&>(*rule));
+            break;
         }
     }
 }
@@ -177,6 +210,9 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
                 any_media_queries_changed_match_state = true;
             break;
         }
+        case CSSRule::Type::Keyframe:
+        case CSSRule::Type::Keyframes:
+            break;
         }
     }
 

@@ -12,7 +12,7 @@
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/RefCounted.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 #include <LibC/elf.h>
 #include <LibC/link.h>
 

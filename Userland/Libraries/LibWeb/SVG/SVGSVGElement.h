@@ -24,8 +24,10 @@ public:
     virtual bool requires_svg_container() const override { return false; }
     virtual bool is_svg_container() const override { return true; }
 
-    Optional<ViewBox> const& view_box() const { return m_view_box; }
+    [[nodiscard]] Optional<ViewBox> view_box() const;
     Optional<PreserveAspectRatio> const& preserve_aspect_ratio() const { return m_preserve_aspect_ratio; }
+
+    void set_fallback_view_box_for_svg_as_image(Optional<ViewBox>);
 
 private:
     SVGSVGElement(DOM::Document&, DOM::QualifiedName);
@@ -36,8 +38,12 @@ private:
 
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
+    void update_fallback_view_box_for_svg_as_image();
+
     Optional<ViewBox> m_view_box;
     Optional<PreserveAspectRatio> m_preserve_aspect_ratio;
+
+    Optional<ViewBox> m_fallback_view_box_for_svg_as_image;
 };
 
 }

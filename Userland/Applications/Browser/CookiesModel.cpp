@@ -34,7 +34,7 @@ int CookiesModel::row_count(GUI::ModelIndex const& index) const
     return 0;
 }
 
-String CookiesModel::column_name(int column) const
+ErrorOr<String> CookiesModel::column_name(int column) const
 {
     switch (column) {
     case Column::Domain:
@@ -46,14 +46,14 @@ String CookiesModel::column_name(int column) const
     case Column::Value:
         return "Value"_short_string;
     case Column::ExpiryTime:
-        return "Expiry time"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Expiry time"_string);
     case Column::SameSite:
-        return "SameSite"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("SameSite"_string);
     case Column::__Count:
-        return {};
+        return String {};
     }
 
-    return {};
+    return String {};
 }
 
 GUI::ModelIndex CookiesModel::index(int row, int column, GUI::ModelIndex const&) const
@@ -88,17 +88,18 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     VERIFY_NOT_REACHED();
 }
 
-TriState CookiesModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+GUI::Model::MatchResult CookiesModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
 {
     auto needle = term.as_string();
     if (needle.is_empty())
-        return TriState::True;
+        return { TriState::True };
 
     auto const& cookie = m_cookies[index.row()];
     auto haystack = DeprecatedString::formatted("{} {} {} {}", cookie.domain, cookie.path, cookie.name, cookie.value);
-    if (fuzzy_match(needle, haystack).score > 0)
-        return TriState::True;
-    return TriState::False;
+    auto match_result = fuzzy_match(needle, haystack);
+    if (match_result.score > 0)
+        return { TriState::True, match_result.score };
+    return { TriState::False };
 }
 
 Web::Cookie::Cookie CookiesModel::take_cookie(GUI::ModelIndex const& index)

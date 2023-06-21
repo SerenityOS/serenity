@@ -157,7 +157,7 @@ is_supported_compiler() {
         [ "$BUILD_VERSION" -ge 14030022 ] && return 0
     elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
         # Clang version check
-        [ "$MAJOR_VERSION" -ge 14 ] && return 0
+        [ "$MAJOR_VERSION" -ge 15 ] && return 0
     else
         # GCC version check
         [ "$MAJOR_VERSION" -ge 12 ] && return 0
@@ -191,7 +191,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-14 clang-15 clang-16 /opt/homebrew/opt/llvm/bin/clang
+    find_newest_compiler clang clang-15 clang-16 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/clang/clang++}"
@@ -206,9 +206,9 @@ pick_host_compiler() {
     fi
 
     if [ "$(uname -s)" = "Darwin" ]; then
-        die "Please make sure that Xcode 14.3, Homebrew Clang 14, or higher is installed."
+        die "Please make sure that Xcode 14.3, Homebrew Clang 15, or higher is installed."
     else
-        die "Please make sure that GCC version 12, Clang version 14, or higher is installed."
+        die "Please make sure that GCC version 12, Clang version 15, or higher is installed."
     fi
 }
 
@@ -303,10 +303,16 @@ build_cmake() {
 
 build_toolchain() {
     echo "build_toolchain: $TOOLCHAIN_DIR"
+
     if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildClang.sh )
     else
-        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
+        (
+            # HACK: ISL's configure fails with "Link Time Optimisation is not supported" if CC is
+            #       Homebrew Clang due to incompatibility with Xcode's ranlib.
+            [ "$(uname -s)" = "Darwin" ] && unset CC CXX
+            cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildGNU.sh
+        )
     fi
 }
 
@@ -395,7 +401,7 @@ run_gdb() {
         GDB_ARGS+=( "$PASS_ARG_TO_GDB" )
     fi
     if [ "$TARGET" = "lagom" ]; then
-        gdb "$BUILD_DIR/$LAGOM_EXECUTABLE" "${GDB_ARGS[@]}"
+        gdb "$BUILD_DIR/bin/$LAGOM_EXECUTABLE" "${GDB_ARGS[@]}"
     else
         if [ -n "$KERNEL_CMD_LINE" ]; then
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"

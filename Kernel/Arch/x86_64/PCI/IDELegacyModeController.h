@@ -8,9 +8,9 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Devices/Storage/ATA/GenericIDE/Controller.h>
+#include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
-#include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 

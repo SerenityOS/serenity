@@ -9,7 +9,7 @@
 #include <Kernel/FileSystem/SysFS/Inode.h>
 #include <Kernel/FileSystem/SysFS/LinkInode.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
-#include <Kernel/KLexicalPath.h>
+#include <Kernel/Library/KLexicalPath.h>
 
 namespace Kernel {
 

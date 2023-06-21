@@ -65,9 +65,9 @@ public:
 
     virtual void stream_into(Stream&) = 0;
 
-    Function<void(bool success, u32 total_size, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
-    Function<void(bool success, u32 total_size)> on_finish;
-    Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
+    Function<void(bool success, u64 total_size, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
+    Function<void(bool success, u64 total_size)> on_finish;
+    Function<void(Optional<u64> total_size, u64 downloaded_size)> on_progress;
     Function<CertificateAndKey()> on_certificate_requested;
 
 protected:

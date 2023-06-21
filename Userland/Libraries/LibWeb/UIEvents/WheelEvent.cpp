@@ -39,10 +39,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create(JS::Realm& 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)
 {
     WheelEventInit event_init {};
-    event_init.offset_x = static_cast<double>(offset_x.value());
-    event_init.offset_y = static_cast<double>(offset_y.value());
-    event_init.client_x = static_cast<double>(client_x.value());
-    event_init.client_y = static_cast<double>(client_y.value());
+    event_init.offset_x = offset_x.to_double();
+    event_init.offset_y = offset_y.to_double();
+    event_init.client_x = client_x.to_double();
+    event_init.client_y = client_y.to_double();
     event_init.button = button;
     event_init.buttons = buttons;
     event_init.delta_x = delta_x;

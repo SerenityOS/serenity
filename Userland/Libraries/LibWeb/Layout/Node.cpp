@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,8 +11,13 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
+#include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -20,7 +26,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -112,6 +117,17 @@ Box const* Node::containing_block() const
         return &root();
 
     return nearest_ancestor_capable_of_forming_a_containing_block(*this);
+}
+
+Box const* Node::non_anonymous_containing_block() const
+{
+    auto nearest_ancestor_box = containing_block();
+    VERIFY(nearest_ancestor_box);
+    while (nearest_ancestor_box->is_anonymous()) {
+        nearest_ancestor_box = nearest_ancestor_box->containing_block();
+        VERIFY(nearest_ancestor_box);
+    }
+    return nearest_ancestor_box;
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
@@ -282,8 +298,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
-    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->to_length().to_px(*this).value());
-    computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->to_integer());
+    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->as_length().length().to_px(*this).to_double());
+    computed_values.set_font_weight(round_to<int>(computed_style.property(CSS::PropertyID::FontWeight)->as_number().number()));
     m_line_height = computed_style.line_height(*this);
 
     computed_values.set_vertical_align(computed_style.vertical_align());
@@ -517,6 +533,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (float_.has_value())
         computed_values.set_float(float_.value());
 
+    computed_values.set_border_spacing_horizontal(computed_style.border_spacing_horizontal());
+    computed_values.set_border_spacing_vertical(computed_style.border_spacing_vertical());
+
+    auto caption_side = computed_style.caption_side();
+    if (caption_side.has_value())
+        computed_values.set_caption_side(caption_side.value());
+
     auto clear = computed_style.clear();
     if (clear.has_value())
         computed_values.set_clear(clear.value());
@@ -560,6 +583,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         const_cast<CSS::AbstractImageStyleValue&>(*m_list_style_image).load_any_resources(document());
     }
 
+    if (auto list_style_position = computed_style.list_style_position(); list_style_position.has_value())
+        computed_values.set_list_style_position(list_style_position.value());
+
     // FIXME: The default text decoration color value is `currentcolor`, but since we can't resolve that easily,
     //        we just manually grab the value from `color`. This makes it dependent on `color` being
     //        specified first, so it's far from ideal.
@@ -594,6 +620,15 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_transformations(computed_style.transformations());
     computed_values.set_transform_origin(computed_style.transform_origin());
 
+    auto transition_delay_property = computed_style.property(CSS::PropertyID::TransitionDelay);
+    if (transition_delay_property->is_time()) {
+        auto& transition_delay = transition_delay_property->as_time();
+        computed_values.set_transition_delay(transition_delay.time());
+    } else if (transition_delay_property->is_calculated()) {
+        auto& transition_delay = transition_delay_property->as_calculated();
+        computed_values.set_transition_delay(transition_delay.resolve_time().value());
+    }
+
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
         // FIXME: The default border color value is `currentcolor`, but since we can't resolve that easily,
         //        we just manually grab the value from `color`. This makes it dependent on `color` being
@@ -612,9 +647,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() -> double {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return value->as_calculated().resolve_length(*this)->to_px(*this).value();
-                if (value->has_length())
-                    return value->to_length().to_px(*this).value();
+                    return value->as_calculated().resolve_length(*this)->to_px(*this).to_double();
+                if (value->is_length())
+                    return value->as_length().length().to_px(*this).to_double();
                 if (value->is_identifier()) {
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
@@ -656,20 +691,25 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_fill(fill->to_color(*this));
     else if (fill->is_url())
         computed_values.set_fill(fill->as_url().url());
-    // TODO: Allow url()s for strokes
-    if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke->has_color())
+    auto stroke = computed_style.property(CSS::PropertyID::Stroke);
+    if (stroke->has_color())
         computed_values.set_stroke(stroke->to_color(*this));
+    else if (stroke->is_url())
+        computed_values.set_stroke(stroke->as_url().url());
     if (auto stop_color = computed_style.property(CSS::PropertyID::StopColor); stop_color->has_color())
         computed_values.set_stop_color(stop_color->to_color(*this));
     auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
-    if (stroke_width->is_numeric())
-        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->to_number()));
+    if (stroke_width->is_number())
+        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_number().number()));
     else if (stroke_width->is_length())
-        computed_values.set_stroke_width(stroke_width->to_length());
+        computed_values.set_stroke_width(stroke_width->as_length().length());
     else if (stroke_width->is_percentage())
         computed_values.set_stroke_width(CSS::LengthPercentage { stroke_width->as_percentage().percentage() });
+
+    if (auto fill_rule = computed_style.fill_rule(); fill_rule.has_value())
+        computed_values.set_fill_rule(*fill_rule);
 
     computed_values.set_fill_opacity(computed_style.fill_opacity());
     computed_values.set_stroke_opacity(computed_style.stroke_opacity());
@@ -680,6 +720,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     if (auto border_collapse = computed_style.border_collapse(); border_collapse.has_value())
         computed_values.set_border_collapse(border_collapse.value());
+
+    auto aspect_ratio = computed_style.property(CSS::PropertyID::AspectRatio);
+    if (aspect_ratio->is_value_list()) {
+        auto& values_list = aspect_ratio->as_value_list().values();
+        if (values_list.size() == 2
+            && values_list[0]->is_identifier() && values_list[0]->as_identifier().id() == CSS::ValueID::Auto
+            && values_list[1]->is_ratio()) {
+            computed_values.set_aspect_ratio({ true, values_list[1]->as_ratio().ratio() });
+        }
+    } else if (aspect_ratio->is_identifier() && aspect_ratio->as_identifier().id() == CSS::ValueID::Auto) {
+        computed_values.set_aspect_ratio({ true, {} });
+    } else if (aspect_ratio->is_ratio()) {
+        computed_values.set_aspect_ratio({ false, aspect_ratio->as_ratio().ratio() });
+    }
 }
 
 bool Node::is_root_element() const
@@ -746,7 +800,7 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 
 void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_values()
 {
-    VERIFY(is<TableBox>(*this));
+    VERIFY(this->display().is_table_inside());
 
     CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
     mutable_computed_values.set_position(CSS::Position::Static);

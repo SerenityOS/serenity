@@ -55,6 +55,16 @@ private:
 template<>
 inline bool Node::fast_is<ParentNode>() const { return is_parent_node(); }
 
+template<typename U>
+inline U* Node::shadow_including_first_ancestor_of_type()
+{
+    for (auto* ancestor = parent_or_shadow_host(); ancestor; ancestor = ancestor->parent_or_shadow_host()) {
+        if (is<U>(*ancestor))
+            return &verify_cast<U>(*ancestor);
+    }
+    return nullptr;
+}
+
 template<typename Callback>
 inline void ParentNode::for_each_child(Callback callback) const
 {

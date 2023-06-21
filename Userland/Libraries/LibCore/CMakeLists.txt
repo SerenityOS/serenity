@@ -4,7 +4,6 @@ set(SOURCES
     Command.cpp
     ConfigFile.cpp
     DateTime.cpp
-    DeprecatedFile.cpp
     Directory.cpp
     DirectoryEntry.cpp
     DirIterator.cpp
@@ -14,7 +13,6 @@ set(SOURCES
     EventLoopImplementation.cpp
     EventLoopImplementationUnix.cpp
     File.cpp
-    IODevice.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp

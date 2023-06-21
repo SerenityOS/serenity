@@ -5,11 +5,11 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Devices/GPU/Management.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 

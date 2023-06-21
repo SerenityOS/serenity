@@ -202,11 +202,9 @@ constexpr double const middle_c = note_frequencies[36];
 struct Signal : public Variant<FixedArray<Sample>, RollNotes> {
     using Variant::Variant;
     AK_MAKE_NONCOPYABLE(Signal);
+    AK_MAKE_DEFAULT_MOVABLE(Signal);
 
 public:
-    Signal& operator=(Signal&&) = default;
-    Signal(Signal&&) = default;
-
     ALWAYS_INLINE SignalType type() const
     {
         if (has<FixedArray<Sample>>())

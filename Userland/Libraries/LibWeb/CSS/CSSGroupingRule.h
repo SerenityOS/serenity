@@ -27,6 +27,7 @@ public:
     WebIDL::ExceptionOr<void> delete_rule(u32 index);
 
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
+    virtual void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const;
 
     virtual void set_parent_style_sheet(CSSStyleSheet*) override;
 

@@ -246,7 +246,7 @@ Completion BlockStatement::execute(Interpreter& interpreter) const
 
     old_environment = vm.running_execution_context().lexical_environment;
     auto block_environment = new_declarative_environment(*old_environment);
-    block_declaration_instantiation(interpreter, block_environment);
+    block_declaration_instantiation(vm, block_environment);
     vm.running_execution_context().lexical_environment = block_environment;
 
     // 5. Let blockValue be the result of evaluating StatementList.
@@ -1735,59 +1735,43 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
         switch (kind()) {
         case Kind::Method:
             set_function_name();
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Method, method_value } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Method, make_handle(method_value) } };
         case Kind::Getter:
             set_function_name("get");
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), &method_function, nullptr) } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, make_handle(Value(Accessor::create(interpreter.vm(), &method_function, nullptr))) } };
         case Kind::Setter:
             set_function_name("set");
-            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, Accessor::create(interpreter.vm(), nullptr, &method_function) } };
+            return ClassValue { PrivateElement { private_name, PrivateElement::Kind::Accessor, make_handle(Value(Accessor::create(interpreter.vm(), nullptr, &method_function))) } };
         default:
             VERIFY_NOT_REACHED();
         }
     }
 }
 
-// We use this class to mimic  Initializer : = AssignmentExpression of
-// 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
-class ClassFieldInitializerStatement : public Statement {
-public:
-    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression, DeprecatedFlyString field_name)
-        : Statement(source_range)
-        , m_expression(move(expression))
-        , m_class_field_identifier_name(move(field_name))
-    {
-    }
+Completion ClassFieldInitializerStatement::execute(Interpreter& interpreter) const
+{
+    // 1. Assert: argumentsList is empty.
+    VERIFY(interpreter.vm().argument_count() == 0);
 
-    Completion execute(Interpreter& interpreter) const override
-    {
-        // 1. Assert: argumentsList is empty.
-        VERIFY(interpreter.vm().argument_count() == 0);
+    // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
+    VERIFY(!m_class_field_identifier_name.is_empty());
 
-        // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
-        VERIFY(!m_class_field_identifier_name.is_empty());
+    // 3. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
+    //    a. Let value be ? NamedEvaluation of Initializer with argument functionObject.[[ClassFieldInitializerName]].
+    // 4. Else,
+    //    a. Let rhs be the result of evaluating AssignmentExpression.
+    //    b. Let value be ? GetValue(rhs).
+    auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(m_expression, m_class_field_identifier_name));
 
-        // 3. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
-        //    a. Let value be ? NamedEvaluation of Initializer with argument functionObject.[[ClassFieldInitializerName]].
-        // 4. Else,
-        //    a. Let rhs be the result of evaluating AssignmentExpression.
-        //    b. Let value be ? GetValue(rhs).
-        auto value = TRY(interpreter.vm().named_evaluation_if_anonymous_function(m_expression, m_class_field_identifier_name));
+    // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+    return { Completion::Type::Return, value, {} };
+}
 
-        // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-        return { Completion::Type::Return, value, {} };
-    }
-
-    void dump(int) const override
-    {
-        // This should not be dumped as it is never part of an actual AST.
-        VERIFY_NOT_REACHED();
-    }
-
-private:
-    NonnullRefPtr<Expression const> m_expression;
-    DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
-};
+void ClassFieldInitializerStatement::dump(int) const
+{
+    // This should not be dumped as it is never part of an actual AST.
+    VERIFY_NOT_REACHED();
+}
 
 // 15.7.10 Runtime Semantics: ClassFieldDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classfielddefinitionevaluation
 ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation(Interpreter& interpreter, Object& target) const
@@ -2043,11 +2027,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
                 if (existing.key == private_element.key) {
                     VERIFY(existing.kind == PrivateElement::Kind::Accessor);
                     VERIFY(private_element.kind == PrivateElement::Kind::Accessor);
-                    auto& accessor = private_element.value.as_accessor();
+                    auto& accessor = private_element.value.value().as_accessor();
                     if (!accessor.getter())
-                        existing.value.as_accessor().set_setter(accessor.setter());
+                        existing.value.value().as_accessor().set_setter(accessor.setter());
                     else
-                        existing.value.as_accessor().set_getter(accessor.getter());
+                        existing.value.value().as_accessor().set_getter(accessor.getter());
                     added_to_existing = true;
                 }
             }
@@ -3289,6 +3273,8 @@ DeprecatedString MemberExpression::to_string_approximation() const
         object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
         return DeprecatedString::formatted("{}[<computed>]", object_string);
+    if (is<PrivateIdentifier>(*m_property))
+        return DeprecatedString::formatted("{}.{}", object_string, verify_cast<PrivateIdentifier>(*m_property).string());
     return DeprecatedString::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
 }
 
@@ -3362,7 +3348,7 @@ ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_
             [&](Call const& call) -> NonnullRefPtr<Expression const> {
                 return CallExpression::create(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
-                    call.arguments);
+                    call.arguments, InvocationStyleEnum::Parenthesized, InsideParenthesesEnum::NotInsideParentheses);
             },
             [&](ComputedReference const& ref) -> NonnullRefPtr<Expression const> {
                 return create_ast_node<MemberExpression>(source_range(),
@@ -4307,7 +4293,7 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
         auto block_environment = new_declarative_environment(*old_environment);
 
         // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-        block_declaration_instantiation(interpreter, block_environment);
+        block_declaration_instantiation(vm, block_environment);
 
         // 6. Set the running execution context's LexicalEnvironment to blockEnv.
         vm.running_execution_context().lexical_environment = block_environment;
@@ -4727,10 +4713,9 @@ bool ImportStatement::has_bound_name(DeprecatedFlyString const& name) const
 }
 
 // 14.2.3 BlockDeclarationInstantiation ( code, env ), https://tc39.es/ecma262/#sec-blockdeclarationinstantiation
-void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Environment* environment) const
+void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment) const
 {
     // See also B.3.2.6 Changes to BlockDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-blockdeclarationinstantiation
-    auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
     VERIFY(environment);
@@ -4760,9 +4745,8 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
 }
 
 // 16.1.7 GlobalDeclarationInstantiation ( script, env ), https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
-ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& interpreter, GlobalEnvironment& global_environment) const
+ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, GlobalEnvironment& global_environment) const
 {
-    auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
@@ -4981,14 +4965,14 @@ DeprecatedString SourceRange::filename() const
     return code->filename().to_deprecated_string();
 }
 
-NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
+NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens)
 {
-    return ASTNodeWithTailArray::create<CallExpression>(arguments.size(), move(source_range), move(callee), arguments);
+    return ASTNodeWithTailArray::create<CallExpression>(arguments.size(), move(source_range), move(callee), arguments, invocation_style, inside_parens);
 }
 
-NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
+NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens)
 {
-    return ASTNodeWithTailArray::create<NewExpression>(arguments.size(), move(source_range), move(callee), arguments);
+    return ASTNodeWithTailArray::create<NewExpression>(arguments.size(), move(source_range), move(callee), arguments, invocation_style, inside_parens);
 }
 
 }

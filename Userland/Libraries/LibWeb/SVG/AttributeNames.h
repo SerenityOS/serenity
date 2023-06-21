@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +22,8 @@ namespace Web::SVG::AttributeNames {
     E(contentStyleType)             \
     E(cx)                           \
     E(cy)                           \
+    E(dx)                           \
+    E(dy)                           \
     E(diffuseConstant)              \
     E(edgeMode)                     \
     E(filterUnits)                  \
@@ -32,6 +34,7 @@ namespace Web::SVG::AttributeNames {
     E(gradientTransform)            \
     E(gradientUnits)                \
     E(height)                       \
+    E(href)                         \
     E(kernelMatrix)                 \
     E(kernelUnitLength)             \
     E(keyPoints)                    \
@@ -46,6 +49,7 @@ namespace Web::SVG::AttributeNames {
     E(maskUnits)                    \
     E(numOctaves)                   \
     E(offset)                       \
+    E(opacity)                      \
     E(pathLength)                   \
     E(patternContentUnits)          \
     E(patternTransform)             \

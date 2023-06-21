@@ -7,7 +7,7 @@
  */
 
 #include <Kernel/FileSystem/ProcFS/Inode.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -124,7 +124,6 @@ ErrorOr<void> ProcFSInode::traverse_as_root_directory(Function<ErrorOr<void>(Fil
 
 ErrorOr<void> ProcFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(procfs().m_lock);
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
         auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
@@ -174,7 +173,6 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView n
 
 ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup(StringView name)
 {
-    MutexLocker locker(procfs().m_lock);
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
         auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
@@ -396,7 +394,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     case Type::ProcessDirectory: {
@@ -410,7 +411,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     case Type::ProcessSubdirectory: {
@@ -424,7 +428,10 @@ InodeMetadata ProcFSInode::metadata() const
         metadata.uid = credentials->uid();
         metadata.gid = credentials->gid();
         metadata.size = 0;
-        metadata.mtime = TimeManagement::now();
+        auto creation_time = process->creation_time();
+        metadata.atime = creation_time;
+        metadata.ctime = creation_time;
+        metadata.mtime = creation_time;
         break;
     }
     }

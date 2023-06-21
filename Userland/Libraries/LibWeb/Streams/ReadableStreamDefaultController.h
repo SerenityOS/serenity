@@ -25,7 +25,7 @@ public:
     explicit ReadableStreamDefaultController(JS::Realm&);
     virtual ~ReadableStreamDefaultController() override = default;
 
-    Optional<float> desired_size();
+    Optional<double> desired_size();
 
     WebIDL::ExceptionOr<void> close();
     WebIDL::ExceptionOr<void> enqueue(JS::Value chunk);
@@ -54,8 +54,8 @@ public:
     bool started() const { return m_started; }
     void set_started(bool value) { m_started = value; }
 
-    size_t strategy_hwm() const { return m_strategy_hwm; }
-    void set_strategy_hwm(size_t value) { m_strategy_hwm = value; }
+    double strategy_hwm() const { return m_strategy_hwm; }
+    void set_strategy_hwm(double value) { m_strategy_hwm = value; }
 
     auto& strategy_size_algorithm() { return m_strategy_size_algorithm; }
     void set_strategy_size_algorithm(Optional<SizeAlgorithm> value) { m_strategy_size_algorithm = move(value); }
@@ -106,7 +106,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-strategyhwm
     // A number supplied to the constructor as part of the stream’s queuing strategy, indicating the point at which the stream will apply backpressure to its underlying source
-    size_t m_strategy_hwm { 0 };
+    double m_strategy_hwm { 0 };
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-strategysizealgorithm
     // An algorithm to calculate the size of enqueued chunks, as part of the stream’s queuing strategy

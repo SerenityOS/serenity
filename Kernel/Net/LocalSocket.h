@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
-#include <Kernel/DoubleBuffer.h>
+#include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
 namespace Kernel {

@@ -15,6 +15,7 @@
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
+#include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
@@ -131,7 +132,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, action.is_checked());
     };
 
-    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, true);
+    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, Browser::default_show_bookmarks_bar);
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
@@ -213,9 +214,9 @@ void BrowserWindow::build_menus()
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(Browser::url_from_user_input(g_home_url)); }, this);
-    m_go_home_action->set_status_tip("Go to home page");
+    m_go_home_action->set_status_tip("Go to home page"_string.release_value_but_fixme_should_propagate_errors());
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
-    m_reload_action->set_status_tip("Reload current page");
+    m_reload_action->set_status_tip("Reload current page"_string.release_value_but_fixme_should_propagate_errors());
 
     auto& go_menu = add_menu("&Go"_short_string);
     go_menu.add_action(*m_go_back_action);
@@ -240,21 +241,21 @@ void BrowserWindow::build_menus()
             active_tab().view().get_source();
         },
         this);
-    m_view_source_action->set_status_tip("View source code of the current page");
+    m_view_source_action->set_status_tip("View source code of the current page"_string.release_value_but_fixme_should_propagate_errors());
 
     m_inspect_dom_tree_action = GUI::Action::create(
         "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
-    m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page");
+    m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page"_string.release_value_but_fixme_should_propagate_errors());
 
     m_inspect_dom_node_action = GUI::Action::create(
         "&Inspect Element", g_icon_bag.inspect, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
-    m_inspect_dom_node_action->set_status_tip("Open inspector for this element");
+    m_inspect_dom_node_action->set_status_tip("Open inspector for this element"_string.release_value_but_fixme_should_propagate_errors());
 
     auto& inspect_menu = add_menu("&Inspect"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(*m_view_source_action);
@@ -265,7 +266,7 @@ void BrowserWindow::build_menus()
             active_tab().show_console_window();
         },
         this);
-    js_console_action->set_status_tip("Open JavaScript console for this page");
+    js_console_action->set_status_tip("Open JavaScript console for this page"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(js_console_action);
 
     auto storage_window_action = GUI::Action::create(
@@ -273,7 +274,7 @@ void BrowserWindow::build_menus()
             active_tab().show_storage_inspector();
         },
         this);
-    storage_window_action->set_status_tip("Show Storage inspector for this page");
+    storage_window_action->set_status_tip("Show Storage inspector for this page"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(storage_window_action);
 
     auto history_window_action = GUI::Action::create(
@@ -281,14 +282,14 @@ void BrowserWindow::build_menus()
             active_tab().show_history_inspector();
         },
         this);
-    storage_window_action->set_status_tip("Show History inspector for this tab");
+    storage_window_action->set_status_tip("Show History inspector for this tab"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(history_window_action);
 
     auto& settings_menu = add_menu("&Settings"_string.release_value_but_fixme_should_propagate_errors());
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv)).release_value_but_fixme_should_propagate_errors();
+            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
@@ -310,7 +311,7 @@ void BrowserWindow::build_menus()
     auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme"_string.release_value_but_fixme_should_propagate_errors());
     color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
-        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
+        auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
         m_color_scheme_actions.set_exclusive(true);
 
         auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
@@ -364,6 +365,11 @@ void BrowserWindow::build_menus()
             active_tab().view().debug_request("dump-style-sheets");
         },
         this));
+    debug_menu.add_action(GUI::Action::create(
+        "Dump &All Resolved Styles", g_icon_bag.filetype_css, [this](auto&) {
+            active_tab().view().debug_request("dump-all-resolved-styles");
+        },
+        this));
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
         active_tab().m_history.dump();
     }));
@@ -397,26 +403,26 @@ void BrowserWindow::build_menus()
     m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
         active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
-    m_disable_user_agent_spoofing->set_status_tip(Web::default_user_agent);
+    m_disable_user_agent_spoofing->set_status_tip(String::from_utf8(Web::default_user_agent).release_value_but_fixme_should_propagate_errors());
     spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
     spoof_user_agent_menu.set_icon(g_icon_bag.spoof);
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
     m_disable_user_agent_spoofing->set_checked(true);
 
-    auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto& user_agent) {
+    auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto user_agent) {
         auto action = GUI::Action::create_checkable(name, [this, user_agent](auto&) {
             active_tab().view().debug_request("spoof-user-agent", user_agent);
         });
-        action->set_status_tip(user_agent);
+        action->set_status_tip(String::from_utf8(user_agent).release_value_but_fixme_should_propagate_errors());
         spoof_user_agent_menu.add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
-    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36");
-    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0");
-    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15");
-    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36");
-    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
-    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
+    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"sv);
+    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"sv);
+    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15"sv);
+    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36"sv);
+    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0"sv);
+    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"sv);
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         String user_agent;
@@ -425,7 +431,7 @@ void BrowserWindow::build_menus()
             return;
         }
         active_tab().view().debug_request("spoof-user-agent", user_agent.to_deprecated_string());
-        action.set_status_tip(user_agent.to_deprecated_string());
+        action.set_status_tip(user_agent);
     });
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
@@ -504,7 +510,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                     action->set_checked(true);
                     search_engine_set = true;
                 }
-                action->set_status_tip(url_format);
+                action->set_status_tip(TRY(String::from_deprecated_string(url_format)));
             }
         }
     }
@@ -525,14 +531,14 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 
         g_search_engine = search_engine.to_deprecated_string();
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
-        action.set_status_tip(search_engine.to_deprecated_string());
+        action.set_status_tip(search_engine);
     });
     search_engine_menu.add_action(custom_search_engine_action);
     m_search_engine_actions.add_action(custom_search_engine_action);
 
     if (!search_engine_set && !g_search_engine.is_empty()) {
         custom_search_engine_action->set_checked(true);
-        custom_search_engine_action->set_status_tip(g_search_engine);
+        custom_search_engine_action->set_status_tip(TRY(String::from_deprecated_string(g_search_engine)));
     }
 
     return {};

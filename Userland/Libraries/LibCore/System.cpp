@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,7 +13,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -378,6 +377,22 @@ ErrorOr<struct stat> fstat(int fd)
     if (::fstat(fd, &st) < 0)
         return Error::from_syscall("fstat"sv, -errno);
     return st;
+}
+
+ErrorOr<struct stat> fstatat(int fd, StringView path, int flags)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("fstatat"sv, -EFAULT);
+
+    struct stat st = {};
+#ifdef AK_OS_SERENITY
+    Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, fd, !(flags & AT_SYMLINK_NOFOLLOW) };
+    int rc = syscall(SC_stat, &params);
+#else
+    DeprecatedString path_string = path;
+    int rc = ::fstatat(fd, path_string.characters(), &st, flags);
+#endif
+    HANDLE_SYSCALL_RETURN_VALUE("fstatat", rc, st);
 }
 
 ErrorOr<int> fcntl(int fd, int command, ...)
@@ -1032,7 +1047,7 @@ ErrorOr<String> mkdtemp(Span<char> pattern)
         return Error::from_errno(errno);
     }
 
-    return String::from_utf8({ path, strlen(path) });
+    return String::from_utf8(StringView { path, strlen(path) });
 }
 
 ErrorOr<void> rename(StringView old_path, StringView new_path)
@@ -1247,20 +1262,21 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
         return {};
     };
 
-    DeprecatedString exec_filename;
-
+    StringView exec_filename;
+    String resolved_executable_path;
     if (search_in_path == SearchInPath::Yes) {
-        auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename);
+        auto executable_or_error = resolve_executable_from_environment(filename);
 
-        if (!maybe_executable.has_value())
-            return ENOENT;
+        if (executable_or_error.is_error())
+            return executable_or_error.release_error();
 
-        exec_filename = maybe_executable.release_value();
+        resolved_executable_path = executable_or_error.release_value();
+        exec_filename = resolved_executable_path;
     } else {
-        exec_filename = filename.to_deprecated_string();
+        exec_filename = filename;
     }
 
-    params.path = { exec_filename.characters(), exec_filename.length() };
+    params.path = { exec_filename.characters_without_null_termination(), exec_filename.length() };
     TRY(run_exec(params));
     VERIFY_NOT_REACHED();
 #else
@@ -1289,14 +1305,15 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
-            auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename_string);
+            auto executable_or_error = resolve_executable_from_environment(filename_string);
 
-            if (!maybe_executable.has_value()) {
-                errno_rollback.set_override_rollback_value(ENOENT);
-                return Error::from_errno(ENOENT);
+            if (executable_or_error.is_error()) {
+                errno_rollback.set_override_rollback_value(executable_or_error.error().code());
+                return executable_or_error.release_error();
             }
 
-            rc = ::execve(maybe_executable.release_value().characters(), argv.data(), envp.data());
+            DeprecatedString executable = executable_or_error.release_value().to_deprecated_string();
+            rc = ::execve(executable.characters(), argv.data(), envp.data());
 #    else
             rc = ::execvpe(filename_string.characters(), argv.data(), envp.data());
 #    endif
@@ -1638,5 +1655,40 @@ ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length)
     return {};
 }
 #endif
+
+// This constant is copied from LibFileSystem. We cannot use or even include it directly,
+// because that would cause a dependency of LibCore on LibFileSystem, effectively rendering
+// the distinction between these libraries moot.
+static constexpr StringView INTERNAL_DEFAULT_PATH_SV = "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv;
+
+ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags)
+{
+    if (filename.is_empty())
+        return Error::from_errno(ENOENT);
+
+    // Paths that aren't just a file name generally count as already resolved.
+    if (filename.contains('/')) {
+        TRY(Core::System::access(filename, X_OK, flags));
+        return TRY(String::from_utf8(filename));
+    }
+
+    auto const* path_str = ::getenv("PATH");
+    StringView path;
+    if (path_str)
+        path = { path_str, strlen(path_str) };
+    if (path.is_empty())
+        path = INTERNAL_DEFAULT_PATH_SV;
+
+    auto directories = path.split_view(':');
+
+    for (auto directory : directories) {
+        auto file = TRY(String::formatted("{}/{}", directory, filename));
+
+        if (!Core::System::access(file, X_OK, flags).is_error())
+            return file;
+    }
+
+    return Error::from_errno(ENOENT);
+}
 
 }

@@ -22,7 +22,8 @@ public:
 
     bool is_enabled() const;
     ErrorOr<void> activate();
-    ErrorOr<void> did_exit(int exit_code);
+    // Note: This is a `status` as in POSIX's wait syscall, not an exit-code.
+    ErrorOr<void> did_exit(int status);
 
     static Service* find_by_pid(pid_t);
 
@@ -32,6 +33,8 @@ private:
     ErrorOr<void> spawn(int socket_fd = -1);
 
     ErrorOr<void> determine_account(int fd);
+
+    ErrorOr<void> change_privileges();
 
     /// SocketDescriptor describes the details of a single socket that was
     /// requested by a service.
@@ -74,6 +77,7 @@ private:
 
     // The resolved user account to run this service as.
     Optional<Core::Account> m_account;
+    bool m_must_login { false };
 
     // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };

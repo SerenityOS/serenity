@@ -51,7 +51,7 @@ static ErrorOr<int> weekday_index(StringView weekday_name)
 static ErrorOr<int> default_weekday_start()
 {
     auto calendar_config = TRY(Core::ConfigFile::open_for_app("Calendar"sv));
-    String default_first_day_of_week = TRY(String::from_utf8(calendar_config->read_entry("View"sv, "FirstDayOfWeek"sv, "Sunday"sv)));
+    String default_first_day_of_week = TRY(String::from_deprecated_string(calendar_config->read_entry("View"sv, "FirstDayOfWeek"sv, "Sunday"sv)));
     return TRY(weekday_index(default_first_day_of_week));
 }
 

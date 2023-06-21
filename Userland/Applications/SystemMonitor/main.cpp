@@ -265,7 +265,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return result.release_error();
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
-    TRY(Core::System::unveil("/bin/HackStudio", "rx"));
+    // HackStudio doesn't exist in the minimal build configuration.
+    if (auto result = Core::System::unveil("/bin/HackStudio", "rx"); result.is_error() && result.error().code() != ENOENT)
+        return result.release_error();
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
@@ -289,8 +291,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
-        statusbar->set_text(0, DeprecatedString::formatted("Processes: {}", process_count));
-        statusbar->set_text(1, DeprecatedString::formatted("Threads: {}", thread_count));
+        statusbar->set_text(0, String::formatted("Processes: {}", process_count).release_value_but_fixme_should_propagate_errors());
+        statusbar->set_text(1, String::formatted("Threads: {}", thread_count).release_value_but_fixme_should_propagate_errors());
     };
 
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
@@ -301,7 +303,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column) {
         process_table_view.set_column_visible(column,
-            Config::read_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column),
+            Config::read_bool("SystemMonitor"sv, "ProcessTableColumns"sv, TRY(process_model->column_name(column)),
                 process_model->is_default_column(column)));
     }
 
@@ -453,7 +455,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Config::write_i32("SystemMonitor"sv, "Monitor"sv, "Frequency"sv, seconds);
             refresh_timer->restart(seconds * 1000);
         });
-        action->set_status_tip(DeprecatedString::formatted("Refresh every {} seconds", seconds));
+        action->set_status_tip(TRY(String::formatted("Refresh every {} seconds", seconds)));
         action->set_checked(frequency == seconds);
         frequency_action_group.add_action(*action);
         TRY(frequency_menu->try_add_action(*action));
@@ -514,7 +516,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // to be loaded the next time the application is opened.
     auto& process_table_header = process_table_view.column_header();
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
-        Config::write_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column), process_table_header.is_section_visible(column));
+        Config::write_bool("SystemMonitor"sv, "ProcessTableColumns"sv, TRY(process_model->column_name(column)), process_table_header.is_section_visible(column));
 
     return exec;
 }
@@ -603,7 +605,7 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
             sum_cpu += cpus[i]->total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();
-        statusbar->set_text(2, DeprecatedString::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));
+        statusbar->set_text(2, String::formatted("CPU usage: {}%", (int)roundf(cpu_usage)).release_value_but_fixme_should_propagate_errors());
     };
 
     auto& memory_graph = *graphs_container.find_descendant_of_type_named<SystemMonitor::GraphWidget>("memory_graph");

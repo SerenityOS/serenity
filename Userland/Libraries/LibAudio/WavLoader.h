@@ -14,17 +14,14 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibAudio/Loader.h>
+#include <LibAudio/RIFFTypes.h>
 
 namespace Audio {
 
-// constants for handling the WAV header data
-static constexpr unsigned const WAVE_FORMAT_PCM = 0x0001;        // PCM
-static constexpr unsigned const WAVE_FORMAT_IEEE_FLOAT = 0x0003; // IEEE float
-static constexpr unsigned const WAVE_FORMAT_ALAW = 0x0006;       // 8-bit ITU-T G.711 A-law
-static constexpr unsigned const WAVE_FORMAT_MULAW = 0x0007;      // 8-bit ITU-T G.711 µ-law
-static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined by SubFormat
-
-// Parses and reads audio data from a WAV file.
+// Loader for the WAVE (file extension .wav) uncompressed audio file format.
+// WAVE uses the Microsoft RIFF container.
+// Original RIFF Spec, without later extensions: https://www.aelius.com/njh/wavemetatools/doc/riffmci.pdf
+// More concise WAVE information plus various spec links: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
@@ -50,6 +47,7 @@ private:
     MaybeLoaderError initialize();
 
     MaybeLoaderError parse_header();
+    MaybeLoaderError load_wav_info_block(Vector<RIFF::Chunk> info_chunks);
 
     LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
     template<typename SampleReader>

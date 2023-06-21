@@ -6,7 +6,7 @@
  */
 
 #include <Kernel/FileSystem/RAMFS/Inode.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -39,11 +39,11 @@ public:
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_matches.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
 
-    virtual String column_name(int column) const override
+    virtual ErrorOr<String> column_name(int column) const override
     {
         switch (column) {
         case Column::Filename:
-            return "Filename"_string.release_value_but_fixme_should_propagate_errors();
+            return TRY("Filename"_string);
         case Column::Location:
             return "#"_short_string;
         case Column::MatchedText:

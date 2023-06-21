@@ -1419,7 +1419,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
-        if (is<FunctionExpression>(*expression)) {
+        if (is<NewExpression>(*expression)) {
+            auto& new_expression = static_cast<NewExpression&>(*static_cast<NonnullRefPtr<Expression>>(expression));
+            new_expression.set_inside_parens();
+        } else if (is<FunctionExpression>(*expression)) {
             auto& function = static_cast<FunctionExpression const&>(*expression);
             if (function.kind() == FunctionKind::Generator && function.name() == "yield"sv)
                 syntax_error("function is not allowed to be called 'yield' in this context", function.source_range().start);
@@ -1458,11 +1461,11 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
     case TokenType::BigIntLiteral:
         return { create_ast_node<BigIntLiteral>({ m_source_code, rule_start.position(), position() }, consume().value()) };
     case TokenType::BoolLiteral:
-        return { create_ast_node<BooleanLiteral>({ m_source_code, rule_start.position(), position() }, consume().bool_value()) };
+        return { create_ast_node<BooleanLiteral>({ m_source_code, rule_start.position(), position() }, consume_and_allow_division().bool_value()) };
     case TokenType::StringLiteral:
         return { parse_string_literal(consume()) };
     case TokenType::NullLiteral:
-        consume();
+        consume_and_allow_division();
         return { create_ast_node<NullLiteral>({ m_source_code, rule_start.position(), position() }) };
     case TokenType::CurlyOpen:
         return { parse_object_expression() };
@@ -2168,7 +2171,7 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
             expected("IdentifierName");
         }
 
-        return create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_source_code, rule_start.position(), position() }, consume().DeprecatedFlyString_value()));
+        return create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_source_code, rule_start.position(), position() }, consume_and_allow_division().DeprecatedFlyString_value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
         auto expression = create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), parse_expression(0), true);
@@ -2221,15 +2224,18 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
         return parse_assignment_expression(AssignmentOp::NullishAssignment, move(lhs), min_precedence, associativity, forbidden);
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs), forbidden);
-    case TokenType::QuestionMarkPeriod:
-        // FIXME: This should allow `(new Foo)?.bar', but as our parser strips parenthesis,
-        //        we can't really tell if `lhs' was parenthesized at this point.
-        if (is<NewExpression>(lhs.ptr())) {
-            syntax_error("'new' cannot be used with optional chaining", position());
-            consume();
-            return lhs;
+    case TokenType::QuestionMarkPeriod: {
+        auto const* lhs_expression = lhs.ptr();
+        if (is<NewExpression>(lhs_expression)) {
+            auto const& new_expression = static_cast<NewExpression const&>(*lhs_expression);
+            if (!new_expression.is_parenthesized() && !new_expression.is_inside_parens()) {
+                syntax_error("'new' cannot be used with optional chaining", position());
+                consume();
+                return lhs;
+            }
         }
         return parse_optional_chain(move(lhs));
+    }
     default:
         expected("secondary expression");
         consume();
@@ -2380,7 +2386,7 @@ NonnullRefPtr<Expression const> Parser::parse_call_expression(NonnullRefPtr<Expr
     if (is<SuperExpression>(*lhs))
         return create_ast_node<SuperCall>({ m_source_code, rule_start.position(), position() }, move(arguments));
 
-    return CallExpression::create({ m_source_code, rule_start.position(), position() }, move(lhs), arguments.span());
+    return CallExpression::create({ m_source_code, rule_start.position(), position() }, move(lhs), arguments.span(), InvocationStyleEnum::Parenthesized, InsideParenthesesEnum::NotInsideParentheses);
 }
 
 NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
@@ -2394,8 +2400,10 @@ NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
 
     Vector<CallExpression::Argument> arguments;
 
-    if (match(TokenType::ParenOpen)) {
-        consume(TokenType::ParenOpen);
+    auto is_parenthesized = match(TokenType::ParenOpen);
+
+    if (is_parenthesized) {
+        consume();
         while (match_expression() || match(TokenType::TripleDot)) {
             if (match(TokenType::TripleDot)) {
                 consume();
@@ -2410,7 +2418,9 @@ NonnullRefPtr<NewExpression const> Parser::parse_new_expression()
         consume(TokenType::ParenClose);
     }
 
-    return NewExpression::create({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments));
+    InvocationStyleEnum invocation_style = is_parenthesized ? InvocationStyleEnum::Parenthesized : InvocationStyleEnum::NotParenthesized;
+
+    return NewExpression::create({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments), invocation_style, InsideParenthesesEnum::NotInsideParentheses);
 }
 
 NonnullRefPtr<YieldExpression const> Parser::parse_yield_expression()
@@ -4013,6 +4023,18 @@ Token Parser::consume()
 {
     auto old_token = m_state.current_token;
     m_state.current_token = m_state.lexer.next();
+
+    // If an IdentifierName is not parsed as an Identifier a slash after it should not be a division
+    if (old_token.is_identifier_name() && (m_state.current_token.type() == TokenType::Slash || m_state.current_token.type() == TokenType::SlashEquals)) {
+        m_state.current_token = m_state.lexer.force_slash_as_regex();
+    }
+    return old_token;
+}
+
+Token Parser::consume_and_allow_division()
+{
+    auto old_token = m_state.current_token;
+    m_state.current_token = m_state.lexer.next();
     // NOTE: This is the bare minimum needed to decide whether we might need an arguments object
     // in a function expression or declaration. ("might" because the AST implements some further
     // conditions from the spec that rule out the need for allocating one)
@@ -4057,26 +4079,26 @@ Token Parser::consume_identifier()
     if (match(TokenType::Let)) {
         if (m_state.strict_mode)
             syntax_error("'let' is not allowed as an identifier in strict mode");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Yield)) {
         if (m_state.strict_mode || m_state.in_generator_function_context)
             syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Await)) {
         if (m_program_type == Program::Type::Module || m_state.await_expression_is_valid || m_state.in_class_static_init_block)
             syntax_error("Identifier must not be a reserved word in modules ('await')");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Async))
-        return consume();
+        return consume_and_allow_division();
 
     expected("Identifier");
-    return consume();
+    return consume_and_allow_division();
 }
 
 // https://tc39.es/ecma262/#prod-IdentifierReference
@@ -4092,33 +4114,33 @@ Token Parser::consume_identifier_reference()
         if (m_program_type == Program::Type::Module && name == "await"sv)
             syntax_error("'await' is not allowed as an identifier in module");
 
-        return consume();
+        return consume_and_allow_division();
     }
 
     // See note in Parser::parse_identifier().
     if (match(TokenType::Let)) {
         if (m_state.strict_mode)
             syntax_error("'let' is not allowed as an identifier in strict mode");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Yield)) {
         if (m_state.strict_mode)
             syntax_error("Identifier reference may not be 'yield' in strict mode");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Await)) {
         if (m_program_type == Program::Type::Module)
             syntax_error("'await' is not allowed as an identifier in module");
-        return consume();
+        return consume_and_allow_division();
     }
 
     if (match(TokenType::Async))
-        return consume();
+        return consume_and_allow_division();
 
     expected(Token::name(TokenType::Identifier));
-    return consume();
+    return consume_and_allow_division();
 }
 
 Token Parser::consume(TokenType expected_type)
@@ -4126,7 +4148,7 @@ Token Parser::consume(TokenType expected_type)
     if (!match(expected_type)) {
         expected(Token::name(expected_type));
     }
-    auto token = consume();
+    auto token = expected_type == TokenType::Identifier ? consume_and_allow_division() : consume();
     if (expected_type == TokenType::Identifier) {
         if (m_state.strict_mode && is_strict_reserved_word(token.value()))
             syntax_error(DeprecatedString::formatted("Identifier must not be a reserved word in strict mode ('{}')", token.value()));
@@ -4834,5 +4856,4 @@ Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<To
 
 template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u16, Optional<Position> const&);
 template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u16, Optional<Position> const&);
-
 }

@@ -368,6 +368,26 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
         }
     }
 
+    if (request == "dump-all-resolved-styles") {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
+            Queue<Web::DOM::Node*> elements_to_visit;
+            elements_to_visit.enqueue(doc->document_element());
+            while (!elements_to_visit.is_empty()) {
+                auto element = elements_to_visit.dequeue();
+                for (auto& child : element->children_as_vector())
+                    elements_to_visit.enqueue(child.ptr());
+                if (element->is_element()) {
+                    auto styles = doc->style_computer().compute_style(*static_cast<Web::DOM::Element*>(element)).release_value_but_fixme_should_propagate_errors();
+                    dbgln("+ Element {}", element->debug_description());
+                    auto& properties = styles->properties();
+                    for (size_t i = 0; i < properties.size(); ++i)
+                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].has_value() ? properties[i]->style->to_string() : ""_short_string);
+                    dbgln("---");
+                }
+            }
+        }
+    }
+
     if (request == "collect-garbage") {
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
     }
@@ -424,7 +444,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
     top_context.for_each_in_inclusive_subtree([&](auto& ctx) {
         if (ctx.active_document() != nullptr) {
-            ctx.active_document()->set_inspected_node(nullptr);
+            ctx.active_document()->set_inspected_node(nullptr, {});
         }
         return IterationDecision::Continue;
     });
@@ -435,8 +455,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         return { false, "", "", "", "" };
     }
 
-    // FIXME: Pass the pseudo-element here.
-    node->document().set_inspected_node(node);
+    node->document().set_inspected_node(node, pseudo_element);
 
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
@@ -484,21 +503,21 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             auto box_model = box->box_model();
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
-            MUST(serializer.add("padding_top"sv, box_model.padding.top.value()));
-            MUST(serializer.add("padding_right"sv, box_model.padding.right.value()));
-            MUST(serializer.add("padding_bottom"sv, box_model.padding.bottom.value()));
-            MUST(serializer.add("padding_left"sv, box_model.padding.left.value()));
-            MUST(serializer.add("margin_top"sv, box_model.margin.top.value()));
-            MUST(serializer.add("margin_right"sv, box_model.margin.right.value()));
-            MUST(serializer.add("margin_bottom"sv, box_model.margin.bottom.value()));
-            MUST(serializer.add("margin_left"sv, box_model.margin.left.value()));
-            MUST(serializer.add("border_top"sv, box_model.border.top.value()));
-            MUST(serializer.add("border_right"sv, box_model.border.right.value()));
-            MUST(serializer.add("border_bottom"sv, box_model.border.bottom.value()));
-            MUST(serializer.add("border_left"sv, box_model.border.left.value()));
+            MUST(serializer.add("padding_top"sv, box_model.padding.top.to_double()));
+            MUST(serializer.add("padding_right"sv, box_model.padding.right.to_double()));
+            MUST(serializer.add("padding_bottom"sv, box_model.padding.bottom.to_double()));
+            MUST(serializer.add("padding_left"sv, box_model.padding.left.to_double()));
+            MUST(serializer.add("margin_top"sv, box_model.margin.top.to_double()));
+            MUST(serializer.add("margin_right"sv, box_model.margin.right.to_double()));
+            MUST(serializer.add("margin_bottom"sv, box_model.margin.bottom.to_double()));
+            MUST(serializer.add("margin_left"sv, box_model.margin.left.to_double()));
+            MUST(serializer.add("border_top"sv, box_model.border.top.to_double()));
+            MUST(serializer.add("border_right"sv, box_model.border.right.to_double()));
+            MUST(serializer.add("border_bottom"sv, box_model.border.bottom.to_double()));
+            MUST(serializer.add("border_left"sv, box_model.border.left.to_double()));
             if (auto* paintable_box = box->paintable_box()) {
-                MUST(serializer.add("content_width"sv, paintable_box->content_width().value()));
-                MUST(serializer.add("content_height"sv, paintable_box->content_height().value()));
+                MUST(serializer.add("content_width"sv, paintable_box->content_width().to_double()));
+                MUST(serializer.add("content_height"sv, paintable_box->content_height().to_double()));
             } else {
                 MUST(serializer.add("content_width"sv, 0));
                 MUST(serializer.add("content_height"sv, 0));
@@ -636,6 +655,16 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     return builder.to_deprecated_string();
 }
 
+Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return DeprecatedString { "(no DOM tree)" };
+    if (!document->body())
+        return DeprecatedString { "(no body)" };
+    return document->body()->inner_text();
+}
+
 void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
 {
     Web::ContentFilter::the().set_patterns(filters).release_value_but_fixme_should_propagate_errors();
@@ -756,19 +785,24 @@ void ConnectionFromClient::prompt_closed(Optional<String> const& response)
     m_page_host->prompt_closed(response);
 }
 
-void ConnectionFromClient::toggle_video_play_state()
+void ConnectionFromClient::toggle_media_play_state()
 {
-    m_page_host->toggle_video_play_state().release_value_but_fixme_should_propagate_errors();
+    m_page_host->toggle_media_play_state().release_value_but_fixme_should_propagate_errors();
 }
 
-void ConnectionFromClient::toggle_video_loop_state()
+void ConnectionFromClient::toggle_media_mute_state()
 {
-    m_page_host->toggle_video_loop_state().release_value_but_fixme_should_propagate_errors();
+    m_page_host->toggle_media_mute_state();
 }
 
-void ConnectionFromClient::toggle_video_controls_state()
+void ConnectionFromClient::toggle_media_loop_state()
 {
-    m_page_host->toggle_video_controls_state().release_value_but_fixme_should_propagate_errors();
+    m_page_host->toggle_media_loop_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::toggle_media_controls_state()
+{
+    m_page_host->toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::inspect_accessibility_tree()

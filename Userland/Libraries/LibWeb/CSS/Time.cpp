@@ -15,13 +15,13 @@ Time::Time(int value, Type type)
 {
 }
 
-Time::Time(float value, Type type)
+Time::Time(double value, Type type)
     : m_type(type)
     , m_value(value)
 {
 }
 
-Time Time::make_seconds(float value)
+Time Time::make_seconds(double value)
 {
     return { value, Type::S };
 }
@@ -33,16 +33,27 @@ Time Time::percentage_of(Percentage const& percentage) const
 
 ErrorOr<String> Time::to_string() const
 {
-    return String::formatted("{}{}", m_value, unit_name());
+    return String::formatted("{}s", to_seconds());
 }
 
-float Time::to_seconds() const
+double Time::to_seconds() const
 {
     switch (m_type) {
     case Type::S:
         return m_value;
     case Type::Ms:
-        return m_value / 1000.0f;
+        return m_value / 1000.0;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+double Time::to_milliseconds() const
+{
+    switch (m_type) {
+    case Type::S:
+        return m_value * 1000.0;
+    case Type::Ms:
+        return m_value;
     }
     VERIFY_NOT_REACHED();
 }

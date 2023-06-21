@@ -43,8 +43,9 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> slice(Optional<i64> start = {}, Optional<i64> end = {}, Optional<String> const& content_type = {});
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> stream();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> text();
-    JS::Promise* array_buffer();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> array_buffer();
 
     ReadonlyBytes bytes() const { return m_byte_buffer.bytes(); }
 
@@ -55,6 +56,8 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
 private:
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> get_stream();
+
     explicit Blob(JS::Realm&);
 
     ByteBuffer m_byte_buffer {};

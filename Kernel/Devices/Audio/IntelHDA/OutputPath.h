@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Devices/Audio/Channel.h>
 #include <Kernel/Devices/Audio/IntelHDA/Stream.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel::Audio::IntelHDA {
 

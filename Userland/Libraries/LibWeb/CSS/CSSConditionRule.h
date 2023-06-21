@@ -23,6 +23,7 @@ public:
     virtual bool condition_matches() const = 0;
 
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const override;
+    virtual void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const override;
 
 protected:
     CSSConditionRule(JS::Realm&, CSSRuleList&);

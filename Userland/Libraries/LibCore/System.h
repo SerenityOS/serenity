@@ -116,6 +116,7 @@ ErrorOr<sig_t> signal(int signal, sig_t handler);
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
 #endif
 ErrorOr<struct stat> fstat(int fd);
+ErrorOr<struct stat> fstatat(int fd, StringView path, int flags);
 ErrorOr<int> fcntl(int fd, int command, ...);
 ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
 ErrorOr<void> munmap(void* address, size_t);
@@ -236,9 +237,9 @@ ErrorOr<int> poll(Span<struct pollfd>, int timeout);
 
 class AddressInfoVector {
     AK_MAKE_NONCOPYABLE(AddressInfoVector);
+    AK_MAKE_DEFAULT_MOVABLE(AddressInfoVector);
 
 public:
-    AddressInfoVector(AddressInfoVector&&) = default;
     ~AddressInfoVector() = default;
 
     ReadonlySpan<struct addrinfo> addresses() const { return m_addresses; }
@@ -265,5 +266,7 @@ ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servnam
 #ifdef AK_OS_SERENITY
 ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length);
 #endif
+
+ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags = 0);
 
 }

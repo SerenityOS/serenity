@@ -11,7 +11,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/Plan9FS/Definitions.h>
 #include <Kernel/FileSystem/Plan9FS/Message.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

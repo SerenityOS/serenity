@@ -9,9 +9,16 @@
 #include <Applications/MouseSettings/HighlightWidgetGML.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 
-HighlightWidget::HighlightWidget()
+ErrorOr<NonnullRefPtr<HighlightWidget>> HighlightWidget::try_create()
 {
-    load_from_gml(highlight_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) HighlightWidget()));
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> HighlightWidget::setup()
+{
+    TRY(load_from_gml(highlight_widget_gml));
 
     m_highlight_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<MouseSettings::HighlightPreviewWidget>(palette());
 
@@ -41,6 +48,7 @@ HighlightWidget::HighlightWidget()
 
     m_highlight_preview->set_color(highlight_color());
     m_highlight_preview->set_radius(highlight_radius());
+    return {};
 }
 
 Gfx::Color HighlightWidget::highlight_color()

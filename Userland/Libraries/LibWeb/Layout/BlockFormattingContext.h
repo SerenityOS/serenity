@@ -39,7 +39,7 @@ public:
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
-    SpaceUsedByFloats space_used_by_floats(CSSPixels y) const;
+    SpaceUsedAndContainingMarginForFloats space_used_and_containing_margin_for_floats(CSSPixels y) const;
     SpaceUsedByFloats intrusion_by_floats_into_box(Box const&, CSSPixels y_in_box) const;
 
     virtual CSSPixels greatest_child_width(Box const&) const override;
@@ -52,12 +52,14 @@ public:
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
+    void resolve_vertical_box_model_metrics(Box const&);
+
 private:
     CSSPixels compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
 
     void compute_width_for_floating_box(Box const&, AvailableSpace const&);
 
-    void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const&, AvailableSpace const&);
+    void compute_width_for_block_level_replaced_element_in_normal_flow(Box const&, AvailableSpace const&);
 
     CSSPixels compute_table_box_width_inside_table_wrapper(Box const&, AvailableSpace const&);
 
@@ -66,11 +68,19 @@ private:
     void layout_block_level_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
     void layout_inline_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
 
-    static void resolve_vertical_box_model_metrics(Box const& box, LayoutState&);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const&);
     void place_block_level_element_in_normal_flow_vertically(Box const&, CSSPixels y);
 
     void layout_list_item_marker(ListItemBox const&);
+
+    void measure_scrollable_overflow(Box const&, CSSPixels& bottom_edge, CSSPixels& right_edge) const;
+
+    enum class DidIntroduceClearance {
+        Yes,
+        No,
+    };
+
+    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Box const& child_box);
 
     enum class FloatSide {
         Left,

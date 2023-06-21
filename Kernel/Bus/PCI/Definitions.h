@@ -13,7 +13,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::PCI {
 

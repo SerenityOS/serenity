@@ -32,6 +32,8 @@ void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPha
 
     auto& graphics_element = layout_box().dom_node();
 
+    if (auto fill_rule = graphics_element.fill_rule(); fill_rule.has_value())
+        context.svg_context().set_fill_rule(*fill_rule);
     if (auto fill_color = graphics_element.fill_color(); fill_color.has_value())
         context.svg_context().set_fill_color(*fill_color);
     if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value())

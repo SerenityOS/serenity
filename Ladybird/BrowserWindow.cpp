@@ -28,12 +28,24 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+static QIcon const& app_icon()
+{
+    static QIcon icon;
+    if (icon.isNull()) {
+        QPixmap pixmap;
+        pixmap.load(":/Icons/ladybird.png");
+        icon = QIcon(pixmap);
+    }
+    return icon;
+}
+
+BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)
-
+    , m_use_javascript_bytecode(use_javascript_bytecode)
 {
+    setWindowIcon(app_icon());
     m_tabs_container = new QTabWidget(this);
     m_tabs_container->installEventFilter(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -54,6 +66,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
+    auto* open_file_action = new QAction("&Open File...", this);
+    open_file_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-folder-open.png").arg(s_serenity_resource_root.characters())));
+    open_file_action->setShortcut(QKeySequence(QKeySequence::StandardKey::Open));
+    menu->addAction(open_file_action);
+
+    menu->addSeparator();
+
     auto* quit_action = new QAction("&Quit", this);
     quit_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Quit));
     menu->addAction(quit_action);
@@ -71,6 +90,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     m_select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
     edit_menu->addAction(m_select_all_action);
     QObject::connect(m_select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
+
+    edit_menu->addSeparator();
 
     auto* settings_action = new QAction("&Settings", this);
     settings_action->setIcon(QIcon(QString("%1/res/icons/16x16/settings.png").arg(s_serenity_resource_root.characters())));
@@ -208,6 +229,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("dump-style-sheets");
     });
 
+    auto* dump_styles_action = new QAction("Dump All Resolved Styles", this);
+    dump_styles_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
+    debug_menu->addAction(dump_styles_action);
+    QObject::connect(dump_styles_action, &QAction::triggered, this, [this] {
+        debug_request("dump-all-resolved-styles");
+    });
+
     auto* dump_history_action = new QAction("Dump History", this);
     dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_history_action);
@@ -327,13 +355,13 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
         new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
     });
+    QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
     });
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
-        setWindowIcon(m_tabs_container->tabIcon(index));
         set_current_tab(verify_cast<Tab>(m_tabs_container->widget(index)));
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
@@ -388,7 +416,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
 
 Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_tab)
 {
-    auto tab = make<Tab>(this, m_webdriver_content_ipc_path, m_enable_callgrind_profiling);
+    auto tab = make<Tab>(this, m_webdriver_content_ipc_path, m_enable_callgrind_profiling, m_use_javascript_bytecode);
     auto tab_ptr = tab.ptr();
     m_tabs.append(std::move(tab));
 
@@ -483,6 +511,11 @@ void BrowserWindow::close_tab(int index)
     });
 }
 
+void BrowserWindow::open_file()
+{
+    m_current_tab->open_file();
+}
+
 void BrowserWindow::close_current_tab()
 {
     auto count = m_tabs_container->count() - 1;
@@ -499,22 +532,14 @@ int BrowserWindow::tab_index(Tab* tab)
 
 void BrowserWindow::tab_title_changed(int index, QString const& title)
 {
-    if (title.isEmpty()) {
-        m_tabs_container->setTabText(index, "...");
-        if (m_tabs_container->currentIndex() == index)
-            setWindowTitle("Ladybird");
-    } else {
-        m_tabs_container->setTabText(index, title);
-        if (m_tabs_container->currentIndex() == index)
-            setWindowTitle(QString("%1 - Ladybird").arg(title));
-    }
+    m_tabs_container->setTabText(index, title);
+    if (m_tabs_container->currentIndex() == index)
+        setWindowTitle(QString("%1 - Ladybird").arg(title));
 }
 
 void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
     m_tabs_container->setTabIcon(index, icon);
-    if (m_tabs_container->currentIndex() == index)
-        setWindowIcon(icon);
 }
 
 void BrowserWindow::open_next_tab()

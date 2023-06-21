@@ -49,7 +49,7 @@ public:
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override { return m_array.size(); }
     virtual int column_count(ModelIndex const& = ModelIndex()) const override { return m_fields.size(); }
-    virtual String column_name(int column) const override { return m_fields[column].column_name; }
+    virtual ErrorOr<String> column_name(int column) const override { return m_fields[column].column_name; }
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const override;
     virtual void invalidate() override;
     virtual void update();

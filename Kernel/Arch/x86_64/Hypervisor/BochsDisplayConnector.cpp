@@ -10,9 +10,9 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Graphics/Bochs/Definitions.h>
-#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Devices/GPU/Bochs/Definitions.h>
+#include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
+#include <Kernel/Devices/GPU/Management.h>
 
 namespace Kernel {
 

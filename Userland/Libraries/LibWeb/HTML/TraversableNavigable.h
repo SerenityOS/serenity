@@ -30,8 +30,22 @@ public:
     bool running_nested_apply_history_step() const { return m_running_nested_apply_history_step; };
     VisibilityState system_visibility_state() const { return m_system_visibility_state; };
 
+    struct HistoryObjectLengthAndIndex {
+        size_t script_history_length;
+        size_t script_history_index;
+    };
+    HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
+
+    void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
+    void apply_pending_history_changes();
+
+    int get_the_used_step(int step) const;
+    Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
     Vector<int> get_all_used_history_steps() const;
     void clear_the_forward_session_history();
+    void traverse_the_history_by_delta(int delta);
+
+    void destroy_top_level_traversable();
 
 private:
     TraversableNavigable();

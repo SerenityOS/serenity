@@ -58,6 +58,9 @@ public:
 
     [[nodiscard]] SourceRange source_range() const;
     u32 start_offset() const { return m_start_offset; }
+    u32 end_offset() const { return m_end_offset; }
+
+    SourceCode const& source_code() const { return *m_source_code; }
 
     void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 
@@ -310,7 +313,7 @@ public:
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
-    void block_declaration_instantiation(Interpreter&, Environment*) const;
+    void block_declaration_instantiation(VM&, Environment*) const;
 
     ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
 
@@ -534,7 +537,7 @@ public:
     bool has_top_level_await() const { return m_has_top_level_await; }
     void set_has_top_level_await() { m_has_top_level_await = true; }
 
-    ThrowCompletionOr<void> global_declaration_instantiation(Interpreter&, GlobalEnvironment&) const;
+    ThrowCompletionOr<void> global_declaration_instantiation(VM&, GlobalEnvironment&) const;
 
 private:
     virtual bool is_program() const override { return true; }
@@ -1452,6 +1455,26 @@ private:
     NonnullRefPtr<ClassExpression const> m_class_expression;
 };
 
+// We use this class to mimic  Initializer : = AssignmentExpression of
+// 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
+class ClassFieldInitializerStatement final : public Statement {
+public:
+    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression, DeprecatedFlyString field_name)
+        : Statement(move(source_range))
+        , m_expression(move(expression))
+        , m_class_field_identifier_name(move(field_name))
+    {
+    }
+
+    virtual Completion execute(Interpreter& interpreter) const override;
+    virtual void dump(int) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+private:
+    NonnullRefPtr<Expression const> m_expression;
+    DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
+};
+
 class SpreadExpression final : public Expression {
 public:
     explicit SpreadExpression(SourceRange source_range, NonnullRefPtr<Expression const> target)
@@ -1484,13 +1507,26 @@ struct CallExpressionArgument {
     bool is_spread;
 };
 
+enum InvocationStyleEnum {
+    Parenthesized,
+    NotParenthesized,
+};
+
+enum InsideParenthesesEnum {
+    InsideParentheses,
+    NotInsideParentheses,
+};
+
 class CallExpression : public ASTNodeWithTailArray<CallExpression, Expression, CallExpressionArgument> {
     friend class ASTNodeWithTailArray;
+
+    InvocationStyleEnum m_invocation_style;
+    InsideParenthesesEnum m_inside_parentheses;
 
 public:
     using Argument = CallExpressionArgument;
 
-    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments);
+    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -1500,9 +1536,15 @@ public:
 
     ReadonlySpan<Argument> arguments() const { return tail_span(); }
 
+    bool is_parenthesized() const { return m_invocation_style == InvocationStyleEnum::Parenthesized; }
+    bool is_inside_parens() const { return m_inside_parentheses == InsideParenthesesEnum::InsideParentheses; }
+    void set_inside_parens() { m_inside_parentheses = InsideParenthesesEnum::InsideParentheses; }
+
 protected:
-    CallExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
+    CallExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens = InsideParenthesesEnum::NotInsideParentheses)
         : ASTNodeWithTailArray(move(source_range), arguments)
+        , m_invocation_style(invocation_style)
+        , m_inside_parentheses(inside_parens)
         , m_callee(move(callee))
     {
     }
@@ -1527,15 +1569,15 @@ class NewExpression final : public CallExpression {
     friend class ASTNodeWithTailArray;
 
 public:
-    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments);
+    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
     virtual Completion execute(Interpreter&) const override;
 
     virtual bool is_new_expression() const override { return true; }
 
 private:
-    NewExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
-        : CallExpression(move(source_range), move(callee), arguments)
+    NewExpression(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens)
+        : CallExpression(move(source_range), move(callee), arguments, invocation_style, inside_parens)
     {
     }
 };
@@ -1933,6 +1975,10 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual ThrowCompletionOr<JS::Reference> to_reference(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+    Expression const& base() const { return *m_base; }
+    Vector<Reference> const& references() const { return m_references; }
 
 private:
     struct ReferenceAndValue {

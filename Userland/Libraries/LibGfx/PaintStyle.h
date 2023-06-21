@@ -26,13 +26,6 @@ public:
     using SamplerFunction = Function<Color(IntPoint)>;
     using PaintFunction = Function<void(SamplerFunction)>;
 
-    friend Painter;
-    friend AntiAliasingPainter;
-
-private:
-    // Simple paint styles can simply override sample_color() if they can easily generate a color from a coordinate.
-    virtual Color sample_color(IntPoint) const { return Color(); };
-
     // Paint styles that have paint time dependent state (e.g. based on the paint size) may find it easier to override paint().
     // If paint() is overridden sample_color() is unused.
     virtual void paint(IntRect physical_bounding_box, PaintFunction paint) const
@@ -40,6 +33,10 @@ private:
         (void)physical_bounding_box;
         paint([this](IntPoint point) { return sample_color(point); });
     }
+
+private:
+    // Simple paint styles can simply override sample_color() if they can easily generate a color from a coordinate.
+    virtual Color sample_color(IntPoint) const { return Color(); };
 };
 
 class SolidColorPaintStyle final : public PaintStyle {

@@ -28,10 +28,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto strings = arguments.strings;
 
     if (argc == 2 && strings[1] == "-l") {
-        for (size_t i = 0; i < NSIG; ++i) {
-            if (i && !(i % 5))
+        size_t valid_signal_count = 0;
+        for (size_t i = 1; i < NSIG; ++i) {
+            if (valid_signal_count && valid_signal_count % 5 == 0)
                 outln("");
-            out("{:2}) {:10}", i, getsignalname(i));
+            auto const* signal_name = getsignalname(i);
+            // This excludes SIGCANCEL, which is intended for internal use only
+            if (!signal_name)
+                continue;
+            valid_signal_count++;
+            out("{:2}) {:10}", i, signal_name);
         }
         outln("");
         return 0;
@@ -50,12 +56,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (is_ascii_alpha(strings[1][1])) {
             int value = getsignalbyname(&strings[1][1]);
-            if (value >= 0 && value < NSIG)
+            if (value > 0 && value < NSIG)
                 number = value;
         }
 
         if (!number.has_value())
-            number = strings[1].substring_view(1, 1).to_uint();
+            number = strings[1].substring_view(1).to_uint();
 
         if (!number.has_value()) {
             warnln("'{}' is not a valid signal name or number", &strings[1][1]);
@@ -70,8 +76,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     pid_t pid = pid_opt.value();
 
-    int rc = kill(pid, signum);
-    if (rc < 0)
-        perror("kill");
+    TRY(Core::System::kill(pid, signum));
     return 0;
 }

@@ -13,6 +13,11 @@
 namespace Wasm {
 
 struct BytecodeInterpreter : public Interpreter {
+    explicit BytecodeInterpreter(StackInfo const& stack_info)
+        : m_stack_info(stack_info)
+    {
+    }
+
     virtual void interpret(Configuration&) override;
     virtual ~BytecodeInterpreter() override = default;
     virtual bool did_trap() const override { return !m_trap.has<Empty>(); }
@@ -72,10 +77,14 @@ protected:
     }
 
     Variant<Trap, JS::Completion, Empty> m_trap;
-    StackInfo m_stack_info;
+    StackInfo const& m_stack_info;
 };
 
 struct DebuggerBytecodeInterpreter : public BytecodeInterpreter {
+    DebuggerBytecodeInterpreter(StackInfo const& stack_info)
+        : BytecodeInterpreter(stack_info)
+    {
+    }
     virtual ~DebuggerBytecodeInterpreter() override = default;
 
     Function<bool(Configuration&, InstructionPointer&, Instruction const&)> pre_interpret_hook;

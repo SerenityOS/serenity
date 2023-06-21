@@ -20,10 +20,10 @@ public:
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_items.size(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 1; }
-    virtual String column_name(int) const override { return "Item"_short_string; }
+    virtual ErrorOr<String> column_name(int) const override { return "Item"_short_string; }
 
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole = GUI::ModelRole::Display) const override;
-    virtual TriState data_matches(GUI::ModelIndex const&, GUI::Variant const&) const override;
+    virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const&, GUI::Variant const&) const override;
     virtual void invalidate() override;
     virtual GUI::ModelIndex index(int row, int column = 0, GUI::ModelIndex const& parent = GUI::ModelIndex()) const override;
 

@@ -33,13 +33,14 @@ static int max_ms;
 static DeprecatedString host;
 static int payload_size = -1;
 static bool quiet = false;
-static u64 interval_in_microseconds = 1'000'000;
+static Optional<size_t> ttl;
+static timespec interval_timespec { .tv_sec = 1, .tv_nsec = 0 };
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 static constexpr int max_optional_header_size_in_bytes = 40;
 static constexpr int min_header_size_in_bytes = 5;
 
-static void closing_statistics()
+static void print_closing_statistics()
 {
     int packet_loss = 100;
 
@@ -57,8 +58,6 @@ static void closing_statistics()
     if (successful_pings)
         average_ms = total_ms / successful_pings;
     outln("rtt min/avg/max = {}/{}/{} ms", min_ms, average_ms, max_ms);
-
-    exit(0);
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -78,19 +77,30 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
 
             auto interval_in_seconds = interval_in_seconds_string.to_double();
-            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0)
+            if (!interval_in_seconds.has_value() || interval_in_seconds.value() <= 0 || interval_in_seconds.value() > UINT32_MAX)
                 return false;
 
-            interval_in_microseconds = static_cast<u64>(interval_in_seconds.value() * 1'000'000);
+            auto whole_seconds = static_cast<time_t>(interval_in_seconds.value());
+            auto fractional_seconds = interval_in_seconds.value() - static_cast<double>(whole_seconds);
+            interval_timespec = {
+                .tv_sec = whole_seconds,
+                .tv_nsec = static_cast<long>(fractional_seconds * 1'000'000'000)
+            };
             return true;
         },
     });
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(quiet, "Quiet mode. Only display summary when finished.", "quiet", 'q');
+    args_parser.add_option(ttl, "Set the TTL (time-to-live) value on the ICMP packets.", nullptr, 't', "ttl");
     args_parser.parse(arguments);
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
         warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), UINT32_MAX);
+        return 1;
+    }
+
+    if (ttl.has_value() && (ttl.value() < 1 || ttl.value() > 255)) {
+        warnln("invalid TTL argument: '{}': out of range: 1 <= value <= 255", ttl.value());
         return 1;
     }
 
@@ -109,6 +119,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+    if (ttl.has_value()) {
+        TRY(Core::System::setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl.value(), sizeof(ttl.value())));
+    }
 
     auto* hostent = gethostbyname(host.characters());
     if (!hostent) {
@@ -128,7 +141,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uint16_t seq = 1;
 
     TRY(Core::System::signal(SIGINT, [](int) {
-        closing_statistics();
+        print_closing_statistics();
+        exit(0);
     }));
 
     for (;;) {
@@ -154,11 +168,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
 
-        if (count.has_value() && total_pings == count.value())
-            closing_statistics();
-        else
-            total_pings++;
-
         TRY(Core::System::sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in)));
 
         for (;;) {
@@ -171,6 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& pong_packet = pong_packet_result.value();
             socklen_t peer_address_size = sizeof(peer_address);
             auto result = Core::System::recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+            uint8_t const pong_ttl = pong_packet[8];
             if (result.is_error()) {
                 if (result.error().code() == EAGAIN) {
                     if (!quiet)
@@ -221,11 +231,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             char addr_buf[INET_ADDRSTRLEN];
             if (!quiet)
-                outln("Pong from {}: id={}, seq={}{}, time={}ms, size={}",
+                outln("Pong from {}: id={}, seq={}{}, ttl={}, time={}ms, size={}",
                     inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                     ntohs(pong_hdr->un.echo.id),
                     ntohs(pong_hdr->un.echo.sequence),
                     pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence ? "(!)" : "",
+                    pong_ttl,
                     ms, result.value());
 
             // If this was a response to an earlier packet, we still need to wait for the current one.
@@ -234,6 +245,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         }
 
-        usleep(interval_in_microseconds);
+        total_pings++;
+        if (count.has_value() && total_pings == count.value()) {
+            print_closing_statistics();
+            break;
+        }
+
+        clock_nanosleep(CLOCK_MONOTONIC, 0, &interval_timespec, nullptr);
     }
+
+    return 0;
 }

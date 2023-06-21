@@ -19,6 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec"));
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     DeprecatedString groupname;
 

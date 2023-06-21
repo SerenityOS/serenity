@@ -13,16 +13,11 @@
 namespace GUI {
 
 class WizardDialog : public Dialog {
-    C_OBJECT(WizardDialog)
+    C_OBJECT_ABSTRACT(WizardDialog)
 public:
     virtual ~WizardDialog() override = default;
 
-    static void show(AbstractWizardPage& first_page, Window* parent_window = nullptr)
-    {
-        auto dialog = WizardDialog::construct(parent_window);
-        dialog->push_page(first_page);
-        dialog->exec();
-    }
+    static ErrorOr<NonnullRefPtr<WizardDialog>> create(Window* parent_window);
 
     Function<void()> on_cancel;
 
@@ -36,8 +31,9 @@ public:
     inline bool has_pages() const { return !m_page_stack.is_empty(); }
 
 protected:
-    WizardDialog(Window* parent_window);
+    explicit WizardDialog(Window* parent_window);
 
+    virtual ErrorOr<void> build();
     virtual void handle_cancel();
 
 private:

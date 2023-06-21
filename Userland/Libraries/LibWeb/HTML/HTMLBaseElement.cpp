@@ -105,10 +105,10 @@ DeprecatedString HTMLBaseElement::href() const
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-base-href
-void HTMLBaseElement::set_href(DeprecatedString const& href)
+WebIDL::ExceptionOr<void> HTMLBaseElement::set_href(DeprecatedString const& href)
 {
     // The href IDL attribute, on setting, must set the href content attribute to the given new value.
-    MUST(set_attribute(AttributeNames::href, href));
+    return set_attribute(AttributeNames::href, href);
 }
 
 }

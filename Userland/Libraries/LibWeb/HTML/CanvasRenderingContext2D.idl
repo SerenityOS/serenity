@@ -1,4 +1,5 @@
 #import <HTML/HTMLCanvasElement.idl>
+#import <HTML/Canvas/CanvasCompositing.idl>
 #import <HTML/Canvas/CanvasDrawImage.idl>
 #import <HTML/Canvas/CanvasDrawPath.idl>
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
@@ -21,7 +22,7 @@ interface CanvasRenderingContext2D {
 
 CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasTransform;
-// FIXME: CanvasRenderingContext2D includes CanvasCompositing;
+CanvasRenderingContext2D includes CanvasCompositing;
 CanvasRenderingContext2D includes CanvasImageSmoothing;
 CanvasRenderingContext2D includes CanvasFillStrokeStyles;
 // FIXME: CanvasRenderingContext2D includes CanvasShadowStyles;

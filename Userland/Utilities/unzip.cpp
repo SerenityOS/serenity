@@ -11,6 +11,7 @@
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -104,10 +105,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView zip_file_path;
     bool quiet { false };
+    bool list_files { false };
     StringView output_directory_path;
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(list_files, "Only list files in the archive", "list", 'l');
     args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
     args_parser.add_positional_argument(zip_file_path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
@@ -138,6 +141,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!output_directory_path.is_null()) {
         TRY(Core::Directory::create(output_directory_path, Core::Directory::CreateDirectories::Yes));
         TRY(Core::System::chdir(output_directory_path));
+    }
+
+    if (list_files) {
+        outln("  Length     Date      Time     Name");
+        outln("--------- ---------- --------   ----");
+        u32 members_count = 0;
+        u64 total_size = 0;
+        TRY(zip_file->for_each_member([&](auto zip_member) -> ErrorOr<IterationDecision> {
+            members_count++;
+
+            auto time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
+            auto time_str = TRY(Core::DateTime::from_timestamp(time.seconds_since_epoch()).to_string());
+
+            total_size += zip_member.uncompressed_size;
+
+            outln("{:>9} {}   {}", zip_member.uncompressed_size, time_str, zip_member.name);
+
+            return IterationDecision::Continue;
+        }));
+        outln("---------                       ----");
+        outln("{:>9}                       {} files", total_size, members_count);
+        return 0;
     }
 
     Vector<Archive::ZipMember> zip_directories;

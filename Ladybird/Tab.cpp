@@ -16,6 +16,7 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QCursor>
+#include <QFileDialog>
 #include <QFont>
 #include <QFontMetrics>
 #include <QGuiApplication>
@@ -58,7 +59,7 @@ static QIcon render_svg_icon_with_theme_colors(QString name, QPalette const& pal
     return icon;
 }
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
     : QWidget(window)
     , m_window(window)
 {
@@ -66,7 +67,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling);
+    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_javascript_bytecode);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
     m_reset_zoom_button = new QToolButton(m_toolbar);
@@ -373,49 +374,89 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_image_context_menu->exec(screen_position);
     };
 
-    m_video_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
-    m_video_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_play_icon = make<QIcon>(QString("%1/res/icons/16x16/play.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_pause_icon = make<QIcon>(QString("%1/res/icons/16x16/pause.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_mute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-muted.png").arg(s_serenity_resource_root.characters()));
+    m_media_context_menu_unmute_icon = make<QIcon>(QString("%1/res/icons/16x16/audio-volume-high.png").arg(s_serenity_resource_root.characters()));
 
-    m_video_context_menu_play_pause_action = make<QAction>("&Play", this);
-    m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_play_icon);
-    QObject::connect(m_video_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_play_state();
+    m_media_context_menu_play_pause_action = make<QAction>("&Play", this);
+    m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+    QObject::connect(m_media_context_menu_play_pause_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_play_state();
     });
 
-    m_video_context_menu_controls_action = make<QAction>("Show &Controls", this);
-    m_video_context_menu_controls_action->setCheckable(true);
-    QObject::connect(m_video_context_menu_controls_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_controls_state();
+    m_media_context_menu_mute_unmute_action = make<QAction>("&Mute", this);
+    m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+    QObject::connect(m_media_context_menu_mute_unmute_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_mute_state();
     });
 
-    m_video_context_menu_loop_action = make<QAction>("&Loop Video", this);
-    m_video_context_menu_loop_action->setCheckable(true);
-    QObject::connect(m_video_context_menu_loop_action, &QAction::triggered, this, [this]() {
-        view().toggle_video_loop_state();
+    m_media_context_menu_controls_action = make<QAction>("Show &Controls", this);
+    m_media_context_menu_controls_action->setCheckable(true);
+    QObject::connect(m_media_context_menu_controls_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_controls_state();
     });
+
+    m_media_context_menu_loop_action = make<QAction>("&Loop", this);
+    m_media_context_menu_loop_action->setCheckable(true);
+    QObject::connect(m_media_context_menu_loop_action, &QAction::triggered, this, [this]() {
+        view().toggle_media_loop_state();
+    });
+
+    auto* open_audio_action = new QAction("&Open Audio", this);
+    open_audio_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-sound.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_audio_action, &QAction::triggered, this, [this]() {
+        open_link(m_media_context_menu_url);
+    });
+
+    auto* open_audio_in_new_tab_action = new QAction("Open Audio in New &Tab", this);
+    open_audio_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(open_audio_in_new_tab_action, &QAction::triggered, this, [this]() {
+        open_link_in_new_tab(m_media_context_menu_url);
+    });
+
+    auto* copy_audio_url_action = new QAction("Copy Audio &URL", this);
+    copy_audio_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
+    QObject::connect(copy_audio_url_action, &QAction::triggered, this, [this]() {
+        copy_link_url(m_media_context_menu_url);
+    });
+
+    m_audio_context_menu = make<QMenu>("Audio context menu", this);
+    m_audio_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_audio_context_menu->addAction(m_media_context_menu_mute_unmute_action);
+    m_audio_context_menu->addAction(m_media_context_menu_controls_action);
+    m_audio_context_menu->addAction(m_media_context_menu_loop_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(open_audio_action);
+    m_audio_context_menu->addAction(open_audio_in_new_tab_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(copy_audio_url_action);
+    m_audio_context_menu->addSeparator();
+    m_audio_context_menu->addAction(&m_window->inspect_dom_node_action());
 
     auto* open_video_action = new QAction("&Open Video", this);
     open_video_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-video.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(open_video_action, &QAction::triggered, this, [this]() {
-        open_link(m_video_context_menu_url);
+        open_link(m_media_context_menu_url);
     });
 
     auto* open_video_in_new_tab_action = new QAction("Open Video in New &Tab", this);
     open_video_in_new_tab_action->setIcon(QIcon(QString("%1/res/icons/16x16/new-tab.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(open_video_in_new_tab_action, &QAction::triggered, this, [this]() {
-        open_link_in_new_tab(m_video_context_menu_url);
+        open_link_in_new_tab(m_media_context_menu_url);
     });
 
     auto* copy_video_url_action = new QAction("Copy Video &URL", this);
     copy_video_url_action->setIcon(QIcon(QString("%1/res/icons/16x16/edit-copy.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(copy_video_url_action, &QAction::triggered, this, [this]() {
-        copy_link_url(m_video_context_menu_url);
+        copy_link_url(m_media_context_menu_url);
     });
 
     m_video_context_menu = make<QMenu>("Video context menu", this);
-    m_video_context_menu->addAction(m_video_context_menu_play_pause_action);
-    m_video_context_menu->addAction(m_video_context_menu_controls_action);
-    m_video_context_menu->addAction(m_video_context_menu_loop_action);
+    m_video_context_menu->addAction(m_media_context_menu_play_pause_action);
+    m_video_context_menu->addAction(m_media_context_menu_mute_unmute_action);
+    m_video_context_menu->addAction(m_media_context_menu_controls_action);
+    m_video_context_menu->addAction(m_media_context_menu_loop_action);
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(open_video_action);
     m_video_context_menu->addAction(open_video_in_new_tab_action);
@@ -424,22 +465,34 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_video_context_menu->addSeparator();
     m_video_context_menu->addAction(&m_window->inspect_dom_node_action());
 
-    view().on_video_context_menu_request = [this](auto const& video_url, Gfx::IntPoint, bool is_playing, bool has_user_agent_controls, bool is_looping) {
-        m_video_context_menu_url = video_url;
+    view().on_media_context_menu_request = [this](Gfx::IntPoint, Web::Page::MediaContextMenu const& menu) {
+        m_media_context_menu_url = menu.media_url;
 
-        if (is_playing) {
-            m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_play_icon);
-            m_video_context_menu_play_pause_action->setText("&Play");
+        if (menu.is_playing) {
+            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_pause_icon);
+            m_media_context_menu_play_pause_action->setText("&Pause");
         } else {
-            m_video_context_menu_play_pause_action->setIcon(*m_video_context_menu_pause_icon);
-            m_video_context_menu_play_pause_action->setText("&Pause");
+            m_media_context_menu_play_pause_action->setIcon(*m_media_context_menu_play_icon);
+            m_media_context_menu_play_pause_action->setText("&Play");
         }
 
-        m_video_context_menu_controls_action->setChecked(has_user_agent_controls);
-        m_video_context_menu_loop_action->setChecked(is_looping);
+        if (menu.is_muted) {
+            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_unmute_icon);
+            m_media_context_menu_mute_unmute_action->setText("Un&mute");
+        } else {
+            m_media_context_menu_mute_unmute_action->setIcon(*m_media_context_menu_mute_icon);
+            m_media_context_menu_mute_unmute_action->setText("&Mute");
+        }
+
+        m_media_context_menu_controls_action->setChecked(menu.has_user_agent_controls);
+        m_media_context_menu_loop_action->setChecked(menu.is_looping);
 
         auto screen_position = QCursor::pos();
-        m_video_context_menu->exec(screen_position);
+
+        if (menu.is_video)
+            m_video_context_menu->exec(screen_position);
+        else
+            m_audio_context_menu->exec(screen_position);
     };
 }
 
@@ -468,7 +521,9 @@ void Tab::focus_location_editor()
 
 void Tab::navigate(QString url, LoadType load_type)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
+    if (url.startsWith("/"))
+        url = "file://" + url;
+    else if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
         url = "https://" + url;
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     view().load(ak_deprecated_string_from_qstring(url));
@@ -519,6 +574,13 @@ void Tab::copy_link_url(URL const& url)
 void Tab::location_edit_return_pressed()
 {
     navigate(m_location_edit->text());
+}
+
+void Tab::open_file()
+{
+    auto filename = QFileDialog::getOpenFileName(this, "Open file", QDir::homePath(), "All Files (*.*)");
+    if (!filename.isNull())
+        navigate("file://" + filename);
 }
 
 int Tab::tab_index()

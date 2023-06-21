@@ -26,9 +26,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix"));
 
     auto app = TRY(GUI::Application::create(arguments));
-
-    TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd"));
-
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper"sv);
 
     auto window = GUI::Window::construct();
@@ -43,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else
         TRY(keyboard_mapper_widget->load_map_from_file(path));
 
-    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd"));
+    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix"));
 
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
@@ -82,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto auto_modifier_action = GUI::Action::create("Auto-Modifier", [&](auto& act) {
         keyboard_mapper_widget->set_automatic_modifier(act.is_checked());
     });
-    auto_modifier_action->set_status_tip("Toggle automatic modifier");
+    auto_modifier_action->set_status_tip(TRY("Toggle automatic modifier"_string));
     auto_modifier_action->set_checkable(true);
     auto_modifier_action->set_checked(false);
 

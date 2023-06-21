@@ -359,36 +359,6 @@ ErrorOr<void> link_file(StringView destination_path, StringView source_path)
     return TRY(Core::System::symlink(source_path, TRY(get_duplicate_file_name(destination_path))));
 }
 
-ErrorOr<String> resolve_executable_from_environment(StringView filename, int flags)
-{
-    if (filename.is_empty())
-        return Error::from_errno(ENOENT);
-
-    // Paths that aren't just a file name generally count as already resolved.
-    if (filename.contains('/')) {
-        TRY(Core::System::access(filename, X_OK, flags));
-        return TRY(String::from_utf8(filename));
-    }
-
-    auto const* path_str = ::getenv("PATH");
-    StringView path;
-    if (path_str)
-        path = { path_str, strlen(path_str) };
-    if (path.is_empty())
-        path = DEFAULT_PATH_SV;
-
-    auto directories = path.split_view(':');
-
-    for (auto directory : directories) {
-        auto file = TRY(String::formatted("{}/{}", directory, filename));
-
-        if (!Core::System::access(file, X_OK, flags).is_error())
-            return file;
-    }
-
-    return Error::from_errno(ENOENT);
-}
-
 bool looks_like_shared_library(StringView path)
 {
     return path.ends_with(".so"sv) || path.contains(".so."sv);

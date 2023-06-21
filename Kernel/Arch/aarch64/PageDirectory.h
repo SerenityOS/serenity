@@ -15,8 +15,8 @@
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
 

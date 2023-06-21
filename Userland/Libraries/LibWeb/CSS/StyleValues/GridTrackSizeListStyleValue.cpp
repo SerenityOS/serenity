@@ -26,4 +26,9 @@ ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> GridTrackSizeL
     return adopt_nonnull_ref_or_enomem(new (nothrow) GridTrackSizeListStyleValue(CSS::GridTrackSizeList()));
 }
 
+ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue>> GridTrackSizeListStyleValue::make_none()
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) GridTrackSizeListStyleValue(CSS::GridTrackSizeList()));
+}
+
 }

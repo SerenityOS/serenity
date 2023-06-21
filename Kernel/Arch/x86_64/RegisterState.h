@@ -11,7 +11,7 @@
 
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/x86_64/ASM_wrapper.h>
-#include <Kernel/ExecutionMode.h>
+#include <Kernel/Security/ExecutionMode.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()

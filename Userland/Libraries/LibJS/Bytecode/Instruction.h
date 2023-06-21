@@ -17,11 +17,12 @@
     O(BitwiseNot)                    \
     O(BitwiseOr)                     \
     O(BitwiseXor)                    \
+    O(BlockDeclarationInstantiation) \
     O(Call)                          \
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \
     O(CopyObjectExcludingProperties) \
-    O(CreateEnvironment)             \
+    O(CreateLexicalEnvironment)      \
     O(CreateVariable)                \
     O(Decrement)                     \
     O(DeleteById)                    \
@@ -52,7 +53,7 @@
     O(JumpConditional)               \
     O(JumpNullish)                   \
     O(JumpUndefined)                 \
-    O(LeaveEnvironment)              \
+    O(LeaveLexicalEnvironment)       \
     O(LeaveUnwindContext)            \
     O(LeftShift)                     \
     O(LessThan)                      \
@@ -88,6 +89,7 @@
     O(SuperCall)                     \
     O(Throw)                         \
     O(ThrowIfNotObject)              \
+    O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \
     O(UnaryMinus)                    \

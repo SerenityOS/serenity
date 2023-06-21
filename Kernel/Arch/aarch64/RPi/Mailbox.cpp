@@ -7,6 +7,7 @@
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
+#include <Kernel/Library/Panic.h>
 
 namespace Kernel::RPi {
 
@@ -169,6 +170,62 @@ StringView Mailbox::query_kernel_command_line(Bytes buffer)
         return ""sv; // The buffer was too small to hold the response.
 
     return StringView { (char const*)&message[5], response_length };
+}
+
+class QueryARMMemoryMailboxMessage : RPi::Mailbox::Message {
+public:
+    u32 base;
+    u32 size;
+
+    QueryARMMemoryMailboxMessage()
+        : RPi::Mailbox::Message(0x0001'0005, 8)
+    {
+        base = 0;
+        size = 0;
+    }
+};
+
+Mailbox::MemoryRange Mailbox::query_lower_arm_memory_range()
+{
+    struct __attribute__((aligned(16))) {
+        MessageHeader header;
+        QueryARMMemoryMailboxMessage query_arm_memory;
+        MessageTail tail;
+    } message_queue;
+
+    if (!the().send_queue(&message_queue, sizeof(message_queue))) {
+        PANIC("Failed to determine the available RAM range");
+    }
+
+    return { message_queue.query_arm_memory.base, message_queue.query_arm_memory.size };
+}
+
+class QueryVCMemoryMailboxMessage : RPi::Mailbox::Message {
+public:
+    u32 base;
+    u32 size;
+
+    QueryVCMemoryMailboxMessage()
+        : RPi::Mailbox::Message(0x0001'0006, 8)
+    {
+        base = 0;
+        size = 0;
+    }
+};
+
+Mailbox::MemoryRange Mailbox::query_videocore_memory_range()
+{
+    struct __attribute__((aligned(16))) {
+        MessageHeader header;
+        QueryVCMemoryMailboxMessage query_vc_memory;
+        MessageTail tail;
+    } message_queue;
+
+    if (!the().send_queue(&message_queue, sizeof(message_queue))) {
+        PANIC("Failed to determine the VideoCore memory range");
+    }
+
+    return { message_queue.query_vc_memory.base, message_queue.query_vc_memory.size };
 }
 
 }

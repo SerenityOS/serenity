@@ -83,6 +83,10 @@ public:
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
+    void push_home_object(Register);
+    void pop_home_object();
+    void emit_new_function(JS::FunctionNode const&);
+
     void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();
     void begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set);
@@ -132,36 +136,11 @@ public:
     };
     struct LexicalScope {
         SurroundingScopeKind kind;
-        BindingMode mode;
-        HashTable<IdentifierTableIndex> known_bindings;
     };
 
-    void register_binding(IdentifierTableIndex identifier, BindingMode mode = BindingMode::Lexical)
-    {
-        m_variable_scopes.last_matching([&](auto& x) { return x.mode == BindingMode::Global || x.mode == mode; })->known_bindings.set(identifier);
-    }
-    bool has_binding(IdentifierTableIndex identifier, Optional<BindingMode> const& specific_binding_mode = {}) const
-    {
-        for (auto index = m_variable_scopes.size(); index > 0; --index) {
-            auto& scope = m_variable_scopes[index - 1];
+    void block_declaration_instantiation(ScopeNode const&);
 
-            if (scope.mode != BindingMode::Global && specific_binding_mode.value_or(scope.mode) != scope.mode)
-                continue;
-
-            if (scope.known_bindings.contains(identifier))
-                return true;
-        }
-        return false;
-    }
-    bool has_binding_in_current_scope(IdentifierTableIndex identifier) const
-    {
-        if (m_variable_scopes.is_empty())
-            return false;
-
-        return m_variable_scopes.last().known_bindings.contains(identifier);
-    }
-
-    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block);
+    void begin_variable_scope();
     void end_variable_scope();
 
     enum class BlockBoundaryType {
@@ -170,7 +149,6 @@ public:
         Unwind,
         ReturnToFinally,
         LeaveLexicalEnvironment,
-        LeaveVariableEnvironment,
     };
     template<typename OpType>
     void perform_needed_unwinds()
@@ -186,10 +164,7 @@ public:
                 emit<Bytecode::Op::LeaveUnwindContext>();
                 break;
             case LeaveLexicalEnvironment:
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
-                break;
-            case LeaveVariableEnvironment:
-                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
+                emit<Bytecode::Op::LeaveLexicalEnvironment>();
                 break;
             case Break:
             case Continue:
@@ -235,8 +210,8 @@ private:
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;
-    Vector<LexicalScope> m_variable_scopes;
     Vector<BlockBoundaryType> m_boundaries;
+    Vector<Register> m_home_objects;
 };
 
 }

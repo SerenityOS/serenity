@@ -18,5 +18,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 37, length: 11, rect: [10,360 468.75x87.34375]
             "background."
         TextNode <#text>
-      BlockContainer <(anonymous)> at (10,10) content-size 0x0 [BFC] children: inline
+      BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>

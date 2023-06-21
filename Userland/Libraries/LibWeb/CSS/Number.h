@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,21 +25,21 @@ public:
         , m_type(Type::Number)
     {
     }
-    Number(Type type, float value)
+    Number(Type type, double value)
         : m_value(value)
         , m_type(type)
     {
     }
 
     Type type() const { return m_type; }
-    float value() const { return m_value; }
+    double value() const { return m_value; }
     i64 integer_value() const
     {
         // https://www.w3.org/TR/css-values-4/#numeric-types
         // When a value cannot be explicitly supported due to range/precision limitations, it must be converted
         // to the closest value supported by the implementation, but how the implementation defines "closest"
         // is explicitly undefined as well.
-        return llroundf(m_value);
+        return llround(m_value);
     }
     bool is_integer() const { return m_type == Type::Integer || m_type == Type::IntegerWithExplicitSign; }
     bool is_integer_with_explicit_sign() const { return m_type == Type::IntegerWithExplicitSign; }
@@ -82,8 +82,17 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
+    int operator<=>(Number const& other) const
+    {
+        if (m_value < other.m_value)
+            return -1;
+        if (m_value > other.m_value)
+            return 1;
+        return 0;
+    }
+
 private:
-    float m_value { 0 };
+    double m_value { 0 };
     Type m_type;
 };
 }

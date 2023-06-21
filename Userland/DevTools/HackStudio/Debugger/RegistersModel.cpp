@@ -86,16 +86,15 @@ int RegistersModel::row_count(const GUI::ModelIndex&) const
     return m_registers.size();
 }
 
-String RegistersModel::column_name(int column) const
+ErrorOr<String> RegistersModel::column_name(int column) const
 {
     switch (column) {
     case Column::Register:
-        return "Register"_string.release_value_but_fixme_should_propagate_errors();
+        return TRY("Register"_string);
     case Column::Value:
         return "Value"_short_string;
     default:
         VERIFY_NOT_REACHED();
-        return {};
     }
 }
 

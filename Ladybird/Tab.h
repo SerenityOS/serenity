@@ -27,7 +27,7 @@ class InspectorWidget;
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
+    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode);
     virtual ~Tab() override;
 
     WebContentView& view() { return *m_view; }
@@ -43,6 +43,7 @@ public:
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
+    void open_file();
     void update_reset_zoom_button();
 
     enum class InspectorTarget {
@@ -95,13 +96,17 @@ private:
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
 
+    OwnPtr<QMenu> m_audio_context_menu;
     OwnPtr<QMenu> m_video_context_menu;
-    OwnPtr<QIcon> m_video_context_menu_play_icon;
-    OwnPtr<QIcon> m_video_context_menu_pause_icon;
-    OwnPtr<QAction> m_video_context_menu_play_pause_action;
-    OwnPtr<QAction> m_video_context_menu_controls_action;
-    OwnPtr<QAction> m_video_context_menu_loop_action;
-    URL m_video_context_menu_url;
+    OwnPtr<QIcon> m_media_context_menu_play_icon;
+    OwnPtr<QIcon> m_media_context_menu_pause_icon;
+    OwnPtr<QIcon> m_media_context_menu_mute_icon;
+    OwnPtr<QIcon> m_media_context_menu_unmute_icon;
+    OwnPtr<QAction> m_media_context_menu_play_pause_action;
+    OwnPtr<QAction> m_media_context_menu_mute_unmute_action;
+    OwnPtr<QAction> m_media_context_menu_controls_action;
+    OwnPtr<QAction> m_media_context_menu_loop_action;
+    URL m_media_context_menu_url;
 
     int tab_index();
 

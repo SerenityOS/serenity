@@ -6,8 +6,8 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/PerformanceManager.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

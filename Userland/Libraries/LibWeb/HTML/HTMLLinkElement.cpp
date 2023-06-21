@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2023, Srikavin Ramkumar <me@srikavin.me>
@@ -60,7 +60,7 @@ void HTMLLinkElement::inserted()
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
         request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
-        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     } else if (m_relationship & Relationship::DNSPrefetch) {
         ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
@@ -79,6 +79,8 @@ bool HTMLLinkElement::has_loaded_icon() const
 
 void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
+    HTMLElement::parse_attribute(name, value);
+
     // 4.6.7 Link types - https://html.spec.whatwg.org/multipage/links.html#linkTypes
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
@@ -111,6 +113,8 @@ void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
         if (
+            // AD-HOC: When the rel attribute changes
+            name == AttributeNames::rel ||
             // - When the href attribute of the link element of an external resource link that is already browsing-context connected is changed.
             name == AttributeNames::href ||
             // - When the disabled attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
@@ -128,15 +132,20 @@ void HTMLLinkElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
 void HTMLLinkElement::resource_did_fail()
 {
     dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did fail. URL: {}", resource()->url());
+    if (m_relationship & Relationship::Preload) {
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+    }
 }
 
 void HTMLLinkElement::resource_did_load()
 {
     VERIFY(resource());
-    VERIFY(m_relationship & (Relationship::Icon));
     if (m_relationship & Relationship::Icon) {
         resource_did_load_favicon();
         m_document_load_event_delayer.clear();
+    }
+    if (m_relationship & Relationship::Preload) {
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
     }
 }
 
@@ -279,72 +288,30 @@ void HTMLLinkElement::default_fetch_and_process_linked_resource()
     }
 
     // 7. Fetch request with processResponseConsumeBody set to the following steps given response response and null, failure, or a byte sequence bodyBytes:
-    Fetch::Fetching::fetch(
-        realm(), *request,
-        Fetch::Infrastructure::FetchAlgorithms::create(vm(),
-            { .process_request_body_chunk_length = {},
-                .process_request_end_of_body = {},
-                .process_early_hints_response = {},
-                .process_response = {},
-                .process_response_end_of_body = {},
-                .process_response_consume_body = [this, hr = options](auto response, auto body_bytes) {
-                    // 1. Let success be true.
-                    bool success = true;
+    Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
+    fetch_algorithms_input.process_response_consume_body = [this, hr = options](auto response, auto body_bytes) {
+        // FIXME: If the response is CORS cross-origin, we must use its internal response to query any of its data. See:
+        //        https://github.com/whatwg/html/issues/9355
+        response = response->unsafe_response();
 
-                    // 2. If either of the following conditions are met:
-                    // - bodyBytes is null or failure; or
-                    // - response's status is not an ok status,
-                    // then set success to false.
-                    // NOTE: content-specific errors, e.g., CSS parse errors or PNG decoding errors, do not affect success.
-                    if (body_bytes.template has<Empty>()) {
-                        // CORS cross-origin responses in the No CORS request mode provide an opaque filtered response, which is the original response
-                        // with certain attributes removed/changed.
+        // 1. Let success be true.
+        bool success = true;
 
-                        // The relevant effect it has is setting the body to `null`, which means `body_bytes` has `Empty` here. This effectively
-                        // disables cross-origin linked resources (e.g. stylesheets).
+        // 2. If either of the following conditions are met:
+        // - bodyBytes is null or failure; or
+        // - response's status is not an ok status,
+        if (body_bytes.template has<Empty>() || body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
+            // then set success to false.
+            success = false;
+        }
 
-                        // However, the web actually depends on this, especially for stylesheets retrieved from a cross-origin CDN. For example,
-                        // Shopify websites request stylesheets from `cdn.shopify.com` and Substack websites request stylesheets from `substackcdn.com`.
+        // FIXME: 3. Otherwise, wait for the link resource's critical subresources to finish loading.
 
-                        // This makes this a specification bug, as this code was written from it.
+        // 4. Process the linked resource given el, success, response, and bodyBytes.
+        process_linked_resource(success, response, body_bytes);
+    };
 
-                        // The workaround is to read the actual body from the unfiltered response and then call `process_linked_resource` from there.
-
-                        // This _should_ be safe to do, as linked resource fetches do not include credentials (i.e. cookies and the Authorization
-                        // header), so it cannot provide personalized responses.
-
-                        // FIXME: Replace this workaround with a proper fix that has landed in the specification.
-                        //        See: https://github.com/whatwg/html/issues/9066
-                        if (is<Fetch::Infrastructure::OpaqueFilteredResponse>(response.ptr())) {
-                            auto unsafe_response = static_cast<Fetch::Infrastructure::OpaqueFilteredResponse const&>(*response).internal_response();
-                            if (unsafe_response->body().has_value()) {
-                                // NOTE: `this` and `unsafe_response` are protected by `fully_read` using JS::SafeFunction.
-                                auto process_body = [this, unsafe_response](ByteBuffer bytes) {
-                                    process_linked_resource(true, unsafe_response, bytes);
-                                };
-
-                                // NOTE: `this` and `unsafe_response` are protected by `fully_read` using JS::SafeFunction.
-                                auto process_body_error = [this, unsafe_response](auto) {
-                                    process_linked_resource(false, unsafe_response, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
-                                };
-
-                                unsafe_response->body()->fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
-                                return;
-                            } else {
-                                success = false;
-                            }
-                        } else {
-                            success = false;
-                        }
-                    } else if (body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
-                        success = false;
-                    }
-                    // FIXME: 3. Otherwise, wait for the link resource's critical subresources to finish loading.
-
-                    // 4. Process the linked resource given el, success, response, and bodyBytes.
-                    process_linked_resource(success, response, body_bytes);
-                } }))
-        .release_value_but_fixme_should_propagate_errors();
+    Fetch::Fetching::fetch(realm(), *request, Fetch::Infrastructure::FetchAlgorithms::create(vm(), move(fetch_algorithms_input))).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:process-the-linked-resource
@@ -397,6 +364,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
 
         if (m_loaded_style_sheet) {
             m_loaded_style_sheet->set_owner_node(this);
+            m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media));
             document().style_sheets().add_sheet(*m_loaded_style_sheet);
         } else {
             dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());

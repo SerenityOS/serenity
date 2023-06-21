@@ -37,10 +37,10 @@ public:
     RefPtr<Gfx::Bitmap const> bitmap() const;
 
     unsigned width() const;
-    void set_width(unsigned);
+    WebIDL::ExceptionOr<void> set_width(unsigned);
 
     unsigned height() const;
-    void set_height(unsigned);
+    WebIDL::ExceptionOr<void> set_height(unsigned);
 
     unsigned natural_width() const;
     unsigned natural_height() const;
@@ -51,7 +51,7 @@ public:
     virtual Optional<ARIA::Role> default_role() const override;
 
     // https://html.spec.whatwg.org/multipage/images.html#update-the-image-data
-    ErrorOr<void> update_the_image_data(bool restart_the_animations = false);
+    ErrorOr<void> update_the_image_data(bool restart_the_animations = false, bool maybe_omit_events = false);
 
     // https://html.spec.whatwg.org/multipage/images.html#use-srcset-or-picture
     [[nodiscard]] bool uses_srcset_or_picture() const;
@@ -93,7 +93,7 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer);
+    void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer, bool maybe_omit_events, AK::URL const& previous_url);
     void handle_failed_fetch();
 
     void animate();

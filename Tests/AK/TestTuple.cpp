@@ -53,9 +53,9 @@ TEST_CASE(no_copy)
 {
     struct NoCopy {
         AK_MAKE_NONCOPYABLE(NoCopy);
+        AK_MAKE_DEFAULT_MOVABLE(NoCopy);
 
     public:
-        NoCopy(NoCopy&&) = default;
         NoCopy() = default;
     };
 

@@ -24,13 +24,13 @@ RequestServerRequestAdapter::RequestServerRequestAdapter(NonnullRefPtr<Protocol:
                 strong_this->on_buffered_request_finish(success, total_size, response_headers, response_code, move(payload));
     };
 
-    request->on_finish = [weak_this = make_weak_ptr()](bool success, u32 total_size) {
+    request->on_finish = [weak_this = make_weak_ptr()](bool success, u64 total_size) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_finish)
                 strong_this->on_finish(success, total_size);
     };
 
-    request->on_progress = [weak_this = make_weak_ptr()](Optional<u32> total_size, u32 downloaded_size) {
+    request->on_progress = [weak_this = make_weak_ptr()](Optional<u64> total_size, u64 downloaded_size) {
         if (auto strong_this = weak_this.strong_ref())
             if (strong_this->on_progress)
                 strong_this->on_progress(total_size, downloaded_size);

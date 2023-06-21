@@ -29,7 +29,7 @@ int IndividualSampleModel::column_count(GUI::ModelIndex const&) const
     return Column::__Count;
 }
 
-String IndividualSampleModel::column_name(int column) const
+ErrorOr<String> IndividualSampleModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:

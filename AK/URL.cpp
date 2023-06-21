@@ -388,6 +388,11 @@ DeprecatedString URL::serialize_for_display() const
     return builder.to_deprecated_string();
 }
 
+ErrorOr<String> URL::to_string() const
+{
+    return String::from_deprecated_string(serialize());
+}
+
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
 // https://url.spec.whatwg.org/#concept-url-origin
 DeprecatedString URL::serialize_origin() const

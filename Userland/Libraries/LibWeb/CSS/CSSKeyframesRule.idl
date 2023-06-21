@@ -1,0 +1,17 @@
+#import <CSS/CSSRule.idl>
+
+[Exposed=Window]
+interface CSSKeyframesRule : CSSRule {
+    attribute CSSOMString name;
+    readonly attribute unsigned long length;
+
+//    FIXME: Implement this
+//    readonly attribute CSSRuleList cssRules;
+
+    getter CSSKeyframeRule (unsigned long index);
+
+//    FIXME: Implement these
+//    undefined        appendRule(CSSOMString rule);
+//    undefined        deleteRule(CSSOMString select);
+//    CSSKeyframeRule? findRule(CSSOMString select);
+};

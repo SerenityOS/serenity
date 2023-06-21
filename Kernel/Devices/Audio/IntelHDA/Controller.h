@@ -16,7 +16,7 @@
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/Audio/IntelHDA/OutputPath.h>
 #include <Kernel/Devices/Audio/IntelHDA/RingBuffer.h>
-#include <Kernel/IOWindow.h>
+#include <Kernel/Library/IOWindow.h>
 
 namespace Kernel::Audio::IntelHDA {
 

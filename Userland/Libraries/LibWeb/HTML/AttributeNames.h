@@ -63,10 +63,14 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(dirname)                    \
     __ENUMERATE_HTML_ATTRIBUTE(disabled)                   \
     __ENUMERATE_HTML_ATTRIBUTE(download)                   \
+    __ENUMERATE_HTML_ATTRIBUTE(enctype)                    \
     __ENUMERATE_HTML_ATTRIBUTE(event)                      \
     __ENUMERATE_HTML_ATTRIBUTE(face)                       \
     __ENUMERATE_HTML_ATTRIBUTE(for_)                       \
     __ENUMERATE_HTML_ATTRIBUTE(form)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(formaction)                 \
+    __ENUMERATE_HTML_ATTRIBUTE(formenctype)                \
+    __ENUMERATE_HTML_ATTRIBUTE(formmethod)                 \
     __ENUMERATE_HTML_ATTRIBUTE(formnovalidate)             \
     __ENUMERATE_HTML_ATTRIBUTE(formtarget)                 \
     __ENUMERATE_HTML_ATTRIBUTE(frame)                      \
@@ -211,6 +215,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(shape)                      \
     __ENUMERATE_HTML_ATTRIBUTE(size)                       \
     __ENUMERATE_HTML_ATTRIBUTE(sizes)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(span)                       \
     __ENUMERATE_HTML_ATTRIBUTE(src)                        \
     __ENUMERATE_HTML_ATTRIBUTE(srcdoc)                     \
     __ENUMERATE_HTML_ATTRIBUTE(srclang)                    \

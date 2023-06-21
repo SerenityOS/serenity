@@ -9,7 +9,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

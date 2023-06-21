@@ -1,0 +1,9 @@
+<script src="include.js"></script>
+<script>
+    let link = document.createElement("link");
+    link.setAttribute("rel", "preload");
+    link.setAttribute("href", "valid.css");
+    link.setAttribute("as", "style");
+    link.setAttribute("onload", "println('link element onload')");
+    document.head.appendChild(link);
+</script>

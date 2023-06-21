@@ -42,6 +42,18 @@ Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, H
     return result;
 }
 
+static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
+{
+    switch (fill_rule) {
+    case SVG::FillRule::Nonzero:
+        return Gfx::Painter::WindingRule::Nonzero;
+    case SVG::FillRule::Evenodd:
+        return Gfx::Painter::WindingRule::EvenOdd;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -62,16 +74,14 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
-    auto const* svg_element = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto const* svg_element = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
-
-    context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
-    auto css_scale = context.device_pixels_per_css_pixel();
 
     auto transform = layout_box().layout_transform();
     if (!transform.has_value())
         return;
 
+    auto css_scale = context.device_pixels_per_css_pixel();
     auto paint_transform = Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform);
     auto const& original_path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path();
     Gfx::Path path = original_path.copy_transformed(paint_transform);
@@ -101,27 +111,38 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         .transform = paint_transform
     };
 
-    // FIXME: Apply fill opacity to paint styles?
     auto fill_opacity = geometry_element.fill_opacity().value_or(svg_context.fill_opacity());
+    auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(svg_context.fill_rule()));
+
     if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
         painter.fill_path(
             closed_path(),
             *paint_style,
-            Gfx::Painter::WindingRule::EvenOdd);
+            fill_opacity,
+            winding_rule);
     } else if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()).with_opacity(fill_opacity); fill_color.alpha() > 0) {
         painter.fill_path(
             closed_path(),
             fill_color,
-            Gfx::Painter::WindingRule::EvenOdd);
+            winding_rule);
     }
 
     auto stroke_opacity = geometry_element.stroke_opacity().value_or(svg_context.stroke_opacity());
-    if (auto stroke_color = geometry_element.stroke_color().value_or(svg_context.stroke_color()).with_opacity(stroke_opacity); stroke_color.alpha() > 0) {
+
+    // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
+    float stroke_thickness = geometry_element.stroke_width().value_or(svg_context.stroke_width()) * viewbox_scale;
+
+    if (auto paint_style = geometry_element.stroke_paint_style(paint_context); paint_style.has_value()) {
+        painter.stroke_path(
+            path,
+            *paint_style,
+            stroke_thickness,
+            stroke_opacity);
+    } else if (auto stroke_color = geometry_element.stroke_color().value_or(svg_context.stroke_color()).with_opacity(stroke_opacity); stroke_color.alpha() > 0) {
         painter.stroke_path(
             path,
             stroke_color,
-            // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
-            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * viewbox_scale);
+            stroke_thickness);
     }
 }
 

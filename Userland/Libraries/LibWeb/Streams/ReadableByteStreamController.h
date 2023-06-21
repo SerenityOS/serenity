@@ -27,23 +27,23 @@ struct PullIntoDescriptor {
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-buffer-byte-length
     // A positive integer representing the initial byte length of buffer
-    u32 buffer_byte_length;
+    u64 buffer_byte_length;
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-byte-offset
     // A nonnegative integer byte offset into the buffer where the underlying byte source will start writing
-    u32 byte_offset;
+    u64 byte_offset;
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-byte-length
     // A positive integer number of bytes which can be written into the buffer
-    u32 byte_length;
+    u64 byte_length;
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-bytes-filled
     // A nonnegative integer number of bytes that have been written into the buffer so far
-    u32 bytes_filled;
+    u64 bytes_filled;
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-element-size
     // A positive integer representing the number of bytes that can be written into the buffer at a time, using views of the type described by the view constructor
-    u32 element_size;
+    u64 element_size;
 
     // https://streams.spec.whatwg.org/#pull-into-descriptor-view-constructor
     // A typed array constructor or %DataView%, which will be used for constructing a view with which to write into the buffer
@@ -62,11 +62,11 @@ struct ReadableByteStreamQueueEntry {
 
     // https://streams.spec.whatwg.org/#readable-byte-stream-queue-entry-byte-offset
     // A nonnegative integer number giving the byte offset derived from the view originally supplied by the underlying byte source
-    u32 byte_offset;
+    u64 byte_offset;
 
     // https://streams.spec.whatwg.org/#readable-byte-stream-queue-entry-byte-length
     // A nonnegative integer number giving the byte length derived from the view originally supplied by the underlying byte source
-    u32 byte_length;
+    u64 byte_length;
 };
 
 // https://streams.spec.whatwg.org/#readablebytestreamcontroller
@@ -83,8 +83,8 @@ public:
     WebIDL::ExceptionOr<void> close();
     void error(JS::Value error);
 
-    Optional<u32> const& auto_allocate_chunk_size() { return m_auto_allocate_chunk_size; }
-    void set_auto_allocate_chunk_size(Optional<u32> value) { m_auto_allocate_chunk_size = value; }
+    Optional<u64> const& auto_allocate_chunk_size() { return m_auto_allocate_chunk_size; }
+    void set_auto_allocate_chunk_size(Optional<u64> value) { m_auto_allocate_chunk_size = value; }
 
     auto& cancel_algorithm() { return m_cancel_algorithm; }
     void set_cancel_algorithm(Optional<CancelAlgorithm> value) { m_cancel_algorithm = move(value); }
@@ -105,14 +105,14 @@ public:
 
     SinglyLinkedList<ReadableByteStreamQueueEntry>& queue() { return m_queue; }
 
-    u32 queue_total_size() const { return m_queue_total_size; }
-    void set_queue_total_size(u32 size) { m_queue_total_size = size; }
+    double queue_total_size() const { return m_queue_total_size; }
+    void set_queue_total_size(double size) { m_queue_total_size = size; }
 
     bool started() const { return m_started; }
     void set_started(bool value) { m_started = value; }
 
-    u32 strategy_hwm() const { return m_strategy_hwm; }
-    void set_strategy_hwm(u32 value) { m_strategy_hwm = value; }
+    double strategy_hwm() const { return m_strategy_hwm; }
+    void set_strategy_hwm(double value) { m_strategy_hwm = value; }
 
     JS::GCPtr<ReadableStream const> stream() const { return m_stream; }
     JS::GCPtr<ReadableStream> stream() { return m_stream; }
@@ -129,7 +129,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablebytestreamcontroller-autoallocatechunksize
     // A positive integer, when the automatic buffer allocation feature is enabled. In that case, this value specifies the size of buffer to allocate. It is undefined otherwise.
-    Optional<u32> m_auto_allocate_chunk_size;
+    Optional<u64> m_auto_allocate_chunk_size;
 
     // https://streams.spec.whatwg.org/#readablebytestreamcontroller-byobrequest
     // A ReadableStreamBYOBRequest instance representing the current BYOB pull request, or null if there are no pending requests
@@ -165,7 +165,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-queuetotalsize
     // The total size of all the chunks stored in [[queue]]
-    u32 m_queue_total_size { 0 };
+    double m_queue_total_size { 0 };
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-started
     // A boolean flag indicating whether the underlying source has finished starting
@@ -173,7 +173,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-strategyhwm
     // A number supplied to the constructor as part of the stream’s queuing strategy, indicating the point at which the stream will apply backpressure to its underlying source
-    u32 m_strategy_hwm { 0 };
+    double m_strategy_hwm { 0 };
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-stream
     // The ReadableStream instance controlled

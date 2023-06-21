@@ -16,10 +16,10 @@ set(KERNEL_HEAP_SOURCES
 )
 
 set(KERNEL_SOURCES
-    AddressSanitizer.cpp
     Arch/init.cpp
     Arch/PageFault.cpp
     Arch/DeferredCallPool.cpp
+    Boot/CommandLine.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
@@ -41,12 +41,8 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
-    CommandLine.cpp
-    Coredump.cpp
-    CrashHandler.cpp
-    Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
-    Devices/Audio/AC97.cpp
+    Devices/Audio/AC97/AC97.cpp
     Devices/Audio/Channel.cpp
     Devices/Audio/IntelHDA/Codec.cpp
     Devices/Audio/IntelHDA/Controller.cpp
@@ -64,6 +60,8 @@ set(KERNEL_SOURCES
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
+    Devices/HID/PS2/KeyboardDevice.cpp
+    Devices/HID/PS2/MouseDevice.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
@@ -72,56 +70,53 @@ set(KERNEL_SOURCES
     Devices/Generic/RandomDevice.cpp
     Devices/Generic/SelfTTYDevice.cpp
     Devices/Generic/ZeroDevice.cpp
-    Graphics/Bochs/GraphicsAdapter.cpp
-    Graphics/Bochs/QEMUDisplayConnector.cpp
-    Graphics/Console/BootFramebufferConsole.cpp
-    Graphics/Console/GenericFramebufferConsole.cpp
-    Graphics/Console/ContiguousFramebufferConsole.cpp
-    Graphics/Console/VGATextModeConsole.cpp
-    Graphics/DisplayConnector.cpp
-    Graphics/Generic/DisplayConnector.cpp
-    Graphics/GraphicsManagement.cpp
-    Graphics/Intel/Auxiliary/GMBusConnector.cpp
-    Graphics/Intel/Plane/DisplayPlane.cpp
-    Graphics/Intel/Plane/G33DisplayPlane.cpp
-    Graphics/Intel/Transcoder/AnalogDisplayTranscoder.cpp
-    Graphics/Intel/Transcoder/DisplayTranscoder.cpp
-    Graphics/Intel/Transcoder/PLL.cpp
-    Graphics/Intel/DisplayConnectorGroup.cpp
-    Graphics/Intel/NativeDisplayConnector.cpp
-    Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VMWare/Console.cpp
-    Graphics/VMWare/GraphicsAdapter.cpp
-    Graphics/VMWare/DisplayConnector.cpp
-    Graphics/VirtIOGPU/DisplayConnector.cpp
-    Graphics/VirtIOGPU/Console.cpp
-    Graphics/VirtIOGPU/GPU3DDevice.cpp
-    Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    IOWindow.cpp
-    Jail.cpp
+    Devices/GPU/Bochs/GraphicsAdapter.cpp
+    Devices/GPU/Bochs/QEMUDisplayConnector.cpp
+    Devices/GPU/Console/BootFramebufferConsole.cpp
+    Devices/GPU/Console/GenericFramebufferConsole.cpp
+    Devices/GPU/Console/ContiguousFramebufferConsole.cpp
+    Devices/GPU/Console/VGATextModeConsole.cpp
+    Devices/GPU/DisplayConnector.cpp
+    Devices/GPU/Generic/DisplayConnector.cpp
+    Devices/GPU/Management.cpp
+    Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp
+    Devices/GPU/Intel/Plane/DisplayPlane.cpp
+    Devices/GPU/Intel/Plane/G33DisplayPlane.cpp
+    Devices/GPU/Intel/Transcoder/AnalogDisplayTranscoder.cpp
+    Devices/GPU/Intel/Transcoder/DisplayTranscoder.cpp
+    Devices/GPU/Intel/Transcoder/PLL.cpp
+    Devices/GPU/Intel/DisplayConnectorGroup.cpp
+    Devices/GPU/Intel/NativeDisplayConnector.cpp
+    Devices/GPU/Intel/NativeGraphicsAdapter.cpp
+    Devices/GPU/VMWare/Console.cpp
+    Devices/GPU/VMWare/GraphicsAdapter.cpp
+    Devices/GPU/VMWare/DisplayConnector.cpp
+    Devices/GPU/VirtIO/DisplayConnector.cpp
+    Devices/GPU/VirtIO/Console.cpp
+    Devices/GPU/VirtIO/GPU3DDevice.cpp
+    Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/Storage/ATA/AHCI/Controller.cpp
+    Devices/Storage/ATA/AHCI/Port.cpp
+    Devices/Storage/ATA/AHCI/InterruptHandler.cpp
+    Devices/Storage/ATA/GenericIDE/Controller.cpp
+    Devices/Storage/ATA/GenericIDE/Channel.cpp
+    Devices/Storage/ATA/ATAController.cpp
+    Devices/Storage/ATA/ATADevice.cpp
+    Devices/Storage/ATA/ATADiskDevice.cpp
+    Devices/Storage/ATA/ATAPort.cpp
+    Devices/Storage/NVMe/NVMeController.cpp
+    Devices/Storage/NVMe/NVMeNameSpace.cpp
+    Devices/Storage/NVMe/NVMeInterruptQueue.cpp
+    Devices/Storage/NVMe/NVMePollQueue.cpp
+    Devices/Storage/NVMe/NVMeQueue.cpp
+    Devices/Storage/SD/PCISDHostController.cpp
+    Devices/Storage/SD/SDHostController.cpp
+    Devices/Storage/SD/SDMemoryCard.cpp
+    Devices/Storage/DiskPartition.cpp
+    Devices/Storage/StorageController.cpp
+    Devices/Storage/StorageDevice.cpp
+    Devices/Storage/StorageManagement.cpp
     SanCov.cpp
-    Storage/ATA/AHCI/Controller.cpp
-    Storage/ATA/AHCI/Port.cpp
-    Storage/ATA/AHCI/InterruptHandler.cpp
-    Storage/ATA/GenericIDE/Controller.cpp
-    Storage/ATA/GenericIDE/Channel.cpp
-    Storage/ATA/ATAController.cpp
-    Storage/ATA/ATADevice.cpp
-    Storage/ATA/ATADiskDevice.cpp
-    Storage/ATA/ATAPort.cpp
-    Storage/NVMe/NVMeController.cpp
-    Storage/NVMe/NVMeNameSpace.cpp
-    Storage/NVMe/NVMeInterruptQueue.cpp
-    Storage/NVMe/NVMePollQueue.cpp
-    Storage/NVMe/NVMeQueue.cpp
-    Storage/SD/PCISDHostController.cpp
-    Storage/SD/SDHostController.cpp
-    Storage/SD/SDMemoryCard.cpp
-    Storage/DiskPartition.cpp
-    Storage/StorageController.cpp
-    Storage/StorageDevice.cpp
-    Storage/StorageManagement.cpp
-    DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
@@ -179,8 +174,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Devices/Directory.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
-    FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
@@ -213,19 +206,14 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
     FileSystem/VirtualFileSystem.cpp
-    Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
-    Firmware/MultiProcessor/Parser.cpp
-    FutexQueue.cpp
+    Firmware/ACPI/StaticParsing.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
-    KBufferBuilder.cpp
-    KLexicalPath.cpp
-    KString.cpp
     KSyms.cpp
     Memory/AddressSpace.cpp
     Memory/AnonymousVMObject.cpp
@@ -244,9 +232,18 @@ set(KERNEL_SOURCES
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
-    MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
+    Library/DoubleBuffer.cpp
+    Library/IOWindow.cpp
+    Library/MiniStdLib.cpp
+    Library/Panic.cpp
+    Library/ScopedCritical.cpp
+    Library/StdLib.cpp
+    Library/KBufferBuilder.cpp
+    Library/KLexicalPath.cpp
+    Library/KString.cpp
+    Library/UserOrKernelBuffer.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
@@ -260,16 +257,11 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    Panic.cpp
-    PerformanceEventBuffer.cpp
-    Process.cpp
-    ProcessGroup.cpp
-    ProcessList.cpp
-    Random.cpp
-    Scheduler.cpp
-    ScopedCritical.cpp
-    StdLib.cpp
-    Syscall.cpp
+    Security/AddressSanitizer.cpp
+    Security/Credentials.cpp
+    Security/Random.cpp
+    Security/Jail.cpp
+    Security/UBSanitizer.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
@@ -330,6 +322,7 @@ set(KERNEL_SOURCES
     Syscalls/stat.cpp
     Syscalls/statvfs.cpp
     Syscalls/sync.cpp
+    Syscalls/SyscallHandler.cpp
     Syscalls/sysconf.cpp
     Syscalls/thread.cpp
     Syscalls/times.cpp
@@ -348,17 +341,23 @@ set(KERNEL_SOURCES
     TTY/SlavePTY.cpp
     TTY/TTY.cpp
     TTY/VirtualConsole.cpp
+    Tasks/Coredump.cpp
+    Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp
+    Tasks/FutexQueue.cpp
+    Tasks/PerformanceEventBuffer.cpp
+    Tasks/Process.cpp
+    Tasks/ProcessGroup.cpp
+    Tasks/ProcessList.cpp
+    Tasks/Scheduler.cpp
     Tasks/SyncTask.cpp
-    Thread.cpp
-    ThreadBlockers.cpp
-    ThreadTracer.cpp
+    Tasks/Thread.cpp
+    Tasks/ThreadBlockers.cpp
+    Tasks/ThreadTracer.cpp
+    Tasks/WaitQueue.cpp
+    Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
-    TimerQueue.cpp
-    UBSanitizer.cpp
-    UserOrKernelBuffer.cpp
-    WaitQueue.cpp
-    WorkQueue.cpp
+    Time/TimerQueue.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
@@ -369,6 +368,12 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/CMOS.cpp
         Arch/x86_64/DebugOutput.cpp
         Arch/x86_64/Delay.cpp
+
+        Arch/x86_64/Firmware/ACPI/StaticParsing.cpp
+        Arch/x86_64/Firmware/MultiProcessor/Parser.cpp
+        Arch/x86_64/Firmware/PCBIOS/Mapper.cpp
+        Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp
+        Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.cpp
 
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
@@ -386,8 +391,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Time/RTC.cpp
         Arch/x86_64/PCSpeaker.cpp
 
-        Arch/x86_64/ISABus/HID/PS2KeyboardDevice.cpp
-        Arch/x86_64/ISABus/HID/PS2MouseDevice.cpp
         Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
         Arch/x86_64/ISABus/IDEController.cpp
@@ -405,7 +408,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
-        kprintf.cpp
+        kprintf.cpp        
     )
 
     set(KERNEL_SOURCES
@@ -443,7 +446,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MiniUART.cpp
-        Arch/aarch64/RPi/MMIO.cpp
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
@@ -453,12 +455,15 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/MMU.cpp
         Arch/aarch64/pre_init.cpp
+        Arch/aarch64/RPi/MMIO.cpp
         )
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         ${RPI_SOURCES}
         ${SOURCES_RUNNING_WITHOUT_MMU}
         Arch/Processor.cpp
+
+        Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
 
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
@@ -545,6 +550,7 @@ set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/EBRPartitionTable.cpp
     ../Userland/Libraries/LibPartition/GUIDPartitionTable.cpp
     ../Userland/Libraries/LibPartition/MBRPartitionTable.cpp
+    ../Userland/Libraries/LibPartition/PartitionableDevice.cpp
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
 
@@ -599,7 +605,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
-    set_source_files_properties(MiniStdLib.cpp
+    set_source_files_properties(Library/MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
     add_link_options(LINKER:-z,pack-relative-relocs)
@@ -653,7 +659,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         # interrupt handlers because their calling convention is not compatible
         # with the System V ABI.
         ../Kernel/Arch/x86_64/Interrupts.cpp
-        ../Kernel/Syscall.cpp
+        ../Kernel/Syscall/SyscallHandler.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
 elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
@@ -699,10 +705,15 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         COMMENT "Preprocessing linker.ld"
         VERBATIM
     )
-
     add_custom_target(generate_kernel_linker_script DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
     target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib -nodefaultlibs)
     set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(Kernel PRIVATE -mpreferred-stack-boundary=3)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        target_compile_options(Kernel PRIVATE -mstack-alignment=8)
+    endif()
 else()
     target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
     set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)

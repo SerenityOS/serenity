@@ -11,19 +11,19 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(SerialIOController const& serial_io_controller, SerialIOController::PortIndex port_index, MouseDevice const& mouse_device)
 {
     // FIXME: return the correct error
     if (!VMWareBackdoor::the())
         return Error::from_errno(EIO);
     if (!VMWareBackdoor::the()->vmmouse_is_absolute())
         return Error::from_errno(EIO);
-    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VMWareMouseDevice(ps2_controller, mouse_device)));
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VMWareMouseDevice(serial_io_controller, port_index, mouse_device)));
     TRY(device->initialize());
     return device;
 }
 
-void VMWareMouseDevice::irq_handle_byte_read(u8)
+void VMWareMouseDevice::handle_byte_read_from_serial_input(u8)
 {
     auto backdoor = VMWareBackdoor::the();
     VERIFY(backdoor);
@@ -46,8 +46,8 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
     }
 }
 
-VMWareMouseDevice::VMWareMouseDevice(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
-    : PS2MouseDevice(ps2_controller, mouse_device)
+VMWareMouseDevice::VMWareMouseDevice(SerialIOController const& serial_io_controller, SerialIOController::PortIndex port_index, MouseDevice const& mouse_device)
+    : PS2MouseDevice(serial_io_controller, port_index, mouse_device)
 {
 }
 VMWareMouseDevice::~VMWareMouseDevice() = default;

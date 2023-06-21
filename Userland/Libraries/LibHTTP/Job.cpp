@@ -380,7 +380,7 @@ void Job::on_socket_connected()
                 dbgln_if(JOB_DEBUG, "Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
             } else if (name.equals_ignoring_ascii_case("Content-Length"sv)) {
-                auto length = value.to_uint();
+                auto length = value.to_uint<u64>();
                 if (length.has_value())
                     m_content_length = length.value();
             }

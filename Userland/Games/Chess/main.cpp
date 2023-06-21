@@ -10,7 +10,6 @@
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
-#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -38,7 +37,7 @@ static ErrorOr<Vector<EngineDetails>> available_engines()
 {
     Vector<EngineDetails> available_engines;
     for (auto& engine : s_all_engines) {
-        auto path_or_error = FileSystem::resolve_executable_from_environment(engine.command);
+        auto path_or_error = Core::System::resolve_executable_from_environment(engine.command);
         if (path_or_error.is_error())
             continue;
 
@@ -100,7 +99,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_separator());
 
     TRY(game_menu->try_add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().open_file(window);
+        FileSystemAccessClient::OpenFileOptions options {
+            .allowed_file_types = Vector {
+                GUI::FileTypeFilter { "PGN Files", { { "pgn" } } },
+                GUI::FileTypeFilter::all_files(),
+            }
+        };
+        auto result = FileSystemAccessClient::Client::the().open_file(window, options);
         if (result.is_error())
             return;
 
@@ -139,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Process::spawn_or_show_error(window, "/bin/GamesSettings"sv, Array { "--open-tab", "chess" });
         },
         window);
-    settings_action->set_status_tip("Open the Game Settings for Chess");
+    settings_action->set_status_tip(TRY("Open the Game Settings for Chess"_string));
     TRY(game_menu->try_add_action(settings_action));
 
     auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {

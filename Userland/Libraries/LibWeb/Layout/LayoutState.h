@@ -51,6 +51,8 @@ struct LayoutState {
 
         void set_indefinite_content_width();
         void set_indefinite_content_height();
+        void set_min_content_width();
+        void set_max_content_width();
 
         // NOTE: These are used by FlexFormattingContext to assign a temporary main size to items
         //       early on, so that descendants have something to resolve percentages against.
@@ -112,19 +114,13 @@ struct LayoutState {
         CSSPixels border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
         CSSPixels border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
 
-        Optional<Painting::PaintableBox::OverflowData> overflow_data;
-
-        Painting::PaintableBox::OverflowData& ensure_overflow_data()
-        {
-            if (!overflow_data.has_value())
-                overflow_data = Painting::PaintableBox::OverflowData {};
-            return *overflow_data;
-        }
-
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
 
         void add_floating_descendant(Box const& box) { m_floating_descendants.set(&box); }
         auto const& floating_descendants() const { return m_floating_descendants; }
+
+        void set_override_borders_data(Painting::BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+        auto const& override_borders_data() const { return m_override_borders_data; }
 
     private:
         AvailableSize available_width_inside() const;
@@ -139,6 +135,8 @@ struct LayoutState {
         bool m_has_definite_height { false };
 
         HashTable<JS::GCPtr<Box const>> m_floating_descendants;
+
+        Optional<Painting::BordersData> m_override_borders_data;
     };
 
     void commit();
@@ -172,14 +170,5 @@ struct LayoutState {
     LayoutState const* m_parent { nullptr };
     LayoutState const& m_root;
 };
-
-CSSPixelRect absolute_content_rect(Box const&, LayoutState const&);
-CSSPixelRect margin_box_rect(Box const&, LayoutState const&);
-CSSPixelRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixelRect border_box_rect(Box const&, LayoutState const&);
-CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixelRect content_box_rect(Box const&, LayoutState const&);
-CSSPixelRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-CSSPixels box_baseline(LayoutState const& state, Box const& box);
 
 }

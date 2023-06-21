@@ -6,9 +6,9 @@
 
 #include <AK/Checked.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Tasks/PerformanceManager.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 

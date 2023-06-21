@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <AK/FlyString.h>
+#include <AK/Random.h>
 #include <AK/SourceLocation.h>
 #include <AK/Tuple.h>
 #include <LibCore/File.h>
@@ -514,14 +515,19 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
@@ -547,11 +553,11 @@ ErrorOr<Result<FileStat>> Implementation::impl$path_filestat_get(Configuration& 
         if (S_ISREG(buf.st_mode))
             return FileType::RegularFile;
         if (S_ISFIFO(buf.st_mode))
-            return FileType::Unknown; // no Pipe? :yakfused:
+            return FileType::Unknown; // FIXME: FileType::Pipe is currently not present in WASI (but it should be) so we use Unknown for now.
         if (S_ISLNK(buf.st_mode))
             return FileType::SymbolicLink;
         if (S_ISSOCK(buf.st_mode))
-            return FileType::SocketDGram; // :shrug:
+            return FileType::SocketStream;
         return FileType::Unknown;
     };
 
@@ -572,14 +578,19 @@ ErrorOr<Result<void>> Implementation::impl$path_create_directory(Configuration& 
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
@@ -598,14 +609,19 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
     auto dir_fd = AT_FDCWD;
 
     auto mapped_fd = map_fd(fd);
-    if (mapped_fd.has<PreopenedDirectoryDescriptor>()) {
-        auto& entry = preopened_directories()[mapped_fd.get<PreopenedDirectoryDescriptor>().value()];
-        dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
-            DeprecatedString path = entry.host_path.string();
-            return open(path.characters(), O_DIRECTORY, 0755);
-        });
-        entry.opened_fd = dir_fd;
-    }
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            dir_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0);
+            });
+            entry.opened_fd = dir_fd;
+        },
+        [&](u32 fd) {
+            dir_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
 
     if (dir_fd < 0 && dir_fd != AT_FDCWD)
         return errno_value_from_errno(errno);
@@ -635,11 +651,15 @@ ErrorOr<Result<FD>> Implementation::impl$path_open(Configuration& configuration,
     auto path_data = TRY(slice_typed_memory(configuration, path, path_len));
     auto path_string = DeprecatedString::copy(path_data);
 
+    dbgln_if(WASI_FINE_GRAINED_DEBUG, "path_open: dir_fd={}, path={}, open_flags={}", dir_fd, path_string, open_flags);
+
     int opened_fd = openat(dir_fd, path_string.characters(), open_flags, 0644);
     if (opened_fd < 0)
         return errno_value_from_errno(errno);
 
     // FIXME: Implement Rights and RightsInheriting.
+
+    m_fd_map.insert(opened_fd, static_cast<u32>(opened_fd));
 
     return FD(opened_fd);
 }
@@ -676,6 +696,88 @@ ErrorOr<Result<Timestamp>> Implementation::impl$clock_time_get(Configuration&, C
     return Result<Timestamp> { static_cast<u64>(ts.tv_sec) * nanoseconds_in_second + static_cast<u64>(ts.tv_nsec) };
 }
 
+ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, FD fd)
+{
+    int resolved_fd = -1;
+
+    auto mapped_fd = map_fd(fd);
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            resolved_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                DeprecatedString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0);
+            });
+            entry.opened_fd = resolved_fd;
+        },
+        [&](u32 fd) {
+            resolved_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
+
+    if (resolved_fd < 0)
+        return errno_value_from_errno(errno);
+
+    struct stat stat_buf;
+    if (fstat(resolved_fd, &stat_buf) < 0)
+        return errno_value_from_errno(errno);
+
+    constexpr auto file_type_of = [](struct stat const& buf) {
+        if (S_ISDIR(buf.st_mode))
+            return FileType::Directory;
+        if (S_ISCHR(buf.st_mode))
+            return FileType::CharacterDevice;
+        if (S_ISBLK(buf.st_mode))
+            return FileType::BlockDevice;
+        if (S_ISREG(buf.st_mode))
+            return FileType::RegularFile;
+        if (S_ISFIFO(buf.st_mode))
+            return FileType::Unknown; // no Pipe? :yakfused:
+        if (S_ISLNK(buf.st_mode))
+            return FileType::SymbolicLink;
+        if (S_ISSOCK(buf.st_mode))
+            return FileType::SocketDGram; // :shrug:
+        return FileType::Unknown;
+    };
+
+    return Result(FileStat {
+        .dev = stat_buf.st_dev,
+        .ino = stat_buf.st_ino,
+        .filetype = file_type_of(stat_buf),
+        .nlink = stat_buf.st_nlink,
+        .size = stat_buf.st_size,
+        .atim = stat_buf.st_atime,
+        .mtim = stat_buf.st_mtime,
+        .ctim = stat_buf.st_ctime,
+    });
+}
+
+ErrorOr<Result<void>> Implementation::impl$random_get(Configuration& configuration, Pointer<u8> buf, Size buf_len)
+{
+    auto buffer_slice = TRY(slice_typed_memory(configuration, buf, buf_len));
+    fill_with_random(buffer_slice);
+
+    return Result<void> {};
+}
+
+ErrorOr<Result<Size>> Implementation::impl$fd_read(Configuration& configuration, FD fd, Pointer<IOVec> iovs, Size iovs_len)
+{
+    auto mapped_fd = map_fd(fd);
+    if (!mapped_fd.has<u32>())
+        return errno_value_from_errno(EBADF);
+
+    u32 fd_value = mapped_fd.get<u32>();
+    Size bytes_read = 0;
+    for (auto& iovec : TRY(copy_typed_array(configuration, iovs, iovs_len))) {
+        auto slice = TRY(slice_typed_memory(configuration, iovec.buf, iovec.buf_len));
+        auto result = read(fd_value, slice.data(), slice.size());
+        if (result < 0)
+            return errno_value_from_errno(errno);
+        bytes_read += static_cast<Size>(result);
+    }
+    return bytes_read;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -689,12 +791,10 @@ ErrorOr<Result<void>> Implementation::impl$fd_datasync(Configuration&, FD) { ret
 ErrorOr<Result<FDStat>> Implementation::impl$fd_fdstat_get(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_flags(Configuration&, FD, FDFlags) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_rights(Configuration&, FD, Rights fs_rights_base, Rights fs_rights_inheriting) { return Errno::NoSys; }
-ErrorOr<Result<FileStat>> Implementation::impl$fd_filestat_get(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_size(Configuration&, FD, FileSize) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_times(Configuration&, FD, Timestamp atim, Timestamp mtim, FSTFlags) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_pread(Configuration&, FD, Pointer<IOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_pwrite(Configuration&, FD, Pointer<CIOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
-ErrorOr<Result<Size>> Implementation::impl$fd_read(Configuration&, FD, Pointer<IOVec> iovs, Size iovs_len) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_readdir(Configuration&, FD, Pointer<u8> buf, Size buf_len, DirCookie cookie) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_renumber(Configuration&, FD from, FD to) { return Errno::NoSys; }
 ErrorOr<Result<FileSize>> Implementation::impl$fd_seek(Configuration&, FD, FileDelta offset, Whence whence) { return Errno::NoSys; }
@@ -710,7 +810,6 @@ ErrorOr<Result<void>> Implementation::impl$path_unlink_file(Configuration&, FD, 
 ErrorOr<Result<Size>> Implementation::impl$poll_oneoff(Configuration&, ConstPointer<Subscription> in, Pointer<Event> out, Size nsubscriptions) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$proc_raise(Configuration&, Signal) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$sched_yield(Configuration&) { return Errno::NoSys; }
-ErrorOr<Result<void>> Implementation::impl$random_get(Configuration&, Pointer<u8> buf, Size buf_len) { return Errno::NoSys; }
 ErrorOr<Result<FD>> Implementation::impl$sock_accept(Configuration&, FD fd, FDFlags fd_flags) { return Errno::NoSys; }
 ErrorOr<Result<SockRecvResult>> Implementation::impl$sock_recv(Configuration&, FD fd, Pointer<IOVec> ri_data, Size ri_data_len, RIFlags ri_flags) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$sock_send(Configuration&, FD fd, Pointer<CIOVec> si_data, Size si_data_len, SIFlags si_flags) { return Errno::NoSys; }
@@ -838,8 +937,7 @@ struct InvocationOf<impl> {
                 .template operator()<Args...>(MakeIndexSequence<sizeof...(Args)>());
 
                 auto result = args.apply_as_args([&](auto&&... impl_args) { return (self.*impl)(configuration, impl_args...); });
-                dbgln_if(WASI_DEBUG, "WASI: Called {}", function_name);
-
+                dbgln_if(WASI_DEBUG, "WASI: {}({}) = {}", function_name, arguments, result);
                 if (result.is_error())
                     return Wasm::Trap { DeprecatedString::formatted("Invalid call to {}() = {}", function_name, result.error()) };
 
@@ -1014,4 +1112,88 @@ Errno errno_value_from_errno(int value)
         return Errno::Invalid;
     }
 }
+}
+
+namespace AK {
+template<>
+struct Formatter<Wasm::Value> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Value const& value)
+    {
+        return value.value().visit(
+            [&](Wasm::Reference const&) {
+                return Formatter<FormatString>::format(builder, "({}) &r"sv, Wasm::ValueType::kind_name(value.type().kind()));
+            },
+            [&](auto const& v) {
+                return Formatter<FormatString>::format(builder, "({}) {}"sv, Wasm::ValueType::kind_name(value.type().kind()), v);
+            });
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::Errno> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::Errno const& value)
+    {
+        return Formatter<FormatString>::format(builder, "{}"sv, to_underlying(value));
+    }
+};
+
+template<>
+struct Formatter<Empty> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder&, Empty)
+    {
+        return {};
+    }
+};
+
+template<typename T>
+struct Formatter<Wasm::Wasi::Result<T>> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::Result<T> const& value)
+    {
+        if (value.is_error())
+            return Formatter<FormatString>::format(builder, "Error({})"sv, *value.error());
+
+        return Formatter<FormatString>::format(builder, "Ok({})"sv, *value.result());
+    }
+};
+
+template<OneOf<Wasm::Wasi::ArgsSizes, Wasm::Wasi::EnvironSizes> T>
+struct Formatter<T> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, T const& value)
+    {
+        return Formatter<FormatString>::format(builder, "size={}, count={}"sv, value.size, value.count);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::FDStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::FDStat const&)
+    {
+        return Formatter<FormatString>::format(builder, "(rights)"sv);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::FileStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::FileStat const& value)
+    {
+        return Formatter<FormatString>::format(builder, "dev={}, ino={}, ft={}, nlink={}, size={}, atim={}, mtim={}, ctim={}"sv,
+            value.dev, value.ino, to_underlying(value.filetype), value.nlink, value.size, value.atim, value.mtim, value.ctim);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::PreStat> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::PreStat const& value)
+    {
+        return Formatter<FormatString>::format(builder, "length={}"sv, value.dir.pr_name_len);
+    }
+};
+
+template<>
+struct Formatter<Wasm::Wasi::SockRecvResult> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Wasi::SockRecvResult const& value)
+    {
+        return Formatter<FormatString>::format(builder, "size={}"sv, value.size);
+    }
+};
 }

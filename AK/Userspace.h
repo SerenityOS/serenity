@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 
 #ifdef KERNEL
-#    include <Kernel/VirtualAddress.h>
+#    include <Kernel/Memory/VirtualAddress.h>
 #endif
 
 namespace AK {

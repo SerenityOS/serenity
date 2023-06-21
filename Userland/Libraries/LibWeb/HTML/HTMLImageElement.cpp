@@ -47,7 +47,7 @@ JS::ThrowCompletionOr<void> HTMLImageElement::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
 
-    m_current_request = TRY_OR_THROW_OOM(vm(), ImageRequest::create());
+    m_current_request = TRY_OR_THROW_OOM(vm(), ImageRequest::create(*document().page()));
 
     return {};
 }
@@ -152,7 +152,7 @@ unsigned HTMLImageElement::width() const
 
     // Return the rendered width of the image, in CSS pixels, if the image is being rendered.
     if (auto* paintable_box = this->paintable_box())
-        return paintable_box->content_width().value();
+        return paintable_box->content_width().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto width_attr = get_attribute(HTML::AttributeNames::width);
@@ -168,9 +168,9 @@ unsigned HTMLImageElement::width() const
     return 0;
 }
 
-void HTMLImageElement::set_width(unsigned width)
+WebIDL::ExceptionOr<void> HTMLImageElement::set_width(unsigned width)
 {
-    MUST(set_attribute(HTML::AttributeNames::width, DeprecatedString::number(width)));
+    return set_attribute(HTML::AttributeNames::width, DeprecatedString::number(width));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-height
@@ -180,7 +180,7 @@ unsigned HTMLImageElement::height() const
 
     // Return the rendered height of the image, in CSS pixels, if the image is being rendered.
     if (auto* paintable_box = this->paintable_box())
-        return paintable_box->content_height().value();
+        return paintable_box->content_height().to_int();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto height_attr = get_attribute(HTML::AttributeNames::height);
@@ -196,9 +196,9 @@ unsigned HTMLImageElement::height() const
     return 0;
 }
 
-void HTMLImageElement::set_height(unsigned height)
+WebIDL::ExceptionOr<void> HTMLImageElement::set_height(unsigned height)
 {
-    MUST(set_attribute(HTML::AttributeNames::height, DeprecatedString::number(height)));
+    return set_attribute(HTML::AttributeNames::height, DeprecatedString::number(height));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalwidth
@@ -266,7 +266,7 @@ bool HTMLImageElement::uses_srcset_or_picture() const
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#update-the-image-data
-ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
+ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, bool maybe_omit_events)
 {
     // 1. If the element's node document is not fully active, then:
     if (!document().is_fully_active()) {
@@ -281,11 +281,14 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
     //           then abort the image request for the current request and the pending request,
     //           set current request's state to unavailable, set pending request to null, and return.
 
-    // 3. Let selected source be null and selected pixel density be undefined.
+    // 3. Let previous URL be the current request's current URL.
+    auto previous_url = m_current_request->current_url();
+
+    // 4. Let selected source be null and selected pixel density be undefined.
     Optional<String> selected_source;
     Optional<float> selected_pixel_density;
 
-    // 4. If the element does not use srcset or picture
+    // 5. If the element does not use srcset or picture
     //    and it has a src attribute specified whose value is not the empty string,
     //    then set selected source to the value of the element's src attribute
     //    and set selected pixel density to 1.0.
@@ -294,17 +297,17 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
         selected_pixel_density = 1.0f;
     }
 
-    // 5. Set the element's last selected source to selected source.
+    // 6. Set the element's last selected source to selected source.
     m_last_selected_source = selected_source;
 
-    // 6. If selected source is not null, then:
+    // 7. If selected source is not null, then:
     if (selected_source.has_value()) {
         // 1. Parse selected source, relative to the element's node document.
         //    If that is not successful, then abort this inner set of steps.
         //    Otherwise, let urlString be the resulting URL string.
         auto url_string = document().parse_url(selected_source.value().to_deprecated_string());
         if (!url_string.is_valid())
-            goto after_step_6;
+            goto after_step_7;
 
         // 2. Let key be a tuple consisting of urlString, the img element's crossorigin attribute's mode,
         //    and, if that mode is not No CORS, the node document's origin.
@@ -319,17 +322,14 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
             entry->ignore_higher_layer_caching = true;
 
             // 2. Abort the image request for the current request and the pending request.
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
 
             // 3. Set pending request to null.
             m_pending_request = nullptr;
 
             // 4. Let current request be a new image request whose image data is that of the entry and whose state is completely available.
-            m_current_request = ImageRequest::create().release_value_but_fixme_should_propagate_errors();
+            m_current_request = ImageRequest::create(*document().page()).release_value_but_fixme_should_propagate_errors();
             m_current_request->set_image_data(entry->image_data);
             m_current_request->set_state(ImageRequest::State::CompletelyAvailable);
 
@@ -342,7 +342,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
             m_current_request->set_current_pixel_density(selected_pixel_density.value_or(1.0f));
 
             // 7. Queue an element task on the DOM manipulation task source given the img element and following steps:
-            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, restart_animations, url_string] {
+            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, restart_animations, maybe_omit_events, url_string, previous_url] {
                 // 1. If restart animation is set, then restart the animation.
                 if (restart_animations)
                     restart_the_animation();
@@ -350,21 +350,22 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations)
                 // 2. Set current request's current URL to urlString.
                 m_current_request->set_current_url(url_string);
 
-                // 3. Fire an event named load at the img element.
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                // 3. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
+                if (!maybe_omit_events || previous_url != url_string)
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
             });
 
             // 8. Abort the update the image data algorithm.
             return {};
         }
     }
-after_step_6:
-    // 7. Queue a microtask to perform the rest of this algorithm, allowing the task that invoked this algorithm to continue.
-    queue_a_microtask(&document(), [this, restart_animations]() mutable {
-        // FIXME: 8. If another instance of this algorithm for this img element was started after this instance
+after_step_7:
+    // 8. Queue a microtask to perform the rest of this algorithm, allowing the task that invoked this algorithm to continue.
+    queue_a_microtask(&document(), [this, restart_animations, maybe_omit_events, previous_url]() mutable {
+        // FIXME: 9. If another instance of this algorithm for this img element was started after this instance
         //           (even if it aborted and is no longer running), then return.
 
-        // 9. Let selected source and selected pixel density be
+        // 10. Let selected source and selected pixel density be
         //    the URL and pixel density that results from selecting an image source, respectively.
         Optional<ImageSource> selected_source;
         Optional<float> pixel_density;
@@ -373,26 +374,27 @@ after_step_6:
             pixel_density = result.value().pixel_density;
         }
 
-        // 10. If selected source is null, then:
+        // 11. If selected source is null, then:
         if (!selected_source.has_value()) {
             // 1. Set the current request's state to broken,
             //    abort the image request for the current request and the pending request,
             //    and set pending request to null.
             m_current_request->set_state(ImageRequest::State::Broken);
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like the image's pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
             m_pending_request = nullptr;
 
             // 2. Queue an element task on the DOM manipulation task source given the img element and the following steps:
-            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
+            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, maybe_omit_events, previous_url] {
                 // 1. Change the current request's current URL to the empty string.
                 m_current_request->set_current_url(""sv);
 
-                // 2. If the element has a src attribute or it uses srcset or picture, fire an event named error at the img element.
-                if (has_attribute(HTML::AttributeNames::src) || uses_srcset_or_picture()) {
+                // 2. If all of the following conditions are true:
+                //    - the element has a src attribute or it uses srcset or picture; and
+                //    - maybe omit events is not set or previousURL is not the empty string
+                if (
+                    (has_attribute(HTML::AttributeNames::src) || uses_srcset_or_picture())
+                    && (!maybe_omit_events || m_current_request->current_url() != ""sv)) {
                     dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
                 }
             });
@@ -401,16 +403,13 @@ after_step_6:
             return;
         }
 
-        // 11. Parse selected source, relative to the element's node document, and let urlString be the resulting URL string.
+        // 12. Parse selected source, relative to the element's node document, and let urlString be the resulting URL string.
         auto url_string = document().parse_url(selected_source.value().url.to_deprecated_string());
         // If that is not successful, then:
         if (!url_string.is_valid()) {
             // 1. Abort the image request for the current request and the pending request.
-            m_current_request->abort(realm());
-
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_current_request);
+            abort_the_image_request(realm(), m_pending_request);
 
             // 2. Set the current request's state to broken.
             m_current_request->set_state(ImageRequest::State::Broken);
@@ -419,30 +418,29 @@ after_step_6:
             m_pending_request = nullptr;
 
             // 4. Queue an element task on the DOM manipulation task source given the img element and the following steps:
-            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, selected_source] {
+            queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, selected_source, maybe_omit_events, previous_url] {
                 // 1. Change the current request's current URL to selected source.
                 m_current_request->set_current_url(selected_source.value().url);
 
-                // 2. Fire an event named error at the img element.
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                // 2. If maybe omit events is not set or previousURL is not equal to selected source, then fire an event named error at the img element.
+                if (!maybe_omit_events || previous_url != selected_source.value().url)
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             });
 
             // 5. Return.
             return;
         }
 
-        // 12. If the pending request is not null and urlString is the same as the pending request's current URL, then return.
+        // 13. If the pending request is not null and urlString is the same as the pending request's current URL, then return.
         if (m_pending_request && url_string == m_pending_request->current_url())
             return;
 
-        // 13. If urlString is the same as the current request's current URL and current request's state is partially available,
+        // 14. If urlString is the same as the current request's current URL and current request's state is partially available,
         //     then abort the image request for the pending request,
         //     queue an element task on the DOM manipulation task source given the img element
         //     to restart the animation if restart animation is set, and return.
         if (url_string == m_current_request->current_url() && m_current_request->state() == ImageRequest::State::PartiallyAvailable) {
-            // FIXME: Spec bug? Seems like pending request can be null here.
-            if (m_pending_request)
-                m_pending_request->abort(realm());
+            abort_the_image_request(realm(), m_pending_request);
             if (restart_animations) {
                 queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
                     restart_the_animation();
@@ -451,174 +449,123 @@ after_step_6:
             return;
         }
 
-        // 14. If the pending request is not null, then abort the image request for the pending request.
-        if (m_pending_request)
-            m_pending_request->abort(realm());
+        // 15. If the pending request is not null, then abort the image request for the pending request.
+        abort_the_image_request(realm(), m_pending_request);
 
-        // 15. Set image request to a new image request whose current URL is urlString.
-        auto image_request = ImageRequest::create().release_value_but_fixme_should_propagate_errors();
+        // AD-HOC: At this point we start deviating from the spec in order to allow sharing ImageRequest between
+        //         multiple image elements (as well as CSS background-images, etc.)
+
+        // 16. Set image request to a new image request whose current URL is urlString.
+        auto image_request = ImageRequest::create(*document().page()).release_value_but_fixme_should_propagate_errors();
         image_request->set_current_url(url_string);
 
-        // 16. If current request's state is unavailable or broken, then set the current request to image request.
+        // 17. If current request's state is unavailable or broken, then set the current request to image request.
         //     Otherwise, set the pending request to image request.
         if (m_current_request->state() == ImageRequest::State::Unavailable || m_current_request->state() == ImageRequest::State::Broken)
             m_current_request = image_request;
         else
             m_pending_request = image_request;
 
-        // 17. Let request be the result of creating a potential-CORS request given urlString, "image",
-        //     and the current state of the element's crossorigin content attribute.
-        auto request = create_potential_CORS_request(vm(), url_string, Fetch::Infrastructure::Request::Destination::Image, m_cors_setting);
-
-        // 18. Set request's client to the element's node document's relevant settings object.
-        request->set_client(&document().relevant_settings_object());
-
-        // 19. If the element uses srcset or picture, set request's initiator to "imageset".
-        if (uses_srcset_or_picture())
-            request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
-
-        // 20. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
-        request->set_referrer_policy(ReferrerPolicy::from_string(attribute(HTML::AttributeNames::referrerpolicy)));
-
-        // FIXME: 21. Set request's priority to the current state of the element's fetchpriority attribute.
-
-        // 22. Let delay load event be true if the img's lazy loading attribute is in the Eager state, or if scripting is disabled for the img, and false otherwise.
+        // 23. Let delay load event be true if the img's lazy loading attribute is in the Eager state, or if scripting is disabled for the img, and false otherwise.
         auto delay_load_event = lazy_loading() == LazyLoading::Eager;
-
-        // FIXME: 23. If the will lazy load element steps given the img return true, then:
-        // FIXME:     1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
-        // FIXME:     2. Start intersection-observing a lazy loading element for the img element.
-        // FIXME:     3. Return.
-
-        Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
-        fetch_algorithms_input.process_response = [this, image_request, url_string](JS::NonnullGCPtr<Fetch::Infrastructure::Response> response) {
-            // 25. As soon as possible, jump to the first applicable entry from the following list:
-
-            // FIXME: - If the resource type is multipart/x-mixed-replace
-
-            // - If the resource type and data corresponds to a supported image format, as described below
-            // - The next task that is queued by the networking task source while the image is being fetched must run the following steps:
-            queue_an_element_task(HTML::Task::Source::Networking, [this, response, image_request, url_string] {
-                auto process_body = [response, image_request, url_string, this](ByteBuffer data) {
-                    // FIXME: Another instance of the CORS cross-origin response workaround here:
-                    auto response_with_headers = response;
-                    if (response->is_cors_cross_origin()
-                        && response->header_list()->is_empty()
-                        && !response->unsafe_response()->header_list()->is_empty()) {
-                        response_with_headers = response->unsafe_response();
-                    }
-                    auto extracted_mime_type = response_with_headers->header_list()->extract_mime_type().release_value_but_fixme_should_propagate_errors();
-                    auto mime_type = extracted_mime_type.has_value() ? extracted_mime_type.value().essence().bytes_as_string_view() : StringView {};
-                    handle_successful_fetch(url_string, mime_type, image_request, move(data));
-                };
-                auto process_body_error = [this](auto) {
-                    handle_failed_fetch();
-                };
-                // FIXME: See HTMLLinkElement::default_fetch_and_process_linked_resource for thorough notes on the workaround
-                //        added here for CORS cross-origin responses. The gist is that all cross-origin responses will have a
-                //        null bodyBytes. So we must read the actual body from the unsafe response.
-                //        https://github.com/whatwg/html/issues/9066
-                if (response->is_cors_cross_origin() && !response->body().has_value() && response->unsafe_response()->body().has_value()) {
-                    auto unsafe_response = static_cast<Fetch::Infrastructure::OpaqueFilteredResponse const&>(*response).internal_response();
-                    unsafe_response->body()->fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
-                } else if (response->body().has_value()) {
-                    response->body().value().fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
-                }
-            });
-        };
-
-        // 24. Fetch the image: Fetch request.
-        //     Return from this algorithm, and run the remaining steps as part of the fetch's processResponse for the response response.
 
         // When delay load event is true, fetching the image must delay the load event of the element's node document
         // until the task that is queued by the networking task source once the resource has been fetched (defined below) has been run.
         if (delay_load_event)
             m_load_event_delayer.emplace(document());
 
-        auto fetch_controller = Fetch::Fetching::fetch(
-            realm(),
-            request,
-            Fetch::Infrastructure::FetchAlgorithms::create(vm(), move(fetch_algorithms_input)))
-                                    .release_value_but_fixme_should_propagate_errors();
+        image_request->add_callbacks(
+            [this, image_request, maybe_omit_events, url_string, previous_url]() {
+                VERIFY(image_request->shared_image_request());
+                auto image_data = image_request->shared_image_request()->image_data();
+                image_request->set_image_data(image_data);
 
-        image_request->set_fetch_controller(fetch_controller);
+                ListOfAvailableImages::Key key;
+                key.url = url_string;
+                key.mode = m_cors_setting;
+                key.origin = document().origin();
+
+                // 1. If image request is the pending request, abort the image request for the current request,
+                //    upgrade the pending request to the current request
+                //    and prepare image request for presentation given the img element.
+                if (image_request == m_pending_request) {
+                    abort_the_image_request(realm(), m_current_request);
+                    upgrade_pending_request_to_current_request();
+                    image_request->prepare_for_presentation(*this);
+                }
+
+                // 2. Set image request to the completely available state.
+                image_request->set_state(ImageRequest::State::CompletelyAvailable);
+
+                // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
+                document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
+
+                // 4. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
+                if (!maybe_omit_events || previous_url != url_string)
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+
+                set_needs_style_update(true);
+                document().set_needs_layout();
+
+                if (image_data->is_animated() && image_data->frame_count() > 1) {
+                    m_current_frame_index = 0;
+                    m_animation_timer->set_interval(image_data->frame_duration(0));
+                    m_animation_timer->start();
+                }
+
+                m_load_event_delayer.clear();
+            },
+            [this, image_request, maybe_omit_events, url_string, previous_url, selected_source]() {
+                // The image data is not in a supported file format;
+
+                // the user agent must set image request's state to broken,
+                image_request->set_state(ImageRequest::State::Broken);
+
+                // abort the image request for the current request and the pending request,
+                abort_the_image_request(realm(), m_current_request);
+                abort_the_image_request(realm(), m_pending_request);
+
+                // upgrade the pending request to the current request if image request is the pending request,
+                if (image_request == m_pending_request)
+                    upgrade_pending_request_to_current_request();
+
+                // and then, if maybe omit events is not set or previousURL is not equal to urlString,
+                // queue an element task on the DOM manipulation task source given the img element
+                // to fire an event named error at the img element.
+                if (!maybe_omit_events || previous_url != url_string)
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+
+                m_load_event_delayer.clear();
+            });
+
+        // AD-HOC: If the image request is already available or fetching, no need to start another fetch.
+        if (image_request->is_available() || image_request->is_fetching())
+            return;
+
+        // 18. Let request be the result of creating a potential-CORS request given urlString, "image",
+        //     and the current state of the element's crossorigin content attribute.
+        auto request = create_potential_CORS_request(vm(), url_string, Fetch::Infrastructure::Request::Destination::Image, m_cors_setting);
+
+        // 19. Set request's client to the element's node document's relevant settings object.
+        request->set_client(&document().relevant_settings_object());
+
+        // 20. If the element uses srcset or picture, set request's initiator to "imageset".
+        if (uses_srcset_or_picture())
+            request->set_initiator(Fetch::Infrastructure::Request::Initiator::ImageSet);
+
+        // 21. Set request's referrer policy to the current state of the element's referrerpolicy attribute.
+        request->set_referrer_policy(ReferrerPolicy::from_string(attribute(HTML::AttributeNames::referrerpolicy)));
+
+        // FIXME: 22. Set request's priority to the current state of the element's fetchpriority attribute.
+
+        // FIXME: 24. If the will lazy load element steps given the img return true, then:
+        // FIXME:     1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
+        // FIXME:     2. Start intersection-observing a lazy loading element for the img element.
+        // FIXME:     3. Return.
+
+        image_request->fetch_image(realm(), request);
     });
     return {};
-}
-
-void HTMLImageElement::handle_successful_fetch(AK::URL const& url_string, StringView mime_type, ImageRequest& image_request, ByteBuffer data)
-{
-    // AD-HOC: At this point, things gets very ad-hoc.
-    // FIXME: Bring this closer to spec.
-
-    ScopeGuard undelay_load_event_guard = [this] {
-        m_load_event_delayer.clear();
-    };
-
-    bool is_svg_image = mime_type == "image/svg+xml"sv || url_string.basename().ends_with(".svg"sv);
-
-    RefPtr<DecodedImageData> image_data;
-
-    if (is_svg_image) {
-        VERIFY(document().page());
-        auto result = SVG::SVGDecodedImageData::create(*document().page(), url_string, data);
-        if (result.is_error()) {
-            dbgln("Failed to decode SVG image: {}", result.error());
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
-            return;
-        }
-
-        image_data = result.release_value();
-    } else {
-        auto result = Web::Platform::ImageCodecPlugin::the().decode_image(data.bytes());
-        if (!result.has_value()) {
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
-            return;
-        }
-
-        Vector<AnimatedBitmapDecodedImageData::Frame> frames;
-        for (auto& frame : result.value().frames) {
-            frames.append(AnimatedBitmapDecodedImageData::Frame {
-                .bitmap = frame.bitmap,
-                .duration = static_cast<int>(frame.duration),
-            });
-        }
-        image_data = AnimatedBitmapDecodedImageData::create(move(frames), result.value().loop_count, result.value().is_animated).release_value_but_fixme_should_propagate_errors();
-    }
-
-    image_request.set_image_data(image_data);
-
-    ListOfAvailableImages::Key key;
-    key.url = url_string;
-    key.mode = m_cors_setting;
-    key.origin = document().origin();
-
-    // 1. If image request is the pending request, abort the image request for the current request,
-    //    upgrade the pending request to the current request
-    //    and prepare image request for presentation given the img element.
-    if (image_request == m_pending_request) {
-        m_current_request->abort(realm());
-        upgrade_pending_request_to_current_request();
-        image_request.prepare_for_presentation(*this);
-    }
-
-    // 2. Set image request to the completely available state.
-    image_request.set_state(ImageRequest::State::CompletelyAvailable);
-
-    // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
-    document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
-
-    // 4. Fire an event named load at the img element.
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
-
-    set_needs_style_update(true);
-    document().set_needs_layout();
-
-    if (image_data->is_animated() && image_data->frame_count() > 1) {
-        m_current_frame_index = 0;
-        m_animation_timer->set_interval(image_data->frame_duration(0));
-        m_animation_timer->start();
-    }
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#upgrade-the-pending-request-to-the-current-request
@@ -741,7 +688,14 @@ static void update_the_source_set(DOM::Element& element)
         if (source_set.is_empty())
             continue;
 
-        // FIXME: 6. If child has a media attribute, and its value does not match the environment, continue to the next child.
+        // 6. If child has a media attribute, and its value does not match the environment, continue to the next child.
+        if (child->has_attribute(HTML::AttributeNames::media)) {
+            auto media_query = parse_media_query(CSS::Parser::ParsingContext { element.document() },
+                child->attribute(HTML::AttributeNames::media));
+            if (!media_query || !media_query->evaluate(element.document().window())) {
+                continue;
+            }
+        }
 
         // 7. Parse child's sizes attribute, and let source set's source size be the returned value.
         source_set.m_source_size = parse_a_sizes_attribute(element.document(), child->attribute(HTML::AttributeNames::sizes));

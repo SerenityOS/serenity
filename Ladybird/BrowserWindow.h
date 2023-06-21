@@ -26,7 +26,7 @@ class CookieJar;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
+    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -76,6 +76,7 @@ public slots:
     void close_current_tab();
     void open_next_tab();
     void open_previous_tab();
+    void open_file();
     void enable_auto_color_scheme();
     void enable_light_color_scheme();
     void enable_dark_color_scheme();
@@ -114,4 +115,5 @@ private:
 
     StringView m_webdriver_content_ipc_path;
     WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;
+    WebView::UseJavaScriptBytecode m_use_javascript_bytecode;
 };

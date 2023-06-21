@@ -1121,7 +1121,12 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         m_dnd_client->async_drag_accepted();
         if (window->client()) {
             auto translated_event = event.translated(-window->position());
-            window->client()->async_drag_dropped(window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data());
+            auto copied_mime_data_or_error = m_dnd_mime_data->all_data().clone();
+            // If the mime data is so large that it causes memory troubles, we should silently drop the drag'n'drop request entirely.
+            if (copied_mime_data_or_error.is_error())
+                dbgln("Drag and drop mimetype data nearly caused OOM and was dropped: {}", copied_mime_data_or_error.release_error());
+            else
+                window->client()->async_drag_dropped(window->window_id(), translated_event.position(), m_dnd_text, copied_mime_data_or_error.release_value());
         }
     } else {
         m_dnd_client->async_drag_cancelled();

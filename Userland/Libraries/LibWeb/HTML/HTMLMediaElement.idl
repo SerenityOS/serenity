@@ -1,3 +1,4 @@
+#import <HTML/AudioTrackList.idl>
 #import <HTML/HTMLElement.idl>
 #import <HTML/MediaError.idl>
 #import <HTML/TimeRanges.idl>
@@ -51,7 +52,11 @@ interface HTMLMediaElement : HTMLElement {
 
     // controls
     [Reflect, CEReactions] attribute boolean controls;
+    attribute double volume;
+    attribute boolean muted;
+    [Reflect=muted, CEReactions] attribute boolean defaultMuted;
 
     // tracks
+    [SameObject] readonly attribute AudioTrackList audioTracks;
     [SameObject] readonly attribute VideoTrackList videoTracks;
 };

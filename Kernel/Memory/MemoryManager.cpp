@@ -10,21 +10,21 @@
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Library/Panic.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Multiboot.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
+#include <Kernel/Tasks/Process.h>
 
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];

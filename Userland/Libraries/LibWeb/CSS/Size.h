@@ -33,6 +33,7 @@ public:
     static Size make_min_content();
     static Size make_max_content();
     static Size make_fit_content(Length available_space);
+    static Size make_fit_content();
     static Size make_none();
 
     bool is_auto() const { return m_type == Type::Auto; }

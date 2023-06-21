@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLDocument.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/RemoteBrowsingContext.h>
@@ -203,7 +204,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create(window->realm()).release_value_but_fixme_should_propagate_errors();
+    auto document = HTML::HTMLDocument::create(window->realm()).release_value_but_fixme_should_propagate_errors();
 
     // Non-standard
     document->set_window(*window);
@@ -361,7 +362,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         verify_cast<WindowEnvironmentSettingsObject>(Bindings::host_defined_environment_settings_object(window->realm())).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
 
     // 14. Let document be a new Document, with:
-    auto document = TRY(DOM::Document::create(window->realm()));
+    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
 
     // Non-standard
     document->set_window(*window);
@@ -532,7 +533,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
     // AD-HOC:
     document->set_browsing_context(this);
 
-    if (m_page && is_top_level())
+    if (m_page && m_page->top_level_browsing_context_is_initialized() && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_change_title(document->title());
 
     if (previously_active_document && previously_active_document != document.ptr())
@@ -554,7 +555,7 @@ void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
         if (auto* document = active_document()) {
             // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
             document->invalidate_style();
-            document->invalidate_layout();
+            document->set_needs_layout();
         }
         did_change = true;
     }
@@ -582,7 +583,7 @@ void BrowsingContext::set_size(CSSPixelSize size)
 
     if (auto* document = active_document()) {
         document->invalidate_style();
-        document->invalidate_layout();
+        document->set_needs_layout();
     }
 
     for (auto* client : m_viewport_clients)
@@ -621,7 +622,7 @@ void BrowsingContext::scroll_to(CSSPixelPoint position)
             active_document()->update_layout();
     }
 
-    if (m_page)
+    if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_to(position);
 }
 
@@ -659,7 +660,7 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
         target_rect.translate_by(-padding_box.left, -padding_box.top);
     }
 
-    if (m_page)
+    if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_into_view(target_rect);
 }
 
@@ -848,6 +849,15 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 {
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
+    JS::GCPtr<AbstractBrowsingContext> matching_name_in_tree = nullptr;
+    top_level_browsing_context().for_each_in_subtree([&](auto& context) {
+        if (context.name() == name) {
+            matching_name_in_tree = &context;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
 
     // 1. Let chosen be null.
     JS::GCPtr<AbstractBrowsingContext> chosen = nullptr;
@@ -878,15 +888,14 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
         chosen = &top_level_browsing_context();
     }
 
-    // FIXME: 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
-    //           whose name is the same as name, current is familiar with that browsing context, and the user agent
-    //           determines that the two browsing contexts are related enough that it is ok if they reach each other,
-    //           set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
-    //           should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
-    //           recently focused, or more closely related.
-    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
-        dbgln("FIXME: Find matching browser context for name {}", name);
-        chosen = this;
+    // 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
+    //    whose name is the same as name, current is familiar with that browsing context, and the user agent
+    //    determines that the two browsing contexts are related enough that it is ok if they reach each other,
+    //    set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
+    //    should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
+    //    recently focused, or more closely related.
+    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv) && matching_name_in_tree) {
+        chosen = matching_name_in_tree;
     } else {
         // 8. Otherwise, a new browsing context is being requested, and what happens depends on the user agent's
         //    configuration and abilities — it is determined by the rules given for the first applicable option from
@@ -949,7 +958,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
             // 6. If name is not an ASCII case-insensitive match for "_blank", then set chosen's name to name.
             if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
-                chosen->set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
+                chosen->set_name(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
         }
 
         // --> If the user agent has been configured such that in this instance t will reuse current
@@ -1212,7 +1221,21 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     (void)process_response_end_of_body;
 
     // AD-HOC:
-    loader().load(resource->url(), FrameLoader::Type::IFrame);
+    auto request = LoadRequest::create_for_url_on_page(resource->url(), page());
+    request.set_method(DeprecatedString { resource->method() });
+    for (auto& header : *resource->header_list()) {
+        request.set_header(DeprecatedString { header.name.bytes() }, DeprecatedString { header.value.bytes() });
+    }
+    if (request.method() == "POST"sv) {
+        if (resource->body().has<ByteBuffer>()) {
+            auto const& byte_buffer = resource->body().get<ByteBuffer>();
+            request.set_body(byte_buffer);
+            request.set_header("Content-Length", DeprecatedString::number(byte_buffer.size()));
+        } else {
+            request.set_header("Content-Length", DeprecatedString::number(0));
+        }
+    }
+    loader().load(request, FrameLoader::Type::Navigation);
     return {};
 }
 

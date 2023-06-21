@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 
 namespace Kernel {
 UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)

@@ -7,6 +7,7 @@
 
 #include "Engine.h"
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -27,12 +28,12 @@ void Engine::connect_to_engine_service()
 {
     int wpipefds[2];
     int rpipefds[2];
-    if (pipe2(wpipefds, O_CLOEXEC | O_NONBLOCK) < 0) {
+    if (pipe2(wpipefds, O_CLOEXEC) < 0) {
         perror("pipe2");
         VERIFY_NOT_REACHED();
     }
 
-    if (pipe2(rpipefds, O_CLOEXEC | O_NONBLOCK) < 0) {
+    if (pipe2(rpipefds, O_CLOEXEC) < 0) {
         perror("pipe2");
         VERIFY_NOT_REACHED();
     }
@@ -55,9 +56,11 @@ void Engine::connect_to_engine_service()
     close(rpipefds[1]);
 
     auto infile = Core::File::adopt_fd(rpipefds[0], Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    infile->set_blocking(false).release_value_but_fixme_should_propagate_errors();
     set_in(move(infile)).release_value_but_fixme_should_propagate_errors();
 
     auto outfile = Core::File::adopt_fd(wpipefds[1], Core::File::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
+    outfile->set_blocking(false).release_value_but_fixme_should_propagate_errors();
     set_out(move(outfile));
 
     send_command(Chess::UCI::UCICommand());
