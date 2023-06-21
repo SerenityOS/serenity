@@ -27,6 +27,7 @@ struct AudioTask {
         Pause,
         Seek,
         Volume,
+        RecreateAudioDevice,
     };
 
     Type type;
@@ -82,20 +83,64 @@ private:
         No,
     };
 
+    struct AudioDevice {
+        static AudioDevice create()
+        {
+            auto const& device_info = QMediaDevices::defaultAudioOutput();
+
+            auto format = device_info.preferredFormat();
+            format.setChannelCount(2);
+
+            auto audio_output = make<QAudioSink>(device_info, format);
+            return AudioDevice { move(audio_output) };
+        }
+
+        AudioDevice(AudioDevice&&) = default;
+
+        AudioDevice& operator=(AudioDevice&& device)
+        {
+            if (audio_output) {
+                audio_output->stop();
+                io_device = nullptr;
+            }
+
+            swap(audio_output, device.audio_output);
+            swap(io_device, device.io_device);
+            return *this;
+        }
+
+        ~AudioDevice()
+        {
+            if (audio_output)
+                audio_output->stop();
+        }
+
+        OwnPtr<QAudioSink> audio_output;
+        QIODevice* io_device { nullptr };
+
+    private:
+        explicit AudioDevice(NonnullOwnPtr<QAudioSink> output)
+            : audio_output(move(output))
+        {
+            io_device = audio_output->start();
+        }
+    };
+
     void run() override
     {
         auto devices = make<QMediaDevices>();
-        auto const& device_info = devices->defaultAudioOutput();
+        auto audio_device = AudioDevice::create();
 
-        auto format = device_info.preferredFormat();
-        format.setChannelCount(2);
-
-        auto audio_output = make<QAudioSink>(device_info, format);
-        auto* io_device = audio_output->start();
+        connect(devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
+            queue_task({ AudioTask::Type::RecreateAudioDevice }).release_value_but_fixme_should_propagate_errors();
+        });
 
         auto paused = Paused::Yes;
 
         while (true) {
+            auto& audio_output = audio_device.audio_output;
+            auto* io_device = audio_device.io_device;
+
             if (auto result = m_task_queue.dequeue(); result.is_error()) {
                 VERIFY(result.error() == AudioTaskQueue::QueueStatus::Empty);
             } else {
@@ -136,6 +181,10 @@ private:
                     VERIFY(task.data.has_value());
                     audio_output->setVolume(*task.data);
                     break;
+
+                case AudioTask::Type::RecreateAudioDevice:
+                    audio_device = AudioDevice::create();
+                    continue;
                 }
             }
 
