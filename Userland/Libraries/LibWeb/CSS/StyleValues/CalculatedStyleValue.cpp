@@ -106,6 +106,11 @@ bool NumericCalculationNode::contains_percentage() const
     return m_value.has<Percentage>();
 }
 
+bool NumericCalculationNode::contains_relative_length() const
+{
+    return m_value.has<Length>() && m_value.get<Length>().is_relative();
+}
+
 CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const
 {
     return m_value;
@@ -191,6 +196,17 @@ bool SumCalculationNode::contains_percentage() const
         if (value->contains_percentage())
             return true;
     }
+
+    return false;
+}
+
+bool SumCalculationNode::contains_relative_length() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_relative_length())
+            return true;
+    }
+
     return false;
 }
 
@@ -296,6 +312,16 @@ bool ProductCalculationNode::contains_percentage() const
     return false;
 }
 
+bool ProductCalculationNode::contains_relative_length() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_relative_length())
+            return true;
+    }
+
+    return false;
+}
+
 CalculatedStyleValue::CalculationResult ProductCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     Optional<CalculatedStyleValue::CalculationResult> total;
@@ -358,6 +384,12 @@ bool NegateCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
+bool NegateCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
+    ;
+}
+
 CalculatedStyleValue::CalculationResult NegateCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto child_value = m_value->resolve(context, percentage_basis);
@@ -408,6 +440,11 @@ Optional<CalculatedStyleValue::ResolvedType> InvertCalculationNode::resolved_typ
 bool InvertCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
+}
+
+bool InvertCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult InvertCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -467,6 +504,16 @@ bool MinCalculationNode::contains_percentage() const
 {
     for (auto const& value : m_values) {
         if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+bool MinCalculationNode::contains_relative_length() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_relative_length())
             return true;
     }
 
@@ -551,6 +598,16 @@ bool MaxCalculationNode::contains_percentage() const
     return false;
 }
 
+bool MaxCalculationNode::contains_relative_length() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_relative_length())
+            return true;
+    }
+
+    return false;
+}
+
 CalculatedStyleValue::CalculationResult MaxCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     CalculatedStyleValue::CalculationResult largest_node = m_values.first()->resolve(context, percentage_basis);
@@ -624,6 +681,11 @@ Optional<CalculatedStyleValue::ResolvedType> ClampCalculationNode::resolved_type
 bool ClampCalculationNode::contains_percentage() const
 {
     return m_min_value->contains_percentage() || m_center_value->contains_percentage() || m_max_value->contains_percentage();
+}
+
+bool ClampCalculationNode::contains_relative_length() const
+{
+    return m_min_value->contains_relative_length() || m_center_value->contains_relative_length() || m_max_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult ClampCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -701,6 +763,11 @@ bool AbsCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
+bool AbsCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult AbsCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto resolved_type = m_value->resolved_type().value();
@@ -756,6 +823,11 @@ Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type(
 bool SignCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
+}
+
+bool SignCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult SignCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -882,6 +954,11 @@ bool SinCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
+bool SinCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult SinCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_value->resolve(context, percentage_basis);
@@ -934,6 +1011,11 @@ Optional<CalculatedStyleValue::ResolvedType> CosCalculationNode::resolved_type()
 bool CosCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
+}
+
+bool CosCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult CosCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -990,6 +1072,11 @@ bool TanCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
+bool TanCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult TanCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_value->resolve(context, percentage_basis);
@@ -1042,6 +1129,11 @@ Optional<CalculatedStyleValue::ResolvedType> AsinCalculationNode::resolved_type(
 bool AsinCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
+}
+
+bool AsinCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult AsinCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1098,6 +1190,11 @@ bool AcosCalculationNode::contains_percentage() const
     return m_value->contains_percentage();
 }
 
+bool AcosCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult AcosCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_value->resolve(context, percentage_basis);
@@ -1150,6 +1247,11 @@ Optional<CalculatedStyleValue::ResolvedType> AtanCalculationNode::resolved_type(
 bool AtanCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
+}
+
+bool AtanCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult AtanCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1207,6 +1309,11 @@ Optional<CalculatedStyleValue::ResolvedType> Atan2CalculationNode::resolved_type
 bool Atan2CalculationNode::contains_percentage() const
 {
     return m_y->contains_percentage() || m_x->contains_percentage();
+}
+
+bool Atan2CalculationNode::contains_relative_length() const
+{
+    return m_y->contains_relative_length() || m_x->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult Atan2CalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1267,6 +1374,11 @@ Optional<CalculatedStyleValue::ResolvedType> PowCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+bool PowCalculationNode::contains_relative_length() const
+{
+    return m_x->contains_relative_length() || m_y->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult PowCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_x->resolve(context, percentage_basis);
@@ -1320,6 +1432,11 @@ ErrorOr<String> SqrtCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> SqrtCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Number;
+}
+
+bool SqrtCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult SqrtCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1380,6 +1497,16 @@ bool HypotCalculationNode::contains_percentage() const
 {
     for (auto const& value : m_values) {
         if (value->contains_percentage())
+            return true;
+    }
+
+    return false;
+}
+
+bool HypotCalculationNode::contains_relative_length() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_relative_length())
             return true;
     }
 
@@ -1450,6 +1577,11 @@ Optional<CalculatedStyleValue::ResolvedType> LogCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+bool LogCalculationNode::contains_relative_length() const
+{
+    return m_x->contains_relative_length() || m_y->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult LogCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_x->resolve(context, percentage_basis);
@@ -1503,6 +1635,11 @@ ErrorOr<String> ExpCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> ExpCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Number;
+}
+
+bool ExpCalculationNode::contains_relative_length() const
+{
+    return m_value->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult ExpCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1577,6 +1714,11 @@ Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type
 bool RoundCalculationNode::contains_percentage() const
 {
     return m_x->contains_percentage() || m_y->contains_percentage();
+}
+
+bool RoundCalculationNode::contains_relative_length() const
+{
+    return m_x->contains_relative_length() || m_y->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1667,6 +1809,11 @@ bool ModCalculationNode::contains_percentage() const
     return m_x->contains_percentage() || m_y->contains_percentage();
 }
 
+bool ModCalculationNode::contains_relative_length() const
+{
+    return m_x->contains_relative_length() || m_y->contains_relative_length();
+}
+
 CalculatedStyleValue::CalculationResult ModCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto resolved_type = m_x->resolved_type().value();
@@ -1730,6 +1877,11 @@ Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type()
 bool RemCalculationNode::contains_percentage() const
 {
     return m_x->contains_percentage() || m_y->contains_percentage();
+}
+
+bool RemCalculationNode::contains_relative_length() const
+{
+    return m_x->contains_relative_length() || m_y->contains_relative_length();
 }
 
 CalculatedStyleValue::CalculationResult RemCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
