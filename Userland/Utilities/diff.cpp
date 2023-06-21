@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
+#include <LibDiff/Format.h>
 #include <LibDiff/Generator.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
@@ -25,51 +27,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file1 = TRY(Core::File::open(filename1, Core::File::OpenMode::Read));
     auto file2 = TRY(Core::File::open(filename2, Core::File::OpenMode::Read));
+    auto out = TRY(Core::File::standard_output());
 
-    bool color_output = TRY(Core::System::isatty(STDOUT_FILENO));
+    auto const color_output = TRY(Core::System::isatty(STDOUT_FILENO)) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
     auto hunks = Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()));
-    for (auto const& hunk : hunks) {
-        auto original_start = hunk.original_start_line;
-        auto target_start = hunk.target_start_line;
-        auto num_added = hunk.added_lines.size();
-        auto num_removed = hunk.removed_lines.size();
-
-        StringBuilder sb;
-        // Source line(s)
-        sb.appendff("{}", original_start);
-        if (num_removed > 1)
-            sb.appendff(",{}", original_start + num_removed - 1);
-
-        // Action
-        if (num_added > 0 && num_removed > 0)
-            sb.append('c');
-        else if (num_added > 0)
-            sb.append('a');
-        else
-            sb.append('d');
-
-        // Target line(s)
-        sb.appendff("{}", target_start);
-        if (num_added > 1)
-            sb.appendff(",{}", target_start + num_added - 1);
-
-        outln("{}", sb.to_deprecated_string());
-        for (auto const& line : hunk.removed_lines) {
-            if (color_output)
-                outln("\033[31;1m< {}\033[0m", line);
-            else
-                outln("< {}", line);
-        }
-        if (num_added > 0 && num_removed > 0)
-            outln("---");
-        for (auto const& line : hunk.added_lines) {
-            if (color_output)
-                outln("\033[32;1m> {}\033[0m", line);
-            else
-                outln("> {}", line);
-        }
-    }
+    for (auto const& hunk : hunks)
+        TRY(Diff::write_normal(hunk, *out, color_output));
 
     return hunks.is_empty() ? 0 : 1;
 }
