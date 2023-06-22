@@ -236,6 +236,7 @@
       "right",
       "top"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ],
@@ -256,7 +257,8 @@
       "center",
       "left",
       "right"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "background-position-y": {
     "inherited": false,
@@ -270,7 +272,8 @@
       "center",
       "bottom",
       "top"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "background-repeat": {
     "affects-layout": false,
@@ -298,7 +301,8 @@
       "auto",
       "cover",
       "contain"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "border": {
     "inherited": false,
@@ -364,7 +368,8 @@
     "valid-types": [
       "length [0,∞]",
       "percentage [0,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "border-bottom-right-radius": {
     "affects-layout": false,
@@ -374,7 +379,8 @@
     "valid-types": [
       "length [0,∞]",
       "percentage [0,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "border-bottom-style": {
     "initial": "none",
@@ -542,7 +548,8 @@
     "valid-types": [
       "length [0,∞]",
       "percentage [0,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "border-top-right-radius": {
     "affects-layout": false,
@@ -552,7 +559,8 @@
     "valid-types": [
       "length [0,∞]",
       "percentage [0,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "border-top-style": {
     "initial": "none",
@@ -607,6 +615,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -673,7 +682,8 @@
     ],
     "valid-identifiers": [
       "auto"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "content": {
     "inherited": false,
@@ -749,7 +759,8 @@
     "valid-types": [
       "number [-∞,∞]",
       "percentage [-∞,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "number"
   },
   "fill-rule": {
     "affects-layout": false,
@@ -782,7 +793,8 @@
     "valid-identifiers": [
       "auto",
       "content"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "flex-direction": {
     "inherited": false,
@@ -860,6 +872,7 @@
       "xx-small",
       "xxx-large"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -922,6 +935,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "longhands": [
       "row-gap",
       "column-gap"
@@ -976,7 +990,8 @@
     ],
     "valid-identifiers": [
       "auto"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-column-start": {
     "inherited": false,
@@ -999,6 +1014,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "longhands": [
       "grid-row-gap",
       "grid-column-gap"
@@ -1037,7 +1053,8 @@
     ],
     "valid-identifiers": [
       "auto"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-row-start": {
     "inherited": false,
@@ -1060,6 +1077,7 @@
       "percentage",
       "string"
     ],
+    "percentages-resolve-to": "length",
     "longhands": [
       "grid-template"
     ]
@@ -1075,6 +1093,7 @@
       "percentage",
       "string"
     ],
+    "percentages-resolve-to": "length",
     "longhands": [
       "grid-template-areas",
       "grid-template-rows",
@@ -1101,7 +1120,8 @@
       "length",
       "percentage",
       "string"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-auto-rows": {
     "inherited": false,
@@ -1113,7 +1133,8 @@
       "length",
       "percentage",
       "string"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-template-columns": {
     "inherited": false,
@@ -1126,7 +1147,8 @@
       "length",
       "percentage",
       "string"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "grid-template-rows": {
     "inherited": false,
@@ -1139,7 +1161,8 @@
       "length",
       "percentage",
       "string"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "height": {
     "inherited": false,
@@ -1151,6 +1174,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1179,7 +1203,8 @@
     ],
     "valid-identifiers": [
       "auto"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "justify-content": {
     "inherited": false,
@@ -1198,6 +1223,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1209,6 +1235,7 @@
       "length [-∞,∞]",
       "percentage [-∞,∞]"
     ],
+    "percentages-resolve-to": "length",
     "valid-identifiers": [
       "normal"
     ],
@@ -1226,7 +1253,8 @@
     ],
     "valid-identifiers": [
       "normal"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "list-style": {
     "inherited": true,
@@ -1279,6 +1307,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1315,6 +1344,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1351,6 +1381,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1365,6 +1396,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1379,6 +1411,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1393,6 +1426,7 @@
     "valid-identifiers": [
       "none"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1417,6 +1451,7 @@
       "min-content",
       "none"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1432,6 +1467,7 @@
       "auto",
       "none"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1457,6 +1493,7 @@
       "min-content",
       "none"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1469,7 +1506,8 @@
     "valid-types": [
       "number [-∞,∞]",
       "percentage [-∞,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "number"
   },
   "order": {
     "inherited": false,
@@ -1561,6 +1599,7 @@
       "length [0,∞]",
       "percentage [0,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1594,6 +1633,7 @@
       "length [0,∞]",
       "percentage [0,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1627,6 +1667,7 @@
       "length [0,∞]",
       "percentage [0,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1638,6 +1679,7 @@
       "length [0,∞]",
       "percentage [0,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1649,6 +1691,7 @@
       "length [0,∞]",
       "percentage [0,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1686,6 +1729,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1699,7 +1743,8 @@
     ],
     "valid-identifiers": [
       "auto"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "stroke": {
     "affects-layout": false,
@@ -1716,7 +1761,8 @@
     "valid-types": [
       "number [-∞,∞]",
       "percentage [-∞,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "number"
   },
   "stop-color": {
     "affects-layout": false,
@@ -1733,7 +1779,8 @@
     "valid-types": [
       "number [-∞,∞]",
       "percentage [-∞,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "number"
   },
   "stroke-width": {
     "affects-layout": false,
@@ -1743,7 +1790,8 @@
       "length [0,∞]",
       "number [0,∞]",
       "percentage [0,∞]"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "text-align": {
     "inherited": true,
@@ -1799,7 +1847,8 @@
     "valid-identifiers": [
       "auto",
       "from-font"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "text-indent": {
     "inherited": true,
@@ -1808,6 +1857,7 @@
       "length [-∞,∞]",
       "percentage [-∞,∞]"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1844,6 +1894,7 @@
     "valid-identifiers": [
       "auto"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1868,7 +1919,8 @@
       "left",
       "right",
       "top"
-    ]
+    ],
+    "percentages-resolve-to": "length"
   },
   "transition-delay": {
     "inherited": false,
@@ -1897,6 +1949,7 @@
       "percentage [-∞,∞]",
       "vertical-align"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1921,6 +1974,7 @@
       "max-content",
       "min-content"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
@@ -1942,6 +1996,7 @@
     "valid-identifiers": [
       "normal"
     ],
+    "percentages-resolve-to": "length",
     "quirks": [
       "unitless-length"
     ]
