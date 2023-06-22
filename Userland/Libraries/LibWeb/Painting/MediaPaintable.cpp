@@ -288,10 +288,13 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<E
     auto& media_element = *verify_cast<HTML::HTMLMediaElement>(layout_box().dom_node());
     auto const& cached_layout_boxes = media_element.cached_layout_boxes({});
 
-    if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position))
+    if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
         media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Timeline);
-    else if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position))
+        set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
+    } else if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
         media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
+        set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+    }
 
     if (media_element.layout_mouse_tracking_component({}).has_value())
         const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(&layout_node());
@@ -342,18 +345,8 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             return DispatchEventOfSameName::Yes;
         }
 
-        if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
-            set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::No);
-            return DispatchEventOfSameName::Yes;
-        }
-
         if (cached_layout_boxes.speaker_button_rect.has_value() && cached_layout_boxes.speaker_button_rect->contains(position)) {
             media_element.set_muted(!media_element.muted());
-            return DispatchEventOfSameName::Yes;
-        }
-
-        if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
-            set_volume(media_element, *cached_layout_boxes.volume_rect, position);
             return DispatchEventOfSameName::Yes;
         }
 
