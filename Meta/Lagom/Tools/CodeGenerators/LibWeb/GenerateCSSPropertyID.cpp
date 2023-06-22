@@ -176,6 +176,7 @@ enum class ValueType {
 };
 bool property_accepts_type(PropertyID, ValueType);
 bool property_accepts_identifier(PropertyID, ValueID);
+Optional<ValueType> property_resolves_percentages_relative_to(PropertyID);
 
 // These perform range-checking, but are also safe to call with properties that don't accept that type. (They'll just return false.)
 bool property_accepts_angle(PropertyID, Angle const&);
@@ -715,6 +716,31 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
     TRY(generator.try_append(R"~~~(
     default:
         return false;
+    }
+}
+
+Optional<ValueType> property_resolves_percentages_relative_to(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~"));
+
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+        VERIFY(value.is_object());
+        if (auto resolved_type = value.as_object().get_deprecated_string("percentages-resolve-to"sv); resolved_type.has_value()) {
+            auto property_generator = TRY(generator.fork());
+            TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
+            TRY(property_generator.set("resolved_type:titlecase", TRY(title_casify(resolved_type.value()))));
+            TRY(property_generator.try_append(R"~~~(
+    case PropertyID::@name:titlecase@:
+        return ValueType::@resolved_type:titlecase@;
+)~~~"));
+        }
+        return {};
+    }));
+
+    TRY(generator.try_append(R"~~~(
+    default:
+        return {};
     }
 }
 
