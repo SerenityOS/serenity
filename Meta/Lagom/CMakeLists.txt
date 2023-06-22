@@ -490,7 +490,7 @@ if (BUILD_LAGOM)
         target_link_libraries(abench LibCore LibMain LibFileSystem LibAudio)
 
         add_executable(aconv ../../Userland/Utilities/aconv.cpp)
-        target_link_libraries(aconv LibCore LibMain LibAudio)
+        target_link_libraries(aconv LibCore LibMain LibFileSystem LibAudio)
 
         if (NOT EMSCRIPTEN)
             add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
