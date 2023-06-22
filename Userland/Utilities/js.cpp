@@ -71,7 +71,6 @@ private:
 };
 
 static bool s_dump_ast = false;
-static bool s_run_bytecode = false;
 static bool s_opt_bytecode = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
@@ -212,10 +211,9 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (s_run_bytecode) {
-            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
-            bytecode_interpreter.set_optimizations_enabled(s_opt_bytecode);
-            result = bytecode_interpreter.run(*script_or_module);
+        if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
+            bytecode_interpreter->set_optimizations_enabled(s_opt_bytecode);
+            result = bytecode_interpreter->run(*script_or_module);
         } else {
             result = interpreter.run(*script_or_module);
         }
@@ -579,12 +577,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_test262_global = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
+    bool use_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
-    args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
+    args_parser.add_option(use_bytecode, "Run the bytecode", "run-bytecode", 'b');
     args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
@@ -597,6 +596,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(use_test262_global, "Use test262 global ($262)", "use-test262-global", {});
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
 
     bool syntax_highlight = !disable_syntax_highlight;
 

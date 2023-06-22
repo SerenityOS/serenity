@@ -11,6 +11,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/FunctionKind.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -31,13 +32,10 @@ public:
     [[nodiscard]] static bool enabled();
     static void set_enabled(bool);
 
-    explicit Interpreter(Realm&);
+    explicit Interpreter(VM&);
     ~Interpreter();
 
-    // FIXME: Remove this thing once we don't need it anymore!
-    static Interpreter* current();
-
-    Realm& realm() { return m_realm; }
+    Realm& realm();
     VM& vm() { return m_vm; }
 
     void set_optimizations_enabled(bool);
@@ -45,9 +43,9 @@ public:
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
-    ThrowCompletionOr<Value> run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Realm& realm, Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
-        auto value_and_frame = run_and_return_frame(executable, entry_point);
+        auto value_and_frame = run_and_return_frame(realm, executable, entry_point);
         return move(value_and_frame.value);
     }
 
@@ -55,7 +53,7 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<RegisterWindow> frame;
     };
-    ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
+    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
@@ -97,7 +95,7 @@ public:
     };
     static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
 
-    VM::InterpreterExecutionScope ast_interpreter_scope();
+    VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 
 private:
     RegisterWindow& window()
@@ -115,7 +113,6 @@ private:
     static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
-    NonnullGCPtr<Realm> m_realm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
@@ -130,5 +127,7 @@ private:
 };
 
 extern bool g_dump_bytecode;
+
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
 
 }

@@ -95,9 +95,8 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::En
         auto timer = Core::ElapsedTimer::start_new();
 
         // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
-        if (JS::Bytecode::Interpreter::enabled()) {
-            auto interpreter = JS::Bytecode::Interpreter(m_script_record->realm());
-            evaluation_status = interpreter.run(*m_script_record, lexical_environment_override);
+        if (auto* bytecode_interpreter = vm().bytecode_interpreter_if_exists()) {
+            evaluation_status = bytecode_interpreter->run(*m_script_record, lexical_environment_override);
         } else {
             auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
             evaluation_status = interpreter->run(*m_script_record, lexical_environment_override);

@@ -32,26 +32,15 @@ void Interpreter::set_enabled(bool enabled)
     s_bytecode_interpreter_enabled = enabled;
 }
 
-static Interpreter* s_current;
 bool g_dump_bytecode = false;
 
-Interpreter* Interpreter::current()
+Interpreter::Interpreter(VM& vm)
+    : m_vm(vm)
 {
-    return s_current;
-}
-
-Interpreter::Interpreter(Realm& realm)
-    : m_vm(realm.vm())
-    , m_realm(realm)
-{
-    VERIFY(!s_current);
-    s_current = this;
 }
 
 Interpreter::~Interpreter()
 {
-    VERIFY(s_current == this);
-    s_current = nullptr;
 }
 
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
@@ -124,7 +113,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
                 executable->dump();
 
             // a. Set result to the result of evaluating script.
-            auto result_or_error = run_and_return_frame(*executable, nullptr);
+            auto result_or_error = run_and_return_frame(script_record.realm(), *executable, nullptr);
             if (result_or_error.value.is_error())
                 result = result_or_error.value.release_error();
             else
@@ -189,7 +178,7 @@ void Interpreter::set_optimizations_enabled(bool enabled)
     m_optimizations_enabled = enabled;
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -201,12 +190,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
-        execution_context.this_value = &m_realm->global_object();
+        execution_context.this_value = &realm.global_object();
         static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
-        execution_context.lexical_environment = &m_realm->global_environment();
-        execution_context.variable_environment = &m_realm->global_environment();
-        execution_context.realm = m_realm;
+        execution_context.lexical_environment = &realm.global_environment();
+        execution_context.variable_environment = &realm.global_environment();
+        execution_context.realm = realm;
         execution_context.is_strict_mode = executable.is_strict_mode;
         vm().push_execution_context(execution_context);
         pushed_execution_context = true;
@@ -395,10 +384,10 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
     return {};
 }
 
-VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope()
+VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope(Realm& realm)
 {
     if (!m_ast_interpreter)
-        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(m_realm);
+        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(realm);
 
     return { *m_ast_interpreter };
 }
@@ -447,6 +436,31 @@ size_t Interpreter::pc() const
 DeprecatedString Interpreter::debug_position() const
 {
     return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
+}
+
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+{
+    auto executable_result = Bytecode::Generator::generate(node, kind);
+    if (executable_result.is_error())
+        return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
+
+    auto bytecode_executable = executable_result.release_value();
+    bytecode_executable->name = name;
+    auto& passes = Bytecode::Interpreter::optimization_pipeline();
+    passes.perform(*bytecode_executable);
+    if constexpr (JS_BYTECODE_DEBUG) {
+        dbgln("Optimisation passes took {}us", passes.elapsed());
+        dbgln("Compiled Bytecode::Block for function '{}':", name);
+    }
+    if (Bytecode::g_dump_bytecode)
+        bytecode_executable->dump();
+
+    return bytecode_executable;
+}
+
+Realm& Interpreter::realm()
+{
+    return *m_vm.current_realm();
 }
 
 }

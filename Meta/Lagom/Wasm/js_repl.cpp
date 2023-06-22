@@ -102,7 +102,6 @@ private:
 };
 
 static bool s_dump_ast = false;
-static bool s_run_bytecode = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
 
@@ -119,9 +118,8 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (s_run_bytecode) {
-            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.realm());
-            result = bytecode_interpreter.run(*script_or_module);
+        if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
+            result = bytecode_interpreter->run(*script_or_module);
         } else {
             result = interpreter.run(*script_or_module);
         }

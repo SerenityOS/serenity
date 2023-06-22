@@ -701,7 +701,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
 
     // 29. If result.[[Type]] is normal, then
     //     a. Set result to the result of evaluating body.
-    if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
+    if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
         auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
             return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
@@ -710,7 +710,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         executable->name = "eval"sv;
         if (Bytecode::g_dump_bytecode)
             executable->dump();
-        auto result_or_error = bytecode_interpreter->run_and_return_frame(*executable, nullptr);
+        auto result_or_error = bytecode_interpreter->run_and_return_frame(eval_realm, *executable, nullptr);
         if (result_or_error.value.is_error())
             return result_or_error.value.release_error();
 
