@@ -31,6 +31,7 @@ ThrowCompletionOr<void> ConsoleObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.log, log, 0, attr);
     define_native_function(realm, vm.names.trace, trace, 0, attr);
     define_native_function(realm, vm.names.warn, warn, 0, attr);
+    define_native_function(realm, vm.names.dir, dir, 0, attr);
     define_native_function(realm, vm.names.count, count, 0, attr);
     define_native_function(realm, vm.names.countReset, count_reset, 0, attr);
     define_native_function(realm, vm.names.group, group, 0, attr);
@@ -97,6 +98,13 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::warn)
 {
     auto& console_object = *vm.current_realm()->intrinsics().console_object();
     return console_object.console().warn();
+}
+
+// 1.1.10. dir(item, options), https://console.spec.whatwg.org/#warn
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::dir)
+{
+    auto& console_object = *vm.current_realm()->intrinsics().console_object();
+    return console_object.console().dir();
 }
 
 // 1.2.1. count(label), https://console.spec.whatwg.org/#count
