@@ -7,6 +7,7 @@
 #include <AK/URLParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web::HTML {
@@ -472,49 +473,40 @@ bool HTMLHyperlinkElementUtils::cannot_navigate() const
 // https://html.spec.whatwg.org/multipage/links.html#following-hyperlinks-2
 void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> hyperlink_suffix)
 {
-    // To follow the hyperlink created by an element subject, given an optional hyperlinkSuffix (default null):
-
     // 1. If subject cannot navigate, then return.
     if (cannot_navigate())
         return;
 
-    // FIXME: 2. Let replace be false.
+    // 2. Let replace be false.
+    [[maybe_unused]] auto replace = false;
 
-    // 3. Let source be subject's node document's browsing context.
-    auto* source = hyperlink_element_utils_document().browsing_context();
-    if (!source)
-        return;
+    // 3. Let targetAttributeValue be the empty string.
+    DeprecatedString target_attribute_value;
 
-    // 4. Let targetAttributeValue be the empty string.
-    // 5. If subject is an a or area element, then set targetAttributeValue to
-    // the result of getting an element's target given subject.
-    DeprecatedString target_attribute_value = hyperlink_element_utils_get_an_elements_target();
+    // 4. If subject is an a or area element, then set targetAttributeValue to the result of getting an element's target given subject.
+    target_attribute_value = hyperlink_element_utils_get_an_elements_target();
 
-    // 6. Let noopener be the result of getting an element's noopener with subject and targetAttributeValue.
+    // 5. Let noopener be the result of getting an element's noopener with subject and targetAttributeValue.
     auto noopener = hyperlink_element_utils_get_an_elements_noopener(target_attribute_value);
 
-    // 7. Let target be the first return value of applying the rules for
-    // choosing a browsing context given targetAttributeValue, source, and
-    // noopener.
-    auto target = source->choose_a_browsing_context(target_attribute_value, noopener).browsing_context;
+    // 6. Let targetNavigable be the first return value of applying the rules for choosing a navigable given
+    //    targetAttributeValue, subject's node navigable, and noopener.
+    auto target_navigable = hyperlink_element_utils_document().navigable()->choose_a_navigable(target_attribute_value, noopener).navigable;
 
-    // 8. If target is null, then return.
-    if (!target)
+    // 7. If targetNavigable is null, then return.
+    if (!target_navigable)
         return;
 
-    // 9. Parse a URL given subject's href attribute, relative to subject's node
-    // document.
-    auto url = source->active_document()->parse_url(href());
+    // 8. Parse a URL given subject's href attribute, relative to subject's node document.
+    auto url = hyperlink_element_utils_document().parse_url(href());
+
+    // 9. If that is successful, let url be the resulting URL string.
+    //    Otherwise, if parsing the URL failed, then return.
+    if (!url.is_valid())
+        return;
 
     // 10. If that is successful, let URL be the resulting URL string.
     auto url_string = url.to_deprecated_string();
-
-    // 11. Otherwise, if parsing the URL failed, the user agent may report the
-    // error to the user in a user-agent-specific manner, may queue an element
-    // task on the DOM manipulation task source given subject to navigate the
-    // target browsing context to an error page to report the error, or may
-    // ignore the error and do nothing. In any case, the user agent must then
-    // return.
 
     // 12. If hyperlinkSuffix is non-null, then append it to URL.
     if (hyperlink_suffix.has_value()) {
@@ -525,21 +517,10 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
         url_string = url_builder.to_deprecated_string();
     }
 
-    // FIXME: 13. Let request be a new request whose URL is URL and whose
-    // referrer policy is the current state of subject's referrerpolicy content
-    // attribute.
+    // FIXME: 12. If subject's link types includes the noreferrer keyword, then set referrerPolicy to "no-referrer".
 
-    // FIXME: 14. If subject's link types includes the noreferrer keyword, then
-    // set request's referrer to "no-referrer".
-
-    // 15. Queue an element task on the DOM manipulation task source given
-    // subject to navigate target to request with the source browsing context
-    // set to source.
-    // FIXME: "navigate" means implementing the navigation algorithm here:
-    //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
-        verify_cast<BrowsingContext>(*target).loader().load(url_string, FrameLoader::Type::Navigation);
-    });
+    // 13. Navigate targetNavigable to url using subject's node document, with referrerPolicy set to referrerPolicy.
+    MUST(target_navigable->navigate(url, hyperlink_element_utils_document()));
 }
 
 }
