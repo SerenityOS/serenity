@@ -1081,7 +1081,7 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto name = m_class_expression.name();
-    auto scope = interpreter.ast_interpreter_scope();
+    auto scope = interpreter.ast_interpreter_scope(interpreter.realm());
     auto& ast_interpreter = scope.interpreter();
 
     auto* class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, name, name.is_null() ? ""sv : name));

@@ -39,10 +39,13 @@ public:
     };
 
     static ErrorOr<NonnullRefPtr<VM>> create(OwnPtr<CustomData> = {});
-    ~VM() = default;
+    ~VM();
 
     Heap& heap() { return m_heap; }
     Heap const& heap() const { return m_heap; }
+
+    Bytecode::Interpreter& bytecode_interpreter();
+    Bytecode::Interpreter* bytecode_interpreter_if_exists();
 
     Interpreter& interpreter();
     Interpreter* interpreter_if_exists();
@@ -332,6 +335,8 @@ private:
     u32 m_execution_generation { 0 };
 
     OwnPtr<CustomData> m_custom_data;
+
+    OwnPtr<Bytecode::Interpreter> m_bytecode_interpreter;
 };
 
 ALWAYS_INLINE Heap& Cell::heap() const

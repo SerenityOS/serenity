@@ -455,8 +455,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
-                        auto value_and_frame = bytecode_interpreter->run_and_return_frame(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                    if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+                        auto value_and_frame = bytecode_interpreter->run_and_return_frame(realm, *m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
                         if (value_and_frame.value.is_error())
                             return value_and_frame.value.release_error();
                         // Resulting value is in the accumulator.
@@ -751,9 +751,19 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement const> const& async_body,
     auto& running_context = vm.running_execution_context();
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
-    auto execution_steps = NativeFunction::create(realm, "", [&async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
+    auto execution_steps = NativeFunction::create(realm, "", [&realm, &async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
         // a. Let result be the result of evaluating asyncBody.
-        auto result = async_body->execute(vm.interpreter());
+        Completion result;
+        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+            // FIXME: Cache this executable somewhere.
+            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
+            if (maybe_executable.is_error())
+                result = maybe_executable.release_error();
+            else
+                result = bytecode_interpreter->run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
+        } else {
+            result = async_body->execute(vm.interpreter());
+        }
 
         // b. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
 
@@ -817,7 +827,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     if (m_kind == FunctionKind::AsyncGenerator)
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async Generator function execution");
 
-    auto* bytecode_interpreter = Bytecode::Interpreter::current();
+    auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists();
 
     // The bytecode interpreter can execute generator functions while the AST interpreter cannot.
     // This simply makes it create a new bytecode interpreter when one doesn't exist when executing a generator function.
@@ -826,32 +836,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     // However, this does cause an awkward situation with features not supported in bytecode, where features that work outside of generators with AST
     // suddenly stop working inside of generators.
     // This is a stop gap until bytecode mode becomes the default.
-    OwnPtr<Bytecode::Interpreter> temp_bc_interpreter;
     if (m_kind == FunctionKind::Generator && !bytecode_interpreter) {
-        temp_bc_interpreter = make<Bytecode::Interpreter>(realm);
-        bytecode_interpreter = temp_bc_interpreter.ptr();
+        bytecode_interpreter = &vm.bytecode_interpreter();
     }
 
     if (bytecode_interpreter) {
-        auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
-            auto executable_result = Bytecode::Generator::generate(node, kind);
-            if (executable_result.is_error())
-                return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
-
-            auto bytecode_executable = executable_result.release_value();
-            bytecode_executable->name = name;
-            auto& passes = Bytecode::Interpreter::optimization_pipeline();
-            passes.perform(*bytecode_executable);
-            if constexpr (JS_BYTECODE_DEBUG) {
-                dbgln("Optimisation passes took {}us", passes.elapsed());
-                dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-            }
-            if (Bytecode::g_dump_bytecode)
-                bytecode_executable->dump();
-
-            return bytecode_executable;
-        };
-
         // NOTE: There's a subtle ordering issue here:
         //       - We have to compile the default parameter values before instantiating the function.
         //       - We have to instantiate the function before compiling the function body.
@@ -864,7 +853,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             for (auto& parameter : m_formal_parameters) {
                 if (!parameter.default_value)
                     continue;
-                auto executable = TRY(compile(*parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
                 m_default_parameter_bytecode_executables.append(move(executable));
             }
         }
@@ -872,10 +861,10 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         TRY(function_declaration_instantiation(nullptr));
 
         if (!m_bytecode_executable) {
-            m_bytecode_executable = TRY(compile(*m_ecmascript_code, m_kind, m_name));
+            m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
         }
 
-        auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
+        auto result_and_frame = bytecode_interpreter->run_and_return_frame(realm, *m_bytecode_executable, nullptr);
 
         VERIFY(result_and_frame.frame != nullptr);
         if (result_and_frame.value.is_error())
