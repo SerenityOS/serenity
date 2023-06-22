@@ -126,7 +126,6 @@ static consteval size_t __testjs_last()
 static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
 extern bool g_collect_on_every_allocation;
-extern bool g_run_bytecode;
 extern DeprecatedString g_currently_running_test;
 struct FunctionWithLength {
     JS::ThrowCompletionOr<JS::Value> (*function)(JS::VM&);
@@ -360,10 +359,9 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     }
     auto test_script = result.release_value();
 
-    if (g_run_bytecode) {
+    if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
         g_vm->push_execution_context(global_execution_context);
-        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
-        MUST(bytecode_interpreter.run(*test_script));
+        MUST(bytecode_interpreter->run(*test_script));
         g_vm->pop_execution_context();
     } else {
         g_vm->push_execution_context(global_execution_context);
@@ -376,9 +374,8 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     if (file_script.is_error())
         return { test_path, file_script.error() };
     g_vm->push_execution_context(global_execution_context);
-    if (g_run_bytecode) {
-        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
-        top_level_result = bytecode_interpreter.run(file_script.value());
+    if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
+        top_level_result = bytecode_interpreter->run(file_script.value());
     } else {
         top_level_result = interpreter->run(file_script.value());
     }

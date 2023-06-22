@@ -215,12 +215,10 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
     if (program_or_error.is_error())
         return program_or_error.release_error();
 
-    OwnPtr<JS::Bytecode::Interpreter> bytecode_interpreter = nullptr;
-    if (JS::Bytecode::Interpreter::enabled())
-        bytecode_interpreter = make<JS::Bytecode::Interpreter>(realm);
+    auto* bytecode_interpreter = vm->bytecode_interpreter_if_exists();
 
     auto run_with_interpreter = [&](ScriptOrModuleProgram& program) {
-        if (JS::Bytecode::Interpreter::enabled())
+        if (bytecode_interpreter)
             return run_program(*bytecode_interpreter, program);
         return run_program(*ast_interpreter, program);
     };

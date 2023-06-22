@@ -14,6 +14,7 @@
 #include <AK/StringBuilder.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -65,6 +66,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     , m_error_messages(move(error_messages))
     , m_custom_data(move(custom_data))
 {
+    m_bytecode_interpreter = make<Bytecode::Interpreter>(*this);
+
     m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
 
     for (size_t i = 0; i < single_ascii_character_strings.size(); ++i)
@@ -166,6 +169,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     };
 }
 
+VM::~VM() = default;
+
 String const& VM::error_message(ErrorMessage type) const
 {
     VERIFY(type < ErrorMessage::__Count);
@@ -194,6 +199,18 @@ Interpreter* VM::interpreter_if_exists()
     if (m_interpreters.is_empty())
         return nullptr;
     return m_interpreters.last();
+}
+
+Bytecode::Interpreter& VM::bytecode_interpreter()
+{
+    return *m_bytecode_interpreter;
+}
+
+Bytecode::Interpreter* VM::bytecode_interpreter_if_exists()
+{
+    if (!Bytecode::Interpreter::enabled())
+        return nullptr;
+    return m_bytecode_interpreter;
 }
 
 void VM::push_interpreter(Interpreter& interpreter)
