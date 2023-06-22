@@ -22,12 +22,14 @@ struct Count {
     unsigned lines { 0 };
     unsigned characters { 0 };
     unsigned words { 0 };
+    unsigned max_line_length { 0 };
     size_t bytes { 0 };
 };
 
 bool g_output_line = false;
 bool g_output_byte = false;
 bool g_output_word = false;
+bool g_output_max_line_length = false;
 
 static void wc_out(Count const& count)
 {
@@ -37,6 +39,8 @@ static void wc_out(Count const& count)
         out("{:7} ", count.words);
     if (g_output_byte)
         out("{:7} ", count.bytes);
+    if (g_output_max_line_length)
+        out("{:7} ", count.max_line_length);
 
     outln("{:>14}", count.name);
 }
@@ -58,14 +62,22 @@ static ErrorOr<Count> get_count(StringView file_specifier)
     count.name = file_specifier;
 
     bool start_a_new_word = true;
+    unsigned current_line_length = 0;
 
     u8 ch;
     for (Bytes bytes = TRY(file->read_some({ &ch, 1 })); bytes.size() != 0; bytes = TRY(file->read_some(bytes))) {
         count.bytes++;
+        if (ch != '\n')
+            current_line_length++;
         if (is_ascii_space(ch)) {
             start_a_new_word = true;
-            if (ch == '\n')
+            if (ch == '\n') {
                 count.lines++;
+                if (current_line_length > count.max_line_length)
+                    count.max_line_length = current_line_length;
+
+                current_line_length = 0;
+            }
         } else if (start_a_new_word) {
             start_a_new_word = false;
             count.words++;
@@ -83,6 +95,8 @@ static Count get_total_count(Vector<Count> const& counts)
         total_count.words += count.words;
         total_count.characters += count.characters;
         total_count.bytes += count.bytes;
+        if (count.max_line_length > total_count.max_line_length)
+            total_count.max_line_length = count.max_line_length;
     }
     return total_count;
 }
@@ -97,10 +111,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');
     args_parser.add_option(g_output_byte, "Output byte count", "bytes", 'c');
     args_parser.add_option(g_output_word, "Output word count", "words", 'w');
+    args_parser.add_option(g_output_max_line_length, "Output byte count of the longest line", "max-line-length", 'L');
     args_parser.add_positional_argument(file_specifiers, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    if (!g_output_line && !g_output_byte && !g_output_word)
+    if (!g_output_line && !g_output_byte && !g_output_word && !g_output_max_line_length)
         g_output_line = g_output_byte = g_output_word = true;
 
     Vector<Count> counts;
