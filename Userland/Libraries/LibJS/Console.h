@@ -65,16 +65,16 @@ public:
     HashMap<String, unsigned>& counters() { return m_counters; }
     HashMap<String, unsigned> const& counters() const { return m_counters; }
 
+    ThrowCompletionOr<Value> assert_();
+    Value clear();
     ThrowCompletionOr<Value> debug();
     ThrowCompletionOr<Value> error();
     ThrowCompletionOr<Value> info();
     ThrowCompletionOr<Value> log();
-    ThrowCompletionOr<Value> warn();
-    Value clear();
     ThrowCompletionOr<Value> trace();
+    ThrowCompletionOr<Value> warn();
     ThrowCompletionOr<Value> count();
     ThrowCompletionOr<Value> count_reset();
-    ThrowCompletionOr<Value> assert_();
     ThrowCompletionOr<Value> group();
     ThrowCompletionOr<Value> group_collapsed();
     ThrowCompletionOr<Value> group_end();
