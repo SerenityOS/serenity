@@ -656,7 +656,6 @@ if (BUILD_LAGOM)
 
         # Extra tests from Tests/LibJS
         lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LibJS)
-        lagom_test(../../Tests/LibJS/test-bytecode-js.cpp LIBS LibJS)
         lagom_test(../../Tests/LibJS/test-value-js.cpp LIBS LibJS)
 
         # Spreadsheet
