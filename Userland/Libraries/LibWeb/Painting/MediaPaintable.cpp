@@ -80,7 +80,7 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     auto remaining_rect = components.control_box_rect;
     remaining_rect.shrink(component_padding * 2, 0);
 
-    auto timeline_rect_height = context.rounded_device_pixels(10);
+    auto timeline_rect_height = context.rounded_device_pixels(8);
     if ((timeline_rect_height * 3) <= components.control_box_rect.height()) {
         components.timeline_rect = components.control_box_rect;
         components.timeline_rect.set_height(timeline_rect_height);
