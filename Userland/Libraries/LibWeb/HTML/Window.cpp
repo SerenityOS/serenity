@@ -110,6 +110,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
         visitor.visit(plugin_object);
     for (auto& mime_type_object : m_pdf_viewer_mime_type_objects)
         visitor.visit(mime_type_object);
+    visitor.visit(m_count_queuing_strategy_size_function);
 }
 
 Window::~Window() = default;
@@ -755,6 +756,28 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
     }
 
     return m_pdf_viewer_mime_type_objects;
+}
+
+// https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::count_queuing_strategy_size_function()
+{
+    auto& realm = this->realm();
+
+    if (!m_count_queuing_strategy_size_function) {
+        // 1. Let steps be the following steps:
+        auto steps = [](auto const&) {
+            // 1. Return 1.
+            return 1.0;
+        };
+
+        // 2. Let F be ! CreateBuiltinFunction(steps, 0, "size", « », globalObject’s relevant Realm).
+        auto function = JS::NativeFunction::create(realm, move(steps), 0, "size", &realm);
+
+        // 3. Set globalObject’s count queuing strategy size function to a Function that represents a reference to F, with callback context equal to globalObject’s relevant settings object.
+        m_count_queuing_strategy_size_function = MUST_OR_THROW_OOM(heap().allocate<WebIDL::CallbackType>(realm, *function, relevant_settings_object(*this)));
+    }
+
+    return JS::NonnullGCPtr { *m_count_queuing_strategy_size_function };
 }
 
 WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
