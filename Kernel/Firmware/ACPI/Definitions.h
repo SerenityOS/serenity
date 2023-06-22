@@ -89,6 +89,11 @@ enum class AddressSpace {
     PCIConfigurationSpace = 2,
     EmbeddedController = 3,
     SMBus = 4,
+    SystemCMOS = 5,
+    PCIBarTarget = 6,
+    IPMI = 7,
+    GeneralPurposeIO = 8,
+    GenericSerialBus = 9,
     PCC = 0xA,
     FunctionalFixedHardware = 0x7F
 };
