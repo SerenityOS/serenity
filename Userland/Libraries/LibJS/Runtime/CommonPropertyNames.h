@@ -151,6 +151,7 @@ namespace JS {
     P(deref)                                 \
     P(description)                           \
     P(difference)                            \
+    P(dir)                                   \
     P(direction)                             \
     P(disambiguation)                        \
     P(disposed)                              \

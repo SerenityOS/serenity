@@ -73,6 +73,7 @@ public:
     ThrowCompletionOr<Value> log();
     ThrowCompletionOr<Value> trace();
     ThrowCompletionOr<Value> warn();
+    ThrowCompletionOr<Value> dir();
     ThrowCompletionOr<Value> count();
     ThrowCompletionOr<Value> count_reset();
     ThrowCompletionOr<Value> group();
