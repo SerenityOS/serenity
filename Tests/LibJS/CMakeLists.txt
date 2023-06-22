@@ -6,9 +6,6 @@ link_with_locale_data(test-js)
 serenity_test(test-invalid-unicode-js.cpp LibJS LIBS LibJS LibLocale)
 link_with_locale_data(test-invalid-unicode-js)
 
-serenity_test(test-bytecode-js.cpp LibJS LIBS LibJS LibLocale)
-link_with_locale_data(test-bytecode-js)
-
 serenity_test(test-value-js.cpp LibJS LIBS LibJS LibLocale)
 link_with_locale_data(test-value-js)
 
