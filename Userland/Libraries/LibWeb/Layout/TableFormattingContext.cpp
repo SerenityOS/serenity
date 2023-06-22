@@ -699,9 +699,12 @@ void TableFormattingContext::distribute_height_to_rows()
             row.final_height = row.reference_height + increment;
         }
     }
+
+    // Add undistributable space due to border spacing: https://www.w3.org/TR/css-tables-3/#computing-undistributable-space.
+    m_table_height += (m_rows.size() + 1) * border_spacing_vertical();
 }
 
-void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
+void TableFormattingContext::position_row_boxes()
 {
     auto const& table_state = m_state.get(table_box());
 
@@ -744,10 +747,11 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
         row_group_top_offset += row_group_height;
     });
 
-    total_content_height = max(row_top_offset, row_group_top_offset) - table_state.offset.y() - table_state.padding_top;
+    auto total_content_height = max(row_top_offset, row_group_top_offset) - table_state.offset.y() - table_state.padding_top;
     // The height of a table is the sum of the row heights plus any cell spacing or borders.
     // Note that we've already added one vertical border-spacing to row_top_offset, so it's sufficient to multiply it by row count here.
     total_content_height += m_rows.size() * border_spacing_vertical();
+    m_table_height = max(total_content_height, m_table_height);
 }
 
 void TableFormattingContext::position_cell_boxes()
@@ -966,8 +970,6 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
 
     auto total_captions_height = run_caption_layout(layout_mode, CSS::CaptionSide::Top);
 
-    CSSPixels total_content_height = 0;
-
     // Determine the number of rows/columns the table requires.
     calculate_row_column_grid(box);
 
@@ -999,10 +1001,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
 
     distribute_height_to_rows();
 
-    position_row_boxes(total_content_height);
+    position_row_boxes();
     position_cell_boxes();
 
-    m_state.get_mutable(table_box()).set_content_height(total_content_height);
+    m_state.get_mutable(table_box()).set_content_height(m_table_height);
 
     total_captions_height += run_caption_layout(layout_mode, CSS::CaptionSide::Bottom);
 
@@ -1011,8 +1013,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     // A visual representation of this model can be found at https://www.w3.org/TR/css-tables-3/images/table_container.png
     m_state.get_mutable(table_box()).margin_bottom += total_captions_height;
 
-    // FIXME: This is a total hack, we should respect the 'height' property.
-    m_automatic_content_height = total_content_height;
+    m_automatic_content_height = m_table_height;
 }
 
 CSSPixels TableFormattingContext::automatic_content_width() const
