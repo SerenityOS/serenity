@@ -208,6 +208,9 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
     FileSystem/VirtualFileSystem.cpp
+    Firmware/ACPI/AML/AST.cpp
+    Firmware/ACPI/AML/Namespace.cpp
+    Firmware/ACPI/AML/Parser.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
