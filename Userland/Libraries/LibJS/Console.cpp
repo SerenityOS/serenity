@@ -22,6 +22,67 @@ Console::Console(Realm& realm)
 {
 }
 
+// 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
+ThrowCompletionOr<Value> Console::assert_()
+{
+    auto& vm = realm().vm();
+
+    // 1. If condition is true, return.
+    auto condition = vm.argument(0).to_boolean();
+    if (condition)
+        return js_undefined();
+
+    // 2. Let message be a string without any formatting specifiers indicating generically an assertion failure (such as "Assertion failed").
+    auto message = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Assertion failed"sv));
+
+    // NOTE: Assemble `data` from the function arguments.
+    MarkedVector<Value> data { vm.heap() };
+    if (vm.argument_count() > 1) {
+        data.ensure_capacity(vm.argument_count() - 1);
+        for (size_t i = 1; i < vm.argument_count(); ++i) {
+            data.append(vm.argument(i));
+        }
+    }
+
+    // 3. If data is empty, append message to data.
+    if (data.is_empty()) {
+        data.append(message);
+    }
+    // 4. Otherwise:
+    else {
+        // 1. Let first be data[0].
+        auto& first = data[0];
+        // 2. If Type(first) is not String, then prepend message to data.
+        if (!first.is_string()) {
+            data.prepend(message);
+        }
+        // 3. Otherwise:
+        else {
+            // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
+            auto concat = TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", TRY(message->utf8_string()), MUST(first.to_string(vm))));
+            // 2. Set data[0] to concat.
+            data[0] = PrimitiveString::create(vm, move(concat));
+        }
+    }
+
+    // 5. Perform Logger("assert", data).
+    if (m_client)
+        TRY(m_client->logger(LogLevel::Assert, data));
+    return js_undefined();
+}
+
+// 1.1.2. clear(), https://console.spec.whatwg.org/#clear
+Value Console::clear()
+{
+    // 1. Empty the appropriate group stack.
+    m_group_stack.clear();
+
+    // 2. If possible for the environment, clear the console. (Otherwise, do nothing.)
+    if (m_client)
+        m_client->clear();
+    return js_undefined();
+}
+
 // 1.1.3. debug(...data), https://console.spec.whatwg.org/#debug
 ThrowCompletionOr<Value> Console::debug()
 {
@@ -66,29 +127,6 @@ ThrowCompletionOr<Value> Console::log()
     return js_undefined();
 }
 
-// 1.1.9. warn(...data), https://console.spec.whatwg.org/#warn
-ThrowCompletionOr<Value> Console::warn()
-{
-    // 1. Perform Logger("warn", data).
-    if (m_client) {
-        auto data = vm_arguments();
-        return m_client->logger(LogLevel::Warn, data);
-    }
-    return js_undefined();
-}
-
-// 1.1.2. clear(), https://console.spec.whatwg.org/#clear
-Value Console::clear()
-{
-    // 1. Empty the appropriate group stack.
-    m_group_stack.clear();
-
-    // 2. If possible for the environment, clear the console. (Otherwise, do nothing.)
-    if (m_client)
-        m_client->clear();
-    return js_undefined();
-}
-
 // 1.1.8. trace(...data), https://console.spec.whatwg.org/#trace
 ThrowCompletionOr<Value> Console::trace()
 {
@@ -117,6 +155,17 @@ ThrowCompletionOr<Value> Console::trace()
 
     // 3. Perform Printer("trace", « trace »).
     return m_client->printer(Console::LogLevel::Trace, trace);
+}
+
+// 1.1.9. warn(...data), https://console.spec.whatwg.org/#warn
+ThrowCompletionOr<Value> Console::warn()
+{
+    // 1. Perform Logger("warn", data).
+    if (m_client) {
+        auto data = vm_arguments();
+        return m_client->logger(LogLevel::Warn, data);
+    }
+    return js_undefined();
 }
 
 static ThrowCompletionOr<String> label_or_fallback(VM& vm, StringView fallback)
@@ -184,55 +233,6 @@ ThrowCompletionOr<Value> Console::count_reset()
             TRY(m_client->logger(LogLevel::CountReset, message_as_vector));
     }
 
-    return js_undefined();
-}
-
-// 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert
-ThrowCompletionOr<Value> Console::assert_()
-{
-    auto& vm = realm().vm();
-
-    // 1. If condition is true, return.
-    auto condition = vm.argument(0).to_boolean();
-    if (condition)
-        return js_undefined();
-
-    // 2. Let message be a string without any formatting specifiers indicating generically an assertion failure (such as "Assertion failed").
-    auto message = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Assertion failed"sv));
-
-    // NOTE: Assemble `data` from the function arguments.
-    MarkedVector<Value> data { vm.heap() };
-    if (vm.argument_count() > 1) {
-        data.ensure_capacity(vm.argument_count() - 1);
-        for (size_t i = 1; i < vm.argument_count(); ++i) {
-            data.append(vm.argument(i));
-        }
-    }
-
-    // 3. If data is empty, append message to data.
-    if (data.is_empty()) {
-        data.append(message);
-    }
-    // 4. Otherwise:
-    else {
-        // 1. Let first be data[0].
-        auto& first = data[0];
-        // 2. If Type(first) is not String, then prepend message to data.
-        if (!first.is_string()) {
-            data.prepend(message);
-        }
-        // 3. Otherwise:
-        else {
-            // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", TRY(message->utf8_string()), MUST(first.to_string(vm))));
-            // 2. Set data[0] to concat.
-            data[0] = PrimitiveString::create(vm, move(concat));
-        }
-    }
-
-    // 5. Perform Logger("assert", data).
-    if (m_client)
-        TRY(m_client->logger(LogLevel::Assert, data));
     return js_undefined();
 }
 
