@@ -122,6 +122,8 @@ public:
     CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
     CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> count_queuing_strategy_size_function();
+
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;
     JS::NonnullGCPtr<WindowProxy> self() const;
@@ -241,6 +243,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#user-activation-data-model
     HighResolutionTime::DOMHighResTimeStamp m_last_activation_timestamp { NumericLimits<double>::max() };
+
+    // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
+    JS::GCPtr<WebIDL::CallbackType> m_count_queuing_strategy_size_function;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
