@@ -803,11 +803,11 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
     VERIFY(this->display().is_table_inside());
 
     CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
-    mutable_computed_values.set_position(CSS::Position::Static);
-    mutable_computed_values.set_float(CSS::Float::None);
-    mutable_computed_values.set_clear(CSS::Clear::None);
-    mutable_computed_values.set_inset({ CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() });
-    mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
+    mutable_computed_values.set_position(CSS::InitialValues::position());
+    mutable_computed_values.set_float(CSS::InitialValues::float_());
+    mutable_computed_values.set_clear(CSS::InitialValues::clear());
+    mutable_computed_values.set_inset(CSS::InitialValues::inset());
+    mutable_computed_values.set_margin(CSS::InitialValues::margin());
 }
 
 void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)
