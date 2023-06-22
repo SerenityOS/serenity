@@ -172,12 +172,28 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
 
     // 17. If result.[[Type]] is normal, then
     if (!eval_result.is_throw_completion()) {
-        // FIXME: Remove once everything uses the VM's current realm.
-        auto eval_realm_interpreter = Interpreter::create_with_existing_realm(eval_realm);
-
-        // TODO: Optionally use bytecode interpreter?
         // a. Set result to the result of evaluating body.
-        result = program->execute(*eval_realm_interpreter);
+        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+            auto maybe_executable = Bytecode::compile(vm, program, FunctionKind::Normal, "ShadowRealmEval"sv);
+            if (maybe_executable.is_error())
+                result = maybe_executable.release_error();
+            else {
+                auto executable = maybe_executable.release_value();
+
+                auto value_and_frame = bytecode_interpreter->run_and_return_frame(eval_realm, *executable, nullptr);
+                if (value_and_frame.value.is_error()) {
+                    result = value_and_frame.value.release_error();
+                } else {
+                    // Resulting value is in the accumulator.
+                    result = value_and_frame.frame->registers.at(0).value_or(js_undefined());
+                }
+            }
+        } else {
+            // FIXME: Remove once everything uses the VM's current realm.
+            auto eval_realm_interpreter = Interpreter::create_with_existing_realm(eval_realm);
+
+            result = program->execute(*eval_realm_interpreter);
+        }
     }
 
     // 18. If result.[[Type]] is normal and result.[[Value]] is empty, then
