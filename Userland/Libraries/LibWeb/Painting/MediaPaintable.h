@@ -28,9 +28,7 @@ private:
     struct Components {
         DevicePixelRect control_box_rect;
         DevicePixelRect playback_button_rect;
-
         DevicePixelRect timeline_rect;
-        DevicePixels timeline_button_size;
 
         String timestamp;
         RefPtr<Gfx::Font> timestamp_font;
@@ -50,7 +48,7 @@ private:
 
     Components compute_control_bar_components(PaintContext&, HTML::HTMLMediaElement const&, DevicePixelRect media_rect) const;
     static void paint_control_bar_playback_button(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);
-    static void paint_control_bar_timeline(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);
+    static void paint_control_bar_timeline(PaintContext&, HTML::HTMLMediaElement const&, Components const&);
     static void paint_control_bar_timestamp(PaintContext&, Components const&);
     static void paint_control_bar_speaker(PaintContext&, HTML::HTMLMediaElement const&, Components const& components, Optional<DevicePixelPoint> const& mouse_position);
     static void paint_control_bar_volume(PaintContext&, HTML::HTMLMediaElement const&, Components const&, Optional<DevicePixelPoint> const& mouse_position);

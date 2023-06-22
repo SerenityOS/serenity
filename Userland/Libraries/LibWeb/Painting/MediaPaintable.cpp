@@ -60,7 +60,7 @@ void MediaPaintable::paint_media_controls(PaintContext& context, HTML::HTMLMedia
     context.painter().fill_rect(components.control_box_rect.to_type<int>(), control_box_color.with_alpha(0xd0));
 
     paint_control_bar_playback_button(context, media_element, components, mouse_position);
-    paint_control_bar_timeline(context, media_element, components, mouse_position);
+    paint_control_bar_timeline(context, media_element, components);
     paint_control_bar_timestamp(context, components);
     paint_control_bar_speaker(context, media_element, components, mouse_position);
     paint_control_bar_volume(context, media_element, components, mouse_position);
@@ -79,6 +79,13 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
 
     auto remaining_rect = components.control_box_rect;
     remaining_rect.shrink(component_padding * 2, 0);
+
+    auto timeline_rect_height = context.rounded_device_pixels(10);
+    if ((timeline_rect_height * 3) <= components.control_box_rect.height()) {
+        components.timeline_rect = components.control_box_rect;
+        components.timeline_rect.set_height(timeline_rect_height);
+        remaining_rect.take_from_top(timeline_rect_height);
+    }
 
     auto playback_button_rect_width = min(context.rounded_device_pixels(40), remaining_rect.width());
     components.playback_button_rect = remaining_rect;
@@ -105,22 +112,14 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     auto display_time = human_readable_digital_time(round(media_element.layout_display_time({})));
     auto duration = human_readable_digital_time(isnan(media_element.duration()) ? 0 : round(media_element.duration()));
     components.timestamp = String::formatted("{} / {}", display_time, duration).release_value_but_fixme_should_propagate_errors();
-
-    auto const& scaled_font = layout_node().scaled_font(context);
-    components.timestamp_font = scaled_font.with_size(10);
-    if (!components.timestamp_font)
-        components.timestamp_font = scaled_font;
+    components.timestamp_font = layout_node().scaled_font(context);
 
     auto timestamp_size = DevicePixels { static_cast<DevicePixels::Type>(ceilf(components.timestamp_font->width(components.timestamp))) };
     if (timestamp_size <= remaining_rect.width()) {
         components.timestamp_rect = remaining_rect;
-        components.timestamp_rect.take_from_left(remaining_rect.width() - timestamp_size);
-        remaining_rect.take_from_right(timestamp_size + component_padding);
+        components.timestamp_rect.take_from_right(remaining_rect.width() - timestamp_size);
+        remaining_rect.take_from_left(timestamp_size + component_padding);
     }
-
-    components.timeline_button_size = context.rounded_device_pixels(16);
-    if ((components.timeline_button_size * 3) <= remaining_rect.width())
-        components.timeline_rect = remaining_rect;
 
     media_element.cached_layout_boxes({}).control_box_rect = context.scale_to_css_rect(components.control_box_rect);
     media_element.cached_layout_boxes({}).playback_button_rect = context.scale_to_css_rect(components.playback_button_rect);
@@ -165,35 +164,22 @@ void MediaPaintable::paint_control_bar_playback_button(PaintContext& context, HT
     }
 }
 
-void MediaPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components, Optional<DevicePixelPoint> const& mouse_position)
+void MediaPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components)
 {
     if (components.timeline_rect.is_empty())
         return;
 
-    auto timelime_scrub_rect = components.timeline_rect;
-    timelime_scrub_rect.shrink(components.timeline_button_size, timelime_scrub_rect.height() - components.timeline_button_size / 2);
-
     auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.layout_display_time({}) / media_element.duration();
-    auto playback_position = static_cast<double>(static_cast<int>(timelime_scrub_rect.width())) * playback_percentage;
+    auto playback_position = static_cast<double>(static_cast<int>(components.timeline_rect.width())) * playback_percentage;
     auto timeline_button_offset_x = static_cast<DevicePixels>(round(playback_position));
 
-    Gfx::AntiAliasingPainter painter { context.painter() };
-
-    auto timeline_past_rect = timelime_scrub_rect;
+    auto timeline_past_rect = components.timeline_rect;
     timeline_past_rect.set_width(timeline_button_offset_x);
-    painter.fill_rect_with_rounded_corners(timeline_past_rect.to_type<int>(), control_highlight_color.lightened(), 4);
+    context.painter().fill_rect(timeline_past_rect.to_type<int>(), control_highlight_color.lightened());
 
-    auto timeline_future_rect = timelime_scrub_rect;
+    auto timeline_future_rect = components.timeline_rect;
     timeline_future_rect.take_from_left(timeline_button_offset_x);
-    painter.fill_rect_with_rounded_corners(timeline_future_rect.to_type<int>(), Color::Black, 4);
-
-    auto timeline_button_rect = timelime_scrub_rect;
-    timeline_button_rect.shrink(timelime_scrub_rect.width() - components.timeline_button_size, timelime_scrub_rect.height() - components.timeline_button_size);
-    timeline_button_rect.set_x(timelime_scrub_rect.x() + timeline_button_offset_x - components.timeline_button_size / 2);
-
-    auto timeline_is_hovered = rect_is_hovered(media_element, components.timeline_rect, mouse_position, HTML::HTMLMediaElement::MouseTrackingComponent::Timeline);
-    auto timeline_color = control_button_color(timeline_is_hovered);
-    painter.fill_ellipse(timeline_button_rect.to_type<int>(), timeline_color);
+    context.painter().fill_rect(timeline_future_rect.to_type<int>(), Color::Black);
 }
 
 void MediaPaintable::paint_control_bar_timestamp(PaintContext& context, Components const& components)
