@@ -84,11 +84,12 @@ private:
     };
 
     struct AudioDevice {
-        static AudioDevice create()
+        static AudioDevice create(Audio::Loader const& loader)
         {
             auto const& device_info = QMediaDevices::defaultAudioOutput();
 
             auto format = device_info.preferredFormat();
+            format.setSampleRate(static_cast<int>(loader.sample_rate()));
             format.setChannelCount(2);
 
             auto audio_output = make<QAudioSink>(device_info, format);
@@ -129,7 +130,7 @@ private:
     void run() override
     {
         auto devices = make<QMediaDevices>();
-        auto audio_device = AudioDevice::create();
+        auto audio_device = AudioDevice::create(m_loader);
 
         connect(devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
             queue_task({ AudioTask::Type::RecreateAudioDevice }).release_value_but_fixme_should_propagate_errors();
@@ -175,7 +176,7 @@ private:
                     break;
 
                 case AudioTask::Type::RecreateAudioDevice:
-                    audio_device = AudioDevice::create();
+                    audio_device = AudioDevice::create(m_loader);
                     continue;
                 }
             }
