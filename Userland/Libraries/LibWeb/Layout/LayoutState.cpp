@@ -215,6 +215,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
             // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
             if (width
                 && !node.is_floating()
+                && !node.is_absolutely_positioned()
                 && node.display().is_block_outside()
                 && node.parent()
                 && !node.parent()->is_floating()
