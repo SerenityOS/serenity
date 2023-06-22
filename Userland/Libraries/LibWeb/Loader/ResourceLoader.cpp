@@ -330,6 +330,11 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (request.page().has_value()) {
                 if (auto set_cookie = response_headers.get("Set-Cookie"); set_cookie.has_value())
                     store_response_cookies(request.page().value(), request.url(), *set_cookie);
+                if (auto cache_control = response_headers.get("cache-control"); cache_control.has_value()) {
+                    if (cache_control.value().contains("no-store"sv)) {
+                        s_resource_cache.remove(request);
+                    }
+                }
             }
 
             if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599 && (payload.is_empty() || !request.is_main_resource()))) {
