@@ -1,3 +1,4 @@
+#import <WebIDL/Function.idl>
 #import <Streams/QueuingStrategyInit.idl>
 
 // https://streams.spec.whatwg.org/#cqs-class-definition
@@ -7,5 +8,5 @@ interface CountQueuingStrategy {
 
     readonly attribute unrestricted double highWaterMark;
 
-    // FIXME: readonly attribute Function size;
+    readonly attribute Function size;
 };
