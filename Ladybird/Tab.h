@@ -22,6 +22,7 @@ class BrowserWindow;
 namespace Ladybird {
 class ConsoleWidget;
 class InspectorWidget;
+class HistoryWidget;
 }
 
 class Tab final : public QWidget {
@@ -115,4 +116,5 @@ private:
 
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
+    Ladybird::HistoryWidget* m_history_widget { nullptr };
 };

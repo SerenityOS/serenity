@@ -81,10 +81,12 @@ set(SOURCES
     ${BROWSER_SOURCE_DIR}/CookieJar.cpp
     ${BROWSER_SOURCE_DIR}/Database.cpp
     ${BROWSER_SOURCE_DIR}/History.cpp
+    ${BROWSER_SOURCE_DIR}/History/HistoryModel.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
     EventLoopImplementationQt.cpp
     HelperProcess.cpp
+    HistoryWidget.cpp
     InspectorWidget.cpp
     LocationEdit.cpp
     ModelTranslator.cpp

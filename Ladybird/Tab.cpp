@@ -8,6 +8,7 @@
 #include "Tab.h"
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
+#include "HistoryWidget.h"
 #include "InspectorWidget.h"
 #include "Settings.h"
 #include "Utilities.h"
@@ -678,10 +679,14 @@ void Tab::show_console_window()
 
 void Tab::show_history_window()
 {
-    dbgln("FIXME: Create history window widget.");
-    for (auto& history_entry : m_history.get_all_history_entries()) {
-        dbgln("{} {}", history_entry.title, history_entry.url);
+    if (!m_history_widget) {
+        m_history_widget = new Ladybird::HistoryWidget;
+        m_history_widget->setWindowTitle("History");
+        m_history_widget->resize(640, 480);
     }
+
+    m_history_widget->set_history_entries(m_history.get_all_history_entries());
+    m_history_widget->show();
 }
 
 void Tab::close_sub_widgets()
