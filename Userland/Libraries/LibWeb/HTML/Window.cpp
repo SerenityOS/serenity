@@ -111,6 +111,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     for (auto& mime_type_object : m_pdf_viewer_mime_type_objects)
         visitor.visit(mime_type_object);
     visitor.visit(m_count_queuing_strategy_size_function);
+    visitor.visit(m_byte_length_queuing_strategy_size_function);
 }
 
 Window::~Window() = default;
@@ -778,6 +779,30 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::count_queuin
     }
 
     return JS::NonnullGCPtr { *m_count_queuing_strategy_size_function };
+}
+
+// https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::byte_length_queuing_strategy_size_function()
+{
+    auto& realm = this->realm();
+
+    if (!m_byte_length_queuing_strategy_size_function) {
+        // 1. Let steps be the following steps, given chunk:
+        auto steps = [](JS::VM& vm) {
+            auto chunk = vm.argument(0);
+
+            // 1. Return ? GetV(chunk, "byteLength").
+            return chunk.get(vm, vm.names.byteLength);
+        };
+
+        // 2. Let F be ! CreateBuiltinFunction(steps, 1, "size", « », globalObject’s relevant Realm).
+        auto function = JS::NativeFunction::create(realm, move(steps), 1, "size", &realm);
+
+        // 3. Set globalObject’s byte length queuing strategy size function to a Function that represents a reference to F, with callback context equal to globalObject’s relevant settings object.
+        m_byte_length_queuing_strategy_size_function = MUST_OR_THROW_OOM(heap().allocate<WebIDL::CallbackType>(realm, *function, relevant_settings_object(*this)));
+    }
+
+    return JS::NonnullGCPtr { *m_byte_length_queuing_strategy_size_function };
 }
 
 WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
