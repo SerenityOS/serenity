@@ -123,6 +123,7 @@ public:
     CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> count_queuing_strategy_size_function();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> byte_length_queuing_strategy_size_function();
 
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;
@@ -246,6 +247,9 @@ private:
 
     // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
     JS::GCPtr<WebIDL::CallbackType> m_count_queuing_strategy_size_function;
+
+    // https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
+    JS::GCPtr<WebIDL::CallbackType> m_byte_length_queuing_strategy_size_function;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);

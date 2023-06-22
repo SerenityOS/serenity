@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/ByteLengthQueuingStrategyPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Streams/ByteLengthQueuingStrategy.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -26,6 +28,13 @@ ByteLengthQueuingStrategy::ByteLengthQueuingStrategy(JS::Realm& realm, double hi
 }
 
 ByteLengthQueuingStrategy::~ByteLengthQueuingStrategy() = default;
+
+// https://streams.spec.whatwg.org/#blqs-size
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> ByteLengthQueuingStrategy::size()
+{
+    // 1. Return this's relevant global object's byte length queuing strategy size function.
+    return global_object().byte_length_queuing_strategy_size_function();
+}
 
 JS::ThrowCompletionOr<void> ByteLengthQueuingStrategy::initialize(JS::Realm& realm)
 {
