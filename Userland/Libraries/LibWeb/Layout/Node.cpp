@@ -26,6 +26,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -734,6 +735,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     } else if (aspect_ratio->is_ratio()) {
         computed_values.set_aspect_ratio({ false, aspect_ratio->as_ratio().ratio() });
     }
+    if (display().is_table_inside() && is<TableWrapper>(parent())) {
+        auto& wrapper_computed_values = static_cast<TableWrapper*>(parent())->m_computed_values;
+        transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
+    }
 }
 
 bool Node::is_root_element() const
@@ -808,6 +813,24 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
     mutable_computed_values.set_clear(CSS::InitialValues::clear());
     mutable_computed_values.set_inset(CSS::InitialValues::inset());
     mutable_computed_values.set_margin(CSS::InitialValues::margin());
+}
+
+void NodeWithStyle::transfer_table_box_computed_values_to_wrapper_computed_values(CSS::ComputedValues& wrapper_computed_values)
+{
+    // The computed values of properties 'position', 'float', 'margin-*', 'top', 'right', 'bottom', and 'left' on the table element are used on the table wrapper box and not the table box;
+    // all other values of non-inheritable properties are used on the table box and not the table wrapper box.
+    // (Where the table element's values are not used on the table and table wrapper boxes, the initial values are used instead.)
+    auto& mutable_wrapper_computed_values = static_cast<CSS::MutableComputedValues&>(wrapper_computed_values);
+    if (display().is_inline_outside())
+        mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
+    else
+        mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::FlowRoot));
+    mutable_wrapper_computed_values.set_position(computed_values().position());
+    mutable_wrapper_computed_values.set_inset(computed_values().inset());
+    mutable_wrapper_computed_values.set_float(computed_values().float_());
+    mutable_wrapper_computed_values.set_clear(computed_values().clear());
+    mutable_wrapper_computed_values.set_margin(computed_values().margin());
+    reset_table_box_computed_values_used_by_wrapper_to_init_values();
 }
 
 void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)

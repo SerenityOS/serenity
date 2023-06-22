@@ -195,13 +195,15 @@ public:
 
     JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
-    void reset_table_box_computed_values_used_by_wrapper_to_init_values();
+    void transfer_table_box_computed_values_to_wrapper_computed_values(CSS::ComputedValues& wrapper_computed_values);
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
 
 private:
+    void reset_table_box_computed_values_used_by_wrapper_to_init_values();
+
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::Font const> m_font;
     CSSPixels m_line_height { 0 };
