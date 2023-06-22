@@ -96,12 +96,12 @@ private:
 
     ErrorOr<String> pick_an_encoding() const;
 
-    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
-    void get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
-    ErrorOr<void> mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
-    void plan_to_navigate_to(Variant<AK::URL, JS::NonnullGCPtr<Fetch::Infrastructure::Request>> resource, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    void get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> mail_as_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
+    void plan_to_navigate_to(AK::URL url, Variant<Empty, String, POSTResource> post_resource, JS::NonnullGCPtr<Navigable> target_navigable, HistoryHandlingBehavior history_handling);
 
     bool m_firing_submission_events { false };
 
