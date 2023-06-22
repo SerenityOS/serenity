@@ -295,6 +295,11 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
         }
     }
 
+    if (auto* bytecode_interpreter = bytecode_interpreter_if_exists()) {
+        auto executable = TRY(Bytecode::compile(*this, expression, FunctionKind::Normal, name));
+        return TRY(bytecode_interpreter->run(*current_realm(), *executable));
+    }
+
     return TRY(expression.execute(interpreter())).release_value();
 }
 
