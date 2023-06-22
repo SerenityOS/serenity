@@ -9,8 +9,8 @@
 #include <LibAudio/Loader.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 
@@ -80,9 +80,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_view("Output format must be specified manually when writing to standard output"sv);
 
     if (input != "-"sv)
-        TRY(Core::System::unveil(Core::DeprecatedFile::absolute_path(input), "r"sv));
+        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input)), "r"sv));
     if (output != "-"sv)
-        TRY(Core::System::unveil(Core::DeprecatedFile::absolute_path(output), "rwc"sv));
+        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(output)), "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     RefPtr<Audio::Loader> input_loader;
