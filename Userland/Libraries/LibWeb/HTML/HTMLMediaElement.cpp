@@ -476,7 +476,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
             m_fetch_controller->stop_fetch();
 
         // FIXME: 3. If the media element's assigned media provider object is a MediaSource object, then detach it.
-        // FIXME: 4. Forget the media element's media-resource-specific tracks.
+
+        // 4. Forget the media element's media-resource-specific tracks.
+        forget_media_resource_specific_tracks();
 
         // 5. If readyState is not set to HAVE_NOTHING, then set it to that state.
         if (m_ready_state != ReadyState::HaveNothing)
