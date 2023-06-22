@@ -43,7 +43,7 @@ private:
     void distribute_width_to_columns();
     void compute_table_height(LayoutMode layout_mode);
     void distribute_height_to_rows();
-    void position_row_boxes(CSSPixels&);
+    void position_row_boxes();
     void position_cell_boxes();
     void border_conflict_resolution();
     CSSPixels border_spacing_horizontal() const;
