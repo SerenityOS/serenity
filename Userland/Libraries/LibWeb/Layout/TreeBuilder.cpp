@@ -592,20 +592,7 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         auto& parent = *table_box->parent();
 
         CSS::ComputedValues wrapper_computed_values;
-        // The computed values of properties 'position', 'float', 'margin-*', 'top', 'right', 'bottom', and 'left' on the table element are used on the table wrapper box and not the table box;
-        // all other values of non-inheritable properties are used on the table box and not the table wrapper box.
-        // (Where the table element's values are not used on the table and table wrapper boxes, the initial values are used instead.)
-        auto& mutable_wrapper_computed_values = static_cast<CSS::MutableComputedValues&>(wrapper_computed_values);
-        if (table_box->display().is_inline_outside())
-            mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
-        else
-            mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::FlowRoot));
-        mutable_wrapper_computed_values.set_position(table_box->computed_values().position());
-        mutable_wrapper_computed_values.set_inset(table_box->computed_values().inset());
-        mutable_wrapper_computed_values.set_float(table_box->computed_values().float_());
-        mutable_wrapper_computed_values.set_clear(table_box->computed_values().clear());
-        mutable_wrapper_computed_values.set_margin(table_box->computed_values().margin());
-        table_box->reset_table_box_computed_values_used_by_wrapper_to_init_values();
+        table_box->transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
 
         auto wrapper = parent.heap().allocate_without_realm<TableWrapper>(parent.document(), nullptr, move(wrapper_computed_values));
 
