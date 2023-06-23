@@ -100,6 +100,10 @@ public:
     DevicePixelSize window_size() const { return m_window_size; }
     void set_window_size(DevicePixelSize size) { m_window_size = size; }
 
+    void did_request_debugger_break();
+    bool should_continue_after_debugger_break();
+    void set_should_continue_after_debugger_break(bool value);
+
     void did_request_alert(String const& message);
     void alert_closed();
 
@@ -172,6 +176,8 @@ private:
     // Spec Note: This value also impacts the navigation processing model.
     // FIXME: Actually support pdf viewing
     bool m_pdf_viewer_supported { false };
+
+    bool m_should_continue_after_debugger_break { true };
 };
 
 class PageClient {
@@ -216,6 +222,7 @@ public:
     virtual void page_did_request_scroll_to(CSSPixelPoint) { }
     virtual void page_did_request_scroll_into_view(CSSPixelRect const&) { }
     virtual void page_did_request_alert(String const&) { }
+    virtual void page_did_request_debugger_break() { }
     virtual void page_did_request_confirm(String const&) { }
     virtual void page_did_request_prompt(String const&, String const&) { }
     virtual void page_did_request_set_prompt_text(String const&) { }
@@ -235,6 +242,8 @@ public:
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
     virtual void page_did_request_file_picker(WeakPtr<DOM::EventTarget>, [[maybe_unused]] bool multiple) {};
+
+    virtual void continue_after_debugger_break() { }
 
 protected:
     virtual ~PageClient() = default;

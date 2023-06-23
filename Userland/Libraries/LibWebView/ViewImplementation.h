@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/Forward.h>
 #include <LibWebView/WebContentClient.h>
+#include <WebContent/WebContentDebugger.h>
 
 namespace WebView {
 
@@ -128,6 +129,8 @@ public:
     Function<Gfx::IntRect()> on_fullscreen_window;
     Function<void()> on_back_button;
     Function<void()> on_forward_button;
+    Function<void()> on_debugger_request;
+    Function<void(Vector<WebContent::StackFrame>)> on_js_stack_trace_available;
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id, Gfx::IntSize) = 0;
@@ -152,6 +155,9 @@ public:
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const = 0;
 
+    WebContentClient& client();
+    WebContentClient const& client() const;
+
 protected:
     static constexpr auto ZOOM_MIN_LEVEL = 0.3f;
     static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
@@ -159,8 +165,6 @@ protected:
 
     ViewImplementation();
 
-    WebContentClient& client();
-    WebContentClient const& client() const;
     virtual void update_zoom() = 0;
 
     enum class WindowResizeInProgress {

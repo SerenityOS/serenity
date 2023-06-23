@@ -10,6 +10,7 @@
 #include <LibIPC/ConnectionToServer.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <WebContent/WebContentClientEndpoint.h>
+#include <WebContent/WebContentDebugger.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
 namespace WebView {
@@ -54,6 +55,7 @@ private:
     virtual void did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_request_media_context_menu(Gfx::IntPoint, DeprecatedString const&, unsigned, Web::Page::MediaContextMenu const&) override;
     virtual void did_get_source(AK::URL const&, DeprecatedString const&) override;
+    virtual void did_get_js_stack_trace(Vector<WebContent::StackFrame> const&) override;
     virtual void did_get_dom_tree(DeprecatedString const&) override;
     virtual void did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
     virtual void did_get_accessibility_tree(DeprecatedString const&) override;
@@ -83,6 +85,7 @@ private:
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(DeprecatedString const& path, i32) override;
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
+    virtual void did_request_debugger_break() override;
 
     ViewImplementation& m_view;
 };

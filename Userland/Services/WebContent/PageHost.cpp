@@ -304,6 +304,11 @@ void PageHost::page_did_request_alert(String const& message)
     m_client.async_did_request_alert(message);
 }
 
+void PageHost::page_did_request_debugger_break()
+{
+    m_client.async_did_request_debugger_break();
+}
+
 void PageHost::alert_closed()
 {
     page().alert_closed();
@@ -352,6 +357,11 @@ Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_loop_state()
 Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_controls_state()
 {
     return page().toggle_media_controls_state();
+}
+
+void PageHost::continue_after_debugger_break()
+{
+    page().set_should_continue_after_debugger_break(true);
 }
 
 void PageHost::page_did_request_accept_dialog()

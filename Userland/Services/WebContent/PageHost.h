@@ -80,6 +80,7 @@ private:
     virtual void page_did_request_scroll(i32, i32) override;
     virtual void page_did_request_scroll_to(Web::CSSPixelPoint) override;
     virtual void page_did_request_scroll_into_view(Web::CSSPixelRect const&) override;
+    virtual void page_did_request_debugger_break() override;
     virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint, DeprecatedString const&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
@@ -110,6 +111,7 @@ private:
     virtual void page_did_request_activate_tab() override;
     virtual void page_did_close_browsing_context(Web::HTML::BrowsingContext const&) override;
     virtual void request_file(Web::FileRequest) override;
+    virtual void continue_after_debugger_break() override;
 
     explicit PageHost(ConnectionFromClient&);
 

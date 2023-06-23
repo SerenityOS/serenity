@@ -805,6 +805,11 @@ void ConnectionFromClient::toggle_media_controls_state()
     m_page_host->toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
 }
 
+void ConnectionFromClient::continue_after_debugger_break()
+{
+    m_page_host->page().set_should_continue_after_debugger_break(true);
+}
+
 void ConnectionFromClient::inspect_accessibility_tree()
 {
     if (auto* doc = page().top_level_browsing_context().active_document()) {

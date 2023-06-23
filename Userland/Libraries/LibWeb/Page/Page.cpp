@@ -200,6 +200,22 @@ static ResponseType spin_event_loop_until_dialog_closed(PageClient& client, Opti
     return response.release_value();
 }
 
+void Page::did_request_debugger_break()
+{
+    m_client.page_did_request_debugger_break();
+    m_should_continue_after_debugger_break = false;
+}
+
+bool Page::should_continue_after_debugger_break()
+{
+    return m_should_continue_after_debugger_break;
+}
+
+void Page::set_should_continue_after_debugger_break(bool value)
+{
+    m_should_continue_after_debugger_break = value;
+}
+
 void Page::did_request_alert(String const& message)
 {
     m_pending_dialog = PendingDialog::Alert;

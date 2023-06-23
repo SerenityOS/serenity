@@ -188,6 +188,12 @@ void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const
         m_view.on_get_source(url, source);
 }
 
+void WebContentClient::did_get_js_stack_trace(Vector<WebContent::StackFrame> const& trace)
+{
+    if (m_view.on_js_stack_trace_available)
+        m_view.on_js_stack_trace_available(trace);
+}
+
 void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
 {
     if (m_view.on_get_dom_tree)
@@ -366,6 +372,20 @@ void WebContentClient::did_request_file(DeprecatedString const& path, i32 reques
 void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
 {
     m_view.notify_server_did_finish_handling_input_event(event_was_accepted);
+}
+
+void WebContentClient::did_request_debugger_break()
+{
+    ScopeGuard continue_after_break = [&] {
+        m_view.client().async_continue_after_debugger_break();
+    };
+
+    if (!m_view.on_debugger_request)
+        return;
+
+    m_view.debug_request("pause");
+    m_view.on_debugger_request();
+    m_view.debug_request("resume");
 }
 
 }

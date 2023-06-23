@@ -101,6 +101,8 @@ private:
     virtual void toggle_media_loop_state() override;
     virtual void toggle_media_controls_state() override;
 
+    virtual void continue_after_debugger_break() override;
+
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;

@@ -5,6 +5,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/Page/Page.h>
+#include <WebContent/WebContentDebugger.h>
 
 endpoint WebContentClient
 {
@@ -60,8 +61,10 @@ endpoint WebContentClient
     did_request_fullscreen_window() => (Gfx::IntRect window_rect)
     did_request_file(DeprecatedString path, i32 request_id) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
+    did_request_debugger_break() =|
 
     did_output_js_console_message(i32 message_index) =|
     did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|
 
+    did_get_js_stack_trace(Vector<WebContent::StackFrame> frames) =|
 }

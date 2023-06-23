@@ -21,6 +21,7 @@ struct HostDefined : public JS::Realm::HostDefined {
     }
     virtual ~HostDefined() override = default;
     virtual void visit_edges(JS::Cell::Visitor& visitor) override;
+    virtual void debugger_hook() override;
 
     // NOTE: Only the root execution environment in the main thread VM ever sets this to nullptr
     JS::GCPtr<HTML::EnvironmentSettingsObject> environment_settings_object;

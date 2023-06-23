@@ -82,4 +82,6 @@ endpoint WebContentServer
     toggle_media_mute_state() =|
     toggle_media_loop_state() =|
     toggle_media_controls_state() =|
+
+    continue_after_debugger_break() =|
 }
