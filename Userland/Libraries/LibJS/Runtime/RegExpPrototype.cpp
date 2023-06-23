@@ -193,8 +193,8 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 
     // 8. Let matcher be R.[[RegExpMatcher]].
 
-    // 9. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
-    bool full_unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode);
+    // 9. If flags contains "u" or flags contains "v", let fullUnicode be true; else let fullUnicode be false.
+    bool full_unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode) || regex.options().has_flag_set(ECMAScriptFlags::UnicodeSets);
 
     RegexResult result;
 
@@ -252,44 +252,45 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     }
 
     // 17. Let n be the number of elements in r's captures List. (This is the same value as 22.2.2.1's NcapturingParens.)
-    // 18. Assert: n < 2^32 - 1.
+    // 18. Assert: n = R.[[RegExpRecord]].[[CapturingGroupsCount]].
+    // 19. Assert: n < 2^32 - 1.
     VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
 
-    // 19. Let A be ! ArrayCreate(n + 1).
+    // 20. Let A be ! ArrayCreate(n + 1).
     auto array = MUST(Array::create(realm, result.n_named_capture_groups + 1));
 
-    // 20. Assert: The mathematical value of A's "length" property is n + 1.
+    // 21. Assert: The mathematical value of A's "length" property is n + 1.
 
-    // 21. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
+    // 22. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
     MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
 
-    // 23. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    // 24. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
     auto match_indices = Match::create(match);
 
-    // 24. Let indices be a new empty List.
+    // 25. Let indices be a new empty List.
     Vector<Optional<Match>> indices;
     Vector<Utf16String> captured_values;
 
-    // 25. Let groupNames be a new empty List.
+    // 26. Let groupNames be a new empty List.
     HashMap<DeprecatedFlyString, Match> group_names;
 
-    // 26. Add match as the last element of indices.
+    // 27. Add match as the last element of indices.
     indices.append(move(match_indices));
 
-    // 27. Let matchedValue be ! GetMatchString(S, match).
-    // 28. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
+    // 28. Let matchedValue be ! GetMatchString(S, match).
+    // 29. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
     MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, TRY(Utf16String::create(vm, match.view.u16_view())))));
 
-    // 29. If R contains any GroupName, then
+    // 30. If R contains any GroupName, then
     //     a. Let groups be OrdinaryObjectCreate(null).
     //     b. Let hasGroups be true.
-    // 30. Else,
+    // 31. Else,
     //     a. Let groups be undefined.
     //     b. Let hasGroups be false.
     bool has_groups = result.n_named_capture_groups != 0;
     auto groups_object = has_groups ? Object::create(realm, nullptr) : GCPtr<Object> {};
 
-    // 32. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
+    // 33. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
     for (size_t i = 1; i <= result.n_capture_groups; ++i) {
         // a. Let captureI be ith element of r's captures List.
         auto& capture = result.capture_group_matches[0][i];
@@ -362,12 +363,12 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         }
     }
 
-    // 31. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+    // 32. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     // NOTE: This step must be performed after the above loop in order for groups to be populated.
     Value groups = has_groups ? groups_object : js_undefined();
     MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
-    // 33. If hasIndices is true, then
+    // 34. If hasIndices is true, then
     if (has_indices) {
         // a. Let indicesArray be MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups).
         auto indices_array = make_match_indices_index_pair_array(vm, string.view(), indices, group_names, has_groups);
@@ -375,11 +376,11 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         MUST(array->create_data_property(vm.names.indices, indices_array));
     }
 
-    // 22. Perform ! CreateDataPropertyOrThrow(A, "input", S).
+    // 23. Perform ! CreateDataPropertyOrThrow(A, "input", S).
     // NOTE: This step is performed last to allow the string to be moved into the PrimitiveString::create() invocation.
     MUST(array->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, move(string))));
 
-    // 34. Return A.
+    // 35. Return A.
     return array;
 }
 
@@ -438,7 +439,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 // 22.2.6.10 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
 // 22.2.6.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.6.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
-// 22.2.6.18 get RegExp.prototype.unicodeSets, https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodeSets
+// 22.2.6.19 get RegExp.prototype.unicodeSets, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicodesets
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                     \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                  \
     {                                                                                      \
@@ -497,10 +498,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     // 11. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
     // 12. Let dotAll be ToBoolean(? Get(R, "dotAll")).
     // 13. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
-    // 14. Let unicodeSets be ! ToBoolean(? Get(R, "unicodeSets")).
-    // 15. If unicodeSets is true, append the code unit 0x0076 (LATIN SMALL LETTER V) as the last code unit of result.
-    // 16. Let unicode be ToBoolean(? Get(R, "unicode")).
-    // 17. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
+    // 14. Let unicode be ToBoolean(? Get(R, "unicode")).
+    // 15. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
+    // 16. Let unicodeSets be ! ToBoolean(? Get(R, "unicodeSets")).
+    // 17. If unicodeSets is true, append the code unit 0x0076 (LATIN SMALL LETTER V) as the last code unit of result.
     // 18. Let sticky be ToBoolean(? Get(R, "sticky")).
     // 19. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
@@ -510,12 +511,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
-    // 18. Return result.
+    // 20. Return result.
     return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.2.6.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
     auto& realm = *vm.current_realm();
@@ -538,9 +538,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     }
 
     // 6. Else,
-    // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    // FIXME: Update spec steps when https://github.com/tc39/ecma262/pull/2418 is rebased on the
-    //        current ECMA-262 main branch. According to the PR, this is how this step will look:
+    // a. If flags contains "u" or flags contains "v", let fullUnicode be true. Otherwise, let fullUnicode be false.
     bool full_unicode = flags.contains('u') || flags.contains('v');
 
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
@@ -591,7 +589,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 }
 
 // 22.2.6.9 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
     auto& realm = *vm.current_realm();
@@ -635,7 +632,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 }
 
 // 22.2.6.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40replace
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 {
     auto string_value = vm.argument(0);
@@ -664,24 +660,18 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 8. If flags contains "g", let global be true. Otherwise, let global be false.
     bool global = flags.contains('g');
-    bool full_unicode = false;
 
-    // 8. If global is true, then
+    // 9. If global is true, then
     if (global) {
-        // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-        // FIXME: Update spec steps when https://github.com/tc39/ecma262/pull/2418 is rebased on the
-        //        current ECMA-262 main branch. According to the PR, this is how this step will look:
-        full_unicode = flags.contains('u') || flags.contains('v');
-
-        // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
+        // a. Perform ? Set(rx, "lastIndex", +0𝔽, true).
         TRY(regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
     }
 
-    // 9. Let results be a new empty List.
+    // 10. Let results be a new empty List.
     MarkedVector<Object*> results(vm.heap());
 
-    // 10. Let done be false.
-    // 11. Repeat, while done is false,
+    // 11. Let done be false.
+    // 12. Repeat, while done is false,
     while (true) {
         // a. Let result be ? RegExpExec(rx, S).
         auto result = TRY(regexp_exec(vm, regexp_object, string));
@@ -707,18 +697,21 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
-            // Steps 2a-2c are implemented by increment_last_index.
+            // b. If flags contains "u" or flags contains "v", let fullUnicode be true. Otherwise, let fullUnicode be false.
+            bool full_unicode = flags.contains('u') || flags.contains('v');
+
+            // Steps 2a, 2c-2d are implemented by increment_last_index.
             TRY(increment_last_index(vm, regexp_object, string.view(), full_unicode));
         }
     }
 
-    // 12. Let accumulatedResult be the empty String.
+    // 13. Let accumulatedResult be the empty String.
     StringBuilder accumulated_result;
 
-    // 13. Let nextSourcePosition be 0.
+    // 14. Let nextSourcePosition be 0.
     size_t next_source_position = 0;
 
-    // 14. For each element result of results, do
+    // 15. For each element result of results, do
     for (auto& result : results) {
         // a. Let resultLength be ? LengthOfArrayLike(result).
         size_t result_length = TRY(length_of_array_like(vm, *result));
@@ -740,11 +733,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // f. Set position to the result of clamping position between 0 and lengthS.
         position = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
 
-        // g. Let n be 1.
-
-        // h. Let captures be a new empty List.
+        // g. Let captures be a new empty List.
         MarkedVector<Value> captures(vm.heap());
 
+        // h. Let n be 1.
         // i. Repeat, while n ≤ nCaptures,
         for (size_t n = 1; n <= n_captures; ++n) {
             // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
@@ -770,27 +762,23 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
-            // i. Let replacerArgs be « matched ».
+            // i. Let replacerArgs be the list-concatenation of « matched », captures, and « 𝔽(position), S ».
             MarkedVector<Value> replacer_args(vm.heap());
             replacer_args.append(PrimitiveString::create(vm, move(matched)));
-
-            // ii. Append in List order the elements of captures to the end of the List replacerArgs.
             replacer_args.extend(move(captures));
-
-            // iii. Append 𝔽(position) and S to replacerArgs.
             replacer_args.append(Value(position));
             replacer_args.append(PrimitiveString::create(vm, string));
 
-            // iv. If namedCaptures is not undefined, then
+            // ii. If namedCaptures is not undefined, then
             if (!named_captures.is_undefined()) {
                 // 1. Append namedCaptures as the last element of replacerArgs.
                 replacer_args.append(move(named_captures));
             }
 
-            // v. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
+            // iii. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
             auto replace_result = TRY(call(vm, replace_value.as_function(), js_undefined(), move(replacer_args)));
 
-            // vi. Let replacement be ? ToString(replValue).
+            // iv. Let replacement be ? ToString(replValue).
             replacement = TRY(replace_result.to_string(vm));
         }
         // l. Else,
@@ -819,11 +807,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         }
     }
 
-    // 15. If nextSourcePosition ≥ lengthS, return accumulatedResult.
+    // 16. If nextSourcePosition ≥ lengthS, return accumulatedResult.
     if (next_source_position >= string.length_in_code_units())
         return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 
-    // 16. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
+    // 17. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
     auto substring = string.substring_view(next_source_position);
     accumulated_result.append(substring);
 
@@ -896,7 +884,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 }
 
 // 22.2.6.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
-// With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
     auto& realm = *vm.current_realm();
@@ -941,8 +928,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     if (limit == 0)
         return array;
 
-    // 15. Let size be the length of S.
-    // 16. If size is 0, then
+    // 15. If S is the empty String, then
     if (string.is_empty()) {
         // a. Let z be ? RegExpExec(splitter, S).
         auto result = TRY(regexp_exec(vm, splitter, string));
@@ -957,6 +943,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         // d. Return A.
         return array;
     }
+
+    // 16. Let size be the length of S.
 
     // 17. Let p be 0.
     size_t last_match_end = 0;
@@ -1021,7 +1009,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         // 8. Let i be 1.
         // 9. Repeat, while i ≤ numberOfCaptures,
         for (size_t i = 1; i <= number_of_captures; ++i) {
-
             // a. Let nextCapture be ? Get(z, ! ToString(𝔽(i))).
             auto next_capture = TRY(result.get(vm, i));
 
