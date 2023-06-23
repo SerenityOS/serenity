@@ -27,6 +27,7 @@ public:
         virtual ~HostDefined() = default;
 
         virtual void visit_edges(Cell::Visitor&) { }
+        virtual void debugger_hook() { }
     };
 
     static ThrowCompletionOr<NonnullGCPtr<Realm>> create(VM&);

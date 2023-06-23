@@ -4448,19 +4448,18 @@ Completion DebuggerStatement::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    Completion result;
-
     // 1. If an implementation-defined debugging facility is available and enabled, then
-    if (false) {
-        // a. Perform an implementation-defined debugging action.
-        // b. Return a new implementation-defined Completion Record.
-        VERIFY_NOT_REACHED();
-    }
+    auto* host_defined = interpreter.vm().current_realm()->host_defined();
+    // NOTE: See after step 2.
     // 2. Else,
-    else {
+    if (!host_defined)
         // a. Return empty.
         return Optional<Value> {};
-    }
+
+    // a. Perform an implementation-defined debugging action.
+    host_defined->debugger_hook();
+    // b. Return a new implementation-defined Completion Record.
+    return js_undefined();
 }
 
 ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const
