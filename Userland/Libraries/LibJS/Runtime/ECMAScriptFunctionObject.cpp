@@ -455,7 +455,10 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+                    auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists();
+                    if (static_cast<FunctionKind>(m_kind) == FunctionKind::Generator)
+                        bytecode_interpreter = &vm.bytecode_interpreter();
+                    if (bytecode_interpreter) {
                         auto value_and_frame = bytecode_interpreter->run_and_return_frame(realm, *m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
                         if (value_and_frame.value.is_error())
                             return value_and_frame.value.release_error();
