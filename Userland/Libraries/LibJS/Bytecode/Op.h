@@ -517,6 +517,23 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class GetPrivateById final : public Instruction {
+public:
+    explicit GetPrivateById(IdentifierTableIndex property)
+        : Instruction(Type::GetPrivateById)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_property;
+};
+
 enum class PropertyKind {
     Getter,
     Setter,
@@ -529,6 +546,31 @@ class PutById final : public Instruction {
 public:
     explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutById)
+        , m_base(base)
+        , m_property(property)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+    }
+
+private:
+    Register m_base;
+    IdentifierTableIndex m_property;
+    PropertyKind m_kind;
+};
+
+class PutPrivateById final : public Instruction {
+public:
+    explicit PutPrivateById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutPrivateById)
         , m_base(base)
         , m_property(property)
         , m_kind(kind)
