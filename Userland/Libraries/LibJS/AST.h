@@ -45,6 +45,8 @@ create_ast_node(SourceRange range, Args&&... args)
     return adopt_ref(*new T(move(range), forward<Args>(args)...));
 }
 
+class DebuggerStatement;
+
 class ASTNode : public RefCounted<ASTNode> {
 public:
     virtual ~ASTNode() = default;
@@ -94,6 +96,10 @@ public:
 
     virtual ASTNode const* find_node_at_source_position(size_t line) const = 0;
 
+    RefPtr<DebuggerStatement> breakpoint() const { return m_as_break_point; }
+    void set_as_breakpoint(NonnullRefPtr<DebuggerStatement> point) { m_as_break_point = move(point); }
+    void clear_breakpoint() { m_as_break_point = nullptr; }
+
 protected:
     explicit ASTNode(SourceRange);
 
@@ -102,6 +108,7 @@ private:
     //       This creates a 4-byte padding hole after `m_end_offset` which is used to pack subclasses better.
     u32 m_start_offset { 0 };
     RefPtr<SourceCode const> m_source_code;
+    RefPtr<DebuggerStatement> m_as_break_point;
     u32 m_end_offset { 0 };
 };
 

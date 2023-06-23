@@ -53,6 +53,9 @@ public:
         // The node pointer is popped from the interpreter in the destructor.
         m_interpreter.push_ast_node(m_chain_node);
 #pragma GCC diagnostic push
+
+        if (auto bp = node.breakpoint())
+            (void)bp->execute(interpreter);
     }
 
     ~InterpreterNodeScope()
