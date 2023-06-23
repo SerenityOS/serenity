@@ -84,6 +84,7 @@ Result<regex::RegexOptions<ECMAScriptFlags>, DeprecatedString> regex_flags_from_
     return options;
 }
 
+// 22.2.3.4 Static Semantics: ParsePattern ( patternText, u, v ), https://tc39.es/ecma262/#sec-parsepattern
 ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView pattern, bool unicode, bool unicode_sets)
 {
     if (unicode && unicode_sets)
@@ -119,6 +120,7 @@ ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView
     return builder.to_deprecated_string();
 }
 
+// 22.2.3.4 Static Semantics: ParsePattern ( patternText, u, v ), https://tc39.es/ecma262/#sec-parsepattern
 ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets)
 {
     auto result = parse_regex_pattern(pattern, unicode, unicode_sets);
@@ -162,7 +164,7 @@ ThrowCompletionOr<void> RegExpObject::initialize(Realm& realm)
     return {};
 }
 
-// 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
+// 22.2.3.3 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM& vm, Value pattern_value, Value flags_value)
 {
     // NOTE: This also contains changes adapted from https://arai-a.github.io/ecma262-compare/?pr=2418, which doesn't match the upstream spec anymore.
@@ -230,7 +232,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM
     return NonnullGCPtr { *this };
 }
 
-// 22.2.3.2.5 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
+// 22.2.6.13.1 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
 DeprecatedString RegExpObject::escape_regexp_pattern() const
 {
     // 1. Let S be a String in the form of a Pattern[~UnicodeMode] (Pattern[+UnicodeMode] if F contains "u") equivalent
@@ -291,7 +293,7 @@ DeprecatedString RegExpObject::escape_regexp_pattern() const
     return builder.to_deprecated_string();
 }
 
-// 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
+// 22.2.3.1 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value pattern, Value flags)
 {
     auto& realm = *vm.current_realm();
