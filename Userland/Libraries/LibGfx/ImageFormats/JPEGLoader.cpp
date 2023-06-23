@@ -1562,7 +1562,7 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
     // 7 - Conversion to and from RGB
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            const u32 chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
+            u32 const chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
             Macroblock const& chroma = macroblocks[chroma_block_index];
             // Overflows are intentional.
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
@@ -1573,10 +1573,10 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
                     auto* cr = macroblocks[macroblock_index].cr;
                     for (u8 i = 7; i < 8; --i) {
                         for (u8 j = 7; j < 8; --j) {
-                            const u8 pixel = i * 8 + j;
-                            const u32 chroma_pxrow = (i / context.vsample_factor) + 4 * vfactor_i;
-                            const u32 chroma_pxcol = (j / context.hsample_factor) + 4 * hfactor_i;
-                            const u32 chroma_pixel = chroma_pxrow * 8 + chroma_pxcol;
+                            u8 const pixel = i * 8 + j;
+                            u32 const chroma_pxrow = (i / context.vsample_factor) + 4 * vfactor_i;
+                            u32 const chroma_pxcol = (j / context.hsample_factor) + 4 * hfactor_i;
+                            u32 const chroma_pixel = chroma_pxrow * 8 + chroma_pxcol;
                             int r = y[pixel] + 1.402f * (chroma.cr[chroma_pixel] - 128);
                             int g = y[pixel] - 0.3441f * (chroma.cb[chroma_pixel] - 128) - 0.7141f * (chroma.cr[chroma_pixel] - 128);
                             int b = y[pixel] + 1.772f * (chroma.cb[chroma_pixel] - 128);
@@ -1738,14 +1738,14 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
     context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
     for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {
-        const u32 block_row = y / 8;
-        const u32 pixel_row = y % 8;
+        u32 const block_row = y / 8;
+        u32 const pixel_row = y % 8;
         for (u32 x = 0; x < context.frame.width; x++) {
-            const u32 block_column = x / 8;
+            u32 const block_column = x / 8;
             auto& block = macroblocks[block_row * context.mblock_meta.hpadded_count + block_column];
-            const u32 pixel_column = x % 8;
-            const u32 pixel_index = pixel_row * 8 + pixel_column;
-            const Color color { (u8)block.y[pixel_index], (u8)block.cb[pixel_index], (u8)block.cr[pixel_index] };
+            u32 const pixel_column = x % 8;
+            u32 const pixel_index = pixel_row * 8 + pixel_column;
+            Color const color { (u8)block.y[pixel_index], (u8)block.cb[pixel_index], (u8)block.cr[pixel_index] };
             context.bitmap->set_pixel(x, y, color);
         }
     }
