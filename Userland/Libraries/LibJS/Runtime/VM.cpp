@@ -466,7 +466,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
 // 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
-ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment)
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment)
 {
     auto& vm = *this;
     auto& realm = *vm.current_realm();

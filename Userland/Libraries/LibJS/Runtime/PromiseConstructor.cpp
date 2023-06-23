@@ -39,7 +39,7 @@ static ThrowCompletionOr<Value> get_promise_resolve(VM& vm, Value constructor)
 using EndOfElementsCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&)>;
 using InvokeElementFunctionCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&, RemainingElements&, Value, size_t)>;
 
-static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
+static ThrowCompletionOr<Value> perform_promise_common(VM& vm, IteratorRecord& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
 {
     VERIFY(constructor.is_constructor());
     VERIFY(promise_resolve.is_function());
@@ -113,7 +113,7 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
 }
 
 // 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
-static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all(VM& vm, IteratorRecord& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -147,7 +147,7 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
 }
 
 // 27.2.4.2.1 PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseallsettled
-static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, IteratorRecord& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -190,7 +190,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
 }
 
 // 27.2.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseany
-static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability& result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_any(VM& vm, IteratorRecord& iterator_record, Value constructor, PromiseCapability& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -225,7 +225,7 @@ static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_r
 }
 
 // 27.2.4.5.1 PerformPromiseRace ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiserace
-static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_race(VM& vm, IteratorRecord& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     return perform_promise_common(
         vm, iterator_record, constructor, result_capability, promise_resolve,
