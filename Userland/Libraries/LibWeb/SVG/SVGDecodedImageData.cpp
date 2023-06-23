@@ -8,8 +8,10 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
@@ -46,8 +48,8 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
     auto page_client = make<SVGPageClient>(host_page);
     auto page = make<Page>(*page_client);
     page_client->m_svg_page = page.ptr();
-    auto browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*page);
-    auto response = Fetch::Infrastructure::Response::create(browsing_context->vm());
+    JS::NonnullGCPtr<HTML::Navigable> navigable = page->top_level_traversable();
+    auto response = Fetch::Infrastructure::Response::create(navigable->vm());
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
@@ -59,11 +61,12 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
         .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
         .reserved_environment = {},
-        .browsing_context = browsing_context,
-        .navigable = nullptr,
+        .browsing_context = nullptr,
+        .navigable = navigable,
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
-    browsing_context->set_active_document(document);
+    navigable->set_ongoing_navigation({});
+    navigable->active_session_history_entry()->document_state->set_document(document);
 
     auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);
     parser->run(document->url());
@@ -94,7 +97,8 @@ SVGDecodedImageData::~SVGDecodedImageData() = default;
 
 void SVGDecodedImageData::render(Gfx::IntSize size) const
 {
-    m_document->browsing_context()->set_viewport_rect({ 0, 0, size.width(), size.height() });
+    VERIFY(m_document->navigable());
+    m_document->navigable()->set_viewport_rect({ 0, 0, size.width(), size.height() });
     m_document->update_layout();
 
     Gfx::Painter painter(*m_bitmap);
