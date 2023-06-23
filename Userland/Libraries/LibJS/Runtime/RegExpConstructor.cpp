@@ -22,7 +22,7 @@ ThrowCompletionOr<void> RegExpConstructor::initialize(Realm& realm)
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
-    // 22.2.4.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
+    // 22.2.5.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().regexp_prototype(), 0);
 
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
@@ -53,7 +53,7 @@ ThrowCompletionOr<void> RegExpConstructor::initialize(Realm& realm)
     return {};
 }
 
-// 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
+// 22.2.4.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
 ThrowCompletionOr<Value> RegExpConstructor::call()
 {
     auto& vm = this->vm();
@@ -81,7 +81,7 @@ ThrowCompletionOr<Value> RegExpConstructor::call()
     return TRY(construct(new_target));
 }
 
-// 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
+// 22.2.4.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
 ThrowCompletionOr<NonnullGCPtr<Object>> RegExpConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
@@ -142,7 +142,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> RegExpConstructor::construct(FunctionObj
     return TRY(regexp_object->regexp_initialize(vm, pattern_value, flags_value));
 }
 
-// 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species
+// 22.2.5.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species
 JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::symbol_species_getter)
 {
     // 1. Return the this value.
