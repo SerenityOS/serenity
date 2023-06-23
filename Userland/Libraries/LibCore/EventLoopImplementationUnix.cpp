@@ -96,8 +96,10 @@ EventLoopImplementationUnix::~EventLoopImplementationUnix() = default;
 int EventLoopImplementationUnix::exec()
 {
     for (;;) {
-        if (m_exit_requested)
+        if (m_exit_requested) {
+            m_exit_requested = false;
             return m_exit_code;
+        }
         pump(PumpMode::WaitForEvents);
     }
     VERIFY_NOT_REACHED();
