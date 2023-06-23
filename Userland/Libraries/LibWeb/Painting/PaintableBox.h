@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/Range.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/Paintable.h>
@@ -100,7 +101,8 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    Optional<CSSPixelRect> calculate_overflow_clipped_rect() const;
+    Optional<CSSPixelRange> calculate_horizontal_clip_range() const;
+    Optional<CSSPixelRange> calculate_vertical_clip_range() const;
 
     void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
@@ -160,6 +162,9 @@ private:
 
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;
+
+    Optional<CSSPixelRange> mutable m_horizontal_clip;
+    Optional<CSSPixelRange> mutable m_vertical_clip;
 
     Optional<CSSPixelRect> mutable m_clip_rect;
 

@@ -14,6 +14,7 @@
 #include <LibGfx/Line.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/Range.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 #include <math.h>
@@ -52,6 +53,13 @@ public:
     }
 
     template<typename U>
+    Rect(Range<U> const& horizontal, Range<U> const& vertical)
+        : m_location(horizontal.min(), vertical.min())
+        , m_size(horizontal.dist(), vertical.dist())
+    {
+    }
+
+    template<typename U>
     explicit Rect(Rect<U> const& other)
         : m_location(other.location())
         , m_size(other.size())
@@ -70,6 +78,9 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE Point<T> const& location() const { return m_location; }
     [[nodiscard]] ALWAYS_INLINE Size<T> const& size() const { return m_size; }
+
+    [[nodiscard]] ALWAYS_INLINE Range<T> horizontal_range() const { return Range<T> { left(), right() }; }
+    [[nodiscard]] ALWAYS_INLINE Range<T> vertical_range() const { return Range<T> { top(), bottom() }; }
 
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
 
@@ -474,20 +485,47 @@ public:
 
     void intersect(Rect<T> const& other)
     {
+        intersect_horizontally(other);
+        intersect_vertically(other);
+    }
+
+    void intersect_horizontally(Range<T> const& range)
+    {
+        intersect_horizontally(Rect<T> { range, {} });
+    }
+
+    void intersect_horizontally(Rect<T> const& other)
+    {
         T l = max(left(), other.left());
         T r = min(right(), other.right());
-        T t = max(top(), other.top());
-        T b = min(bottom(), other.bottom());
 
-        if (l > r || t > b) {
+        if (l > r) {
             m_location = {};
             m_size = {};
             return;
         }
 
         set_x(l);
-        set_y(t);
         set_right(r);
+    }
+
+    void intersect_vertically(Range<T> const& range)
+    {
+        intersect_vertically(Rect<T> { {}, range });
+    }
+
+    void intersect_vertically(Rect<T> const& other)
+    {
+        T t = max(top(), other.top());
+        T b = min(bottom(), other.bottom());
+
+        if (t > b) {
+            m_location = {};
+            m_size = {};
+            return;
+        }
+
+        set_y(t);
         set_bottom(b);
     }
 

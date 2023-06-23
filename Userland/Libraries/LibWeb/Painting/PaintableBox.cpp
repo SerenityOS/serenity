@@ -332,31 +332,51 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
+// NOTE: stacking context should not be crossed while aggregating rectangle to
+// clip `overflow: hidden` because intersecting rectangles with different
+// transforms doesn't make sense
+// TODO: figure out if there are cases when stacking context should be
+// crossed to calculate correct clip rect
+Optional<CSSPixelRange> PaintableBox::calculate_horizontal_clip_range() const
 {
-    if (!m_clip_rect.has_value()) {
-        // NOTE: stacking context should not be crossed while aggregating rectangle to
-        // clip `overflow: hidden` because intersecting rectangles with different
-        // transforms doesn't make sense
-        // TODO: figure out if there are cases when stacking context should be
-        // crossed to calculate correct clip rect
+    if (!m_horizontal_clip.has_value()) {
         if (!stacking_context() && containing_block() && containing_block()->paintable_box()) {
-            m_clip_rect = containing_block()->paintable_box()->calculate_overflow_clipped_rect();
+            m_horizontal_clip = containing_block()->paintable_box()->calculate_horizontal_clip_range();
         }
 
         auto overflow_x = computed_values().overflow_x();
-        auto overflow_y = computed_values().overflow_y();
-
-        if (overflow_x != CSS::Overflow::Visible && overflow_y != CSS::Overflow::Visible) {
-            if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect());
+        if (overflow_x != CSS::Overflow::Visible) {
+            auto horizontal_padding_range = absolute_padding_box_rect().horizontal_range();
+            if (m_horizontal_clip.has_value()) {
+                m_horizontal_clip->intersect(horizontal_padding_range);
             } else {
-                m_clip_rect = absolute_padding_box_rect();
+                m_horizontal_clip = horizontal_padding_range;
             }
         }
     }
 
-    return m_clip_rect;
+    return m_horizontal_clip;
+}
+
+Optional<CSSPixelRange> PaintableBox::calculate_vertical_clip_range() const
+{
+    if (!m_vertical_clip.has_value()) {
+        if (!stacking_context() && containing_block() && containing_block()->paintable_box()) {
+            m_vertical_clip = containing_block()->paintable_box()->calculate_vertical_clip_range();
+        }
+
+        auto overflow_y = computed_values().overflow_y();
+        if (overflow_y != CSS::Overflow::Visible) {
+            auto vertical_padding_range = absolute_padding_box_rect().vertical_range();
+            if (m_vertical_clip.has_value()) {
+                m_vertical_clip->intersect(vertical_padding_range);
+            } else {
+                m_vertical_clip = vertical_padding_range;
+            }
+        }
+    }
+
+    return m_vertical_clip;
 }
 
 void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
@@ -364,24 +384,32 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
 
-    // FIXME: Support more overflow variations.
-    auto clip_rect = this->calculate_overflow_clipped_rect();
+    auto horizontal_clip = calculate_horizontal_clip_range();
+    auto vertical_clip = calculate_vertical_clip_range();
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
-    if (!clip_rect.has_value())
-        return;
-
     if (!m_clipping_overflow) {
         context.painter().save();
-        context.painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
+        auto clip_box = context.painter().clip_rect();
+        if (horizontal_clip.has_value() && overflow_x != CSS::Overflow::Visible) {
+            auto device_horizontal_clip = context.enclosing_device_range(horizontal_clip.value()).to_type<int>();
+            clip_box.intersect_horizontally(device_horizontal_clip);
+        }
+        if (vertical_clip.has_value() && overflow_y != CSS::Overflow::Visible) {
+            auto device_vertical_clip = context.enclosing_device_range(vertical_clip.value()).to_type<int>();
+            clip_box.intersect_vertically(device_vertical_clip);
+        }
+        context.painter().add_clip_rect(clip_box);
         m_clipping_overflow = true;
     }
 
-    if (!clip_rect->is_empty() && overflow_y == CSS::Overflow::Hidden && overflow_x == CSS::Overflow::Hidden) {
+    // FIXME: Implement the steps in https://drafts.csswg.org/css-overflow/#corner-clipping
+    if (horizontal_clip.has_value() && vertical_clip.has_value() && (overflow_x == CSS::Overflow::Hidden || overflow_y == CSS::Overflow::Hidden)) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto clip_rect = CSSPixelRect { horizontal_clip.value(), vertical_clip.value() };
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
@@ -397,7 +425,6 @@ void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase ph
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
 
-    // FIXME: Support more overflow variations.
     if (m_clipping_overflow) {
         context.painter().restore();
         m_clipping_overflow = false;
@@ -566,20 +593,30 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (m_line_boxes.is_empty())
         return;
 
-    bool should_clip_overflow = computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
+    auto is_overflow_x_visible = computed_values().overflow_x() == CSS::Overflow::Visible;
+    auto is_overflow_y_visible = computed_values().overflow_y() == CSS::Overflow::Visible;
+    bool should_clip_overflow = !is_overflow_x_visible || !is_overflow_y_visible;
     Optional<BorderRadiusCornerClipper> corner_clipper;
 
     if (should_clip_overflow) {
         context.painter().save();
-        // FIXME: Handle overflow-x and overflow-y being different values.
-        auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
-        context.painter().add_clip_rect(clip_box.to_type<int>());
+        auto clip_rect = context.painter().clip_rect();
+        auto device_rect = context.rounded_device_rect(absolute_padding_box_rect());
+        if (!is_overflow_x_visible) {
+            clip_rect.intersect_horizontally(device_rect.horizontal_range().to_type<int>());
+        }
+        if (!is_overflow_y_visible) {
+            clip_rect.intersect_vertically(device_rect.vertical_range().to_type<int>());
+        }
+        context.painter().add_clip_rect(clip_rect);
+
         auto scroll_offset = context.rounded_device_point(static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset());
         context.painter().translate(-scroll_offset.to_type<int>());
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii.has_any_radius()) {
-            auto clipper = BorderRadiusCornerClipper::create(context, clip_box, border_radii);
+            // FIXME: Implement the steps in https://drafts.csswg.org/css-overflow/#corner-clipping
+            auto clipper = BorderRadiusCornerClipper::create(context, device_rect, border_radii);
             if (!clipper.is_error()) {
                 corner_clipper = clipper.release_value();
                 corner_clipper->sample_under_corners(context.painter());

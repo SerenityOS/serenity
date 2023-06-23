@@ -201,11 +201,13 @@ constexpr CSSPixels operator%(CSSPixels left, T right) { return left.to_double()
 
 using CSSPixelLine = Gfx::Line<CSSPixels>;
 using CSSPixelPoint = Gfx::Point<CSSPixels>;
+using CSSPixelRange = Gfx::Range<CSSPixels>;
 using CSSPixelRect = Gfx::Rect<CSSPixels>;
 using CSSPixelSize = Gfx::Size<CSSPixels>;
 
 using DevicePixelLine = Gfx::Line<DevicePixels>;
 using DevicePixelPoint = Gfx::Point<DevicePixels>;
+using DevicePixelRange = Gfx::Range<DevicePixels>;
 using DevicePixelRect = Gfx::Rect<DevicePixels>;
 using DevicePixelSize = Gfx::Size<DevicePixels>;
 

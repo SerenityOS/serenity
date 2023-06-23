@@ -58,6 +58,14 @@ DevicePixelPoint PaintContext::floored_device_point(CSSPixelPoint point) const
     };
 }
 
+DevicePixelRange PaintContext::enclosing_device_range(CSSPixelRange range) const
+{
+    return {
+        floorf(range.min().to_double() * m_device_pixels_per_css_pixel),
+        ceilf(range.max().to_double() * m_device_pixels_per_css_pixel)
+    };
+}
+
 DevicePixelRect PaintContext::enclosing_device_rect(CSSPixelRect rect) const
 {
     return {
