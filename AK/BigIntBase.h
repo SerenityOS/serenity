@@ -196,7 +196,7 @@ ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2,
 ALWAYS_INLINE constexpr NativeWord sub_words(NativeWord word1, NativeWord word2, bool& carry)
 {
     if (!is_constant_evaluated()) {
-#if __has_builtin(__builtin_subc)
+#if __has_builtin(__builtin_subc) && !defined(AK_BUILTIN_SUBC_BROKEN)
         NativeWord ncarry, output;
         if constexpr (SameAs<NativeWord, unsigned int>)
             output = __builtin_subc(word1, word2, carry, reinterpret_cast<unsigned int*>(&ncarry));
