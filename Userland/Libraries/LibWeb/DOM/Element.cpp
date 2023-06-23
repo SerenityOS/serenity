@@ -891,14 +891,25 @@ bool Element::is_potentially_scrollable() const
     VERIFY(parent());
 
     // - body has an associated box.
+    if (!layout_node())
+        return false;
+
     // - body’s parent element’s computed value of the overflow-x or overflow-y properties is neither visible nor clip.
+    if (!parent()->layout_node())
+        return false;
+
+    auto const& parent_computed_values = parent()->layout_node()->computed_values();
+    if ((parent_computed_values.overflow_x() == CSS::Overflow::Visible || parent_computed_values.overflow_x() == CSS::Overflow::Clip)
+        && (parent_computed_values.overflow_y() == CSS::Overflow::Visible || parent_computed_values.overflow_y() == CSS::Overflow::Clip))
+        return false;
+
     // - body’s computed value of the overflow-x or overflow-y properties is neither visible nor clip.
-    return layout_node()
-        && (parent()->layout_node()
-            && parent()->layout_node()->computed_values().overflow_x() != CSS::Overflow::Visible && parent()->layout_node()->computed_values().overflow_x() != CSS::Overflow::Clip
-            && parent()->layout_node()->computed_values().overflow_y() != CSS::Overflow::Visible && parent()->layout_node()->computed_values().overflow_y() != CSS::Overflow::Clip)
-        && (layout_node()->computed_values().overflow_x() != CSS::Overflow::Visible && layout_node()->computed_values().overflow_x() != CSS::Overflow::Clip
-            && layout_node()->computed_values().overflow_y() != CSS::Overflow::Visible && layout_node()->computed_values().overflow_y() != CSS::Overflow::Clip);
+    auto const& computed_values = layout_node()->computed_values();
+    if ((computed_values.overflow_x() == CSS::Overflow::Visible || computed_values.overflow_x() == CSS::Overflow::Clip)
+        && (computed_values.overflow_y() == CSS::Overflow::Visible || computed_values.overflow_y() == CSS::Overflow::Clip))
+        return false;
+
+    return true;
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
