@@ -12,6 +12,7 @@
 #include "Settings.h"
 #include "Utilities.h"
 #include <Browser/History.h>
+#include <LibCore/Promise.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <QClipboard>
 #include <QCoreApplication>
@@ -57,6 +58,47 @@ static QIcon render_svg_icon_with_theme_colors(QString name, QPalette const& pal
     icon.addPixmap(render(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)), QIcon::Mode::Disabled);
 
     return icon;
+}
+
+void Tab::print_top_js_frame()
+{
+    auto promise = MUST(Core::Promise<Vector<WebContent::StackFrame>>::try_create());
+    view().on_js_stack_trace_available = [&](Vector<WebContent::StackFrame> trace) {
+        MUST(promise->resolve(std::move(trace)));
+    };
+
+    view().debug_request("get-js-trace");
+    auto trace = MUST(promise->await());
+    if (trace.is_empty()) {
+        console()->print_html("<div>Empty stack trace.</div>"sv);
+        return;
+    }
+    auto maybe_frame = trace.last_matching([](auto& x) { return x.column != 0 && x.source_url != "(console)"sv; });
+    if (maybe_frame.has_value()) {
+        auto& frame = *maybe_frame;
+        view().debug_request("get-js-source", frame.source_url);
+        auto promise = MUST(Core::Promise<DeprecatedString>::try_create());
+        auto get_source_change = TemporaryChange<Function<void(const AK::URL&, DeprecatedString const&)>> {
+            view().on_get_source,
+            [&](AK::URL const&, AK::DeprecatedString const& source) {
+                MUST(promise->resolve(DeprecatedString { source }));
+            },
+        };
+
+        auto result = MUST(promise->await());
+
+        auto source = result.view();
+        auto lines = source.split_view('\n');
+        console()->print_html(DeprecatedString::formatted("<div>- {}:{}@{} in {}", frame.line, frame.column, frame.function_name, frame.source_url));
+        for (size_t i = max(4, frame.line + 1) - 3; i < min(lines.size(), frame.line + 4); ++i) {
+            auto line = lines[i];
+            console()->print_html(DeprecatedString::formatted("<pre>{:04} | {}</pre>", i, line));
+            if (i == frame.line + 1)
+                console()->print_html(DeprecatedString::formatted("<pre>     | {: >{}}</pre>", "^", frame.column));
+        }
+    } else {
+        console()->print_html(DeprecatedString::formatted("<div>- {}</div>", trace[0].function_name));
+    }
 }
 
 Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
@@ -123,6 +165,21 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     view().on_forward_button = [this] {
         forward();
+    };
+
+    view().on_debugger_request = [this] {
+        show_console_window();
+        print_top_js_frame();
+
+        auto on_js_input_change = TemporaryChange<Function<void(DeprecatedString const&)>> {
+            m_console_widget->on_js_input,
+            [this](auto js_source) {
+                if (handle_meta_command(js_source, MetaCommandContext::Debug))
+                    return;
+                view().js_console_input(js_source, WebContent::ConsoleExecutionMode::InCurrentScope);
+            }
+        };
+        m_debugger_loop.exec();
     };
 
     view().on_load_start = [this](const URL& url, bool is_redirect) {
@@ -644,6 +701,46 @@ void Tab::show_inspector_window(InspectorTarget inspector_target)
     }
 }
 
+bool Tab::handle_meta_command(StringView js_source, MetaCommandContext context)
+{
+    js_source = js_source.trim_whitespace();
+
+    if (js_source == ".help"sv) {
+        console()->print_html("Available commands:<br/>"sv);
+        console()->print_html("<ul>"sv);
+        console()->print_html("<li><code>.help</code>: Show this text</li>"sv);
+        console()->print_html("<li><code>.break \"url:line\"</code>: Set a breakpoint at the given location</li>"sv);
+        if (context == MetaCommandContext::Debug) {
+            console()->print_html("<li><code>.continue</code>: Continue execution</li>"sv);
+            console()->print_html("<li><code>.frame</code>: Show the current stack frame</li>"sv);
+        }
+        console()->print_html("</ul>"sv);
+        return true;
+    }
+
+    if (js_source.starts_with(".break "sv)) {
+        auto spec = js_source.substring_view(7);
+        if (spec.starts_with('"') && spec.ends_with('"'))
+            spec = spec.substring_view(1, spec.length() - 2);
+        view().debug_request("break", spec);
+        return true;
+    }
+
+    if (context != MetaCommandContext::Debug)
+        return false;
+
+    if (js_source == ".continue"sv) {
+        m_debugger_loop.quit(0);
+        return true;
+    }
+
+    if (js_source == ".frame"sv) {
+        print_top_js_frame();
+        return true;
+    }
+
+    return false;
+}
 void Tab::show_console_window()
 {
     if (!m_console_widget) {
@@ -651,6 +748,8 @@ void Tab::show_console_window()
         m_console_widget->setWindowTitle("JS Console");
         m_console_widget->resize(640, 480);
         m_console_widget->on_js_input = [this](auto js_source) {
+            if (handle_meta_command(js_source, MetaCommandContext::Regular))
+                return;
             view().js_console_input(js_source);
         };
         m_console_widget->on_request_messages = [this](i32 start_index) {

@@ -76,6 +76,14 @@ private:
 
     void close_sub_widgets();
 
+    enum class MetaCommandContext {
+        Regular,
+        Debug,
+    };
+    bool handle_meta_command(StringView, MetaCommandContext);
+
+    void print_top_js_frame();
+
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };
@@ -114,4 +122,6 @@ private:
 
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
+
+    Core::EventLoop m_debugger_loop;
 };
