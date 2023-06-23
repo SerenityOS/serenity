@@ -136,20 +136,35 @@ public:
         return {};
     }
 
+    static Array<double, 64> create_cosine_lookup_table()
+    {
+        static constexpr double pi_over_16 = AK::Pi<double> / 16;
+
+        Array<double, 64> table;
+
+        for (u8 u = 0; u < 8; ++u) {
+            for (u8 x = 0; x < 8; ++x)
+                table[u * 8 + x] = cos((2 * x + 1) * u * pi_over_16);
+        }
+
+        return table;
+    }
+
     void fdct_and_quantization()
     {
+        static auto cosine_table = create_cosine_lookup_table();
+
         for (auto& macroblock : m_macroblocks) {
-            constexpr double pi_over_16 = AK::Pi<double> / 16;
             constexpr double inverse_sqrt_2 = M_SQRT1_2;
 
-            auto const convert_one_component = [](i16 component[], QuantizationTable const& table) {
+            auto const convert_one_component = [&](i16 component[], QuantizationTable const& table) {
                 Array<i16, 64> result {};
 
-                auto const sum_xy = [&component](u8 u, u8 v) {
+                auto const sum_xy = [&](u8 u, u8 v) {
                     double sum {};
                     for (u8 x {}; x < 8; ++x) {
                         for (u8 y {}; y < 8; ++y)
-                            sum += component[x * 8 + y] * cos((2 * x + 1) * u * pi_over_16) * cos((2 * y + 1) * v * pi_over_16);
+                            sum += component[x * 8 + y] * cosine_table[u * 8 + x] * cosine_table[v * 8 + y];
                     }
                     return sum;
                 };
