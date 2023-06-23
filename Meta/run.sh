@@ -334,24 +334,30 @@ if [ "$SERENITY_ARCH" = "aarch64" ]; then
         SERENITY_KERNEL_AND_INITRD="
         -device loader,file=Kernel/Arch/aarch64/RPi/Prekernel/kernel8.img,addr=0x80000,cpu-num=0
         "
+        SERENITY_QEMU_KERNEL_CMDLINE=""
     elif [ "$SERENITY_RUN" = "prekernel" ]; then
         SERENITY_KERNEL_AND_INITRD="
         -kernel Kernel/Arch/aarch64/RPi/Prekernel/Prekernel
         "
+        SERENITY_QEMU_KERNEL_CMDLINE="-append $SERENITY_KERNEL_CMDLINE"
     elif [ "$SERENITY_RUN" = "rpi" ]; then
         SERENITY_KERNEL_AND_INITRD="
         -device loader,file=Kernel/kernel8.img,addr=0x80000,cpu-num=0
         "
+        SERENITY_QEMU_KERNEL_CMDLINE=""
     else
         SERENITY_KERNEL_AND_INITRD="
         -kernel Kernel/Kernel
         "
+        SERENITY_QEMU_KERNEL_CMDLINE="-append $SERENITY_KERNEL_CMDLINE"
     fi
 else
     SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Prekernel/Prekernel
     -initrd Kernel/Kernel
     "
+
+    SERENITY_QEMU_KERNEL_CMDLINE="-append $SERENITY_KERNEL_CMDLINE"
 fi
 
 
@@ -466,7 +472,7 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
         $SERENITY_COMMON_QEMU_ARGS \
         -device $SERENITY_ETHERNET_DEVICE_TYPE \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo ip tuntap del dev tap0 mode tap || true
@@ -478,7 +484,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         -netdev tap,ifname=tap0,id=br0 \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=br0 \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
     sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
     # Meta/run.sh qgrub: qemu with grub/extlinux
@@ -495,7 +501,7 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
 elif [ "$SERENITY_RUN" = "isapc" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU ISA-PC machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
@@ -505,7 +511,7 @@ elif [ "$SERENITY_RUN" = "isapc" ]; then
         $SERENITY_NETFLAGS \
         -device ne2k_isa,netdev=breh \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
 elif [ "$SERENITY_RUN" = "microvm" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU MicroVM machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
@@ -515,7 +521,7 @@ elif [ "$SERENITY_RUN" = "microvm" ]; then
         $SERENITY_NETFLAGS \
         -device ne2k_isa,netdev=breh \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
 elif [ "$SERENITY_RUN" = "q35grub" ]; then
     # Meta/run.sh q35grub: qemu (q35 chipset) with SerenityOS, using a grub disk image
     "$SERENITY_QEMU_BIN" \
@@ -543,7 +549,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
             -serial file:debug.log \
             -serial stdio \
             $SERENITY_KERNEL_AND_INITRD \
-            -append "${SERENITY_KERNEL_CMDLINE}"
+            $SERENITY_QEMU_KERNEL_CMDLINE
     else
         "$SERENITY_QEMU_BIN" \
             $SERENITY_EXTRA_QEMU_ARGS \
@@ -559,7 +565,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
             -display none \
             -debugcon file:debug.log \
             $SERENITY_KERNEL_AND_INITRD \
-            -append "${SERENITY_KERNEL_CMDLINE}"
+            $SERENITY_QEMU_KERNEL_CMDLINE
     fi
 else
     # Meta/run.sh: qemu with user networking
@@ -569,5 +575,5 @@ else
         $SERENITY_PACKET_LOGGING_ARG \
         $SERENITY_NETFLAGS_WITH_DEFAULT_DEVICE \
         $SERENITY_KERNEL_AND_INITRD \
-        -append "${SERENITY_KERNEL_CMDLINE}"
+        $SERENITY_QEMU_KERNEL_CMDLINE
 fi
