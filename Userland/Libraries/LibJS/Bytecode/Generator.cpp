@@ -198,6 +198,9 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
             } else if (expression.property().is_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
                 emit<Bytecode::Op::GetById>(identifier_table_ref);
+            } else if (expression.property().is_private_identifier()) {
+                auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+                emit<Bytecode::Op::GetPrivateById>(identifier_table_ref);
             } else {
                 return CodeGenerationError {
                     &expression,
@@ -238,6 +241,10 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
             emit<Bytecode::Op::Load>(value_reg);
             auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
             emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
+        } else if (expression.property().is_private_identifier()) {
+            emit<Bytecode::Op::Load>(value_reg);
+            auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+            emit<Bytecode::Op::PutPrivateById>(object_reg, identifier_table_ref);
         } else {
             return CodeGenerationError {
                 &expression,

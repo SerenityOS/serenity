@@ -38,6 +38,7 @@
     O(GetMethod)                     \
     O(GetNewTarget)                  \
     O(GetObjectPropertyIterator)     \
+    O(GetPrivateById)                \
     O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
@@ -76,6 +77,7 @@
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
     O(PutByValue)                    \
+    O(PutPrivateById)                \
     O(ResolveThisBinding)            \
     O(ResolveSuperBase)              \
     O(Return)                        \

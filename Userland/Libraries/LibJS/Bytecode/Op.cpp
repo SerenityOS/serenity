@@ -512,6 +512,16 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
     return {};
 }
 
+ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const& name = interpreter.current_executable().get_identifier(m_property);
+    auto base_value = interpreter.accumulator();
+    auto private_reference = make_private_reference(vm, base_value, name);
+    interpreter.accumulator() = TRY(private_reference.get_value(vm));
+    return {};
+}
+
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -520,6 +530,17 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     return put_by_property_key(vm, object, value, name, m_kind);
+}
+
+ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto name = interpreter.current_executable().get_identifier(m_property);
+    auto private_reference = make_private_reference(vm, object, name);
+    return private_reference.put_value(vm, value);
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1252,9 +1273,25 @@ DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& 
     return DeprecatedString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
+DeprecatedString PutPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return DeprecatedString::formatted("PutPrivateById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
+}
+
 DeprecatedString GetById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
+DeprecatedString GetPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("GetPrivateById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
 DeprecatedString DeleteById::to_deprecated_string_impl(Bytecode::Executable const& executable) const

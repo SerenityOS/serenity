@@ -382,6 +382,8 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                         // To be continued later with PutByValue.
                     } else if (expression.property().is_identifier()) {
                         // Do nothing, this will be handled by PutById later.
+                    } else if (expression.property().is_private_identifier()) {
+                        // Do nothing, this will be handled by PutPrivateById later.
                     } else {
                         return Bytecode::CodeGenerationError {
                             &expression,
@@ -415,6 +417,9 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                     } else if (expression.property().is_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(expression.property()).string());
                         generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref);
+                    } else if (expression.property().is_private_identifier()) {
+                        auto identifier_table_ref = generator.intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+                        generator.emit<Bytecode::Op::PutPrivateById>(*base_object_register, identifier_table_ref);
                     } else {
                         return Bytecode::CodeGenerationError {
                             &expression,
