@@ -302,13 +302,12 @@ Completion FunctionExpression::execute(Interpreter& interpreter) const
     InterpreterNodeScope node_scope { interpreter, *this };
 
     // 1. Return InstantiateOrdinaryFunctionExpression of FunctionExpression.
-    return instantiate_ordinary_function_expression(interpreter, name());
+    return instantiate_ordinary_function_expression(interpreter.vm(), name());
 }
 
 // 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
-Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& interpreter, DeprecatedFlyString given_name) const
+Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, DeprecatedFlyString given_name) const
 {
-    auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
     if (given_name.is_empty())
@@ -316,7 +315,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
     auto has_own_name = !name().is_empty();
 
     auto const& used_name = has_own_name ? name() : given_name;
-    auto environment = NonnullGCPtr { *interpreter.lexical_environment() };
+    auto environment = NonnullGCPtr { *vm.running_execution_context().lexical_environment };
     if (has_own_name) {
         VERIFY(environment);
         environment = new_declarative_environment(*environment);
