@@ -92,6 +92,8 @@ public:
     virtual bool is_iteration_statement() const { return false; }
     virtual bool is_class_method() const { return false; }
 
+    virtual ASTNode const* find_node_at_source_position(size_t line) const = 0;
+
 protected:
     explicit ASTNode(SourceRange);
 
@@ -169,6 +171,7 @@ public:
     DeprecatedFlyString const& label() const { return m_label; }
     DeprecatedFlyString& label() { return m_label; }
     NonnullRefPtr<Statement const> const& labelled_item() const { return m_labelled_item; }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     virtual bool is_labelled_statement() const final { return true; }
@@ -207,6 +210,12 @@ public:
     }
     Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override
+    {
+        if (line <= source_range().end.line && line >= source_range().start.line)
+            return this;
+        return nullptr;
+    }
 };
 
 class ErrorStatement final : public Statement {
@@ -216,6 +225,13 @@ public:
     {
     }
     Completion execute(Interpreter&) const override { return {}; }
+
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override
+    {
+        if (line <= source_range().end.line && line >= source_range().start.line)
+            return this;
+        return nullptr;
+    }
 };
 
 class ExpressionStatement final : public Statement {
@@ -231,6 +247,7 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     Expression const& expression() const { return m_expression; };
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     virtual bool is_expression_statement() const override { return true; }
@@ -317,6 +334,8 @@ public:
 
     ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
 
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
 protected:
     explicit ScopeNode(SourceRange source_range)
         : Statement(source_range)
@@ -376,6 +395,7 @@ public:
     bool has_bound_name(DeprecatedFlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
     ModuleRequest const& module_request() const { return m_module_request; }
+    virtual ASTNode const* find_node_at_source_position(size_t) const override { return nullptr; }
 
 private:
     ModuleRequest m_module_request;
@@ -488,6 +508,7 @@ public:
         VERIFY(!m_module_request.module_specifier.is_null());
         return m_module_request;
     }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     RefPtr<ASTNode const> m_statement;
@@ -539,6 +560,8 @@ public:
 
     ThrowCompletionOr<void> global_declaration_instantiation(VM&, GlobalEnvironment&) const;
 
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
 private:
     virtual bool is_program() const override { return true; }
 
@@ -583,6 +606,12 @@ public:
     {
     }
     virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override
+    {
+        if (line <= source_range().end.line && line >= source_range().start.line)
+            return this;
+        return nullptr;
+    }
 };
 
 class Declaration : public Statement {
@@ -611,6 +640,13 @@ public:
     ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&&) const override
     {
         VERIFY_NOT_REACHED();
+    }
+
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override
+    {
+        if (line <= source_range().end.line && line >= source_range().start.line)
+            return this;
+        return nullptr;
     }
 };
 
@@ -659,6 +695,8 @@ public:
     bool contains_direct_call_to_eval() const { return m_contains_direct_call_to_eval; }
     bool is_arrow_function() const { return m_is_arrow_function; }
     FunctionKind kind() const { return m_kind; }
+
+    ASTNode const* find_node_at_source_position(size_t line) const;
 
 protected:
     FunctionNode(DeprecatedFlyString name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
@@ -714,6 +752,8 @@ public:
 
     void set_should_do_additional_annexB_steps() { m_is_hoisted = true; }
 
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override { return FunctionNode::find_node_at_source_position(line); }
+
 private:
     bool m_is_hoisted { false };
 };
@@ -738,6 +778,7 @@ public:
     bool has_name() const { return !name().is_empty(); }
 
     Value instantiate_ordinary_function_expression(Interpreter&, DeprecatedFlyString given_name) const;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override { return FunctionNode::find_node_at_source_position(line); }
 
 private:
     virtual bool is_function_expression() const override { return true; }
@@ -805,6 +846,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     RefPtr<Expression const> m_argument;
 };
 
@@ -827,6 +870,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_predicate;
     NonnullRefPtr<Statement const> m_consequent;
     RefPtr<Statement const> m_alternate;
@@ -851,6 +896,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_test;
     NonnullRefPtr<Statement const> m_body;
 };
@@ -874,6 +921,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_test;
     NonnullRefPtr<Statement const> m_body;
 };
@@ -895,6 +944,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_object;
     NonnullRefPtr<Statement const> m_body;
 };
@@ -923,6 +974,7 @@ public:
 
 private:
     Completion for_body_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&, size_t per_iteration_bindings_size) const;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
     RefPtr<ASTNode const> m_init;
     RefPtr<Expression const> m_test;
@@ -951,6 +1003,8 @@ public:
     virtual void dump(int indent) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> m_lhs;
     NonnullRefPtr<Expression const> m_rhs;
     NonnullRefPtr<Statement const> m_body;
@@ -977,6 +1031,8 @@ public:
     virtual void dump(int indent) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> m_lhs;
     NonnullRefPtr<Expression const> m_rhs;
     NonnullRefPtr<Statement const> m_body;
@@ -997,6 +1053,8 @@ public:
     virtual void dump(int indent) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> m_lhs;
     NonnullRefPtr<Expression const> m_rhs;
     NonnullRefPtr<Statement const> m_body;
@@ -1331,6 +1389,8 @@ public:
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     virtual bool is_class_method() const override { return true; }
     NonnullRefPtr<Expression const> m_key;
     NonnullRefPtr<FunctionExpression const> m_function;
@@ -1358,6 +1418,8 @@ public:
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_key;
     RefPtr<Expression const> m_initializer;
     bool m_contains_direct_call_to_eval { false };
@@ -1378,6 +1440,8 @@ public:
     virtual void dump(int indent) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<FunctionBody> m_function_body;
     bool m_contains_direct_call_to_eval { false };
 };
@@ -1419,6 +1483,8 @@ public:
 
     ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(Interpreter&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
 
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
 private:
     virtual bool is_class_expression() const override { return true; }
 
@@ -1449,6 +1515,7 @@ public:
 
 private:
     virtual bool is_class_declaration() const override { return true; }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
     friend ExportStatement;
 
@@ -1471,6 +1538,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
+
     NonnullRefPtr<Expression const> m_expression;
     DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
 };
@@ -1724,6 +1793,7 @@ public:
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> m_target;
@@ -1752,6 +1822,7 @@ public:
     virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
 
     virtual bool is_lexical_declaration() const override { return m_declaration_kind != DeclarationKind::Var; }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     virtual bool is_variable_declaration() const override { return true; }
@@ -1778,6 +1849,7 @@ public:
     virtual bool is_lexical_declaration() const override { return true; }
 
     Vector<NonnullRefPtr<VariableDeclarator const>> const& declarations() const { return m_declarations; }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     Vector<NonnullRefPtr<VariableDeclarator const>> m_declarations;
@@ -1814,6 +1886,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     Type m_property_type;
@@ -1833,6 +1906,7 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     virtual bool is_object_expression() const override { return true; }
@@ -2072,6 +2146,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     Variant<DeprecatedFlyString, NonnullRefPtr<BindingPattern const>> m_parameter;
@@ -2095,6 +2170,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     NonnullRefPtr<BlockStatement const> m_block;
@@ -2115,6 +2191,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     NonnullRefPtr<Expression const> m_argument;
@@ -2132,6 +2209,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     RefPtr<Expression const> m_test;
@@ -2152,6 +2230,7 @@ public:
 
     Completion execute_impl(Interpreter&) const;
     void add_case(NonnullRefPtr<SwitchCase const> switch_case) { m_cases.append(move(switch_case)); }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     NonnullRefPtr<Expression const> m_discriminant;
@@ -2170,6 +2249,7 @@ public:
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     DeprecatedFlyString m_target_label;
@@ -2187,6 +2267,7 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 
 private:
     DeprecatedFlyString m_target_label;
@@ -2201,6 +2282,7 @@ public:
 
     virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual ASTNode const* find_node_at_source_position(size_t line) const override;
 };
 
 class SyntheticReferenceExpression final : public Expression {

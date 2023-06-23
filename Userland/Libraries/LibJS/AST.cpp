@@ -207,6 +207,11 @@ Completion LabelledStatement::execute(Interpreter& interpreter) const
     return labelled_evaluation(interpreter, *this, {});
 }
 
+ASTNode const* LabelledStatement::find_node_at_source_position(size_t line) const
+{
+    return m_labelled_item->find_node_at_source_position(line);
+}
+
 void LabelledStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
@@ -265,6 +270,19 @@ Completion Program::execute(Interpreter& interpreter) const
     InterpreterNodeScope node_scope { interpreter, *this };
 
     return evaluate_statements(interpreter);
+}
+
+ASTNode const* Program::find_node_at_source_position(size_t line) const
+{
+    for (auto& import_ : m_imports) {
+        if (auto node = static_cast<ASTNode const*>(import_.ptr())->find_node_at_source_position(line))
+            return node;
+    }
+    for (auto& export_ : m_exports) {
+        if (auto node = static_cast<ASTNode const*>(export_.ptr())->find_node_at_source_position(line))
+            return node;
+    }
+    return ScopeNode::find_node_at_source_position(line);
 }
 
 // 15.2.6 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation
@@ -351,6 +369,13 @@ Completion ExpressionStatement::execute(Interpreter& interpreter) const
     // 1. Let exprRef be the result of evaluating Expression.
     // 2. Return ? GetValue(exprRef).
     return m_expression->execute(interpreter);
+}
+
+ASTNode const* ExpressionStatement::find_node_at_source_position(size_t line) const
+{
+    if (source_range().start.line <= line && line <= source_range().end.line)
+        return m_expression->find_node_at_source_position(line);
+    return nullptr;
 }
 
 // TODO: This shouldn't exist. Refactor into EvaluateCall.
@@ -582,6 +607,17 @@ Completion ReturnStatement::execute(Interpreter& interpreter) const
     return { Completion::Type::Return, value, {} };
 }
 
+ASTNode const* ReturnStatement::find_node_at_source_position(size_t line) const
+{
+    if (m_argument)
+        return m_argument->find_node_at_source_position(line);
+
+    auto range = source_range();
+    if (line >= range.start.line && line <= range.end.line)
+        return this;
+    return nullptr;
+}
+
 // 14.6.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation
 Completion IfStatement::execute(Interpreter& interpreter) const
 {
@@ -610,6 +646,21 @@ Completion IfStatement::execute(Interpreter& interpreter) const
     // 3. If exprValue is false, then
     //    a. Return undefined.
     return js_undefined();
+}
+
+ASTNode const* IfStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (m_alternate)
+        return m_alternate->find_node_at_source_position(line);
+
+    if (auto node = m_consequent->find_node_at_source_position(line))
+        return node;
+
+    return m_predicate->find_node_at_source_position(line);
 }
 
 // 14.11.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
@@ -644,6 +695,18 @@ Completion WithStatement::execute(Interpreter& interpreter) const
     return result.update_empty(js_undefined());
 }
 
+ASTNode const* WithStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_object->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
+}
+
 // 14.7.1.1 LoopContinues ( completion, labelSet ), https://tc39.es/ecma262/#sec-loopcontinues
 static bool loop_continues(Completion const& completion, Vector<DeprecatedFlyString> const& label_set)
 {
@@ -674,6 +737,18 @@ Completion WhileStatement::execute(Interpreter& interpreter) const
     // 1. Let newLabelSet be a new empty List.
     // 2. Return ? LabelledEvaluation of this BreakableStatement with argument newLabelSet.
     return labelled_evaluation(interpreter, *this, {});
+}
+
+ASTNode const* WhileStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_test->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
 }
 
 // 14.7.3.2 Runtime Semantics: WhileLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-whileloopevaluation
@@ -718,6 +793,18 @@ Completion DoWhileStatement::execute(Interpreter& interpreter) const
     return labelled_evaluation(interpreter, *this, {});
 }
 
+ASTNode const* DoWhileStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_test->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
+}
+
 // 14.7.2.2 Runtime Semantics: DoWhileLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-dowhileloopevaluation
 Completion DoWhileStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
@@ -758,6 +845,28 @@ Completion ForStatement::execute(Interpreter& interpreter) const
     // 1. Let newLabelSet be a new empty List.
     // 2. Return ? LabelledEvaluation of this BreakableStatement with argument newLabelSet.
     return labelled_evaluation(interpreter, *this, {});
+}
+
+ASTNode const* ForStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (m_init) {
+        if (auto node = m_init->find_node_at_source_position(line))
+            return node;
+    }
+    if (m_test) {
+        if (auto node = m_test->find_node_at_source_position(line))
+            return node;
+    }
+    if (m_update) {
+        if (auto node = m_update->find_node_at_source_position(line))
+            return node;
+    }
+
+    return m_body->find_node_at_source_position(line);
 }
 
 // 14.7.4.2 Runtime Semantics: ForLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forloopevaluation
@@ -1140,6 +1249,18 @@ Completion ForInStatement::execute(Interpreter& interpreter) const
     return labelled_evaluation(interpreter, *this, {});
 }
 
+ASTNode const* ForInStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_rhs->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
+}
+
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
 Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
@@ -1214,6 +1335,18 @@ Completion ForOfStatement::execute(Interpreter& interpreter) const
     return labelled_evaluation(interpreter, *this, {});
 }
 
+ASTNode const* ForOfStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_rhs->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
+}
+
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
 Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<DeprecatedFlyString> const& label_set) const
 {
@@ -1281,6 +1414,18 @@ Completion ForAwaitOfStatement::execute(Interpreter& interpreter) const
     // 1. Let newLabelSet be a new empty List.
     // 2. Return ? LabelledEvaluation of this BreakableStatement with argument newLabelSet.
     return labelled_evaluation(interpreter, *this, {});
+}
+
+ASTNode const* ForAwaitOfStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line < range.start.line || line > range.end.line)
+        return nullptr;
+
+    if (auto node = m_rhs->find_node_at_source_position(line))
+        return node;
+
+    return m_body->find_node_at_source_position(line);
 }
 
 // 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
@@ -1748,6 +1893,13 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
     }
 }
 
+ASTNode const* ClassMethod::find_node_at_source_position(size_t line) const
+{
+    if (auto node = m_key->find_node_at_source_position(line))
+        return node;
+    return m_function->FunctionNode::find_node_at_source_position(line);
+}
+
 Completion ClassFieldInitializerStatement::execute(Interpreter& interpreter) const
 {
     // 1. Assert: argumentsList is empty.
@@ -1765,6 +1917,11 @@ Completion ClassFieldInitializerStatement::execute(Interpreter& interpreter) con
 
     // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
     return { Completion::Type::Return, value, {} };
+}
+
+ASTNode const* ClassFieldInitializerStatement::find_node_at_source_position(size_t) const
+{
+    return nullptr;
 }
 
 void ClassFieldInitializerStatement::dump(int) const
@@ -1803,6 +1960,15 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
             move(initializer),
         }
     };
+}
+
+ASTNode const* ClassField::find_node_at_source_position(size_t line) const
+{
+    if (m_initializer) {
+        if (auto node = m_initializer->find_node_at_source_position(line))
+            return node;
+    }
+    return m_key->find_node_at_source_position(line);
 }
 
 static Optional<DeprecatedFlyString> nullopt_or_private_identifier_description(Expression const& expression)
@@ -1845,6 +2011,11 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
 
     // 7. Return the ClassStaticBlockDefinition Record { [[BodyFunction]]: bodyFunction }.
     return ClassValue { normal_completion(body_function) };
+}
+
+ASTNode const* StaticInitializer::find_node_at_source_position(size_t line) const
+{
+    return m_function_body->find_node_at_source_position(line);
 }
 
 // 15.7.16 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation
@@ -1914,6 +2085,11 @@ Completion ClassDeclaration::execute(Interpreter& interpreter) const
 
     // 2. Return empty.
     return Optional<Value> {};
+}
+
+ASTNode const* ClassDeclaration::find_node_at_source_position(size_t line) const
+{
+    return m_class_expression->find_node_at_source_position(line);
 }
 
 // 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
@@ -2083,10 +2259,37 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     return class_constructor;
 }
 
+ASTNode const* ClassExpression::find_node_at_source_position(size_t line) const
+{
+    if (m_super_class)
+        if (auto node = m_super_class->find_node_at_source_position(line))
+            return node;
+    if (m_constructor)
+        if (auto node = m_constructor->FunctionNode::find_node_at_source_position(line))
+            return node;
+
+    for (auto& element : m_elements) {
+        if (auto node = element->find_node_at_source_position(line))
+            return node;
+    }
+
+    return Expression::find_node_at_source_position(line);
+}
+
 void ASTNode::dump(int indent) const
 {
     print_indent(indent);
     outln("{}", class_name());
+}
+
+ASTNode const* ScopeNode::find_node_at_source_position(size_t line) const
+{
+    for (auto& child : children()) {
+        if (auto* found_node = child->find_node_at_source_position(line))
+            return found_node;
+    }
+
+    return nullptr;
 }
 
 void ScopeNode::dump(int indent) const
@@ -2473,6 +2676,11 @@ void BindingPattern::dump(int indent) const
             entry.initializer->dump(indent + 3);
         }
     }
+}
+
+ASTNode const* FunctionNode::find_node_at_source_position(size_t line) const
+{
+    return m_body->find_node_at_source_position(line);
 }
 
 void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
@@ -3058,6 +3266,14 @@ Completion VariableDeclarator::execute(Interpreter& interpreter) const
     VERIFY_NOT_REACHED();
 }
 
+ASTNode const* VariableDeclarator::find_node_at_source_position(size_t line) const
+{
+    if (m_init)
+        if (auto* node = m_init->find_node_at_source_position(line))
+            return node;
+    return nullptr;
+}
+
 ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& entry : declarations()) {
@@ -3098,6 +3314,15 @@ void VariableDeclaration::dump(int indent) const
         declarator->dump(indent + 1);
 }
 
+ASTNode const* VariableDeclaration::find_node_at_source_position(size_t line) const
+{
+    for (auto const& entry : declarations()) {
+        if (auto* node = entry->find_node_at_source_position(line))
+            return node;
+    }
+    return nullptr;
+}
+
 // 6.2.1.2 Runtime Semantics: Evaluation, https://tc39.es/proposal-explicit-resource-management/#sec-let-and-const-declarations-runtime-semantics-evaluation
 Completion UsingDeclaration::execute(Interpreter& interpreter) const
 {
@@ -3120,6 +3345,15 @@ Completion UsingDeclaration::execute(Interpreter& interpreter) const
 
     // 3. Return empty.
     return normal_completion({});
+}
+
+ASTNode const* UsingDeclaration::find_node_at_source_position(size_t line) const
+{
+    for (auto const& entry : m_declarations) {
+        if (auto* node = entry->find_node_at_source_position(line))
+            return node;
+    }
+    return nullptr;
 }
 
 ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
@@ -3162,12 +3396,31 @@ void ObjectProperty::dump(int indent) const
     }
 }
 
+ASTNode const* ObjectProperty::find_node_at_source_position(size_t line) const
+{
+    if (auto node = m_key->find_node_at_source_position(line))
+        return node;
+    if (m_value)
+        if (auto node = m_value->find_node_at_source_position(line))
+            return node;
+    return nullptr;
+}
+
 void ObjectExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
     for (auto& property : m_properties) {
         property->dump(indent + 1);
     }
+}
+
+ASTNode const* ObjectExpression::find_node_at_source_position(size_t line) const
+{
+    for (auto& property : m_properties) {
+        if (auto node = property->find_node_at_source_position(line))
+            return node;
+    }
+    return Expression::find_node_at_source_position(line);
 }
 
 void ExpressionStatement::dump(int indent) const
@@ -3951,10 +4204,20 @@ void CatchClause::dump(int indent) const
     body().dump(indent + 1);
 }
 
+ASTNode const* CatchClause::find_node_at_source_position(size_t line) const
+{
+    return m_body->find_node_at_source_position(line);
+}
+
 void ThrowStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
     argument().dump(indent + 1);
+}
+
+ASTNode const* ThrowStatement::find_node_at_source_position(size_t line) const
+{
+    return m_argument->find_node_at_source_position(line);
 }
 
 // 14.15.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation
@@ -4055,6 +4318,19 @@ Completion TryStatement::execute(Interpreter& interpreter) const
     return result.update_empty(js_undefined());
 }
 
+ASTNode const* TryStatement::find_node_at_source_position(size_t line) const
+{
+    if (auto node = m_block->find_node_at_source_position(line))
+        return node;
+    if (m_handler)
+        if (auto node = m_handler->find_node_at_source_position(line))
+            return node;
+    if (m_finalizer)
+        if (auto node = m_finalizer->find_node_at_source_position(line))
+            return node;
+    return nullptr;
+}
+
 Completion CatchClause::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -4084,6 +4360,17 @@ Completion SwitchStatement::execute(Interpreter& interpreter) const
     // 1. Let newLabelSet be a new empty List.
     // 2. Return ? LabelledEvaluation of this BreakableStatement with argument newLabelSet.
     return labelled_evaluation(interpreter, *this, {});
+}
+
+ASTNode const* SwitchStatement::find_node_at_source_position(size_t line) const
+{
+    if (auto node = m_discriminant->find_node_at_source_position(line))
+        return node;
+    for (auto& switch_case : m_cases) {
+        if (auto node = switch_case->find_node_at_source_position(line))
+            return node;
+    }
+    return nullptr;
 }
 
 // NOTE: Since we don't have the 'BreakableStatement' from the spec as a separate ASTNode that wraps IterationStatement / SwitchStatement,
@@ -4326,6 +4613,16 @@ Completion SwitchCase::execute(Interpreter& interpreter) const
     return {};
 }
 
+ASTNode const* SwitchCase::find_node_at_source_position(size_t line) const
+{
+    if (m_test)
+        return m_test->find_node_at_source_position(line);
+    auto range = source_range();
+    if (line >= range.start.line && line <= range.end.line)
+        return this;
+    return nullptr;
+}
+
 // 14.9.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation
 Completion BreakStatement::execute(Interpreter& interpreter) const
 {
@@ -4343,6 +4640,14 @@ Completion BreakStatement::execute(Interpreter& interpreter) const
     return { Completion::Type::Break, {}, m_target_label };
 }
 
+ASTNode const* BreakStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line >= range.start.line && line <= range.end.line)
+        return this;
+    return nullptr;
+}
+
 // 14.8.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation
 Completion ContinueStatement::execute(Interpreter& interpreter) const
 {
@@ -4358,6 +4663,14 @@ Completion ContinueStatement::execute(Interpreter& interpreter) const
     // 1. Let label be the StringValue of LabelIdentifier.
     // 2. Return Completion Record { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
     return { Completion::Type::Continue, {}, m_target_label };
+}
+
+ASTNode const* ContinueStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line >= range.start.line && line <= range.end.line)
+        return this;
+    return nullptr;
 }
 
 void SwitchStatement::dump(int indent) const
@@ -4460,6 +4773,14 @@ Completion DebuggerStatement::execute(Interpreter& interpreter) const
     host_defined->debugger_hook();
     // b. Return a new implementation-defined Completion Record.
     return js_undefined();
+}
+
+ASTNode const* DebuggerStatement::find_node_at_source_position(size_t line) const
+{
+    auto range = source_range();
+    if (line >= range.start.line && line <= range.end.line)
+        return this;
+    return nullptr;
 }
 
 ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const
@@ -4628,6 +4949,13 @@ Completion ExportStatement::execute(Interpreter& interpreter) const
 
     // 5. Return empty.
     return Optional<Value> {};
+}
+
+ASTNode const* ExportStatement::find_node_at_source_position(size_t line) const
+{
+    if (m_statement)
+        return m_statement->find_node_at_source_position(line);
+    return nullptr;
 }
 
 static void dump_assert_clauses(ModuleRequest const& request)
