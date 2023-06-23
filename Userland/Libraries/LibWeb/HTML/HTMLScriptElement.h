@@ -54,6 +54,14 @@ public:
     void unmark_as_already_started(Badge<DOM::Range>);
     void unmark_as_parser_inserted(Badge<DOM::Range>);
 
+    JS::GCPtr<HTML::Script> result_script() const
+    {
+        auto script = m_result.get_pointer<JS::NonnullGCPtr<HTML::Script>>();
+        if (script)
+            return script->ptr();
+        return nullptr;
+    }
+
 private:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
 

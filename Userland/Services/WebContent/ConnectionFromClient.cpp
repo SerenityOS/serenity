@@ -14,12 +14,16 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/AST.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
+#include <LibJS/Script.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -329,6 +333,39 @@ void ConnectionFromClient::report_finished_handling_input_event(bool event_was_h
     async_did_finish_handling_input_event(event_was_handled);
 }
 
+JS::GCPtr<JS::Script const> ConnectionFromClient::get_script_for_url(StringView url) const
+{
+    JS::GCPtr<JS::Script const> found_script;
+    if (auto document = m_page_host->page().top_level_browsing_context().active_document()) {
+        document->for_each_in_inclusive_subtree([&](auto& node) -> IterationDecision {
+            if (is<Web::HTML::HTMLScriptElement>(node)) {
+                auto& script_element = static_cast<Web::HTML::HTMLScriptElement const&>(node);
+                if (auto html_script = script_element.result_script(); html_script && is<Web::HTML::ClassicScript>(html_script.ptr())) {
+                    if (auto record = static_cast<Web::HTML::ClassicScript const*>(html_script.ptr())->script_record()) {
+                        found_script = record;
+                        return IterationDecision::Break;
+                    }
+                }
+            }
+            return IterationDecision::Continue;
+        });
+        if (found_script)
+            return found_script;
+    }
+
+    auto& vm = page().top_level_browsing_context().vm();
+    for (auto& entry : vm.execution_context_stack()) {
+        if (entry->current_node) {
+            if (entry->current_node->source_range().filename() == url) {
+                if (auto script = entry->script_or_module.get_pointer<JS::NonnullGCPtr<JS::Script>>())
+                    return *script;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 void ConnectionFromClient::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     if (request == "dump-dom-tree") {
@@ -421,6 +458,73 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "dump-local-storage") {
         if (auto* document = page().top_level_browsing_context().active_document())
             document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
+    }
+
+    static bool is_paused = false;
+    if (request == "pause") {
+        is_paused = true;
+
+        Web::HTML::main_thread_event_loop().set_execution_paused(is_paused);
+        dbgln("Paused JS event loop: paused={}", Web::HTML::main_thread_event_loop().execution_paused());
+        auto& event_loop = Web::HTML::main_thread_event_loop();
+        auto& vm = event_loop.vm();
+        vm.dump_backtrace();
+
+        Core::EventLoop loop;
+        loop.spin_until([] { return is_paused; });
+    }
+
+    if (request == "resume") {
+        is_paused = false;
+        Web::HTML::main_thread_event_loop().set_execution_paused(is_paused);
+    }
+
+    if (request == "get-js-trace") {
+        auto& vm = Web::HTML::main_thread_event_loop().vm();
+        Vector<WebContent::StackFrame> trace;
+        trace.ensure_capacity(vm.execution_context_stack().size());
+        for (auto& entry : vm.execution_context_stack()) {
+            if (entry->current_node) {
+                trace.unchecked_append(WebContent::StackFrame {
+                    .source_url = entry->current_node->source_range().filename(),
+                    .function_name = entry->function_name,
+                    .line = entry->current_node->source_range().start.line,
+                    .column = entry->current_node->source_range().start.column,
+                });
+            } else {
+                trace.unchecked_append(WebContent::StackFrame {
+                    .source_url = "<anonymous>",
+                    .function_name = entry->function_name,
+                    .line = 0,
+                    .column = 0,
+                });
+            }
+        }
+        async_did_get_js_stack_trace(trace);
+    }
+    if (request == "get-js-source") {
+        auto url = argument.view();
+        if (auto script = get_script_for_url(argument))
+            return async_did_get_source(url, script->parse_node().source_code().code().to_deprecated_string());
+        return async_did_get_source(url, "");
+    }
+    if (request == "break") {
+        auto url = argument.view();
+        size_t line = 0;
+        auto index = argument.view().find_last(':');
+        if (index.has_value()) {
+            url = url.substring_view(0, index.value());
+            line = argument.view().substring_view(index.value() + 1).to_uint().value_or(0);
+        }
+
+        if (auto script = get_script_for_url(url)) {
+            if (auto node = script->parse_node().find_node_at_source_position(line)) {
+                const_cast<JS::ASTNode*>(node)->set_as_breakpoint(AK::make_ref_counted<JS::DebuggerStatement>(node->source_range()));
+                return;
+            }
+        }
+
+        dbgln("Failed to find script for bp {}:{}", url, line);
     }
 }
 

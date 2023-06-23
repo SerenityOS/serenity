@@ -114,6 +114,7 @@ private:
     void flush_pending_paint_requests();
 
     void report_finished_handling_input_event(bool event_was_handled);
+    JS::GCPtr<JS::Script const> get_script_for_url(StringView) const;
 
     NonnullOwnPtr<PageHost> m_page_host;
     struct PaintRequest {
