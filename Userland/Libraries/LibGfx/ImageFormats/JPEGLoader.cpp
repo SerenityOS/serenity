@@ -1030,8 +1030,11 @@ static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& 
 static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
 {
     // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, page 5, "JFIF".
-    if (bytes_to_read <= 2)
-        return Error::from_string_literal("icc marker too small");
+    if (bytes_to_read <= 2) {
+        dbgln_if(JPEG_DEBUG, "icc marker too small");
+        TRY(stream.discard(bytes_to_read));
+        return {};
+    }
 
     auto chunk_sequence_number = TRY(stream.read_u8()); // 1-based
     auto number_of_chunks = TRY(stream.read_u8());
