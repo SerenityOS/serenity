@@ -286,7 +286,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
     if (is<FunctionExpression>(expression)) {
         auto& function = static_cast<FunctionExpression const&>(expression);
         if (!function.has_name()) {
-            return function.instantiate_ordinary_function_expression(interpreter(), name);
+            return function.instantiate_ordinary_function_expression(*this, name);
         }
     } else if (is<ClassExpression>(expression)) {
         auto& class_expression = static_cast<ClassExpression const&>(expression);

@@ -452,12 +452,34 @@ void Generator::pop_home_object()
     m_home_objects.take_last();
 }
 
-void Generator::emit_new_function(FunctionNode const& function_node)
+void Generator::emit_new_function(FunctionExpression const& function_node, Optional<DeprecatedFlyString const&> lhs_name)
 {
     if (m_home_objects.is_empty())
-        emit<Op::NewFunction>(function_node);
+        emit<Op::NewFunction>(function_node, lhs_name);
     else
-        emit<Op::NewFunction>(function_node, m_home_objects.last());
+        emit<Op::NewFunction>(function_node, lhs_name, m_home_objects.last());
+}
+
+CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_function(Expression const& expression, Optional<DeprecatedFlyString const&> lhs_name)
+{
+    if (is<FunctionExpression>(expression)) {
+        auto const& function_expression = static_cast<FunctionExpression const&>(expression);
+        if (!function_expression.has_name()) {
+            TRY(function_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            return {};
+        }
+    }
+
+    if (is<ClassExpression>(expression)) {
+        auto const& class_expression = static_cast<ClassExpression const&>(expression);
+        if (!class_expression.has_name()) {
+            TRY(class_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            return {};
+        }
+    }
+
+    TRY(expression.generate_bytecode(*this));
+    return {};
 }
 
 }
