@@ -1908,10 +1908,9 @@ ErrorOr<void> JPEGImageDecoderPlugin::initialize()
 
 bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    return data.size() > 3
+    return data.size() > 2
         && data.data()[0] == 0xFF
-        && data.data()[1] == 0xD8
-        && data.data()[2] == 0xFF;
+        && data.data()[1] == 0xD8;
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
