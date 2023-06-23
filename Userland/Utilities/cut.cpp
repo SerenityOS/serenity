@@ -136,7 +136,7 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
 
 static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter)
 {
-    auto string_split = DeprecatedString(line).split(delimiter);
+    auto string_split = DeprecatedString(line).split(delimiter, SplitBehavior::KeepEmpty);
     Vector<DeprecatedString> output_fields;
 
     for (auto& range : ranges) {
