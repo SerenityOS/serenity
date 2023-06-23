@@ -480,11 +480,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     };
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
-    // FIXME: Support more overflow variations.
-    if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-            return {};
-    }
+    if (!paintable_box().can_potentially_hit(transformed_position))
+        return {};
 
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
@@ -503,11 +500,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     Optional<HitTestResult> result;
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
-        // FIXME: Support more overflow variations.
-        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                return TraversalDecision::SkipChildrenAndContinue;
-        }
+        if (!paintable_box.can_potentially_hit(transformed_position))
+            return TraversalDecision::SkipChildrenAndContinue;
 
         auto const& z_index = paintable_box.computed_values().z_index();
         auto& layout_box = paintable_box.layout_box();
@@ -543,11 +537,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 4. the non-positioned floats.
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
-        // FIXME: Support more overflow variations.
-        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                return TraversalDecision::SkipChildrenAndContinue;
-        }
+        if (!paintable_box.can_potentially_hit(transformed_position))
+            return TraversalDecision::SkipChildrenAndContinue;
 
         auto& layout_box = paintable_box.layout_box();
         if (layout_box.is_floating()) {
@@ -564,11 +555,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box->children_are_inline()) {
         for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
-            // FIXME: Support more overflow variations.
-            if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
-                    return TraversalDecision::SkipChildrenAndContinue;
-            }
+            if (!paintable_box.can_potentially_hit(transformed_position))
+                return TraversalDecision::SkipChildrenAndContinue;
 
             auto& layout_box = paintable_box.layout_box();
             if (!layout_box.is_absolutely_positioned() && !layout_box.is_floating()) {

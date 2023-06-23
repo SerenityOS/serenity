@@ -37,6 +37,8 @@ public:
     CSSPixelRect absolute_rect() const;
     CSSPixelPoint effective_offset() const;
 
+    bool can_potentially_hit(CSSPixelPoint) const;
+
     void set_offset(CSSPixelPoint);
     void set_offset(float x, float y) { set_offset({ x, y }); }
 

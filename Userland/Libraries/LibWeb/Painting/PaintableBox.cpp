@@ -85,6 +85,22 @@ CSSPixelPoint PaintableBox::effective_offset() const
     return offset;
 }
 
+// FIXME: Support overflow values of clip/scroll/auto
+bool PaintableBox::can_potentially_hit(CSSPixelPoint position) const
+{
+    if (computed_values().overflow_x() == CSS::Overflow::Hidden) {
+        if (!absolute_border_box_rect().contains_horizontally(position.x()))
+            return false;
+    }
+
+    if (computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        if (!absolute_border_box_rect().contains_vertically(position.y()))
+            return false;
+    }
+
+    return true;
+}
+
 CSSPixelRect PaintableBox::compute_absolute_rect() const
 {
     CSSPixelRect rect { effective_offset(), content_size() };
