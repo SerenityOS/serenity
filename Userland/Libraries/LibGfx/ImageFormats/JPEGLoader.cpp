@@ -1687,7 +1687,9 @@ static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
 
 static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
-    if (context.color_transform.has_value()) {
+    // Note: This is non-standard but some encoder still add the App14 segment for grayscale images.
+    //       So let's ignore the color transform value if we only have one component.
+    if (context.color_transform.has_value() && context.components.size() != 1) {
         // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.872-201206-I!!PDF-E&type=items
         // 6.5.3 - APP14 marker segment for colour encoding
 
