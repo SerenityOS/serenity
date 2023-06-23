@@ -349,11 +349,6 @@ static Result<TestMetadata, DeprecatedString> extract_metadata(StringView source
         if (line.starts_with("flags:"sv)) {
             auto flags = parse_list(line);
 
-            if (flags.is_empty()) {
-                failed_message = DeprecatedString::formatted("Failed to find flags in '{}'", line);
-                break;
-            }
-
             for (auto flag : flags) {
                 if (flag == "raw"sv) {
                     metadata.strict_mode = StrictMode::NoStrict;
