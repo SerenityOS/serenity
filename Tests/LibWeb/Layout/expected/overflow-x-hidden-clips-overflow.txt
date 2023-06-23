@@ -1,0 +1,11 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x49.46875 children: not-inline
+      BlockContainer <div.x> at (8,8) content-size 0x49.46875 [BFC] children: not-inline
+        BlockContainer <p> at (8,24) content-size 0x17.46875 children: inline
+          line 0 width: 47.90625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 6, rect: [8,24 47.90625x17.46875]
+              "hidden"
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,57.46875) content-size 784x0 children: inline
+        TextNode <#text>
