@@ -2224,6 +2224,11 @@ Optional<u32> ECMA262Parser::parse_class_set_character()
         "&&"sv, "!!"sv, "##"sv, "$$"sv, "%%"sv, "**"sv, "++"sv, ",,"sv, ".."sv, "::"sv, ";;"sv, "<<"sv, "=="sv, ">>"sv, "??"sv, "@@"sv, "^^"sv, "``"sv, "~~"sv
     };
 
+    if (done()) {
+        set_error(Error::InvalidPattern);
+        return {};
+    }
+
     auto start_position = tell();
     ArmedScopeGuard restore { [&] { back(tell() - start_position + 1); } };
 
