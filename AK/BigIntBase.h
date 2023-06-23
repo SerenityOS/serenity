@@ -159,20 +159,11 @@ ALWAYS_INLINE constexpr NativeWord extend_sign(bool sign)
     return sign ? max_word : 0;
 }
 
-// FIXME: 1) If available, we might try to use AVX2 and AVX512.
-//        2) We should use something similar to __builtin_ia32_addcarryx_u64 for GCC on !x86_64 or
-//           get https://gcc.gnu.org/bugzilla/show_bug.cgi?id=79173 fixed to use
-//           architecture-agnostic __builtin_addc function family unconditionally. The same applies
-//           to `sub_words`.
+// FIXME: If available, we might try to use AVX2 and AVX512.
 ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2, bool& carry)
 {
     if (!is_constant_evaluated()) {
-#if ARCH(X86_64)
-        unsigned long long output;
-        carry = __builtin_ia32_addcarryx_u64(carry, word1, word2, &output);
-        return static_cast<NativeWord>(output);
-#else
-#    if defined(AK_COMPILER_CLANG)
+#if __has_builtin(__builtin_addc)
         NativeWord ncarry, output;
         if constexpr (SameAs<NativeWord, unsigned int>)
             output = __builtin_addc(word1, word2, carry, reinterpret_cast<unsigned int*>(&ncarry));
@@ -184,7 +175,10 @@ ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2,
             VERIFY_NOT_REACHED();
         carry = ncarry;
         return output;
-#    endif
+#elif ARCH(X86_64)
+        unsigned long long output;
+        carry = __builtin_ia32_addcarryx_u64(carry, word1, word2, &output);
+        return static_cast<NativeWord>(output);
 #endif
     }
     // Note: This is usually too confusing for both GCC and Clang.
@@ -202,17 +196,7 @@ ALWAYS_INLINE constexpr NativeWord add_words(NativeWord word1, NativeWord word2,
 ALWAYS_INLINE constexpr NativeWord sub_words(NativeWord word1, NativeWord word2, bool& carry)
 {
     if (!is_constant_evaluated()) {
-#if ARCH(X86_64)
-        unsigned long long output;
-#    if defined(AK_COMPILER_CLANG)
-        // This is named __builtin_ia32_sbb_u64 in G++. *facepalm*
-        carry = __builtin_ia32_subborrow_u64(carry, word1, word2, &output);
-#    else
-        carry = __builtin_ia32_sbb_u64(carry, word1, word2, &output);
-#    endif
-        return static_cast<NativeWord>(output);
-#else
-#    if defined(AK_COMPILER_CLANG)
+#if __has_builtin(__builtin_subc)
         NativeWord ncarry, output;
         if constexpr (SameAs<NativeWord, unsigned int>)
             output = __builtin_subc(word1, word2, carry, reinterpret_cast<unsigned int*>(&ncarry));
@@ -224,7 +208,10 @@ ALWAYS_INLINE constexpr NativeWord sub_words(NativeWord word1, NativeWord word2,
             VERIFY_NOT_REACHED();
         carry = ncarry;
         return output;
-#    endif
+#elif ARCH(X86_64) && defined(AK_COMPILER_GCC)
+        unsigned long long output;
+        carry = __builtin_ia32_sbb_u64(carry, word1, word2, &output);
+        return static_cast<NativeWord>(output);
 #endif
     }
     NativeWord output;
