@@ -31,6 +31,7 @@ ThrowCompletionOr<void> RegExpPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
+
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.test, test, 1, attr);
@@ -69,7 +70,7 @@ static ThrowCompletionOr<void> increment_last_index(VM& vm, Object& regexp_objec
     return {};
 }
 
-// 22.2.5.2.5 Match Records, https://tc39.es/ecma262/#sec-match-records
+// 22.2.7.5 Match Records, https://tc39.es/ecma262/#sec-match-records
 struct Match {
     static Match create(regex::Match const& match)
     {
@@ -80,7 +81,7 @@ struct Match {
     size_t end_index { 0 };
 };
 
-// 22.2.5.2.7 GetMatchIndexPair ( S, match ), https://tc39.es/ecma262/#sec-getmatchindexpair
+// 22.2.7.7 GetMatchIndexPair ( S, match ), https://tc39.es/ecma262/#sec-getmatchindexpair
 static Value get_match_index_par(VM& vm, Utf16View const& string, Match const& match)
 {
     auto& realm = *vm.current_realm();
@@ -96,7 +97,7 @@ static Value get_match_index_par(VM& vm, Utf16View const& string, Match const& m
     return Array::create_from(realm, { Value(match.start_index), Value(match.end_index) });
 }
 
-// 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
+// 22.2.7.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
 static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<DeprecatedFlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
@@ -165,8 +166,8 @@ static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string
     return array;
 }
 
-// 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
-// 22.2.5.2.2 RegExpBuiltInExec ( R, S ), https://github.com/tc39/proposal-regexp-legacy-features#regexpbuiltinexec--r-s-
+// 22.2.7.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
+// 22.2.7.2 RegExpBuiltInExec ( R, S ), https://github.com/tc39/proposal-regexp-legacy-features#regexpbuiltinexec--r-s-
 static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp_object, Utf16String string)
 {
     auto& realm = *vm.current_realm();
@@ -382,7 +383,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     return array;
 }
 
-// 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
+// 22.2.7.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
 ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String string)
 {
     // 1. Let exec be ? Get(R, "exec").
@@ -409,7 +410,7 @@ ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String 
     return regexp_builtin_exec(vm, static_cast<RegExpObject&>(regexp_object), move(string));
 }
 
-// 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
+// 22.2.7.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
 size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 {
     // 1. Assert: index ≤ 2^53 - 1.
@@ -430,14 +431,14 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     return index + code_point.code_unit_count;
 }
 
-// 22.2.5.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
-// 22.2.5.5 get RegExp.prototype.global, https://tc39.es/ecma262/#sec-get-regexp.prototype.global
-// 22.2.5.6 get RegExp.prototype.hasIndices, https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices
-// 22.2.5.7 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
-// 22.2.5.10 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
-// 22.2.5.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
-// 22.2.5.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
-// 22.2.5.18 get RegExp.prototype.unicodeSets, https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodeSets
+// 22.2.6.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
+// 22.2.6.5 get RegExp.prototype.global, https://tc39.es/ecma262/#sec-get-regexp.prototype.global
+// 22.2.6.6 get RegExp.prototype.hasIndices, https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices
+// 22.2.6.7 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
+// 22.2.6.10 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
+// 22.2.6.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
+// 22.2.6.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
+// 22.2.6.18 get RegExp.prototype.unicodeSets, https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodeSets
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                     \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                  \
     {                                                                                      \
@@ -461,7 +462,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
-// 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
+// 22.2.6.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
     // 1. Let R be the this value.
@@ -475,7 +476,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     return TRY(regexp_builtin_exec(vm, regexp_object, move(string)));
 }
 
-// 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
+// 22.2.6.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 {
 
@@ -513,7 +514,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
-// 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
+// 22.2.6.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
@@ -589,7 +590,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     }
 }
 
-// 22.2.5.9 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
+// 22.2.6.9 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
@@ -633,7 +634,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     return RegExpStringIterator::create(realm, matcher, move(string), global, full_unicode);
 }
 
-// 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
+// 22.2.6.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40replace
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 {
@@ -829,7 +830,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 }
 
-// 22.2.5.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
+// 22.2.6.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
     // 1. Let rx be the this value.
@@ -868,7 +869,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     return TRY(result.get(vm, vm.names.index));
 }
 
-// 22.2.5.13 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
+// 22.2.6.13 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
     auto& realm = *vm.current_realm();
@@ -894,7 +895,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     return PrimitiveString::create(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
 }
 
-// 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
+// 22.2.6.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 // With changes from https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-regexp.prototype-%40%40split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
@@ -1051,7 +1052,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     return array;
 }
 
-// 22.2.5.16 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
+// 22.2.6.16 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
     // 1. Let R be the this value.
@@ -1068,7 +1069,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     return Value(!match.is_null());
 }
 
-// 22.2.5.17 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
+// 22.2.6.17 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
     // 1. Let R be the this value.
