@@ -14,6 +14,33 @@ SCRIPT_DIR="$(dirname "${0}")"
 # shellcheck source=/dev/null
 [ -x "$SCRIPT_DIR/../run-local.sh" ] && . "$SCRIPT_DIR/../run-local.sh"
 
+# Detect whether a Windows user does (or wants to) use native Windows QEMU.
+# This allows disabling native Windows QEMU by assigning it the value 0, for instance.
+if { [ -n "${NATIVE_WINDOWS_QEMU+x}" ] || [ "$NATIVE_WINDOWS_QEMU" = "1" ] ;} && command -v wslpath >/dev/null; then
+    case "$SERENITY_QEMU_BIN" in
+        /mnt/?/*)
+            if [ -z "$SERENITY_VIRT_TECH_ARG" ]; then
+                if [ "$VIRTUALIZATION_SUPPORT" -eq "1" ]; then
+                    if [ "$installed_major_version" -gt 5 ]; then
+                        SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"
+                    else
+                        SERENITY_VIRT_TECH_ARG="-accel whpx"
+                    fi
+                fi
+                SERENITY_VIRT_TECH_ARG="$SERENITY_VIRT_TECH_ARG -accel tcg"
+            fi
+            [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
+            SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
+            NATIVE_WINDOWS_QEMU="1"
+            ;;
+        *)
+            NATIVE_WINDOWS_QEMU="0"
+            ;;
+    esac
+else
+    NATIVE_WINDOWS_QEMU="0"
+fi
+
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
 # FIXME: Enable for SERENITY_ARCH=aarch64 if on an aarch64 host?
@@ -22,7 +49,7 @@ SCRIPT_DIR="$(dirname "${0}")"
 if [ -z ${SERENITY_VIRTUALIZATION_SUPPORT+x} ]; then
     VIRTUALIZATION_SUPPORT="0"
     [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && [ "$(uname -m)" != "aarch64" ] && VIRTUALIZATION_SUPPORT="1"
-    command -v wslpath >/dev/null && VIRTUALIZATION_SUPPORT="1"
+    command -v wslpath >/dev/null && [ "$NATIVE_WINDOWS_QEMU" = "1" ] && VIRTUALIZATION_SUPPORT="1"
 else
     VIRTUALIZATION_SUPPORT="$SERENITY_VIRTUALIZATION_SUPPORT"
 fi
@@ -95,7 +122,7 @@ fi
     else
         SERENITY_DISK_IMAGE="_disk_image"
     fi
-    if command -v wslpath >/dev/null; then
+    if [ "$NATIVE_WINDOWS_QEMU" = "1" ]; then
         case "$SERENITY_QEMU_BIN" in
             /mnt/?/*)
                 SERENITY_DISK_IMAGE=$(wslpath -w "$SERENITY_DISK_IMAGE")
@@ -119,28 +146,6 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_MAJOR_VERSION" ] ||
     echo "Required QEMU >= $SERENITY_QEMU_MIN_REQ_VERSION! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
     echo "Please install a newer version of QEMU or use the Toolchain/BuildQemu.sh script."
     die
-fi
-
-NATIVE_WINDOWS_QEMU="0"
-
-if command -v wslpath >/dev/null; then
-    case "$SERENITY_QEMU_BIN" in
-        /mnt/?/*)
-            if [ -z "$SERENITY_VIRT_TECH_ARG" ]; then
-                if [ "$VIRTUALIZATION_SUPPORT" -eq "1" ]; then
-                    if [ "$installed_major_version" -gt 5 ]; then
-                        SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"
-                    else
-                        SERENITY_VIRT_TECH_ARG="-accel whpx"
-                    fi
-                fi
-                SERENITY_VIRT_TECH_ARG="$SERENITY_VIRT_TECH_ARG -accel tcg"
-            fi
-            [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
-            SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
-            NATIVE_WINDOWS_QEMU="1"
-            ;;
-    esac
 fi
 
 [ "$VIRTUALIZATION_SUPPORT" -eq "1" ] && [ "$NATIVE_WINDOWS_QEMU" -ne "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
@@ -261,7 +266,7 @@ if [ -z "$SERENITY_HOST_IP" ]; then
     SERENITY_HOST_IP="127.0.0.1"
 fi
 
-if command -v wslpath >/dev/null; then
+if [ "$NATIVE_WINDOWS_QEMU" = "1" ]; then
    SERENITY_DISABLE_GDB_SOCKET=1
 fi
 

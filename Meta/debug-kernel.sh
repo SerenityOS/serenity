@@ -40,24 +40,20 @@ fi
 #
 if [ "$SERENITY_ARCH" = "x86_64" ]; then
     gdb_arch=i386:x86-64
-    prekernel_image=Prekernel64
+    prekernel_image=Prekernel/Prekernel64
     kernel_base=0x2000200000
 elif [ "$SERENITY_ARCH" = "aarch64" ]; then
     gdb_arch=aarch64:armv8-r
-    prekernel_image=Prekernel
+    prekernel_image=Arch/aarch64/RPi/Prekernel/Prekernel
     kernel_base=0x0
 fi
 
-# FIXME: This doesn't work when running QEMU inside the WSL2 VM
-if command -v wslpath >/dev/null; then
-    gdb_host=$(powershell.exe "(Test-Connection -ComputerName (hostname) -Count 1).IPV4Address.IPAddressToString" | tr -d '\r\n')
-else
-    gdb_host=${SERENITY_HOST_IP:-127.0.0.1}
-fi
-
+# It is not possible to use GDB with Windows-native QEMU.
+# Assume that run.sh detects when we're in WSL and switches to WSL QEMU instead.
+gdb_host=${SERENITY_HOST_IP:-127.0.0.1}
 
 exec $SERENITY_KERNEL_DEBUGGER \
-    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Prekernel/$prekernel_image" \
+    -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/" \
     -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Kernel -o $kernel_base" \

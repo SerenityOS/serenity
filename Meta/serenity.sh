@@ -403,6 +403,7 @@ run_gdb() {
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
         fi
         sleep 1
+        export NATIVE_WINDOWS_QEMU="0"
         "$(get_top_dir)/Meta/debug-kernel.sh" "${GDB_ARGS[@]}"
     fi
 }
