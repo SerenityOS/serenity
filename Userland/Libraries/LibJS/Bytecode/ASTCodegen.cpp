@@ -403,7 +403,11 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                 // d. Else,
                 // i. Let rref be the result of evaluating AssignmentExpression.
                 // ii. Let rval be ? GetValue(rref).
-                TRY(m_rhs->generate_bytecode(generator));
+                if (lhs->is_identifier()) {
+                    TRY(generator.emit_named_evaluation_if_anonymous_function(*m_rhs, static_cast<Identifier const&>(*lhs).string()));
+                } else {
+                    TRY(m_rhs->generate_bytecode(generator));
+                }
 
                 // e. Perform ? PutValue(lref, rval).
                 if (is<Identifier>(*lhs)) {
@@ -960,7 +964,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
     return {};
 }
 
-Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
+Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode_with_lhs_name(Bytecode::Generator& generator, Optional<DeprecatedFlyString const&> lhs_name) const
 {
     bool has_name = !name().is_empty();
     Optional<Bytecode::IdentifierTableIndex> name_identifier;
@@ -972,7 +976,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
         generator.emit<Bytecode::Op::CreateVariable>(*name_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
     }
 
-    generator.emit_new_function(*this);
+    generator.emit_new_function(*this, lhs_name);
 
     if (has_name) {
         generator.emit<Bytecode::Op::SetVariable>(*name_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
@@ -980,6 +984,11 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
     }
 
     return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    return generate_bytecode_with_lhs_name(generator, {});
 }
 
 static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg)
@@ -1041,7 +1050,11 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
                 Bytecode::Label { if_not_undefined_block });
 
             generator.switch_to_basic_block(if_undefined_block);
-            TRY(initializer->generate_bytecode(generator));
+            if (auto const* lhs = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*lhs)->string()));
+            } else {
+                TRY(initializer->generate_bytecode(generator));
+            }
             generator.emit<Bytecode::Op::Jump>().set_targets(
                 Bytecode::Label { if_not_undefined_block },
                 {});
@@ -1231,7 +1244,12 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 Bytecode::Label { value_is_not_undefined_block });
 
             generator.switch_to_basic_block(value_is_undefined_block);
-            TRY(initializer->generate_bytecode(generator));
+
+            if (auto const* lhs = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*lhs)->string()));
+            } else {
+                TRY(initializer->generate_bytecode(generator));
+            }
             generator.emit<Bytecode::Op::Jump>(Bytecode::Label { value_is_not_undefined_block });
 
             generator.switch_to_basic_block(value_is_not_undefined_block);
@@ -1273,7 +1291,11 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
 {
     for (auto& declarator : m_declarations) {
         if (declarator->init()) {
-            TRY(declarator->init()->generate_bytecode(generator));
+            if (auto const* lhs = declarator->target().get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*declarator->init(), (*lhs)->string()));
+            } else {
+                TRY(declarator->init()->generate_bytecode(generator));
+            }
             TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
         } else if (m_declaration_kind != DeclarationKind::Var) {
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
@@ -2166,10 +2188,15 @@ Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Byteco
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode_with_lhs_name(Bytecode::Generator& generator, Optional<DeprecatedFlyString const&> lhs_name) const
+{
+    generator.emit<Bytecode::Op::NewClass>(*this, lhs_name);
+    return {};
+}
+
 Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::NewClass>(*this);
-    return {};
+    return generate_bytecode_with_lhs_name(generator, {});
 }
 
 Bytecode::CodeGenerationErrorOr<void> SpreadExpression::generate_bytecode(Bytecode::Generator& generator) const
@@ -2616,7 +2643,7 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
 Bytecode::CodeGenerationErrorOr<void> ClassFieldInitializerStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    TRY(m_expression->generate_bytecode(generator));
+    TRY(generator.emit_named_evaluation_if_anonymous_function(*m_expression, m_class_field_identifier_name));
     generator.perform_needed_unwinds<Bytecode::Op::Return>();
     generator.emit<Bytecode::Op::Return>();
     return {};

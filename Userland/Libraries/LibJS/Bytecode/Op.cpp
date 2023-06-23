@@ -768,7 +768,13 @@ ThrowCompletionOr<void> SuperCall::execute_impl(Bytecode::Interpreter& interpret
 ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+
+    if (!m_function_node.has_name()) {
+        interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, m_lhs_name.value_or({}));
+    } else {
+        interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+    }
+
     if (m_home_object.has_value()) {
         auto home_object_value = interpreter.reg(m_home_object.value());
         static_cast<ECMAScriptFunctionObject&>(interpreter.accumulator().as_function()).set_home_object(&home_object_value.as_object());
@@ -1105,7 +1111,13 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     auto scope = interpreter.ast_interpreter_scope(interpreter.realm());
     auto& ast_interpreter = scope.interpreter();
 
-    auto* class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, name, name.is_null() ? ""sv : name));
+    ECMAScriptFunctionObject* class_object = nullptr;
+
+    if (!m_class_expression.has_name() && m_lhs_name.has_value())
+        class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, {}, m_lhs_name.value()));
+    else
+        class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, name, name.is_null() ? ""sv : name));
+
     class_object->set_source_text(m_class_expression.source_text());
 
     interpreter.accumulator() = class_object;
@@ -1355,15 +1367,25 @@ DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const
 
 DeprecatedString NewFunction::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
+    StringBuilder builder;
+    builder.append("NewFunction"sv);
+    if (m_function_node.has_name())
+        builder.appendff(" name:{}"sv, m_function_node.name());
+    if (m_lhs_name.has_value())
+        builder.appendff(" lhs_name:{}"sv, m_lhs_name.value());
     if (m_home_object.has_value())
-        return DeprecatedString::formatted("NewFunction home_object:{}", m_home_object.value());
-    return "NewFunction"sv;
+        builder.appendff(" home_object:{}"sv, m_home_object.value());
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString NewClass::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
+    StringBuilder builder;
     auto name = m_class_expression.name();
-    return DeprecatedString::formatted("NewClass '{}'", name.is_null() ? ""sv : name);
+    builder.appendff("NewClass '{}'"sv, name.is_null() ? ""sv : name);
+    if (m_lhs_name.has_value())
+        builder.appendff(" lhs_name:{}"sv, m_lhs_name.value());
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Return::to_deprecated_string_impl(Bytecode::Executable const&) const

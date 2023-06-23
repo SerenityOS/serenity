@@ -734,10 +734,11 @@ public:
     virtual void dump(int indent) const override;
 
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<DeprecatedFlyString const&> lhs_name) const;
 
     bool has_name() const { return !name().is_empty(); }
 
-    Value instantiate_ordinary_function_expression(Interpreter&, DeprecatedFlyString given_name) const;
+    Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const;
 
 private:
     virtual bool is_function_expression() const override { return true; }
@@ -1414,6 +1415,7 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<DeprecatedFlyString const&> lhs_name) const;
 
     bool has_name() const { return !m_name.is_empty(); }
 
