@@ -15,7 +15,7 @@
 namespace JS {
 
 // 7.4.2 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
-ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint, Optional<Value> method)
+ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value value, IteratorHint hint, Optional<Value> method)
 {
     // 1. If hint is not present, set hint to sync.
 
@@ -61,14 +61,14 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
     auto next_method = TRY(iterator.get(vm, vm.names.next));
 
     // 6. Let iteratorRecord be the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    auto iterator_record = Iterator { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
+    auto iterator_record = IteratorRecord { .iterator = &iterator.as_object(), .next_method = next_method, .done = false };
 
     // 7. Return iteratorRecord.
     return iterator_record;
 }
 
 // 7.4.3 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
-ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM& vm, Iterator const& iterator_record, Optional<Value> value)
+ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM& vm, IteratorRecord const& iterator_record, Optional<Value> value)
 {
     Value result;
 
@@ -104,7 +104,7 @@ ThrowCompletionOr<Value> iterator_value(VM& vm, Object& iterator_result)
 }
 
 // 7.4.6 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
-ThrowCompletionOr<GCPtr<Object>> iterator_step(VM& vm, Iterator const& iterator_record)
+ThrowCompletionOr<GCPtr<Object>> iterator_step(VM& vm, IteratorRecord const& iterator_record)
 {
     // 1. Let result be ? IteratorNext(iteratorRecord).
     auto result = TRY(iterator_next(vm, iterator_record));
@@ -123,7 +123,7 @@ ThrowCompletionOr<GCPtr<Object>> iterator_step(VM& vm, Iterator const& iterator_
 // 7.4.7 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
 // 7.4.9 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
 // NOTE: These only differ in that async awaits the inner value after the call.
-static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, Completion completion, IteratorHint iterator_hint)
+static Completion iterator_close_impl(VM& vm, IteratorRecord const& iterator_record, Completion completion, IteratorHint iterator_hint)
 {
     // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
 
@@ -172,13 +172,13 @@ static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, C
 }
 
 // 7.4.7 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
-Completion iterator_close(VM& vm, Iterator const& iterator_record, Completion completion)
+Completion iterator_close(VM& vm, IteratorRecord const& iterator_record, Completion completion)
 {
     return iterator_close_impl(vm, iterator_record, move(completion), IteratorHint::Sync);
 }
 
 // 7.4.9 AsyncIteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-asynciteratorclose
-Completion async_iterator_close(VM& vm, Iterator const& iterator_record, Completion completion)
+Completion async_iterator_close(VM& vm, IteratorRecord const& iterator_record, Completion completion)
 {
     return iterator_close_impl(vm, iterator_record, move(completion), IteratorHint::Async);
 }

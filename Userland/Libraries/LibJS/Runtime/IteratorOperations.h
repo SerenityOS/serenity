@@ -22,13 +22,13 @@ enum class IteratorHint {
     Async,
 };
 
-ThrowCompletionOr<Iterator> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
-ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, Iterator const&, Optional<Value> = {});
-ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, Iterator const&);
+ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
+ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, IteratorRecord const&, Optional<Value> = {});
+ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, IteratorRecord const&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
-Completion iterator_close(VM&, Iterator const&, Completion);
-Completion async_iterator_close(VM&, Iterator const&, Completion);
+Completion iterator_close(VM&, IteratorRecord const&, Completion);
+Completion async_iterator_close(VM&, IteratorRecord const&, Completion);
 NonnullGCPtr<Object> create_iterator_result_object(VM&, Value, bool done);
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, Optional<Value> method = {});
 

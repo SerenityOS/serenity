@@ -248,7 +248,7 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
 }
 
 // 10 GetKeysIterator ( setRec ), https://tc39.es/proposal-set-methods/#sec-getkeysiterator
-static ThrowCompletionOr<Iterator> get_keys_iterator(VM& vm, SetRecord const& set_record)
+static ThrowCompletionOr<IteratorRecord> get_keys_iterator(VM& vm, SetRecord const& set_record)
 {
     // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
     auto keys_iterator = TRY(call(vm, *set_record.keys, set_record.set));
@@ -265,7 +265,7 @@ static ThrowCompletionOr<Iterator> get_keys_iterator(VM& vm, SetRecord const& se
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, next_method.to_string_without_side_effects()));
 
     // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    return Iterator { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };
+    return IteratorRecord { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };
 }
 
 // 1 Set.prototype.union ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.union

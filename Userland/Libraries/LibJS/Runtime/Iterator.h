@@ -12,7 +12,7 @@
 namespace JS {
 
 // 7.4.1 Iterator Records, https://tc39.es/ecma262/#sec-iterator-records
-struct Iterator {
+struct IteratorRecord {
     GCPtr<Object> iterator; // [[Iterator]]
     Value next_method;      // [[NextMethod]]
     bool done { false };    // [[Done]]

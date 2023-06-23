@@ -30,6 +30,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(throw_);
 };
 
-Iterator create_async_from_sync_iterator(VM&, Iterator sync_iterator);
+IteratorRecord create_async_from_sync_iterator(VM&, IteratorRecord sync_iterator);
 
 }
