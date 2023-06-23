@@ -11,6 +11,7 @@ compile_gml(FilterGallery.gml FilterGalleryGML.h filter_gallery_gml)
 compile_gml(ResizeImageDialog.gml ResizeImageDialogGML.h resize_image_dialog_gml)
 compile_gml(LevelsDialog.gml LevelsDialogGML.h levels_dialog_gml)
 compile_gml(LuminosityMasking.gml LuminosityMaskingGML.h luminosity_masking_gml)
+compile_gml(ColorMasking.gml ColorMaskingGML.h color_masking_gml)
 compile_gml(Filters/MedianSettings.gml Filters/MedianSettingsGML.h median_settings_gml)
 
 set(SOURCES
@@ -80,6 +81,7 @@ set(SOURCES
 
 set(GENERATED_SOURCES
     EditGuideDialogGML.h
+    ColorMaskingGML.h
     FilterGalleryGML.h
     Filters/MedianSettingsGML.h
     LevelsDialogGML.h
