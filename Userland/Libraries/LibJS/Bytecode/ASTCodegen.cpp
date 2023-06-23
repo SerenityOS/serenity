@@ -1353,14 +1353,10 @@ static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expr
         if (member_expression.is_computed()) {
             TRY(member_expression.property().generate_bytecode(generator));
             generator.emit<Bytecode::Op::GetByValue>(this_reg);
+        } else if (is<PrivateIdentifier>(member_expression.property())) {
+            generator.emit<Bytecode::Op::GetPrivateById>(generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string()));
         } else {
-            auto identifier_table_ref = [&] {
-                if (is<PrivateIdentifier>(member_expression.property()))
-                    return generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string());
-                return generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-            }();
-
-            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string()));
         }
     }
 
