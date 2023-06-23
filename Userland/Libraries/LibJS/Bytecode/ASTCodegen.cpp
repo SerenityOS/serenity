@@ -2698,11 +2698,11 @@ static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::G
                 generator.emit<Bytecode::Op::Store>(current_value_register);
                 return {};
             },
-            [&](OptionalChain::PrivateMemberReference const&) -> Bytecode::CodeGenerationErrorOr<void> {
-                return Bytecode::CodeGenerationError {
-                    &optional_chain,
-                    "Unimplemented reference: PrivateMemberReference"sv,
-                };
+            [&](OptionalChain::PrivateMemberReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
+                generator.emit<Bytecode::Op::Store>(current_base_register);
+                generator.emit<Bytecode::Op::GetPrivateById>(generator.intern_identifier(ref.private_identifier->string()));
+                generator.emit<Bytecode::Op::Store>(current_value_register);
+                return {};
             }));
     }
 
