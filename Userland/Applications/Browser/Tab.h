@@ -10,11 +10,13 @@
 #include "History.h"
 #include <AK/Optional.h>
 #include <AK/URL.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
+#include <WebContent/WebContentDebugger.h>
 
 namespace WebView {
 class OutOfProcessWebView;
@@ -103,6 +105,8 @@ private:
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;
 
+    DeprecatedString get_source_for_url(StringView);
+
     BrowserWindow const& window() const;
     BrowserWindow& window();
 
@@ -120,6 +124,13 @@ private:
     };
 
     Optional<URL> url_from_location_bar(MayAppendTLD = MayAppendTLD::No);
+
+    enum class MetaCommandContext {
+        Regular,
+        Debug,
+    };
+    bool handle_meta_command(StringView, MetaCommandContext);
+    void refresh_console_debugger_view();
 
     History m_history;
 
@@ -162,6 +173,8 @@ private:
 
     bool m_loaded { false };
     bool m_is_history_navigation { false };
+
+    Core::EventLoop m_debugger_loop;
 };
 
 URL url_from_user_input(DeprecatedString const& input);

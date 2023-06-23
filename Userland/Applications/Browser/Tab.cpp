@@ -531,6 +531,30 @@ Tab::Tab(BrowserWindow& window)
             m_console_widget->handle_console_messages(start_index, message_types, messages);
     };
 
+    view().on_debugger_request = [this] {
+        show_console_window();
+        refresh_console_debugger_view();
+
+        auto on_js_input_change = TemporaryChange<Function<void(DeprecatedString const&)>> {
+            m_console_widget->on_js_input,
+            [this](auto js_source) {
+                ScopeGuard refresh_after_change = [this] {
+                    refresh_console_debugger_view();
+                };
+
+                if (handle_meta_command(js_source, MetaCommandContext::Debug))
+                    return;
+                view().js_console_input(js_source, WebContent::ConsoleExecutionMode::InCurrentScope);
+            }
+        };
+
+        auto on_debug_continue_change = TemporaryChange<Function<void()>> {
+            m_console_widget->on_debug_continue,
+            [this]() { handle_meta_command(".continue"sv, MetaCommandContext::Debug); }
+        };
+        m_debugger_loop.exec();
+    };
+
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->set_focus(true);
@@ -853,6 +877,111 @@ void Tab::close_sub_widgets()
     close_widget_window(m_storage_widget);
 }
 
+bool Tab::handle_meta_command(StringView command, MetaCommandContext context)
+{
+    command = command.trim_whitespace();
+
+    if (command == ".help"sv) {
+        m_console_widget->print_html("Available commands:<br/>"sv);
+        m_console_widget->print_html("<ul>"sv);
+        m_console_widget->print_html("<li><code>.help</code>: Show this text</li>"sv);
+        m_console_widget->print_html("<li><code>.debugger [\"url\"]</code>: Toggle the debugger UI for the given URL or the currently open page</li>"sv);
+        m_console_widget->print_html("<li><code>.break \"url:line\"</code>: Set a breakpoint at the given location</li>"sv);
+        if (context == MetaCommandContext::Debug) {
+            m_console_widget->print_html("<li><code>.continue</code>: Continue execution</li>"sv);
+            m_console_widget->print_html("<li><code>.frame</code>: Refresh the debugger view</li>"sv);
+        }
+        m_console_widget->print_html("</ul>"sv);
+        return true;
+    }
+
+    if (command.starts_with(".break "sv)) {
+        auto spec = command.substring_view(7);
+        if (spec.starts_with('"') && spec.ends_with('"'))
+            spec = spec.substring_view(1, spec.length() - 2);
+        view().debug_request("break", spec);
+        return true;
+    }
+
+    if (command == ".debugger"sv) {
+        Optional<StringView> url;
+        auto args = command.substring_view(9).trim_whitespace();
+        if (args.starts_with('"') && args.ends_with('"'))
+            url = args.substring_view(1, args.length() - 2);
+
+        if (m_console_widget->debugger_view_is_visible() && !url.has_value()) {
+            m_console_widget->hide_debugger_view();
+            return true;
+        }
+
+        String current_url;
+        if (!url.has_value()) {
+            current_url = MUST(view().url().to_string());
+            url = current_url.bytes_as_string_view();
+        }
+
+        m_console_widget->show_debugger_view(
+            url->to_deprecated_string(),
+            get_source_for_url(*url));
+        return true;
+    }
+
+    if (context != MetaCommandContext::Debug)
+        return false;
+
+    if (command == ".continue"sv) {
+        m_debugger_loop.quit(0);
+        return true;
+    }
+
+    if (command == ".frame"sv) {
+        return true;
+    }
+
+    return false;
+}
+
+DeprecatedString Tab::get_source_for_url(StringView url)
+{
+    view().debug_request("get-js-source", url);
+    auto promise = MUST(Core::Promise<DeprecatedString>::try_create());
+    auto get_source_change = TemporaryChange<Function<void(const AK::URL&, DeprecatedString const&)>> {
+        view().on_get_source,
+        [&](AK::URL const&, AK::DeprecatedString const& source) {
+            MUST(promise->resolve(DeprecatedString { source }));
+        },
+    };
+
+    return MUST(promise->await());
+}
+
+void Tab::refresh_console_debugger_view()
+{
+    auto trace_promise = MUST(Core::Promise<Vector<WebContent::StackFrame>>::try_create());
+    view().on_js_stack_trace_available = [&](Vector<WebContent::StackFrame> trace) {
+        MUST(trace_promise->resolve(std::move(trace)));
+    };
+
+    view().debug_request("get-js-trace");
+    auto trace = MUST(trace_promise->await());
+    if (trace.is_empty()) {
+        m_console_widget->print_html("<div>Debugger: Empty stack trace.</div>"sv);
+        return;
+    }
+
+    auto maybe_frame = trace.last_matching([](auto& x) { return x.column != 0 && x.source_url != "(console)"sv; });
+    if (maybe_frame.has_value()) {
+        auto& frame = *maybe_frame;
+        auto result = get_source_for_url(frame.source_url);
+        auto source = result.view();
+        m_console_widget->show_debugger_view(frame.source_url, source);
+        m_console_widget->set_active_source_line(frame.line - 1);
+    } else {
+        m_console_widget->clear_gutter_markers();
+        m_console_widget->show_debugger_view("(console)"sv, ""sv);
+    }
+}
+
 void Tab::show_console_window()
 {
     if (!m_console_widget) {
@@ -862,10 +991,17 @@ void Tab::show_console_window()
         console_window->set_icon(g_icon_bag.filetype_javascript);
         m_console_widget = console_window->set_main_widget<ConsoleWidget>().release_value_but_fixme_should_propagate_errors();
         m_console_widget->on_js_input = [this](DeprecatedString const& js_source) {
+            if (handle_meta_command(js_source, MetaCommandContext::Regular))
+                return;
             m_web_content_view->js_console_input(js_source);
         };
         m_console_widget->on_request_messages = [this](i32 start_index) {
             m_web_content_view->js_console_request_messages(start_index);
+        };
+        m_console_widget->on_breakpoint_change = [this](size_t line, bool was_set) {
+            (void)was_set;
+            auto spec = DeprecatedString::formatted("{}:{}", view().url().to_deprecated_string(), line + 1);
+            view().debug_request("break", spec);
         };
     }
 
