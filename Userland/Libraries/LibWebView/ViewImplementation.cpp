@@ -141,9 +141,9 @@ void ViewImplementation::run_javascript(StringView js_source)
     client().async_run_javascript(js_source);
 }
 
-void ViewImplementation::js_console_input(DeprecatedString const& js_source)
+void ViewImplementation::js_console_input(DeprecatedString const& js_source, WebContent::ConsoleExecutionMode execution_mode)
 {
-    client().async_js_console_input(js_source);
+    client().async_js_console_input(js_source, execution_mode);
 }
 
 void ViewImplementation::js_console_request_messages(i32 start_index)

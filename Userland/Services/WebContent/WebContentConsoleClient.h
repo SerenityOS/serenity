@@ -13,6 +13,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
+#include <WebContent/WebContentDebugger.h>
 
 namespace WebContent {
 
@@ -20,7 +21,7 @@ class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
     WebContentConsoleClient(JS::Console&, JS::Realm&, ConnectionFromClient&);
 
-    void handle_input(DeprecatedString const& js_source);
+    void handle_input(DeprecatedString const& js_source, ConsoleExecutionMode);
     void send_messages(i32 start_index);
     void report_exception(JS::Error const&, bool) override;
 

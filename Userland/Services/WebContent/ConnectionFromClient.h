@@ -88,7 +88,7 @@ private:
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;
 
-    virtual void js_console_input(DeprecatedString const&) override;
+    virtual void js_console_input(DeprecatedString const&, ConsoleExecutionMode const&) override;
     virtual void run_javascript(DeprecatedString const&) override;
     virtual void js_console_request_messages(i32) override;
 

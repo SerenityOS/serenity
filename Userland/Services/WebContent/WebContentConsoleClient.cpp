@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -31,7 +32,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     m_console_global_environment_extensions = realm.heap().allocate<ConsoleGlobalEnvironmentExtensions>(realm, realm, window).release_allocated_value_but_fixme_should_propagate_errors().ptr();
 }
 
-void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
+void WebContentConsoleClient::handle_input(DeprecatedString const& js_source, ConsoleExecutionMode execution_mode)
 {
     if (!m_console_global_environment_extensions)
         return;
@@ -39,7 +40,17 @@ void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)
     auto& settings = Web::HTML::relevant_settings_object(*m_console_global_environment_extensions);
     auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
 
-    JS::NonnullGCPtr<JS::Environment> with_scope = JS::new_object_environment(*m_console_global_environment_extensions, true, &settings.realm().global_environment());
+    JS::GCPtr<JS::Environment> with_scope;
+
+    if (execution_mode == ConsoleExecutionMode::InCurrentScope) {
+        if (auto document = settings.responsible_document()) {
+            if (auto& execution_context_stack = document->vm().execution_context_stack(); !execution_context_stack.is_empty())
+                with_scope = execution_context_stack.last()->lexical_environment;
+        }
+    }
+
+    if (!with_scope)
+        with_scope = JS::new_object_environment(*m_console_global_environment_extensions, true, &settings.realm().global_environment());
 
     // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
     auto result = script->run(Web::HTML::ClassicScript::RethrowErrors::No, with_scope);

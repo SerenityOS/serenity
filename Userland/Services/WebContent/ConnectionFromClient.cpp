@@ -576,10 +576,10 @@ void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
     console_object->console().set_client(*m_console_client.ptr());
 }
 
-void ConnectionFromClient::js_console_input(DeprecatedString const& js_source)
+void ConnectionFromClient::js_console_input(DeprecatedString const& js_source, ConsoleExecutionMode const& execution_mode)
 {
     if (m_console_client)
-        m_console_client->handle_input(js_source);
+        m_console_client->handle_input(js_source, execution_mode);
 }
 
 void ConnectionFromClient::run_javascript(DeprecatedString const& js_source)
