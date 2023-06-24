@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
@@ -349,6 +349,25 @@ public:
 private:
     Register m_lhs;
     bool m_is_spread = false;
+};
+
+class ImportCall final : public Instruction {
+public:
+    ImportCall(Register specifier, Register options)
+        : Instruction(Type::ImportCall)
+        , m_specifier(specifier)
+        , m_options(options)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register);
+
+private:
+    Register m_specifier;
+    Register m_options;
 };
 
 class IteratorToArray final : public Instruction {
