@@ -32,6 +32,7 @@
     __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void)          \
     __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                                     \
     __JS_ENUMERATE(GeneratorFunction, generator_function, GeneratorFunctionPrototype, GeneratorFunctionConstructor, void)                      \
+    __JS_ENUMERATE(Iterator, iterator, IteratorPrototype, IteratorConstructor, void)                                                           \
     __JS_ENUMERATE(Map, map, MapPrototype, MapConstructor, void)                                                                               \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                                                             \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                                                                   \
@@ -106,7 +107,6 @@
     __JS_ENUMERATE(Temporal::Temporal, temporal)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES                         \
-    __JS_ENUMERATE(Iterator, iterator)                           \
     __JS_ENUMERATE(ArrayIterator, array_iterator)                \
     __JS_ENUMERATE(AsyncIterator, async_iterator)                \
     __JS_ENUMERATE(Intl::SegmentIterator, intl_segment_iterator) \

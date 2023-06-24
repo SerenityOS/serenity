@@ -63,6 +63,7 @@
 #include <LibJS/Runtime/Intl/SegmenterPrototype.h>
 #include <LibJS/Runtime/Intl/SegmentsPrototype.h>
 #include <LibJS/Runtime/Intrinsics.h>
+#include <LibJS/Runtime/IteratorConstructor.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
