@@ -295,12 +295,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
         }
     }
 
-    if (auto* bytecode_interpreter = bytecode_interpreter_if_exists()) {
-        auto executable = TRY(Bytecode::compile(*this, expression, FunctionKind::Normal, name));
-        return TRY(bytecode_interpreter->run(*current_realm(), *executable));
-    }
-
-    return TRY(expression.execute(interpreter())).release_value();
+    return execute_ast_node(expression);
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
@@ -361,6 +356,19 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
     }
 }
 
+ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
+{
+    if (auto* bytecode_interpreter = bytecode_interpreter_if_exists()) {
+        auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
+        auto result_or_error = bytecode_interpreter->run_and_return_frame(*current_realm(), *executable, nullptr);
+        if (result_or_error.value.is_error())
+            return result_or_error.value.release_error();
+        return result_or_error.frame->registers[0];
+    }
+
+    return TRY(node.execute(interpreter())).value();
+}
+
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment)
@@ -401,7 +409,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return identifier->string();
             },
             [&](NonnullRefPtr<Expression const> const& expression) -> ThrowCompletionOr<PropertyKey> {
-                auto result = TRY(expression->execute(interpreter())).release_value();
+                auto result = TRY(execute_ast_node(*expression));
                 return result.to_property_key(vm);
             }));
 
@@ -439,7 +447,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string()));
             else
-                value_to_assign = TRY(property.initializer->execute(interpreter())).release_value();
+                value_to_assign = TRY(execute_ast_node(*property.initializer));
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
@@ -576,7 +584,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string()));
             else
-                value = TRY(entry.initializer->execute(interpreter())).release_value();
+                value = TRY(execute_ast_node(*entry.initializer));
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
