@@ -137,8 +137,12 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
 static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter)
 {
     auto string_split = DeprecatedString(line).split(delimiter, SplitBehavior::KeepEmpty);
-    Vector<DeprecatedString> output_fields;
+    if (string_split.size() == 1) {
+        outln("{}", line);
+        return;
+    }
 
+    Vector<DeprecatedString> output_fields;
     for (auto& range : ranges) {
         for (size_t i = range.m_from - 1; i < min(range.m_to, string_split.size()); i++) {
             output_fields.append(string_split[i]);
