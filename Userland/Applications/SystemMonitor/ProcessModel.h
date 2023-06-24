@@ -55,6 +55,8 @@ public:
         __Count
     };
 
+    static ErrorOr<String> read_command_line(pid_t pid);
+
     static ProcessModel& the();
 
     static NonnullRefPtr<ProcessModel> create() { return adopt_ref(*new ProcessModel); }
@@ -94,6 +96,11 @@ private:
 
     struct Process;
 
+    enum class EmptyCommand : u8 {
+        NotInitialized,
+        PermissionError,
+    };
+
     struct ThreadState {
         pid_t tid { 0 };
         pid_t pid { 0 };
@@ -105,7 +112,7 @@ private:
         bool kernel { false };
         DeprecatedString executable { "" };
         DeprecatedString name { "" };
-        DeprecatedString command { "" };
+        Variant<String, EmptyCommand> command { EmptyCommand::NotInitialized };
         uid_t uid { 0 };
         DeprecatedString state { "" };
         DeprecatedString user { "" };
@@ -202,6 +209,26 @@ private:
         {
             return current_state.tid == current_state.process.pid;
         }
+
+        void read_command_line_if_necessary()
+        {
+            // Most likely the previous state still has a command line which we can copy over.
+            // Or, reading the command line was not allowed, e.g. on a Kernel process.
+            if ((previous_state.command.has<String>() && !current_state.command.has<String>())
+                || (previous_state.command.has<EmptyCommand>() && previous_state.command.get<EmptyCommand>() == EmptyCommand::PermissionError)) {
+                current_state.command = previous_state.command;
+                return;
+            }
+
+            auto maybe_command_line = read_command_line(current_state.pid);
+            if (!maybe_command_line.is_error()) {
+                current_state.command = maybe_command_line.value();
+                previous_state.command = maybe_command_line.release_value();
+            } else if (maybe_command_line.error().code() == EPERM || maybe_command_line.error().code() == EACCES) {
+                current_state.command = EmptyCommand::PermissionError;
+                previous_state.command = EmptyCommand::PermissionError;
+            }
+        }
     };
 
     struct Process {
@@ -240,7 +267,7 @@ private:
 
     int thread_model_row(Thread const& thread) const;
 
-    ErrorOr<void> initialize_process_statistics_file();
+    ErrorOr<void> ensure_process_statistics_file();
 
     OwnPtr<Core::File> m_process_statistics_file;
 
