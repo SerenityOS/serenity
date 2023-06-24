@@ -33,5 +33,5 @@ struct Hunk {
 };
 
 Vector<Hunk> parse_hunks(DeprecatedString const& diff);
-HunkLocation parse_hunk_location(DeprecatedString const& location_line);
+HunkLocation parse_hunk_location(StringView location_line);
 };
