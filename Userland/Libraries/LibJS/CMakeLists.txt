@@ -141,6 +141,8 @@ set(SOURCES
     Runtime/Intl/SegmentIteratorPrototype.cpp
     Runtime/Intl/SegmentsPrototype.cpp
     Runtime/Intrinsics.cpp
+    Runtime/Iterator.cpp
+    Runtime/IteratorConstructor.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp

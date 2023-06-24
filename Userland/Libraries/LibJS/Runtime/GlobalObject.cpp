@@ -48,6 +48,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/SegmenterConstructor.h>
+#include <LibJS/Runtime/IteratorConstructor.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
 #include <LibJS/Runtime/MathObject.h>
@@ -146,6 +147,7 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.Int8Array, attr, [](auto& realm) -> Value { return realm.intrinsics().int8_array_constructor(); });
     global.define_intrinsic_accessor(vm.names.Int16Array, attr, [](auto& realm) -> Value { return realm.intrinsics().int16_array_constructor(); });
     global.define_intrinsic_accessor(vm.names.Int32Array, attr, [](auto& realm) -> Value { return realm.intrinsics().int32_array_constructor(); });
+    global.define_intrinsic_accessor(vm.names.Iterator, attr, [](auto& realm) -> Value { return realm.intrinsics().iterator_constructor(); });
     global.define_intrinsic_accessor(vm.names.Map, attr, [](auto& realm) -> Value { return realm.intrinsics().map_constructor(); });
     global.define_intrinsic_accessor(vm.names.Number, attr, [](auto& realm) -> Value { return realm.intrinsics().number_constructor(); });
     global.define_intrinsic_accessor(vm.names.Object, attr, [](auto& realm) -> Value { return realm.intrinsics().object_constructor(); });
