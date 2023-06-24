@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto const color_output = TRY(Core::System::isatty(STDOUT_FILENO)) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
-    auto hunks = Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()));
+    auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof())));
     for (auto const& hunk : hunks)
         TRY(Diff::write_normal(hunk, *out, color_output));
 
