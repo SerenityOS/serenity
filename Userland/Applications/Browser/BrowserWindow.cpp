@@ -454,7 +454,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(block_pop_ups_action);
 
     auto same_origin_policy_action = GUI::Action::create_checkable(
-        "Enable Same Origin &Policy", [this](auto& action) {
+        "Enable Same-Origin &Policy", [this](auto& action) {
             active_tab().view().debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
