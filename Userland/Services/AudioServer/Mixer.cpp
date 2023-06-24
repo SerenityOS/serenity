@@ -11,6 +11,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
+#include <AudioServer/ConnectionFromManagerClient.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Timer.h>
@@ -127,7 +128,7 @@ void Mixer::set_main_volume(double volume)
     m_config->write_num_entry("Master", "Volume", static_cast<int>(volume * 100));
     request_setting_sync();
 
-    ConnectionFromClient::for_each([&](ConnectionFromClient& client) {
+    ConnectionFromManagerClient::for_each([&](auto& client) {
         client.did_change_main_mix_volume({}, main_volume());
     });
 }
@@ -141,7 +142,7 @@ void Mixer::set_muted(bool muted)
     m_config->write_bool_entry("Master", "Mute", m_muted);
     request_setting_sync();
 
-    ConnectionFromClient::for_each([muted](ConnectionFromClient& client) {
+    ConnectionFromManagerClient::for_each([muted](auto& client) {
         client.did_change_main_mix_muted_state({}, muted);
     });
 }
