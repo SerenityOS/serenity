@@ -68,6 +68,7 @@ public:
 
 Q_SIGNALS:
     void playback_position_updated(Duration);
+    void seek_completed();
 
 private:
     AudioThread(NonnullRefPtr<Audio::Loader> loader, AudioTaskQueue task_queue)
@@ -164,6 +165,7 @@ private:
                 case AudioTask::Type::Seek:
                     VERIFY(task.data.has_value());
                     m_position = Web::Platform::AudioCodecPlugin::set_loader_position(m_loader, *task.data, m_duration, audio_output->format().sampleRate());
+                    Q_EMIT seek_completed();
 
                     if (paused == Paused::Yes)
                         Q_EMIT playback_position_updated(m_position);
@@ -298,6 +300,10 @@ AudioCodecPluginLadybird::AudioCodecPluginLadybird(NonnullOwnPtr<AudioThread> au
     connect(m_audio_thread, &AudioThread::playback_position_updated, this, [this](auto position) {
         if (on_playback_position_updated)
             on_playback_position_updated(position);
+    });
+    connect(m_audio_thread, &AudioThread::seek_completed, this, [this]() {
+        if (on_seek_completed)
+            on_seek_completed();
     });
 }
 

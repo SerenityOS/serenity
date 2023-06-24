@@ -108,8 +108,8 @@ public:
     void set_layout_mouse_position(Badge<Painting::MediaPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
     Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::MediaPaintable>) const { return m_mouse_position; }
 
-    void set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time);
-    double layout_display_time(Badge<Painting::MediaPaintable>) const;
+    void pause_temporarily(Badge<Painting::MediaPaintable>);
+    void resume_from_temporary_pause(Badge<Painting::MediaPaintable>);
 
     struct CachedLayoutBoxes {
         Optional<CSSPixelRect> control_box_rect;
@@ -270,9 +270,8 @@ private:
 
     // Cached state for layout.
     Optional<MouseTrackingComponent> m_mouse_tracking_component;
-    bool m_tracking_mouse_position_while_playing { false };
+    bool m_was_playing_before_temporary_pause { false };
     Optional<CSSPixelPoint> m_mouse_position;
-    Optional<double> m_display_time;
     mutable CachedLayoutBoxes m_layout_boxes;
 };
 

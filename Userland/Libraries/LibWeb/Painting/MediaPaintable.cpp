@@ -109,7 +109,7 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
         remaining_rect.take_from_right(components.speaker_button_size + component_padding);
     }
 
-    auto display_time = human_readable_digital_time(round(media_element.layout_display_time({})));
+    auto display_time = human_readable_digital_time(round(media_element.current_time()));
     auto duration = human_readable_digital_time(isnan(media_element.duration()) ? 0 : round(media_element.duration()));
     components.timestamp = String::formatted("{} / {}", display_time, duration).release_value_but_fixme_should_propagate_errors();
     components.timestamp_font = layout_node().scaled_font(context);
@@ -169,7 +169,7 @@ void MediaPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTM
     if (components.timeline_rect.is_empty())
         return;
 
-    auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.layout_display_time({}) / media_element.duration();
+    auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.current_time() / media_element.duration();
     auto playback_position = static_cast<double>(static_cast<int>(components.timeline_rect.width())) * playback_percentage;
     auto timeline_button_offset_x = static_cast<DevicePixels>(round(playback_position));
 
@@ -276,7 +276,8 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<E
 
     if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
         media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Timeline);
-        set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
+        media_element.pause_temporarily({});
+        set_current_time(media_element, *cached_layout_boxes.timeline_rect, position);
     } else if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
         media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
         set_volume(media_element, *cached_layout_boxes.volume_rect, position);
@@ -299,8 +300,8 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
 
     if (was_tracking_mouse) {
         if (was_tracking_timeline) {
-            set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::No);
-            media_element.set_layout_display_time({}, {});
+            set_current_time(media_element, *cached_layout_boxes.timeline_rect, position);
+            media_element.resume_from_temporary_pause({});
         }
 
         const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(nullptr);
@@ -352,7 +353,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
         switch (*mouse_tracking_component) {
         case HTML::HTMLMediaElement::MouseTrackingComponent::Timeline:
             if (cached_layout_boxes.timeline_rect.has_value())
-                set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
+                set_current_time(media_element, *cached_layout_boxes.timeline_rect, position);
             break;
 
         case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
@@ -371,7 +372,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
     return DispatchEventOfSameName::No;
 }
 
-void MediaPaintable::set_current_time(HTML::HTMLMediaElement& media_element, CSSPixelRect timeline_rect, CSSPixelPoint mouse_position, Temporary temporarily)
+void MediaPaintable::set_current_time(HTML::HTMLMediaElement& media_element, CSSPixelRect timeline_rect, CSSPixelPoint mouse_position)
 {
     auto x_offset = mouse_position.x() - timeline_rect.x();
     x_offset = max(x_offset, 0);
@@ -380,14 +381,7 @@ void MediaPaintable::set_current_time(HTML::HTMLMediaElement& media_element, CSS
     auto x_percentage = static_cast<double>(x_offset) / static_cast<double>(timeline_rect.width());
     auto position = static_cast<double>(x_percentage) * media_element.duration();
 
-    switch (temporarily) {
-    case Temporary::Yes:
-        media_element.set_layout_display_time({}, position);
-        break;
-    case Temporary::No:
-        media_element.set_current_time(position);
-        break;
-    }
+    media_element.set_current_time(position);
 }
 
 void MediaPaintable::set_volume(HTML::HTMLMediaElement& media_element, CSSPixelRect volume_rect, CSSPixelPoint mouse_position)

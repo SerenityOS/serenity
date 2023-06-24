@@ -19,6 +19,8 @@ public:
     Layout::AudioBox* layout_node();
     Layout::AudioBox const* layout_node() const;
 
+    void on_seek_completed(Badge<AudioTrack>);
+
 private:
     HTMLAudioElement(DOM::Document&, DOM::QualifiedName);
 
@@ -30,6 +32,8 @@ private:
     virtual void on_paused() override;
     virtual void on_seek(double, MediaSeekMode) override;
     virtual void on_volume_change() override;
+
+    size_t m_seeks_in_progress { 0 };
 };
 
 }

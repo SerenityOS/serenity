@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/AudioTrack.h>
 #include <LibWeb/HTML/AudioTrackList.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/HTMLAudioElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Platform/AudioCodecPlugin.h>
@@ -33,6 +34,9 @@ AudioTrack::AudioTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
 
         auto playback_position = static_cast<double>(position.to_milliseconds()) / 1000.0;
         m_media_element->set_current_playback_position(playback_position);
+    };
+    m_audio_plugin->on_seek_completed = [this]() {
+        verify_cast<HTMLAudioElement>(m_media_element.ptr())->on_seek_completed({});
     };
 }
 

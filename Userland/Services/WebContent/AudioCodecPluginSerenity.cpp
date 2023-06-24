@@ -91,6 +91,8 @@ void AudioCodecPluginSerenity::set_volume(double volume)
 void AudioCodecPluginSerenity::seek(double position)
 {
     m_position = set_loader_position(m_loader, position, m_duration, m_device_sample_rate);
+    if (on_seek_completed)
+        on_seek_completed();
 
     if (on_playback_position_updated)
         on_playback_position_updated(m_position);
