@@ -48,7 +48,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
             left_y_offset += line_height();
         }
         for (int i = 0; i < (int)hunk.added_lines.size() - (int)hunk.removed_lines.size(); ++i) {
-            draw_line(painter, "", left_y_offset, LinePosition::Left, LineType::Missing);
+            draw_line(painter, ""sv, left_y_offset, LinePosition::Left, LineType::Missing);
             left_y_offset += line_height();
         }
 
@@ -58,7 +58,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
             right_y_offset += line_height();
         }
         for (int i = 0; i < (int)hunk.removed_lines.size() - (int)hunk.added_lines.size(); ++i) {
-            draw_line(painter, "", right_y_offset, LinePosition::Right, LineType::Missing);
+            draw_line(painter, ""sv, right_y_offset, LinePosition::Right, LineType::Missing);
             right_y_offset += line_height();
         }
 
@@ -71,7 +71,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void DiffViewer::draw_line(GUI::Painter& painter, DeprecatedString const& line, size_t y_offset, LinePosition line_position, LineType line_type)
+void DiffViewer::draw_line(GUI::Painter& painter, StringView line, size_t y_offset, LinePosition line_position, LineType line_type)
 {
     size_t line_width = font().width(line);
 
