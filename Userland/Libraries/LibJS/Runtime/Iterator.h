@@ -35,4 +35,7 @@ private:
     IteratorRecord m_iterated; // [[Iterated]]
 };
 
+ThrowCompletionOr<IteratorRecord> get_iterator_direct(VM&, Object&);
+ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM&, Value);
+
 }
