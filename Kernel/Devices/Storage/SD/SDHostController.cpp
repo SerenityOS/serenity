@@ -136,7 +136,7 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
 
     // NOTE: The SDHC might already have been initialized (e.g. by the bootloader), let's reset it to a known configuration
     if (is_sd_clock_enabled())
-        sd_clock_stop();
+        TRY(sd_clock_stop());
     TRY(sd_clock_supply(400000));
 
     // PLSS 4.2.3: "Card Initialization and Identification Process"
@@ -459,12 +459,20 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
     return {};
 }
 
-void SDHostController::sd_clock_stop()
+ErrorOr<void> SDHostController::sd_clock_stop()
 {
     // SDHC 3.2.2: "SD Clock Stop Sequence"
 
+    // The Host Driver shall not clear SD Clock Enable while an SD transaction is executing on the SD Bus --
+    // namely, while either Command Inhibit (DAT) or Command Inhibit (CMD) in the Present State register
+    // is set to 1
+    if (!retry_with_timeout([&] { return !m_registers->present_state.command_inhibit_dat && !m_registers->present_state.command_inhibit_cmd; })) {
+        return EIO;
+    }
+
     // 1. Set SD Clock Enable in the Clock Control register to 0
     m_registers->host_configuration_1 = m_registers->host_configuration_1 & ~sd_clock_enable;
+    return {};
 }
 
 ErrorOr<void> SDHostController::sd_clock_frequency_change(u32 new_frequency)
@@ -472,7 +480,7 @@ ErrorOr<void> SDHostController::sd_clock_frequency_change(u32 new_frequency)
     // SDHC 3.2.3: "SD Clock Frequency Change Sequence"
 
     // 1. Execute the SD Clock Stop Sequence
-    sd_clock_stop();
+    TRY(sd_clock_stop());
 
     // 2. Execute the SD Clock Supply Sequence
     return sd_clock_supply(new_frequency);
