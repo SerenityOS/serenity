@@ -254,7 +254,7 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     else
         outln("\nTest failed: {}", input_path);
 
-    auto hunks = Diff::from_text(expectation, actual);
+    auto hunks = TRY(Diff::from_text(expectation, actual));
     auto out = TRY(Core::File::standard_output());
     for (auto const& hunk : hunks) {
         TRY(out->write_formatted("Hunk: "));
