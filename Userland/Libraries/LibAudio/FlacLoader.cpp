@@ -699,6 +699,10 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
         samples[i] <<= subframe_header.wasted_bits_per_sample;
     }
 
+    // Resamplers VERIFY that the sample rate is non-zero.
+    if (m_current_frame->sample_rate == 0 || m_sample_rate == 0)
+        return samples;
+
     ResampleHelper<i32> resampler(m_current_frame->sample_rate, m_sample_rate);
     return resampler.resample(samples);
 }
