@@ -57,8 +57,51 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     main_widget->set_fill_with_background_color(true);
 
     auto tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
+    TRY(create_general_tab(tab_widget, disable_rename));
 
-    auto general_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("General"_short_string));
+    auto button_widget = TRY(main_widget->try_add<GUI::Widget>());
+    TRY(button_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5));
+    button_widget->set_fixed_height(22);
+
+    TRY(button_widget->add_spacer());
+
+    auto ok_button = TRY(make_button("OK"_short_string, button_widget));
+    ok_button->on_click = [this](auto) {
+        if (apply_changes())
+            close();
+    };
+    auto cancel_button = TRY(make_button("Cancel"_short_string, button_widget));
+    cancel_button->on_click = [this](auto) {
+        close();
+    };
+
+    m_apply_button = TRY(make_button("Apply"_short_string, button_widget));
+    m_apply_button->on_click = [this](auto) { apply_changes(); };
+    m_apply_button->set_enabled(false);
+
+    if (S_ISDIR(m_old_mode)) {
+        m_directory_statistics_calculator = make_ref_counted<DirectoryStatisticsCalculator>(m_path);
+        m_directory_statistics_calculator->on_update = [this, origin_event_loop = &Core::EventLoop::current()](off_t total_size_in_bytes, size_t file_count, size_t directory_count) {
+            origin_event_loop->deferred_invoke([=, weak_this = make_weak_ptr<PropertiesWindow>()] {
+                if (auto strong_this = weak_this.strong_ref())
+                    strong_this->m_size_label->set_text(String::formatted("{}\n{} files, {} subdirectories", human_readable_size_long(total_size_in_bytes, UseThousandsSeparator::Yes), file_count, directory_count).release_value_but_fixme_should_propagate_errors());
+            });
+        };
+        m_directory_statistics_calculator->start();
+    }
+
+    m_on_escape = GUI::Action::create("Close properties", { Key_Escape }, [this](GUI::Action&) {
+        if (!m_apply_button->is_enabled())
+            close();
+    });
+
+    update();
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, bool disable_rename)
+{
+    auto general_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("General"_short_string));
     TRY(general_tab->load_from_gml(properties_window_general_tab_gml));
 
     m_icon = general_tab->find_descendant_of_type_named<GUI::ImageWidget>("icon");
@@ -150,43 +193,6 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     auto* others_execute = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_execute");
     TRY(setup_permission_checkboxes(*others_read, *others_write, *others_execute, { S_IROTH, S_IWOTH, S_IXOTH }, m_mode));
 
-    auto button_widget = TRY(main_widget->try_add<GUI::Widget>());
-    TRY(button_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5));
-    button_widget->set_fixed_height(22);
-
-    TRY(button_widget->add_spacer());
-
-    auto ok_button = TRY(make_button("OK"_short_string, button_widget));
-    ok_button->on_click = [this](auto) {
-        if (apply_changes())
-            close();
-    };
-    auto cancel_button = TRY(make_button("Cancel"_short_string, button_widget));
-    cancel_button->on_click = [this](auto) {
-        close();
-    };
-
-    m_apply_button = TRY(make_button("Apply"_short_string, button_widget));
-    m_apply_button->on_click = [this](auto) { apply_changes(); };
-    m_apply_button->set_enabled(false);
-
-    if (S_ISDIR(m_old_mode)) {
-        m_directory_statistics_calculator = make_ref_counted<DirectoryStatisticsCalculator>(m_path);
-        m_directory_statistics_calculator->on_update = [this, origin_event_loop = &Core::EventLoop::current()](off_t total_size_in_bytes, size_t file_count, size_t directory_count) {
-            origin_event_loop->deferred_invoke([=, weak_this = make_weak_ptr<PropertiesWindow>()] {
-                if (auto strong_this = weak_this.strong_ref())
-                    strong_this->m_size_label->set_text(String::formatted("{}\n{} files, {} subdirectories", human_readable_size_long(total_size_in_bytes, UseThousandsSeparator::Yes), file_count, directory_count).release_value_but_fixme_should_propagate_errors());
-            });
-        };
-        m_directory_statistics_calculator->start();
-    }
-
-    m_on_escape = GUI::Action::create("Close properties", { Key_Escape }, [this](GUI::Action&) {
-        if (!m_apply_button->is_enabled())
-            close();
-    });
-
-    update();
     return {};
 }
 
