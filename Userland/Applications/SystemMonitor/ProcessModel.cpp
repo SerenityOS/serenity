@@ -440,10 +440,25 @@ static DeprecatedString read_command_line(pid_t pid)
     return string_or_error.release_value();
 }
 
+ErrorOr<void> ProcessModel::initialize_process_statistics_file()
+{
+    if (!m_process_statistics_file || !m_process_statistics_file->is_open())
+        m_process_statistics_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
+
+    return {};
+}
+
 void ProcessModel::update()
 {
+    auto result = initialize_process_statistics_file();
+    if (result.is_error()) {
+        dbgln("Process model couldn't be updated: {}", result.release_error());
+        return;
+    }
+
+    auto all_processes = Core::ProcessStatisticsReader::get_all(*m_process_statistics_file, true);
+
     auto previous_tid_count = m_threads.size();
-    auto all_processes = Core::ProcessStatisticsReader::get_all(true);
 
     HashTable<int> live_tids;
     u64 total_time_scheduled_diff = 0;
