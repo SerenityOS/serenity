@@ -35,7 +35,7 @@ struct Range {
 
 static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
 {
-    Vector<DeprecatedString> tokens = list.split(',');
+    Vector<DeprecatedString> tokens = list.split(',', SplitBehavior::KeepEmpty);
 
     for (auto& token : tokens) {
         if (token.length() == 0) {
@@ -75,7 +75,7 @@ static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
 
             ranges.append({ index.value(), SIZE_MAX });
         } else {
-            auto range = token.split('-');
+            auto range = token.split('-', SplitBehavior::KeepEmpty);
             if (range.size() == 2) {
                 auto index1 = range[0].to_uint();
                 if (!index1.has_value()) {
