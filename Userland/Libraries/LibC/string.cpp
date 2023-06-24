@@ -151,6 +151,19 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 #endif
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/memccpy.html
+void* memccpy(void* dest_ptr, void const* src_ptr, int c, size_t n)
+{
+    u8* pd = static_cast<u8*>(dest_ptr);
+    u8 const* ps = static_cast<u8 const*>(src_ptr);
+    for (; n--; pd++, ps++) {
+        *pd = *ps;
+        if (*pd == static_cast<u8>(c))
+            return pd + 1;
+    }
+    return nullptr;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
 // For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
 #if ARCH(X86_64)

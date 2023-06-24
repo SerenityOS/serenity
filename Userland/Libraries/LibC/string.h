@@ -34,6 +34,7 @@ int strncmp(char const*, char const*, size_t);
 int memcmp(void const*, void const*, size_t);
 int timingsafe_memcmp(void const*, void const*, size_t);
 void* memcpy(void*, void const*, size_t);
+void* memccpy(void*, void const*, int, size_t);
 void* memmove(void*, void const*, size_t);
 void* memchr(void const*, int c, size_t);
 void* memmem(void const* haystack, size_t, void const* needle, size_t);
