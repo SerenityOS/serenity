@@ -40,8 +40,6 @@ private:
     Duration m_duration;
     Duration m_position;
 
-    size_t m_device_sample_rate { 0 };
-    size_t m_device_samples_per_buffer { 0 };
     size_t m_samples_to_load_per_buffer { 0 };
 };
 

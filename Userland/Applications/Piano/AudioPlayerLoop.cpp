@@ -17,7 +17,6 @@
 #include <AK/Time.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Queue.h>
-#include <LibAudio/Resampler.h>
 #include <LibAudio/Sample.h>
 #include <LibIPC/Connection.h>
 #include <LibThreading/Thread.h>
@@ -59,11 +58,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need
     , m_wav_writer(wav_writer)
 {
     m_audio_client = Audio::ConnectionToServer::try_create().release_value_but_fixme_should_propagate_errors();
-
-    auto target_sample_rate = m_audio_client->get_sample_rate();
-    if (target_sample_rate == 0)
-        target_sample_rate = Music::sample_rate;
-    m_resampler = Audio::ResampleHelper<DSP::Sample>(Music::sample_rate, target_sample_rate);
+    m_audio_client->set_self_sample_rate(sample_rate);
 
     MUST(m_pipeline_thread->set_priority(sched_get_priority_max(0)));
     m_pipeline_thread->start();
@@ -108,15 +103,12 @@ intptr_t AudioPlayerLoop::pipeline_thread_main()
 
 ErrorOr<void> AudioPlayerLoop::send_audio_to_server()
 {
-    TRY(m_resampler->try_resample_into_end(m_remaining_samples, m_buffer));
-
-    auto sample_rate = static_cast<double>(m_resampler->target());
     auto buffer_play_time_ns = 1'000'000'000.0 / (sample_rate / static_cast<double>(Audio::AUDIO_BUFFER_SIZE));
     auto good_sleep_time = Duration::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
 
     size_t start_of_chunk_to_write = 0;
-    while (start_of_chunk_to_write + Audio::AUDIO_BUFFER_SIZE <= m_remaining_samples.size()) {
-        auto const exact_chunk = m_remaining_samples.span().slice(start_of_chunk_to_write, Audio::AUDIO_BUFFER_SIZE);
+    while (start_of_chunk_to_write + Audio::AUDIO_BUFFER_SIZE <= m_buffer.size()) {
+        auto const exact_chunk = m_buffer.span().slice(start_of_chunk_to_write, Audio::AUDIO_BUFFER_SIZE);
         auto exact_chunk_array = Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE>::from_span(exact_chunk);
 
         TRY(m_audio_client->blocking_realtime_enqueue(exact_chunk_array, [&]() {
@@ -125,8 +117,8 @@ ErrorOr<void> AudioPlayerLoop::send_audio_to_server()
 
         start_of_chunk_to_write += Audio::AUDIO_BUFFER_SIZE;
     }
-    m_remaining_samples.remove(0, start_of_chunk_to_write);
-    VERIFY(m_remaining_samples.size() < Audio::AUDIO_BUFFER_SIZE);
+    // The buffer has to have been constructed with a size of an integer multiple of the audio buffer size.
+    VERIFY(start_of_chunk_to_write == m_buffer.size());
 
     return {};
 }

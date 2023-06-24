@@ -28,7 +28,7 @@ ErrorOr<NonnullOwnPtr<AudioCodecPlugin>> AudioCodecPlugin::create(NonnullRefPtr<
     return s_creation_hook(move(loader));
 }
 
-ErrorOr<FixedArray<Audio::Sample>> AudioCodecPlugin::read_samples_from_loader(Audio::Loader& loader, size_t samples_to_load, size_t device_sample_rate)
+ErrorOr<FixedArray<Audio::Sample>> AudioCodecPlugin::read_samples_from_loader(Audio::Loader& loader, size_t samples_to_load)
 {
     auto buffer_or_error = loader.get_more_samples(samples_to_load);
     if (buffer_or_error.is_error()) {
@@ -36,29 +36,25 @@ ErrorOr<FixedArray<Audio::Sample>> AudioCodecPlugin::read_samples_from_loader(Au
         return Error::from_string_literal("Error while loading samples");
     }
 
-    Audio::ResampleHelper<Audio::Sample> resampler(loader.sample_rate(), device_sample_rate);
-    return FixedArray<Audio::Sample>::create(resampler.resample(buffer_or_error.release_value()).span());
+    return buffer_or_error.release_value();
 }
 
-Duration AudioCodecPlugin::set_loader_position(Audio::Loader& loader, double position, Duration duration, size_t device_sample_rate)
+Duration AudioCodecPlugin::set_loader_position(Audio::Loader& loader, double position, Duration duration)
 {
     if (loader.total_samples() == 0)
-        return current_loader_position(loader, device_sample_rate);
+        return current_loader_position(loader);
 
     auto duration_value = static_cast<double>(duration.to_milliseconds()) / 1000.0;
     position = position / duration_value * static_cast<double>(loader.total_samples() - 1);
 
     loader.seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
-    return current_loader_position(loader, device_sample_rate);
+    return current_loader_position(loader);
 }
 
-Duration AudioCodecPlugin::current_loader_position(Audio::Loader const& loader, size_t device_sample_rate)
+Duration AudioCodecPlugin::current_loader_position(Audio::Loader const& loader)
 {
     auto samples_played = static_cast<double>(loader.loaded_samples());
     auto sample_rate = static_cast<double>(loader.sample_rate());
-
-    auto source_to_device_ratio = sample_rate / static_cast<double>(device_sample_rate);
-    samples_played *= source_to_device_ratio;
 
     return Duration::from_milliseconds(static_cast<i64>(samples_played / sample_rate * 1000.0));
 }

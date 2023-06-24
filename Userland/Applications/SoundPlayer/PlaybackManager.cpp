@@ -16,7 +16,6 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connec
             return;
         next_buffer();
     }).release_value_but_fixme_should_propagate_errors();
-    m_device_sample_rate = connection->get_sample_rate();
 }
 
 void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)
@@ -24,10 +23,9 @@ void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)
     stop();
     m_loader = loader;
     if (m_loader) {
+        m_connection->set_self_sample_rate(loader->sample_rate());
         m_total_length = m_loader->total_samples() / static_cast<float>(m_loader->sample_rate());
-        m_device_samples_per_buffer = PlaybackManager::buffer_size_ms / 1000.0f * m_device_sample_rate;
         m_samples_to_load_per_buffer = PlaybackManager::buffer_size_ms / 1000.0f * m_loader->sample_rate();
-        m_resampler = Audio::ResampleHelper<Audio::Sample>(m_loader->sample_rate(), m_device_sample_rate);
         m_timer->start();
     } else {
         m_timer->stop();
@@ -102,7 +100,7 @@ void PlaybackManager::next_buffer()
     if (m_paused)
         return;
 
-    while (m_connection->remaining_samples() < m_device_samples_per_buffer * always_enqueued_buffer_count) {
+    while (m_connection->remaining_samples() < m_samples_to_load_per_buffer * always_enqueued_buffer_count) {
         bool all_samples_loaded = (m_loader->loaded_samples() >= m_loader->total_samples());
         bool audio_server_done = (m_connection->remaining_samples() == 0);
 
@@ -121,12 +119,6 @@ void PlaybackManager::next_buffer()
         }
         auto buffer = buffer_or_error.release_value();
         m_current_buffer.swap(buffer);
-        VERIFY(m_resampler.has_value());
-
-        m_resampler->reset();
-        // FIXME: Handle OOM better.
-        auto resampled = MUST(FixedArray<Audio::Sample>::create(m_resampler->resample(move(m_current_buffer)).span()));
-        m_current_buffer.swap(resampled);
         MUST(m_connection->async_enqueue(m_current_buffer));
     }
 }
