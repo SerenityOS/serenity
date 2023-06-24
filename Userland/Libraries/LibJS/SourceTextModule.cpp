@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
@@ -690,7 +691,26 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         TRY(vm.push_execution_context(module_context, {}));
 
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
-        auto result = m_ecmascript_code->execute(vm.interpreter());
+        Completion result;
+
+        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+            auto maybe_executable = Bytecode::compile(vm, m_ecmascript_code, FunctionKind::Normal, "ShadowRealmEval"sv);
+            if (maybe_executable.is_error())
+                result = maybe_executable.release_error();
+            else {
+                auto executable = maybe_executable.release_value();
+
+                auto value_and_frame = bytecode_interpreter->run_and_return_frame(realm(), *executable, nullptr);
+                if (value_and_frame.value.is_error()) {
+                    result = value_and_frame.value.release_error();
+                } else {
+                    // Resulting value is in the accumulator.
+                    result = value_and_frame.frame->registers.at(0).value_or(js_undefined());
+                }
+            }
+        } else {
+            result = m_ecmascript_code->execute(vm.interpreter());
+        }
 
         // d. Let env be moduleContext's LexicalEnvironment.
         auto env = module_context.lexical_environment;
@@ -708,7 +728,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         // h. If result is an abrupt completion, then
         if (result.is_error()) {
             // i. Return ? result.
-            return result;
+            return result.release_error();
         }
     }
     // 10. Else,
