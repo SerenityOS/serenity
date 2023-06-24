@@ -1141,12 +1141,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         // 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
         //    not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
         // FIXME: Handle unbounded media resources.
-        auto duration = audio_track ? audio_track->duration() : video_track->duration();
-        set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
-
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.
         if (video_track && is<HTMLVideoElement>(*this)) {
+            auto duration = video_track ? video_track->duration() : audio_track->duration();
+            set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
+
             auto& video_element = verify_cast<HTMLVideoElement>(*this);
             video_element.set_video_width(video_track->pixel_width());
             video_element.set_video_height(video_track->pixel_height());
@@ -1154,6 +1154,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
             queue_a_media_element_task([this] {
                 dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::resize).release_value_but_fixme_should_propagate_errors());
             });
+        } else {
+            auto duration = audio_track ? audio_track->duration() : video_track->duration();
+            set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
         }
 
         // 6. Set the readyState attribute to HAVE_METADATA.
