@@ -2489,11 +2489,11 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
         outln("(Parameters)");
 
         for (auto& parameter : m_parameters) {
-            print_indent(indent + 2);
-            if (parameter.is_rest)
-                out("...");
             parameter.binding.visit(
                 [&](DeprecatedFlyString const& name) {
+                    print_indent(indent + 2);
+                    if (parameter.is_rest)
+                        out("...");
                     outln("{}", name);
                 },
                 [&](BindingPattern const& pattern) {
