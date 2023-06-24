@@ -240,6 +240,10 @@ private:
 
     int thread_model_row(Thread const& thread) const;
 
+    ErrorOr<void> initialize_process_statistics_file();
+
+    OwnPtr<Core::File> m_process_statistics_file;
+
     // The thread list contains the same threads as the Process structs.
     HashMap<int, NonnullRefPtr<Thread>> m_threads;
     Vector<NonnullOwnPtr<Process>> m_processes;
