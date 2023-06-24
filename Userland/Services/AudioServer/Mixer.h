@@ -17,6 +17,7 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibAudio/Queue.h>
+#include <LibAudio/Resampler.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -42,7 +43,7 @@ public:
     explicit ClientAudioStream(ConnectionFromClient&);
     ~ClientAudioStream() = default;
 
-    bool get_next_sample(Audio::Sample& sample)
+    bool get_next_sample(Audio::Sample& sample, u32 audiodevice_sample_rate)
     {
         // Note: Even though we only check client state here, we will probably close the client much earlier.
         if (!is_connected())
@@ -60,7 +61,19 @@ public:
 
                 return false;
             }
-            m_current_audio_chunk = result.release_value();
+            // FIXME: Our resampler and the way we resample here are bad.
+            //        Ideally, we should both do perfect band-corrected resampling,
+            //        as well as carry resampling state over between buffers.
+            auto attempted_resample = Audio::ResampleHelper<Audio::Sample> {
+                m_sample_rate == 0 ? audiodevice_sample_rate : m_sample_rate, audiodevice_sample_rate
+            }
+                                          .try_resample(result.release_value());
+            if (attempted_resample.is_error())
+                return false;
+
+            // If the sample rate changes underneath us, we will still play the existing buffer unchanged until we're done.
+            // This is not a significant problem since the buffers are very small (~100 samples or less).
+            m_current_audio_chunk = attempted_resample.release_value();
             m_in_chunk_location = 0;
         }
 
@@ -90,14 +103,21 @@ public:
     void set_volume(double const volume) { m_volume = volume; }
     bool is_muted() const { return m_muted; }
     void set_muted(bool muted) { m_muted = muted; }
+    u32 sample_rate() const { return m_sample_rate; }
+    void set_sample_rate(u32 sample_rate)
+    {
+        dbgln_if(AUDIO_DEBUG, "queue {} got sample rate {} Hz", m_client->client_id(), sample_rate);
+        m_sample_rate = sample_rate;
+    }
 
 private:
     OwnPtr<Audio::AudioQueue> m_buffer;
-    Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE> m_current_audio_chunk;
+    Vector<Audio::Sample> m_current_audio_chunk;
     size_t m_in_chunk_location;
 
     bool m_paused { true };
     bool m_muted { false };
+    u32 m_sample_rate;
 
     WeakPtr<ConnectionFromClient> m_client;
     FadingProperty<double> m_volume { 1 };
@@ -137,6 +157,7 @@ private:
     Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
 
     NonnullOwnPtr<Core::File> m_device;
+    mutable Optional<u32> m_cached_sample_rate {};
 
     NonnullRefPtr<Threading::Thread> m_sound_thread;
 

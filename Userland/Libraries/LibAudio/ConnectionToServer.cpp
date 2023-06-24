@@ -16,6 +16,7 @@
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/Event.h>
 #include <LibThreading/Mutex.h>
+#include <Userland/Services/AudioServer/AudioClientEndpoint.h>
 #include <sched.h>
 #include <time.h>
 
@@ -37,6 +38,7 @@ ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::LocalSocket> socket)
         return (intptr_t) nullptr;
     }))
 {
+    update_good_sleep_time();
     async_pause_playback();
     set_buffer(*m_buffer);
 }
@@ -64,12 +66,12 @@ ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
 {
     if (!m_background_audio_enqueuer->is_started()) {
         m_background_audio_enqueuer->start();
+        // Wait until the enqueuer has constructed its loop. A pseudo-spinlock is fine since this happens as soon as the other thread gets scheduled.
         while (!m_enqueuer_loop)
             usleep(1);
         TRY(m_background_audio_enqueuer->set_priority(THREAD_PRIORITY_MAX));
     }
 
-    update_good_sleep_time();
     m_user_queue->append(move(samples));
     // Wake the background thread to make sure it starts enqueuing audio.
     m_enqueuer_loop->post_event(*this, make<Core::CustomEvent>(0));
@@ -86,10 +88,16 @@ void ConnectionToServer::clear_client_buffer()
 
 void ConnectionToServer::update_good_sleep_time()
 {
-    auto sample_rate = static_cast<double>(get_sample_rate());
+    auto sample_rate = static_cast<double>(get_self_sample_rate());
     auto buffer_play_time_ns = 1'000'000'000.0 / (sample_rate / static_cast<double>(AUDIO_BUFFER_SIZE));
     // A factor of 1 should be good for now.
     m_good_sleep_time = Duration::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
+}
+
+void ConnectionToServer::set_self_sample_rate(u32 sample_rate)
+{
+    IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>::set_self_sample_rate(sample_rate);
+    update_good_sleep_time();
 }
 
 // Non-realtime audio writing loop

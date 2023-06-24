@@ -29,7 +29,6 @@ public:
     bool toggle_pause();
     void set_loader(NonnullRefPtr<Audio::Loader>&&);
     RefPtr<Audio::Loader> loader() const { return m_loader; }
-    size_t device_sample_rate() const { return m_device_sample_rate; }
 
     bool is_paused() const { return m_paused; }
     float total_length() const { return m_total_length; }
@@ -50,13 +49,10 @@ private:
     bool m_paused { true };
     bool m_loop = { false };
     float m_total_length { 0 };
-    size_t m_device_sample_rate { 44100 };
-    size_t m_device_samples_per_buffer { 0 };
     size_t m_samples_to_load_per_buffer { 0 };
     RefPtr<Audio::Loader> m_loader { nullptr };
     NonnullRefPtr<Audio::ConnectionToServer> m_connection;
     FixedArray<Audio::Sample> m_current_buffer;
-    Optional<Audio::ResampleHelper<Audio::Sample>> m_resampler;
     RefPtr<Core::Timer> m_timer;
 
     // Controls the GUI update rate. A smaller value makes the visualizations nicer.

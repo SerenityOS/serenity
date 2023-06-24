@@ -39,6 +39,7 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> d
 NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ConnectionFromClient& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));
+    queue->set_sample_rate(audiodevice_get_sample_rate());
     {
         Threading::MutexLocker const locker(m_pending_mutex);
         m_pending_mixing.append(*queue);
@@ -83,7 +84,7 @@ void Mixer::mix()
 
             for (auto& mixed_sample : mixed_buffer) {
                 Audio::Sample sample;
-                if (!queue->get_next_sample(sample))
+                if (!queue->get_next_sample(sample, audiodevice_get_sample_rate()))
                     break;
                 if (queue->is_muted())
                     continue;
@@ -155,15 +156,22 @@ int Mixer::audiodevice_set_sample_rate(u32 sample_rate)
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_SET_SAMPLE_RATE, sample_rate);
     if (code != 0)
         dbgln("Error while setting sample rate to {}: ioctl error: {}", sample_rate, strerror(errno));
+    // Note that the effective sample rate may be different depending on device restrictions.
+    // Therefore, we delete our cache, but for efficency don't immediately read the sample rate back.
+    m_cached_sample_rate = {};
     return code;
 }
 
 u32 Mixer::audiodevice_get_sample_rate() const
 {
+    if (m_cached_sample_rate.has_value())
+        return m_cached_sample_rate.value();
     u32 sample_rate = 0;
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_SAMPLE_RATE, &sample_rate);
     if (code != 0)
         dbgln("Error while getting sample rate: ioctl error: {}", strerror(errno));
+    else
+        m_cached_sample_rate = sample_rate;
     return sample_rate;
 }
 

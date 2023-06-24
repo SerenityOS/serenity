@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibAudio/Queue.h>
 #include <LibGfx/Color.h>
 
 namespace Music {
@@ -23,8 +24,7 @@ struct Sample {
     i16 right;
 };
 
-// HACK: needs to increase with device sample rate, but all of the sample_count stuff is static for now
-constexpr int sample_count = 1 << 10;
+constexpr int sample_count = Audio::AUDIO_BUFFER_SIZE * 10;
 
 constexpr double sample_rate = 44100;
 

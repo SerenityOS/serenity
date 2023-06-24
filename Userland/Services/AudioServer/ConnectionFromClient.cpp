@@ -40,8 +40,11 @@ void ConnectionFromClient::set_buffer(Audio::AudioQueue const& buffer)
         did_misbehave("Received an invalid buffer");
         return;
     }
-    if (!m_queue)
+    if (!m_queue) {
         m_queue = m_mixer.create_queue(*this);
+        if (m_saved_sample_rate.has_value())
+            m_queue->set_sample_rate(m_saved_sample_rate.release_value());
+    }
 
     // This is ugly but we know nobody uses the buffer afterwards anyways.
     m_queue->set_buffer(make<Audio::AudioQueue>(move(const_cast<Audio::AudioQueue&>(buffer))));
@@ -52,9 +55,19 @@ void ConnectionFromClient::did_change_client_volume(Badge<ClientAudioStream>, do
     async_client_volume_changed(volume);
 }
 
-Messages::AudioServer::GetSampleRateResponse ConnectionFromClient::get_sample_rate()
+Messages::AudioServer::GetSelfSampleRateResponse ConnectionFromClient::get_self_sample_rate()
 {
-    return { m_mixer.audiodevice_get_sample_rate() };
+    if (m_queue)
+        return { m_queue->sample_rate() };
+    // Fall back to device sample rate since that would mean no resampling.
+    return m_mixer.audiodevice_get_sample_rate();
+}
+void ConnectionFromClient::set_self_sample_rate(u32 sample_rate)
+{
+    if (m_queue)
+        m_queue->set_sample_rate(sample_rate);
+    else
+        m_saved_sample_rate = sample_rate;
 }
 
 Messages::AudioServer::GetSelfVolumeResponse ConnectionFromClient::get_self_volume()

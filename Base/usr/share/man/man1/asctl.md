@@ -30,7 +30,7 @@ There are two commands available: `get` reports the state of audio variables, an
 The available variables are:
 * `(v)olume`: Audio server volume, in percent. Integer value.
 * `(m)ute`: Mute state. Boolean value, may be set with `0`, `false` or `1`, `true`.
-* `sample(r)ate`: Sample rate of the sound card. **Attention:** Most audio applications need to be restarted after changing the sample rate. Integer value.
+* `sample(r)ate`: Sample rate of the sound card. Integer value.
 
 Both commands and arguments can be abbreviated: Commands by their first letter, arguments by the letter in parenthesis.
 

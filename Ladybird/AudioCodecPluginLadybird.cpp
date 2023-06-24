@@ -163,7 +163,7 @@ private:
 
                 case AudioTask::Type::Seek:
                     VERIFY(task.data.has_value());
-                    m_position = Web::Platform::AudioCodecPlugin::set_loader_position(m_loader, *task.data, m_duration, audio_output->format().sampleRate());
+                    m_position = Web::Platform::AudioCodecPlugin::set_loader_position(m_loader, *task.data, m_duration);
 
                     if (paused == Paused::Yes)
                         Q_EMIT playback_position_updated(m_position);
@@ -211,10 +211,10 @@ private:
         auto channel_count = audio_output.format().channelCount();
         auto samples_to_load = bytes_available / bytes_per_sample / channel_count;
 
-        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, samples_to_load, audio_output.format().sampleRate()));
+        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, samples_to_load));
         enqueue_samples(audio_output, io_device, move(samples));
 
-        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader, audio_output.format().sampleRate());
+        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader);
         return Paused::No;
     }
 
