@@ -57,7 +57,10 @@ void Mixer::mix()
         {
             Threading::MutexLocker const locker(m_pending_mutex);
             // While we have nothing to mix, wait on the condition.
-            m_mixing_necessary.wait_while([this, &active_mix_queues]() { return m_pending_mixing.is_empty() && active_mix_queues.is_empty(); });
+            // HACK: HDA is currently broken when we don't constantly feed it a buffer stream.
+            //       Commenting out this line makes it "just work" for the time being. Please add this line back once the issue is fixed.
+            //       See:
+            // m_mixing_necessary.wait_while([this, &active_mix_queues]() { return m_pending_mixing.is_empty() && active_mix_queues.is_empty(); });
             if (!m_pending_mixing.is_empty()) {
                 active_mix_queues.extend(move(m_pending_mixing));
                 m_pending_mixing.clear();
