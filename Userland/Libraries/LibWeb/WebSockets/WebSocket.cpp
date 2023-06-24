@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,50 +51,103 @@ WebSocketClientManager::WebSocketClientManager() = default;
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, String const& url, Optional<Variant<String, Vector<String>>> const& protocols)
 {
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-    AK::URL url_record(url);
+    auto& vm = realm.vm();
+
+    auto web_socket = MUST_OR_THROW_OOM(realm.heap().allocate<WebSocket>(realm, realm));
+    auto& relevant_settings_object = HTML::relevant_settings_object(*web_socket);
+
+    // 1. Let baseURL be this's relevant settings object's API base URL.
+    auto base_url = relevant_settings_object.api_base_url();
+
+    // 2. Let urlRecord be the result of applying the URL parser to url with baseURL.
+    // FIXME: This should call an implementation of https://url.spec.whatwg.org/#concept-url-parser, currently it calls https://url.spec.whatwg.org/#concept-basic-url-parser
+    auto url_record = base_url.complete_url(url);
+
+    // 3. If urlRecord is failure, then throw a "SyntaxError" DOMException.
     if (!url_record.is_valid())
         return WebIDL::SyntaxError::create(realm, "Invalid URL");
-    if (!url_record.scheme().is_one_of("ws", "wss"))
-        return WebIDL::SyntaxError::create(realm, "Invalid protocol");
+
+    // 4. If urlRecord’s scheme is "http", then set urlRecord’s scheme to "ws".
+    if (url_record.scheme() == "http"sv)
+        url_record.set_scheme("ws"sv);
+    // 5. Otherwise, if urlRecord’s scheme is "https", set urlRecord’s scheme to "wss".
+    else if (url_record.scheme() == "https"sv)
+        url_record.set_scheme("wss"sv);
+
+    // 6. If urlRecord’s scheme is not "ws" or "wss", then throw a "SyntaxError" DOMException.
+    if (!url_record.scheme().is_one_of("ws"sv, "wss"sv))
+        return WebIDL::SyntaxError::create(realm, "Invalid protocol"sv);
+
+    // 7. If urlRecord’s fragment is non-null, then throw a "SyntaxError" DOMException.
     if (!url_record.fragment().is_empty())
-        return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid");
+        return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid"sv);
+
     Vector<String> protocols_sequence;
-    if (protocols.has_value()) {
-        // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
-        if (protocols.value().has<String>())
-            protocols_sequence = { protocols.value().get<String>() };
-        else
-            protocols_sequence = protocols.value().get<Vector<String>>();
-        // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-        auto sorted_protocols = protocols_sequence;
-        quick_sort(sorted_protocols);
-        for (size_t i = 0; i < sorted_protocols.size(); i++) {
-            // https://datatracker.ietf.org/doc/html/rfc6455
-            // The elements that comprise this value MUST be non-empty strings with characters in the range U+0021 to U+007E not including
-            // separator characters as defined in [RFC2616] and MUST all be unique strings.
-            auto protocol = sorted_protocols[i];
-            if (i < sorted_protocols.size() - 1 && protocol == sorted_protocols[i + 1])
-                return WebIDL::SyntaxError::create(realm, "Found a duplicate protocol name in the specified list");
-            for (auto character : protocol.code_points()) {
-                if (character < '\x21' || character > '\x7E')
-                    return WebIDL::SyntaxError::create(realm, "Found invalid character in subprotocol name");
-            }
+    // 8. If protocols is a string, set protocols to a sequence consisting of just that string.
+    if (protocols.has_value() && protocols->has<String>())
+        protocols_sequence = { protocols.value().get<String>() };
+    else if (protocols.has_value() && protocols->has<Vector<String>>())
+        protocols_sequence = protocols.value().get<Vector<String>>();
+    else
+        protocols_sequence = {};
+
+    // 9. If any of the values in protocols occur more than once or otherwise fail to match the requirements for elements that comprise
+    //    the value of `Sec-WebSocket-Protocol` fields as defined by The WebSocket protocol, then throw a "SyntaxError" DOMException. [WSP]
+    auto sorted_protocols = protocols_sequence;
+    quick_sort(sorted_protocols);
+    for (size_t i = 0; i < sorted_protocols.size(); i++) {
+        // https://datatracker.ietf.org/doc/html/rfc6455
+        // The elements that comprise this value MUST be non-empty strings with characters in the range U+0021 to U+007E not including
+        // separator characters as defined in [RFC2616] and MUST all be unique strings.
+        auto protocol = sorted_protocols[i];
+        if (i < sorted_protocols.size() - 1 && protocol == sorted_protocols[i + 1])
+            return WebIDL::SyntaxError::create(realm, "Found a duplicate protocol name in the specified list"sv);
+        for (auto code_point : protocol.code_points()) {
+            if (code_point < '\x21' || code_point > '\x7E')
+                return WebIDL::SyntaxError::create(realm, "Found invalid character in subprotocol name"sv);
         }
     }
-    return MUST_OR_THROW_OOM(realm.heap().allocate<WebSocket>(realm, window, url_record, protocols_sequence));
+
+    // 10. Set this's url to urlRecord.
+    web_socket->set_url(url_record);
+
+    // 11. Let client be this’s relevant settings object.
+    auto& client = relevant_settings_object;
+
+    // FIXME: 12. Run this step in parallel:
+    //     1. Establish a WebSocket connection given urlRecord, protocols, and client. [FETCH]
+    TRY_OR_THROW_OOM(vm, web_socket->establish_web_socket_connection(url_record, protocols_sequence, client));
+
+    return web_socket;
 }
 
-WebSocket::WebSocket(HTML::Window& window, AK::URL& url, Vector<String> const& protocols)
-    : EventTarget(window.realm())
-    , m_window(window)
+WebSocket::WebSocket(JS::Realm& realm)
+    : EventTarget(realm)
+{
+}
+
+WebSocket::~WebSocket() = default;
+
+JS::ThrowCompletionOr<void> WebSocket::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"));
+
+    return {};
+}
+
+ErrorOr<void> WebSocket::establish_web_socket_connection(AK::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
-    auto origin_string = m_window->associated_document().origin().serialize();
+
+    auto& window = verify_cast<HTML::Window>(client.global_object());
+    auto origin_string = window.associated_document().origin().serialize();
+
     Vector<DeprecatedString> protcol_deprecated_strings;
-    for (auto protocol : protocols)
-        protcol_deprecated_strings.append(protocol.to_deprecated_string());
-    m_websocket = WebSocketClientManager::the().connect(url, origin_string, protcol_deprecated_strings);
+    for (auto const& protocol : protocols)
+        TRY(protcol_deprecated_strings.try_append(protocol.to_deprecated_string()));
+
+    m_websocket = WebSocketClientManager::the().connect(url_record, origin_string, protcol_deprecated_strings);
     m_websocket->on_open = [weak_this = make_weak_ptr<WebSocket>()] {
         if (!weak_this)
             return;
@@ -118,22 +172,8 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url, Vector<String> const& p
         auto& websocket = const_cast<WebSocket&>(*weak_this);
         websocket.on_error();
     };
-}
-
-WebSocket::~WebSocket() = default;
-
-JS::ThrowCompletionOr<void> WebSocket::initialize(JS::Realm& realm)
-{
-    MUST_OR_THROW_OOM(Base::initialize(realm));
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"));
 
     return {};
-}
-
-void WebSocket::visit_edges(Cell::Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-readystate
