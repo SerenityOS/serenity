@@ -158,7 +158,7 @@ private:
 
     void timer_callback();
     // This must be called with m_demuxer_mutex locked!
-    Optional<Duration> seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample = OptionalNone());
+    DecoderErrorOr<Optional<Duration>> seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample = OptionalNone());
 
     Optional<FrameQueueItem> dequeue_one_frame();
     void set_state_update_timer(int delay_ms);
