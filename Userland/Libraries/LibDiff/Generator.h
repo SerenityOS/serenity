@@ -7,9 +7,10 @@
 #pragma once
 
 #include "Hunks.h"
+#include <AK/Error.h>
 
 namespace Diff {
 
-Vector<Hunk> from_text(StringView old_text, StringView new_text);
+ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text);
 
 }

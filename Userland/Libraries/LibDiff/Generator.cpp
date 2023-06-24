@@ -8,7 +8,7 @@
 
 namespace Diff {
 
-Vector<Hunk> from_text(StringView old_text, StringView new_text)
+ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
 {
     auto old_lines = old_text.lines();
     auto new_lines = new_text.lines();
@@ -33,7 +33,7 @@ Vector<Hunk> from_text(StringView old_text, StringView new_text)
     };
 
     auto dp_matrix = Vector<Cell>();
-    dp_matrix.resize((old_lines.size() + 1) * (new_lines.size() + 1));
+    TRY(dp_matrix.try_resize((old_lines.size() + 1) * (new_lines.size() + 1)));
 
     auto dp = [&dp_matrix, width = old_lines.size() + 1](size_t i, size_t j) -> Cell& {
         return dp_matrix[i + width * j];
@@ -66,27 +66,31 @@ Vector<Hunk> from_text(StringView old_text, StringView new_text)
     Hunk cur_hunk;
     bool in_hunk = false;
 
-    auto update_hunk = [&](size_t i, size_t j, Direction direction) {
+    auto update_hunk = [&](size_t i, size_t j, Direction direction) -> ErrorOr<void> {
         if (!in_hunk) {
             in_hunk = true;
             cur_hunk = { i, j, {}, {} };
         }
         if (direction == Direction::Down) {
-            cur_hunk.added_lines.append(new_lines[j]);
+            TRY(cur_hunk.added_lines.try_append(new_lines[j]));
         } else if (direction == Direction::Right) {
-            cur_hunk.removed_lines.append(old_lines[i]);
+            TRY(cur_hunk.removed_lines.try_append(old_lines[i]));
         }
+
+        return {};
     };
 
-    auto flush_hunk = [&]() {
+    auto flush_hunk = [&]() -> ErrorOr<void> {
         if (in_hunk) {
             if (cur_hunk.added_lines.size() > 0)
                 cur_hunk.target_start_line++;
             if (cur_hunk.removed_lines.size() > 0)
                 cur_hunk.original_start_line++;
-            hunks.append(cur_hunk);
+            TRY(hunks.try_append(cur_hunk));
             in_hunk = false;
         }
+
+        return {};
     };
 
     size_t i = 0;
@@ -95,28 +99,28 @@ Vector<Hunk> from_text(StringView old_text, StringView new_text)
     while (i < old_lines.size() && j < new_lines.size()) {
         auto& cell = dp(i, j);
         if (cell.direction == Direction::Down) {
-            update_hunk(i, j, cell.direction);
+            TRY(update_hunk(i, j, cell.direction));
             ++j;
         } else if (cell.direction == Direction::Right) {
-            update_hunk(i, j, cell.direction);
+            TRY(update_hunk(i, j, cell.direction));
             ++i;
         } else {
             ++i;
             ++j;
-            flush_hunk();
+            TRY(flush_hunk());
         }
     }
 
     while (i < old_lines.size()) {
-        update_hunk(i, new_lines.is_empty() ? 0 : new_lines.size() - 1, Direction::Right); // Remove a line
+        TRY(update_hunk(i, new_lines.is_empty() ? 0 : new_lines.size() - 1, Direction::Right)); // Remove a line
         ++i;
     }
     while (j < new_lines.size()) {
-        update_hunk(old_lines.is_empty() ? 0 : old_lines.size() - 1, j, Direction::Down); // Add a line
+        TRY(update_hunk(old_lines.is_empty() ? 0 : old_lines.size() - 1, j, Direction::Down)); // Add a line
         ++j;
     }
 
-    flush_hunk();
+    TRY(flush_hunk());
 
     return hunks;
 }
