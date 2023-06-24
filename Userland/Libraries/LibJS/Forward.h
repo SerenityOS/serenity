@@ -183,6 +183,7 @@ struct ImportEntry;
 class ImportStatement;
 class Interpreter;
 class Intrinsics;
+struct IteratorRecord;
 class MetaProperty;
 class Module;
 struct ModuleRequest;
