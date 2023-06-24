@@ -2,6 +2,7 @@
 
 import os
 import re
+import stat
 import sys
 import subprocess
 from pathlib import Path
@@ -60,7 +61,7 @@ def read_port_table(filename):
 
 
 def read_port_dirs():
-    """Check Ports directory for unexpected files and check each port has a package.sh file.
+    """Check Ports directory for unexpected files and check each port has an executable package.sh file.
 
     Returns:
         list: all ports (set), no errors encountered (bool)
@@ -81,6 +82,9 @@ def read_port_dirs():
             print(f"Ports/{entry}/ is missing its package.sh?!")
             all_good = False
             continue
+        if not os.stat(entry + '/package.sh')[stat.ST_MODE] & stat.S_IXUSR:
+            print(f"Ports/{entry}/package.sh is not executable?!")
+            all_good = False
         ports[entry] = get_port_properties(entry)
 
     return ports, all_good
