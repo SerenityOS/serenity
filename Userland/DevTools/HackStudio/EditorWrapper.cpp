@@ -88,7 +88,7 @@ void EditorWrapper::save()
 void EditorWrapper::update_diff()
 {
     if (m_git_repo) {
-        m_hunks = Diff::parse_hunks(m_git_repo->unstaged_diff(filename()).value());
+        m_hunks = Diff::parse_hunks(m_git_repo->unstaged_diff(filename()).value()).release_value_but_fixme_should_propagate_errors();
         editor().update_git_diff_indicators().release_value_but_fixme_should_propagate_errors();
     }
 }
