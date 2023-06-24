@@ -134,11 +134,13 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
     outln();
 }
 
-static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter)
+static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter, bool only_print_delimited_lines)
 {
     auto string_split = DeprecatedString(line).split(delimiter, SplitBehavior::KeepEmpty);
     if (string_split.size() == 1) {
-        outln("{}", line);
+        if (!only_print_delimited_lines)
+            outln("{}", line);
+
         return;
     }
 
@@ -157,6 +159,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString byte_list = "";
     DeprecatedString fields_list = "";
     DeprecatedString delimiter = "\t";
+    bool only_print_delimited_lines = false;
 
     Vector<StringView> files;
 
@@ -165,6 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
     args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list");
     args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter");
+    args_parser.add_option(only_print_delimited_lines, "suppress lines which don't contain any field delimiter characters", "only-delimited", 's');
     args_parser.parse(arguments);
 
     bool selected_bytes = (byte_list != "");
@@ -249,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (selected_bytes) {
                 process_line_bytes(line, disjoint_ranges);
             } else if (selected_fields) {
-                process_line_fields(line, disjoint_ranges, delimiter[0]);
+                process_line_fields(line, disjoint_ranges, delimiter[0], only_print_delimited_lines);
             } else {
                 VERIFY_NOT_REACHED();
             }
