@@ -29,6 +29,7 @@ public:
     NonnullGCPtr<Object> async_from_sync_iterator_prototype() { return *m_async_from_sync_iterator_prototype; }
     NonnullGCPtr<Object> async_generator_prototype() { return *m_async_generator_prototype; }
     NonnullGCPtr<Object> generator_prototype() { return *m_generator_prototype; }
+    NonnullGCPtr<Object> wrap_for_valid_iterator_prototype() { return *m_wrap_for_valid_iterator_prototype; }
 
     // Alias for the AsyncGenerator Prototype Object used by the spec (%AsyncGeneratorFunction.prototype.prototype%)
     NonnullGCPtr<Object> async_generator_function_prototype_prototype() { return *m_async_generator_prototype; }
@@ -128,6 +129,7 @@ private:
     GCPtr<Object> m_async_from_sync_iterator_prototype;
     GCPtr<Object> m_async_generator_prototype;
     GCPtr<Object> m_generator_prototype;
+    GCPtr<Object> m_wrap_for_valid_iterator_prototype;
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
     GCPtr<Object> m_intl_segments_prototype;
