@@ -40,8 +40,8 @@ public:
     explicit FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~FlacLoaderPlugin() override = default;
 
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(StringView path);
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(Bytes buffer);
+    static bool sniff(SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create(NonnullOwnPtr<SeekableStream>);
 
     virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 
