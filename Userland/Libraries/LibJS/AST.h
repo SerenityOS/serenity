@@ -470,6 +470,8 @@ public:
 
     virtual void dump(int indent) const override;
 
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
     bool has_export(DeprecatedFlyString const& export_name) const;
 
     bool has_statement() const { return m_statement; }
