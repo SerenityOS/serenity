@@ -272,6 +272,10 @@ public:
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
 
+    // Execute a specific AST node either in AST or BC interpreter, depending on which one is enabled by default.
+    // NOTE: This is meant as a temporary stopgap until everything is bytecode.
+    ThrowCompletionOr<Value> execute_ast_node(ASTNode const&);
+
 private:
     using ErrorMessages = AK::Array<String, to_underlying(ErrorMessage::__Count)>;
 
