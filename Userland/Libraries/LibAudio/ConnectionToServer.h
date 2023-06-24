@@ -57,15 +57,11 @@ public:
 
     virtual void die() override;
 
-    Function<void(bool muted)> on_main_mix_muted_state_change;
-    Function<void(double volume)> on_main_mix_volume_change;
     Function<void(double volume)> on_client_volume_change;
 
 private:
     ConnectionToServer(NonnullOwnPtr<Core::LocalSocket>);
 
-    virtual void main_mix_muted_state_changed(bool) override;
-    virtual void main_mix_volume_changed(double) override;
     virtual void client_volume_changed(double) override;
 
     // We use this to perform the audio enqueuing on the background thread's event loop

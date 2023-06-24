@@ -3,18 +3,12 @@
 
 endpoint AudioServer
 {
-    // Mixer functions
-    set_main_mix_muted(bool muted) => ()
-    is_main_mix_muted() => (bool muted)
     set_self_muted(bool muted) => ()
     is_self_muted() => (bool muted)
-    get_main_mix_volume() => (double volume)
-    set_main_mix_volume(double volume) => ()
     get_self_volume() => (double volume)
     set_self_volume(double volume) => ()
 
-    // Audio device
-    set_sample_rate(u32 sample_rate) => ()
+    // FIXME: Decouple client sample rate from device sample rate, then remove this API
     get_sample_rate() => (u32 sample_rate)
 
     // Buffer playback
