@@ -241,8 +241,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = TRY(Core::InputBufferedFile::create(maybe_file.release_value()));
 
         Array<u8, PAGE_SIZE> buffer;
-        while (!file->is_eof()) {
+        while (TRY(file->can_read_line())) {
             auto line = TRY(file->read_line(buffer));
+            if (line == "\n" && TRY(file->can_read_line()))
+                break;
 
             if (selected_bytes) {
                 process_line_bytes(line, disjoint_ranges);
