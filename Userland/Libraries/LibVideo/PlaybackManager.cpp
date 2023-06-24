@@ -173,10 +173,10 @@ bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
     return false;
 }
 
-void PlaybackManager::dispatch_state_change()
+void PlaybackManager::dispatch_state_change(PlaybackState old_state) const
 {
     if (on_playback_state_change)
-        on_playback_state_change();
+        on_playback_state_change(old_state);
 }
 
 void PlaybackManager::timer_callback()
@@ -349,6 +349,7 @@ ErrorOr<void> PlaybackManager::PlaybackStateHandler::stop()
 template<class T, class... Args>
 ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_this(Args... args)
 {
+    auto old_state = get_state();
     OwnPtr<PlaybackStateHandler> temp_handler = TRY(try_make<T>(m_manager, args...));
     m_manager.m_playback_handler.swap(temp_handler);
 #if PLAYBACK_MANAGER_DEBUG
@@ -356,7 +357,7 @@ ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_
     dbgln("Changing state from {} to {}", temp_handler->name(), m_manager.m_playback_handler->name());
 #endif
     TRY(m_manager.m_playback_handler->on_enter());
-    m_manager.dispatch_state_change();
+    m_manager.dispatch_state_change(old_state);
     return {};
 }
 
@@ -388,14 +389,14 @@ protected:
     ErrorOr<void> play() override
     {
         m_playing = true;
-        manager().dispatch_state_change();
+        manager().dispatch_state_change(get_state());
         return {};
     }
     bool is_playing() const override { return m_playing; }
     ErrorOr<void> pause() override
     {
         m_playing = false;
-        manager().dispatch_state_change();
+        manager().dispatch_state_change(get_state());
         return {};
     }
 

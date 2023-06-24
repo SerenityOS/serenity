@@ -138,7 +138,7 @@ public:
     Duration duration();
 
     Function<void(RefPtr<Gfx::Bitmap>)> on_video_frame;
-    Function<void()> on_playback_state_change;
+    Function<void(PlaybackState)> on_playback_state_change;
     Function<void(DecoderError)> on_decoder_error;
     Function<void(Error)> on_fatal_playback_error;
 
@@ -169,7 +169,7 @@ private:
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
     // Returns whether we changed playback states. If so, any PlaybackStateHandler processing must cease.
     [[nodiscard]] bool dispatch_frame_queue_item(FrameQueueItem&&);
-    void dispatch_state_change();
+    void dispatch_state_change(PlaybackState) const;
     void dispatch_fatal_error(Error);
 
     Duration m_last_present_in_media_time = Duration::zero();

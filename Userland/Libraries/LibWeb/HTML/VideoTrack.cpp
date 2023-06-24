@@ -38,7 +38,7 @@ VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
         m_media_element->set_current_playback_position(playback_position);
     };
 
-    m_playback_manager->on_playback_state_change = [this]() {
+    m_playback_manager->on_playback_state_change = [this](Video::PlaybackState) {
         switch (m_playback_manager->get_state()) {
         case Video::PlaybackState::Stopped: {
             auto playback_position_ms = static_cast<double>(duration().to_milliseconds());

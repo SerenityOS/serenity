@@ -149,7 +149,7 @@ void VideoPlayerWidget::open_file(FileSystemAccessClient::File file)
         set_current_timestamp(m_playback_manager->current_playback_time());
     };
 
-    m_playback_manager->on_playback_state_change = [this]() {
+    m_playback_manager->on_playback_state_change = [this](Video::PlaybackState) {
         update_play_pause_icon();
         // If we are seeking, do not set the timestamp, as that will override the seek position.
         if (!m_was_playing_before_seek && m_playback_manager->get_state() != Video::PlaybackState::Seeking) {
