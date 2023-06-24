@@ -32,6 +32,6 @@ struct Hunk {
     Vector<DeprecatedString> added_lines;
 };
 
-Vector<Hunk> parse_hunks(DeprecatedString const& diff);
+ErrorOr<Vector<Hunk>> parse_hunks(DeprecatedString const& diff);
 HunkLocation parse_hunk_location(StringView location_line);
 };
