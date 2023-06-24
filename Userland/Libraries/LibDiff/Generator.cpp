@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,13 +69,19 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
 
     auto update_hunk = [&](size_t i, size_t j, Direction direction) -> ErrorOr<void> {
         if (!in_hunk) {
+            HunkLocation location;
+            location.old_range.start_line = i;
+            location.new_range.start_line = j;
             in_hunk = true;
-            cur_hunk = { i, j, {}, {} };
+            cur_hunk = { location, {} };
         }
+
         if (direction == Direction::Down) {
-            TRY(cur_hunk.added_lines.try_append(TRY(String::from_utf8(new_lines[j]))));
+            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Addition, TRY(String::from_utf8(new_lines[j])) }));
+            cur_hunk.location.new_range.number_of_lines++;
         } else if (direction == Direction::Right) {
-            TRY(cur_hunk.removed_lines.try_append(TRY(String::from_utf8(old_lines[i]))));
+            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Removal, TRY(String::from_utf8(old_lines[i])) }));
+            cur_hunk.location.old_range.number_of_lines++;
         }
 
         return {};
@@ -82,10 +89,12 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
 
     auto flush_hunk = [&]() -> ErrorOr<void> {
         if (in_hunk) {
-            if (cur_hunk.added_lines.size() > 0)
-                cur_hunk.target_start_line++;
-            if (cur_hunk.removed_lines.size() > 0)
-                cur_hunk.original_start_line++;
+            // A file with no content has a zero indexed start line.
+            if (cur_hunk.location.new_range.start_line != 0 || cur_hunk.location.new_range.number_of_lines != 0)
+                cur_hunk.location.new_range.start_line++;
+            if (cur_hunk.location.old_range.start_line != 0 || cur_hunk.location.old_range.number_of_lines != 0)
+                cur_hunk.location.old_range.start_line++;
+
             TRY(hunks.try_append(cur_hunk));
             in_hunk = false;
         }
