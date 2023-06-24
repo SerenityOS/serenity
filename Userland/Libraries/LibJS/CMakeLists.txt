@@ -257,6 +257,7 @@ set(SOURCES
     Runtime/WeakSet.cpp
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
+    Runtime/WrapForValidIteratorPrototype.cpp
     Runtime/WrappedFunction.cpp
     Script.cpp
     SourceCode.cpp

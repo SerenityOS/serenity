@@ -29,6 +29,9 @@ ThrowCompletionOr<void> IteratorConstructor::initialize(Realm& realm)
     // 3.1.1.2.1 Iterator.prototype, https://tc39.es/proposal-iterator-helpers/#sec-iterator.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().iterator_prototype(), 0);
 
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(realm, vm.names.from, from, 1, attr);
+
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
     return {};
@@ -54,6 +57,37 @@ ThrowCompletionOr<NonnullGCPtr<Object>> IteratorConstructor::construct(FunctionO
 
     // 2. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Iterator.prototype%").
     return TRY(ordinary_create_from_constructor<Iterator>(vm, new_target, &Intrinsics::iterator_prototype));
+}
+
+// 3.1.1.2.2 Iterator.from ( O ), https://tc39.es/proposal-iterator-helpers/#sec-iterator.from
+JS_DEFINE_NATIVE_FUNCTION(IteratorConstructor::from)
+{
+    auto& realm = *vm.current_realm();
+
+    auto object = vm.argument(0);
+
+    // 1. If O is a String, set O to ! ToObject(O).
+    if (object.is_string())
+        object = MUST_OR_THROW_OOM(object.to_object(vm));
+
+    // 2. Let iteratorRecord be ? GetIteratorFlattenable(O).
+    auto iterator_record = TRY(get_iterator_flattenable(vm, object));
+
+    // 3. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
+    auto has_instance = TRY(ordinary_has_instance(vm, iterator_record.iterator, realm.intrinsics().iterator_constructor()));
+
+    // 4. If hasInstance is true, then
+    if (has_instance.is_boolean() && has_instance.as_bool()) {
+        // a. Return iteratorRecord.[[Iterator]].
+        return iterator_record.iterator;
+    }
+
+    // 5. Let wrapper be OrdinaryObjectCreate(%WrapForValidIteratorPrototype%, « [[Iterated]] »).
+    // 6. Set wrapper.[[Iterated]] to iteratorRecord.
+    auto wrapper = MUST_OR_THROW_OOM(Iterator::create(realm, realm.intrinsics().wrap_for_valid_iterator_prototype(), move(iterator_record)));
+
+    // 7. Return wrapper.
+    return wrapper;
 }
 
 }

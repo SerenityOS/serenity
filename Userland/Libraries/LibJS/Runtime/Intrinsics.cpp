@@ -126,6 +126,7 @@
 #include <LibJS/Runtime/WeakRefPrototype.h>
 #include <LibJS/Runtime/WeakSetConstructor.h>
 #include <LibJS/Runtime/WeakSetPrototype.h>
+#include <LibJS/Runtime/WrapForValidIteratorPrototype.h>
 
 namespace JS {
 
@@ -199,6 +200,7 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_wrap_for_valid_iterator_prototype = heap().allocate<WrapForValidIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
     // These must be initialized before allocating...
     // - AggregateErrorPrototype, which uses ErrorPrototype as its prototype
@@ -356,6 +358,7 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_async_generator_prototype);
     visitor.visit(m_generator_prototype);
     visitor.visit(m_intl_segments_prototype);
+    visitor.visit(m_wrap_for_valid_iterator_prototype);
     visitor.visit(m_eval_function);
     visitor.visit(m_is_finite_function);
     visitor.visit(m_is_nan_function);

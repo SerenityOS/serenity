@@ -229,6 +229,7 @@ class AsyncFromSyncIteratorPrototype;
 class AsyncGenerator;
 class AsyncGeneratorPrototype;
 class GeneratorPrototype;
+class WrapForValidIteratorPrototype;
 
 class TypedArrayConstructor;
 class TypedArrayPrototype;
