@@ -47,6 +47,10 @@ constexpr u32 internal_clock_stable = 1 << 1;
 constexpr u32 sd_clock_enable = 1 << 2;
 constexpr u32 sd_clock_divisor_mask = 0x0000ffc0;
 
+// In sub-register "Timeout Control"
+constexpr u32 data_timeout_counter_value_mask = 0b1111 << 16;
+constexpr u32 data_timeout_counter_value_max = 0b1110 << 16;
+
 // In sub-register "Software Reset"
 constexpr u32 software_reset_for_all = 0x01000000;
 
@@ -468,6 +472,10 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
     if (!retry_with_timeout([&] { return m_registers->host_configuration_1 & internal_clock_stable; })) {
         return EIO;
     }
+
+    // FIXME: With the default timeout value, reading will sometimes fail on the Raspberry Pi.
+    //        We should be a bit smarter with choosing the right timeout value and handling errors.
+    m_registers->host_configuration_1 = (m_registers->host_configuration_1 & ~data_timeout_counter_value_mask) | data_timeout_counter_value_max;
 
     // 4. Set SD Clock Enable in the Clock Control register to 1
     m_registers->host_configuration_1 = m_registers->host_configuration_1 | sd_clock_enable;
