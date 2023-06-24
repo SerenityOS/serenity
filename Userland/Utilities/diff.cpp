@@ -18,8 +18,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser parser;
-    DeprecatedString filename1;
-    DeprecatedString filename2;
+    StringView filename1;
+    StringView filename2;
 
     parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
