@@ -2025,6 +2025,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     virtual bool is_import_call() const override { return true; }

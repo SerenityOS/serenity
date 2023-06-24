@@ -3485,11 +3485,6 @@ Completion ImportCall::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
-    auto& realm = *vm.current_realm();
-
-    // 2.1.1.1 EvaluateImportCall ( specifierExpression [ , optionsExpression ] ), https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
-    //  1. Let referencingScriptOrModule be GetActiveScriptOrModule().
-    auto referencing_script_or_module = vm.get_active_script_or_module();
 
     // 2. Let specifierRef be the result of evaluating specifierExpression.
     // 3. Let specifier be ? GetValue(specifierRef).
@@ -3506,88 +3501,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     // a. Let options be undefined.
     // Note: options_value is undefined by default.
 
-    // 6. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
-
-    // 7. Let specifierString be Completion(ToString(specifier)).
-    // 8. IfAbruptRejectPromise(specifierString, promiseCapability).
-    auto specifier_string = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, specifier->to_deprecated_string(vm));
-
-    // 9. Let assertions be a new empty List.
-    Vector<ModuleRequest::Assertion> assertions;
-
-    // 10. If options is not undefined, then
-    if (!options_value.is_undefined()) {
-        // a. If Type(options) is not Object,
-        if (!options_value.is_object()) {
-            auto error = TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions")));
-            // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-            MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
-
-            // ii. Return promiseCapability.[[Promise]].
-            return Value { promise_capability->promise() };
-        }
-
-        // b. Let assertionsObj be Get(options, "assert").
-        // c. IfAbruptRejectPromise(assertionsObj, promiseCapability).
-        auto assertion_object = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, options_value.get(vm, vm.names.assert));
-
-        // d. If assertionsObj is not undefined,
-        if (!assertion_object.is_undefined()) {
-            // i. If Type(assertionsObj) is not Object,
-            if (!assertion_object.is_object()) {
-                auto error = TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions")));
-                // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
-
-                // 2. Return promiseCapability.[[Promise]].
-                return Value { promise_capability->promise() };
-            }
-
-            // ii. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
-            // iii. IfAbruptRejectPromise(keys, promiseCapability).
-            auto keys = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.as_object().enumerable_own_property_names(Object::PropertyKind::Key));
-
-            // iv. Let supportedAssertions be ! HostGetSupportedImportAssertions().
-            auto supported_assertions = vm.host_get_supported_import_assertions();
-
-            // v. For each String key of keys,
-            for (auto const& key : keys) {
-                auto property_key = MUST(key.to_property_key(vm));
-
-                // 1. Let value be Get(assertionsObj, key).
-                // 2. IfAbruptRejectPromise(value, promiseCapability).
-                auto value = TRY_OR_REJECT_WITH_VALUE(vm, promise_capability, assertion_object.get(vm, property_key));
-
-                // 3. If Type(value) is not String, then
-                if (!value.is_string()) {
-                    auto error = TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value")));
-                    // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                    MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
-
-                    // b. Return promiseCapability.[[Promise]].
-                    return Value { promise_capability->promise() };
-                }
-
-                // 4. If supportedAssertions contains key, then
-                if (supported_assertions.contains_slow(property_key.to_string())) {
-                    // a. Append { [[Key]]: key, [[Value]]: value } to assertions.
-                    assertions.empend(property_key.to_string(), TRY(value.as_string().deprecated_string()));
-                }
-            }
-        }
-        // e. Sort assertions by the code point order of the [[Key]] of each element. NOTE: This sorting is observable only in that hosts are prohibited from distinguishing among assertions by the order they occur in.
-        // Note: This is done when constructing the ModuleRequest.
-    }
-
-    // 11. Let moduleRequest be a new ModuleRequest Record { [[Specifier]]: specifierString, [[Assertions]]: assertions }.
-    ModuleRequest request { specifier_string, assertions };
-
-    // 12. Perform HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability).
-    MUST_OR_THROW_OOM(interpreter.vm().host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability));
-
-    // 13. Return promiseCapability.[[Promise]].
-    return Value { promise_capability->promise() };
+    return perform_import_call(vm, *specifier, options_value);
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation
