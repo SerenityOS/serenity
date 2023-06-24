@@ -61,6 +61,8 @@ void HTMLAudioElement::on_seek(double position, MediaSeekMode seek_mode)
     audio_tracks()->for_each_enabled_track([&](auto& audio_track) {
         audio_track.seek(position, seek_mode);
     });
+
+    finish_seek_element();
 }
 
 void HTMLAudioElement::on_volume_change()

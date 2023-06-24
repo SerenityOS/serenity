@@ -277,9 +277,6 @@ void HTMLMediaElement::set_current_playback_position(double playback_position)
 
     time_marches_on();
 
-    // NOTE: This notifies blocked seek_element() invocations that we have finished seeking.
-    m_seek_in_progress = false;
-
     // NOTE: Invoking the following steps is not listed in the spec. Rather, the spec just describes the scenario in
     //       which these steps should be invoked, which is when we've reached the end of the media playback.
     if (m_current_playback_position == m_duration)
@@ -1516,13 +1513,16 @@ void HTMLMediaElement::seek_element(double playback_position, MediaSeekMode seek
 
     // 12. Wait until the user agent has established whether or not the media data for the new playback position is
     //     available, and, if it is, until it has decoded enough data to play back that position.
-    m_seek_in_progress = true;
     on_seek(playback_position, seek_mode);
-    HTML::main_thread_event_loop().spin_until([&]() { return !m_seek_in_progress; });
 
-    // FIXME: 13. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm. (Steps in the
-    //            synchronous section are marked with ⌛.)
+    // 13. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm. (Steps in the
+    //     synchronous section are marked with ⌛.)
+    // NOTE: We start the seeking, and then we will invoke the rest of the steps of this algorithm when the media has finished seeking
+    //       to the target timestamp.
+}
 
+void HTMLMediaElement::finish_seek_element()
+{
     // 14. ⌛ Set the seeking IDL attribute to false.
     m_seeking = false;
 

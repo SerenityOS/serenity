@@ -96,6 +96,8 @@ public:
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
 
+    void finish_seek_element();
+
     enum class MouseTrackingComponent {
         Timeline,
         Volume,
@@ -135,8 +137,8 @@ protected:
     virtual void on_paused() { }
 
     // Override in subclasses to handle implementation-specific seeking behavior. When seeking is complete,
-    // subclasses must invoke set_current_playback_position() to unblock the user agent.
-    virtual void on_seek(double, MediaSeekMode) { m_seek_in_progress = false; }
+    // subclasses must call finish_seek_element() to complete the seeking steps required by the spec.
+    virtual void on_seek(double, MediaSeekMode) { }
 
     virtual void on_volume_change() { }
 
@@ -265,8 +267,6 @@ private:
     JS::GCPtr<SourceElementSelector> m_source_element_selector;
 
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
-
-    bool m_seek_in_progress = false;
 
     // Cached state for layout.
     Optional<MouseTrackingComponent> m_mouse_tracking_component;
