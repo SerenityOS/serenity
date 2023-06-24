@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -29,8 +29,8 @@ struct HunkLocation {
 struct Hunk {
     size_t original_start_line { 0 };
     size_t target_start_line { 0 };
-    Vector<DeprecatedString> removed_lines;
-    Vector<DeprecatedString> added_lines;
+    Vector<String> removed_lines;
+    Vector<String> added_lines;
 };
 
 ErrorOr<Vector<Hunk>> parse_hunks(StringView diff);

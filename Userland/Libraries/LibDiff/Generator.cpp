@@ -72,9 +72,9 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
             cur_hunk = { i, j, {}, {} };
         }
         if (direction == Direction::Down) {
-            TRY(cur_hunk.added_lines.try_append(new_lines[j]));
+            TRY(cur_hunk.added_lines.try_append(TRY(String::from_utf8(new_lines[j]))));
         } else if (direction == Direction::Right) {
-            TRY(cur_hunk.removed_lines.try_append(old_lines[i]));
+            TRY(cur_hunk.removed_lines.try_append(TRY(String::from_utf8(old_lines[i]))));
         }
 
         return {};
