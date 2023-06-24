@@ -194,63 +194,64 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
-    auto* dump_dom_tree_action = new QAction("Dump DOM Tree", this);
+    auto* dump_dom_tree_action = new QAction("Dump &DOM Tree", this);
     dump_dom_tree_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_dom_tree_action);
     QObject::connect(dump_dom_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-dom-tree");
     });
 
-    auto* dump_layout_tree_action = new QAction("Dump Layout Tree", this);
+    auto* dump_layout_tree_action = new QAction("Dump &Layout Tree", this);
     dump_layout_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_layout_tree_action);
     QObject::connect(dump_layout_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-layout-tree");
     });
 
-    auto* dump_paint_tree_action = new QAction("Dump Paint Tree", this);
+    auto* dump_paint_tree_action = new QAction("Dump &Paint Tree", this);
     dump_paint_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_paint_tree_action);
     QObject::connect(dump_paint_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-paint-tree");
     });
 
-    auto* dump_stacking_context_tree_action = new QAction("Dump Stacking Context Tree", this);
+    auto* dump_stacking_context_tree_action = new QAction("Dump S&tacking Context Tree", this);
     dump_stacking_context_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layers.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_stacking_context_tree_action);
     QObject::connect(dump_stacking_context_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-stacking-context-tree");
     });
 
-    auto* dump_style_sheets_action = new QAction("Dump Style Sheets", this);
+    auto* dump_style_sheets_action = new QAction("Dump &Style Sheets", this);
     dump_style_sheets_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_style_sheets_action);
     QObject::connect(dump_style_sheets_action, &QAction::triggered, this, [this] {
         debug_request("dump-style-sheets");
     });
 
-    auto* dump_styles_action = new QAction("Dump All Resolved Styles", this);
+    auto* dump_styles_action = new QAction("Dump &All Resolved Styles", this);
     dump_styles_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_styles_action);
     QObject::connect(dump_styles_action, &QAction::triggered, this, [this] {
         debug_request("dump-all-resolved-styles");
     });
 
-    auto* dump_history_action = new QAction("Dump History", this);
+    auto* dump_history_action = new QAction("Dump &History", this);
+    dump_history_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
     dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_history_action);
     QObject::connect(dump_history_action, &QAction::triggered, this, [this] {
         debug_request("dump-history");
     });
 
-    auto* dump_cookies_action = new QAction("Dump Cookies", this);
+    auto* dump_cookies_action = new QAction("Dump C&ookies", this);
     dump_cookies_action->setIcon(QIcon(QString("%1/res/icons/browser/cookie.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_cookies_action);
     QObject::connect(dump_cookies_action, &QAction::triggered, this, [this] {
         m_cookie_jar.dump_cookies();
     });
 
-    auto* dump_local_storage_action = new QAction("Dump Local Storage", this);
+    auto* dump_local_storage_action = new QAction("Dump Loc&al Storage", this);
     dump_local_storage_action->setIcon(QIcon(QString("%1/res/icons/browser/local-storage.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_local_storage_action);
     QObject::connect(dump_local_storage_action, &QAction::triggered, this, [this] {
@@ -269,7 +270,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
     debug_menu->addSeparator();
 
-    auto* collect_garbage_action = new QAction("Collect Garbage", this);
+    auto* collect_garbage_action = new QAction("Collect &Garbage", this);
     collect_garbage_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_G));
     collect_garbage_action->setIcon(QIcon(QString("%1/res/icons/16x16/trash-can.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(collect_garbage_action);
@@ -277,14 +278,15 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("collect-garbage");
     });
 
-    auto* clear_cache_action = new QAction("Clear Cache", this);
+    auto* clear_cache_action = new QAction("Clear &Cache", this);
+    clear_cache_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
     clear_cache_action->setIcon(QIcon(QString("%1/res/icons/browser/clear-cache.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(clear_cache_action);
     QObject::connect(clear_cache_action, &QAction::triggered, this, [this] {
         debug_request("clear-cache");
     });
 
-    auto* spoof_user_agent_menu = debug_menu->addMenu("Spoof User Agent");
+    auto* spoof_user_agent_menu = debug_menu->addMenu("Spoof &User Agent");
     spoof_user_agent_menu->setIcon(QIcon(QString("%1/res/icons/16x16/spoof.png").arg(s_serenity_resource_root.characters())));
 
     auto* user_agent_group = new QActionGroup(this);
