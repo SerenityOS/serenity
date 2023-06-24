@@ -43,7 +43,7 @@ private:
         Missing,
     };
 
-    void draw_line(GUI::Painter&, DeprecatedString const& line, size_t y_offset, LinePosition, LineType);
+    void draw_line(GUI::Painter&, StringView line, size_t y_offset, LinePosition, LineType);
 
     static Vector<DeprecatedString> split_to_lines(DeprecatedString const& text);
 
