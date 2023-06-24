@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 
 namespace Diff {
@@ -32,6 +33,6 @@ struct Hunk {
     Vector<DeprecatedString> added_lines;
 };
 
-ErrorOr<Vector<Hunk>> parse_hunks(DeprecatedString const& diff);
+ErrorOr<Vector<Hunk>> parse_hunks(StringView diff);
 HunkLocation parse_hunk_location(StringView location_line);
 };
