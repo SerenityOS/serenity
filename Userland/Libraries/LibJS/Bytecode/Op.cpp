@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
@@ -244,6 +244,23 @@ ThrowCompletionOr<void> Append::execute_impl(Bytecode::Interpreter& interpreter)
     return {};
 }
 
+ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto specifier = interpreter.reg(m_specifier);
+    auto options_value = interpreter.reg(m_options);
+    interpreter.accumulator() = TRY(perform_import_call(vm, specifier, options_value));
+    return {};
+}
+
+void ImportCall::replace_references_impl(Register from, Register to)
+{
+    if (m_specifier == from)
+        m_specifier = to;
+    if (m_options == from)
+        m_options = to;
+}
+
 // FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
 // Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
 static Object* iterator_to_object(VM& vm, Iterator iterator)
@@ -375,8 +392,10 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
         auto const& string = interpreter.current_executable().get_identifier(m_identifier);
         if (m_cached_environment_coordinate.has_value()) {
             Environment* environment = nullptr;
+            bool coordinate_screwed_by_delete_in_global_environment = false;
             if (m_cached_environment_coordinate->index == EnvironmentCoordinate::global_marker) {
                 environment = &interpreter.vm().current_realm()->global_environment();
+                coordinate_screwed_by_delete_in_global_environment = !TRY(environment->has_binding(string));
             } else {
                 environment = vm.running_execution_context().lexical_environment;
                 for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
@@ -384,7 +403,7 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
                 VERIFY(environment);
                 VERIFY(environment->is_declarative_environment());
             }
-            if (!environment->is_permanently_screwed_by_eval()) {
+            if (!coordinate_screwed_by_delete_in_global_environment && !environment->is_permanently_screwed_by_eval()) {
                 return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
             }
             m_cached_environment_coordinate = {};
@@ -1550,6 +1569,11 @@ DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const
 DeprecatedString BlockDeclarationInstantiation::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "BlockDeclarationInstantiation"sv;
+}
+
+DeprecatedString ImportCall::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("ImportCall specifier:{} options:{}"sv, m_specifier, m_options);
 }
 
 }

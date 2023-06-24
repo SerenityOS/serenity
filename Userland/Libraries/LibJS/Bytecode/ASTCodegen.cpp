@@ -2725,4 +2725,48 @@ Bytecode::CodeGenerationErrorOr<void> OptionalChain::generate_bytecode(Bytecode:
     return generate_optional_chain(generator, *this, current_value_register, current_base_register);
 }
 
+Bytecode::CodeGenerationErrorOr<void> ImportCall::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_specifier->generate_bytecode(generator));
+    auto specifier_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(specifier_reg);
+
+    if (m_options) {
+        TRY(m_options->generate_bytecode(generator));
+    } else {
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    }
+    auto options_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(options_reg);
+
+    generator.emit<Bytecode::Op::ImportCall>(specifier_reg, options_reg);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    if (!is_default_export()) {
+        if (m_statement) {
+            return m_statement->generate_bytecode(generator);
+        }
+        return {};
+    }
+
+    VERIFY(m_statement);
+
+    if (is<FunctionDeclaration>(*m_statement) || is<ClassDeclaration>(*m_statement)) {
+        return m_statement->generate_bytecode(generator);
+    }
+
+    if (is<ClassExpression>(*m_statement)) {
+        TODO();
+    }
+
+    // ExportDeclaration : export default AssignmentExpression ;
+    VERIFY(is<Expression>(*m_statement));
+    TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<Expression const&>(*m_statement), DeprecatedFlyString("default"sv)));
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier("default"sv));
+    return {};
+}
+
 }

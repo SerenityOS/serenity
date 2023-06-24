@@ -144,20 +144,24 @@ void Path::close_all_subpaths()
     Optional<FloatPoint> cursor, start_of_subpath;
     bool is_first_point_in_subpath { false };
 
+    auto close_previous_subpath = [&] {
+        if (cursor.has_value() && !is_first_point_in_subpath) {
+            // This is a move from a subpath to another
+            // connect the two ends of this subpath before
+            // moving on to the next one
+            VERIFY(start_of_subpath.has_value());
+
+            append_segment<MoveSegment>(cursor.value());
+            append_segment<LineSegment>(start_of_subpath.value());
+        }
+    };
+
     auto segment_count = m_segments.size();
     for (size_t i = 0; i < segment_count; i++) {
         // Note: We need to use m_segments[i] as append_segment() may invalidate any references.
         switch (m_segments[i]->type()) {
         case Segment::Type::MoveTo: {
-            if (cursor.has_value() && !is_first_point_in_subpath) {
-                // This is a move from a subpath to another
-                // connect the two ends of this subpath before
-                // moving on to the next one
-                VERIFY(start_of_subpath.has_value());
-
-                append_segment<MoveSegment>(cursor.value());
-                append_segment<LineSegment>(start_of_subpath.value());
-            }
+            close_previous_subpath();
             is_first_point_in_subpath = true;
             cursor = m_segments[i]->point();
             break;
@@ -177,6 +181,9 @@ void Path::close_all_subpaths()
             break;
         }
     }
+
+    if (m_segments.last()->type() != Segment::Type::MoveTo)
+        close_previous_subpath();
 }
 
 DeprecatedString Path::to_deprecated_string() const

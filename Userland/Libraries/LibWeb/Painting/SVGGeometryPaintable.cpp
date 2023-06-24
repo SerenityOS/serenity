@@ -86,13 +86,13 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto const& original_path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path();
     Gfx::Path path = original_path.copy_transformed(paint_transform);
 
-    // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
+    // Fills are computed as though all subpaths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
     auto closed_path = [&] {
         // We need to fill the path before applying the stroke, however the filled
         // path must be closed, whereas the stroke path may not necessary be closed.
         // Copy the path and close it for filling, but use the previous path for stroke
         auto copy = path;
-        copy.close();
+        copy.close_all_subpaths();
         return copy;
     };
 
