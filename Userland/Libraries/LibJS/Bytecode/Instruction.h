@@ -42,6 +42,7 @@
     O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
+    O(ImportCall)                    \
     O(In)                            \
     O(Increment)                     \
     O(InstanceOf)                    \

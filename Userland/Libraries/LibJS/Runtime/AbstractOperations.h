@@ -53,6 +53,8 @@ Completion dispose(VM& vm, Value, NonnullGCPtr<FunctionObject> method);
 Completion dispose_resources(VM& vm, Vector<DisposableResource> const& disposable, Completion completion);
 Completion dispose_resources(VM& vm, GCPtr<DeclarativeEnvironment> disposable, Completion completion);
 
+ThrowCompletionOr<Value> perform_import_call(VM&, Value specifier, Value options_value);
+
 enum class CanonicalIndexMode {
     DetectNumericRoundtrip,
     IgnoreNumericRoundtrip,
