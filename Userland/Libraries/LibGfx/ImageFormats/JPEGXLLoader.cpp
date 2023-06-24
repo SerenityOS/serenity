@@ -1081,11 +1081,16 @@ public:
         auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { width, height }));
 
         // FIXME: This assumes a raw image with RGB channels, other cases are possible
-        VERIFY(bits_per_sample == 8);
+        VERIFY(bits_per_sample >= 8);
         for (u32 y {}; y < height; ++y) {
             for (u32 x {}; x < width; ++x) {
                 auto const to_u8 = [&, bits_per_sample](i32 sample) -> u8 {
-                    return clamp(sample + .5, 0, (1 << bits_per_sample) - 1);
+                    // FIXME: Don't truncate the result to 8 bits
+                    static constexpr auto maximum_supported_bit_depth = 8;
+                    if (bits_per_sample > maximum_supported_bit_depth)
+                        sample >>= (bits_per_sample - maximum_supported_bit_depth);
+
+                    return clamp(sample + .5, 0, (1 << maximum_supported_bit_depth) - 1);
                 };
 
                 Color const color {
