@@ -44,6 +44,7 @@ constexpr u32 dma_select_adma2_64 = 0b11 << 3;
 constexpr u32 internal_clock_enable = 1 << 0;
 constexpr u32 internal_clock_stable = 1 << 1;
 constexpr u32 sd_clock_enable = 1 << 2;
+constexpr u32 sd_clock_divisor_mask = 0x0000ffc0;
 
 // In sub-register "Software Reset"
 constexpr u32 software_reset_for_all = 0x01000000;
@@ -446,7 +447,7 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
         const u32 two_upper_bits_of_sdclk_frequency_select = (divisor >> 8 & 0x3) << 6;
         sdclk_frequency_select |= two_upper_bits_of_sdclk_frequency_select;
     }
-    m_registers->host_configuration_1 = m_registers->host_configuration_1 | internal_clock_enable | sdclk_frequency_select;
+    m_registers->host_configuration_1 = (m_registers->host_configuration_1 & ~sd_clock_divisor_mask) | internal_clock_enable | sdclk_frequency_select;
 
     // 3. Check Internal Clock Stable in the Clock Control register until it is 1
     if (!retry_with_timeout([&] { return m_registers->host_configuration_1 & internal_clock_stable; })) {
