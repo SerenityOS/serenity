@@ -59,6 +59,7 @@
             name: "location"
             text: "/home/anon/file"
             text_alignment: "CenterLeft"
+            text_wrapping: "DontWrap"
         }
     }
 
@@ -79,6 +80,7 @@
             name: "link_location"
             text: "/home/anon/file"
             text_alignment: "CenterLeft"
+            text_wrapping: "DontWrap"
         }
     }
 
