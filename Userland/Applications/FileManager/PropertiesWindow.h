@@ -29,12 +29,6 @@ private:
     PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
     ErrorOr<void> create_widgets(bool disable_rename);
 
-    struct PropertyValuePair {
-        DeprecatedString property;
-        DeprecatedString value;
-        Optional<URL> link = {};
-    };
-
     struct PermissionMasks {
         mode_t read;
         mode_t write;
