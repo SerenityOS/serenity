@@ -189,12 +189,9 @@ void PlaybackManager::seek_to_timestamp(Duration target_timestamp, SeekMode seek
     TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, seek_mode));
 }
 
-Optional<Duration> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample)
+DecoderErrorOr<Optional<Duration>> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample)
 {
-    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
-    if (result.is_error())
-        dispatch_decoder_error(result.release_error());
-    return result.release_value();
+    return m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
 }
 
 Optional<FrameQueueItem> PlaybackManager::dequeue_one_frame()
@@ -597,7 +594,13 @@ private:
 
         {
             Threading::MutexLocker demuxer_locker(manager().m_demuxer_mutex);
-            auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
+
+            auto demuxer_seek_result = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
+            if (demuxer_seek_result.is_error()) {
+                manager().dispatch_decoder_error(demuxer_seek_result.release_error());
+                return {};
+            }
+            auto keyframe_timestamp = demuxer_seek_result.release_value();
 
 #if PLAYBACK_MANAGER_DEBUG
             auto seek_mode_name = m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv;
