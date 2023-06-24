@@ -1497,8 +1497,10 @@ ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) 
 {
     if (m_cached_environment_coordinate.is_valid()) {
         Environment* environment = nullptr;
+        bool coordinate_screwed_by_delete_in_global_environment = false;
         if (m_cached_environment_coordinate.index == EnvironmentCoordinate::global_marker) {
             environment = &interpreter.vm().current_realm()->global_environment();
+            coordinate_screwed_by_delete_in_global_environment = !TRY(environment->has_binding(string()));
         } else {
             environment = interpreter.vm().running_execution_context().lexical_environment;
             for (size_t i = 0; i < m_cached_environment_coordinate.hops; ++i)
@@ -1506,7 +1508,7 @@ ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) 
             VERIFY(environment);
             VERIFY(environment->is_declarative_environment());
         }
-        if (!environment->is_permanently_screwed_by_eval()) {
+        if (!coordinate_screwed_by_delete_in_global_environment && !environment->is_permanently_screwed_by_eval()) {
             return Reference { *environment, string(), interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
         }
         m_cached_environment_coordinate = {};
