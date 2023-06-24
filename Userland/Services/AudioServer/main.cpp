@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "ConnectionFromClient.h"
+#include "ConnectionFromManagerClient.h"
 #include "Mixer.h"
 #include <LibCore/ConfigFile.h>
 #include <LibCore/LocalServer.h>
@@ -23,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     auto mixer = TRY(AudioServer::Mixer::try_create(config));
     auto server = TRY(Core::LocalServer::try_create());
-    TRY(server->take_over_from_system_server());
+    TRY(server->take_over_from_system_server("/tmp/session/%sid/portal/audio"));
 
     server->on_accept = [&](NonnullOwnPtr<Core::LocalSocket> client_socket) {
         static int s_next_client_id = 0;
@@ -31,8 +33,16 @@ ErrorOr<int> serenity_main(Main::Arguments)
         (void)IPC::new_client_connection<AudioServer::ConnectionFromClient>(move(client_socket), client_id, *mixer);
     };
 
+    auto manager_server = TRY(Core::LocalServer::try_create());
+    TRY(manager_server->take_over_from_system_server("/tmp/session/%sid/portal/audiomanager"));
+
+    manager_server->on_accept = [&](NonnullOwnPtr<Core::LocalSocket> client_socket) {
+        static int s_next_client_id = 0;
+        int client_id = ++s_next_client_id;
+        (void)IPC::new_client_connection<AudioServer::ConnectionFromManagerClient>(move(client_socket), client_id, *mixer);
+    };
+
     TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     return event_loop.exec();
 }

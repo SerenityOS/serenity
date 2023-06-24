@@ -44,6 +44,10 @@ public:
 
     bool get_next_sample(Audio::Sample& sample)
     {
+        // Note: Even though we only check client state here, we will probably close the client much earlier.
+        if (!is_connected())
+            return false;
+
         if (m_paused)
             return false;
 
@@ -52,11 +56,6 @@ public:
             if (result.is_error()) {
                 if (result.error() == Audio::AudioQueue::QueueStatus::Empty) {
                     dbgln_if(AUDIO_DEBUG, "Audio client {} can't keep up!", m_client->client_id());
-                    // Note: Even though we only check client state here, we will probably close the client much earlier.
-                    if (!m_client->is_open()) {
-                        dbgln("Client socket {} has closed, closing audio server connection.", m_client->client_id());
-                        m_client->shutdown();
-                    }
                 }
 
                 return false;
