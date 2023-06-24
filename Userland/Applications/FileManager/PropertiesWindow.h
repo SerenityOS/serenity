@@ -28,6 +28,7 @@ public:
 private:
     PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
     ErrorOr<void> create_widgets(bool disable_rename);
+    ErrorOr<void> create_general_tab(GUI::TabWidget&, bool disable_rename);
 
     struct PermissionMasks {
         mode_t read;
