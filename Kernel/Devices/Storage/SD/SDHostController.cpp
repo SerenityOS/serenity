@@ -35,6 +35,7 @@ constexpr u32 max_supported_sdsc_frequency_high_speed = 50000000;
 
 // In "m_registers->host_configuration_0"
 // 2.2.11 Host Control 1 Register
+constexpr u32 data_transfer_width_4bit = 1 << 1;
 constexpr u32 high_speed_enable = 1 << 2;
 constexpr u32 dma_select_adma2_32 = 0b10 << 3;
 constexpr u32 dma_select_adma2_64 = 0b11 << 3;
@@ -54,6 +55,7 @@ constexpr u32 command_complete = 1 << 0;
 constexpr u32 transfer_complete = 1 << 1;
 constexpr u32 buffer_write_ready = 1 << 4;
 constexpr u32 buffer_read_ready = 1 << 5;
+constexpr u32 card_interrupt = 1 << 8;
 
 // PLSS 5.1: all voltage windows
 constexpr u32 acmd41_voltage = 0x00ff8000;
@@ -243,10 +245,23 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
 
     auto scr = TRY(retrieve_sd_configuration_register(rca));
 
+    // SDHC 3.4: "Changing Bus Width"
+
+    // 1. Set Card Interrupt Status Enable in the Normal Interrupt Status Enable register to 0 for
+    //    masking incorrect interrupts that may occur while changing the bus width.
+    m_registers->interrupt_status_enable &= ~card_interrupt;
+    // 2. In case of SD memory only card, go to step (4). In case of other card, go to step (3).
+    // 4. Change the bus width mode for an SD card. SD Memory Card bus width is changed by ACMD6
+    //    and SDIO card bus width is changed by setting Bus Width of Bus Interface Control register in
+    //    CCCR.
     TRY(issue_command(SD::Commands::app_cmd, rca));
     TRY(wait_for_response());
     TRY(issue_command(SD::Commands::app_set_bus_width, 0x2)); // 0b00=1 bit bus, 0b10=4 bit bus
     TRY(wait_for_response());
+    // 5. In case of changing to 4-bit mode, set Data Transfer Width to 1 in the Host Control 1 register.
+    //    In another case (1-bit mode), set this bit to 0.
+    m_registers->host_configuration_0 |= data_transfer_width_4bit;
+    // 6. In case of SD memory only card, go to the 'End'. In case of other card, go to step (7).
 
     return TRY(DeviceManagement::try_create_device<SDMemoryCard>(
         *this,
