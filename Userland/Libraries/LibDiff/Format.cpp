@@ -26,47 +26,40 @@ DeprecatedString generate_only_additions(StringView text)
 
 ErrorOr<void> write_normal(Hunk const& hunk, Stream& stream, ColorOutput color_output)
 {
-    auto original_start = hunk.original_start_line;
-    auto target_start = hunk.target_start_line;
-    auto num_added = hunk.added_lines.size();
-    auto num_removed = hunk.removed_lines.size();
-
     // Source line(s)
-    TRY(stream.write_formatted("{}", original_start));
-
-    if (num_removed > 1)
-        TRY(stream.write_formatted(",{}", original_start + num_removed - 1));
+    TRY(stream.write_formatted("{}", hunk.location.old_range.start_line));
+    if (hunk.location.old_range.number_of_lines > 1)
+        TRY(stream.write_formatted(",{}", (hunk.location.old_range.start_line + hunk.location.old_range.number_of_lines - 1)));
 
     // Action
-    if (num_added > 0 && num_removed > 0)
+    if (hunk.location.old_range.number_of_lines > 0 && hunk.location.new_range.number_of_lines > 0)
         TRY(stream.write_formatted("c"));
-    else if (num_added > 0)
+    else if (hunk.location.new_range.number_of_lines > 0)
         TRY(stream.write_formatted("a"));
     else
         TRY(stream.write_formatted("d"));
 
     // Target line(s)
-    TRY(stream.write_formatted("{}", target_start));
-    if (num_added > 1)
-        TRY(stream.write_formatted(",{}", target_start + num_added - 1));
+    TRY(stream.write_formatted("{}", hunk.location.new_range.start_line));
+    if (hunk.location.new_range.number_of_lines > 1)
+        TRY(stream.write_formatted(",{}", (hunk.location.new_range.start_line + hunk.location.new_range.number_of_lines - 1)));
 
     TRY(stream.write_formatted("\n"));
 
-    for (auto const& line : hunk.removed_lines) {
-        if (color_output == ColorOutput::Yes)
-            TRY(stream.write_formatted("\033[31;1m< {}\033[0m\n", line));
-        else
-            TRY(stream.write_formatted("< {}\n", line));
-    }
+    for (auto const& line : hunk.lines) {
+        VERIFY(line.operation == Line::Operation::Removal || line.operation == Line::Operation::Addition);
 
-    if (num_added > 0 && num_removed > 0)
-        TRY(stream.write_formatted("---\n"));
-
-    for (auto const& line : hunk.added_lines) {
-        if (color_output == ColorOutput::Yes)
-            TRY(stream.write_formatted("\033[32;1m> {}\033[0m\n", line));
-        else
-            TRY(stream.write_formatted("> {}\n", line));
+        if (line.operation == Line::Operation::Addition) {
+            if (color_output == ColorOutput::Yes)
+                TRY(stream.write_formatted("\033[32;1m> {}\033[0m\n", line.content));
+            else
+                TRY(stream.write_formatted("> {}\n", line.content));
+        } else {
+            if (color_output == ColorOutput::Yes)
+                TRY(stream.write_formatted("\033[31;1m< {}\033[0m\n", line.content));
+            else
+                TRY(stream.write_formatted("< {}\n", line.content));
+        }
     }
 
     return {};

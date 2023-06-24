@@ -831,12 +831,15 @@ ErrorOr<void> Editor::update_git_diff_indicators()
     for (auto i = 0u; i < document().line_count(); ++i)
         line_differences.unchecked_append(CodeDocument::DiffType::None);
 
-    for (auto& hunk : wrapper().hunks()) {
-        auto start_line = hunk.target_start_line;
-        auto finish_line = start_line + hunk.added_lines.size();
+    for (auto const& hunk : wrapper().hunks()) {
+        auto start_line = hunk.location.new_range.start_line;
+        // Account for 1 indexed hunk location
+        if (start_line != 0)
+            start_line--;
+        auto finish_line = start_line + hunk.location.new_range.number_of_lines;
 
-        auto additions = hunk.added_lines.size();
-        auto deletions = hunk.removed_lines.size();
+        auto additions = hunk.location.new_range.number_of_lines;
+        auto deletions = hunk.location.old_range.number_of_lines;
 
         for (size_t line_offset = 0; line_offset < additions; line_offset++) {
             auto line = start_line + line_offset;
