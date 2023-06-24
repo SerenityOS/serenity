@@ -43,6 +43,9 @@ template<typename T>
 class Size;
 
 template<typename T>
+class Range;
+
+template<typename T>
 class Rect;
 
 template<typename T>
