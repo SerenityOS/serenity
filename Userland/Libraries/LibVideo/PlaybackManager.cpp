@@ -623,7 +623,8 @@ private:
             }
         }
 
-        return skip_samples_until_timestamp();
+        manager().set_state_update_timer(0);
+        return {};
     }
 
     ErrorOr<void> skip_samples_until_timestamp()
