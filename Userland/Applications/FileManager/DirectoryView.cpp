@@ -408,9 +408,9 @@ bool DirectoryView::open(DeprecatedString const& path)
         return false;
 
     auto real_path = error_or_real_path.release_value();
-    if (Core::System::chdir(real_path).is_error()) {
-        perror("chdir");
-        return false;
+    if (auto result = Core::System::chdir(real_path); result.is_error()) {
+        dbgln("Failed to open '{}': {}", real_path, result.error());
+        warnln("Failed to open '{}': {}", real_path, result.error());
     }
 
     if (model().root_path() == real_path.to_deprecated_string()) {
