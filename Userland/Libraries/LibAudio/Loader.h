@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/Result.h>
 #include <AK/Span.h>
 #include <AK/Stream.h>
 #include <AK/StringView.h>
@@ -23,8 +23,6 @@
 #include <LibAudio/SampleFormats.h>
 
 namespace Audio {
-
-static constexpr StringView no_plugin_error = "No loader plugin available"sv;
 
 // Experimentally determined to be a decent buffer size on i686:
 // 4K (the default) is slightly worse, and 64K is much worse.
@@ -87,8 +85,8 @@ protected:
 
 class Loader : public RefCounted<Loader> {
 public:
-    static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(create_plugin(path)))); }
-    static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes buffer) { return adopt_ref(*new Loader(TRY(create_plugin(buffer)))); }
+    static ErrorOr<NonnullRefPtr<Loader>, LoaderError> create(StringView path);
+    static ErrorOr<NonnullRefPtr<Loader>, LoaderError> create(Bytes buffer);
 
     // Will only read less samples if we're at the end of the stream.
     LoaderSamples get_more_samples(size_t samples_to_read_from_input = 128 * KiB);
@@ -111,8 +109,7 @@ public:
     Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
 
 private:
-    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(StringView path);
-    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(Bytes buffer);
+    static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(NonnullOwnPtr<SeekableStream> stream);
 
     explicit Loader(NonnullOwnPtr<LoaderPlugin>);
 

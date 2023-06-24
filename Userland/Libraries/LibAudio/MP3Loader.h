@@ -24,8 +24,8 @@ public:
     explicit MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~MP3LoaderPlugin() = default;
 
-    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(StringView path);
-    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(Bytes buffer);
+    static bool sniff(SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create(NonnullOwnPtr<SeekableStream>);
 
     virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 

@@ -12,9 +12,9 @@
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
 #include <AK/MemoryStream.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
-#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -23,31 +23,27 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
+bool WavLoaderPlugin::sniff(SeekableStream& stream)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
-    auto loader = make<WavLoaderPlugin>(move(stream));
+    auto riff = stream.read_value<RIFF::ChunkID>();
+    if (riff.is_error())
+        return false;
+    if (riff.value() != RIFF::riff_magic)
+        return false;
 
-    LOADER_TRY(loader->initialize());
+    auto size = stream.read_value<LittleEndian<u32>>();
+    if (size.is_error())
+        return false;
 
-    return loader;
+    auto wave = stream.read_value<RIFF::ChunkID>();
+    return !wave.is_error() && wave.value() == RIFF::wave_subformat_id;
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> WavLoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
-    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
-
-    LOADER_TRY(loader->initialize());
-
+    LOADER_TRY(loader->parse_header());
     return loader;
-}
-
-MaybeLoaderError WavLoaderPlugin::initialize()
-{
-    LOADER_TRY(parse_header());
-
-    return {};
 }
 
 template<typename SampleReader>
