@@ -43,8 +43,7 @@ private:
 
     bool is_card_inserted() const
     {
-        constexpr u32 card_inserted = 1 << 16;
-        return m_registers->present_state & card_inserted;
+        return m_registers->present_state.card_inserted;
     }
 
     SD::HostVersion host_version() { return m_registers->slot_interrupt_status_and_version.specification_version_number; }

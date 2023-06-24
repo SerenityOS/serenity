@@ -42,7 +42,34 @@ struct HostControlRegisterMap {
     u32 response_2;
     u32 response_3;
     u32 buffer_data_port;
-    u32 present_state;
+    union PresentState {
+        struct { // SDHC 2.2.9 Present State Register (Cat.C Offset 024h)
+            u32 command_inhibit_cmd : 1;
+            u32 command_inhibit_dat : 1;
+            u32 dat_line_active : 1;
+            u32 re_tuning_request : 1;
+            u32 dat_7_4_line_signal_level : 4;
+            u32 write_transfer_active : 1;
+            u32 read_transfer_active : 1;
+            u32 buffer_write_enable : 1;
+            u32 buffer_read_enable : 1;
+            u32 : 4;
+            u32 card_inserted : 1;
+            u32 card_state_stable : 1;
+            u32 card_detect_pin_level : 1;
+            u32 write_protect_switch_pin_level : 1;
+            u32 dat_3_0_line_signal_level : 4;
+            u32 cmd_line_signal_level : 1;
+            u32 host_regulator_voltage_stable : 1;
+            u32 : 1;
+            u32 command_not_issued_by_error : 1;
+            u32 sub_command_status : 1;
+            u32 in_dormant_state : 1;
+            u32 lane_synchronization : 1;
+            u32 uhs_2_if_detection : 1;
+        };
+        u32 raw;
+    } present_state;
     u32 host_configuration_0;
     u32 host_configuration_1;
     union InterruptStatus {

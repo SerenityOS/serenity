@@ -270,14 +270,12 @@ bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_
 ErrorOr<void> SDHostController::issue_command(SD::Command const& cmd, u32 argument)
 {
     // SDHC 3.7.1: "Transaction Control without Data Transfer Using DAT Line"
-    constexpr u32 command_inhibit = 1 << 1;
 
     // 1. Check Command Inhibit (CMD) in the Present State register.
     //    Repeat this step until Command Inhibit (CMD) is 0.
     //    That is, when Command Inhibit (CMD) is 1, the Host Driver
     //    shall not issue an SD Command.
-    if (!retry_with_timeout(
-            [&]() { return !(m_registers->present_state & command_inhibit); })) {
+    if (!retry_with_timeout([&]() { return !m_registers->present_state.command_inhibit_cmd; })) {
         return EIO;
     }
 
@@ -290,8 +288,7 @@ ErrorOr<void> SDHostController::issue_command(SD::Command const& cmd, u32 argume
 
         // 4. Check Command Inhibit (DAT) in the Present State register. Repeat
         // this step until Command Inhibit (DAT) is set to 0.
-        constexpr u32 data_inhibit = 1 << 2;
-        if (!retry_with_timeout([&]() { return !(m_registers->present_state & data_inhibit); })) {
+        if (!retry_with_timeout([&]() { return !m_registers->present_state.command_inhibit_dat; })) {
             return EIO;
         }
     }
