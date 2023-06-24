@@ -118,7 +118,7 @@ Optional<DeprecatedString> GitRepo::original_file_content(DeprecatedString const
 
 Optional<DeprecatedString> GitRepo::unstaged_diff(DeprecatedString const& file) const
 {
-    return command({ "diff", file.characters() });
+    return command({ "diff", "-U0", file.characters() });
 }
 
 bool GitRepo::is_tracked(DeprecatedString const& file) const
