@@ -9,9 +9,9 @@
 
 namespace Diff {
 
-ErrorOr<Vector<Hunk>> parse_hunks(DeprecatedString const& diff)
+ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
 {
-    Vector<DeprecatedString> diff_lines = diff.split('\n');
+    Vector<StringView> diff_lines = diff.split_view('\n');
     if (diff_lines.is_empty())
         return Vector<Hunk> {};
 
@@ -41,12 +41,12 @@ ErrorOr<Vector<Hunk>> parse_hunks(DeprecatedString const& diff)
         hunk.target_start_line = current_location.target_start_line;
 
         while (line_index < diff_lines.size() && diff_lines[line_index][0] == '-') {
-            TRY(hunk.removed_lines.try_append(diff_lines[line_index].substring(1, diff_lines[line_index].length() - 1)));
+            TRY(hunk.removed_lines.try_append(diff_lines[line_index].substring_view(1, diff_lines[line_index].length() - 1)));
             current_location.apply_offset(1, HunkLocation::LocationType::Original);
             ++line_index;
         }
         while (line_index < diff_lines.size() && diff_lines[line_index][0] == '+') {
-            TRY(hunk.added_lines.try_append(diff_lines[line_index].substring(1, diff_lines[line_index].length() - 1)));
+            TRY(hunk.added_lines.try_append(diff_lines[line_index].substring_view(1, diff_lines[line_index].length() - 1)));
             current_location.apply_offset(1, HunkLocation::LocationType::Target);
             ++line_index;
         }
