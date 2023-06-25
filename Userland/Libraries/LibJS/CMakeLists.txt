@@ -143,6 +143,8 @@ set(SOURCES
     Runtime/Intrinsics.cpp
     Runtime/Iterator.cpp
     Runtime/IteratorConstructor.cpp
+    Runtime/IteratorHelper.cpp
+    Runtime/IteratorHelperPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
