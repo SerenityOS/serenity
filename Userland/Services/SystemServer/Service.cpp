@@ -359,16 +359,13 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
 ErrorOr<NonnullRefPtr<Service>> Service::try_create(Core::ConfigFile const& config, StringView name)
 {
-    auto service = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Service(config, name)));
-    if (service->is_enabled())
-        TRY(service->setup_sockets());
-    return service;
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Service(config, name)));
 }
 
-bool Service::is_enabled() const
+bool Service::is_enabled_for_system_mode(StringView mode) const
 {
     extern DeprecatedString g_system_mode;
-    return m_system_modes.contains_slow(g_system_mode);
+    return m_system_modes.contains_slow(mode);
 }
 
 ErrorOr<void> Service::determine_account(int fd)

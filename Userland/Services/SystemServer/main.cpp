@@ -30,7 +30,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-DeprecatedString g_system_mode = "graphical";
+static constexpr StringView text_system_mode = "text"sv;
+static constexpr StringView selftest_system_mode = "self-test"sv;
+static constexpr StringView graphical_system_mode = "graphical"sv;
+DeprecatedString g_system_mode = graphical_system_mode;
 Vector<NonnullRefPtr<Service>> g_services;
 
 // NOTE: This handler ensures that the destructor of g_services is called.
@@ -68,8 +71,8 @@ static ErrorOr<void> determine_system_mode()
 {
     ArmedScopeGuard declare_text_mode_on_failure([&] {
         // Note: Only if the mode is not set to self-test, degrade it to text mode.
-        if (g_system_mode != "self-test")
-            g_system_mode = "text";
+        if (g_system_mode != selftest_system_mode)
+            g_system_mode = text_system_mode;
     });
 
     auto file_or_error = Core::File::open("/sys/kernel/system_mode"sv, Core::File::OpenMode::Read);
@@ -482,6 +485,26 @@ static ErrorOr<void> create_tmp_semaphore_directory()
     return {};
 }
 
+static ErrorOr<void> activate_services(Core::ConfigFile const& config)
+{
+    for (auto const& name : config.groups()) {
+        auto service = TRY(Service::try_create(config, name));
+        if (service->is_enabled_for_system_mode(g_system_mode)) {
+            TRY(service->setup_sockets());
+            g_services.append(move(service));
+        }
+    }
+    // After we've set them all up, activate them!
+    dbgln("Activating {} services...", g_services.size());
+    for (auto& service : g_services) {
+        dbgln_if(SYSTEMSERVER_DEBUG, "Activating {}", service->name());
+        if (auto result = service->activate(); result.is_error())
+            dbgln("{}: {}", service->name(), result.release_error());
+    }
+
+    return {};
+}
+
 static ErrorOr<void> reopen_base_file_descriptors()
 {
     // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
@@ -495,6 +518,42 @@ static ErrorOr<void> reopen_base_file_descriptors()
     TRY(Core::System::dup2(stdin_new_fd, 0));
     TRY(Core::System::dup2(stdin_new_fd, 1));
     TRY(Core::System::dup2(stdin_new_fd, 2));
+    return {};
+}
+
+static ErrorOr<void> activate_base_services_based_on_system_mode()
+{
+    if (g_system_mode == graphical_system_mode) {
+        bool found_gpu_device = false;
+        for (int attempt = 0; attempt < 10; attempt++) {
+            struct stat file_state;
+            int rc = lstat("/dev/gpu/connector0", &file_state);
+            if (rc == 0) {
+                found_gpu_device = true;
+                break;
+            }
+            sleep(1);
+        }
+        if (!found_gpu_device) {
+            dbgln("WARNING: No device nodes at /dev/gpu/ directory after 10 seconds. This is probably a sign of disabled graphics functionality.");
+            dbgln("To cope with this, graphical mode will not be enabled.");
+            g_system_mode = text_system_mode;
+        }
+    }
+
+    // Read our config and instantiate services.
+    // This takes care of setting up sockets.
+    auto config = TRY(Core::ConfigFile::open_for_system("SystemServer"));
+    TRY(activate_services(*config));
+    return {};
+}
+
+static ErrorOr<void> activate_user_services_based_on_system_mode()
+{
+    // Read our config and instantiate services.
+    // This takes care of setting up sockets.
+    auto config = TRY(Core::ConfigFile::open_for_app("SystemServer"));
+    TRY(activate_services(*config));
     return {};
 }
 
@@ -525,22 +584,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     event_loop.register_signal(SIGCHLD, sigchld_handler);
     event_loop.register_signal(SIGTERM, sigterm_handler);
 
-    // Read our config and instantiate services.
-    // This takes care of setting up sockets.
-    auto config = (user)
-        ? TRY(Core::ConfigFile::open_for_app("SystemServer"))
-        : TRY(Core::ConfigFile::open_for_system("SystemServer"));
-    for (auto const& name : config->groups()) {
-        auto service = TRY(Service::try_create(*config, name));
-        if (service->is_enabled())
-            g_services.append(move(service));
-    }
-
-    // After we've set them all up, activate them!
-    dbgln("Activating {} services...", g_services.size());
-    for (auto& service : g_services) {
-        if (auto result = service->activate(); result.is_error())
-            dbgln("{}: {}", service->name(), result.release_error());
+    if (!user) {
+        TRY(activate_base_services_based_on_system_mode());
+    } else {
+        TRY(activate_user_services_based_on_system_mode());
     }
 
     return event_loop.exec();
