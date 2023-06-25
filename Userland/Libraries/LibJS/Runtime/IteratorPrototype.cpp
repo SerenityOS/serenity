@@ -32,6 +32,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
     define_native_function(realm, vm.names.map, map, 1, attr);
     define_native_function(realm, vm.names.filter, filter, 1, attr);
+    define_native_function(realm, vm.names.take, take, 1, attr);
 
     return {};
 }
@@ -167,6 +168,73 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::filter)
     auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
 
     // 8. Return result.
+    return result;
+}
+
+// 3.1.3.4 Iterator.prototype.take ( limit ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.take
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::take)
+{
+    auto& realm = *vm.current_realm();
+
+    auto limit = vm.argument(0);
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. Let numLimit be ? ToNumber(limit).
+    auto numeric_limit = TRY(limit.to_number(vm));
+
+    // 4. If numLimit is NaN, throw a RangeError exception.
+    if (numeric_limit.is_nan())
+        return vm.throw_completion<RangeError>(ErrorType::NumberIsNaN, "limit"sv);
+
+    // 5. Let integerLimit be ! ToIntegerOrInfinity(numLimit).
+    auto integer_limit = MUST(numeric_limit.to_integer_or_infinity(vm));
+
+    // 6. If integerLimit < 0, throw a RangeError exception.
+    if (integer_limit < 0)
+        return vm.throw_completion<RangeError>(ErrorType::NumberIsNegative, "limit"sv);
+
+    // 7. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    // 8. Let closure be a new Abstract Closure with no parameters that captures iterated and integerLimit and performs the following steps when called:
+    IteratorHelper::Closure closure = [integer_limit](auto& iterator) -> ThrowCompletionOr<Value> {
+        auto& vm = iterator.vm();
+
+        auto const& iterated = iterator.underlying_iterator();
+
+        // a. Let remaining be integerLimit.
+        // b. Repeat,
+
+        // i. If remaining is 0, then
+        if (iterator.counter() >= integer_limit) {
+            // 1. Return ? IteratorClose(iterated, NormalCompletion(undefined)).
+            return iterator.close_result(normal_completion(js_undefined()));
+        }
+
+        // ii. If remaining is not +∞, then
+        //     1. Set remaining to remaining - 1.
+        iterator.increment_counter();
+
+        // iii. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // iv. If next is false, return undefined.
+        if (!next)
+            return iterator.result(js_undefined());
+
+        // v. Let completion be Completion(Yield(? IteratorValue(next))).
+        // vi. IfAbruptCloseIterator(completion, iterated).
+        return iterator.result(TRY(iterator_value(vm, *next)));
+    };
+
+    // 9. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+    // 10. Set result.[[UnderlyingIterator]] to iterated.
+    auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
+
+    // 11. Return result.
     return result;
 }
 
