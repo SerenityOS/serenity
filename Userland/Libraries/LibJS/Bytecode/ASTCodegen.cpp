@@ -1081,6 +1081,8 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             if (create_variables)
                 generator.emit<Bytecode::Op::CreateVariable>(identifier_ref, Bytecode::Op::EnvironmentMode::Lexical, false);
             generator.emit<Bytecode::Op::SetVariable>(identifier_ref, initialization_mode);
+        } else if (alias.has<NonnullRefPtr<MemberExpression const>>()) {
+            TRY(generator.emit_store_to_reference(alias.get<NonnullRefPtr<MemberExpression const>>()));
         } else {
             auto& identifier = alias.get<NonnullRefPtr<Identifier const>>()->string();
             auto identifier_ref = generator.intern_identifier(identifier);
