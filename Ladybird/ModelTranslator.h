@@ -31,6 +31,7 @@ public:
     virtual int columnCount(QModelIndex const& parent) const override;
     virtual int rowCount(QModelIndex const& parent) const override;
     virtual QVariant data(QModelIndex const&, int role) const override;
+    virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     virtual QModelIndex index(int row, int column, QModelIndex const& parent) const override;
     virtual QModelIndex parent(QModelIndex const& index) const override;
 

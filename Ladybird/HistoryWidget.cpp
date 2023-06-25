@@ -17,7 +17,7 @@ HistoryWidget::HistoryWidget()
     table_view->setModel(&m_history_model);
     table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     table_view->verticalHeader()->setVisible(false);
-    table_view->horizontalHeader()->setVisible(false);
+    table_view->horizontalHeader()->setVisible(true);
     m_table_view = table_view;
 }
 

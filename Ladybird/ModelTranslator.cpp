@@ -55,6 +55,19 @@ QVariant ModelTranslator::data(QModelIndex const& index, int role) const
     }
 }
 
+QVariant ModelTranslator::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Vertical)
+        return {};
+    VERIFY(m_model);
+    switch (role) {
+    case Qt::DisplayRole:
+        return convert_variant(m_model->column_name(section).release_value_but_fixme_should_propagate_errors());
+    default:
+        return {};
+    }
+}
+
 QModelIndex ModelTranslator::index(int row, int column, QModelIndex const& parent) const
 {
     VERIFY(m_model);
