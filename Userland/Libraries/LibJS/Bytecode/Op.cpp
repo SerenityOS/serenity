@@ -359,15 +359,16 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 
     auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
-    HashTable<Value, ValueTraits> excluded_names;
-    for (size_t i = 0; i < m_excluded_names_count; ++i)
-        excluded_names.set(interpreter.reg(m_excluded_names[i]));
+    HashTable<PropertyKey> excluded_names;
+    for (size_t i = 0; i < m_excluded_names_count; ++i) {
+        excluded_names.set(TRY(interpreter.reg(m_excluded_names[i]).to_property_key(vm)));
+    }
 
     auto own_keys = TRY(from_object->internal_own_property_keys());
 
     for (auto& key : own_keys) {
-        if (!excluded_names.contains(key)) {
-            auto property_key = TRY(key.to_property_key(vm));
+        auto property_key = TRY(key.to_property_key(vm));
+        if (!excluded_names.contains(property_key)) {
             auto property_value = TRY(from_object->get(property_key));
             to_object->define_direct_property(property_key, property_value, JS::default_attributes);
         }
