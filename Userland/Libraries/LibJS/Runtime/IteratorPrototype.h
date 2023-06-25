@@ -26,6 +26,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(filter);
     JS_DECLARE_NATIVE_FUNCTION(take);
     JS_DECLARE_NATIVE_FUNCTION(drop);
+    JS_DECLARE_NATIVE_FUNCTION(flat_map);
 };
 
 }
