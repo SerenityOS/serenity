@@ -380,7 +380,8 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.reg(m_lhs) = TRY(add(vm, interpreter.reg(m_lhs), interpreter.accumulator()));
+    auto string = TRY(interpreter.accumulator().to_primitive_string(vm));
+    interpreter.reg(m_lhs) = PrimitiveString::create(vm, interpreter.reg(m_lhs).as_string(), string);
     return {};
 }
 
