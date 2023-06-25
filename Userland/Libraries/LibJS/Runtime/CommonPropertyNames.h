@@ -512,6 +512,7 @@ namespace JS {
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(timeZones)                             \
+    P(toArray)                               \
     P(toDateString)                          \
     P(toExponential)                         \
     P(toFixed)                               \
