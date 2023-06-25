@@ -157,6 +157,7 @@ namespace JS {
     P(disposed)                              \
     P(done)                                  \
     P(dotAll)                                \
+    P(drop)                                  \
     P(encodeURI)                             \
     P(encodeURIComponent)                    \
     P(endsWith)                              \
