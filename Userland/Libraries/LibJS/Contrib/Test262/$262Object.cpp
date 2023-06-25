@@ -6,6 +6,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Contrib/Test262/$262Object.h>
 #include <LibJS/Contrib/Test262/AgentObject.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
@@ -102,7 +103,12 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
     }
 
     // 5. Let status be ScriptEvaluation(s).
-    auto status = vm.interpreter().run(script_or_error.value());
+    auto status = [&] {
+        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists())
+            return bytecode_interpreter->run(script_or_error.value());
+        else
+            return vm.interpreter().run(script_or_error.value());
+    }();
 
     // 6. Return Completion(status).
     return status;

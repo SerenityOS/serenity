@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +43,7 @@ public:
     virtual ~WebSocket() override;
 
     WebIDL::ExceptionOr<String> url() const { return TRY_OR_THROW_OOM(vm(), m_url.to_string()); }
+    void set_url(AK::URL url) { m_url = move(url); }
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -66,12 +68,11 @@ private:
     void on_error();
     void on_close(u16 code, String reason, bool was_clean);
 
-    WebSocket(HTML::Window&, AK::URL&, Vector<String> const& protocols);
+    WebSocket(JS::Realm&);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
-    virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::NonnullGCPtr<HTML::Window> m_window;
+    ErrorOr<void> establish_web_socket_connection(AK::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client);
 
     AK::URL m_url;
     String m_binary_type { "blob"_string.release_value_but_fixme_should_propagate_errors() };

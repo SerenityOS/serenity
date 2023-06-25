@@ -380,7 +380,8 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
 ThrowCompletionOr<void> ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.reg(m_lhs) = TRY(add(vm, interpreter.reg(m_lhs), interpreter.accumulator()));
+    auto string = TRY(interpreter.accumulator().to_primitive_string(vm));
+    interpreter.reg(m_lhs) = PrimitiveString::create(vm, interpreter.reg(m_lhs).as_string(), string);
     return {};
 }
 
@@ -841,6 +842,15 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
     auto& vm = interpreter.vm();
     if (!interpreter.accumulator().is_object())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
+    return {};
+}
+
+ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto value = interpreter.accumulator();
+    if (value.is_nullish())
+        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
     return {};
 }
 
@@ -1430,6 +1440,11 @@ DeprecatedString Throw::to_deprecated_string_impl(Bytecode::Executable const&) c
 DeprecatedString ThrowIfNotObject::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "ThrowIfNotObject";
+}
+
+DeprecatedString ThrowIfNullish::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ThrowIfNullish";
 }
 
 DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const

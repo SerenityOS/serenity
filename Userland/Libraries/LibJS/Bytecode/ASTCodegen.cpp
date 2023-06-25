@@ -29,17 +29,13 @@ Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Gener
 
 Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    // Note: SwitchStatement has its own codegen, but still calls into this function to handle the scoping of the switch body.
-    auto is_switch_statement = is<SwitchStatement>(*this);
     bool did_create_lexical_environment = false;
 
-    if (is<BlockStatement>(*this) || is_switch_statement) {
+    if (is<BlockStatement>(*this)) {
         if (has_lexical_declarations()) {
             generator.block_declaration_instantiation(*this);
             did_create_lexical_environment = true;
         }
-        if (is_switch_statement)
-            return {};
     } else if (is<Program>(*this)) {
         // GlobalDeclarationInstantiation is handled by the C++ AO.
     } else {
@@ -993,6 +989,8 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
 
 static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg, bool create_variables)
 {
+    generator.emit<Bytecode::Op::ThrowIfNullish>();
+
     Vector<Bytecode::Register> excluded_property_names;
     auto has_rest = false;
     if (pattern.entries.size() > 0)
@@ -1255,8 +1253,10 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
 
             generator.switch_to_basic_block(value_is_undefined_block);
 
-            if (auto const* lhs = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
-                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*lhs)->string()));
+            if (auto const* alias_identifier = alias.get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*alias_identifier)->string()));
+            } else if (auto const* name_identifier = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*name_identifier)->string()));
             } else {
                 TRY(initializer->generate_bytecode(generator));
             }
@@ -1902,6 +1902,12 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 
     // FIXME: We only need to record the first and last register,
     //        due to packing everything in an array, same goes for argument_regs
+    // FIXME: Follow
+    //        13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
+    //        more closely, namely:
+    //        * cache this somehow
+    //        * add a raw object accessor
+    //        * freeze array and raw member
     Vector<Bytecode::Register> string_regs;
     auto& expressions = m_template_literal->expressions();
     for (size_t i = 0; i < expressions.size(); ++i) {
@@ -1914,8 +1920,14 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     for (size_t i = 0; i < expressions.size(); ++i) {
         if (i % 2 != 0)
             continue;
+        // NOTE: If the string contains invalid escapes we get a null expression here,
+        //       which we then convert to the expected `undefined` TV. See
+        //       12.9.6.1 Static Semantics: TV, https://tc39.es/ecma262/#sec-static-semantics-tv
+        if (is<NullLiteral>(expressions[i]))
+            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        else
+            TRY(expressions[i]->generate_bytecode(generator));
 
-        TRY(expressions[i]->generate_bytecode(generator));
         auto string_reg = string_regs[reg_index++];
         generator.emit<Bytecode::Op::Store>(string_reg);
     }
@@ -2128,9 +2140,9 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
     Bytecode::BasicBlock* default_block { nullptr };
     Bytecode::BasicBlock* next_test_block = &generator.make_block();
 
-    auto has_lexical_block = has_lexical_declarations();
-    // Note: This call ends up calling begin_variable_scope() if has_lexical_block is true, so we need to clean up after it at the end.
-    TRY(ScopeNode::generate_bytecode(generator));
+    auto has_lexical_declarations = this->has_lexical_declarations();
+    if (has_lexical_declarations)
+        generator.block_declaration_instantiation(*this);
 
     generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *next_test_block }, {});
 
@@ -2179,10 +2191,12 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
         current_block++;
     }
     generator.end_breakable_scope();
-    if (has_lexical_block)
-        generator.end_variable_scope();
 
     generator.switch_to_basic_block(end_block);
+
+    if (has_lexical_declarations)
+        generator.end_variable_scope();
+
     return {};
 }
 

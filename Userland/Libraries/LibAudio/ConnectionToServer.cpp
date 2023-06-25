@@ -142,18 +142,6 @@ size_t ConnectionToServer::remaining_buffers() const
     return m_buffer->size() - m_buffer->weak_remaining_capacity();
 }
 
-void ConnectionToServer::main_mix_muted_state_changed(bool muted)
-{
-    if (on_main_mix_muted_state_change)
-        on_main_mix_muted_state_change(muted);
-}
-
-void ConnectionToServer::main_mix_volume_changed(double volume)
-{
-    if (on_main_mix_volume_change)
-        on_main_mix_volume_change(volume);
-}
-
 void ConnectionToServer::client_volume_changed(double volume)
 {
     if (on_client_volume_change)

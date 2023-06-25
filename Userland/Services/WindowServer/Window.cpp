@@ -380,18 +380,6 @@ void Window::start_launch_animation(Gfx::IntRect const& launch_origin_rect)
     m_animation->start();
 }
 
-void Window::set_opacity(float opacity)
-{
-    if (m_opacity == opacity)
-        return;
-    bool was_opaque = is_opaque();
-    m_opacity = opacity;
-    if (was_opaque != is_opaque())
-        Compositor::the().invalidate_occlusions();
-    invalidate(false);
-    WindowManager::the().notify_opacity_changed(*this);
-}
-
 void Window::set_has_alpha_channel(bool value)
 {
     if (m_has_alpha_channel == value)

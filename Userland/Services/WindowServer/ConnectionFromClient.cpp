@@ -322,16 +322,6 @@ void ConnectionFromClient::set_forced_shadow(i32 window_id, bool shadow)
     Compositor::the().invalidate_occlusions();
 }
 
-void ConnectionFromClient::set_window_opacity(i32 window_id, float opacity)
-{
-    auto it = m_windows.find(window_id);
-    if (it == m_windows.end()) {
-        did_misbehave("SetWindowOpacity: Bad window ID");
-        return;
-    }
-    it->value->set_opacity(opacity);
-}
-
 Messages::WindowServer::SetWallpaperResponse ConnectionFromClient::set_wallpaper(Gfx::ShareableBitmap const& bitmap)
 {
     return Compositor::the().set_wallpaper(bitmap.bitmap());
@@ -613,7 +603,7 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
 
 void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool minimizable, bool closeable, bool resizable,
-    bool fullscreen, bool frameless, bool forced_shadow, float opacity,
+    bool fullscreen, bool frameless, bool forced_shadow,
     float alpha_hit_threshold, Gfx::IntSize base_size, Gfx::IntSize size_increment,
     Gfx::IntSize minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
     DeprecatedString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
@@ -675,7 +665,6 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
         window->set_rect(Screen::bounding_rect());
         window->recalculate_rect();
     }
-    window->set_opacity(opacity);
     window->set_alpha_hit_threshold(alpha_hit_threshold);
     window->set_size_increment(size_increment);
     window->set_base_size(base_size);

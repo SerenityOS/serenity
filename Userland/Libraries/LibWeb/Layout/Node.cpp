@@ -594,7 +594,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto maybe_text_decoration_thickness = computed_style.length_percentage(CSS::PropertyID::TextDecorationThickness); maybe_text_decoration_thickness.has_value())
         computed_values.set_text_decoration_thickness(maybe_text_decoration_thickness.release_value());
 
-    computed_values.set_text_shadow(computed_style.text_shadow());
+    computed_values.set_text_shadow(computed_style.text_shadow(*this));
 
     computed_values.set_z_index(computed_style.z_index());
     computed_values.set_opacity(computed_style.opacity());
@@ -616,7 +616,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_margin(computed_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
     computed_values.set_padding(computed_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
 
-    computed_values.set_box_shadow(computed_style.box_shadow());
+    computed_values.set_box_shadow(computed_style.box_shadow(*this));
 
     computed_values.set_transformations(computed_style.transformations());
     computed_values.set_transform_origin(computed_style.transform_origin());

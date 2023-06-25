@@ -16,7 +16,7 @@ struct QueryParam {
     String name;
     String value;
 };
-ErrorOr<String> url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
+ErrorOr<String> url_encode(Vector<QueryParam> const&, StringView encoding = "UTF-8"sv);
 ErrorOr<Vector<QueryParam>> url_decode(StringView);
 
 class URLSearchParams : public Bindings::PlatformObject {
