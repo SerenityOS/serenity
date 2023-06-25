@@ -21,6 +21,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -30,6 +31,7 @@
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
 #    include <sys/ptrace.h>
+#    include <sys/sysmacros.h>
 #endif
 
 #if defined(AK_OS_LINUX) && !defined(MFD_CLOEXEC)
@@ -444,6 +446,18 @@ ErrorOr<int> fcntl(int fd, int command, ...)
         return Error::from_syscall("fcntl"sv, -errno);
     return rc;
 }
+
+#ifdef AK_OS_SERENITY
+ErrorOr<void> create_block_device(StringView name, mode_t mode, unsigned major, unsigned minor)
+{
+    return Core::System::mknod(name, mode | S_IFBLK, makedev(major, minor));
+}
+
+ErrorOr<void> create_char_device(StringView name, mode_t mode, unsigned major, unsigned minor)
+{
+    return Core::System::mknod(name, mode | S_IFCHR, makedev(major, minor));
+}
+#endif
 
 ErrorOr<void*> mmap(void* address, size_t size, int protection, int flags, int fd, off_t offset, [[maybe_unused]] size_t alignment, [[maybe_unused]] StringView name)
 {
