@@ -224,7 +224,7 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
     // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
     // 5. If numSize is NaN, throw a TypeError exception.
     if (number_size.is_nan())
-        return vm.throw_completion<TypeError>(ErrorType::IntlNumberIsNaN, "size"sv);
+        return vm.throw_completion<TypeError>(ErrorType::NumberIsNaN, "size"sv);
 
     // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
     auto integer_size = MUST(number_size.to_integer_or_infinity(vm));
