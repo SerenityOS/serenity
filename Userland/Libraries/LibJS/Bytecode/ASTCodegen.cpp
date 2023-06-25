@@ -29,17 +29,13 @@ Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Gener
 
 Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    // Note: SwitchStatement has its own codegen, but still calls into this function to handle the scoping of the switch body.
-    auto is_switch_statement = is<SwitchStatement>(*this);
     bool did_create_lexical_environment = false;
 
-    if (is<BlockStatement>(*this) || is_switch_statement) {
+    if (is<BlockStatement>(*this)) {
         if (has_lexical_declarations()) {
             generator.block_declaration_instantiation(*this);
             did_create_lexical_environment = true;
         }
-        if (is_switch_statement)
-            return {};
     } else if (is<Program>(*this)) {
         // GlobalDeclarationInstantiation is handled by the C++ AO.
     } else {
@@ -2128,9 +2124,9 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
     Bytecode::BasicBlock* default_block { nullptr };
     Bytecode::BasicBlock* next_test_block = &generator.make_block();
 
-    auto has_lexical_block = has_lexical_declarations();
-    // Note: This call ends up calling begin_variable_scope() if has_lexical_block is true, so we need to clean up after it at the end.
-    TRY(ScopeNode::generate_bytecode(generator));
+    auto has_lexical_declarations = this->has_lexical_declarations();
+    if (has_lexical_declarations)
+        generator.block_declaration_instantiation(*this);
 
     generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *next_test_block }, {});
 
@@ -2179,10 +2175,12 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
         current_block++;
     }
     generator.end_breakable_scope();
-    if (has_lexical_block)
-        generator.end_variable_scope();
 
     generator.switch_to_basic_block(end_block);
+
+    if (has_lexical_declarations)
+        generator.end_variable_scope();
+
     return {};
 }
 
