@@ -34,6 +34,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.filter, filter, 1, attr);
     define_native_function(realm, vm.names.take, take, 1, attr);
     define_native_function(realm, vm.names.drop, drop, 1, attr);
+    define_native_function(realm, vm.names.flatMap, flat_map, 1, attr);
 
     return {};
 }
@@ -307,6 +308,140 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::drop)
     auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
 
     // 11. Return result.
+    return result;
+}
+
+class FlatMapIterator : public Cell {
+    JS_CELL(FlatMapIterator, Cell);
+
+public:
+    ThrowCompletionOr<Value> next(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
+    {
+        if (m_inner_iterator.has_value())
+            return next_inner_iterator(vm, iterated, iterator, mapper);
+        return next_outer_iterator(vm, iterated, iterator, mapper);
+    }
+
+private:
+    FlatMapIterator() = default;
+
+    virtual void visit_edges(Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+
+        if (m_inner_iterator.has_value())
+            visitor.visit(m_inner_iterator->iterator);
+    }
+
+    ThrowCompletionOr<Value> next_outer_iterator(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
+    {
+        // i. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // ii. If next is false, return undefined.
+        if (!next)
+            return iterator.result(js_undefined());
+
+        // iii. Let value be ? IteratorValue(next).
+        auto value = TRY(iterator_value(vm, *next));
+
+        // iv. Let mapped be Completion(Call(mapper, undefined, « value, 𝔽(counter) »)).
+        auto mapped = call(vm, mapper, js_undefined(), value, Value { iterator.counter() });
+
+        // v. IfAbruptCloseIterator(mapped, iterated).
+        if (mapped.is_error())
+            return iterator.close_result(mapped.release_error());
+
+        // vi. Let innerIterator be Completion(GetIteratorFlattenable(mapped)).
+        auto inner_iterator = get_iterator_flattenable(vm, mapped.release_value());
+
+        // vii. IfAbruptCloseIterator(innerIterator, iterated).
+        if (inner_iterator.is_error())
+            return iterator.close_result(inner_iterator.release_error());
+
+        // viii. Let innerAlive be true.
+        m_inner_iterator = inner_iterator.release_value();
+
+        // x. Set counter to counter + 1.
+        // NOTE: We do this step early to ensure it occurs before returning.
+        iterator.increment_counter();
+
+        // ix. Repeat, while innerAlive is true,
+        return next_inner_iterator(vm, iterated, iterator, mapper);
+    }
+
+    ThrowCompletionOr<Value> next_inner_iterator(VM& vm, IteratorRecord const& iterated, IteratorHelper& iterator, FunctionObject& mapper)
+    {
+        VERIFY(m_inner_iterator.has_value());
+
+        // 1. Let innerNext be Completion(IteratorStep(innerIterator)).
+        auto inner_next = iterator_step(vm, *m_inner_iterator);
+
+        // 2. IfAbruptCloseIterator(innerNext, iterated).
+        if (inner_next.is_error())
+            return iterator.close_result(inner_next.release_error());
+
+        // 3. If innerNext is false, then
+        if (!inner_next.value()) {
+            // a. Set innerAlive to false.
+            m_inner_iterator.clear();
+
+            return next_outer_iterator(vm, iterated, iterator, mapper);
+        }
+        // 4. Else,
+        else {
+            // a. Let innerValue be Completion(IteratorValue(innerNext)).
+            auto inner_value = iterator_value(vm, *inner_next.release_value());
+
+            // b. IfAbruptCloseIterator(innerValue, iterated).
+            if (inner_value.is_error())
+                return iterator.close_result(inner_value.release_error());
+
+            // c. Let completion be Completion(Yield(innerValue)).
+            // d. If completion is an abrupt completion, then
+            //     i. Let backupCompletion be Completion(IteratorClose(innerIterator, completion)).
+            //     ii. IfAbruptCloseIterator(backupCompletion, iterated).
+            //     iii. Return ? IteratorClose(completion, iterated).
+            return inner_value.release_value();
+        }
+    }
+
+    Optional<IteratorRecord> m_inner_iterator;
+};
+
+// 3.1.3.6 Iterator.prototype.flatMap ( mapper ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.flatmap
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::flat_map)
+{
+    auto& realm = *vm.current_realm();
+
+    auto mapper = vm.argument(0);
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. If IsCallable(mapper) is false, throw a TypeError exception.
+    if (!mapper.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "mapper"sv);
+
+    // 4. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    auto flat_map_iterator = MUST_OR_THROW_OOM(vm.heap().allocate<FlatMapIterator>(realm));
+
+    // 5. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
+    IteratorHelper::Closure closure = [flat_map_iterator, mapper = NonnullGCPtr { mapper.as_function() }](auto& iterator) mutable -> ThrowCompletionOr<Value> {
+        auto& vm = iterator.vm();
+
+        auto const& iterated = iterator.underlying_iterator();
+        return flat_map_iterator->next(vm, iterated, iterator, *mapper);
+    };
+
+    // 6. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+    // 7. Set result.[[UnderlyingIterator]] to iterated.
+    auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
+
+    // 8. Return result.
     return result;
 }
 
