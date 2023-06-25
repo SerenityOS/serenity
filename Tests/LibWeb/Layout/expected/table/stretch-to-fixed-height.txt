@@ -1,7 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x122 children: not-inline
-      TableWrapper <(anonymous)> at (8,8) content-size 2x122 [BFC] children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 24x122 [BFC] children: not-inline
         Box <table> at (19,19) content-size 2x100 table-box [TFC] children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
