@@ -35,6 +35,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.take, take, 1, attr);
     define_native_function(realm, vm.names.drop, drop, 1, attr);
     define_native_function(realm, vm.names.flatMap, flat_map, 1, attr);
+    define_native_function(realm, vm.names.reduce, reduce, 1, attr);
 
     return {};
 }
@@ -443,6 +444,76 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::flat_map)
 
     // 8. Return result.
     return result;
+}
+
+// 3.1.3.7 Iterator.prototype.reduce ( reducer [ , initialValue ] ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.reduce
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::reduce)
+{
+    auto reducer = vm.argument(0);
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. If IsCallable(reducer) is false, throw a TypeError exception.
+    if (!reducer.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "reducer"sv);
+
+    // 4. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    Value accumulator;
+    size_t counter = 0;
+
+    // 5. If initialValue is not present, then
+    if (vm.argument_count() < 2) {
+        // a. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // b. If next is false, throw a TypeError exception.
+        if (!next)
+            return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
+
+        // c. Let accumulator be ? IteratorValue(next).
+        accumulator = TRY(iterator_value(vm, *next));
+
+        // d. Let counter be 1.
+        counter = 1;
+    }
+    // 6. Else,
+    else {
+        // a. Let accumulator be initialValue.
+        accumulator = vm.argument(1);
+
+        // b. Let counter be 0.
+        counter = 0;
+    }
+
+    // 7. Repeat,
+    while (true) {
+        // a. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // b. If next is false, return accumulator.
+        if (!next)
+            return accumulator;
+
+        // c. Let value be ? IteratorValue(next).
+        auto value = TRY(iterator_value(vm, *next));
+
+        // d. Let result be Completion(Call(reducer, undefined, « accumulator, value, 𝔽(counter) »)).
+        auto result = call(vm, reducer.as_function(), js_undefined(), accumulator, value, Value { counter });
+
+        // e. IfAbruptCloseIterator(result, iterated).
+        if (result.is_error())
+            return *TRY(iterator_close(vm, iterated, result.release_error()));
+
+        // f. Set accumulator to result.[[Value]].
+        accumulator = result.release_value();
+
+        // g. Set counter to counter + 1.
+        ++counter;
+    }
 }
 
 }
