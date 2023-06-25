@@ -638,12 +638,12 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
     // end
     auto& test_block = generator.make_block();
     auto& body_block = generator.make_block();
+    auto& load_result_and_jump_to_end_block = generator.make_block();
     auto& end_block = generator.make_block();
 
     // Init result register
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto result_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Store>(result_reg);
 
     // jump to the test block
     generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -651,10 +651,11 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
         {});
 
     generator.switch_to_basic_block(test_block);
+    generator.emit<Bytecode::Op::Store>(result_reg);
     TRY(m_test->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { body_block },
-        Bytecode::Label { end_block });
+        Bytecode::Label { load_result_and_jump_to_end_block });
 
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block }, label_set);
@@ -669,8 +670,11 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
             {});
     }
 
-    generator.switch_to_basic_block(end_block);
+    generator.switch_to_basic_block(load_result_and_jump_to_end_block);
     generator.emit<Bytecode::Op::Load>(result_reg);
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(end_block);
     return {};
 }
 
@@ -689,6 +693,7 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evalua
     // end
     auto& test_block = generator.make_block();
     auto& body_block = generator.make_block();
+    auto& load_result_and_jump_to_end_block = generator.make_block();
     auto& end_block = generator.make_block();
 
     // Init result register
@@ -702,10 +707,11 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evalua
         {});
 
     generator.switch_to_basic_block(test_block);
+    generator.emit<Bytecode::Op::Store>(result_reg);
     TRY(m_test->generate_bytecode(generator));
     generator.emit<Bytecode::Op::JumpConditional>().set_targets(
         Bytecode::Label { body_block },
-        Bytecode::Label { end_block });
+        Bytecode::Label { load_result_and_jump_to_end_block });
 
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block }, label_set);
@@ -720,8 +726,11 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evalua
             {});
     }
 
-    generator.switch_to_basic_block(end_block);
+    generator.switch_to_basic_block(load_result_and_jump_to_end_block);
     generator.emit<Bytecode::Op::Load>(result_reg);
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(end_block);
     return {};
 }
 
@@ -748,6 +757,7 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
     Bytecode::BasicBlock* test_block_ptr { nullptr };
     Bytecode::BasicBlock* body_block_ptr { nullptr };
     Bytecode::BasicBlock* update_block_ptr { nullptr };
+    Bytecode::BasicBlock* load_result_and_jump_to_end_block_ptr { nullptr };
 
     auto& end_block = generator.make_block();
 
@@ -789,22 +799,33 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto result_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Store>(result_reg);
+
+    if (m_test && m_update)
+        generator.emit<Bytecode::Op::Store>(result_reg);
 
     generator.emit<Bytecode::Op::Jump>().set_targets(
         Bytecode::Label { *test_block_ptr },
         {});
 
     if (m_test) {
+        load_result_and_jump_to_end_block_ptr = &generator.make_block();
         generator.switch_to_basic_block(*test_block_ptr);
+
+        if (!m_update)
+            generator.emit<Bytecode::Op::Store>(result_reg);
+
         TRY(m_test->generate_bytecode(generator));
         generator.emit<Bytecode::Op::JumpConditional>().set_targets(
             Bytecode::Label { *body_block_ptr },
-            Bytecode::Label { end_block });
+            Bytecode::Label { *load_result_and_jump_to_end_block_ptr });
     }
 
     if (m_update) {
         generator.switch_to_basic_block(*update_block_ptr);
+
+        if (m_test)
+            generator.emit<Bytecode::Op::Store>(result_reg);
+
         TRY(m_update->generate_bytecode(generator));
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { *test_block_ptr },
@@ -830,8 +851,13 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
         }
     }
 
+    if (load_result_and_jump_to_end_block_ptr) {
+        generator.switch_to_basic_block(*load_result_and_jump_to_end_block_ptr);
+        generator.emit<Bytecode::Op::Load>(result_reg);
+        generator.emit<Bytecode::Op::Jump>(Bytecode::Label { end_block });
+    }
+
     generator.switch_to_basic_block(end_block);
-    generator.emit<Bytecode::Op::Load>(result_reg);
 
     if (has_lexical_environment)
         generator.end_variable_scope();
