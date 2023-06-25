@@ -874,8 +874,12 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
             auto& string_literal = static_cast<StringLiteral const&>(property->key());
             Bytecode::IdentifierTableIndex key_name = generator.intern_identifier(string_literal.value());
 
-            if (property_kind != Bytecode::Op::PropertyKind::Spread)
+            if (property_kind == Bytecode::Op::PropertyKind::ProtoSetter) {
                 TRY(property->value().generate_bytecode(generator));
+            } else if (property_kind != Bytecode::Op::PropertyKind::Spread) {
+                DeprecatedFlyString name = string_literal.value();
+                TRY(generator.emit_named_evaluation_if_anonymous_function(property->value(), name));
+            }
 
             generator.emit<Bytecode::Op::PutById>(object_reg, key_name, property_kind);
         } else {
