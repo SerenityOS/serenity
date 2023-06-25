@@ -1137,16 +1137,15 @@ ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter&
 
 ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interpreter) const
 {
+    auto& vm = interpreter.vm();
     auto name = m_class_expression.name();
-    auto scope = interpreter.ast_interpreter_scope(interpreter.realm());
-    auto& ast_interpreter = scope.interpreter();
 
     ECMAScriptFunctionObject* class_object = nullptr;
 
     if (!m_class_expression.has_name() && m_lhs_name.has_value())
-        class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, {}, m_lhs_name.value()));
+        class_object = TRY(m_class_expression.class_definition_evaluation(vm, {}, m_lhs_name.value()));
     else
-        class_object = TRY(m_class_expression.class_definition_evaluation(ast_interpreter, name, name.is_null() ? ""sv : name));
+        class_object = TRY(m_class_expression.class_definition_evaluation(vm, name, name.is_null() ? ""sv : name));
 
     class_object->set_source_text(m_class_expression.source_text());
 

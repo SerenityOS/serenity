@@ -291,7 +291,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
     } else if (is<ClassExpression>(expression)) {
         auto& class_expression = static_cast<ClassExpression const&>(expression);
         if (!class_expression.has_name()) {
-            return TRY(class_expression.class_definition_evaluation(interpreter(), {}, name));
+            return TRY(class_expression.class_definition_evaluation(*this, {}, name));
         }
     }
 
