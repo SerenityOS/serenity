@@ -725,7 +725,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     Value return_value;
     if (m_type == CallType::DirectEval) {
         if (callee == interpreter.realm().intrinsics().eval_function())
-            return_value = TRY(perform_eval(vm, argument_values[0].value_or(JS::js_undefined()), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
+            return_value = TRY(perform_eval(vm, !argument_values.is_empty() ? argument_values[0].value_or(JS::js_undefined()) : js_undefined(), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
         else
             return_value = TRY(call(vm, function, this_value, move(argument_values)));
     } else if (m_type == CallType::Call)
