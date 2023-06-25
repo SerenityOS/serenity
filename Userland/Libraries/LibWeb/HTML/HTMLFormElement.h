@@ -96,7 +96,7 @@ private:
 
     ErrorOr<String> pick_an_encoding() const;
 
-    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
+    ErrorOr<void> mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
     ErrorOr<void> submit_as_entity_body(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, EncodingTypeAttributeState encoding_type, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
     void get_action_url(AK::URL parsed_action, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);
     ErrorOr<void> mail_with_headers(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling);

@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <AK/URLParser.h>
 #include <AK/Utf8View.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/URL/URL.h>
@@ -36,17 +39,40 @@ void URLSearchParams::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_url);
 }
 
-ErrorOr<String> url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEncodeSet percent_encode_set)
+// https://url.spec.whatwg.org/#concept-urlencoded-serializer
+// The application/x-www-form-urlencoded serializer takes a list of name-value tuples tuples, with an optional encoding encoding (default UTF-8), and then runs these steps. They return an ASCII string.
+ErrorOr<String> url_encode(Vector<QueryParam> const& tuples, StringView encoding)
 {
-    StringBuilder builder;
-    for (size_t i = 0; i < pairs.size(); ++i) {
-        TRY(builder.try_append(AK::URL::percent_encode(pairs[i].name, percent_encode_set, AK::URL::SpaceAsPlus::Yes)));
-        TRY(builder.try_append('='));
-        TRY(builder.try_append(AK::URL::percent_encode(pairs[i].value, percent_encode_set, AK::URL::SpaceAsPlus::Yes)));
-        if (i != pairs.size() - 1)
-            TRY(builder.try_append('&'));
+    // 1. Set encoding to the result of getting an output encoding from encoding.
+    encoding = TextCodec::get_output_encoding(encoding);
+
+    // 2. Let output be the empty string.
+    StringBuilder output;
+
+    // 3. For each tuple of tuples:
+    for (auto const& tuple : tuples) {
+        // 1. Assert: tuple’s name and tuple’s value are scalar value strings.
+
+        // 2. Let name be the result of running percent-encode after encoding with encoding, tuple’s name, the application/x-www-form-urlencoded percent-encode set, and true.
+        // FIXME: URLParser does not currently implement encoding.
+        auto name = AK::URLParser::percent_encode_after_encoding(tuple.name, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true);
+
+        // 3. Let value be the result of running percent-encode after encoding with encoding, tuple’s value, the application/x-www-form-urlencoded percent-encode set, and true.
+        // FIXME: URLParser does not currently implement encoding.
+        auto value = AK::URLParser::percent_encode_after_encoding(tuple.value, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded, true);
+
+        // 4. If output is not the empty string, then append U+0026 (&) to output.
+        if (!output.is_empty())
+            TRY(output.try_append('&'));
+
+        // 5. Append name, followed by U+003D (=), followed by value, to output.
+        TRY(output.try_append(name));
+        TRY(output.try_append('='));
+        TRY(output.try_append(value));
     }
-    return builder.to_string();
+
+    // 4. Return output.
+    return output.to_string();
 }
 
 // https://url.spec.whatwg.org/#concept-urlencoded-parser
@@ -292,7 +318,7 @@ WebIDL::ExceptionOr<String> URLSearchParams::to_string() const
     auto& vm = realm().vm();
 
     // return the serialization of this’s list.
-    return TRY_OR_THROW_OOM(vm, url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+    return TRY_OR_THROW_OOM(vm, url_encode(m_list));
 }
 
 JS::ThrowCompletionOr<void> URLSearchParams::for_each(ForEachCallback callback)
