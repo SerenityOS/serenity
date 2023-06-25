@@ -1301,7 +1301,7 @@ public:
 
     // We use the Completion also as a ClassStaticBlockDefinition Record.
     using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const = 0;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const = 0;
 
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; };
 
@@ -1330,7 +1330,7 @@ public:
     virtual ElementKind class_element_kind() const override { return ElementKind::Method; }
 
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
@@ -1357,7 +1357,7 @@ public:
     virtual ElementKind class_element_kind() const override { return ElementKind::Field; }
 
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
@@ -1376,7 +1376,7 @@ public:
     }
 
     virtual ElementKind class_element_kind() const override { return ElementKind::StaticInitializer; }
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
 
     virtual void dump(int indent) const override;
 
@@ -1421,7 +1421,7 @@ public:
 
     bool has_name() const { return !m_name.is_empty(); }
 
-    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(Interpreter&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
 
 private:
     virtual bool is_class_expression() const override { return true; }
