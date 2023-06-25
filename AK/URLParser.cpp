@@ -117,7 +117,7 @@ constexpr bool is_double_dot_path_segment(StringView input)
 }
 
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-static DeprecatedString percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false)
+DeprecatedString URLParser::percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus)
 {
     // NOTE: This is written somewhat ad-hoc since we don't yet implement the Encoding spec.
 
