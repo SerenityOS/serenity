@@ -57,6 +57,9 @@ public:
 
     static URL parse(StringView input, Optional<URL> const& base_url = {}, Optional<URL> url = {}, Optional<State> state_override = {});
 
+    // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
+    static DeprecatedString percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false);
+
 private:
     static Optional<URL> parse_data_url(StringView raw_input);
 };
