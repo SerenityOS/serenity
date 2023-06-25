@@ -5,6 +5,8 @@
  */
 
 #include "CSSKeyframesRule.h"
+#include <LibWeb/Bindings/CSSKeyframesRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 
 namespace Web::CSS {
 
@@ -15,8 +17,11 @@ void CSSKeyframesRule::visit_edges(Visitor& visitor)
         visitor.visit(keyframe);
 }
 
-JS::ThrowCompletionOr<void> CSSKeyframesRule::initialize(JS::Realm&)
+JS::ThrowCompletionOr<void> CSSKeyframesRule::initialize(JS::Realm& realm)
 {
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframesRulePrototype>(realm, "CSSKeyframesRule"));
+
     return {};
 }
 
