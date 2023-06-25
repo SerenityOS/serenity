@@ -1902,6 +1902,12 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 
     // FIXME: We only need to record the first and last register,
     //        due to packing everything in an array, same goes for argument_regs
+    // FIXME: Follow
+    //        13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject
+    //        more closely, namely:
+    //        * cache this somehow
+    //        * add a raw object accessor
+    //        * freeze array and raw member
     Vector<Bytecode::Register> string_regs;
     auto& expressions = m_template_literal->expressions();
     for (size_t i = 0; i < expressions.size(); ++i) {
@@ -1914,8 +1920,14 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     for (size_t i = 0; i < expressions.size(); ++i) {
         if (i % 2 != 0)
             continue;
+        // NOTE: If the string contains invalid escapes we get a null expression here,
+        //       which we then convert to the expected `undefined` TV. See
+        //       12.9.6.1 Static Semantics: TV, https://tc39.es/ecma262/#sec-static-semantics-tv
+        if (is<NullLiteral>(expressions[i]))
+            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        else
+            TRY(expressions[i]->generate_bytecode(generator));
 
-        TRY(expressions[i]->generate_bytecode(generator));
         auto string_reg = string_regs[reg_index++];
         generator.emit<Bytecode::Op::Store>(string_reg);
     }
