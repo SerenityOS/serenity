@@ -30,6 +30,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(reduce);
     JS_DECLARE_NATIVE_FUNCTION(to_array);
     JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(some);
 };
 
 }
