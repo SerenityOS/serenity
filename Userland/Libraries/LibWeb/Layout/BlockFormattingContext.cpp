@@ -437,7 +437,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     });
     VERIFY(table_box.has_value());
 
-    auto table_used_width = throwaway_state.get(*table_box).content_width();
+    auto table_used_width = throwaway_state.get(*table_box).border_box_width();
     return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
 }
 
