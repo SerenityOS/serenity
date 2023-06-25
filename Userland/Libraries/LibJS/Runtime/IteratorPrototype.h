@@ -24,6 +24,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
     JS_DECLARE_NATIVE_FUNCTION(map);
     JS_DECLARE_NATIVE_FUNCTION(filter);
+    JS_DECLARE_NATIVE_FUNCTION(take);
 };
 
 }
