@@ -39,6 +39,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.reduce, reduce, 1, attr);
     define_native_function(realm, vm.names.toArray, to_array, 0, attr);
     define_native_function(realm, vm.names.forEach, for_each, 1, attr);
+    define_native_function(realm, vm.names.some, some, 1, attr);
 
     return {};
 }
@@ -590,6 +591,53 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::for_each)
             return *TRY(iterator_close(vm, iterated, result.release_error()));
 
         // f. Set counter to counter + 1.
+        ++counter;
+    }
+}
+
+// 3.1.3.10 Iterator.prototype.some ( predicate ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.some
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::some)
+{
+    auto predicate = vm.argument(0);
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (!predicate.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "predicate"sv);
+
+    // 4. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    // 5. Let counter be 0.
+    size_t counter = 0;
+
+    // 6. Repeat,
+    while (true) {
+        // a. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // b. If next is false, return false.
+        if (!next)
+            return Value { false };
+
+        // c. Let value be ? IteratorValue(next).
+        auto value = TRY(iterator_value(vm, *next));
+
+        // d. Let result be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+        auto result = call(vm, predicate.as_function(), js_undefined(), value, Value { counter });
+
+        // e. IfAbruptCloseIterator(result, iterated).
+        if (result.is_error())
+            return *TRY(iterator_close(vm, iterated, result.release_error()));
+
+        // f. If ToBoolean(result) is true, return ? IteratorClose(iterated, NormalCompletion(true)).
+        if (result.value().to_boolean())
+            return *TRY(iterator_close(vm, iterated, normal_completion(Value { true })));
+
+        // g. Set counter to counter + 1.
         ++counter;
     }
 }
