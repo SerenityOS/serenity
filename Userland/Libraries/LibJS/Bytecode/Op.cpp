@@ -844,6 +844,15 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
     return {};
 }
 
+ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto value = interpreter.accumulator();
+    if (value.is_nullish())
+        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+    return {};
+}
+
 ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
@@ -1430,6 +1439,11 @@ DeprecatedString Throw::to_deprecated_string_impl(Bytecode::Executable const&) c
 DeprecatedString ThrowIfNotObject::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "ThrowIfNotObject";
+}
+
+DeprecatedString ThrowIfNullish::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "ThrowIfNullish";
 }
 
 DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executable const&) const
