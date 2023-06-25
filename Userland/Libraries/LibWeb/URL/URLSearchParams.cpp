@@ -276,11 +276,7 @@ WebIDL::ExceptionOr<void> URLSearchParams::sort()
              k != a_code_points.end() && l != b_code_points.end();
              ++k, ++l) {
             if (*k != *l) {
-                if (*k < *l) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return *k < *l;
             }
         }
         VERIFY_NOT_REACHED();
