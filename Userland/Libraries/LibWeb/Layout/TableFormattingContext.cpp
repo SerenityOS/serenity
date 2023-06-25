@@ -590,9 +590,8 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         // ends up smaller than this number.
         CSSPixels height_of_table_containing_block = m_state.get(*table_wrapper().containing_block()).content_height();
         auto specified_table_height = table_box().computed_values().height().to_px(table_box(), height_of_table_containing_block);
-        if (m_table_height < specified_table_height) {
-            m_table_height = specified_table_height;
-        }
+        auto const& table_state = m_state.get(table_box());
+        m_table_height = max(m_table_height, specified_table_height - table_state.border_box_top() - table_state.border_box_bottom());
     }
 
     for (auto& row : m_rows) {
