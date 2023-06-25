@@ -101,6 +101,7 @@
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
     M(NotUndefined, "{} is not undefined")                                                                                              \
     M(NumberIsNaN, "{} must not be NaN")                                                                                                \
+    M(NumberIsNegative, "{} must not be negative")                                                                                      \
     M(ObjectDefineOwnPropertyReturnedFalse, "Object's [[DefineOwnProperty]] method returned false")                                     \
     M(ObjectDeleteReturnedFalse, "Object's [[Delete]] method returned false")                                                           \
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
