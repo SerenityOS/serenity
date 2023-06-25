@@ -2086,6 +2086,11 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
                 return {};
             }));
 
+        // Set accumulator to undefined, otherwise we leak the error object through the accumulator.
+        // For example: `try { BigInt.call() } catch {}` would result in the error object. Note that
+        // the exception _is_ caught here, it just leaks the error object through to the result.
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+
         TRY(m_handler->body().generate_bytecode(generator));
         handler_target = Bytecode::Label { handler_block };
         generator.end_variable_scope();
