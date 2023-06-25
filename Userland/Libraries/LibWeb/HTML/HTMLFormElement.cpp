@@ -233,14 +233,14 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 
     if (scheme.is_one_of("http"sv, "https"sv)) {
         if (method == MethodAttributeState::GET)
-            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling));
         else
             TRY_OR_THROW_OOM(vm, submit_as_entity_body(move(parsed_action), move(entry_list), encoding_type, move(encoding), *target_navigable, history_handling));
     } else if (scheme.is_one_of("ftp"sv, "javascript"sv)) {
         get_action_url(move(parsed_action), *target_navigable, history_handling);
     } else if (scheme == "data"sv) {
         if (method == MethodAttributeState::GET)
-            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), *target_navigable, history_handling));
+            TRY_OR_THROW_OOM(vm, mutate_action_url(move(parsed_action), move(entry_list), move(encoding), *target_navigable, history_handling));
         else
             get_action_url(move(parsed_action), *target_navigable, history_handling);
     } else if (scheme == "mailto"sv) {
@@ -609,14 +609,13 @@ static ErrorOr<String> plain_text_encode(Vector<URL::QueryParam> const& pairs)
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submit-mutate-action
-ErrorOr<void> HTMLFormElement::mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling)
+ErrorOr<void> HTMLFormElement::mutate_action_url(AK::URL parsed_action, Vector<XHR::FormDataEntry> entry_list, String encoding, JS::NonnullGCPtr<AbstractBrowsingContext> target_navigable, HistoryHandlingBehavior history_handling)
 {
     // 1. Let pairs be the result of converting to a list of name-value pairs with entry list.
     auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
 
     // 2. Let query be the result of running the application/x-www-form-urlencoded serializer with pairs and encoding.
-    // FIXME: Pass in encoding.
-    auto query = TRY(url_encode(pairs, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+    auto query = TRY(url_encode(pairs, encoding));
 
     // 3. Set parsed action's query component to query.
     parsed_action.set_query(query.to_deprecated_string());
@@ -642,8 +641,7 @@ ErrorOr<void> HTMLFormElement::submit_as_entity_body(AK::URL parsed_action, Vect
         auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
 
         // 2. Let body be the result of running the application/x-www-form-urlencoded serializer with pairs and encoding.
-        // FIXME: Pass in encoding.
-        body = TRY(ByteBuffer::copy(TRY(url_encode(pairs, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded)).bytes()));
+        body = TRY(ByteBuffer::copy(TRY(url_encode(pairs, encoding)).bytes()));
 
         // 3. Set body to the result of encoding body.
         // NOTE: `encoding` refers to `UTF-8 encode`, which body already is encoded as because it uses AK::String.
@@ -713,8 +711,7 @@ ErrorOr<void> HTMLFormElement::mail_with_headers(AK::URL parsed_action, Vector<X
     auto pairs = TRY(convert_to_list_of_name_value_pairs(entry_list));
 
     // 2. Let headers be the result of running the application/x-www-form-urlencoded serializer with pairs and encoding.
-    // FIXME: Pass in encoding.
-    auto headers = TRY(url_encode(pairs, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+    auto headers = TRY(url_encode(pairs, encoding));
 
     // 3. Replace occurrences of U+002B PLUS SIGN characters (+) in headers with the string "%20".
     TRY(headers.replace("+"sv, "%20"sv, ReplaceMode::All));
@@ -751,8 +748,7 @@ ErrorOr<void> HTMLFormElement::mail_as_body(AK::URL parsed_action, Vector<XHR::F
     default:
         // -> Otherwise
         // Let body be the result of running the application/x-www-form-urlencoded serializer with pairs and encoding.
-        // FIXME: Pass in encoding.
-        body = TRY(url_encode(pairs, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+        body = TRY(url_encode(pairs, encoding));
         break;
     }
 
