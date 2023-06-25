@@ -92,6 +92,7 @@
     O(SuperCall)                     \
     O(Throw)                         \
     O(ThrowIfNotObject)              \
+    O(ThrowIfNullish)                \
     O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \

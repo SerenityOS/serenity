@@ -989,6 +989,8 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Byte
 
 static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Register const& value_reg, bool create_variables)
 {
+    generator.emit<Bytecode::Op::ThrowIfNullish>();
+
     Vector<Bytecode::Register> excluded_property_names;
     auto has_rest = false;
     if (pattern.entries.size() > 0)

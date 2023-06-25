@@ -958,6 +958,19 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
+class ThrowIfNullish final : public Instruction {
+public:
+    ThrowIfNullish()
+        : Instruction(Type::ThrowIfNullish)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
 class EnterUnwindContext final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
