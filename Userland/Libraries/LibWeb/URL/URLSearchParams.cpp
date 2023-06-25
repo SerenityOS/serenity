@@ -49,6 +49,8 @@ ErrorOr<String> url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEnco
     return builder.to_string();
 }
 
+// https://url.spec.whatwg.org/#concept-urlencoded-parser
+// The application/x-www-form-urlencoded parser takes a byte sequence input, and then runs these steps:
 ErrorOr<Vector<QueryParam>> url_decode(StringView input)
 {
     // 1. Let sequences be the result of splitting input on 0x26 (&).
