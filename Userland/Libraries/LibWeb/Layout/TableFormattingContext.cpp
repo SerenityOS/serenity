@@ -367,12 +367,13 @@ void TableFormattingContext::compute_table_width()
         // resolved-table-width) other than auto, the used width is the greater
         // of resolved-table-width, and the used min-width of the table.
         CSSPixels resolved_table_width = computed_values.width().to_px(table_box(), width_of_table_wrapper_containing_block);
-        used_width = max(resolved_table_width, used_min_width);
+        // Since used_width is content width, we need to subtract the border spacing from the specified width for a consistent comparison.
+        used_width = max(resolved_table_width - table_box_state.border_box_left() - table_box_state.border_box_right(), used_min_width);
         if (!should_treat_max_width_as_none(table_box(), m_available_space->width))
             used_width = min(used_width, computed_values.max_width().to_px(table_box(), width_of_table_wrapper_containing_block));
     }
 
-    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right);
+    table_box_state.set_content_width(used_width);
 }
 
 void TableFormattingContext::distribute_width_to_columns()
