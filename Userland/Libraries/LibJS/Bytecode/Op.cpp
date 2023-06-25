@@ -550,7 +550,9 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto value = interpreter.accumulator();
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    return put_by_property_key(vm, object, value, name, m_kind);
+    TRY(put_by_property_key(vm, object, value, name, m_kind));
+    interpreter.accumulator() = value;
+    return {};
 }
 
 ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -561,7 +563,9 @@ ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& inte
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     auto name = interpreter.current_executable().get_identifier(m_property);
     auto private_reference = make_private_reference(vm, object, name);
-    return private_reference.put_value(vm, value);
+    TRY(private_reference.put_value(vm, value));
+    interpreter.accumulator() = value;
+    return {};
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -981,7 +985,9 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    return put_by_property_key(vm, object, value, property_key, m_kind);
+    TRY(put_by_property_key(vm, object, value, property_key, m_kind));
+    interpreter.accumulator() = value;
+    return {};
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
