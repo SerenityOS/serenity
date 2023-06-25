@@ -31,6 +31,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
     define_native_function(realm, vm.names.map, map, 1, attr);
+    define_native_function(realm, vm.names.filter, filter, 1, attr);
 
     return {};
 }
@@ -93,6 +94,72 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::map)
         // vi. Let completion be Completion(Yield(mapped)).
         // vii. IfAbruptCloseIterator(completion, iterated).
         return iterator.result(mapped.release_value());
+    };
+
+    // 6. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+    // 7. Set result.[[UnderlyingIterator]] to iterated.
+    auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
+
+    // 8. Return result.
+    return result;
+}
+
+// 3.1.3.3 Iterator.prototype.filter ( predicate ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.filter
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::filter)
+{
+    auto& realm = *vm.current_realm();
+
+    auto predicate = vm.argument(0);
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (!predicate.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "predicate"sv);
+
+    // 4. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    // 5. Let closure be a new Abstract Closure with no parameters that captures iterated and predicate and performs the following steps when called:
+    IteratorHelper::Closure closure = [predicate = NonnullGCPtr { predicate.as_function() }](auto& iterator) -> ThrowCompletionOr<Value> {
+        auto& vm = iterator.vm();
+
+        auto const& iterated = iterator.underlying_iterator();
+
+        // a. Let counter be 0.
+
+        // b. Repeat,
+        while (true) {
+            // i. Let next be ? IteratorStep(iterated).
+            auto next = TRY(iterator_step(vm, iterated));
+
+            // ii. If next is false, return undefined.
+            if (!next)
+                return iterator.result(js_undefined());
+
+            // iii. Let value be ? IteratorValue(next).
+            auto value = TRY(iterator_value(vm, *next));
+
+            // iv. Let selected be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+            auto selected = call(vm, *predicate, js_undefined(), value, Value { iterator.counter() });
+
+            // v. IfAbruptCloseIterator(selected, iterated).
+            if (selected.is_error())
+                return iterator.close_result(selected.release_error());
+
+            // vii. Set counter to counter + 1.
+            // NOTE: We do this step early to ensure it occurs before returning.
+            iterator.increment_counter();
+
+            // vi. If ToBoolean(selected) is true, then
+            if (selected.value().to_boolean()) {
+                // 1. Let completion be Completion(Yield(value)).
+                // 2. IfAbruptCloseIterator(completion, iterated).
+                return iterator.result(value);
+            }
+        }
     };
 
     // 6. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
