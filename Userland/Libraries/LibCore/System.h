@@ -237,6 +237,11 @@ ErrorOr<void> access(StringView pathname, int mode, int flags = 0);
 ErrorOr<DeprecatedString> readlink(StringView pathname);
 ErrorOr<int> poll(Span<struct pollfd>, int timeout);
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> create_block_device(StringView name, mode_t mode, unsigned major, unsigned minor);
+ErrorOr<void> create_char_device(StringView name, mode_t mode, unsigned major, unsigned minor);
+#endif
+
 class AddressInfoVector {
     AK_MAKE_NONCOPYABLE(AddressInfoVector);
     AK_MAKE_DEFAULT_MOVABLE(AddressInfoVector);
