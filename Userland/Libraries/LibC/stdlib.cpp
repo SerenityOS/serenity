@@ -431,6 +431,11 @@ char* secure_getenv(char const* name)
 int unsetenv(char const* name)
 {
     auto new_var_len = strlen(name);
+    if (new_var_len == 0 || strchr(name, '=')) {
+        errno = EINVAL;
+        return -1;
+    }
+
     size_t environ_size = 0;
     int skip = -1;
 
