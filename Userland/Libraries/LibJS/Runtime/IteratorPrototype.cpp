@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorHelper.h>
@@ -36,6 +37,7 @@ ThrowCompletionOr<void> IteratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.drop, drop, 1, attr);
     define_native_function(realm, vm.names.flatMap, flat_map, 1, attr);
     define_native_function(realm, vm.names.reduce, reduce, 1, attr);
+    define_native_function(realm, vm.names.toArray, to_array, 0, attr);
 
     return {};
 }
@@ -513,6 +515,38 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::reduce)
 
         // g. Set counter to counter + 1.
         ++counter;
+    }
+}
+
+// 3.1.3.8 Iterator.prototype.toArray ( ), https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.toarray
+JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::to_array)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let O be the this value.
+    // 2. If O is not an Object, throw a TypeError exception.
+    auto object = TRY(this_object(vm));
+
+    // 3. Let iterated be ? GetIteratorDirect(O).
+    auto iterated = TRY(get_iterator_direct(vm, object));
+
+    // 4. Let items be a new empty List.
+    Vector<Value> items;
+
+    // 5. Repeat,
+    while (true) {
+        // a. Let next be ? IteratorStep(iterated).
+        auto next = TRY(iterator_step(vm, iterated));
+
+        // b. If next is false, return CreateArrayFromList(items).
+        if (!next)
+            return Array::create_from(realm, items);
+
+        // c. Let value be ? IteratorValue(next).
+        auto value = TRY(iterator_value(vm, *next));
+
+        // d. Append value to items.
+        TRY_OR_THROW_OOM(vm, items.try_append(value));
     }
 }
 

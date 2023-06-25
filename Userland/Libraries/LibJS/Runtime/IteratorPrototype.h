@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(drop);
     JS_DECLARE_NATIVE_FUNCTION(flat_map);
     JS_DECLARE_NATIVE_FUNCTION(reduce);
+    JS_DECLARE_NATIVE_FUNCTION(to_array);
 };
 
 }
