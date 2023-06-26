@@ -1638,7 +1638,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent)
     if (is_document()) {
         auto* document = static_cast<DOM::Document*>(this);
         auto* document_element = document->document_element();
-        if (document_element) {
+        if (document_element && document_element->include_in_accessibility_tree()) {
             parent.set_value(document_element);
             if (document_element->has_child_nodes())
                 document_element->for_each_child([&parent](DOM::Node& child) {
