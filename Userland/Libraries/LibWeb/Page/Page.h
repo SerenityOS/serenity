@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -22,7 +22,7 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibIPC/Forward.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
@@ -34,12 +34,13 @@ namespace Web {
 
 class PageClient;
 
-class Page : public Weakable<Page> {
-    AK_MAKE_NONCOPYABLE(Page);
-    AK_MAKE_NONMOVABLE(Page);
+class Page final
+    : public JS::Cell
+    , public Weakable<Page> {
+    JS_CELL(Page, JS::Cell);
 
 public:
-    explicit Page(PageClient&);
+    static JS::NonnullGCPtr<Page> create(JS::VM&, PageClient&);
     ~Page();
 
     PageClient& client() { return m_client; }
@@ -138,11 +139,14 @@ public:
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
+    explicit Page(PageClient&);
+    virtual void visit_edges(Visitor&) override;
+
     JS::GCPtr<HTML::HTMLMediaElement> media_context_menu_element();
 
     PageClient& m_client;
 
-    JS::Handle<HTML::BrowsingContext> m_top_level_browsing_context;
+    JS::GCPtr<HTML::BrowsingContext> m_top_level_browsing_context;
     WeakPtr<HTML::BrowsingContext> m_focused_context;
 
     // FIXME: Enable this by default once CORS preflight checks are supported.

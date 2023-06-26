@@ -13,7 +13,7 @@ namespace Web::SVG {
 
 class SVGDecodedImageData final : public HTML::DecodedImageData {
 public:
-    static ErrorOr<NonnullRefPtr<SVGDecodedImageData>> create(Page&, AK::URL const&, ByteBuffer encoded_svg);
+    static ErrorOr<NonnullRefPtr<SVGDecodedImageData>> create(JS::NonnullGCPtr<Page>, AK::URL const&, ByteBuffer encoded_svg);
     virtual ~SVGDecodedImageData() override;
 
     virtual RefPtr<Gfx::Bitmap const> bitmap(size_t frame_index, Gfx::IntSize) const override;
@@ -32,12 +32,12 @@ public:
 
 private:
     class SVGPageClient;
-    SVGDecodedImageData(NonnullOwnPtr<Page>, NonnullOwnPtr<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
+    SVGDecodedImageData(JS::NonnullGCPtr<Page>, NonnullOwnPtr<SVGPageClient>, JS::Handle<DOM::Document>, JS::Handle<SVG::SVGSVGElement>);
 
     void render(Gfx::IntSize) const;
     mutable RefPtr<Gfx::Bitmap> m_bitmap;
 
-    NonnullOwnPtr<Page> m_page;
+    JS::Handle<Page> m_page;
     NonnullOwnPtr<SVGPageClient> m_page_client;
 
     JS::Handle<DOM::Document> m_document;

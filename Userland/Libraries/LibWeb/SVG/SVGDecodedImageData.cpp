@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -40,10 +41,10 @@ public:
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) override { }
 };
 
-ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& host_page, AK::URL const& url, ByteBuffer data)
+ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(JS::NonnullGCPtr<Page> host_page, AK::URL const& url, ByteBuffer data)
 {
     auto page_client = make<SVGPageClient>(host_page);
-    auto page = make<Page>(*page_client);
+    auto page = Page::create(Bindings::main_thread_vm(), *page_client);
     page_client->m_svg_page = page.ptr();
     auto browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*page);
     auto response = Fetch::Infrastructure::Response::create(browsing_context->vm());
@@ -78,11 +79,11 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
 
     MUST(document->append_child(*svg_root));
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(move(page), move(page_client), move(document), move(svg_root)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SVGDecodedImageData(page, move(page_client), move(document), move(svg_root)));
 }
 
-SVGDecodedImageData::SVGDecodedImageData(NonnullOwnPtr<Page> page, NonnullOwnPtr<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
-    : m_page(move(page))
+SVGDecodedImageData::SVGDecodedImageData(JS::NonnullGCPtr<Page> page, NonnullOwnPtr<SVGPageClient> page_client, JS::Handle<DOM::Document> document, JS::Handle<SVG::SVGSVGElement> root_element)
+    : m_page(page)
     , m_page_client(move(page_client))
     , m_document(move(document))
     , m_root_element(move(root_element))

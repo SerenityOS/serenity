@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibGfx/Rect.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PixelUnits.h>
 #include <WebContent/Forward.h>
@@ -117,7 +118,7 @@ private:
     void setup_palette();
 
     ConnectionFromClient& m_client;
-    NonnullOwnPtr<Web::Page> m_page;
+    JS::Handle<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Web::DevicePixelRect m_screen_rect;
     Web::DevicePixelSize m_content_size;

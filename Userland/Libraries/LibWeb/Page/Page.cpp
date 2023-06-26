@@ -19,6 +19,11 @@
 
 namespace Web {
 
+JS::NonnullGCPtr<Page> Page::create(JS::VM& vm, PageClient& page_client)
+{
+    return vm.heap().allocate_without_realm<Page>(page_client);
+}
+
 Page::Page(PageClient& client)
     : m_client(client)
 {
@@ -26,6 +31,12 @@ Page::Page(PageClient& client)
 }
 
 Page::~Page() = default;
+
+void Page::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_top_level_browsing_context);
+}
 
 HTML::BrowsingContext& Page::focused_context()
 {

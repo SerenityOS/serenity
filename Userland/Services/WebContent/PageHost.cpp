@@ -10,6 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -22,7 +23,7 @@ namespace WebContent {
 
 PageHost::PageHost(ConnectionFromClient& client)
     : m_client(client)
-    , m_page(make<Web::Page>(*this))
+    , m_page(Web::Page::create(Web::Bindings::main_thread_vm(), *this))
 {
     setup_palette();
     m_invalidation_coalescing_timer = Web::Platform::Timer::create_single_shot(0, [this] {
