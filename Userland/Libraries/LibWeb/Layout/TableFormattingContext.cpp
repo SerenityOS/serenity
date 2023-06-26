@@ -223,17 +223,45 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
     }
 }
 
+template<>
+void TableFormattingContext::initialize_table_measures<TableFormattingContext::Row>()
+{
+    auto const& containing_block = m_state.get(*table_wrapper().containing_block());
+
+    for (auto& cell : m_cells) {
+        auto const& computed_values = cell.box->computed_values();
+        if (cell.row_span == 1) {
+            // FIXME: Implement intrinsic percentage width of a column based on cells of span up to 1.
+            auto specified_height = m_rows[cell.row_index].type == SizeType::Pixel
+                ? computed_values.height().to_px(cell.box, containing_block.content_height())
+                : 0;
+            // https://www.w3.org/TR/css-tables-3/#row-layout makes specified cell height part of the initialization formula for row table measures:
+            // This is done by running the same algorithm as the column measurement, with the span=1 value being initialized (for min-content) with
+            // the largest of the resulting height of the previous row layout, the height specified on the corresponding table-row (if any), and
+            // the largest height specified on cells that span this row only (the algorithm starts by considering cells of span 2 on top of that assignment).
+            m_rows[cell.row_index].min_size = max(m_rows[cell.row_index].min_size, max(cell.min_height, specified_height));
+            m_rows[cell.row_index].max_size = max(m_rows[cell.row_index].max_size, cell.max_height);
+        }
+    }
+}
+
+template<>
+void TableFormattingContext::initialize_table_measures<TableFormattingContext::Column>()
+{
+    for (auto& cell : m_cells) {
+        if (cell.column_span == 1) {
+            m_columns[cell.column_index].min_size = max(m_columns[cell.column_index].min_size, cell.min_width);
+            m_columns[cell.column_index].max_size = max(m_columns[cell.column_index].max_size, cell.max_width);
+        }
+    }
+}
+
 template<class RowOrColumn>
 void TableFormattingContext::compute_table_measures()
 {
+    initialize_table_measures<RowOrColumn>();
+
     auto& rows_or_columns = table_rows_or_columns<RowOrColumn>();
-    for (auto& cell : m_cells) {
-        if (cell_span<RowOrColumn>(cell) == 1) {
-            auto rc_index = cell_index<RowOrColumn>(cell);
-            rows_or_columns[rc_index].min_size = max(rows_or_columns[rc_index].min_size, cell_min_size<RowOrColumn>(cell));
-            rows_or_columns[rc_index].max_size = max(rows_or_columns[rc_index].max_size, cell_max_size<RowOrColumn>(cell));
-        }
-    }
 
     size_t max_cell_span = 1;
     for (auto& cell : m_cells) {
