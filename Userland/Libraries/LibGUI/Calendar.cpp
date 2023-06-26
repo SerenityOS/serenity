@@ -769,7 +769,7 @@ size_t Calendar::day_of_week_index(DeprecatedString const& day_name)
     return AK::find_index(day_names.begin(), day_names.end(), day_name);
 }
 
-void Calendar::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void Calendar::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Calendar" && group == "View" && key == "FirstDayOfWeek") {
         m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(value));
@@ -780,7 +780,7 @@ void Calendar::config_string_did_change(DeprecatedString const& domain, Deprecat
     }
 }
 
-void Calendar::config_i32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value)
+void Calendar::config_i32_did_change(StringView domain, StringView group, StringView key, i32 value)
 {
     if (domain == "Calendar" && group == "View" && key == "WeekendLength") {
         m_weekend_length = value;

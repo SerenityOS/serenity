@@ -44,8 +44,8 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
-    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
-    void config_u32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value) override;
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
+    void config_u32_did_change(StringView domain, StringView group, StringView key, u32 value) override;
 
     void game_over();
     void spawn_fruit();

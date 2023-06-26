@@ -16,13 +16,13 @@ public:
 
     static void for_each(Function<void(Listener&)>);
 
-    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value);
-    virtual void config_i32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value);
-    virtual void config_u32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value);
-    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value);
-    virtual void config_key_was_removed(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key);
-    virtual void config_group_was_removed(DeprecatedString const& domain, DeprecatedString const& group);
-    virtual void config_group_was_added(DeprecatedString const& domain, DeprecatedString const& group);
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value);
+    virtual void config_i32_did_change(StringView domain, StringView group, StringView key, i32 value);
+    virtual void config_u32_did_change(StringView domain, StringView group, StringView key, u32 value);
+    virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value);
+    virtual void config_key_was_removed(StringView domain, StringView group, StringView key);
+    virtual void config_group_was_removed(StringView domain, StringView group);
+    virtual void config_group_was_added(StringView domain, StringView group);
 
 protected:
     Listener();

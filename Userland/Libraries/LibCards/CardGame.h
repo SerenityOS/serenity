@@ -57,7 +57,7 @@ protected:
     CardGame();
 
 private:
-    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
 
     Vector<NonnullRefPtr<CardStack>> m_stacks;
 

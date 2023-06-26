@@ -71,8 +71,8 @@ public:
         m_unadjusted_tile_size.set_height(height);
     }
 
-    virtual void config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
-    virtual void config_i32_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, i32 value) override;
+    virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
+    virtual void config_i32_did_change(StringView, StringView, StringView, i32 value) override;
 
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;

@@ -28,7 +28,7 @@ public:
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }
 
-    virtual void config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
     virtual void add_system_menu(NonnullRefPtr<GUI::Menu> system_menu);
 
 private:
