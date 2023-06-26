@@ -67,6 +67,7 @@
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
@@ -1282,25 +1283,39 @@ HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
     return Bindings::host_defined_environment_settings_object(realm());
 }
 
-JS::Value Document::run_javascript(StringView source, StringView filename)
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-to-a-javascript:-url
+void Document::navigate_to_javascript_url(StringView url)
 {
-    // FIXME: The only user of this function now is javascript: URLs. Refactor them to follow the spec: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
-    auto interpreter = JS::Interpreter::create_with_existing_realm(realm());
-    auto script_or_error = JS::Script::parse(source, realm(), filename);
-    if (script_or_error.is_error()) {
-        // FIXME: Add error logging back.
-        return JS::js_undefined();
-    }
+    // FIXME: Implement the rest of steps from the spec
 
-    auto result = interpreter->run(script_or_error.value());
+    // 6. Let newDocument be the result of evaluating a javascript: URL given targetNavigable, url, and initiatorOrigin.
+    evaluate_javascript_url(url);
+}
 
-    if (result.is_error()) {
-        // FIXME: I'm sure the spec could tell us something about error propagation here!
-        HTML::report_exception(result, realm());
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#evaluate-a-javascript:-url
+void Document::evaluate_javascript_url(StringView url)
+{
+    // NOTE: This is done by EventHandler::handle_mouseup
+    // 1. Let urlString be the result of running the URL serializer on url.
 
-        return {};
-    }
-    return result.value();
+    // 2. Let encodedScriptSource be the result of removing the leading "javascript:" from urlString.
+    auto encoded_script_source = url.substring_view(11, url.length() - 11);
+
+    // FIXME: 3. Let scriptSource be the UTF-8 decoding of the percent-decoding of encodedScriptSource.
+
+    // 4. Let settings be targetNavigable's active document's relevant settings object.
+    auto& settings = relevant_settings_object();
+
+    // 5. Let baseURL be settings's API base URL.
+    auto base_url = settings.api_base_url();
+
+    // 6. Let script be the result of creating a classic script given scriptSource, settings, baseURL, and the default classic script fetch options.
+    auto script = HTML::ClassicScript::create("(javascript url)", encoded_script_source, settings, base_url);
+
+    // 7. Let evaluationStatus be the result of running the classic script script.
+    static_cast<void>(script->run());
+
+    // FIXME: Implement the rest of the steps from the spec
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
