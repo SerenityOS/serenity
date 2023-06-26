@@ -251,6 +251,42 @@ ErrorOr<DeprecatedString> Account::generate_passwd_file() const
     return builder.to_deprecated_string();
 }
 
+ErrorOr<DeprecatedString> Account::generate_group_file() const
+{
+    StringBuilder builder;
+    char buffer[1024] = { 0 };
+
+    ScopeGuard pwent_guard([] { endgrent(); });
+    setgrent();
+
+    while (true) {
+        auto group = TRY(Core::System::getgrent(buffer));
+        if (!group.has_value())
+            break;
+
+        auto should_be_present = !m_deleted && m_extra_gids.contains_slow(group->gr_gid);
+
+        auto already_present = false;
+        Vector<char const*> members;
+        for (size_t i = 0; group->gr_mem[i]; ++i) {
+            auto const* member = group->gr_mem[i];
+            if (member == m_username) {
+                already_present = true;
+                if (!should_be_present)
+                    continue;
+            }
+            members.append(member);
+        }
+
+        if (should_be_present && !already_present)
+            members.append(m_username.characters());
+
+        builder.appendff("{}:{}:{}:{}\n", group->gr_name, group->gr_passwd, group->gr_gid, DeprecatedString::join(","sv, members));
+    }
+
+    return builder.to_deprecated_string();
+}
+
 #ifndef AK_OS_BSD_GENERIC
 ErrorOr<DeprecatedString> Account::generate_shadow_file() const
 {
@@ -291,11 +327,13 @@ ErrorOr<void> Account::sync()
     Core::UmaskScope umask_scope(0777);
 
     auto new_passwd_file_content = TRY(generate_passwd_file());
+    auto new_group_file_content = TRY(generate_group_file());
 #ifndef AK_OS_BSD_GENERIC
     auto new_shadow_file_content = TRY(generate_shadow_file());
 #endif
 
     char new_passwd_file[] = "/etc/passwd.XXXXXX";
+    char new_group_file[] = "/etc/group.XXXXXX";
 #ifndef AK_OS_BSD_GENERIC
     char new_shadow_file[] = "/etc/shadow.XXXXXX";
 #endif
@@ -304,6 +342,10 @@ ErrorOr<void> Account::sync()
         auto new_passwd_fd = TRY(Core::System::mkstemp(new_passwd_file));
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
         TRY(Core::System::fchmod(new_passwd_fd, 0644));
+
+        auto new_group_fd = TRY(Core::System::mkstemp(new_group_file));
+        ScopeGuard new_group_fd_guard = [new_group_fd] { close(new_group_fd); };
+        TRY(Core::System::fchmod(new_group_fd, 0644));
 
 #ifndef AK_OS_BSD_GENERIC
         auto new_shadow_fd = TRY(Core::System::mkstemp(new_shadow_file));
@@ -314,6 +356,9 @@ ErrorOr<void> Account::sync()
         auto nwritten = TRY(Core::System::write(new_passwd_fd, new_passwd_file_content.bytes()));
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
+        nwritten = TRY(Core::System::write(new_group_fd, new_group_file_content.bytes()));
+        VERIFY(static_cast<size_t>(nwritten) == new_group_file_content.length());
+
 #ifndef AK_OS_BSD_GENERIC
         nwritten = TRY(Core::System::write(new_shadow_fd, new_shadow_file_content.bytes()));
         VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
@@ -322,13 +367,15 @@ ErrorOr<void> Account::sync()
 
     auto new_passwd_file_view = StringView { new_passwd_file, sizeof(new_passwd_file) };
     TRY(Core::System::rename(new_passwd_file_view, "/etc/passwd"sv));
+
+    auto new_group_file_view = StringView { new_group_file, sizeof(new_group_file) };
+    TRY(Core::System::rename(new_group_file_view, "/etc/group"sv));
 #ifndef AK_OS_BSD_GENERIC
     auto new_shadow_file_view = StringView { new_shadow_file, sizeof(new_shadow_file) };
     TRY(Core::System::rename(new_shadow_file_view, "/etc/shadow"sv));
 #endif
 
     return {};
-    // FIXME: Sync extra groups.
 }
 
 }
