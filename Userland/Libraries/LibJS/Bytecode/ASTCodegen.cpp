@@ -493,7 +493,11 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
     // if the logical assignment condition fails.
     auto lhs_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(lhs_reg);
-    TRY(m_rhs->generate_bytecode(generator));
+
+    if (lhs->is_identifier())
+        TRY(generator.emit_named_evaluation_if_anonymous_function(*m_rhs, static_cast<Identifier const&>(*lhs).string()));
+    else
+        TRY(m_rhs->generate_bytecode(generator));
 
     switch (m_op) {
     case AssignmentOp::AdditionAssignment:
