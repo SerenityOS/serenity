@@ -19,7 +19,7 @@ This program must be run as root.
 ## Options
 
 * `-u`, `--uid` _uid_: The user identifier for the new user. If not specified, an unused UID above `1000` will be auto-generated.
-* `-g`, `--gid` _gid_: The group identifier for the new user. If not specified, it will default to 100 (the **users** group).
+* `-g`, `--gid` _group_: The group name or identifier for the new user. If not specified, it will default to 100 (the **users** group).
 * `-p`, `--password` _password_: The encrypted password for the new user. If not specified, it will default to blank.
 * `-s`, `--shell` _path-to-shell_: The shell binary for this login. The default is `/bin/Shell`.
 * `-m`, `--create-home`: Create the specified home directory for this new user.

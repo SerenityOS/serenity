@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Brandon Pruitt  <brapru@pm.me>
  * Copyright (c) 2022, Umut İnan Erdoğan <umutinanerdogan62@gmail.com>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,13 +29,34 @@ constexpr uid_t BASE_UID = 1000;
 constexpr gid_t USERS_GID = 100;
 constexpr auto DEFAULT_SHELL = "/bin/sh"sv;
 
+static Optional<gid_t> group_string_to_gid(StringView group)
+{
+    auto maybe_gid = group.to_uint<gid_t>();
+    auto maybe_group_or_error = maybe_gid.has_value()
+        ? Core::System::getgrgid(maybe_gid.value())
+        : Core::System::getgrnam(group);
+
+    if (maybe_group_or_error.is_error()) {
+        warnln("Error resolving group '{}': {}", group, maybe_group_or_error.release_error());
+        return {};
+    }
+
+    auto maybe_group = maybe_group_or_error.release_value();
+    if (!maybe_group.has_value()) {
+        warnln("Group '{}' does not exist", group);
+        return {};
+    }
+
+    return maybe_group->gr_gid;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio wpath rpath cpath chown"));
 
     StringView home_path;
     int uid = 0;
-    int gid = USERS_GID;
+    gid_t gid = USERS_GID;
     bool create_home_dir = false;
     DeprecatedString password = "";
     DeprecatedString shell = DEFAULT_SHELL;
@@ -44,14 +66,30 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
     args_parser.add_option(uid, "User ID (uid) for the new user", "uid", 'u', "uid");
-    args_parser.add_option(gid, "Group ID (gid) for the new user", "gid", 'g', "gid");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Group name or number (gid) for the new user",
+        .long_name = "gid",
+        .short_name = 'g',
+        .value_name = "group",
+        .accept_value = [&gid](StringView group) {
+            auto maybe_gid = group_string_to_gid(group);
+            if (maybe_gid.has_value())
+                gid = maybe_gid.value();
+
+            return maybe_gid.has_value();
+        },
+    });
     args_parser.add_option(password, "Encrypted password of the new user", "password", 'p', "password");
     args_parser.add_option(create_home_dir, "Create home directory if it does not exist", "create-home", 'm');
     args_parser.add_option(shell, "Path to the default shell binary for the new user", "shell", 's', "path-to-shell");
     args_parser.add_option(gecos, "GECOS name of the new user", "gecos", 'n', "general-info");
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
 
-    args_parser.parse(arguments);
+    if (!args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore)) {
+        args_parser.print_usage(stderr, arguments.strings[0]);
+        return 3;
+    }
 
     // Let's run a quick sanity check on username
     if (username.find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value()) {
@@ -89,11 +127,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!pwd.has_value())
                 break;
         }
-    }
-
-    if (gid < 0) {
-        warnln("invalid gid {}", gid);
-        return 3;
     }
 
     FILE* pwfile = fopen("/etc/passwd", "a");
