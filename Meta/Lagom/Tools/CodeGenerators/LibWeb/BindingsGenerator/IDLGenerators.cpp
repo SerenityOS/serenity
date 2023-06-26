@@ -1804,9 +1804,9 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
                 auto member_value_js_name = DeprecatedString::formatted("{}_value", member_key_js_name);
                 dictionary_generator.set("member_value", member_value_js_name);
 
-                auto wrapped_value_name = DeprecatedString::formatted("auto wrapped_{}", member_value_js_name);
+                auto wrapped_value_name = DeprecatedString::formatted("wrapped_{}", member_value_js_name);
                 dictionary_generator.set("wrapped_value_name", wrapped_value_name);
-                generate_wrap_statement(dictionary_generator, DeprecatedString::formatted("{}.{}", value, member.name), member.type, interface, wrapped_value_name, WrappingReference::No, recursion_depth + 1);
+                generate_wrap_statement(dictionary_generator, DeprecatedString::formatted("{}.{}", value, member.name.to_snakecase()), member.type, interface, DeprecatedString::formatted("auto {} =", wrapped_value_name), WrappingReference::No, recursion_depth + 1);
 
                 dictionary_generator.append(R"~~~(
     MUST(dictionary_object@recursion_depth@->create_data_property("@member_key@", @wrapped_value_name@));
