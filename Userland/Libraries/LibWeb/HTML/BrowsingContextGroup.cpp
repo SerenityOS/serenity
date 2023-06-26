@@ -34,6 +34,7 @@ BrowsingContextGroup::~BrowsingContextGroup()
 void BrowsingContextGroup::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_page);
     for (auto& context : m_browsing_context_set)
         visitor.visit(context);
 }

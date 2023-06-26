@@ -43,7 +43,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-group-set
     OrderedHashTable<JS::NonnullGCPtr<BrowsingContext>> m_browsing_context_set;
 
-    WeakPtr<Page> m_page;
+    JS::NonnullGCPtr<Page> m_page;
 };
 
 }
