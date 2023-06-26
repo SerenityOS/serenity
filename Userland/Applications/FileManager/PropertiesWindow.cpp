@@ -29,7 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 
-ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(DeprecatedString const& path, bool disable_rename, Window* parent)
+ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(String const& path, bool disable_rename, Window* parent)
 {
     auto window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PropertiesWindow(path, parent)));
     window->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv)));
@@ -37,14 +37,14 @@ ErrorOr<NonnullRefPtr<PropertiesWindow>> PropertiesWindow::try_create(Deprecated
     return window;
 }
 
-PropertiesWindow::PropertiesWindow(DeprecatedString const& path, Window* parent_window)
+PropertiesWindow::PropertiesWindow(String const& path, Window* parent_window)
     : Window(parent_window)
 {
-    auto lexical_path = LexicalPath(path);
+    auto lexical_path = LexicalPath(path.to_deprecated_string());
 
-    m_name = lexical_path.basename();
-    m_path = lexical_path.string();
-    m_parent_path = lexical_path.dirname();
+    m_name = String::from_utf8(lexical_path.basename()).release_value_but_fixme_should_propagate_errors();
+    m_path = String::from_deprecated_string(lexical_path.string()).release_value_but_fixme_should_propagate_errors();
+    m_parent_path = String::from_utf8(lexical_path.dirname()).release_value_but_fixme_should_propagate_errors();
 
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
@@ -67,38 +67,39 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     m_name_box->set_text(m_name);
     m_name_box->set_mode(disable_rename ? GUI::TextBox::Mode::DisplayOnly : GUI::TextBox::Mode::Editable);
     m_name_box->on_change = [&]() {
-        m_name_dirty = m_name != m_name_box->text();
+        m_name_dirty = m_name.to_deprecated_string() != m_name_box->text();
         m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
     };
 
     auto* location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("location");
-    location->set_text(TRY(String::from_deprecated_string(m_path)));
+    location->set_text(m_path);
     location->on_click = [this] {
-        Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path, m_name));
+        const String string = m_parent_path;
+        Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path.to_deprecated_string(), m_name.to_deprecated_string()));
     };
 
     auto st = TRY(Core::System::lstat(m_path));
 
-    DeprecatedString owner_name;
-    DeprecatedString group_name;
+    String owner_name;
+    String group_name;
 
     if (auto* pw = getpwuid(st.st_uid)) {
-        owner_name = pw->pw_name;
+        owner_name = String::from_deprecated_string(pw->pw_name).release_value_but_fixme_should_propagate_errors();
     } else {
-        owner_name = "n/a";
+        owner_name = String::from_utf8_short_string("n/a"sv);
     }
 
     if (auto* gr = getgrgid(st.st_gid)) {
-        group_name = gr->gr_name;
+        group_name = String::from_deprecated_string(gr->gr_name).release_value_but_fixme_should_propagate_errors();
     } else {
-        group_name = "n/a";
+        group_name = String::from_utf8_short_string("n/a"sv);
     }
 
     m_mode = st.st_mode;
     m_old_mode = st.st_mode;
 
     auto* type = general_tab->find_descendant_of_type_named<GUI::Label>("type");
-    type->set_text(TRY(String::from_deprecated_string(get_description(m_mode))));
+    type->set_text(get_description(m_mode));
 
     if (S_ISLNK(m_mode)) {
         auto link_destination_or_error = FileSystem::read_link(m_path);
@@ -188,7 +189,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 void PropertiesWindow::update()
 {
     m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
-    set_title(DeprecatedString::formatted("{} - Properties", m_name));
+    set_title(String::formatted("{} - Properties", m_name).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 }
 
 void PropertiesWindow::permission_changed(mode_t mask, bool set)
@@ -203,24 +204,24 @@ void PropertiesWindow::permission_changed(mode_t mask, bool set)
     m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
-DeprecatedString PropertiesWindow::make_full_path(DeprecatedString const& name)
+String PropertiesWindow::make_full_path(String const& name)
 {
-    return DeprecatedString::formatted("{}/{}", m_parent_path, name);
+    return String::formatted("{}/{}", m_parent_path, name).release_value_but_fixme_should_propagate_errors();
 }
 
 bool PropertiesWindow::apply_changes()
 {
     if (m_name_dirty) {
-        DeprecatedString new_name = m_name_box->text();
-        DeprecatedString new_file = make_full_path(new_name).characters();
+        String new_name = String::from_deprecated_string(m_name_box->text()).release_value_but_fixme_should_propagate_errors();
+        String new_file = make_full_path(new_name);
 
         if (FileSystem::exists(new_file)) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name).release_value_but_fixme_should_propagate_errors(), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
-        if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not rename file: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        if (rename(make_full_path(m_name).to_deprecated_string().characters(), new_file.to_deprecated_string().characters())) {
+            GUI::MessageBox::show(this, String::formatted("Could not rename file: {}!", strerror(errno)).release_value_but_fixme_should_propagate_errors(), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -230,8 +231,8 @@ bool PropertiesWindow::apply_changes()
     }
 
     if (m_permissions_dirty) {
-        if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(this, DeprecatedString::formatted("Could not update permissions: {}!", strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        if (chmod(make_full_path(m_name).to_deprecated_string().characters(), m_mode)) {
+            GUI::MessageBox::show(this, String::formatted("Could not update permissions: {}!", strerror(errno)).release_value_but_fixme_should_propagate_errors(), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -282,7 +283,7 @@ void PropertiesWindow::close()
         m_directory_statistics_calculator->stop();
 }
 
-PropertiesWindow::DirectoryStatisticsCalculator::DirectoryStatisticsCalculator(DeprecatedString path)
+PropertiesWindow::DirectoryStatisticsCalculator::DirectoryStatisticsCalculator(String path)
 {
     m_work_queue.enqueue(path);
 }
@@ -308,7 +309,7 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
                     }
 
                     if (S_ISDIR(st.st_mode)) {
-                        auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
+                        auto full_path = String::from_deprecated_string(LexicalPath::join(directory.path().string(), entry.name).string()).release_value_but_fixme_should_propagate_errors();
                         m_directory_count++;
                         m_work_queue.enqueue(full_path);
                     } else if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)) {

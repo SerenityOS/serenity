@@ -19,13 +19,13 @@ namespace FileManager {
 
 HashTable<NonnullRefPtr<GUI::Window>> file_operation_windows;
 
-void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GUI::Window* parent_window)
+void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window* parent_window)
 {
-    DeprecatedString message;
+    String message;
     if (paths.size() == 1) {
-        message = DeprecatedString::formatted("Are you sure you want to delete \"{}\"?", LexicalPath::basename(paths[0]));
+        message = String::formatted("Are you sure you want to delete \"{}\"?", LexicalPath::basename(paths[0].to_deprecated_string())).release_value_but_fixme_should_propagate_errors();
     } else {
-        message = DeprecatedString::formatted("Are you sure you want to delete {} files?", paths.size());
+        message = String::formatted("Are you sure you want to delete {} files?", paths.size()).release_value_but_fixme_should_propagate_errors();
     }
 
     if (should_confirm) {
@@ -42,7 +42,7 @@ void delete_paths(Vector<DeprecatedString> const& paths, bool should_confirm, GU
         _exit(1);
 }
 
-ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedString> const& sources, DeprecatedString const& destination, GUI::Window* parent_window)
+ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
 {
     auto pipe_fds = TRY(Core::System::pipe2(0));
 
@@ -70,10 +70,10 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
         }
 
         for (auto& source : sources)
-            file_operation_args.append(source.view());
+            file_operation_args.append(source.bytes_as_string_view());
 
         if (operation != FileOperation::Delete)
-            file_operation_args.append(destination.view());
+            file_operation_args.append(destination.bytes_as_string_view());
 
         TRY(Core::System::exec(file_operation_args.first(), file_operation_args, Core::System::SearchInPath::Yes));
         VERIFY_NOT_REACHED();
@@ -110,7 +110,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
     return {};
 }
 
-ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window)
+ErrorOr<bool> handle_drop(GUI::DropEvent const& event, String const& destination, GUI::Window* window)
 {
     bool has_accepted_drop = false;
 
@@ -122,17 +122,17 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
         return has_accepted_drop;
     }
 
-    auto const target = LexicalPath::canonicalized_path(destination);
+    auto const target = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(destination.to_deprecated_string())));
 
     if (!FileSystem::is_directory(target))
         return has_accepted_drop;
 
-    Vector<DeprecatedString> paths_to_copy;
+    Vector<String> paths_to_copy;
     for (auto& url_to_copy : urls) {
-        auto file_path = url_to_copy.serialize_path();
+        auto file_path = TRY(String::from_deprecated_string(url_to_copy.serialize_path()));
         if (!url_to_copy.is_valid() || file_path == target)
             continue;
-        auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(file_path));
+        auto new_path = TRY(String::formatted("{}/{}", target, TRY(String::from_deprecated_string(LexicalPath::basename(file_path.to_deprecated_string())))));
         if (file_path == new_path)
             continue;
 
