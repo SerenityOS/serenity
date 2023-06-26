@@ -93,7 +93,7 @@ ErrorOr<void> CardSettingsWidget::initialize()
     m_card_back_image_view = find_descendant_of_type_named<GUI::IconView>("cards_back_image");
     m_card_back_image_view->set_model(GUI::FileSystemModel::create("/res/graphics/cards/backs"));
     m_card_back_image_view->set_model_column(GUI::FileSystemModel::Column::Name);
-    if (!set_card_back_image_path(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))
+    if (!set_card_back_image_path(TRY(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))))
         set_card_back_image_path(default_card_back_image_path);
     m_card_back_image_view->on_selection_change = [&]() {
         auto& card_back_selection = m_card_back_image_view->selection();
@@ -122,9 +122,9 @@ void CardSettingsWidget::reset_default_values()
     set_card_back_image_path(default_card_back_image_path);
 }
 
-bool CardSettingsWidget::set_card_back_image_path(DeprecatedString const& path)
+bool CardSettingsWidget::set_card_back_image_path(StringView path)
 {
-    auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path, m_card_back_image_view->model_column());
+    auto index = static_cast<GUI::FileSystemModel*>(m_card_back_image_view->model())->index(path.to_deprecated_string(), m_card_back_image_view->model_column());
     if (index.is_valid()) {
         m_card_back_image_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
         Cards::CardPainter::the().set_background_image_path(path);
@@ -134,13 +134,13 @@ bool CardSettingsWidget::set_card_back_image_path(DeprecatedString const& path)
     return false;
 }
 
-DeprecatedString CardSettingsWidget::card_back_image_path() const
+String CardSettingsWidget::card_back_image_path() const
 {
     auto& card_back_selection = m_card_back_image_view->selection();
     GUI::ModelIndex card_back_image_index = m_last_selected_card_back;
     if (!card_back_selection.is_empty())
         card_back_image_index = card_back_selection.first();
-    return static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index);
+    return String::from_deprecated_string(static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index)).release_value_but_fixme_should_propagate_errors();
 }
 
 }

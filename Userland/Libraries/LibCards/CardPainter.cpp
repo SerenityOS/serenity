@@ -21,7 +21,7 @@ CardPainter& CardPainter::the()
 
 CardPainter::CardPainter()
 {
-    m_background_image_path = Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv);
+    m_background_image_path = MUST(String::from_deprecated_string(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv, "/res/graphics/cards/backs/buggie-deck.png"sv)));
 }
 
 static constexpr Gfx::CharacterBitmap s_diamond {
@@ -143,12 +143,12 @@ NonnullRefPtr<Gfx::Bitmap> CardPainter::card_back_inverted()
     return *m_card_back_inverted;
 }
 
-void CardPainter::set_background_image_path(DeprecatedString path)
+void CardPainter::set_background_image_path(StringView path)
 {
     if (m_background_image_path == path)
         return;
 
-    m_background_image_path = path;
+    m_background_image_path = MUST(String::from_utf8(path));
     if (!m_card_back.is_null())
         paint_card_back(*m_card_back);
     if (!m_card_back_inverted.is_null())
