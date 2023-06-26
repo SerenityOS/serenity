@@ -1752,7 +1752,8 @@ void Document::completely_finish_loading()
         });
     }
 
-    for (auto& document_observer : m_document_observers) {
+    auto observers_to_notify = m_document_observers.values();
+    for (auto& document_observer : observers_to_notify) {
         if (document_observer->document_fully_loaded)
             document_observer->document_fully_loaded();
     }
@@ -2627,7 +2628,8 @@ void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::Br
 {
     tear_down_layout_tree();
 
-    for (auto& document_observer : m_document_observers) {
+    auto observers_to_notify = m_document_observers.values();
+    for (auto& document_observer : observers_to_notify) {
         if (document_observer->document_became_inactive)
             document_observer->document_became_inactive();
     }
