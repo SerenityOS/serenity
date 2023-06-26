@@ -155,17 +155,12 @@ void ClipboardHistoryModel::clear()
     invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
 }
 
-void ClipboardHistoryModel::config_string_did_change(StringView domain, StringView group, StringView key, StringView value_string)
+void ClipboardHistoryModel::config_i32_did_change(StringView domain, StringView group, StringView key, i32 value)
 {
     if (domain != "ClipboardHistory" || group != "ClipboardHistory")
         return;
 
-    // FIXME: Once we can get notified for `i32` changes, we can use that instead of this hack.
     if (key == "NumHistoryItems") {
-        auto value_or_error = value_string.to_int();
-        if (!value_or_error.has_value())
-            return;
-        auto value = value_or_error.value();
         if (value < (int)m_history_items.size()) {
             m_history_items.remove(value, m_history_items.size() - value);
             invalidate_model_and_file(false).release_value_but_fixme_should_propagate_errors();
