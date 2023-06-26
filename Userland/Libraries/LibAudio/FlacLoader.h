@@ -69,14 +69,14 @@ private:
     // Helper of next_frame that fetches a sub frame's header
     ErrorOr<FlacSubframeHeader, LoaderError> next_subframe_header(BigEndianInputBitStream& bit_input, u8 channel_index);
     // Helper of next_frame that decompresses a subframe
-    ErrorOr<Vector<i32>, LoaderError> parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input);
+    ErrorOr<Vector<i64>, LoaderError> parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input);
     // Subframe-internal data decoders (heavy lifting)
-    ErrorOr<Vector<i32>, LoaderError> decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
-    ErrorOr<Vector<i32>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
-    ErrorOr<Vector<i32>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
-    MaybeLoaderError decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    ErrorOr<Vector<i64>, LoaderError> decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    ErrorOr<Vector<i64>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    ErrorOr<Vector<i64>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    MaybeLoaderError decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
-    ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError load_seektable(FlacRawMetadataBlock&);
     // Note that failing to read a Vorbis comment block is not treated as an error of the FLAC loader, since metadata is optional.
     void load_vorbis_comment(FlacRawMetadataBlock&);
