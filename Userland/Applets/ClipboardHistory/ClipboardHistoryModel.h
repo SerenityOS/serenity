@@ -53,7 +53,7 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
     // ^Config::Listener
-    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
+    virtual void config_i32_did_change(StringView domain, StringView group, StringView key, i32 value) override;
 
 private:
     ClipboardHistoryModel();
