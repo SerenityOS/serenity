@@ -1152,6 +1152,8 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
      */
 
     auto is_iterator_exhausted_register = generator.allocate_register();
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(false));
+    generator.emit<Bytecode::Op::Store>(is_iterator_exhausted_register);
 
     auto iterator_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(value_reg);
@@ -1306,6 +1308,20 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
         first = false;
     }
 
+    auto& done_block = generator.make_block();
+    auto& not_done_block = generator.make_block();
+
+    generator.emit<Bytecode::Op::Load>(is_iterator_exhausted_register);
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { done_block },
+        Bytecode::Label { not_done_block });
+
+    generator.switch_to_basic_block(not_done_block);
+    generator.emit<Bytecode::Op::Load>(iterator_reg);
+    generator.emit<Bytecode::Op::IteratorClose>(Completion::Type::Normal, Optional<Value> {});
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { done_block });
+
+    generator.switch_to_basic_block(done_block);
     return {};
 }
 
