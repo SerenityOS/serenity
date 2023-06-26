@@ -456,6 +456,7 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
+    visitor.visit(m_page);
     for (auto& entry : m_session_history)
         visitor.visit(entry);
     visitor.visit(m_container);

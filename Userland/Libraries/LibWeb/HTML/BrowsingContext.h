@@ -288,7 +288,7 @@ private:
 
     void scroll_offset_did_change();
 
-    WeakPtr<Page> m_page;
+    JS::NonnullGCPtr<Page> m_page;
 
     FrameLoader m_loader;
     Web::EventHandler m_event_handler;
