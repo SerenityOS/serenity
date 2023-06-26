@@ -768,7 +768,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
         u64 raw_coefficient = LOADER_TRY(bit_input.read_bits<u64>(lpc_precision));
-        i64 coefficient = static_cast<i64>(sign_extend(raw_coefficient, lpc_precision));
+        i64 coefficient = sign_extend(raw_coefficient, lpc_precision);
         coefficients.unchecked_append(coefficient);
     }
 
@@ -970,7 +970,7 @@ i64 sign_extend(u32 n, u8 size)
 {
     // negative
     if ((n & (1 << (size - 1))) > 0) {
-        return static_cast<i64>(n | (0xffffffff << size));
+        return static_cast<i64>(n | (0xffffffffffffffffLL << size));
     }
     // positive
     return n;
