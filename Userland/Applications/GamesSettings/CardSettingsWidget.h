@@ -30,8 +30,8 @@ private:
     CardSettingsWidget() = default;
     ErrorOr<void> initialize();
 
-    bool set_card_back_image_path(DeprecatedString const&);
-    DeprecatedString card_back_image_path() const;
+    bool set_card_back_image_path(StringView);
+    String card_back_image_path() const;
 
     RefPtr<CardGamePreview> m_preview_frame;
     RefPtr<GUI::ColorInput> m_background_color_input;
