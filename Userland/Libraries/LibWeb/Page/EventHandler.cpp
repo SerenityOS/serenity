@@ -286,7 +286,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Primary) {
                         if (href.starts_with("javascript:"sv)) {
-                            document->run_javascript(href.substring_view(11, href.length() - 11));
+                            document->navigate_to_javascript_url(href);
                         } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
                             m_browsing_context->scroll_to_anchor(url.fragment());
                         } else {

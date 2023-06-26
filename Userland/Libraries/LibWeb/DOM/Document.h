@@ -231,7 +231,8 @@ public:
 
     HTML::EnvironmentSettingsObject& relevant_settings_object();
 
-    JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
+    void navigate_to_javascript_url(StringView url);
+    void evaluate_javascript_url(StringView url);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(DeprecatedString const& local_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
