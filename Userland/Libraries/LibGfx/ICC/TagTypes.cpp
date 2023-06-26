@@ -719,6 +719,13 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
             return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType string offset out of bounds");
 
         StringView utf_16be_data { bytes.data() + record.string_offset_in_bytes, record.string_length_in_bytes };
+
+        // Despite the "should not be NULL terminated" in the spec, some files in the wild have trailing NULLs.
+        // Fix up this case here, so that application code doesn't have to worry about it.
+        // (If this wasn't hit in practice, we'd return an Error instead.)
+        while (utf_16be_data.length() >= 2 && utf_16be_data.ends_with(StringView("\0", 2)))
+            utf_16be_data = utf_16be_data.substring_view(0, utf_16be_data.length() - 2);
+
         records[i].text = TRY(utf_16be_decoder.to_utf8(utf_16be_data));
     }
 
