@@ -574,7 +574,7 @@ ErrorOr<int> run_in_desktop_mode()
     };
 
     struct BackgroundWallpaperListener : Config::Listener {
-        virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override
+        virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override
         {
             if (domain == "WindowManager" && group == "Background" && key == "Wallpaper") {
                 if (value.is_empty()) {

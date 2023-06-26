@@ -83,8 +83,8 @@ public:
     static ErrorOr<NonnullRefPtr<QuickLaunchWidget>> create();
     virtual ~QuickLaunchWidget() override = default;
 
-    virtual void config_key_was_removed(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
-    virtual void config_string_did_change(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
+    virtual void config_key_was_removed(StringView, StringView, StringView) override;
+    virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
 
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;

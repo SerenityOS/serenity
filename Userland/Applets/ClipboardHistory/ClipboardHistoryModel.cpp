@@ -155,7 +155,7 @@ void ClipboardHistoryModel::clear()
     invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
 }
 
-void ClipboardHistoryModel::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value_string)
+void ClipboardHistoryModel::config_string_did_change(StringView domain, StringView group, StringView key, StringView value_string)
 {
     if (domain != "ClipboardHistory" || group != "ClipboardHistory")
         return;

@@ -121,7 +121,7 @@ void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
     main->insert_child_before(*m_start_button, *m_quick_launch);
 }
 
-void TaskbarWindow::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void TaskbarWindow::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Taskbar" && group == "Clock" && key == "TimeFormat") {
         m_clock_widget->update_format(value);
