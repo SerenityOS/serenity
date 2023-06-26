@@ -1936,7 +1936,7 @@ static Value exp_double(Value base, Value exponent)
 
     // 5. If base is -∞𝔽, then
     if (base.is_negative_infinity()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (fmod(exponent.as_double(), 2.0) != 0);
 
         // a. If exponent > +0𝔽, then
         if (exponent.as_double() > 0) {
@@ -1958,7 +1958,7 @@ static Value exp_double(Value base, Value exponent)
 
     // 7. If base is -0𝔽, then
     if (base.is_negative_zero()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (fmod(exponent.as_double(), 2.0) != 0);
 
         // a. If exponent > +0𝔽, then
         if (exponent.as_double() > 0) {
