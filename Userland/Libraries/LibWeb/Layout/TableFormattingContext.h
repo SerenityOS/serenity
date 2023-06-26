@@ -38,6 +38,8 @@ private:
     void calculate_row_column_grid(Box const&);
     void compute_cell_measures(AvailableSpace const& available_space);
     template<class RowOrColumn>
+    void initialize_table_measures();
+    template<class RowOrColumn>
     void compute_table_measures();
     void compute_table_width();
     void distribute_width_to_columns();
