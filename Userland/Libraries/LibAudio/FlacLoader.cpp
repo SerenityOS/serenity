@@ -875,6 +875,9 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
     u8 partition_order = LOADER_TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
 
+    if (partitions > m_current_frame->sample_count)
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too many Rice partitions, each partition must contain at least one sample" };
+
     if (residual_mode == FlacResidualMode::Rice4Bit) {
         // 11.30.2. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB
         // decode a single Rice partition with four bits for the order k
@@ -907,8 +910,11 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
         residual_sample_count = m_current_frame->sample_count - subframe.order;
     else
         residual_sample_count = m_current_frame->sample_count / partitions;
-    if (partition_index == 0)
+    if (partition_index == 0) {
+        if (subframe.order > residual_sample_count)
+            return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "First Rice partition must advertise more residuals than LPC order" };
         residual_sample_count -= subframe.order;
+    }
 
     Vector<i64> rice_partition;
     rice_partition.resize(residual_sample_count);
