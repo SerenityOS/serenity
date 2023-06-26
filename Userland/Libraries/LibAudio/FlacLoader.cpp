@@ -440,12 +440,12 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     };
 
     u8 subframe_count = frame_channel_type_to_channel_count(channel_type);
-    Vector<Vector<i32>> current_subframes;
+    Vector<Vector<i64>> current_subframes;
     current_subframes.ensure_capacity(subframe_count);
 
     for (u8 i = 0; i < subframe_count; ++i) {
         FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
-        Vector<i32> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
+        Vector<i64> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
         VERIFY(subframe_samples.size() == m_current_frame->sample_count);
         current_subframes.unchecked_append(move(subframe_samples));
     }
@@ -502,8 +502,8 @@ LoaderSamples FlacLoaderPlugin::next_frame()
             i64 side = current_subframes[1][i];
             mid *= 2;
             // prevent integer division errors
-            samples[i] = { static_cast<float>((mid + side) * .5f) * sample_rescale,
-                static_cast<float>((mid - side) * .5f) * sample_rescale };
+            samples[i] = { (static_cast<float>(mid + side) * .5f) * sample_rescale,
+                (static_cast<float>(mid - side) * .5f) * sample_rescale };
         }
         break;
     }
@@ -669,9 +669,9 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     };
 }
 
-ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input)
+ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input)
 {
-    Vector<i32> samples;
+    Vector<i64> samples;
 
     switch (subframe_header.type) {
     case FlacSubframeType::Constant: {
@@ -681,8 +681,8 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
 
         samples.ensure_capacity(m_current_frame->sample_count);
         VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
-        i32 constant = sign_extend(static_cast<u32>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
-        for (u32 i = 0; i < m_current_frame->sample_count; ++i) {
+        i64 constant = sign_extend(static_cast<u64>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
+        for (u64 i = 0; i < m_current_frame->sample_count; ++i) {
             samples.unchecked_append(constant);
         }
         break;
@@ -714,21 +714,21 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
     if (m_current_frame->sample_rate == 0 || m_sample_rate == 0)
         return samples;
 
-    ResampleHelper<i32> resampler(m_current_frame->sample_rate, m_sample_rate);
+    ResampleHelper<i64> resampler(m_current_frame->sample_rate, m_sample_rate);
     return resampler.resample(samples);
 }
 
 // 11.29. SUBFRAME_VERBATIM
 // Decode a subframe that isn't actually encoded, usually seen in random data
-ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    Vector<i32> decoded;
+    Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
     VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u32>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
@@ -737,20 +737,20 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
 
 // 11.28. SUBFRAME_LPC
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
-ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // LPC must provide at least as many samples as its order.
     if (subframe.order > m_current_frame->sample_count)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
 
-    Vector<i32> decoded;
+    Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
     VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u32>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
@@ -761,14 +761,14 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
     lpc_precision += 1;
 
     // shift needed on the data (signed!)
-    i8 lpc_shift = sign_extend(LOADER_TRY(bit_input.read_bits<u8>(5)), 5);
+    i8 lpc_shift = static_cast<i8>(sign_extend(LOADER_TRY(bit_input.read_bits<u8>(5)), 5));
 
-    Vector<i32> coefficients;
+    Vector<i64> coefficients;
     coefficients.ensure_capacity(subframe.order);
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
-        u32 raw_coefficient = LOADER_TRY(bit_input.read_bits<u32>(lpc_precision));
-        i32 coefficient = static_cast<i32>(sign_extend(raw_coefficient, lpc_precision));
+        u64 raw_coefficient = LOADER_TRY(bit_input.read_bits<u64>(lpc_precision));
+        i64 coefficient = static_cast<i64>(sign_extend(raw_coefficient, lpc_precision));
         coefficients.unchecked_append(coefficient);
     }
 
@@ -796,20 +796,20 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
 
 // 11.27. SUBFRAME_FIXED
 // Decode a subframe encoded with one of the fixed linear predictor codings
-ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // LPC must provide at least as many samples as its order.
     if (subframe.order > m_current_frame->sample_count)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
 
-    Vector<i32> decoded;
+    Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
     VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u32>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
@@ -868,7 +868,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 
 // 11.30. RESIDUAL
 // Decode the residual, the "error" between the function approximation and the actual audio data
-MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // 11.30.1. RESIDUAL_CODING_METHOD
     auto residual_mode = static_cast<FlacResidualMode>(LOADER_TRY(bit_input.read_bits<u8>(2)));
@@ -897,7 +897,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSub
 
 // 11.30.2.1. EXP_GOLOMB_PARTITION and 11.30.3.1. EXP_GOLOMB2_PARTITION
 // Decode a single Rice partition as part of the residual, every partition can have its own Rice parameter k
-ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // 11.30.2.2. EXP GOLOMB PARTITION ENCODING PARAMETER and 11.30.3.2. EXP-GOLOMB2 PARTITION ENCODING PARAMETER
     u8 k = LOADER_TRY(bit_input.read_bits<u8>(partition_type));
@@ -910,7 +910,7 @@ ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_rice_pa
     if (partition_index == 0)
         residual_sample_count -= subframe.order;
 
-    Vector<i32> rice_partition;
+    Vector<i64> rice_partition;
     rice_partition.resize(residual_sample_count);
 
     // escape code for unencoded binary partition
