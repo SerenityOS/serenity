@@ -48,6 +48,8 @@ public:
 private:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void visit_edges(Visitor&) override;
+
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
@@ -80,7 +82,7 @@ private:
 
     RefPtr<DecodedImageData const> image_data() const;
 
-    RefPtr<SharedImageRequest> m_image_request;
+    JS::GCPtr<SharedImageRequest> m_image_request;
 };
 
 }

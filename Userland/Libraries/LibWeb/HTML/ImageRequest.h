@@ -81,7 +81,7 @@ private:
     // which is either a struct consisting of a width and a height or is null. It must initially be null.
     Optional<Gfx::FloatSize> m_preferred_density_corrected_dimensions;
 
-    RefPtr<SharedImageRequest> m_shared_image_request;
+    JS::Handle<SharedImageRequest> m_shared_image_request;
 };
 
 // https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request

@@ -16,9 +16,11 @@
 
 namespace Web::HTML {
 
-class SharedImageRequest : public RefCounted<SharedImageRequest> {
+class SharedImageRequest : public JS::Cell {
+    JS_CELL(SharedImageRequest, JS::Cell);
+
 public:
-    static ErrorOr<NonnullRefPtr<SharedImageRequest>> get_or_create(Page&, AK::URL const&);
+    static ErrorOr<JS::NonnullGCPtr<SharedImageRequest>> get_or_create(Page&, AK::URL const&);
     ~SharedImageRequest();
 
     AK::URL const& url() const { return m_url; }
@@ -38,6 +40,8 @@ public:
 private:
     explicit SharedImageRequest(Page&, AK::URL);
 
+    virtual void visit_edges(Visitor&) override;
+
     void handle_successful_fetch(AK::URL const&, StringView mime_type, ByteBuffer data);
     void handle_failed_fetch();
 
@@ -50,7 +54,7 @@ private:
 
     State m_state { State::New };
 
-    Page& m_page;
+    JS::NonnullGCPtr<Page> m_page;
 
     struct Callbacks {
         JS::SafeFunction<void()> on_finish;
@@ -60,7 +64,7 @@ private:
 
     AK::URL m_url;
     RefPtr<DecodedImageData const> m_image_data;
-    JS::Handle<Fetch::Infrastructure::FetchController> m_fetch_controller;
+    JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 };
 
 }

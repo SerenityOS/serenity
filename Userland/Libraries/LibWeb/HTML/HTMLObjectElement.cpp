@@ -33,6 +33,12 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLObjectElement::~HTMLObjectElement() = default;
 
+void HTMLObjectElement::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_image_request);
+}
+
 JS::ThrowCompletionOr<void> HTMLObjectElement::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));

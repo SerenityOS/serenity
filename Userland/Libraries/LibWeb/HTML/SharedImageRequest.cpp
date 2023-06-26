@@ -24,11 +24,11 @@ static HashMap<AK::URL, SharedImageRequest*>& shared_image_requests()
     return requests;
 }
 
-ErrorOr<NonnullRefPtr<SharedImageRequest>> SharedImageRequest::get_or_create(Page& page, AK::URL const& url)
+ErrorOr<JS::NonnullGCPtr<SharedImageRequest>> SharedImageRequest::get_or_create(Page& page, AK::URL const& url)
 {
     if (auto it = shared_image_requests().find(url); it != shared_image_requests().end())
         return *it->value;
-    auto request = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SharedImageRequest(page, url)));
+    auto request = page.heap().allocate_without_realm<SharedImageRequest>(page, url);
     shared_image_requests().set(url, request);
     return request;
 }
@@ -42,6 +42,13 @@ SharedImageRequest::SharedImageRequest(Page& page, AK::URL url)
 SharedImageRequest::~SharedImageRequest()
 {
     shared_image_requests().remove(m_url);
+}
+
+void SharedImageRequest::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_page);
+    visitor.visit(m_fetch_controller);
 }
 
 RefPtr<DecodedImageData const> SharedImageRequest::image_data() const
