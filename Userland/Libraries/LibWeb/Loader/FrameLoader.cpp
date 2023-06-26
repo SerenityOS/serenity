@@ -60,10 +60,9 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     auto& url = request.url();
 
     if (type == Type::Navigation || type == Type::Reload || type == Type::Redirect) {
-        if (auto* page = browsing_context().page()) {
-            if (&page->top_level_browsing_context() == m_browsing_context)
-                page->client().page_did_start_loading(url, type == Type::Redirect);
-        }
+        auto& page = browsing_context().page();
+        if (&page.top_level_browsing_context() == m_browsing_context)
+            page.client().page_did_start_loading(url, type == Type::Redirect);
     }
 
     // https://fetch.spec.whatwg.org/#concept-fetch
@@ -133,7 +132,7 @@ bool FrameLoader::load(const AK::URL& url, Type type)
         return false;
     }
 
-    auto request = LoadRequest::create_for_url_on_page(url, browsing_context().page());
+    auto request = LoadRequest::create_for_url_on_page(url, &browsing_context().page());
     return load(request, type);
 }
 
@@ -174,7 +173,7 @@ void FrameLoader::set_error_page_url(DeprecatedString error_page_url)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString const& error)
 {
-    LoadRequest request = LoadRequest::create_for_url_on_page(s_error_page_url, browsing_context().page());
+    LoadRequest request = LoadRequest::create_for_url_on_page(s_error_page_url, &browsing_context().page());
 
     ResourceLoader::the().load(
         request,
@@ -195,12 +194,11 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
 
 void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
 {
-    if (auto* page = browsing_context().page()) {
-        if (bitmap)
-            page->client().page_did_change_favicon(*bitmap);
-        else if (s_default_favicon_bitmap)
-            page->client().page_did_change_favicon(*s_default_favicon_bitmap);
-    }
+    auto& page = browsing_context().page();
+    if (bitmap)
+        page.client().page_did_change_favicon(*bitmap);
+    else if (s_default_favicon_bitmap)
+        page.client().page_did_change_favicon(*s_default_favicon_bitmap);
 }
 
 void FrameLoader::resource_did_load()
@@ -287,8 +285,7 @@ void FrameLoader::resource_did_load()
     document->set_content_type(resource()->mime_type());
 
     browsing_context().set_active_document(document);
-    if (auto* page = browsing_context().page())
-        page->client().page_did_create_main_document();
+    browsing_context().page().client().page_did_create_main_document();
 
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");
@@ -300,8 +297,7 @@ void FrameLoader::resource_did_load()
     else
         browsing_context().scroll_to({ 0, 0 });
 
-    if (auto* page = browsing_context().page())
-        page->client().page_did_finish_loading(url);
+    browsing_context().page().client().page_did_finish_loading(url);
 }
 
 void FrameLoader::resource_did_fail()

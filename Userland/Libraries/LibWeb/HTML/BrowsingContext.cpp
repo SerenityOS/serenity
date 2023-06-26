@@ -1222,7 +1222,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     (void)process_response_end_of_body;
 
     // AD-HOC:
-    auto request = LoadRequest::create_for_url_on_page(resource->url(), page());
+    auto request = LoadRequest::create_for_url_on_page(resource->url(), &page());
     request.set_method(DeprecatedString { resource->method() });
     for (auto& header : *resource->header_list()) {
         request.set_header(DeprecatedString { header.name.bytes() }, DeprecatedString { header.value.bytes() });

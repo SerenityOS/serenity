@@ -142,8 +142,8 @@ public:
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
 
-    Page* page() { return m_page; }
-    Page const* page() const { return m_page; }
+    Page& page() { return m_page; }
+    Page const& page() const { return m_page; }
 
     CSSPixelSize size() const { return m_size; }
     void set_size(CSSPixelSize);

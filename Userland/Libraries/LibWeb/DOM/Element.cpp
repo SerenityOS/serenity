@@ -1371,9 +1371,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!element.document().browsing_context())
         return Error::from_string_view("Element has no browsing context."sv);
 
-    auto* page = element.document().browsing_context()->page();
-    if (!page)
-        return Error::from_string_view("Element has no page."sv);
+    auto& page = element.document().browsing_context()->page();
 
     // If this element doesn't have a layout node, we can't scroll it into view.
     element.document().update_layout();
@@ -1388,8 +1386,8 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!layout_node)
         return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
-    if (element.document().browsing_context() == &page->top_level_browsing_context())
-        page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+    if (element.document().browsing_context() == &page.top_level_browsing_context())
+        page.client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
 
     return {};
 }
