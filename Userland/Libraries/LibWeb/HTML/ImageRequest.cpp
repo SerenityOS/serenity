@@ -19,9 +19,9 @@
 
 namespace Web::HTML {
 
-ErrorOr<NonnullRefPtr<ImageRequest>> ImageRequest::create(Page& page)
+ErrorOr<JS::NonnullGCPtr<ImageRequest>> ImageRequest::create(Page& page)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ImageRequest(page));
+    return page.heap().allocate_without_realm<ImageRequest>(page);
 }
 
 ImageRequest::ImageRequest(Page& page)
@@ -29,8 +29,13 @@ ImageRequest::ImageRequest(Page& page)
 {
 }
 
-ImageRequest::~ImageRequest()
+ImageRequest::~ImageRequest() = default;
+
+void ImageRequest::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
+    visitor.visit(m_page);
+    visitor.visit(m_shared_image_request);
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#img-available
@@ -64,7 +69,7 @@ void ImageRequest::set_current_url(AK::URL url)
 {
     m_current_url = move(url);
     if (m_current_url.is_valid())
-        m_shared_image_request = SharedImageRequest::get_or_create(m_page, m_current_url).release_value_but_fixme_should_propagate_errors();
+        m_shared_image_request = SharedImageRequest::get_or_create(*m_page, m_current_url).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request

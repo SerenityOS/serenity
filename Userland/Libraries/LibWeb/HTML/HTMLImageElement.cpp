@@ -42,6 +42,13 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLImageElement::~HTMLImageElement() = default;
 
+void HTMLImageElement::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_current_request);
+    visitor.visit(m_pending_request);
+}
+
 JS::ThrowCompletionOr<void> HTMLImageElement::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));

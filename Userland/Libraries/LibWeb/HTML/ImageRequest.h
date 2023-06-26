@@ -17,9 +17,11 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#image-request
-class ImageRequest : public RefCounted<ImageRequest> {
+class ImageRequest final : public JS::Cell {
+    JS_CELL(ImageRequest, JS::Cell);
+
 public:
-    static ErrorOr<NonnullRefPtr<ImageRequest>> create(Page&);
+    static ErrorOr<JS::NonnullGCPtr<ImageRequest>> create(Page&);
     ~ImageRequest();
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
@@ -59,7 +61,9 @@ public:
 private:
     explicit ImageRequest(Page&);
 
-    Page& m_page;
+    virtual void visit_edges(Visitor&) override;
+
+    JS::NonnullGCPtr<Page> m_page;
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state
     // An image request's state is initially unavailable.
@@ -81,7 +85,7 @@ private:
     // which is either a struct consisting of a width and a height or is null. It must initially be null.
     Optional<Gfx::FloatSize> m_preferred_density_corrected_dimensions;
 
-    JS::Handle<SharedImageRequest> m_shared_image_request;
+    JS::GCPtr<SharedImageRequest> m_shared_image_request;
 };
 
 // https://html.spec.whatwg.org/multipage/images.html#abort-the-image-request

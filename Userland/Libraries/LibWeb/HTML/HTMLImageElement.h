@@ -87,6 +87,7 @@ public:
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual void visit_edges(Visitor&) override;
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
@@ -111,10 +112,10 @@ private:
     Optional<String> m_last_selected_source;
 
     // https://html.spec.whatwg.org/multipage/images.html#current-request
-    RefPtr<ImageRequest> m_current_request;
+    JS::GCPtr<ImageRequest> m_current_request;
 
     // https://html.spec.whatwg.org/multipage/images.html#pending-request
-    RefPtr<ImageRequest> m_pending_request;
+    JS::GCPtr<ImageRequest> m_pending_request;
 
     SourceSet m_source_set;
 };
