@@ -86,13 +86,7 @@ public:
     size_t pc() const;
     DeprecatedString debug_position() const;
 
-    enum class OptimizationLevel {
-        None,
-        Optimize,
-        __Count,
-        Default = None,
-    };
-    static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
+    static Bytecode::PassManager& optimization_pipeline();
 
     VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 
@@ -108,8 +102,6 @@ private:
     }
 
     MarkedVector<Value>& registers() { return window().registers; }
-
-    static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
