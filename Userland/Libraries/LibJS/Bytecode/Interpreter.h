@@ -31,14 +31,13 @@ class Interpreter {
 public:
     [[nodiscard]] static bool enabled();
     static void set_enabled(bool);
+    static void set_optimizations_enabled(bool);
 
     explicit Interpreter(VM&);
     ~Interpreter();
 
     Realm& realm();
     VM& vm() { return m_vm; }
-
-    void set_optimizations_enabled(bool);
 
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
@@ -123,7 +122,6 @@ private:
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };
-    bool m_optimizations_enabled { false };
 };
 
 extern bool g_dump_bytecode;
