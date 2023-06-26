@@ -43,8 +43,8 @@ public:
         JS::NonnullGCPtr<DOM::Document> document;
     };
 
-    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_browsing_context_and_document(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group);
-    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_auxiliary_browsing_context_and_document(Page& page, JS::NonnullGCPtr<HTML::BrowsingContext> opener);
+    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_browsing_context_and_document(JS::NonnullGCPtr<Page> page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group);
+    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_auxiliary_browsing_context_and_document(JS::NonnullGCPtr<Page> page, JS::NonnullGCPtr<HTML::BrowsingContext> opener);
 
     virtual ~BrowsingContext() override;
 
@@ -183,13 +183,13 @@ public:
     virtual void set_window_handle(String handle) override { m_window_handle = move(handle); }
 
 private:
-    explicit BrowsingContext(Page&, HTML::NavigableContainer*);
+    explicit BrowsingContext(JS::NonnullGCPtr<Page>, HTML::NavigableContainer*);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     void reset_cursor_blink_cycle();
 
-    WeakPtr<Page> m_page;
+    JS::NonnullGCPtr<Page> m_page;
 
     Web::EventHandler m_event_handler;
 
