@@ -79,7 +79,7 @@ HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-auxiliary-browsing-context
-WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_auxiliary_browsing_context_and_document(Page& page, JS::NonnullGCPtr<HTML::BrowsingContext> opener)
+WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_auxiliary_browsing_context_and_document(JS::NonnullGCPtr<Page> page, JS::NonnullGCPtr<HTML::BrowsingContext> opener)
 {
     // 1. Let openerTopLevelBrowsingContext be opener's top-level traversable's active browsing context.
     auto opener_top_level_browsing_context = opener->top_level_traversable()->active_browsing_context();
@@ -110,7 +110,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-browsing-context
-WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_browsing_context_and_document(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group)
+WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_browsing_context_and_document(JS::NonnullGCPtr<Page> page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group)
 {
     auto& vm = group->vm();
 
@@ -263,7 +263,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     return BrowsingContext::BrowsingContextAndDocument { browsing_context, document };
 }
 
-BrowsingContext::BrowsingContext(Page& page, HTML::NavigableContainer* container)
+BrowsingContext::BrowsingContext(JS::NonnullGCPtr<Page> page, HTML::NavigableContainer* container)
     : m_page(page)
     , m_event_handler({}, *this)
     , m_container(container)
@@ -284,6 +284,7 @@ void BrowsingContext::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
+    visitor.visit(m_page);
     for (auto& entry : m_session_history)
         visitor.visit(entry);
     visitor.visit(m_container);
@@ -335,7 +336,7 @@ bool BrowsingContext::is_top_level() const
 
 bool BrowsingContext::is_focused_context() const
 {
-    return m_page && &m_page->focused_context() == this;
+    return &m_page->focused_context() == this;
 }
 
 void BrowsingContext::scroll_to(CSSPixelPoint position)
@@ -347,7 +348,7 @@ void BrowsingContext::scroll_to(CSSPixelPoint position)
             active_document()->update_layout();
     }
 
-    if (m_page && this == &m_page->top_level_browsing_context())
+    if (this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_to(position);
 }
 
