@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio wpath rpath cpath chown"));
 
     StringView home_path;
-    int uid = 0;
+    uid_t uid = 0;
     gid_t gid = USERS_GID;
     bool create_home_dir = false;
     DeprecatedString password = "";
@@ -107,11 +107,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (passwd.has_value()) {
         warnln("user {} already exists!", username);
         return 1;
-    }
-
-    if (uid < 0) {
-        warnln("invalid uid {}!", uid);
-        return 3;
     }
 
     // First, let's sort out the uid for the user
