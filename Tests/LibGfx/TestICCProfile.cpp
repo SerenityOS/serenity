@@ -8,6 +8,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -42,6 +43,17 @@ TEST_CASE(jpg)
 
     auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
     EXPECT(icc_profile->is_v4());
+
+    icc_profile->for_each_tag([](auto tag_signature, auto tag_data) {
+        if (tag_signature == Gfx::ICC::profileDescriptionTag) {
+            // Required per v4 spec, but in practice even v4 files sometimes have TextDescriptionTagData descriptions. Not icc-v4.jpg, though.
+            EXPECT_EQ(tag_data->type(), Gfx::ICC::MultiLocalizedUnicodeTagData::Type);
+            auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
+            EXPECT_EQ(multi_localized_unicode.records().size(), 1u);
+            auto& record = multi_localized_unicode.records()[0];
+            EXPECT_EQ(record.text, "sRGB built-in"sv);
+        }
+    });
 }
 
 TEST_CASE(webp_extended_lossless)
