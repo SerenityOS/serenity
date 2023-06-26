@@ -71,7 +71,6 @@ private:
 };
 
 static bool s_dump_ast = false;
-static bool s_opt_bytecode = false;
 static bool s_as_module = false;
 static bool s_print_last_result = false;
 static bool s_strip_ansi = false;
@@ -212,7 +211,6 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             script_or_module->parse_node().dump(0);
 
         if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
-            bytecode_interpreter->set_optimizations_enabled(s_opt_bytecode);
             result = bytecode_interpreter->run(*script_or_module);
         } else {
             result = interpreter.run(*script_or_module);
@@ -578,13 +576,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView evaluate_script;
     Vector<StringView> script_paths;
     bool use_bytecode = false;
+    bool optimize_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(use_bytecode, "Run the bytecode", "run-bytecode", 'b');
-    args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
+    args_parser.add_option(optimize_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i');
@@ -598,6 +597,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     JS::Bytecode::Interpreter::set_enabled(use_bytecode);
+    JS::Bytecode::Interpreter::set_optimizations_enabled(optimize_bytecode);
 
     bool syntax_highlight = !disable_syntax_highlight;
 

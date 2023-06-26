@@ -32,6 +32,13 @@ void Interpreter::set_enabled(bool enabled)
     s_bytecode_interpreter_enabled = enabled;
 }
 
+static bool s_optimizations_enabled = false;
+
+void Interpreter::set_optimizations_enabled(bool enabled)
+{
+    s_optimizations_enabled = enabled;
+}
+
 bool g_dump_bytecode = false;
 
 Interpreter::Interpreter(VM& vm)
@@ -104,7 +111,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
         } else {
             auto executable = executable_result.release_value();
 
-            if (m_optimizations_enabled) {
+            if (s_optimizations_enabled) {
                 auto& passes = optimization_pipeline();
                 passes.perform(*executable);
             }
@@ -171,11 +178,6 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     vm.run_queued_finalization_registry_cleanup_jobs();
 
     return js_undefined();
-}
-
-void Interpreter::set_optimizations_enabled(bool enabled)
-{
-    m_optimizations_enabled = enabled;
 }
 
 Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
