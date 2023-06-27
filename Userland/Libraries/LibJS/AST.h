@@ -373,6 +373,8 @@ public:
 
     virtual void dump(int indent) const override;
 
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
     bool has_bound_name(DeprecatedFlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
     ModuleRequest const& module_request() const { return m_module_request; }

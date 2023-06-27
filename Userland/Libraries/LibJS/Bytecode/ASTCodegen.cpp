@@ -2867,4 +2867,9 @@ Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecod
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> ImportStatement::generate_bytecode(Bytecode::Generator&) const
+{
+    return {};
+}
+
 }
