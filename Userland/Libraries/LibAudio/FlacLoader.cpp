@@ -441,14 +441,20 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     };
 
     u8 subframe_count = frame_channel_type_to_channel_count(channel_type);
-    Vector<Vector<i64>> current_subframes;
+    Vector<FixedArray<float>> current_subframes;
     current_subframes.ensure_capacity(subframe_count);
+
+    float sample_rescale = 1 / static_cast<float>(1 << (m_current_frame->bit_depth - 1));
+    dbgln_if(AFLACLOADER_DEBUG, "Samples will be rescaled from {} bits: factor {:.8f}", m_current_frame->bit_depth, sample_rescale);
 
     for (u8 i = 0; i < subframe_count; ++i) {
         FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
         Vector<i64> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
         VERIFY(subframe_samples.size() == m_current_frame->sample_count);
-        current_subframes.unchecked_append(move(subframe_samples));
+        FixedArray<float> scaled_samples = TRY(FixedArray<float>::create(m_current_frame->sample_count));
+        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
+            scaled_samples[i] = static_cast<float>(subframe_samples[i]) * sample_rescale;
+        current_subframes.unchecked_append(move(scaled_samples));
     }
 
     // 11.2. Overview ("The audio data is composed of...")
@@ -459,54 +465,57 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     [[maybe_unused]] u16 footer_checksum = TRY(bit_stream.read_bits<u16>(16));
     dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
-    float sample_rescale = 1 / static_cast<float>(1 << (m_current_frame->bit_depth - 1));
-    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.8f}", m_current_frame->bit_depth, sample_rescale);
-
-    FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+    FixedArray<Sample> samples;
 
     switch (channel_type) {
     case FlacFrameChannelType::Mono:
-        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
-            samples[i] = Sample { static_cast<float>(current_subframes[0][i]) * sample_rescale };
-        break;
     case FlacFrameChannelType::Stereo:
-    // TODO mix together surround channels on each side?
     case FlacFrameChannelType::StereoCenter:
     case FlacFrameChannelType::Surround4p0:
     case FlacFrameChannelType::Surround5p0:
     case FlacFrameChannelType::Surround5p1:
     case FlacFrameChannelType::Surround6p1:
-    case FlacFrameChannelType::Surround7p1:
-        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
-            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale, static_cast<float>(current_subframes[1][i]) * sample_rescale };
+    case FlacFrameChannelType::Surround7p1: {
+        auto new_samples = TRY(downmix_surround_to_stereo<FixedArray<float>>(move(current_subframes)));
+        samples.swap(new_samples);
         break;
-    case FlacFrameChannelType::LeftSideStereo:
+    }
+    case FlacFrameChannelType::LeftSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are left (0) and side (1)
         for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // right = left - side
-            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale,
-                static_cast<float>(current_subframes[0][i] - current_subframes[1][i]) * sample_rescale };
+            samples[i] = { current_subframes[0][i],
+                current_subframes[0][i] - current_subframes[1][i] };
         }
         break;
-    case FlacFrameChannelType::RightSideStereo:
+    }
+    case FlacFrameChannelType::RightSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are side (0) and right (1)
         for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // left = right + side
-            samples[i] = { static_cast<float>(current_subframes[1][i] + current_subframes[0][i]) * sample_rescale,
-                static_cast<float>(current_subframes[1][i]) * sample_rescale };
+            samples[i] = { current_subframes[1][i] + current_subframes[0][i],
+                current_subframes[1][i] };
         }
         break;
-    case FlacFrameChannelType::MidSideStereo:
+    }
+    case FlacFrameChannelType::MidSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are mid (0) and side (1)
         for (size_t i = 0; i < current_subframes[0].size(); ++i) {
-            i64 mid = current_subframes[0][i];
-            i64 side = current_subframes[1][i];
+            float mid = current_subframes[0][i];
+            float side = current_subframes[1][i];
             mid *= 2;
             // prevent integer division errors
-            samples[i] = { (static_cast<float>(mid + side) * .5f) * sample_rescale,
-                (static_cast<float>(mid - side) * .5f) * sample_rescale };
+            samples[i] = { (mid + side) * .5f,
+                (mid - side) * .5f };
         }
         break;
+    }
     }
 
     return samples;
