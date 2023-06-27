@@ -724,6 +724,10 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
 ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
+    // LPC must provide at least as many samples as its order.
+    if (subframe.order > m_current_frame->sample_count)
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+
     Vector<i32> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
@@ -779,6 +783,10 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
 // Decode a subframe encoded with one of the fixed linear predictor codings
 ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
+    // LPC must provide at least as many samples as its order.
+    if (subframe.order > m_current_frame->sample_count)
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+
     Vector<i32> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
