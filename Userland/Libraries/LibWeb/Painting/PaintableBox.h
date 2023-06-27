@@ -124,6 +124,14 @@ public:
     bool is_out_of_view(PaintContext&) const;
 
     void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+    auto const& override_borders_data() const { return m_override_borders_data; }
+
+    enum class ShrinkRadiiForBorders {
+        Yes,
+        No
+    };
+
+    BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -135,13 +143,6 @@ protected:
 
     virtual CSSPixelRect compute_absolute_rect() const;
     virtual CSSPixelRect compute_absolute_paint_rect() const;
-
-    enum class ShrinkRadiiForBorders {
-        Yes,
-        No
-    };
-
-    BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
     Vector<ShadowData> resolve_box_shadow_data() const;
 
