@@ -22,6 +22,7 @@
 #include <LibAudio/FlacTypes.h>
 #include <LibAudio/GenericTypes.h>
 #include <LibAudio/LoaderError.h>
+#include <LibAudio/MultiChannel.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/VorbisComment.h>
 #include <LibCore/File.h>
@@ -338,7 +339,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     // The first condition is relevant for unknown-size streams (total samples = 0 in the header)
-    if (m_stream->is_eof() || remaining_samples <= 0)
+    if (m_stream->is_eof() || (m_total_samples < NumericLimits<u64>::max() && remaining_samples <= 0))
         return Vector<FixedArray<Sample>> {};
 
     size_t samples_to_read = min(samples_to_read_from_input, remaining_samples);
