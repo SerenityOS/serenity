@@ -2,7 +2,6 @@
 # Globally Disabled checks:
 #
 # bugprone-easily-swappable-parameters: This warning is loud with no clear advice on how to fix the potential problem
-# FIXME: bugprone-macro-parentheses: Enable with clang-tidy-14 when NOLINTBEGIN/NOLINTEND are available for code generating macros
 # bugprone-reserved-identifier: LibC headers that show up in the header filter are part of "the implementation"
 #   cert-dcl37-c: Alias for bugprone-reserved-identifier
 #   cert-dcl51-cpp: Alias for bugprone-reserved-identifier
@@ -27,7 +26,6 @@ Checks: >
   portability-*,
   readability-*,
   -bugprone-easily-swappable-parameters,
-  -bugprone-macro-parentheses,
   -bugprone-reserved-identifier,-cert-dcl37-c,-cert-dcl51-cpp,
   -cert-dcl21-cpp,
   -misc-no-recursion,
