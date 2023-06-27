@@ -47,7 +47,8 @@ ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
     auto stream = TRY(Core::InputBufferedFile::create(TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
-ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(Bytes buffer)
+
+ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(ReadonlyBytes buffer)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(buffer));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
