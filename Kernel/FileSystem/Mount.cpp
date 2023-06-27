@@ -48,4 +48,14 @@ RefPtr<Inode const> Mount::host() const
     return m_host_custody->inode();
 }
 
+RefPtr<Custody const> Mount::host_custody() const
+{
+    return m_host_custody;
+}
+
+RefPtr<Custody> Mount::host_custody()
+{
+    return m_host_custody;
+}
+
 }
