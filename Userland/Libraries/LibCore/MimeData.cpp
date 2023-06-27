@@ -114,6 +114,11 @@ static Array const s_registered_mime_type = {
     MimeType { .name = "extra/win-31x-compressed"sv, .description = "Windows 3.1X compressed file"sv, .magic_bytes = Vector<u8> { 'K', 'W', 'A', 'J' } },
     MimeType { .name = "extra/win-95-compressed"sv, .description = "Windows 95 compressed file"sv, .magic_bytes = Vector<u8> { 'S', 'Z', 'D', 'D' } },
 
+    MimeType { .name = "font/otf"sv, .common_extensions = { "otf"sv }, .description = "OpenType font"sv, .magic_bytes = Vector<u8> { 'O', 'T', 'T', 'F' } },
+    MimeType { .name = "font/ttf"sv, .common_extensions = { "ttf"sv }, .description = "TrueType font"sv, .magic_bytes = Vector<u8> { 0x00, 0x01, 0x00, 0x00, 0x00 } },
+    MimeType { .name = "font/woff"sv, .common_extensions = { "woff"sv }, .description = "WOFF font"sv, .magic_bytes = Vector<u8> { 'W', 'O', 'F', 'F' } },
+    MimeType { .name = "font/woff2"sv, .common_extensions = { "woff2"sv }, .description = "WOFF2 font"sv, .magic_bytes = Vector<u8> { 'W', 'O', 'F', '2' } },
+
     MimeType { .name = "image/bmp"sv, .common_extensions = { ".bmp"sv }, .description = "BMP image data"sv, .magic_bytes = Vector<u8> { 'B', 'M' } },
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '7', 'a' } },
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '9', 'a' } },
