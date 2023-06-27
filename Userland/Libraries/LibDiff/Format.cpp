@@ -24,6 +24,27 @@ DeprecatedString generate_only_additions(StringView text)
     return builder.to_deprecated_string();
 }
 
+ErrorOr<void> write_unified(Hunk const& hunk, Stream& stream, ColorOutput color_output)
+{
+    TRY(stream.write_formatted("{}\n", hunk.location));
+
+    if (color_output == ColorOutput::Yes) {
+        for (auto const& line : hunk.lines) {
+            if (line.operation == Line::Operation::Addition)
+                TRY(stream.write_formatted("\033[32;1m{}\033[0m\n", line));
+            else if (line.operation == Line::Operation::Removal)
+                TRY(stream.write_formatted("\033[31;1m{}\033[0m\n", line));
+            else
+                TRY(stream.write_formatted("{}\n", line));
+        }
+    } else {
+        for (auto const& line : hunk.lines)
+            TRY(stream.write_formatted("{}\n", line));
+    }
+
+    return {};
+}
+
 ErrorOr<void> write_normal(Hunk const& hunk, Stream& stream, ColorOutput color_output)
 {
     // Source line(s)
