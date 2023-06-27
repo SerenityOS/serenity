@@ -2857,13 +2857,18 @@ Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecod
     }
 
     if (is<ClassExpression>(*m_statement)) {
-        TODO();
+        TRY(m_statement->generate_bytecode(generator));
+
+        if (!static_cast<ClassExpression const&>(*m_statement).has_name())
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+
+        return {};
     }
 
     // ExportDeclaration : export default AssignmentExpression ;
     VERIFY(is<Expression>(*m_statement));
     TRY(generator.emit_named_evaluation_if_anonymous_function(static_cast<Expression const&>(*m_statement), DeprecatedFlyString("default"sv)));
-    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier("default"sv));
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(ExportStatement::local_name_for_default), Bytecode::Op::SetVariable::InitializationMode::Initialize);
     return {};
 }
 
