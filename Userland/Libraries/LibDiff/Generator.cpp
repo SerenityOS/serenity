@@ -9,7 +9,7 @@
 
 namespace Diff {
 
-ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
+ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text, size_t context)
 {
     auto old_lines = old_text.lines();
     auto new_lines = new_text.lines();
@@ -65,39 +65,16 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
 
     Vector<Hunk> hunks;
     Hunk cur_hunk;
-    bool in_hunk = false;
-
-    auto update_hunk = [&](size_t i, size_t j, Direction direction) -> ErrorOr<void> {
-        if (!in_hunk) {
-            HunkLocation location;
-            location.old_range.start_line = i;
-            location.new_range.start_line = j;
-            in_hunk = true;
-            cur_hunk = { location, {} };
-        }
-
-        if (direction == Direction::Down) {
-            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Addition, TRY(String::from_utf8(new_lines[j])) }));
-            cur_hunk.location.new_range.number_of_lines++;
-        } else if (direction == Direction::Right) {
-            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Removal, TRY(String::from_utf8(old_lines[i])) }));
-            cur_hunk.location.old_range.number_of_lines++;
-        }
-
-        return {};
-    };
 
     auto flush_hunk = [&]() -> ErrorOr<void> {
-        if (in_hunk) {
-            // A file with no content has a zero indexed start line.
-            if (cur_hunk.location.new_range.start_line != 0 || cur_hunk.location.new_range.number_of_lines != 0)
-                cur_hunk.location.new_range.start_line++;
-            if (cur_hunk.location.old_range.start_line != 0 || cur_hunk.location.old_range.number_of_lines != 0)
-                cur_hunk.location.old_range.start_line++;
+        // A file with no content has a zero indexed start line.
+        if (cur_hunk.location.new_range.start_line != 0 || cur_hunk.location.new_range.number_of_lines != 0)
+            cur_hunk.location.new_range.start_line++;
+        if (cur_hunk.location.old_range.start_line != 0 || cur_hunk.location.old_range.number_of_lines != 0)
+            cur_hunk.location.old_range.start_line++;
 
-            TRY(hunks.try_append(cur_hunk));
-            in_hunk = false;
-        }
+        TRY(hunks.try_append(cur_hunk));
+        cur_hunk.lines.clear();
 
         return {};
     };
@@ -105,31 +82,82 @@ ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text)
     size_t i = 0;
     size_t j = 0;
 
+    auto set_up_hunk_prepended_with_context = [&](Hunk& hunk) -> ErrorOr<void> {
+        // Prefix the hunk with requested number context lines, and set the hunk location to where that context begins.
+        size_t available_context = min(i, context);
+        hunk.location.old_range = { i - available_context, available_context };
+        hunk.location.new_range = { j - available_context, available_context };
+
+        for (size_t offset = 0; offset < available_context; ++offset) {
+            size_t context_line = i + offset - available_context;
+            TRY(hunk.lines.try_append(Line { Line::Operation::Context, TRY(String::from_utf8(new_lines[context_line])) }));
+        }
+
+        return {};
+    };
+
+    size_t current_context = 0;
     while (i < old_lines.size() && j < new_lines.size()) {
+
         auto& cell = dp(i, j);
         if (cell.direction == Direction::Down) {
-            TRY(update_hunk(i, j, cell.direction));
+            if (cur_hunk.lines.is_empty())
+                TRY(set_up_hunk_prepended_with_context(cur_hunk));
+            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Addition, TRY(String::from_utf8(new_lines[j])) }));
+            cur_hunk.location.new_range.number_of_lines++;
+
             ++j;
+            current_context = 0;
         } else if (cell.direction == Direction::Right) {
-            TRY(update_hunk(i, j, cell.direction));
+            if (cur_hunk.lines.is_empty())
+                TRY(set_up_hunk_prepended_with_context(cur_hunk));
+            TRY(cur_hunk.lines.try_append(Line { Line::Operation::Removal, TRY(String::from_utf8(old_lines[i])) }));
+            cur_hunk.location.old_range.number_of_lines++;
+
             ++i;
+            current_context = 0;
         } else {
+            if (!cur_hunk.lines.is_empty()) {
+                // We're currently in the middle of generating a hunk and have found a context line. If we have already added
+                // the number of context lines that were requested then we have already finished with this hunk. Otherwise we
+                // need to continue looking through the hunk until we have located the requested number of context lines in a
+                // row.
+                if (current_context == context) {
+                    TRY(flush_hunk());
+                } else {
+                    TRY(cur_hunk.lines.try_append(Line { Line::Operation::Context, TRY(String::from_utf8(old_lines[i])) }));
+                    cur_hunk.location.new_range.number_of_lines++;
+                    cur_hunk.location.old_range.number_of_lines++;
+                }
+
+                ++current_context;
+            }
+
             ++i;
             ++j;
-            TRY(flush_hunk());
         }
     }
 
     while (i < old_lines.size()) {
-        TRY(update_hunk(i, new_lines.is_empty() ? 0 : new_lines.size() - 1, Direction::Right)); // Remove a line
+        if (cur_hunk.lines.is_empty())
+            TRY(set_up_hunk_prepended_with_context(cur_hunk));
+
+        TRY(cur_hunk.lines.try_append(Line { Line::Operation::Removal, TRY(String::from_utf8(old_lines[i])) }));
+        cur_hunk.location.old_range.number_of_lines++;
         ++i;
     }
+
     while (j < new_lines.size()) {
-        TRY(update_hunk(old_lines.is_empty() ? 0 : old_lines.size() - 1, j, Direction::Down)); // Add a line
+        if (cur_hunk.lines.is_empty())
+            TRY(set_up_hunk_prepended_with_context(cur_hunk));
+        TRY(cur_hunk.lines.try_append(Line { Line::Operation::Addition, TRY(String::from_utf8(new_lines[j])) }));
+        cur_hunk.location.new_range.number_of_lines++;
+
         ++j;
     }
 
-    TRY(flush_hunk());
+    if (!cur_hunk.lines.is_empty())
+        TRY(flush_hunk());
 
     return hunks;
 }

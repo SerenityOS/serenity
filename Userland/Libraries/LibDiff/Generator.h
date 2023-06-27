@@ -11,6 +11,6 @@
 
 namespace Diff {
 
-ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text);
+ErrorOr<Vector<Hunk>> from_text(StringView old_text, StringView new_text, size_t context = 0);
 
 }
