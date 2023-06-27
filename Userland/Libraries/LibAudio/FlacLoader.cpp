@@ -923,7 +923,7 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
     if (k == (1 << partition_type) - 1) {
         u8 unencoded_bps = TRY(bit_input.read_bits<u8>(5));
         for (size_t r = 0; r < residual_sample_count; ++r) {
-            rice_partition[r] = TRY(bit_input.read_bits<u8>(unencoded_bps));
+            rice_partition[r] = sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
         }
     } else {
         for (size_t r = 0; r < residual_sample_count; ++r) {
