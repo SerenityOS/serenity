@@ -96,7 +96,7 @@ void NetworkTask_main(void*)
     auto buffer = (u8*)buffer_region->vaddr().get();
     UnixDateTime packet_timestamp;
 
-    for (;;) {
+    while (!Process::current().is_dying()) {
         flush_delayed_tcp_acks();
         retransmit_tcp_packets();
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
@@ -127,6 +127,8 @@ void NetworkTask_main(void*)
             dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
         }
     }
+    Process::current().sys$exit(0);
+    VERIFY_NOT_REACHED();
 }
 
 void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)

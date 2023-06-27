@@ -586,12 +586,14 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 ErrorOr<void> UHCIController::spawn_port_process()
 {
     TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
-        for (;;) {
+        while (!Process::current().is_dying()) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
 
             (void)Thread::current()->sleep(Duration::from_seconds(1));
         }
+        Process::current().sys$exit(0);
+        VERIFY_NOT_REACHED();
     }));
     return {};
 }
@@ -600,7 +602,7 @@ ErrorOr<void> UHCIController::spawn_async_poll_process()
 {
     TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Async Poll Task"sv)), [&] {
         u16 poll_interval_ms = 1024;
-        for (;;) {
+        while (!Process::current().is_dying()) {
             {
                 SpinlockLocker locker { m_async_lock };
                 for (OwnPtr<AsyncTransferHandle>& handle : m_active_async_transfers) {
@@ -618,6 +620,8 @@ ErrorOr<void> UHCIController::spawn_async_poll_process()
             }
             (void)Thread::current()->sleep(Duration::from_milliseconds(poll_interval_ms));
         }
+        Process::current().sys$exit(0);
+        VERIFY_NOT_REACHED();
     }));
     return {};
 }

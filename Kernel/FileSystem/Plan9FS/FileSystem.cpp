@@ -327,7 +327,7 @@ size_t Plan9FS::adjust_buffer_size(size_t size) const
 void Plan9FS::thread_main()
 {
     dbgln("Plan9FS: Thread running");
-    do {
+    while (!Process::current().is_dying()) {
         auto result = read_and_dispatch_one_message();
         if (result.is_error()) {
             // If we fail to read, wake up everyone with an error.
@@ -342,7 +342,7 @@ void Plan9FS::thread_main()
             dbgln("Plan9FS: Thread terminating, error reading");
             return;
         }
-    } while (!m_thread_shutdown);
+    }
     dbgln("Plan9FS: Thread terminating");
 }
 
@@ -356,6 +356,8 @@ void Plan9FS::ensure_thread()
         auto [_, thread] = Process::create_kernel_process(process_name.release_value(), [&]() {
             thread_main();
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
+            Process::current().sys$exit(0);
+            VERIFY_NOT_REACHED();
         }).release_value_but_fixme_should_propagate_errors();
         m_thread = move(thread);
     }
