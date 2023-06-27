@@ -36,6 +36,18 @@ static constexpr Array<FontStyleMapping, 4> font_slope_names = { {
     { 3, "Reclined"sv },
 } };
 
+static constexpr Array<FontStyleMapping, 9> font_width_names = { {
+    { 1, "Ultra Condensed"sv },
+    { 2, "Extra Condensed"sv },
+    { 3, "Condensed"sv },
+    { 4, "Semi Condensed"sv },
+    { 5, "Normal"sv },
+    { 6, "Semi Expanded"sv },
+    { 7, "Expanded"sv },
+    { 8, "Extra Expanded"sv },
+    { 9, "Ultra Expanded"sv },
+} };
+
 static constexpr StringView weight_to_name(int weight)
 {
     for (auto& it : font_weight_names) {
@@ -66,6 +78,24 @@ static constexpr StringView slope_to_name(int slope)
 static constexpr int name_to_slope(StringView name)
 {
     for (auto& it : font_slope_names) {
+        if (it.name == name)
+            return it.style;
+    }
+    return {};
+}
+
+static constexpr StringView width_to_name(int width)
+{
+    for (auto& it : font_width_names) {
+        if (it.style == width)
+            return it.name;
+    }
+    return {};
+}
+
+static constexpr int name_to_width(StringView name)
+{
+    for (auto& it : font_width_names) {
         if (it.name == name)
             return it.style;
     }
