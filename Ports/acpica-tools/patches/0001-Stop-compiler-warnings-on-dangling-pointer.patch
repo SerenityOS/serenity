@@ -22,3 +22,12 @@ index f789e68..fd18f5c 100644
  
  
      AcpiGbl_EntryStackPointer = &CurrentSp;
+@@ -205,7 +205,7 @@ void
+ AcpiUtTrackStackPtr (
+     void)
+ {
+-    ACPI_SIZE               CurrentSp;
++    static ACPI_SIZE               CurrentSp;
+ 
+ 
+     if (&CurrentSp < AcpiGbl_LowestStackPointer)
