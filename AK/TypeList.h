@@ -16,6 +16,12 @@ struct TypeList;
 template<unsigned Index, typename List>
 struct TypeListElement;
 
+#if __has_builtin(__type_pack_element)
+template<unsigned Index, typename... Types>
+struct TypeListElement<Index, TypeList<Types...>> {
+    using Type = __type_pack_element<Index, Types...>;
+};
+#else
 template<unsigned Index, typename Head, typename... Tail>
 struct TypeListElement<Index, TypeList<Head, Tail...>>
     : TypeListElement<Index - 1, TypeList<Tail...>> {
@@ -25,6 +31,7 @@ template<typename Head, typename... Tail>
 struct TypeListElement<0, TypeList<Head, Tail...>> {
     using Type = Head;
 };
+#endif
 
 template<typename... Types>
 struct TypeList {
