@@ -555,6 +555,9 @@ if (BUILD_LAGOM)
             target_link_libraries(ntpquery LibCore LibMain)
         endif()
 
+        add_executable(pdf ../../Userland/Utilities/pdf.cpp)
+        target_link_libraries(pdf LibCore LibPDF LibMain)
+
         add_executable(sql ../../Userland/Utilities/sql.cpp)
         target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
 
