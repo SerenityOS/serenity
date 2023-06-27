@@ -254,12 +254,12 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     else
         outln("\nTest failed: {}", input_path);
 
-    auto hunks = TRY(Diff::from_text(expectation, actual));
+    auto hunks = TRY(Diff::from_text(expectation, actual, 3));
     auto out = TRY(Core::File::standard_output());
-    for (auto const& hunk : hunks) {
-        TRY(out->write_formatted("Hunk: "));
-        TRY(Diff::write_normal(hunk, *out, color_output));
-    }
+
+    TRY(Diff::write_unified_header(expectation_path, expectation_path, *out));
+    for (auto const& hunk : hunks)
+        TRY(Diff::write_unified(hunk, *out, color_output));
 
     return TestResult::Fail;
 }
