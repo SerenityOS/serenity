@@ -72,12 +72,26 @@ void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, b
             auto promise_value = TRY(result.get(vm, vm.names.value));
 
             if (TRY(result.get(vm, vm.names.done)).to_boolean()) {
-                // We hit a `return value;`
-                m_top_level_promise->fulfill(promise_value);
 
-                // We should not execute anymore, so we are safe to allow our selfs to be GC'd
+                // We should not execute anymore, so we are safe to allow ourselves to be GC'd.
                 m_self_handle = {};
 
+                // When returning a promise, we need to unwrap it.
+                if (promise_value.is_object() && is<Promise>(promise_value.as_object())) {
+                    auto& returned_promise = static_cast<Promise&>(promise_value.as_object());
+                    if (returned_promise.state() == Promise::State::Fulfilled) {
+                        m_top_level_promise->fulfill(returned_promise.result());
+                        return {};
+                    }
+                    if (returned_promise.state() == Promise::State::Rejected)
+                        return throw_completion(returned_promise.result());
+
+                    // The promise is still pending but there's nothing more to do here.
+                    return {};
+                }
+
+                // We hit a `return value;`
+                m_top_level_promise->fulfill(promise_value);
                 return {};
             }
 
