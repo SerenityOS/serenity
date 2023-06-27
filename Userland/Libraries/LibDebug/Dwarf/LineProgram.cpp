@@ -252,6 +252,10 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
         m_prologue_end = true;
         break;
     }
+    case StandardOpcodes::SetEpilogueBegin: {
+        m_epilogue_begin = true;
+        break;
+    }
     default:
         dbgln("Unhandled LineProgram opcode {}", opcode);
         VERIFY_NOT_REACHED();

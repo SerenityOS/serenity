@@ -190,6 +190,7 @@ private:
     bool m_is_statement { false };
     bool m_basic_block { false };
     bool m_prologue_end { false };
+    bool m_epilogue_begin { false };
 
     Vector<LineInfo> m_lines;
 };
