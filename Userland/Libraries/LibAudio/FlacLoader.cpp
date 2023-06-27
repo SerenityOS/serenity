@@ -156,20 +156,28 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     FixedMemoryStream memory_stream { block.data.bytes() };
     BigEndianInputBitStream picture_block_bytes { MaybeOwned<Stream>(memory_stream) };
 
-    PictureData picture {};
+    PictureData picture;
 
     picture.type = static_cast<ID3PictureType>(LOADER_TRY(picture_block_bytes.read_bits(32)));
 
     auto const mime_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
-    // Note: We are seeking before reading the value to ensure that we stayed inside buffer's size.
     auto offset_before_seeking = memory_stream.offset();
-    LOADER_TRY(memory_stream.seek(mime_string_length, SeekMode::FromCurrentPosition));
-    picture.mime_string = { block.data.bytes().data() + offset_before_seeking, (size_t)mime_string_length };
+    if (offset_before_seeking + mime_string_length >= block.data.size())
+        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture MIME type exceeds available data" };
+
+    // "The MIME type string, in printable ASCII characters 0x20-0x7E."
+    picture.mime_string = LOADER_TRY(String::from_stream(memory_stream, mime_string_length));
+    for (auto code_point : picture.mime_string.code_points()) {
+        if (code_point < 0x20 || code_point > 0x7E)
+            return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture MIME type is not ASCII in range 0x20 - 0x7E" };
+    }
 
     auto const description_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
-    LOADER_TRY(memory_stream.seek(description_string_length, SeekMode::FromCurrentPosition));
-    picture.description_string = Vector<u32> { Span<u32> { reinterpret_cast<u32*>(block.data.bytes().data() + offset_before_seeking), (size_t)description_string_length } };
+    if (offset_before_seeking + description_string_length >= block.data.size())
+        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture description exceeds available data" };
+
+    picture.description_string = LOADER_TRY(String::from_stream(memory_stream, description_string_length));
 
     picture.width = LOADER_TRY(picture_block_bytes.read_bits(32));
     picture.height = LOADER_TRY(picture_block_bytes.read_bits(32));
@@ -179,8 +187,11 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 
     auto const picture_size = LOADER_TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
+    if (offset_before_seeking + picture_size > block.data.size())
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(TRY(m_stream->tell())), "Picture size exceeds available data" };
+
     LOADER_TRY(memory_stream.seek(picture_size, SeekMode::FromCurrentPosition));
-    picture.data = Vector<u8> { Span<u8> { block.data.bytes().data() + offset_before_seeking, (size_t)picture_size } };
+    picture.data = Vector<u8> { block.data.bytes().slice(offset_before_seeking, picture_size) };
 
     m_pictures.append(move(picture));
 
