@@ -28,6 +28,9 @@ public:
     RefPtr<Inode const> host() const;
     RefPtr<Inode> host();
 
+    RefPtr<Custody const> host_custody() const;
+    RefPtr<Custody> host_custody();
+
     Inode const& guest() const { return *m_guest; }
     Inode& guest() { return *m_guest; }
 
