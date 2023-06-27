@@ -16,6 +16,7 @@
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/Audio/IntelHDA/OutputPath.h>
 #include <Kernel/Devices/Audio/IntelHDA/RingBuffer.h>
+#include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/IOWindow.h>
 
 namespace Kernel::Audio::IntelHDA {
@@ -26,7 +27,8 @@ class Codec;
 
 class Controller final
     : public AudioController
-    , public PCI::Device {
+    , public PCI::Device
+    , public PCIIRQHandler {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
@@ -34,6 +36,9 @@ public:
 
     // ^PCI::Device
     virtual StringView device_name() const override { return "IntelHDA"sv; }
+
+    // ^PCIIRQHandler
+    virtual StringView purpose() const override { return "IntelHDA IRQ Handler"sv; }
 
     ErrorOr<u32> send_command(u8 codec_address, u8 node_id, CodecControlVerb verb, u16 payload);
 
@@ -47,6 +52,8 @@ private:
         VersionMajor = 0x03,
         GlobalControl = 0x08,
         StateChangeStatus = 0x0e,
+        InterruptControl = 0x20,
+        InterruptStatus = 0x24,
         CommandOutboundRingBufferOffset = 0x40,
         ResponseInboundRingBufferOffset = 0x50,
         StreamsOffset = 0x80,
@@ -58,11 +65,24 @@ private:
         AcceptUnsolicitedResponseEnable = 1u << 8,
     };
 
+    // 3.3.14: INTCTL – Interrupt Control
+    enum InterruptControlFlag : u32 {
+        GlobalInterruptEnable = 1u << 31,
+    };
+
+    // 3.3.15: INTSTS – Interrupt Status
+    enum InterruptStatusFlag : u32 {
+        GlobalInterruptStatus = 1u << 31,
+    };
+
     Controller(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow>);
 
     ErrorOr<void> initialize_codec(u8 codec_address);
     ErrorOr<void> configure_output_route();
     ErrorOr<void> reset();
+
+    // ^PCIIRQHandler
+    virtual bool handle_irq(RegisterState const&) override;
 
     // ^AudioController
     virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
