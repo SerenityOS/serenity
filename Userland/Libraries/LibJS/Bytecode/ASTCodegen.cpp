@@ -1084,7 +1084,9 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
                 Bytecode::Label { if_not_undefined_block });
 
             generator.switch_to_basic_block(if_undefined_block);
-            if (auto const* lhs = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
+            if (auto const* alias_identifier = alias.get_pointer<NonnullRefPtr<Identifier const>>()) {
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*alias_identifier)->string()));
+            } else if (auto const* lhs = name.get_pointer<NonnullRefPtr<Identifier const>>()) {
                 TRY(generator.emit_named_evaluation_if_anonymous_function(*initializer, (*lhs)->string()));
             } else {
                 TRY(initializer->generate_bytecode(generator));
