@@ -18,6 +18,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/ValueTraits.h>
 
@@ -1125,8 +1126,9 @@ private:
 
 class GetIterator final : public Instruction {
 public:
-    GetIterator()
+    GetIterator(IteratorHint hint = IteratorHint::Sync)
         : Instruction(Type::GetIterator)
+        , m_hint(hint)
     {
     }
 
@@ -1134,6 +1136,9 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
+
+private:
+    IteratorHint m_hint { IteratorHint::Sync };
 };
 
 class GetMethod final : public Instruction {

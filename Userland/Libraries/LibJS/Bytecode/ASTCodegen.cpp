@@ -2290,7 +2290,7 @@ Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode
     return {};
 }
 
-Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
+static void generate_await(Bytecode::Generator& generator)
 {
     VERIFY(generator.is_in_async_function());
 
@@ -2302,8 +2302,6 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
 
     auto type_identifier = generator.intern_identifier("type");
     auto value_identifier = generator.intern_identifier("value");
-
-    TRY(m_argument->generate_bytecode(generator));
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
@@ -2337,6 +2335,12 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
 
     generator.switch_to_basic_block(normal_completion_continuation_block);
     generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+}
+
+Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_argument->generate_bytecode(generator));
+    generate_await(generator);
     return {};
 }
 
@@ -2450,29 +2454,23 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
     else {
         // a. Assert: iterationKind is iterate or async-iterate.
         // b. If iterationKind is async-iterate, let iteratorHint be async.
-        if (iteration_kind == IterationKind::AsyncIterate) {
-            return Bytecode::CodeGenerationError {
-                rhs.ptr(),
-                "Unimplemented iteration mode: AsyncIterate"sv,
-            };
-        }
         // c. Else, let iteratorHint be sync.
+        auto iterator_hint = iteration_kind == IterationKind::AsyncIterate ? IteratorHint::Async : IteratorHint::Sync;
 
         // d. Return ? GetIterator(exprValue, iteratorHint).
-        generator.emit<Bytecode::Op::GetIterator>();
+        generator.emit<Bytecode::Op::GetIterator>(iterator_hint);
     }
 
     return result;
 }
 
 // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<DeprecatedFlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
+static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<DeprecatedFlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update, IteratorHint iterator_kind = IteratorHint::Sync)
 {
     auto iterator_register = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(iterator_register);
 
-    // FIXME: Implement this
-    //        1. If iteratorKind is not present, set iteratorKind to sync.
+    // 1. If iteratorKind is not present, set iteratorKind to sync.
 
     // 2. Let oldEnv be the running execution context's LexicalEnvironment.
     bool has_lexical_binding = false;
@@ -2502,11 +2500,12 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     generator.emit<Bytecode::Op::Load>(iterator_register);
     generator.emit<Bytecode::Op::IteratorNext>();
 
-    // FIXME: Implement this:
-    //        b. If iteratorKind is async, set nextResult to ? Await(nextResult).
+    // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
+    if (iterator_kind == IteratorHint::Async)
+        generate_await(generator);
 
     // c. If Type(nextResult) is not Object, throw a TypeError exception.
-    // NOTE: IteratorComplete already does this.
+    generator.emit<Bytecode::Op::ThrowIfNotObject>();
 
     // d. Let done be ? IteratorComplete(nextResult).
     auto iterator_result_register = generator.allocate_register();
@@ -2696,6 +2695,23 @@ Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_labelled_evaluati
 
     // Now perform the rest of ForInOfLoopEvaluation, given that the accumulator holds the iterator we're supposed to iterate over.
     return for_in_of_body_evaluation(generator, *this, m_lhs, body(), head_result, label_set, loop_end, loop_update);
+}
+
+Bytecode::CodeGenerationErrorOr<void> ForAwaitOfStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    return generate_labelled_evaluation(generator, {});
+}
+
+Bytecode::CodeGenerationErrorOr<void> ForAwaitOfStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
+{
+    auto& loop_end = generator.make_block();
+    auto& loop_update = generator.make_block();
+    generator.begin_breakable_scope(Bytecode::Label { loop_end }, label_set);
+
+    auto head_result = TRY(for_in_of_head_evaluation(generator, IterationKind::AsyncIterate, m_lhs, m_rhs));
+
+    // Now perform the rest of ForInOfLoopEvaluation, given that the accumulator holds the iterator we're supposed to iterate over.
+    return for_in_of_body_evaluation(generator, *this, m_lhs, m_body, head_result, label_set, loop_end, loop_update, IteratorHint::Async);
 }
 
 // 13.3.12.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation

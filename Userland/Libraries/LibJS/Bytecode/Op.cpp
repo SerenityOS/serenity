@@ -1008,7 +1008,7 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator = TRY(get_iterator(vm, interpreter.accumulator()));
+    auto iterator = TRY(get_iterator(vm, interpreter.accumulator(), m_hint));
     interpreter.accumulator() = iterator_to_object(vm, iterator);
     return {};
 }
@@ -1525,7 +1525,8 @@ DeprecatedString DeleteByValue::to_deprecated_string_impl(Bytecode::Executable c
 
 DeprecatedString GetIterator::to_deprecated_string_impl(Executable const&) const
 {
-    return "GetIterator";
+    auto hint = m_hint == IteratorHint::Sync ? "sync" : "async";
+    return DeprecatedString::formatted("GetIterator hint:{}", hint);
 }
 
 DeprecatedString GetMethod::to_deprecated_string_impl(Bytecode::Executable const& executable) const
