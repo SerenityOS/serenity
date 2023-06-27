@@ -21,6 +21,8 @@ enum class ColorOutput {
 };
 
 ErrorOr<void> write_unified(Hunk const& hunk, Stream& stream, ColorOutput color_output = ColorOutput::No);
+ErrorOr<void> write_unified_header(StringView old_path, StringView new_path, Stream& stream);
+
 ErrorOr<void> write_normal(Hunk const& hunk, Stream& stream, ColorOutput color_output = ColorOutput::No);
 
 }

@@ -24,6 +24,14 @@ DeprecatedString generate_only_additions(StringView text)
     return builder.to_deprecated_string();
 }
 
+ErrorOr<void> write_unified_header(StringView old_path, StringView new_path, Stream& stream)
+{
+    TRY(stream.write_formatted("--- {}\n", old_path));
+    TRY(stream.write_formatted("+++ {}\n", new_path));
+
+    return {};
+}
+
 ErrorOr<void> write_unified(Hunk const& hunk, Stream& stream, ColorOutput color_output)
 {
     TRY(stream.write_formatted("{}\n", hunk.location));
