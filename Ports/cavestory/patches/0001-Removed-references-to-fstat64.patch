@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: gloof11 <gloof11@proton.me>
+Date: Mon, 26 Jun 2023 18:39:34 +0900
+Subject: [PATCH] If __FreeBSD__, __APPLE__, __x86_64__, __ppc64__, __CYGWIN__, or __HAIKU__ is not defined it will use "fstat64" to get file status. Currently SerenityOS does not support fstat64, so the code was modified to not perform the check, and instead use "fstat"
+
+---
+ deps/spdlog/details/os.h | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
+
+diff --git a/deps/spdlog/details/os.h b/deps/spdlog/details/os.h
+index 57df5a85a0a5b601b17121f1f1f17c536496b132..67769ce1f3f2608dbaa79cd8cf76f21559d39746 100644
+--- a/deps/spdlog/details/os.h
++++ b/deps/spdlog/details/os.h
+@@ -226,21 +226,13 @@ inline size_t filesize(FILE *f)
+ 
+ #else // unix
+     int fd = fileno(f);
+-// 64 bits(but not in osx or cygwin, where fstat64 is deprecated)
+-#if !defined(__FreeBSD__) && !defined(__APPLE__) && (defined(__x86_64__) || defined(__ppc64__)) && !defined(__CYGWIN__) && !defined(__HAIKU__)
+-    struct stat64 st;
+-    if (fstat64(fd, &st) == 0)
+-    {
+-        return static_cast<size_t>(st.st_size);
+-    }
+-#else // unix 32 bits or cygwin
++
+     struct stat st;
+ 
+     if (fstat(fd, &st) == 0)
+     {
+         return static_cast<size_t>(st.st_size);
+     }
+-#endif
+ #endif
+     throw spdlog_ex("Failed getting file size from fd", errno);
+ }
+@@ -271,8 +263,6 @@ inline int utc_minutes_offset(const std::tm &tm = details::os::localtime())
+     }
+     return offset;
+ #else
+-
+-#if defined(sun) || defined(__sun) || defined(_AIX) || defined(__VITA__) || defined(__SWITCH__)
+     // 'tm_gmtoff' field is BSD extension and it's missing on SunOS/Solaris
+     struct helper
+     {
+@@ -302,10 +292,6 @@ inline int utc_minutes_offset(const std::tm &tm = details::os::localtime())
+     };
+ 
+     auto offset_seconds = helper::calculate_gmt_offset(tm);
+-#else
+-    auto offset_seconds = tm.tm_gmtoff;
+-#endif
+-
+     return static_cast<int>(offset_seconds / 60);
+ #endif
+ }

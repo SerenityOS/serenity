@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: gloof11 <gloof11@proton.me>
+Date: Mon, 26 Jun 2023 19:37:55 +0900
+Subject: [PATCH] Updated the .gitignore to ignore unpacked game extract files. Removed hardware acceleration from SDL_CreateRenderer
+
+---
+ .gitignore                | 23 +++++++++++++++++++++++
+ src/graphics/Renderer.cpp |  2 +-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/.gitignore b/.gitignore
+index 5b431d0ec3596bd9d3c59b952d78af4965cb0e10..c98c1868aa957a730a551ca37ebf8a698cfc3ac3 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -7,3 +7,26 @@
+ *.AppImage
+ *.flatpak
+ *.snap
++
++data/endpic/credit01.bmp
++data/endpic/credit02.bmp
++data/endpic/credit03.bmp
++data/endpic/credit04.bmp
++data/endpic/credit05.bmp
++data/endpic/credit06.bmp
++data/endpic/credit07.bmp
++data/endpic/credit08.bmp
++data/endpic/credit09.bmp
++data/endpic/credit10.bmp
++data/endpic/credit11.bmp
++data/endpic/credit12.bmp
++data/endpic/credit14.bmp
++data/endpic/credit15.bmp
++data/endpic/credit16.bmp
++data/endpic/credit17.bmp
++data/endpic/credit18.bmp
++data/endpic/pixel.bmp
++data/org/
++data/pxt/
++data/stage.dat
++data/wavetable.dat
+diff --git a/src/graphics/Renderer.cpp b/src/graphics/Renderer.cpp
+index d6b9486891ddb73e8e4e32e31b63411c83e97ca1..4feb09b7e377921557327e84d485e8f5e3cbe3a5 100644
+--- a/src/graphics/Renderer.cpp
++++ b/src/graphics/Renderer.cpp
+@@ -116,7 +116,7 @@ bool Renderer::initVideo()
+ 
+   if (!_renderer)
+   {
+-    _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
++    _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_SOFTWARE);
+   }
+   if (!_renderer)
+   {
