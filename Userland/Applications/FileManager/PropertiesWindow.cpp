@@ -11,6 +11,7 @@
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
+#include <Applications/FileManager/PropertiesWindowFontTabGML.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <Applications/FileManager/PropertiesWindowImageTabGML.h>
 #include <LibAudio/Loader.h>
@@ -27,6 +28,12 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Font/OpenType/Font.h>
+#include <LibGfx/Font/Typeface.h>
+#include <LibGfx/Font/WOFF/Font.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <grp.h>
@@ -218,6 +225,9 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     if (mime_type.starts_with("audio/"sv))
         return create_audio_tab(tab_widget, move(mapped_file));
 
+    if (mime_type.starts_with("font/"sv) || m_path.ends_with(".font"sv))
+        return create_font_tab(tab_widget, move(mapped_file), mime_type);
+
     if (mime_type.starts_with("image/"sv))
         return create_image_tab(tab_widget, move(mapped_file), mime_type);
 
@@ -258,6 +268,98 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
         ->set_text(TRY(loader->metadata().track_number.map([](auto number) { return String::number(number); })).value_or({}));
     tab->find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
     tab->find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
+
+    return {};
+}
+
+struct FontInfo {
+    enum class Format {
+        BitmapFont,
+        OpenType,
+        TrueType,
+        WOFF,
+        WOFF2,
+    };
+    Format format;
+    NonnullRefPtr<Gfx::Typeface> typeface;
+};
+static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    if (path.ends_with(".font"sv)) {
+        auto font = TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        typeface->add_bitmap_font(move(font));
+        return FontInfo { FontInfo::Format::BitmapFont, move(typeface) };
+    }
+
+    if (mime_type == "font/otf" || mime_type == "font/ttf") {
+        auto font = TRY(OpenType::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        typeface->set_vector_font(move(font));
+        return FontInfo {
+            mime_type == "font/otf" ? FontInfo::Format::OpenType : FontInfo::Format::TrueType,
+            move(typeface)
+        };
+    }
+
+    if (mime_type == "font/woff" || mime_type == "font/woff2") {
+        auto font = TRY(WOFF::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        typeface->set_vector_font(move(font));
+        return FontInfo {
+            mime_type == "font/woff" ? FontInfo::Format::WOFF : FontInfo::Format::WOFF2,
+            move(typeface)
+        };
+    }
+
+    return Error::from_string_view("Unrecognized font format."sv);
+}
+
+ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file, StringView mime_type)
+{
+    auto font_info_or_error = load_font(m_path, mime_type, mapped_file);
+    if (font_info_or_error.is_error()) {
+        warnln("Failed to open '{}': {}", m_path, font_info_or_error.release_error());
+        return {};
+    }
+    auto font_info = font_info_or_error.release_value();
+    auto& typeface = font_info.typeface;
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Font"_short_string));
+    TRY(tab->load_from_gml(properties_window_font_tab_gml));
+
+    String format_name;
+    switch (font_info.format) {
+    case FontInfo::Format::BitmapFont:
+        format_name = TRY("Bitmap Font"_string);
+        break;
+    case FontInfo::Format::OpenType:
+        format_name = TRY("OpenType"_string);
+        break;
+    case FontInfo::Format::TrueType:
+        format_name = TRY("TrueType"_string);
+        break;
+    case FontInfo::Format::WOFF:
+        format_name = TRY("WOFF"_string);
+        break;
+    case FontInfo::Format::WOFF2:
+        format_name = TRY("WOFF2"_string);
+        break;
+    }
+    tab->find_descendant_of_type_named<GUI::Label>("font_format")->set_text(format_name);
+    tab->find_descendant_of_type_named<GUI::Label>("font_family")->set_text(TRY(String::from_deprecated_string(typeface->family())));
+    tab->find_descendant_of_type_named<GUI::Label>("font_fixed_width")->set_text(typeface->is_fixed_width() ? "Yes"_short_string : "No"_short_string);
+    tab->find_descendant_of_type_named<GUI::Label>("font_width")->set_text(TRY(String::from_utf8(Gfx::width_to_name(static_cast<Gfx::FontWidth>(typeface->width())))));
+
+    auto nearest_weight_class_name = [](unsigned weight) {
+        if (weight > 925)
+            return Gfx::weight_to_name(Gfx::FontWeight::ExtraBlack);
+        unsigned weight_class = clamp(round_to<unsigned>(weight / 100.0) * 100, Gfx::FontWeight::Thin, Gfx::FontWeight::Black);
+        return Gfx::weight_to_name(weight_class);
+    };
+    auto weight = typeface->weight();
+    tab->find_descendant_of_type_named<GUI::Label>("font_weight")->set_text(TRY(String::formatted("{} ({})", weight, nearest_weight_class_name(weight))));
+    tab->find_descendant_of_type_named<GUI::Label>("font_slope")->set_text(TRY(String::from_utf8(Gfx::slope_to_name(typeface->slope()))));
 
     return {};
 }

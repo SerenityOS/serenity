@@ -8,6 +8,7 @@ serenity_component(
 compile_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
 compile_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
 compile_gml(PropertiesWindowAudioTab.gml PropertiesWindowAudioTabGML.h properties_window_audio_tab_gml)
+compile_gml(PropertiesWindowFontTab.gml PropertiesWindowFontTabGML.h properties_window_font_tab_gml)
 compile_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h properties_window_general_tab_gml)
 compile_gml(PropertiesWindowImageTab.gml PropertiesWindowImageTabGML.h properties_window_image_tab_gml)
 
@@ -24,6 +25,7 @@ set(GENERATED_SOURCES
     FileManagerWindowGML.h
     FileOperationProgressGML.h
     PropertiesWindowAudioTabGML.h
+    PropertiesWindowFontTabGML.h
     PropertiesWindowGeneralTabGML.h
     PropertiesWindowImageTabGML.h
 )
