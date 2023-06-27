@@ -16,10 +16,12 @@ UNMAP_AFTER_INIT void SyncTask::spawn()
 {
     MUST(Process::create_kernel_process(KString::must_create("VFS Sync Task"sv), [] {
         dbgln("VFS SyncTask is running");
-        for (;;) {
+        while (!Process::current().is_dying()) {
             VirtualFileSystem::sync();
             (void)Thread::current()->sleep(Duration::from_seconds(1));
         }
+        Process::current().sys$exit(0);
+        VERIFY_NOT_REACHED();
     }));
 }
 

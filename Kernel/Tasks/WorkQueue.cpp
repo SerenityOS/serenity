@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
     if (name_kstring.is_error())
         TODO();
     auto [_, thread] = Process::create_kernel_process(name_kstring.release_value(), [this] {
-        for (;;) {
+        while (!Process::current().is_dying()) {
             WorkItem* item;
             bool have_more;
             m_items.with([&](auto& items) {
@@ -44,6 +44,8 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
             }
             [[maybe_unused]] auto result = m_wait_queue.wait_on({});
         }
+        Process::current().sys$exit(0);
+        VERIFY_NOT_REACHED();
     }).release_value_but_fixme_should_propagate_errors();
     m_thread = move(thread);
 }
