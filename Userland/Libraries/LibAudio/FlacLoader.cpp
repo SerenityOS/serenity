@@ -958,13 +958,20 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
     } else if ((start_byte & 0b11000000) == 0b10000000) {
         return Error::from_string_literal("Illegal continuation byte");
     }
-    // This algorithm is too good and supports the theoretical max 0xFF start byte
+    // This algorithm supports the theoretical max 0xFF start byte, which is not part of the regular UTF-8 spec.
     u8 length = 1;
     while (((start_byte << length) & 0b10000000) == 0b10000000)
         ++length;
-    u8 bits_from_start_byte = 8 - (length + 1);
-    u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
-    character = start_byte_bitmask & start_byte;
+
+    // This is technically not spec-compliant, but if we take UTF-8 to its logical extreme,
+    // we can say 0xFF means there's 7 following continuation bytes and no data at all in the leading character.
+    if (length == 8) [[unlikely]] {
+        character = 0;
+    } else {
+        u8 bits_from_start_byte = 8 - (length + 1);
+        u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
+        character = start_byte_bitmask & start_byte;
+    }
     for (u8 i = length - 1; i > 0; --i) {
         u8 current_byte = TRY(input.read_value<u8>());
         character = (character << 6) | (current_byte & 0b00111111);
