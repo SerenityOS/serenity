@@ -521,7 +521,12 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
 
     size_t count = 0;
 
-    for (; count < granule.big_values * 2; count += 2) {
+    // 2.4.3.4.6: "Decoding is done until all Huffman code bits have been decoded
+    //             or until quantized values representing 576 frequency lines have been decoded,
+    //             whichever comes first."
+    auto max_count = min(granule.big_values * 2, MP3::granule_size);
+
+    for (; count < max_count; count += 2) {
         MP3::Tables::Huffman::HuffmanTreeXY const* tree = nullptr;
 
         if (count < region1_start) {
@@ -574,7 +579,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
     // count1 is not known. We have to read huffman encoded values
     // until we've exhausted the granule's bits. We know the size of
     // the granule from part2_3_length, which is the number of bits
-    // used for scaleactors and huffman data (in the granule).
+    // used for scalefactors and huffman data (in the granule).
     while (granule_bits_read < granule.part_2_3_length && count <= MP3::granule_size - 4) {
         auto const entry = MP3::Tables::Huffman::huffman_decode(reservoir, count1table, granule.part_2_3_length - granule_bits_read);
         granule_bits_read += entry.bits_read;
@@ -625,6 +630,8 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
         return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Read too many bits from bit reservoir." };
     }
 
+    // 2.4.3.4.6: "If there are more Huffman code bits than necessary to decode 576 values
+    //             they are regarded as stuffing bits and discarded."
     for (size_t i = granule_bits_read; i < granule.part_2_3_length; i++) {
         LOADER_TRY(reservoir.read_bit());
     }
