@@ -218,8 +218,8 @@ void Editor::get_terminal_size()
     struct winsize ws;
     ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
     if (ws.ws_col == 0 || ws.ws_row == 0) {
-        // LLDB uses ttys which "work" and then gives us a zero sized
-        // terminal which is far from useful
+        // FIXME: LLDB uses ttys which "work" and then gives us a zero sized
+        //        terminal which is far from useful
         if (int fd = open("/dev/tty", O_RDONLY); fd != -1) {
             ioctl(fd, TIOCGWINSZ, &ws);
             close(fd);

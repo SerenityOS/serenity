@@ -78,7 +78,7 @@ endif()
 include(flac_spec_tests)
 include(lagom_compile_options)
 
-include(GNUInstallDirs) # make sure to include before we mess w/RPATH
+include(GNUInstallDirs) # Make sure to include before we mess w/RPATH
 
 # Mirror the structure of the installed tree to ensure that rpaths
 # always remain valid.
@@ -185,7 +185,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 
-# install rules, think about moving to its own helper cmake file
+#FIXME: Install rules, think about moving to its own helper cmake file
 include(CMakePackageConfigHelpers)
 
 # find_package(<package>) call for consumers to find this project
@@ -220,7 +220,7 @@ function(lagom_lib target_name fs_name)
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
     if (NOT ENABLE_FUZZERS AND NOT CMAKE_CROSSCOMPILING)
-        # alias for parity with exports
+        # Alias for parity with exports
         add_library(Lagom::${library} ALIAS ${target_name})
     endif()
 
@@ -330,8 +330,8 @@ if (NOT APPLE AND NOT ANDROID AND NOT EMSCRIPTEN AND NOT ${CMAKE_SYSTEM_NAME} MA
     target_link_libraries(LibCrypt INTERFACE crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 if (SERENITYOS)
-    # Serenity only allows syscalls from LibSystem, so if someone asks for that on Lagom,
-    # we need to pass that through to the system's LibSystem.
+    # NOTE: Serenity only allows syscalls from LibSystem, so if someone asks for that on Lagom,
+    #       we need to pass that through to the system's LibSystem.
     target_link_libraries(LibSystem INTERFACE system)
 endif()
 add_library(NoCoverage INTERFACE)

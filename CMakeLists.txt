@@ -65,9 +65,9 @@ add_custom_target(run
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/run.sh"
     USES_TERMINAL
 )
-
+# FIXME: Revisit this once there is a better way of doing that.
 # This can currently only be implemented by ordered commands
-# as cmake doesn't support inter dependency ordering, and we
+# as CMake doesn't support inter dependency ordering, and we
 # would like to avoid inject dependencies on the existing
 # custom commands to allow people to run commands adhoc with
 # out forcing re-builds when they might not want them.
@@ -158,7 +158,7 @@ configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/AK/Debug.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/AK")
 
 # We disable it completely because it makes cmake very spammy.
-# This will need to be revisited when the Loader supports RPATH/RUN_PATH.
+# FIXME: This will need to be revisited when the Loader supports RPATH/RUN_PATH.
 set(CMAKE_SKIP_RPATH TRUE)
 
 include(serenity_compile_options)
@@ -239,7 +239,7 @@ if (ENABLE_COMPILETIME_HEADER_CHECK)
 endif()
 
 export_components("${CMAKE_BINARY_DIR}/components.ini")
-
+# FIXME: Download compressed version, when supported.
 # it seems like cmake cannot uncompress *.gz files... only ZIP/tar.gz.
 # Lets download the uncompressed versions.
 # https://gitlab.kitware.com/cmake/cmake/-/issues/23054

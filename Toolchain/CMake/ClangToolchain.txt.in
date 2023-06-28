@@ -5,7 +5,7 @@ set(triple @SERENITY_ARCH@-pc-serenity)
 set(TOOLCHAIN_ROOT @SERENITY_SOURCE_DIR@/Toolchain/Local/clang/)
 set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
 
-# where to read from/write to
+# Where to read from/write to
 set(CMAKE_SYSROOT @SERENITY_BUILD_DIR@/Root)
 set(CMAKE_STAGING_PREFIX @SERENITY_BUILD_DIR@/Root/usr/local)
 set(CMAKE_INSTALL_PREFIX /usr/local)
