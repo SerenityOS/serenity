@@ -834,11 +834,14 @@ public:
         for (auto& config : entropy_decoder.m_configs)
             config = TRY(entropy_decoder.read_config(stream));
 
-        Vector<u16> counts;
-        TRY(counts.try_resize(entropy_decoder.m_configs.size()));
-        TRY(entropy_decoder.m_distributions.try_resize(entropy_decoder.m_configs.size()));
-
         if (use_prefix_code) {
+            entropy_decoder.m_distributions = Vector<BrotliCanonicalCode> {};
+            auto& distributions = entropy_decoder.m_distributions.get<Vector<BrotliCanonicalCode>>();
+            TRY(distributions.try_resize(entropy_decoder.m_configs.size()));
+
+            Vector<u16> counts;
+            TRY(counts.try_resize(entropy_decoder.m_configs.size()));
+
             for (auto& count : counts) {
                 if (TRY(stream.read_bit())) {
                     auto const n = TRY(stream.read_bits(4));
@@ -850,15 +853,14 @@ public:
 
             // After reading the counts, the decoder reads each D[i] (implicitly
             // described by a prefix code) as specified in C.2.4, with alphabet_size = count[i].
-            for (u32 i {}; i < entropy_decoder.m_distributions.size(); ++i) {
+            for (u32 i {}; i < distributions.size(); ++i) {
                 // The alphabet size mentioned in the [Brotli] RFC is explicitly specified as parameter alphabet_size
                 // when the histogram is being decoded, except in the special case of alphabet_size == 1, where no
                 // histogram is read, and all decoded symbols are zero without reading any bits at all.
-                if (counts[i] != 1) {
-                    entropy_decoder.m_distributions[i] = TRY(BrotliCanonicalCode::read_prefix_code(stream, counts[i]));
-                } else {
-                    entropy_decoder.m_distributions[i] = BrotliCanonicalCode { { 1 }, { 0 } };
-                }
+                if (counts[i] != 1)
+                    distributions[i] = TRY(BrotliCanonicalCode::read_prefix_code(stream, counts[i]));
+                else
+                    distributions[i] = BrotliCanonicalCode { { 1 }, { 0 } };
             }
         } else {
             TODO();
@@ -875,7 +877,12 @@ public:
             TODO();
 
         // Read symbol from entropy coded stream using D[clusters[ctx]]
-        auto const token = TRY(m_distributions[m_clusters[context]].read_symbol(stream));
+        u32 token {};
+        TRY(m_distributions.visit(
+            [&](Vector<BrotliCanonicalCode> const& distributions) -> ErrorOr<void> {
+                token = TRY(distributions[m_clusters[context]].read_symbol(stream));
+                return {};
+            }));
 
         auto r = TRY(read_uint(stream, m_configs[m_clusters[context]], token));
         return r;
@@ -965,7 +972,7 @@ private:
 
     u8 m_log_alphabet_size { 15 };
 
-    Vector<BrotliCanonicalCode> m_distributions; // D in the spec
+    Variant<Vector<BrotliCanonicalCode>> m_distributions { Vector<BrotliCanonicalCode> {} }; // D in the spec
 };
 ///
 
