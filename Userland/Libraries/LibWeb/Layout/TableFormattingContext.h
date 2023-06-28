@@ -69,6 +69,8 @@ private:
         CSSPixels max_size { 0 };
         CSSPixels used_width { 0 };
         double percentage_width { 0 };
+        // Store whether the column is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
+        bool is_constrained { false };
     };
 
     struct Row {
