@@ -795,7 +795,10 @@ ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpr
     auto& vm = interpreter.vm();
 
     if (!m_function_node.has_name()) {
-        interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, m_lhs_name.value_or({}));
+        DeprecatedFlyString name = {};
+        if (m_lhs_name.has_value())
+            name = interpreter.current_executable().get_identifier(m_lhs_name.value());
+        interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, name);
     } else {
         interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
     }
@@ -1149,7 +1152,7 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     ECMAScriptFunctionObject* class_object = nullptr;
 
     if (!m_class_expression.has_name() && m_lhs_name.has_value())
-        class_object = TRY(m_class_expression.class_definition_evaluation(vm, {}, m_lhs_name.value()));
+        class_object = TRY(m_class_expression.class_definition_evaluation(vm, {}, interpreter.current_executable().get_identifier(m_lhs_name.value())));
     else
         class_object = TRY(m_class_expression.class_definition_evaluation(vm, name, name.is_null() ? ""sv : name));
 

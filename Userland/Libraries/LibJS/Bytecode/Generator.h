@@ -85,9 +85,9 @@ public:
 
     void push_home_object(Register);
     void pop_home_object();
-    void emit_new_function(JS::FunctionExpression const&, Optional<DeprecatedFlyString const&> lhs_name);
+    void emit_new_function(JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
 
-    CodeGenerationErrorOr<void> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<DeprecatedFlyString const&> lhs_name);
+    CodeGenerationErrorOr<void> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name);
 
     void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();

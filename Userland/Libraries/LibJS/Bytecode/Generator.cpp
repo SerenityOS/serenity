@@ -452,7 +452,7 @@ void Generator::pop_home_object()
     m_home_objects.take_last();
 }
 
-void Generator::emit_new_function(FunctionExpression const& function_node, Optional<DeprecatedFlyString const&> lhs_name)
+void Generator::emit_new_function(FunctionExpression const& function_node, Optional<IdentifierTableIndex> lhs_name)
 {
     if (m_home_objects.is_empty())
         emit<Op::NewFunction>(function_node, lhs_name);
@@ -460,7 +460,7 @@ void Generator::emit_new_function(FunctionExpression const& function_node, Optio
         emit<Op::NewFunction>(function_node, lhs_name, m_home_objects.last());
 }
 
-CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_function(Expression const& expression, Optional<DeprecatedFlyString const&> lhs_name)
+CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_function(Expression const& expression, Optional<IdentifierTableIndex> lhs_name)
 {
     if (is<FunctionExpression>(expression)) {
         auto const& function_expression = static_cast<FunctionExpression const&>(expression);
