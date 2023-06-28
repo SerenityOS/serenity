@@ -189,7 +189,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, T
         // g. Repeat, while count > 0,
         for (u32 i = 0; i < element_length; ++i) {
             // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
-            auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
+            auto value = MUST_OR_THROW_OOM(src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered));
 
             // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
             data->template set_value<T>(target_byte_index, value, true, ArrayBuffer::Order::Unordered);
