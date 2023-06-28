@@ -45,3 +45,14 @@ TEST_CASE(rect_shatter)
 
     EXPECT_EQ(glass_plate.size().area() - hammer.size().area(), total_shard_area);
 }
+
+TEST_CASE(rect_closest_to)
+{
+    Gfx::IntRect const screen_rect = { 0, 0, 960, 540 };
+    Gfx::Point<int> p = { 460, 592 }; // point is below the rect
+    Gfx::Point<int> closest = screen_rect.closest_to(p);
+    EXPECT_EQ(screen_rect.side(closest), Gfx::IntRect::Side::Bottom);
+    p = { 960, 0 }; // point exactly on top right corner
+    closest = screen_rect.closest_to(p);
+    EXPECT_EQ(screen_rect.side(closest), Gfx::IntRect::Side::Top);
+}
