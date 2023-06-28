@@ -220,11 +220,43 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
 {
     auto& vm = this->vm();
 
+    // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!is_detached());
+
+    // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+
+    // 3. Assert: value is a BigInt if IsBigIntElementType(type) is true; otherwise, value is a Number.
+    if constexpr (IsIntegral<T> && sizeof(T) == 8)
+        VERIFY(value.is_bigint());
+    else
+        VERIFY(value.is_number());
+
+    // 4. Let block be arrayBuffer.[[ArrayBufferData]].
+    auto& block = buffer();
+
+    // FIXME: 5. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
+
+    // 6. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    //    NOTE: Done by default parameter at declaration of this function.
+
+    // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
     auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
 
-    // FIXME: Check for shared buffer
+    // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
+    if (false) {
+        // FIXME: a. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+        // FIXME: b. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+        // FIXME: c. If isTypedArray is true and IsNoTearConfiguration(type, order) is true, let noTear be true; otherwise let noTear be false.
+        // FIXME: d. Append WriteSharedMemory { [[Order]]: order, [[NoTear]]: noTear, [[Block]]: block, [[ByteIndex]]: byteIndex, [[ElementSize]]: elementSize, [[Payload]]: rawBytes } to eventsRecord.[[EventList]].
+    }
+    // 9. Else,
+    else {
+        // a. Store the individual bytes of rawBytes into block, starting at block[byteIndex].
+        raw_bytes.span().copy_to(block.span().slice(byte_index));
+    }
 
-    raw_bytes.span().copy_to(buffer_impl().span().slice(byte_index));
+    // 10. Return unused.
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
