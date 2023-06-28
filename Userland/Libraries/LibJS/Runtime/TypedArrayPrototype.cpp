@@ -415,7 +415,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
         // k. Repeat, while countBytes > 0,
         for (; count_bytes > 0; --count_bytes) {
             // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-            auto value = buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered);
+            auto value = MUST_OR_THROW_OOM(buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered));
 
             // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
             buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered);
@@ -1231,7 +1231,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         // a. Repeat, while targetByteIndex < limit,
         while (target_byte_index < limit) {
             // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
-            auto value = source.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered);
+            auto value = MUST_OR_THROW_OOM(source.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered));
             // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
             target.set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
             // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
@@ -1459,7 +1459,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
             // ix. Repeat, while targetByteIndex < limit,
             for (; target_byte_index < limit.value(); ++source_byte_index, ++target_byte_index) {
                 // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-                auto value = source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered);
+                auto value = MUST_OR_THROW_OOM(source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered));
 
                 // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
                 target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered);

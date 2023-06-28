@@ -72,7 +72,7 @@ public:
         Unordered
     };
     template<typename type>
-    Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
+    ThrowCompletionOr<Value> get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
     void set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename T>
@@ -149,7 +149,7 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
 
 // Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer().
 template<typename T>
-Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
 
@@ -157,8 +157,7 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 
     // FIXME: Check for shared buffer
 
-    // FIXME: Propagate errors.
-    auto raw_value = MUST(buffer_impl().slice(byte_index, element_size));
+    auto raw_value = TRY_OR_THROW_OOM(vm, buffer_impl().slice(byte_index, element_size));
     return raw_bytes_to_numeric<T>(vm, move(raw_value), is_little_endian);
 }
 
