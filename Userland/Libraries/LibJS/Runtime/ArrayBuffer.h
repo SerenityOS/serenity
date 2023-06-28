@@ -33,6 +33,8 @@ public:
     virtual ~ArrayBuffer() override = default;
 
     size_t byte_length() const { return buffer_impl().size(); }
+
+    // [[ArrayBufferData]]
     ByteBuffer& buffer() { return buffer_impl(); }
     ByteBuffer const& buffer() const { return buffer_impl(); }
 
