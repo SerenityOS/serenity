@@ -24,22 +24,16 @@ QOALoaderPlugin::QOALoaderPlugin(NonnullOwnPtr<AK::SeekableStream> stream)
 {
 }
 
-Result<NonnullOwnPtr<QOALoaderPlugin>, LoaderError> QOALoaderPlugin::create(StringView path)
+bool QOALoaderPlugin::sniff(SeekableStream& stream)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
-    auto loader = make<QOALoaderPlugin>(move(stream));
-
-    LOADER_TRY(loader->initialize());
-
-    return loader;
+    auto maybe_qoa = stream.read_value<BigEndian<u32>>();
+    return !maybe_qoa.is_error() && maybe_qoa.value() == QOA::magic;
 }
 
-Result<NonnullOwnPtr<QOALoaderPlugin>, LoaderError> QOALoaderPlugin::create(Bytes buffer)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> QOALoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
-    auto loader = make<QOALoaderPlugin>(make<FixedMemoryStream>(buffer));
-
+    auto loader = make<QOALoaderPlugin>(move(stream));
     LOADER_TRY(loader->initialize());
-
     return loader;
 }
 

@@ -208,7 +208,7 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
     return {};
 }
 
-void QuickLaunchWidget::config_key_was_removed(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key)
+void QuickLaunchWidget::config_key_was_removed(StringView domain, StringView group, StringView key)
 {
     if (domain == "Taskbar" && group == quick_launch) {
         auto button = find_child_of_type_named<GUI::Button>(key);
@@ -217,7 +217,7 @@ void QuickLaunchWidget::config_key_was_removed(DeprecatedString const& domain, D
     }
 }
 
-void QuickLaunchWidget::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void QuickLaunchWidget::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Taskbar" && group == quick_launch) {
         auto entry = QuickLaunchEntry::create_from_config_value(value);

@@ -157,6 +157,7 @@ namespace JS {
     P(disposed)                              \
     P(done)                                  \
     P(dotAll)                                \
+    P(drop)                                  \
     P(encodeURI)                             \
     P(encodeURIComponent)                    \
     P(endsWith)                              \
@@ -498,6 +499,7 @@ namespace JS {
     P(supportedLocalesOf)                    \
     P(supportedValuesOf)                     \
     P(symmetricDifference)                   \
+    P(take)                                  \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
@@ -510,6 +512,7 @@ namespace JS {
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(timeZones)                             \
+    P(toArray)                               \
     P(toDateString)                          \
     P(toExponential)                         \
     P(toFixed)                               \

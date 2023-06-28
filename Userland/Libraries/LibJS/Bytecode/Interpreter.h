@@ -31,14 +31,13 @@ class Interpreter {
 public:
     [[nodiscard]] static bool enabled();
     static void set_enabled(bool);
+    static void set_optimizations_enabled(bool);
 
     explicit Interpreter(VM&);
     ~Interpreter();
 
     Realm& realm();
     VM& vm() { return m_vm; }
-
-    void set_optimizations_enabled(bool);
 
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
@@ -87,13 +86,7 @@ public:
     size_t pc() const;
     DeprecatedString debug_position() const;
 
-    enum class OptimizationLevel {
-        None,
-        Optimize,
-        __Count,
-        Default = None,
-    };
-    static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
+    static Bytecode::PassManager& optimization_pipeline();
 
     VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 
@@ -110,8 +103,6 @@ private:
 
     MarkedVector<Value>& registers() { return window().registers; }
 
-    static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
-
     VM& m_vm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
@@ -123,7 +114,6 @@ private:
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };
-    bool m_optimizations_enabled { false };
 };
 
 extern bool g_dump_bytecode;

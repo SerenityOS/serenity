@@ -47,6 +47,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_executable(Loader.so ${SOURCES})
+add_dependencies(Loader.so install_libc_headers)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(Loader.so PRIVATE gcc)

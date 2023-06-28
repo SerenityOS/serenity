@@ -373,6 +373,8 @@ public:
 
     virtual void dump(int indent) const override;
 
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
     bool has_bound_name(DeprecatedFlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
     ModuleRequest const& module_request() const { return m_module_request; }
@@ -996,6 +998,8 @@ public:
     }
 
     virtual Completion execute(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
     virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
 

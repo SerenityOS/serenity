@@ -8,11 +8,12 @@
 #include <AK/Debug.h>
 
 namespace Diff {
-Vector<Hunk> parse_hunks(DeprecatedString const& diff)
+
+ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
 {
-    Vector<DeprecatedString> diff_lines = diff.split('\n');
+    Vector<StringView> diff_lines = diff.split_view('\n');
     if (diff_lines.is_empty())
-        return {};
+        return Vector<Hunk> {};
 
     Vector<Hunk> hunks;
 
@@ -40,12 +41,12 @@ Vector<Hunk> parse_hunks(DeprecatedString const& diff)
         hunk.target_start_line = current_location.target_start_line;
 
         while (line_index < diff_lines.size() && diff_lines[line_index][0] == '-') {
-            hunk.removed_lines.append(diff_lines[line_index].substring(1, diff_lines[line_index].length() - 1));
+            TRY(hunk.removed_lines.try_append(TRY(String::from_utf8(diff_lines[line_index].substring_view(1, diff_lines[line_index].length() - 1)))));
             current_location.apply_offset(1, HunkLocation::LocationType::Original);
             ++line_index;
         }
         while (line_index < diff_lines.size() && diff_lines[line_index][0] == '+') {
-            hunk.added_lines.append(diff_lines[line_index].substring(1, diff_lines[line_index].length() - 1));
+            TRY(hunk.added_lines.try_append(TRY(String::from_utf8(diff_lines[line_index].substring_view(1, diff_lines[line_index].length() - 1)))));
             current_location.apply_offset(1, HunkLocation::LocationType::Target);
             ++line_index;
         }
@@ -54,7 +55,7 @@ Vector<Hunk> parse_hunks(DeprecatedString const& diff)
             current_location.apply_offset(1, HunkLocation::LocationType::Both);
             ++line_index;
         }
-        hunks.append(hunk);
+        TRY(hunks.try_append(hunk));
     }
 
     if constexpr (HUNKS_DEBUG) {
@@ -74,17 +75,17 @@ Vector<Hunk> parse_hunks(DeprecatedString const& diff)
     return hunks;
 }
 
-HunkLocation parse_hunk_location(DeprecatedString const& location_line)
+HunkLocation parse_hunk_location(StringView location_line)
 {
     size_t char_index = 0;
     struct StartAndLength {
         size_t start { 0 };
         size_t length { 0 };
     };
-    auto parse_start_and_length_pair = [](DeprecatedString const& raw) {
+    auto parse_start_and_length_pair = [](StringView raw) {
         auto index_of_separator = raw.find(',').value();
-        auto start = raw.substring(0, index_of_separator).to_uint().value();
-        auto length = raw.substring(index_of_separator + 1, raw.length() - index_of_separator - 1).to_uint().value();
+        auto start = raw.substring_view(0, index_of_separator).to_uint().value();
+        auto length = raw.substring_view(index_of_separator + 1, raw.length() - index_of_separator - 1).to_uint().value();
 
         if (start != 0)
             start--;
@@ -114,8 +115,8 @@ HunkLocation parse_hunk_location(DeprecatedString const& location_line)
 
     size_t target_location_end_index = char_index - 2;
 
-    auto original_pair = parse_start_and_length_pair(location_line.substring(original_location_start_index, original_location_end_index - original_location_start_index + 1));
-    auto target_pair = parse_start_and_length_pair(location_line.substring(target_location_start_index, target_location_end_index - target_location_start_index + 1));
+    auto original_pair = parse_start_and_length_pair(location_line.substring_view(original_location_start_index, original_location_end_index - original_location_start_index + 1));
+    auto target_pair = parse_start_and_length_pair(location_line.substring_view(target_location_start_index, target_location_end_index - target_location_start_index + 1));
     return { original_pair.start, original_pair.length, target_pair.start, target_pair.length };
 }
 

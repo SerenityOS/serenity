@@ -141,6 +141,10 @@ set(SOURCES
     Runtime/Intl/SegmentIteratorPrototype.cpp
     Runtime/Intl/SegmentsPrototype.cpp
     Runtime/Intrinsics.cpp
+    Runtime/Iterator.cpp
+    Runtime/IteratorConstructor.cpp
+    Runtime/IteratorHelper.cpp
+    Runtime/IteratorHelperPrototype.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
@@ -255,6 +259,7 @@ set(SOURCES
     Runtime/WeakSet.cpp
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
+    Runtime/WrapForValidIteratorPrototype.cpp
     Runtime/WrappedFunction.cpp
     Script.cpp
     SourceCode.cpp

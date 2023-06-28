@@ -18,8 +18,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser parser;
-    DeprecatedString filename1;
-    DeprecatedString filename2;
+    StringView filename1;
+    StringView filename2;
 
     parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto const color_output = TRY(Core::System::isatty(STDOUT_FILENO)) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
-    auto hunks = Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()));
+    auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof())));
     for (auto const& hunk : hunks)
         TRY(Diff::write_normal(hunk, *out, color_output));
 

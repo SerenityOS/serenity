@@ -54,7 +54,7 @@ public:
     {
     }
 
-    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override
+    virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value) override
     {
         VERIFY(domain == "Terminal");
 
@@ -68,7 +68,7 @@ public:
         }
     }
 
-    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override
     {
         VERIFY(domain == "Terminal");
 
@@ -94,7 +94,7 @@ public:
         }
     }
 
-    virtual void config_i32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, i32 value) override
+    virtual void config_i32_did_change(StringView domain, StringView group, StringView key, i32 value) override
     {
         VERIFY(domain == "Terminal");
 

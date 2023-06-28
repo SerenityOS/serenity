@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibAudio/Loader.h>
@@ -24,8 +25,8 @@ public:
     explicit QOALoaderPlugin(NonnullOwnPtr<AK::SeekableStream> stream);
     virtual ~QOALoaderPlugin() override = default;
 
-    static Result<NonnullOwnPtr<QOALoaderPlugin>, LoaderError> create(StringView path);
-    static Result<NonnullOwnPtr<QOALoaderPlugin>, LoaderError> create(Bytes buffer);
+    static bool sniff(SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create(NonnullOwnPtr<SeekableStream>);
 
     virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 

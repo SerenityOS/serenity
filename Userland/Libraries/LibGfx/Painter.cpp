@@ -2000,6 +2000,9 @@ void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int t
 
 void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
 {
+    if (clip_rect().is_empty())
+        return;
+
     if (thickness <= 0)
         return;
 

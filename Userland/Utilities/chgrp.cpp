@@ -14,14 +14,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath chown"));
 
     StringView gid_arg;
-    StringView path {};
+    Vector<StringView> paths;
     bool dont_follow_symlinks = false;
 
     Core::ArgsParser args_parser;
-    args_parser.set_general_help("Change the owning group for a file or directory.");
+    args_parser.set_general_help("Change the owning group for files or directories.");
     args_parser.add_option(dont_follow_symlinks, "Don't follow symlinks", "no-dereference", 'h');
     args_parser.add_positional_argument(gid_arg, "Group ID", "gid");
-    args_parser.add_positional_argument(path, "Path to file", "path");
+    args_parser.add_positional_argument(paths, "Paths to files", "paths");
     args_parser.parse(arguments);
 
     gid_t new_gid = -1;
@@ -43,11 +43,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         new_gid = group->gr_gid;
     }
 
-    if (dont_follow_symlinks) {
-        TRY(Core::System::lchown(path, -1, new_gid));
-    } else {
-        TRY(Core::System::chown(path, -1, new_gid));
+    auto has_errors = false;
+    for (auto path : paths) {
+        ErrorOr<void> maybe_error;
+        if (dont_follow_symlinks)
+            maybe_error = Core::System::lchown(path, -1, new_gid);
+        else
+            maybe_error = Core::System::chown(path, -1, new_gid);
+
+        if (maybe_error.is_error()) {
+            has_errors = true;
+            warnln("Changing group of '{}'. {}", path, maybe_error.release_error());
+        }
     }
 
-    return 0;
+    return has_errors ? 1 : 0;
 }

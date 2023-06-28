@@ -209,6 +209,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
+    Firmware/PowerState.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -402,6 +403,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/VGA/IOArbiter.cpp
 
+        Arch/x86_64/PowerState.cpp
         Arch/x86_64/RTC.cpp
         Arch/x86_64/Shutdown.cpp
         Arch/x86_64/SmapDisabler.cpp
@@ -477,6 +479,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
+        Arch/aarch64/PowerState.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/TrapFrame.cpp
@@ -693,9 +696,10 @@ add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+add_dependencies(kernel_heap install_libc_headers)
 
 add_executable(Kernel ${SOURCES})
-add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header)
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header install_libc_headers)
 
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_custom_command(

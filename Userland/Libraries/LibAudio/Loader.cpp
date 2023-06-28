@@ -10,6 +10,7 @@
 #include <LibAudio/MP3Loader.h>
 #include <LibAudio/QOALoader.h>
 #include <LibAudio/WavLoader.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -23,59 +24,43 @@ Loader::Loader(NonnullOwnPtr<LoaderPlugin> plugin)
 {
 }
 
-Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(StringView path)
+struct LoaderPluginInitializer {
+    bool (*sniff)(SeekableStream&);
+    ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> (*create)(NonnullOwnPtr<SeekableStream>);
+};
+
+#define ENUMERATE_LOADER_PLUGINS    \
+    __ENUMERATE_LOADER_PLUGIN(Wav)  \
+    __ENUMERATE_LOADER_PLUGIN(Flac) \
+    __ENUMERATE_LOADER_PLUGIN(QOA)  \
+    __ENUMERATE_LOADER_PLUGIN(MP3)
+
+static constexpr LoaderPluginInitializer s_initializers[] = {
+#define __ENUMERATE_LOADER_PLUGIN(Type) \
+    { Type##LoaderPlugin::sniff, Type##LoaderPlugin::create },
+    ENUMERATE_LOADER_PLUGINS
+#undef __ENUMERATE_LOADER_PLUGIN
+};
+
+ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
 {
-    {
-        auto plugin = WavLoaderPlugin::create(path);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = FlacLoaderPlugin::create(path);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = MP3LoaderPlugin::create(path);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = QOALoaderPlugin::create(path);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    return LoaderError { "No loader plugin available" };
+    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
+    return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
+}
+ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(Bytes buffer)
+{
+    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
+    return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
 
-Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(Bytes buffer)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(NonnullOwnPtr<SeekableStream> stream)
 {
-    {
-        auto plugin = WavLoaderPlugin::create(buffer);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = FlacLoaderPlugin::create(buffer);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = MP3LoaderPlugin::create(buffer);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
-    }
-
-    {
-        auto plugin = QOALoaderPlugin::create(buffer);
-        if (!plugin.is_error())
-            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
+    for (auto const& loader : s_initializers) {
+        if (loader.sniff(*stream)) {
+            TRY(stream->seek(0, SeekMode::SetPosition));
+            return loader.create(move(stream));
+        }
+        TRY(stream->seek(0, SeekMode::SetPosition));
     }
 
     return LoaderError { "No loader plugin available" };

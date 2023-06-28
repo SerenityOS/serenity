@@ -8,6 +8,7 @@
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
 #include "MP3Types.h"
+#include <AK/Endian.h>
 #include <AK/FixedArray.h>
 #include <LibCore/File.h>
 
@@ -21,23 +22,34 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
-Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(StringView path)
+bool MP3LoaderPlugin::sniff(SeekableStream& stream)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
-    auto loader = make<MP3LoaderPlugin>(move(stream));
+    auto maybe_bit_stream = try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(stream));
+    if (maybe_bit_stream.is_error())
+        return false;
+    auto bit_stream = maybe_bit_stream.release_value();
 
-    LOADER_TRY(loader->initialize());
+    auto synchronization_result = synchronize(*bit_stream, 0);
+    if (synchronization_result.is_error())
+        return false;
+    auto maybe_mp3 = stream.read_value<BigEndian<u16>>();
+    if (maybe_mp3.is_error())
+        return false;
 
-    return loader;
+    ErrorOr<int> id = bit_stream->read_bit();
+    if (id.is_error() || id.value() != 1)
+        return false;
+    auto raw_layer = bit_stream->read_bits(2);
+    if (raw_layer.is_error())
+        return false;
+    auto layer = MP3::Tables::LayerNumberLookup[raw_layer.value()];
+    return layer == 3;
 }
 
-Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Bytes buffer)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
-    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
     auto loader = make<MP3LoaderPlugin>(move(stream));
-
     LOADER_TRY(loader->initialize());
-
     return loader;
 }
 
@@ -188,19 +200,24 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header()
     return header;
 }
 
-MaybeLoaderError MP3LoaderPlugin::synchronize()
+MaybeLoaderError MP3LoaderPlugin::synchronize(BigEndianInputBitStream& stream, size_t sample_index)
 {
     size_t one_counter = 0;
-    while (one_counter < 12 && !m_bitstream->is_eof()) {
-        bool const bit = LOADER_TRY(m_bitstream->read_bit());
+    while (one_counter < 12 && !stream.is_eof()) {
+        bool const bit = LOADER_TRY(stream.read_bit());
         one_counter = bit ? one_counter + 1 : 0;
         if (!bit) {
-            m_bitstream->align_to_byte_boundary();
+            stream.align_to_byte_boundary();
         }
     }
     if (one_counter != 12)
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Failed to synchronize." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Failed to synchronize." };
     return {};
+}
+
+MaybeLoaderError MP3LoaderPlugin::synchronize()
+{
+    return MP3LoaderPlugin::synchronize(*m_bitstream, m_loaded_samples);
 }
 
 ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()

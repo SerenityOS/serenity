@@ -112,7 +112,7 @@ void CardGame::dump_layout() const
         dbgln("{}", stack);
 }
 
-void CardGame::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void CardGame::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Games" && group == "Cards") {
         if (key == "BackgroundColor") {

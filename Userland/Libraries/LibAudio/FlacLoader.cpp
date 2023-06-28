@@ -12,6 +12,7 @@
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
@@ -34,23 +35,10 @@ FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
-Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(StringView path)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> FlacLoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<FlacLoaderPlugin>(move(stream));
-
-    LOADER_TRY(loader->initialize());
-
-    return loader;
-}
-
-Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(Bytes buffer)
-{
-    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
-    auto loader = make<FlacLoaderPlugin>(move(stream));
-
-    LOADER_TRY(loader->initialize());
-
+    TRY(loader->initialize());
     return loader;
 }
 
@@ -59,6 +47,13 @@ MaybeLoaderError FlacLoaderPlugin::initialize()
     TRY(parse_header());
     TRY(reset());
     return {};
+}
+
+bool FlacLoaderPlugin::sniff(SeekableStream& stream)
+{
+    BigEndianInputBitStream bit_input { MaybeOwned<Stream>(stream) };
+    auto maybe_flac = bit_input.read_bits<u32>(32);
+    return !maybe_flac.is_error() && maybe_flac.value() == 0x664C6143; // "flaC"
 }
 
 // 11.5 STREAM

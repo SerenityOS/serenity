@@ -53,6 +53,7 @@ public:
     void set_shell(StringView shell) { m_shell = shell; }
     void set_gecos(StringView gecos) { m_gecos = gecos; }
     void set_deleted() { m_deleted = true; };
+    void set_extra_gids(Vector<gid_t> extra_gids) { m_extra_gids = move(extra_gids); }
     void delete_password();
 
     // A null password means that this account was missing from /etc/shadow.
@@ -74,6 +75,7 @@ private:
     Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids);
 
     ErrorOr<DeprecatedString> generate_passwd_file() const;
+    ErrorOr<DeprecatedString> generate_group_file() const;
 #ifndef AK_OS_BSD_GENERIC
     ErrorOr<DeprecatedString> generate_shadow_file() const;
 #endif

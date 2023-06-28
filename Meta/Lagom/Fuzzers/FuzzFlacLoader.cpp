@@ -4,14 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibAudio/FlacLoader.h>
 #include <stddef.h>
 #include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto flac_data = ByteBuffer::copy(data, size).release_value();
-    auto flac_or_error = Audio::FlacLoaderPlugin::create(flac_data.bytes());
+    auto const flac_bytes = ByteBuffer::copy(data, size).release_value();
+    auto flac_data = try_make<FixedMemoryStream>(flac_bytes).release_value();
+    auto flac_or_error = Audio::FlacLoaderPlugin::create(move(flac_data));
 
     if (flac_or_error.is_error())
         return 0;

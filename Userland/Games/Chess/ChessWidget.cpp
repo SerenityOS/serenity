@@ -744,7 +744,7 @@ bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
     return true;
 }
 
-void ChessWidget::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void ChessWidget::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain != "Games"sv && group != "Chess"sv)
         return;
@@ -758,7 +758,7 @@ void ChessWidget::config_string_did_change(DeprecatedString const& domain, Depre
     }
 }
 
-void ChessWidget::config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value)
+void ChessWidget::config_bool_did_change(StringView domain, StringView group, StringView key, bool value)
 {
     if (domain != "Games"sv && group != "Chess"sv)
         return;

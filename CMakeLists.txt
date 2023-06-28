@@ -18,7 +18,7 @@ endif()
 
 # Check for toolchain mismatch, user might need to rebuild toolchain
 set(GCC_VERSION "13.1.0")
-set(LLVM_VERSION "15.0.3")
+set(LLVM_VERSION "16.0.6")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(EXPECTED_COMPILER_VERSION "${GCC_VERSION}")
 else()
@@ -183,7 +183,6 @@ add_link_options(-Wno-unused-command-line-argument)
 
 include_directories(.)
 include_directories(Userland/Libraries)
-include_directories(Userland/Libraries/LibC)
 include_directories(Userland/Libraries/LibCrypt)
 include_directories(Userland/Libraries/LibSystem)
 include_directories(Userland/Services)

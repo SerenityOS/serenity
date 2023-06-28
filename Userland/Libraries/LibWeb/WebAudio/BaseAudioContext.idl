@@ -1,6 +1,43 @@
 #import <DOM/EventTarget.idl>
+#import <DOM/EventHandler.idl>
+
+// https://www.w3.org/TR/webaudio/#enumdef-audiocontextstate
+enum AudioContextState { "suspended", "running", "closed" };
+
+// FIXME: callback DecodeErrorCallback = undefined (DOMException error);
+
+// FIXME: callback DecodeSuccessCallback = undefined (AudioBuffer decodedData);
 
 // https://webaudio.github.io/web-audio-api/#BaseAudioContext
 [Exposed=Window]
 interface BaseAudioContext : EventTarget {
+    // FIXME: readonly attribute AudioDestinationNode destination;
+    readonly attribute float sampleRate;
+    readonly attribute double currentTime;
+    // FIXME: readonly attribute AudioListener listener;
+    readonly attribute AudioContextState state;
+    // FIXME: [SameObject, SecureContext]
+    // readonly attribute AudioWorklet audioWorklet;
+    attribute EventHandler onstatechange;
+
+    // FIXME: AnalyserNode createAnalyser ();
+    // FIXME: BiquadFilterNode createBiquadFilter ();
+    // FIXME: AudioBuffer createBuffer (unsigned long numberOfChannels, unsigned long length, float sampleRate);
+    // FIXME: AudioBufferSourceNode createBufferSource ();
+    // FIXME: ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
+    // FIXME: ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
+    // FIXME: ConstantSourceNode createConstantSource ();
+    // FIXME: ConvolverNode createConvolver ();
+    // FIXME: DelayNode createDelay (optional double maxDelayTime = 1.0);
+    // FIXME: DynamicsCompressorNode createDynamicsCompressor ();
+    // FIXME: GainNode createGain ();
+    // FIXME: IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
+    // FIXME: OscillatorNode createOscillator ();
+    // FIXME: PannerNode createPanner ();
+    // FIXME: PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints = {});
+    // FIXME: ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0, optional unsigned long numberOfInputChannels = 2, optional unsigned long numberOfOutputChannels = 2);
+    // FIXME: StereoPannerNode createStereoPanner ();
+    // FIXME: WaveShaperNode createWaveShaper ();
+
+    // FIXME: Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData, optional DecodeSuccessCallback? successCallback, optional DecodeErrorCallback? errorCallback);
 };

@@ -55,6 +55,11 @@ void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
     if (href().is_empty())
         return;
 
+    // AD-HOC: follow_the_hyperlink currently doesn't navigate properly with javascript urls
+    // EventHandler::handle_mouseup performs the navigation steps for javascript urls instead
+    if (href().starts_with("javascript:"sv))
+        return;
+
     // 2. Let hyperlinkSuffix be null.
     Optional<DeprecatedString> hyperlink_suffix {};
 

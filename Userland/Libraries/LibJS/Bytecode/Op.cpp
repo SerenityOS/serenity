@@ -263,7 +263,7 @@ void ImportCall::replace_references_impl(Register from, Register to)
 
 // FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
 // Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
-static Object* iterator_to_object(VM& vm, Iterator iterator)
+static Object* iterator_to_object(VM& vm, IteratorRecord iterator)
 {
     auto& realm = *vm.current_realm();
     auto object = Object::create(realm, nullptr);
@@ -273,9 +273,9 @@ static Object* iterator_to_object(VM& vm, Iterator iterator)
     return object;
 }
 
-static Iterator object_to_iterator(VM& vm, Object& object)
+static IteratorRecord object_to_iterator(VM& vm, Object& object)
 {
-    return Iterator {
+    return IteratorRecord {
         .iterator = &MUST(object.get(vm.names.iterator)).as_object(),
         .next_method = MUST(object.get(vm.names.next)),
         .done = MUST(object.get(vm.names.done)).as_bool()
@@ -1008,7 +1008,7 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto iterator = TRY(get_iterator(vm, interpreter.accumulator()));
+    auto iterator = TRY(get_iterator(vm, interpreter.accumulator(), m_hint));
     interpreter.accumulator() = iterator_to_object(vm, iterator);
     return {};
 }
@@ -1052,7 +1052,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
             properties.set(TRY(PropertyKey::from_value(vm, key)));
         }
     }
-    Iterator iterator {
+    IteratorRecord iterator {
         .iterator = object,
         .next_method = NativeFunction::create(
             interpreter.realm(),
@@ -1525,7 +1525,8 @@ DeprecatedString DeleteByValue::to_deprecated_string_impl(Bytecode::Executable c
 
 DeprecatedString GetIterator::to_deprecated_string_impl(Executable const&) const
 {
-    return "GetIterator";
+    auto hint = m_hint == IteratorHint::Sync ? "sync" : "async";
+    return DeprecatedString::formatted("GetIterator hint:{}", hint);
 }
 
 DeprecatedString GetMethod::to_deprecated_string_impl(Bytecode::Executable const& executable) const

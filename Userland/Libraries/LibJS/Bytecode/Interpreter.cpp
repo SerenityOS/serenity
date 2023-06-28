@@ -32,6 +32,13 @@ void Interpreter::set_enabled(bool enabled)
     s_bytecode_interpreter_enabled = enabled;
 }
 
+static bool s_optimizations_enabled = false;
+
+void Interpreter::set_optimizations_enabled(bool enabled)
+{
+    s_optimizations_enabled = enabled;
+}
+
 bool g_dump_bytecode = false;
 
 Interpreter::Interpreter(VM& vm)
@@ -104,7 +111,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
         } else {
             auto executable = executable_result.release_value();
 
-            if (m_optimizations_enabled) {
+            if (s_optimizations_enabled) {
                 auto& passes = optimization_pipeline();
                 passes.perform(*executable);
             }
@@ -171,11 +178,6 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     vm.run_queued_finalization_registry_cleanup_jobs();
 
     return js_undefined();
-}
-
-void Interpreter::set_optimizations_enabled(bool enabled)
-{
-    m_optimizations_enabled = enabled;
 }
 
 Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
@@ -392,21 +394,10 @@ VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope(Realm& realm)
     return { *m_ast_interpreter };
 }
 
-AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> Interpreter::s_optimization_pipelines {};
-
-Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::OptimizationLevel level)
+Bytecode::PassManager& Interpreter::optimization_pipeline()
 {
-    auto underlying_level = to_underlying(level);
-    VERIFY(underlying_level <= to_underlying(Interpreter::OptimizationLevel::__Count));
-    auto& entry = s_optimization_pipelines[underlying_level];
-
-    if (entry)
-        return *entry;
-
-    auto pm = make<PassManager>();
-    if (level == OptimizationLevel::None) {
-        // No optimization.
-    } else if (level == OptimizationLevel::Optimize) {
+    static auto s_optimization_pipeline = [] {
+        auto pm = make<Bytecode::PassManager>();
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::UnifySameBlocks>();
         pm->add<Passes::GenerateCFG>();
@@ -418,14 +409,9 @@ Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::Optimizat
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::PlaceBlocks>();
         pm->add<Passes::EliminateLoads>();
-    } else {
-        VERIFY_NOT_REACHED();
-    }
-
-    auto& passes = *pm;
-    entry = move(pm);
-
-    return passes;
+        return pm;
+    }();
+    return *s_optimization_pipeline;
 }
 
 size_t Interpreter::pc() const
@@ -446,12 +432,16 @@ ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode c
 
     auto bytecode_executable = executable_result.release_value();
     bytecode_executable->name = name;
-    auto& passes = Bytecode::Interpreter::optimization_pipeline();
-    passes.perform(*bytecode_executable);
-    if constexpr (JS_BYTECODE_DEBUG) {
-        dbgln("Optimisation passes took {}us", passes.elapsed());
-        dbgln("Compiled Bytecode::Block for function '{}':", name);
+
+    if (s_optimizations_enabled) {
+        auto& passes = Bytecode::Interpreter::optimization_pipeline();
+        passes.perform(*bytecode_executable);
+        if constexpr (JS_BYTECODE_DEBUG) {
+            dbgln("Optimisation passes took {}us", passes.elapsed());
+            dbgln("Compiled Bytecode::Block for function '{}':", name);
+        }
     }
+
     if (Bytecode::g_dump_bytecode)
         bytecode_executable->dump();
 

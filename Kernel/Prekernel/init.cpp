@@ -11,7 +11,7 @@
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <LibC/elf.h>
+#include <LibELF/ELFABI.h>
 #include <LibELF/Relocation.h>
 
 #if ARCH(X86_64)

@@ -55,7 +55,7 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
 
         // FIXME: Computing the diff on the entire document's tokens is quite inefficient.
         //        An improvement over this could be only including the tokens that are in edited text ranges in the diff.
-        auto diff_hunks = Diff::from_text(previous.view(), current.view());
+        auto diff_hunks = Diff::from_text(previous.view(), current.view()).release_value_but_fixme_should_propagate_errors();
         for (auto& token : current_tokens) {
             new_tokens_info.append(CodeComprehension::TokenInfo { CodeComprehension::TokenInfo::SemanticType::Unknown,
                 token.start().line, token.start().column, token.end().line, token.end().column });

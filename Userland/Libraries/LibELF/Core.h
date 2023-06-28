@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibC/sys/arch/regs.h>
+#include <sys/arch/regs.h>
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>

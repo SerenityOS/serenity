@@ -36,7 +36,7 @@
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/elf.h>
+#include <LibELF/ELFABI.h>
 
 namespace Kernel {
 

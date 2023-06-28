@@ -19,8 +19,8 @@
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Tasks/Coredump.h>
 #include <Kernel/Tasks/Process.h>
-#include <LibC/elf.h>
 #include <LibELF/Core.h>
+#include <LibELF/ELFABI.h>
 
 #define INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS 0
 
