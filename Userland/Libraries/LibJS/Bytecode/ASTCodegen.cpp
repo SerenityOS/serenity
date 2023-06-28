@@ -2393,12 +2393,19 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
         result.is_destructuring = variable_declaration.declarations().first()->target().has<NonnullRefPtr<BindingPattern const>>();
         result.lhs_kind = variable_declaration.is_lexical_declaration() ? LHSKind::LexicalBinding : LHSKind::VarBinding;
 
-        // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-
-        // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
-        // 2. If uninitializedBoundNames is not an empty List, then
-
-        if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
+        if (variable_declaration.declaration_kind() == DeclarationKind::Var) {
+            // B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
+            auto& variable = variable_declaration.declarations().first();
+            if (variable->init()) {
+                VERIFY(variable->target().has<NonnullRefPtr<Identifier const>>());
+                auto& binding_id = variable->target().get<NonnullRefPtr<Identifier const>>()->string();
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*variable->init(), binding_id));
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(binding_id));
+            }
+        } else {
+            // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+            // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
+            // 2. If uninitializedBoundNames is not an empty List, then
             entered_lexical_scope = true;
             // a. Assert: uninitializedBoundNames has no duplicate entries.
             // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
