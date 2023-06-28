@@ -822,10 +822,10 @@ private:
 
 class NewClass final : public Instruction {
 public:
-    explicit NewClass(ClassExpression const& class_expression, Optional<DeprecatedFlyString const&> lhs_name)
+    explicit NewClass(ClassExpression const& class_expression, Optional<IdentifierTableIndex> lhs_name)
         : Instruction(Type::NewClass)
         , m_class_expression(class_expression)
-        , m_lhs_name(lhs_name.has_value() ? *lhs_name : Optional<DeprecatedFlyString> {})
+        , m_lhs_name(lhs_name)
     {
     }
 
@@ -836,15 +836,15 @@ public:
 
 private:
     ClassExpression const& m_class_expression;
-    Optional<DeprecatedFlyString> m_lhs_name;
+    Optional<IdentifierTableIndex> m_lhs_name;
 };
 
 class NewFunction final : public Instruction {
 public:
-    explicit NewFunction(FunctionExpression const& function_node, Optional<DeprecatedFlyString const&> lhs_name, Optional<Register> home_object = {})
+    explicit NewFunction(FunctionExpression const& function_node, Optional<IdentifierTableIndex> lhs_name, Optional<Register> home_object = {})
         : Instruction(Type::NewFunction)
         , m_function_node(function_node)
-        , m_lhs_name(lhs_name.has_value() ? *lhs_name : Optional<DeprecatedFlyString> {})
+        , m_lhs_name(lhs_name)
         , m_home_object(move(home_object))
     {
     }
@@ -856,7 +856,7 @@ public:
 
 private:
     FunctionExpression const& m_function_node;
-    Optional<DeprecatedFlyString> m_lhs_name;
+    Optional<IdentifierTableIndex> m_lhs_name;
     Optional<Register> m_home_object;
 };
 

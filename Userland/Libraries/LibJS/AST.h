@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Bytecode/CodeGenerationError.h>
+#include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/ClassFieldDefinition.h>
@@ -738,7 +739,7 @@ public:
     virtual void dump(int indent) const override;
 
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<DeprecatedFlyString const&> lhs_name) const;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
     bool has_name() const { return !name().is_empty(); }
 
@@ -1421,7 +1422,7 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<DeprecatedFlyString const&> lhs_name) const;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
     bool has_name() const { return !m_name.is_empty(); }
 
