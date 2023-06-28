@@ -866,9 +866,9 @@ InsertTextCommand::InsertTextCommand(TextDocument& document, DeprecatedString co
 {
 }
 
-DeprecatedString InsertTextCommand::action_text() const
+ErrorOr<String> InsertTextCommand::action_text() const
 {
-    return "Insert Text";
+    return String::from_utf8("Insert Text"sv);
 }
 
 bool InsertTextCommand::merge_with(GUI::Command const& other)
@@ -968,9 +968,9 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString co
 {
 }
 
-DeprecatedString RemoveTextCommand::action_text() const
+ErrorOr<String> RemoveTextCommand::action_text() const
 {
-    return "Remove Text";
+    return String::from_utf8("Remove Text"sv);
 }
 
 bool RemoveTextCommand::merge_with(GUI::Command const& other)
@@ -1041,7 +1041,7 @@ size_t InsertLineCommand::compute_line_number() const
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString InsertLineCommand::action_text() const
+ErrorOr<String> InsertLineCommand::action_text() const
 {
     StringBuilder action_text_builder;
     action_text_builder.append("Insert Line"sv);
@@ -1054,10 +1054,10 @@ DeprecatedString InsertLineCommand::action_text() const
         VERIFY_NOT_REACHED();
     }
 
-    return action_text_builder.to_deprecated_string();
+    return action_text_builder.to_string();
 }
 
-ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text)
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, String const& action_text)
     : TextDocumentUndoCommand(document)
     , m_original_text(document.text())
     , m_new_text(text)
@@ -1089,7 +1089,7 @@ bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
     return false;
 }
 
-DeprecatedString ReplaceAllTextCommand::action_text() const
+ErrorOr<String> ReplaceAllTextCommand::action_text() const
 {
     return m_action_text;
 }

@@ -97,7 +97,7 @@ public:
         else
             warnln("Restoring state failed");
     }
-    virtual DeprecatedString action_text() const override { return m_action_text.to_deprecated_string(); }
+    virtual ErrorOr<String> action_text() const override { return m_action_text; }
 
 private:
     NonnullRefPtr<UndoSelection> m_undo_state;

@@ -476,9 +476,9 @@ void MainWidget::update_action_text()
         return builder.to_string();
     };
 
-    if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text()); !maybe_text.is_error())
+    if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text().release_value_but_fixme_should_propagate_errors()); !maybe_text.is_error())
         m_undo_action->set_text(maybe_text.release_value().to_deprecated_string());
-    if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text()); !maybe_text.is_error())
+    if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text().release_value_but_fixme_should_propagate_errors()); !maybe_text.is_error())
         m_redo_action->set_text(maybe_text.release_value().to_deprecated_string());
 }
 

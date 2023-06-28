@@ -135,8 +135,8 @@ void MainWidget::image_editor_did_update_undo_stack()
     m_undo_action->set_enabled(undo_stack.can_undo());
     m_redo_action->set_enabled(undo_stack.can_redo());
 
-    m_undo_action->set_text(make_action_text("&Undo"sv, undo_stack.undo_action_text()));
-    m_redo_action->set_text(make_action_text("&Redo"sv, undo_stack.redo_action_text()));
+    m_undo_action->set_text(make_action_text("&Undo"sv, undo_stack.undo_action_text().release_value_but_fixme_should_propagate_errors()));
+    m_redo_action->set_text(make_action_text("&Redo"sv, undo_stack.redo_action_text().release_value_but_fixme_should_propagate_errors()));
 }
 
 // Note: Update these together! v

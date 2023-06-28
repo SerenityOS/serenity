@@ -35,8 +35,8 @@ public:
 
     void clear();
 
-    Optional<DeprecatedString> undo_action_text() const;
-    Optional<DeprecatedString> redo_action_text() const;
+    ErrorOr<Optional<String>> undo_action_text() const;
+    ErrorOr<Optional<String>> redo_action_text() const;
 
     Function<void()> on_state_change;
 

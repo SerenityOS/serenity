@@ -95,7 +95,7 @@ public:
 
     virtual void undo() override;
     virtual void redo() override;
-    virtual DeprecatedString action_text() const override { return "Update cell"; }
+    virtual ErrorOr<String> action_text() const override { return "Update cell"_string; }
 
     virtual bool merge_with(GUI::Command const& other) override;
 

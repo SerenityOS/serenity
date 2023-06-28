@@ -1803,7 +1803,7 @@ void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
     auto end = GUI::TextPosition(last_line_index, line(last_line_index).length());
     auto range = GUI::TextRange(start, end);
     auto normalized_range = range.normalized();
-    execute<ReplaceAllTextCommand>(text, range, "GML Playground Format Text");
+    execute<ReplaceAllTextCommand>(text, range, String::from_utf8("GML Playground Format Text"sv).release_value_but_fixme_should_propagate_errors());
     did_change();
     set_cursor(normalized_range.start());
     update();
@@ -2275,8 +2275,8 @@ void TextEditor::document_did_update_undo_stack()
     m_undo_action->set_enabled(can_undo() && !text_is_secret());
     m_redo_action->set_enabled(can_redo() && !text_is_secret());
 
-    m_undo_action->set_text(make_action_text("&Undo"sv, document().undo_stack().undo_action_text()));
-    m_redo_action->set_text(make_action_text("&Redo"sv, document().undo_stack().redo_action_text()));
+    m_undo_action->set_text(make_action_text("&Undo"sv, document().undo_stack().undo_action_text().release_value_but_fixme_should_propagate_errors()));
+    m_redo_action->set_text(make_action_text("&Redo"sv, document().undo_stack().redo_action_text().release_value_but_fixme_should_propagate_errors()));
 
     // FIXME: This is currently firing more often than it should.
     //        Ideally we'd only send this out when the undo stack modified state actually changes.

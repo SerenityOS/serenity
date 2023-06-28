@@ -34,7 +34,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image, DeprecatedString()));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, String::from_utf8_short_string(""sv)));
     m_image->add_client(*this);
     m_image->selection().add_client(*this);
     set_original_rect(m_image->rect());
@@ -118,7 +118,7 @@ void ImageEditor::set_path(DeprecatedString path)
 
 void ImageEditor::set_modified(DeprecatedString action_text)
 {
-    m_undo_stack.push(make<ImageUndoCommand>(*m_image, move(action_text)));
+    m_undo_stack.push(make<ImageUndoCommand>(*m_image, String::from_deprecated_string(action_text).release_value_but_fixme_should_propagate_errors()));
     update_modified();
 }
 

@@ -243,7 +243,7 @@ public:
     virtual void undo() override;
     virtual void redo() override;
     virtual bool merge_with(GUI::Command const&) override;
-    virtual DeprecatedString action_text() const override;
+    virtual ErrorOr<String> action_text() const override;
     DeprecatedString const& text() const { return m_text; }
     TextRange const& range() const { return m_range; }
 
@@ -260,7 +260,7 @@ public:
     virtual void redo() override;
     TextRange const& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
-    virtual DeprecatedString action_text() const override;
+    virtual ErrorOr<String> action_text() const override;
 
 private:
     DeprecatedString m_text;
@@ -279,7 +279,7 @@ public:
     virtual ~InsertLineCommand() = default;
     virtual void undo() override;
     virtual void redo() override;
-    virtual DeprecatedString action_text() const override;
+    virtual ErrorOr<String> action_text() const override;
 
 private:
     size_t compute_line_number() const;
@@ -292,12 +292,12 @@ private:
 class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:
-    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& new_text, GUI::TextRange const& range, DeprecatedString const& action_text);
+    ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& new_text, GUI::TextRange const& range, String const& action_text);
     virtual ~ReplaceAllTextCommand() = default;
     void redo() override;
     void undo() override;
     bool merge_with(GUI::Command const&) override;
-    DeprecatedString action_text() const override;
+    ErrorOr<String> action_text() const override;
     DeprecatedString const& text() const { return m_new_text; }
     TextRange const& range() const { return m_range; }
 
@@ -305,7 +305,7 @@ private:
     DeprecatedString m_original_text;
     DeprecatedString m_new_text;
     GUI::TextRange m_range;
-    DeprecatedString m_action_text;
+    String m_action_text;
 };
 
 class IndentSelection : public TextDocumentUndoCommand {
