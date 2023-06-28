@@ -2196,7 +2196,7 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
     TRY(m_discriminant->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Store>(discriminant_reg);
     Vector<Bytecode::BasicBlock&> case_blocks;
-    Bytecode::BasicBlock* default_block { nullptr };
+    Bytecode::BasicBlock* entry_block_for_default { nullptr };
     Bytecode::BasicBlock* next_test_block = &generator.make_block();
 
     auto has_lexical_declarations = this->has_lexical_declarations();
@@ -2207,22 +2207,30 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
 
     for (auto& switch_case : m_cases) {
         auto& case_block = generator.make_block();
+        auto& case_entry_block = generator.make_block();
         if (switch_case->test()) {
             generator.switch_to_basic_block(*next_test_block);
             TRY(switch_case->test()->generate_bytecode(generator));
             generator.emit<Bytecode::Op::StrictlyEquals>(discriminant_reg);
             next_test_block = &generator.make_block();
-            generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { case_block }, Bytecode::Label { *next_test_block });
+            generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { case_entry_block }, Bytecode::Label { *next_test_block });
         } else {
-            default_block = &case_block;
+            entry_block_for_default = &case_entry_block;
         }
+
+        // Initialize the completion value of the switch statement to empty. We can't do this in the case's basic block directly,
+        // as we must not clobber the possible non-empty completion value of the previous case when falling through.
+        generator.switch_to_basic_block(case_entry_block);
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { case_block }, {});
+
         case_blocks.append(case_block);
     }
     generator.switch_to_basic_block(*next_test_block);
     auto& end_block = generator.make_block();
 
-    if (default_block != nullptr) {
-        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *default_block }, {});
+    if (entry_block_for_default != nullptr) {
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *entry_block_for_default }, {});
     } else {
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { end_block }, {});
@@ -2232,7 +2240,6 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
     for (auto& switch_case : m_cases) {
         generator.switch_to_basic_block(*current_block);
 
-        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         for (auto& statement : switch_case->children()) {
             TRY(statement->generate_bytecode(generator));
             if (generator.is_current_block_terminated())
