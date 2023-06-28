@@ -2273,9 +2273,23 @@ Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Byteco
     return {};
 }
 
+// 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
 Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode_with_lhs_name(Bytecode::Generator& generator, Optional<Bytecode::IdentifierTableIndex> lhs_name) const
 {
+    // NOTE: Step 2 is not a part of NewClass instruction because it is assumed to be done before super class expression evaluation
+    generator.emit<Bytecode::Op::CreateLexicalEnvironment>();
+
+    if (has_name() || !lhs_name.has_value()) {
+        // NOTE: Step 3.a is not a part of NewClass instruction because it is assumed to be done before super class expression evaluation
+        auto interned_index = generator.intern_identifier(m_name);
+        generator.emit<Bytecode::Op::CreateVariable>(interned_index, Bytecode::Op::EnvironmentMode::Lexical, true);
+    }
+
+    if (m_super_class)
+        TRY(m_super_class->generate_bytecode(generator));
+
     generator.emit<Bytecode::Op::NewClass>(*this, lhs_name);
+
     return {};
 }
 

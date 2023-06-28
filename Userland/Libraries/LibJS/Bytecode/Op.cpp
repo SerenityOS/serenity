@@ -1148,17 +1148,23 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
 {
     auto& vm = interpreter.vm();
     auto name = m_class_expression.name();
+    auto super_class = interpreter.accumulator();
 
-    ECMAScriptFunctionObject* class_object = nullptr;
+    // NOTE: NewClass expects classEnv to be active lexical environment
+    auto class_environment = vm.lexical_environment();
+    vm.running_execution_context().lexical_environment = interpreter.saved_lexical_environment_stack().take_last();
 
-    if (!m_class_expression.has_name() && m_lhs_name.has_value())
-        class_object = TRY(m_class_expression.class_definition_evaluation(vm, {}, interpreter.current_executable().get_identifier(m_lhs_name.value())));
-    else
-        class_object = TRY(m_class_expression.class_definition_evaluation(vm, name, name.is_null() ? ""sv : name));
+    DeprecatedFlyString binding_name;
+    DeprecatedFlyString class_name;
+    if (!m_class_expression.has_name() && m_lhs_name.has_value()) {
+        class_name = interpreter.current_executable().get_identifier(m_lhs_name.value());
+    } else {
+        binding_name = name;
+        class_name = name.is_null() ? ""sv : name;
+    }
 
-    class_object->set_source_text(m_class_expression.source_text());
+    interpreter.accumulator() = TRY(m_class_expression.create_class_constructor(vm, class_environment, vm.lexical_environment(), super_class, binding_name, class_name));
 
-    interpreter.accumulator() = class_object;
     return {};
 }
 

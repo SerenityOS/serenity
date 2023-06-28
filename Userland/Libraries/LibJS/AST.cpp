@@ -1913,25 +1913,20 @@ Completion ClassDeclaration::execute(Interpreter& interpreter) const
     return Optional<Value> {};
 }
 
-// 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(VM& vm, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_constructor(VM& vm, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
 {
     auto& realm = *vm.current_realm();
-
-    auto* environment = vm.lexical_environment();
-    VERIFY(environment);
-    auto class_environment = new_declarative_environment(*environment);
 
     // We might not set the lexical environment but we always want to restore it eventually.
     ArmedScopeGuard restore_environment = [&] {
         vm.running_execution_context().lexical_environment = environment;
     };
 
-    if (!binding_name.is_null())
-        MUST(class_environment->create_immutable_binding(vm, binding_name, true));
-
     auto outer_private_environment = vm.running_execution_context().private_environment;
     auto class_private_environment = new_private_environment(vm, outer_private_environment);
+
+    auto proto_parent = GCPtr { realm.intrinsics().object_prototype() };
+    auto constructor_parent = realm.intrinsics().function_prototype();
 
     for (auto const& element : m_elements) {
         auto opt_private_name = element->private_bound_identifier();
@@ -1939,29 +1934,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             class_private_environment->add_private_name({}, opt_private_name.release_value());
     }
 
-    auto proto_parent = GCPtr { realm.intrinsics().object_prototype() };
-    auto constructor_parent = realm.intrinsics().function_prototype();
-
     if (!m_super_class.is_null()) {
-        vm.running_execution_context().lexical_environment = class_environment;
-
-        // Note: Since our execute does evaluation and GetValue in once we must check for a valid reference first
-
-        Value super_class;
-
-        if (vm.bytecode_interpreter_if_exists()) {
-            super_class = TRY(vm.execute_ast_node(*m_super_class));
-        } else {
-            auto reference = TRY(m_super_class->to_reference(vm.interpreter()));
-            if (reference.is_valid_reference()) {
-                super_class = TRY(reference.get_value(vm));
-            } else {
-                super_class = TRY(vm.execute_ast_node(*m_super_class));
-            }
-        }
-
-        vm.running_execution_context().lexical_environment = environment;
-
         if (super_class.is_null()) {
             proto_parent = nullptr;
         } else if (!super_class.is_constructor()) {
@@ -1990,12 +1963,23 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     };
 
     // FIXME: Step 14.a is done in the parser. By using a synthetic super(...args) which does not call @@iterator of %Array.prototype%
-    auto class_constructor_value = TRY(vm.execute_ast_node(*m_constructor));
+    auto const& constructor = *m_constructor;
+    auto class_constructor = ECMAScriptFunctionObject::create(
+        realm,
+        constructor.name(),
+        constructor.source_text(),
+        constructor.body(),
+        constructor.parameters(),
+        constructor.function_length(),
+        vm.lexical_environment(),
+        vm.running_execution_context().private_environment,
+        constructor.kind(),
+        constructor.is_strict_mode(),
+        constructor.might_need_arguments_object(),
+        constructor.contains_direct_call_to_eval(),
+        constructor.is_arrow_function());
 
-    update_function_name(class_constructor_value, class_name);
-
-    VERIFY(class_constructor_value.is_function() && is<ECMAScriptFunctionObject>(class_constructor_value.as_function()));
-    auto* class_constructor = static_cast<ECMAScriptFunctionObject*>(&class_constructor_value.as_function());
+    class_constructor->set_name(class_name);
     class_constructor->set_home_object(prototype);
     class_constructor->set_is_class_constructor();
     class_constructor->define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
@@ -2076,12 +2060,43 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             [&](Handle<ECMAScriptFunctionObject> static_block_function) -> ThrowCompletionOr<void> {
                 VERIFY(!static_block_function.is_null());
                 // We discard any value returned here.
-                TRY(call(vm, *static_block_function.cell(), class_constructor_value));
+                TRY(call(vm, *static_block_function.cell(), class_constructor));
                 return {};
             }));
     }
 
-    return class_constructor;
+    class_constructor->set_source_text(source_text());
+
+    return { class_constructor };
+}
+
+// 15.7.14 Runtime Semantics: ClassDefinitionEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_evaluation(VM& vm, DeprecatedFlyString const& binding_name, DeprecatedFlyString const& class_name) const
+{
+    auto* environment = vm.lexical_environment();
+    VERIFY(environment);
+    auto class_environment = new_declarative_environment(*environment);
+
+    Value super_class;
+
+    if (!binding_name.is_null())
+        MUST(class_environment->create_immutable_binding(vm, binding_name, true));
+
+    if (!m_super_class.is_null()) {
+        vm.running_execution_context().lexical_environment = class_environment;
+
+        // Note: Since our execute does evaluation and GetValue in once we must check for a valid reference first
+        auto reference = TRY(m_super_class->to_reference(vm.interpreter()));
+        if (reference.is_valid_reference()) {
+            super_class = TRY(reference.get_value(vm));
+        } else {
+            super_class = TRY(vm.execute_ast_node(*m_super_class));
+        }
+
+        vm.running_execution_context().lexical_environment = environment;
+    }
+
+    return create_class_constructor(vm, class_environment, environment, super_class, binding_name, class_name);
 }
 
 void ASTNode::dump(int indent) const
