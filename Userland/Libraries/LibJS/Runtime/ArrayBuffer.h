@@ -164,11 +164,11 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 
 // 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
 template<typename T>
-static ByteBuffer numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
+static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
 {
     VERIFY(value.is_number() || value.is_bigint());
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
-    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
+    ByteBuffer raw_bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)));
     auto flip_if_needed = [&]() {
         if (is_little_endian)
             return;
@@ -254,7 +254,7 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
     //    NOTE: Done by default parameter at declaration of this function.
 
     // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
-    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
+    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian).release_allocated_value_but_fixme_should_propagate_errors();
 
     // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
     if (false) {
@@ -278,7 +278,7 @@ Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWrit
 {
     auto& vm = this->vm();
 
-    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
+    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian).release_allocated_value_but_fixme_should_propagate_errors();
 
     // FIXME: Check for shared buffer
 
