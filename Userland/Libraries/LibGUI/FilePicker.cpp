@@ -170,7 +170,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     }
 
     auto open_parent_directory_action = Action::create(
-        "Open Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "Open Parent Directory"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             set_path(DeprecatedString::formatted("{}/..", m_model->root_path()));
         },
         this);
@@ -184,7 +184,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
+        "New Directory..."_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
             String value;
             if (InputBox::show(this, value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
                 auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
@@ -228,7 +228,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_context_menu->add_separator();
 
     auto show_dotfiles = GUI::Action::create_checkable(
-        "Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+        "Show Dotfiles"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_H }, [&](auto& action) {
             m_model->set_should_show_dotfiles(action.is_checked());
             m_model->invalidate();
         },

@@ -96,7 +96,7 @@ void TextEditor::create_actions()
     m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
         m_go_to_line_or_column_action = Action::create(
-            "Go to Line/Column...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+            "Go to Line/Column..."_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 String value;
                 if (InputBox::show(window(), value, "Enter the line, or line:column:"sv, "Go to Line/Column"sv) == InputBox::ExecResult::OK) {
                     // If there is a `:` in the string, the format is expected to be `line:column`. E.g: `123:45`
@@ -2269,14 +2269,14 @@ void TextEditor::document_did_update_undo_stack()
             builder.append(' ');
             builder.append(suffix.value());
         }
-        return builder.to_deprecated_string();
+        return builder.to_string().release_value_but_fixme_should_propagate_errors();
     };
 
     m_undo_action->set_enabled(can_undo() && !text_is_secret());
     m_redo_action->set_enabled(can_redo() && !text_is_secret());
 
-    m_undo_action->set_text(make_action_text("&Undo"sv, document().undo_stack().undo_action_text()));
-    m_redo_action->set_text(make_action_text("&Redo"sv, document().undo_stack().redo_action_text()));
+    m_undo_action->set_text(make_action_text("&Undo"_string.release_value_but_fixme_should_propagate_errors(), document().undo_stack().undo_action_text()));
+    m_redo_action->set_text(make_action_text("&Redo"_string.release_value_but_fixme_should_propagate_errors(), document().undo_stack().redo_action_text()));
 
     // FIXME: This is currently firing more often than it should.
     //        Ideally we'd only send this out when the undo stack modified state actually changes.

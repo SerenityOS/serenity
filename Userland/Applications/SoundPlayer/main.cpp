@@ -76,32 +76,32 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto playback_menu = TRY(window->try_add_menu(TRY("&Playback"_string)));
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
-    auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
+    auto loop_none = GUI::Action::create_checkable(TRY("&No Loop"_string), { Mod_Ctrl, Key_N }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::None);
     });
     loop_actions.add_action(loop_none);
     TRY(playback_menu->try_add_action(loop_none));
 
-    auto loop_file = GUI::Action::create_checkable("Loop &File", { Mod_Ctrl, Key_F }, [&](auto&) {
+    auto loop_file = GUI::Action::create_checkable(TRY("Loop &File"_string), { Mod_Ctrl, Key_F }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::File);
     });
     loop_actions.add_action(loop_file);
     TRY(playback_menu->try_add_action(loop_file));
 
-    auto loop_playlist = GUI::Action::create_checkable("Loop &Playlist", { Mod_Ctrl, Key_P }, [&](auto&) {
+    auto loop_playlist = GUI::Action::create_checkable(TRY("Loop &Playlist"_string), { Mod_Ctrl, Key_P }, [&](auto&) {
         player->set_loop_mode(Player::LoopMode::Playlist);
     });
     loop_actions.add_action(loop_playlist);
     playback_menu->add_action(loop_playlist);
 
-    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
+    auto linear_volume_slider = GUI::Action::create_checkable(TRY("&Nonlinear Volume Slider"_string), [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
     TRY(playback_menu->try_add_separator());
     TRY(playback_menu->try_add_action(linear_volume_slider));
     TRY(playback_menu->try_add_separator());
 
-    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
+    auto playlist_toggle = GUI::Action::create_checkable(TRY("&Show Playlist"_string), [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
     });
     if (player->loop_mode() == Player::LoopMode::Playlist) {
@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     TRY(playback_menu->try_add_action(playlist_toggle));
 
-    auto shuffle_mode = GUI::Action::create_checkable("S&huffle Playlist", [&](auto& action) {
+    auto shuffle_mode = GUI::Action::create_checkable(TRY("S&huffle Playlist"_string), [&](auto& action) {
         if (action.is_checked())
             player->set_shuffle_mode(Player::ShuffleMode::Shuffling);
         else
@@ -128,21 +128,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_string("SoundPlayer"sv, "Preferences"sv, "Visualization"sv, name);
     };
 
-    auto bars = GUI::Action::create_checkable("&Bars", [&](auto&) {
+    auto bars = GUI::Action::create_checkable(TRY("&Bars"_string), [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<BarsVisualizationWidget>();
         set_selected_visualization_in_config("bars"sv);
     });
     TRY(visualization_menu->try_add_action(bars));
     visualization_actions.add_action(bars);
 
-    auto samples = GUI::Action::create_checkable("&Samples", [&](auto&) {
+    auto samples = GUI::Action::create_checkable(TRY("&Samples"_string), [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<SampleWidget>();
         set_selected_visualization_in_config("samples"sv);
     });
     TRY(visualization_menu->try_add_action(samples));
     visualization_actions.add_action(samples);
 
-    auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover", [&](auto&) {
+    auto album_cover_visualization = GUI::Action::create_checkable(TRY("&Album Cover"_string), [&](auto&) {
         auto* view = static_cast<SoundPlayerWidgetAdvancedView*>(player);
         view->set_visualization<AlbumCoverVisualizationWidget>([&view]() {
             return view->get_image_from_music_file();
@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Sound Player"_string), app_icon, window)));
 
     window->show();
     return app->exec();

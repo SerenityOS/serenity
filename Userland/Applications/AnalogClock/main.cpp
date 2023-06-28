@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto clock = TRY(window->set_main_widget<AnalogClock>());
 
     auto show_window_frame_action = GUI::Action::create_checkable(
-        "Show Window &Frame", { Mod_Alt, KeyCode::Key_F }, [&](auto& action) {
+        TRY("Show Window &Frame"_string), { Mod_Alt, KeyCode::Key_F }, [&](auto& action) {
             clock->set_show_window_frame(action.is_checked());
         });
     show_window_frame_action->set_checked(clock->show_window_frame());

@@ -54,7 +54,7 @@ private:
         if (action.icon())
             set_icon(action.icon());
         else
-            set_text(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
+            set_text(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
@@ -168,7 +168,7 @@ Optional<UISize> Toolbar::calculated_min_size() const
 
 ErrorOr<void> Toolbar::create_overflow_objects()
 {
-    m_overflow_action = Action::create("Overflow Menu", { Mod_Ctrl | Mod_Shift, Key_O }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv)), [&](auto&) {
+    m_overflow_action = Action::create(TRY("Overflow Menu"_string), { Mod_Ctrl | Mod_Shift, Key_O }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv)), [&](auto&) {
         m_overflow_menu->popup(m_overflow_button->screen_relative_rect().bottom_left().moved_up(1), {}, m_overflow_button->rect());
     });
     m_overflow_action->set_status_tip(TRY("Show hidden toolbar actions"_string));

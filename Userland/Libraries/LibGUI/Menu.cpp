@@ -235,7 +235,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
         bool is_default = (m_current_default_action.ptr() == &action);
         auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, -1, action.text(), action.is_enabled(), action.is_visible(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
+        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, -1, action.text().to_deprecated_string(), action.is_enabled(), action.is_visible(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
         break;
     }
     case MenuItem::Type::Submenu: {
@@ -258,10 +258,10 @@ ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
     Vector<NonnullRefPtr<GUI::Action>> recent_file_actions;
 
     for (size_t i = 0; i < GUI::Application::max_recently_open_files(); ++i) {
-        recent_file_actions.append(GUI::Action::create("", [&](auto& action) { m_recent_files_callback(action); }));
+        recent_file_actions.append(GUI::Action::create(""_short_string, [&](auto& action) { m_recent_files_callback(action); }));
     }
 
-    recent_file_actions.append(GUI::Action::create("(No recently open files)", nullptr));
+    recent_file_actions.append(GUI::Action::create(TRY("(No recently open files)"_string), nullptr));
     recent_file_actions.last()->set_enabled(false);
 
     auto* app = GUI::Application::the();

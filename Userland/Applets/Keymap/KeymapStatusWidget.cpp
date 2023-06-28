@@ -38,7 +38,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
     auto keymaps = keymaps_string.split(',');
 
     for (auto& keymap : keymaps) {
-        auto action = GUI::Action::create_checkable(keymap, [=](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::from_deprecated_string(keymap)), [=](auto&) {
             GUI::ConnectionToWindowManagerServer::the().async_set_keymap(keymap);
         });
 
@@ -54,7 +54,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
 
     auto settings_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv));
 
-    m_context_menu->add_action(GUI::Action::create("Keyboard &Settings",
+    m_context_menu->add_action(GUI::Action::create(TRY("Keyboard &Settings"_string),
         settings_icon,
         [&](auto&) {
             GUI::Process::spawn_or_show_error(window(), "/bin/KeyboardSettings"sv);

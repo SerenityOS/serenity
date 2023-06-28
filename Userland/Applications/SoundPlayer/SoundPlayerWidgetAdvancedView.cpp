@@ -80,13 +80,13 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
     auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
-    m_play_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
+    m_play_action = GUI::Action::create("Play"_string.release_value_but_fixme_should_propagate_errors(), { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
     m_play_action->set_enabled(false);
     menubar.add_action(*m_play_action);
 
-    m_stop_action = GUI::Action::create("Stop", { Key_S }, m_stop_icon, [&](auto&) {
+    m_stop_action = GUI::Action::create("Stop"_string.release_value_but_fixme_should_propagate_errors(), { Key_S }, m_stop_icon, [&](auto&) {
         stop();
     });
     m_stop_action->set_enabled(false);
@@ -100,13 +100,13 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     // Filler label
     menubar.add<GUI::Label>();
 
-    m_back_action = GUI::Action::create("Back", m_back_icon, [&](auto&) {
+    m_back_action = GUI::Action::create("Back"_string.release_value_but_fixme_should_propagate_errors(), m_back_icon, [&](auto&) {
         play_file_path(playlist().previous());
     });
     m_back_action->set_enabled(false);
     menubar.add_action(*m_back_action);
 
-    m_next_action = GUI::Action::create("Next", m_next_icon, [&](auto&) {
+    m_next_action = GUI::Action::create("Next"_string.release_value_but_fixme_should_propagate_errors(), m_next_icon, [&](auto&) {
         play_file_path(playlist().next());
     });
     m_next_action->set_enabled(false);
@@ -114,7 +114,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     menubar.add_separator();
 
-    m_mute_action = GUI::Action::create("Mute", { Key_M }, m_volume_icon, [&](auto&) {
+    m_mute_action = GUI::Action::create("Mute"_string.release_value_but_fixme_should_propagate_errors(), { Key_M }, m_volume_icon, [&](auto&) {
         toggle_mute();
     });
     m_mute_action->set_enabled(true);
@@ -208,7 +208,8 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 
     m_play_action->set_enabled(state != PlayState::NoFileLoaded);
     m_play_action->set_icon(state == PlayState::Playing ? m_pause_icon : m_play_icon);
-    m_play_action->set_text(state == PlayState::Playing ? "Pause"sv : "Play"sv);
+    String state_text = (state == PlayState::Playing ? "Pause"_string : "Play"_string).release_value_but_fixme_should_propagate_errors();
+    m_play_action->set_text(state_text);
 
     m_stop_action->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
@@ -225,7 +226,8 @@ void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
 
 void SoundPlayerWidgetAdvancedView::mute_changed(bool muted)
 {
-    m_mute_action->set_text(muted ? "Unmute"sv : "Mute"sv);
+    String mute_state = (muted ? "Unmute"_string : "Mute"_string).release_value_but_fixme_should_propagate_errors();
+    m_mute_action->set_text(mute_state);
     m_mute_action->set_icon(muted ? m_muted_icon : m_volume_icon);
     m_volume_slider->set_enabled(!muted);
 }

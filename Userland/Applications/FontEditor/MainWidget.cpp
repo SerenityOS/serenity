@@ -113,7 +113,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
 ErrorOr<void> MainWidget::create_actions()
 {
-    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, g_resources.new_font, [this](auto&) {
+    m_new_action = GUI::Action::create(TRY("&New Font..."_string), { Mod_Ctrl, Key_N }, g_resources.new_font, [this](auto&) {
         if (!request_close())
             return;
         auto maybe_wizard = NewFontDialog::create(window());
@@ -211,7 +211,7 @@ ErrorOr<void> MainWidget::create_actions()
         update_statusbar();
     });
 
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, g_resources.preview_font, [this](auto&) {
+    m_open_preview_action = GUI::Action::create(TRY("&Preview Font"_string), { Mod_Ctrl, Key_P }, g_resources.preview_font, [this](auto&) {
         if (!m_font_preview_window) {
             if (auto maybe_window = create_preview_window(); maybe_window.is_error())
                 show_error(maybe_window.release_error(), "Creating preview window failed"sv);
@@ -225,7 +225,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
     m_font_metadata_groupbox->set_visible(show_metadata);
-    m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [this](auto& action) {
+    m_show_metadata_action = GUI::Action::create_checkable(TRY("Font &Metadata"_string), { Mod_Ctrl, Key_M }, [this](auto& action) {
         m_font_metadata_groupbox->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
@@ -234,7 +234,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
     m_unicode_block_container->set_visible(show_unicode_blocks);
-    m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [this](auto& action) {
+    m_show_unicode_blocks_action = GUI::Action::create_checkable(TRY("&Unicode Blocks"_string), { Mod_Ctrl, Key_U }, [this](auto& action) {
         m_unicode_block_container->set_visible(action.is_checked());
         if (action.is_checked())
             m_search_textbox->set_focus(m_initialized);
@@ -247,7 +247,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_toolbar_container->set_visible(show_toolbar);
-    m_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", [this](auto& action) {
+    m_show_toolbar_action = GUI::Action::create_checkable(TRY("&Toolbar"_string), [this](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
@@ -256,7 +256,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
     m_statusbar->set_visible(show_statusbar);
-    m_show_statusbar_action = GUI::Action::create_checkable("&Status Bar", [this](auto& action) {
+    m_show_statusbar_action = GUI::Action::create_checkable(TRY("&Status Bar"_string), [this](auto& action) {
         m_statusbar->set_visible(action.is_checked());
         update_statusbar();
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
@@ -266,7 +266,7 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
     m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
-    m_highlight_modifications_action = GUI::Action::create_checkable("&Highlight Modifications", { Mod_Ctrl, Key_H }, [this](auto& action) {
+    m_highlight_modifications_action = GUI::Action::create_checkable(TRY("&Highlight Modifications"_string), { Mod_Ctrl, Key_H }, [this](auto& action) {
         m_glyph_map_widget->set_highlight_modifications(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
@@ -275,14 +275,14 @@ ErrorOr<void> MainWidget::create_actions()
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
     m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
-    m_show_system_emoji_action = GUI::Action::create_checkable("System &Emoji", { Mod_Ctrl, Key_E }, [this](auto& action) {
+    m_show_system_emoji_action = GUI::Action::create_checkable(TRY("System &Emoji"_string), { Mod_Ctrl, Key_E }, [this](auto& action) {
         m_glyph_map_widget->set_show_system_emoji(action.is_checked());
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
     });
     m_show_system_emoji_action->set_checked(show_system_emoji);
     m_show_system_emoji_action->set_status_tip(TRY("Show or hide system emoji"_string));
 
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
+    m_go_to_glyph_action = GUI::Action::create(TRY("&Go to Glyph..."_string), { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
         String input;
         auto result = GUI::InputBox::try_show(window(), input, {}, "Go to Glyph"sv, GUI::InputType::NonemptyText, "Hexadecimal"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
@@ -298,29 +298,29 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_go_to_glyph_action->set_status_tip(TRY("Go to the specified code point"_string));
 
-    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, g_resources.previous_glyph, [this](auto&) {
+    m_previous_glyph_action = GUI::Action::create(TRY("Pre&vious Glyph"_string), { Mod_Alt, Key_Left }, g_resources.previous_glyph, [this](auto&) {
         m_glyph_map_widget->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip(TRY("Seek the previous visible glyph"_string));
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, g_resources.next_glyph, [this](auto&) {
+    m_next_glyph_action = GUI::Action::create(TRY("&Next Glyph"_string), { Mod_Alt, Key_Right }, g_resources.next_glyph, [this](auto&) {
         m_glyph_map_widget->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip(TRY("Seek the next visible glyph"_string));
 
     i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
     m_glyph_editor_widget->set_scale(scale);
-    m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
+    m_scale_five_action = GUI::Action::create_checkable(TRY("500%"_string), { Mod_Ctrl, Key_1 }, [this](auto&) {
         set_scale_and_save(5);
     });
     m_scale_five_action->set_checked(scale == 5);
     m_scale_five_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
-    m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [this](auto&) {
+    m_scale_ten_action = GUI::Action::create_checkable(TRY("1000%"_string), { Mod_Ctrl, Key_2 }, [this](auto&) {
         set_scale_and_save(10);
     });
     m_scale_ten_action->set_checked(scale == 10);
     m_scale_ten_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
-    m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [this](auto&) {
+    m_scale_fifteen_action = GUI::Action::create_checkable(TRY("1500%"_string), { Mod_Ctrl, Key_3 }, [this](auto&) {
         set_scale_and_save(15);
     });
     m_scale_fifteen_action->set_checked(scale == 15);
@@ -331,12 +331,12 @@ ErrorOr<void> MainWidget::create_actions()
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
 
-    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, g_resources.paint_glyph, [this](auto&) {
+    m_paint_glyph_action = GUI::Action::create_checkable(TRY("Paint Glyph"_string), { Mod_Ctrl, KeyCode::Key_J }, g_resources.paint_glyph, [this](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     });
     m_paint_glyph_action->set_checked(true);
 
-    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, g_resources.move_glyph, [this](auto&) {
+    m_move_glyph_action = GUI::Action::create_checkable(TRY("Move Glyph"_string), { Mod_Ctrl, KeyCode::Key_K }, g_resources.move_glyph, [this](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
     });
 
@@ -352,15 +352,15 @@ ErrorOr<void> MainWidget::create_actions()
         m_glyph_editor_widget->rotate_90(Gfx::RotationDirection::Clockwise);
     });
 
-    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, g_resources.flip_horizontally, [this](auto&) {
+    m_flip_horizontal_action = GUI::Action::create(TRY("Flip Horizontally"_string), { Mod_Ctrl | Mod_Shift, Key_Q }, g_resources.flip_horizontally, [this](auto&) {
         m_glyph_editor_widget->flip(Gfx::Orientation::Horizontal);
     });
 
-    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, g_resources.flip_vertically, [this](auto&) {
+    m_flip_vertical_action = GUI::Action::create(TRY("Flip Vertically"_string), { Mod_Ctrl | Mod_Shift, Key_W }, g_resources.flip_vertically, [this](auto&) {
         m_glyph_editor_widget->flip(Gfx::Orientation::Vertical);
     });
 
-    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, g_resources.copy_as_text, [this](auto&) {
+    m_copy_text_action = GUI::Action::create(TRY("Copy as Te&xt"_string), { Mod_Ctrl, Key_T }, g_resources.copy_as_text, [this](auto&) {
         StringBuilder builder;
         auto selection = m_glyph_map_widget->selection().normalized();
         for (auto code_point = selection.start(); code_point < selection.start() + selection.size(); ++code_point) {
@@ -477,9 +477,9 @@ void MainWidget::update_action_text()
     };
 
     if (auto maybe_text = text_or_error("&Undo"sv, m_undo_stack->undo_action_text()); !maybe_text.is_error())
-        m_undo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_undo_action->set_text(maybe_text.release_value());
     if (auto maybe_text = text_or_error("&Redo"sv, m_undo_stack->redo_action_text()); !maybe_text.is_error())
-        m_redo_action->set_text(maybe_text.release_value().to_deprecated_string());
+        m_redo_action->set_text(maybe_text.release_value());
 }
 
 ErrorOr<void> MainWidget::create_widgets()
@@ -742,7 +742,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->add_recent_files_list([this](auto& action) {
         if (!request_close())
             return;
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text().to_deprecated_string());
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -798,7 +798,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/FontEditor.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Font Editor"_string), TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window)));
 
     return {};
 }

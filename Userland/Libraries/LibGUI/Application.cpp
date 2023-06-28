@@ -351,7 +351,7 @@ void Application::update_recent_file_actions()
         auto& action = m_recent_file_actions[index];
         char buffer = static_cast<char>('0' + index);
         auto key = StringView(&buffer, 1);
-        auto path = Config::read_string(m_config_domain, "RecentFiles"sv, key);
+        auto path = String::from_deprecated_string(Config::read_string(m_config_domain, "RecentFiles"sv, key)).release_value_but_fixme_should_propagate_errors();
 
         if (path.is_empty()) {
             action->set_visible(false);

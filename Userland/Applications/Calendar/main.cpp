@@ -78,22 +78,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         calendar->update_tiles(view_year, view_month);
     });
 
-    auto add_event_action = GUI::Action::create("&Add Event", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)), [&](const GUI::Action&) {
+    auto add_event_action = GUI::Action::create(TRY("&Add Event"_string), {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)), [&](const GUI::Action&) {
         AddEventDialog::show(calendar->selected_date(), window);
     });
 
-    auto jump_to_action = GUI::Action::create("Jump to &Today", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv)), [&](const GUI::Action&) {
+    auto jump_to_action = GUI::Action::create(TRY("Jump to &Today"_string), {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv)), [&](const GUI::Action&) {
         calendar->set_selected_date(Core::DateTime::now());
         calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
     });
 
-    auto view_month_action = GUI::Action::create_checkable("&Month View", { Mod_Ctrl, KeyCode::Key_1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-month-view.png"sv)), [&](const GUI::Action&) {
+    auto view_month_action = GUI::Action::create_checkable(TRY("&Month View"_string), { Mod_Ctrl, KeyCode::Key_1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-month-view.png"sv)), [&](const GUI::Action&) {
         if (calendar->mode() == GUI::Calendar::Year)
             calendar->toggle_mode();
     });
     view_month_action->set_checked(true);
 
-    auto view_year_action = GUI::Action::create_checkable("&Year View", { Mod_Ctrl, KeyCode::Key_2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"sv)), [&](const GUI::Action&) {
+    auto view_year_action = GUI::Action::create_checkable(TRY("&Year View"_string), { Mod_Ctrl, KeyCode::Key_2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"sv)), [&](const GUI::Action&) {
         if (calendar->mode() == GUI::Calendar::Month)
             calendar->toggle_mode();
     });
@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (default_view == "Year")
         view_year_action->set_checked(true);
 
-    auto open_settings_action = GUI::Action::create("Calendar &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
+    auto open_settings_action = GUI::Action::create(TRY("Calendar &Settings"_string), {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](GUI::Action const&) {
         GUI::Process::spawn_or_show_error(window, "/bin/CalendarSettings"sv);
     });
 
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto& file_menu = window->add_menu("&File"_short_string);
-    file_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)),
+    file_menu.add_action(GUI::Action::create(TRY("&Add Event"_string), { Mod_Ctrl | Mod_Shift, Key_E }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)),
         [&](const GUI::Action&) {
             AddEventDialog::show(calendar->selected_date(), window);
         }));
@@ -147,7 +147,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Calendar", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Calendar"_string), app_icon, window)));
 
     window->show();
     app->exec();

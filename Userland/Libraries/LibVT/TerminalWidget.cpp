@@ -126,17 +126,17 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
-    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
 
-    m_clear_including_history_action = GUI::Action::create("Clear Including &History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+    m_clear_including_history_action = GUI::Action::create("Clear Including &History"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
         clear_including_history();
     });
 
@@ -1133,7 +1133,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
             if (!af->is_valid())
                 continue;
-            auto action = GUI::Action::create(DeprecatedString::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
+            auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()).release_value_but_fixme_should_propagate_errors(), af->icon().bitmap_for_size(16), [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
             });
 
@@ -1143,10 +1143,10 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
             m_context_menu_for_hyperlink->add_action(action);
         }
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &URL", [this](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &URL"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
             GUI::Clipboard::the().set_plain_text(m_context_menu_href);
         }));
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name", [&](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name"_string.release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).serialize_path();
             // /home/anon/something -> something

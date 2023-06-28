@@ -222,7 +222,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     })));
     TRY(file_menu->try_add_separator());
     TRY(file_menu->add_recent_files_list([&](auto& action) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (!response.is_error())
             open_file(response.value().filename(), response.value().release_stream());
     }));
@@ -243,14 +243,14 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
 
     auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("PDF Viewer"_string), GUI::Icon::default_icon("app-pdf-viewer"sv), &window)));
     return {};
 }
 
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
-        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "Toggle &Sidebar"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
             m_sidebar->set_visible(m_sidebar_open);
         },
@@ -261,13 +261,13 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*open_outline_action);
     toolbar.add_separator();
 
-    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page"_string.release_value_but_fixme_should_propagate_errors(), Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
         m_page_text_box->set_current_number(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
-    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page"_string.release_value_but_fixme_should_propagate_errors(), Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
         m_page_text_box->set_current_number(m_viewer->current_page() + 2);
     });
@@ -320,12 +320,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_rotate_counterclockwise_action->set_enabled(false);
     m_rotate_clockwise_action->set_enabled(false);
 
-    m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
+    m_page_view_mode_single = GUI::Action::create_checkable("Single"_string.release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
     m_page_view_mode_single->set_status_tip("Show single page at a time"_string.release_value_but_fixme_should_propagate_errors());
 
-    m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
+    m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple"_string.release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
     m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string.release_value_but_fixme_should_propagate_errors());

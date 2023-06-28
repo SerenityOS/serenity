@@ -92,11 +92,11 @@ ErrorOr<void> MainWidget::initialize()
 
 ErrorOr<void> MainWidget::add_track_actions(GUI::Menu& menu)
 {
-    TRY(menu.try_add_action(GUI::Action::create("&Add Track", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv)), [&](auto&) {
+    TRY(menu.try_add_action(GUI::Action::create(TRY("&Add Track"_string), { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png"sv)), [&](auto&) {
         m_player_widget->add_track();
     })));
 
-    TRY(menu.try_add_action(GUI::Action::create("&Next Track", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv)), [&](auto&) {
+    TRY(menu.try_add_action(GUI::Action::create(TRY("&Next Track"_string), { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv)), [&](auto&) {
         turn_off_pressed_keys();
         m_player_widget->next_track();
         turn_on_pressed_keys();

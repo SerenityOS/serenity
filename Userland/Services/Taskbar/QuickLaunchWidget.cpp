@@ -114,7 +114,7 @@ ErrorOr<void> QuickLaunchWidget::create_context_menu()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv));
     m_context_menu = GUI::Menu::construct();
-    m_context_menu_default_action = GUI::Action::create("&Remove", icon, [this](auto&) {
+    m_context_menu_default_action = GUI::Action::create(TRY("&Remove"_string), icon, [this](auto&) {
         Config::remove_key("Taskbar"sv, quick_launch, m_context_menu_app_name);
         auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
         if (button) {

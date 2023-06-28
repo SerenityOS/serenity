@@ -174,17 +174,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->rotate(Gfx::RotationDirection::Clockwise);
     });
 
-    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)),
+    auto vertical_flip_action = GUI::Action::create(TRY("Flip &Vertically"_string), { Mod_None, Key_V }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)),
+    auto horizontal_flip_action = GUI::Action::create(TRY("Flip &Horizontally"_string), { Mod_None, Key_H }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)),
         [&](auto&) {
             widget->flip(Gfx::Orientation::Horizontal);
         });
 
-    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
+    auto desktop_wallpaper_action = GUI::Action::create(TRY("Set as Desktop &Wallpaper"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
         [&](auto&) {
             if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
                 GUI::MessageBox::show(window,
@@ -194,22 +194,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         });
 
-    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"sv)),
+    auto go_first_action = GUI::Action::create(TRY("&Go to First"_string), { Mod_None, Key_Home }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go to &Previous", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
+    auto go_back_action = GUI::Action::create(TRY("Go to &Previous"_string), { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go to &Next", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
+    auto go_forward_action = GUI::Action::create(TRY("Go to &Next"_string), { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv)),
+    auto go_last_action = GUI::Action::create(TRY("Go to &Last"_string), { Mod_None, Key_End }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Last);
         });
@@ -232,7 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window);
 
     auto fit_image_to_view_action = GUI::Action::create(
-        "Fit Image To &View", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
+        TRY("Fit Image To &View"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
             widget->fit_content_to_view();
         });
 
@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
-    auto hide_show_toolbar_action = GUI::Action::create_checkable("&Toolbar", { Mod_Ctrl, Key_T },
+    auto hide_show_toolbar_action = GUI::Action::create_checkable(TRY("&Toolbar"_string), { Mod_Ctrl, Key_T },
         [&](auto& action) {
             toolbar_container->set_visible(action.is_checked());
         });
@@ -253,20 +253,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Clipboard::the().set_bitmap(*widget->bitmap());
     });
 
-    auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
+    auto nearest_neighbor_action = GUI::Action::create_checkable(TRY("&Nearest Neighbor"_string), [&](auto&) {
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
     });
     nearest_neighbor_action->set_checked(true);
 
-    auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels", [&](auto&) {
+    auto smooth_pixels_action = GUI::Action::create_checkable(TRY("&Smooth Pixels"_string), [&](auto&) {
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::SmoothPixels);
     });
 
-    auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
+    auto bilinear_action = GUI::Action::create_checkable(TRY("&Bilinear"_string), [&](auto&) {
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
 
-    auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling", [&](auto&) {
+    auto box_sampling_action = GUI::Action::create_checkable(TRY("B&ox Sampling"_string), [&](auto&) {
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
     });
 
@@ -313,7 +313,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
-        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.to_deprecated_string());
         if (result.is_error())
             return;
 
@@ -369,7 +369,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/ImageViewer.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Image Viewer"_string), app_icon, window)));
 
     window->show();
 

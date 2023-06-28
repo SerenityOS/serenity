@@ -193,7 +193,7 @@ void ClockWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu = GUI::Menu::construct();
 
         auto settings_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv));
-        auto open_clock_settings_action = GUI::Action::create("Clock &Settings", *settings_icon, [this](auto&) {
+        auto open_clock_settings_action = GUI::Action::create("Clock &Settings"_string.release_value_but_fixme_should_propagate_errors(), *settings_icon, [this](auto&) {
             GUI::Process::spawn_or_show_error(window(), "/bin/ClockSettings"sv, Array { "--open-tab", "clock" });
         });
 
