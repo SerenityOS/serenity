@@ -11,12 +11,12 @@
 
 namespace JS {
 
-NonnullGCPtr<PromiseCapability> PromiseCapability::create(VM& vm, GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)
+NonnullGCPtr<PromiseCapability> PromiseCapability::create(VM& vm, NonnullGCPtr<Object> promise, NonnullGCPtr<FunctionObject> resolve, NonnullGCPtr<FunctionObject> reject)
 {
     return vm.heap().allocate_without_realm<PromiseCapability>(promise, resolve, reject);
 }
 
-PromiseCapability::PromiseCapability(GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)
+PromiseCapability::PromiseCapability(NonnullGCPtr<Object> promise, NonnullGCPtr<FunctionObject> resolve, NonnullGCPtr<FunctionObject> reject)
     : m_promise(promise)
     , m_resolve(resolve)
     , m_reject(reject)
@@ -31,6 +31,22 @@ void PromiseCapability::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_reject);
 }
 
+namespace {
+struct ResolvingFunctions final : public Cell {
+    JS_CELL(ResolvingFunctions, Cell);
+
+    Value resolve { js_undefined() };
+    Value reject { js_undefined() };
+
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(resolve);
+        visitor.visit(reject);
+    }
+};
+}
+
 // 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability
 ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm, Value constructor)
 {
@@ -42,34 +58,28 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
 
     // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 27.2.3.1).
 
-    // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
-    auto promise_capability = PromiseCapability::create(vm, nullptr, nullptr, nullptr);
+    // 3. Let resolvingFunctions be the Record { [[Resolve]]: undefined, [[Reject]]: undefined }.
+    auto resolving_functions = TRY(vm.heap().allocate<ResolvingFunctions>(realm));
 
-    // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
-    // NOTE: Additionally to capturing the GC-allocated promise capability, we also create handles for
-    // the resolve and reject values to keep them alive within the closure, as it may outlive the former.
-    auto executor_closure = [&promise_capability, resolve_handle = make_handle({}), reject_handle = make_handle({})](auto& vm) mutable -> ThrowCompletionOr<Value> {
+    // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures resolvingFunctions and performs the following steps when called:
+    auto executor_closure = [resolving_functions](auto& vm) -> ThrowCompletionOr<Value> {
         auto resolve = vm.argument(0);
         auto reject = vm.argument(1);
 
         // No idea what other engines say here.
         // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
-        if (!resolve_handle.is_null())
+        if (!resolving_functions->resolve.is_undefined())
             return vm.template throw_completion<TypeError>(ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
 
         // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
-        if (!reject_handle.is_null())
+        if (!resolving_functions->reject.is_undefined())
             return vm.template throw_completion<TypeError>(ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
 
         // c. Set promiseCapability.[[Resolve]] to resolve.
-        resolve_handle = make_handle(resolve);
-        if (resolve.is_function())
-            promise_capability->set_resolve(resolve.as_function());
+        resolving_functions->resolve = resolve;
 
         // d. Set promiseCapability.[[Reject]] to reject.
-        reject_handle = make_handle(reject);
-        if (reject.is_function())
-            promise_capability->set_reject(reject.as_function());
+        resolving_functions->reject = reject;
 
         // e. Return undefined.
         return js_undefined();
@@ -81,21 +91,16 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
     // 6. Let promise be ? Construct(C, « executor »).
     auto promise = TRY(construct(vm, constructor.as_function(), executor));
 
-    // 7. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-    // NOTE: We only assign a value in the executor closure if it is a function.
-    if (promise_capability->resolve() == nullptr)
+    //  7. If IsCallable(resolvingFunctions.[[Resolve]]) is false, throw a TypeError exception.
+    if (!resolving_functions->resolve.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability resolve value");
 
-    // 8. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-    // NOTE: We only assign a value in the executor closure if it is a function.
-    if (promise_capability->reject() == nullptr)
+    // 8. If IsCallable(resolvingFunctions.[[Reject]]) is false, throw a TypeError exception.
+    if (!resolving_functions->resolve.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability reject value");
 
-    // 9. Set promiseCapability.[[Promise]] to promise.
-    promise_capability->set_promise(*promise);
-
-    // 10. Return promiseCapability.
-    return promise_capability;
+    // 9. Return the PromiseCapability Record { [[Promise]]: promise, [[Resolve]]: resolvingFunctions.[[Resolve]], [[Reject]]: resolvingFunctions.[[Reject]] }.
+    return PromiseCapability::create(vm, promise, resolving_functions->resolve.as_function(), resolving_functions->reject.as_function());
 }
 
 }
