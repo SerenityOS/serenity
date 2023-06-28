@@ -91,7 +91,7 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
     });
 
-    test.skip("maximum array size exceeded", () => {
+    test("maximum array size exceeded", () => {
         const a = { length: 2 ** 53 - 1 };
         expect(() => {
             Array.prototype.toSpliced.call(a, 0, 0, "foo");
