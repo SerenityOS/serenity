@@ -374,7 +374,9 @@ struct CaseInsensitiveASCIIStringViewTraits : public Traits<StringView> {
 // FIXME: Remove this when clang on BSD distributions fully support consteval (specifically in the context of default parameter initialization).
 //        Note that this is fixed in clang-15, but is not yet picked up by all downstream distributions.
 //        See: https://github.com/llvm/llvm-project/issues/48230
-#if defined(AK_OS_BSD_GENERIC)
+//        Additionally, oss-fuzz currently ships an llvm-project commit that is a pre-release of 15.0.0.
+//        See: https://github.com/google/oss-fuzz/issues/9989
+#if defined(AK_OS_BSD_GENERIC) or defined(OSS_FUZZ)
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL constexpr
 #else
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL consteval
