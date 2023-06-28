@@ -43,7 +43,16 @@ public:
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
 
     void detach_buffer() { m_buffer = Empty {}; }
-    bool is_detached() const { return m_buffer.has<Empty>(); }
+
+    // 25.1.2.2 IsDetachedBuffer ( arrayBuffer ), https://tc39.es/ecma262/#sec-isdetachedbuffer
+    bool is_detached() const
+    {
+        // 1. If arrayBuffer.[[ArrayBufferData]] is null, return true.
+        if (m_buffer.has<Empty>())
+            return true;
+        // 2. Return false.
+        return false;
+    }
 
     enum Order {
         SeqCst,
