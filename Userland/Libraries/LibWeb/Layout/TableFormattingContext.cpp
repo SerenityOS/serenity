@@ -211,6 +211,8 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             m_columns[cell.column_index].percentage_width = max(m_columns[cell.column_index].percentage_width, computed_values.width().percentage().value());
         } else {
             m_columns[cell.column_index].type = SizeType::Pixel;
+            if (computed_values.width().is_length())
+                m_columns[cell.column_index].is_constrained = true;
         }
 
         auto cell_intrinsic_height_offsets = padding_top + padding_bottom + border_top + border_bottom;
@@ -508,24 +510,35 @@ void TableFormattingContext::distribute_width_to_columns()
         expand_columns_to_fill_available_width(SizeType::Percent);
     }
 
+    // Implements steps 1 and 2 of https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns
+    // FIXME: Implement steps 3-5 as well, which distribute excess width to constrained columns.
     if (columns_total_used_width() < available_width) {
         // NOTE: if all columns got their max width and there is still width to distribute left
         // it should be assigned to columns proportionally to their max width
         CSSPixels grid_max = 0.0f;
+        size_t unconstrained_column_count = 0;
         for (auto& column : m_columns) {
+            if (column.is_constrained) {
+                continue;
+            }
             grid_max += column.max_size;
+            ++unconstrained_column_count;
         }
 
         auto width_to_distribute = available_width - columns_total_used_width();
         if (grid_max == 0) {
             // If total max width of columns is zero then divide distributable width equally among them
-            auto column_width = width_to_distribute / m_columns.size();
+            auto column_width = width_to_distribute / unconstrained_column_count;
             for (auto& column : m_columns) {
+                if (column.is_constrained)
+                    continue;
                 column.used_width = column_width;
             }
         } else {
             // Distribute width to columns proportionally to their max width
             for (auto& column : m_columns) {
+                if (column.is_constrained)
+                    continue;
                 column.used_width += width_to_distribute * column.max_size / grid_max;
             }
         }
