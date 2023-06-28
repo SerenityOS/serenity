@@ -180,7 +180,7 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels border_right = is_collapse ? cell_state.border_right : computed_values.border_right().width;
 
         auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
-        auto width = computed_values.width().to_px(cell.box, containing_block.content_width());
+        auto width = computed_values.width().is_length() ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
         auto min_content_height = calculate_min_content_height(cell.box, available_space.width);
         auto max_content_height = calculate_max_content_height(cell.box, available_space.width);
         auto min_content_width = calculate_min_content_width(cell.box);
@@ -194,7 +194,7 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             min_width = max(min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
 
         CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
-        CSSPixels max_width = computed_values.width().is_auto() ? max_content_width : width;
+        CSSPixels max_width = computed_values.width().is_length() ? width : max_content_width;
         if (!should_treat_max_height_as_none(cell.box, available_space.height))
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
         if (!should_treat_max_width_as_none(cell.box, available_space.width))
@@ -392,6 +392,17 @@ void TableFormattingContext::compute_table_width()
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
         used_width = max(min(grid_max, width_of_table_containing_block), used_min_width);
+        // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
+        // A percentage value for a column width is relative to the table width. If the table has 'width: auto',
+        // a percentage represents a constraint on the column's width, which a UA should try to satisfy.
+        CSSPixels adjusted_used_width = 0;
+        for (auto& cell : m_cells) {
+            auto const& cell_width = cell.box->computed_values().width();
+            if (cell_width.is_percentage()) {
+                adjusted_used_width = 100 / cell_width.percentage().value() * cell.min_width;
+                used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block);
+            }
+        }
     } else {
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
