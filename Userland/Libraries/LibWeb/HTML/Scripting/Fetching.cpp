@@ -288,7 +288,8 @@ WebIDL::ExceptionOr<void> fetch_classic_script(JS::NonnullGCPtr<HTMLScriptElemen
         // 7. Let script be the result of creating a classic script given source text, settings object, response's URL,
         //    options, and muted errors.
         // FIXME: Pass options.
-        auto script = ClassicScript::create(element->document().url().to_deprecated_string(), source_text, settings_object, response->url().value_or({}), 1, muted_errors);
+        auto response_url = response->url().value_or({});
+        auto script = ClassicScript::create(response_url.to_deprecated_string(), source_text, settings_object, response_url, 1, muted_errors);
 
         // 8. Run onComplete given script.
         on_complete(script);
