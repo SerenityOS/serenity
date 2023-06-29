@@ -96,7 +96,7 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability resolve value");
 
     // 8. If IsCallable(resolvingFunctions.[[Reject]]) is false, throw a TypeError exception.
-    if (!resolving_functions->resolve.is_function())
+    if (!resolving_functions->reject.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability reject value");
 
     // 9. Return the PromiseCapability Record { [[Promise]]: promise, [[Resolve]]: resolvingFunctions.[[Resolve]], [[Reject]]: resolvingFunctions.[[Reject]] }.
