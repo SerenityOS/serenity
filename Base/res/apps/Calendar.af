@@ -2,3 +2,6 @@
 Name=Calendar
 Executable=/bin/Calendar
 Category=Office
+
+[Launcher]
+FileTypes=cal
