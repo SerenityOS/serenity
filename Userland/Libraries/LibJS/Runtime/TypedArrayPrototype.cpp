@@ -418,7 +418,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             auto value = MUST_OR_THROW_OOM(buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered));
 
             // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-            buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered);
+            MUST_OR_THROW_OOM(buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered));
 
             // iii. Set fromByteIndex to fromByteIndex + direction.
             from_byte_index += direction;
@@ -1233,7 +1233,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
             // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
             auto value = MUST_OR_THROW_OOM(source.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered));
             // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-            target.set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
+            MUST_OR_THROW_OOM(target.set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered));
             // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
             source_byte_index += source_element_size;
             // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
@@ -1462,7 +1462,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
                 auto value = MUST_OR_THROW_OOM(source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered));
 
                 // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-                target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered);
+                MUST_OR_THROW_OOM(target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered));
 
                 // 3. Set srcByteIndex to srcByteIndex + 1.
                 // 4. Set targetByteIndex to targetByteIndex + 1.
