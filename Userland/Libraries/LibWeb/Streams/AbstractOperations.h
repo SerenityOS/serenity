@@ -26,6 +26,7 @@ using CloseAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<Web
 using WriteAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream&);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> acquire_readable_stream_byob_reader(ReadableStream&);
 bool is_readable_stream_locked(ReadableStream const&);
 
 SizeAlgorithm extract_size_algorithm(QueuingStrategy const&);
