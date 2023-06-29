@@ -33,6 +33,7 @@ enum class CanvasFillRule;
 enum class DOMParserSupportedType;
 enum class EndingType;
 enum class ImageSmoothingQuality;
+enum class ReadableStreamReaderMode;
 enum class ReferrerPolicy;
 enum class RequestCache;
 enum class RequestCredentials;
@@ -553,6 +554,7 @@ class WritableStreamDefaultWriter;
 struct PullIntoDescriptor;
 struct QueuingStrategy;
 struct QueuingStrategyInit;
+struct ReadableStreamGetReaderOptions;
 struct UnderlyingSink;
 struct UnderlyingSource;
 }
