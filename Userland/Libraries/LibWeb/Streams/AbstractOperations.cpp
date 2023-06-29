@@ -46,6 +46,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_reada
     return reader;
 }
 
+// https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> acquire_readable_stream_byob_reader(ReadableStream& stream)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let reader be a new ReadableStreamBYOBReader.
+    auto reader = TRY(realm.heap().allocate<ReadableStreamBYOBReader>(realm, realm));
+
+    // 2. Perform ? SetUpReadableStreamBYOBReader(reader, stream).
+    TRY(set_up_readable_stream_byob_reader(reader, stream));
+
+    // 3. Return reader.
+    return reader;
+}
+
 // https://streams.spec.whatwg.org/#is-readable-stream-locked
 bool is_readable_stream_locked(ReadableStream const& stream)
 {
