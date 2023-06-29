@@ -142,9 +142,8 @@ void TextEditor::set_text(StringView text, AllowCallback allow_callback)
     update_content_size();
     recompute_all_visual_lines();
     if (is_single_line())
-        set_cursor(0, line(0).length());
-    else
-        set_cursor(0, 0);
+        m_selection = document().range_for_entire_line(0);
+    set_cursor(0, 0);
     did_update_selection();
     update();
 }
