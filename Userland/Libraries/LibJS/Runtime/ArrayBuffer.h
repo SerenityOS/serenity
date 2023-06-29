@@ -74,7 +74,7 @@ public:
     template<typename type>
     ThrowCompletionOr<Value> get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
-    void set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
+    ThrowCompletionOr<void> set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename T>
     ThrowCompletionOr<Value> get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
@@ -228,7 +228,7 @@ static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, b
 
 // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
 template<typename T>
-void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
 
@@ -253,7 +253,7 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
     //    NOTE: Done by default parameter at declaration of this function.
 
     // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
-    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian).release_allocated_value_but_fixme_should_propagate_errors();
+    auto raw_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, value, is_little_endian));
 
     // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
     if (false) {
@@ -269,6 +269,7 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
     }
 
     // 10. Return unused.
+    return {};
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
