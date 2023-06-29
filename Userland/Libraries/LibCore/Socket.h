@@ -193,9 +193,13 @@ public:
 
     virtual ~TCPSocket() override { close(); }
 
+    int fd() const { return m_helper.fd(); }
+    SocketAddress address() const { return m_address; }
+
 private:
-    TCPSocket(PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
+    TCPSocket(SocketAddress address, PreventSIGPIPE prevent_sigpipe = PreventSIGPIPE::No)
         : Socket(prevent_sigpipe)
+        , m_address(move(address))
     {
     }
 
@@ -211,6 +215,7 @@ private:
     }
 
     PosixSocketHelper m_helper { Badge<TCPSocket> {} };
+    SocketAddress m_address;
 };
 
 class UDPSocket final : public Socket {

@@ -197,7 +197,7 @@ ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(DeprecatedString const& hos
 
 ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& address)
 {
-    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket(address)));
 
     auto fd = TRY(create_fd(SocketDomain::Inet, SocketType::Stream));
     socket->m_helper.set_fd(fd);
@@ -208,13 +208,18 @@ ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(SocketAddress const& addres
     return socket;
 }
 
+// The socket must already be connected
 ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::adopt_fd(int fd)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
     }
 
-    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket()));
+    sockaddr_in addr;
+    socklen_t addr_size = sizeof(sockaddr_in);
+    TRY(System::getpeername(fd, bit_cast<struct sockaddr*>(&addr), &addr_size));
+
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TCPSocket(SocketAddress(AK::IPv4Address(addr.sin_addr.s_addr), ntohs(addr.sin_port)))));
     socket->m_helper.set_fd(fd);
     socket->setup_notifier();
     return socket;
