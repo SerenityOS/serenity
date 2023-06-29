@@ -46,10 +46,15 @@ unset CFLAGS
 unset CXXFLAGS
 export AFL_NOOPT=1
 
+if [ "$#" -gt "0" ] && [ "--oss-fuzz" = "$1" ] ; then
+    CXXFLAGS="$CXXFLAGS -DOSS_FUZZ=ON"
+fi
+
 # FIXME: Replace these CMake invocations with a CMake superbuild?
 echo "Building Lagom Tools..."
 cmake -GNinja -B Build/tools \
     -DBUILD_LAGOM=OFF \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
     -DCMAKE_INSTALL_PREFIX=Build/tool-install \
     -Dpackage=LagomTools
 ninja -C Build/tools install
