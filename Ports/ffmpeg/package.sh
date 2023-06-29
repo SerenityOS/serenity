@@ -18,14 +18,11 @@ configure() {
         --enable-gpl \
         --enable-libx264 \
         --enable-libx265 \
+        --enable-shared \
         --disable-stripping \
         --disable-avx
 }
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    for lib in libavcodec libavdevice libavfilter libavformat libavutil; do
-        ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/${lib}.so -Wl,-soname,${lib}.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/${lib}.a -Wl,--no-whole-archive -liconv -ltiff -llzma -lbz2
-        rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/$lib.la
-    done
 }
