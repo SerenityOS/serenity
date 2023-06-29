@@ -88,6 +88,28 @@ describe("correct behavior", () => {
             plainDateTime.round("minute").equals(plainDateTime.round({ smallestUnit: "minute" }))
         ).toBeTrue();
     });
+
+    test("range boundary conditions", () => {
+        // PlainDateTime can represent a point of time ±10**8 days from the epoch.
+        const min = new Temporal.PlainDateTime(-271821, 4, 19, 0, 0, 0, 0, 0, 1);
+        const max = new Temporal.PlainDateTime(275760, 9, 13, 23, 59, 59, 999, 999, 999);
+
+        ["day", "hour", "minute", "second", "millisecond", "microsecond"].forEach(smallestUnit => {
+            expect(() => {
+                min.round({ smallestUnit, roundingMode: "floor" });
+            }).toThrow(RangeError);
+            expect(() => {
+                min.round({ smallestUnit, roundingMode: "ceil" });
+            }).not.toThrow();
+
+            expect(() => {
+                max.round({ smallestUnit, roundingMode: "floor" });
+            }).not.toThrow();
+            expect(() => {
+                max.round({ smallestUnit, roundingMode: "ceil" });
+            }).toThrow(RangeError);
+        });
+    });
 });
 
 describe("errors", () => {
