@@ -2,6 +2,14 @@
 #import <Streams/ReadableStreamBYOBReader.idl>
 #import <Streams/ReadableStreamDefaultReader.idl>
 
+// https://streams.spec.whatwg.org/#enumdef-readablestreamreadermode
+enum ReadableStreamReaderMode { "byob" };
+
+// https://streams.spec.whatwg.org/#dictdef-readablestreamgetreaderoptions
+dictionary ReadableStreamGetReaderOptions {
+    ReadableStreamReaderMode mode;
+};
+
 // https://streams.spec.whatwg.org/#readablestream
 [Exposed=*, Transferable]
 interface ReadableStream {
@@ -10,8 +18,7 @@ interface ReadableStream {
     readonly attribute boolean locked;
 
     Promise<undefined> cancel(optional any reason);
-    // FIXME: optional ReadableStreamGetReaderOptions options = {}
-    ReadableStreamReader getReader();
+    ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
 };
 
 typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;
