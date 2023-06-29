@@ -17,12 +17,25 @@
 
 namespace GUI {
 
-class Calendar final
+class Calendar
     : public GUI::AbstractScrollableWidget
     , public Config::Listener {
     C_OBJECT(Calendar)
 
 public:
+    struct Tile {
+        unsigned year;
+        unsigned month;
+        unsigned day;
+        Gfx::IntRect rect;
+        int width { 0 };
+        int height { 0 };
+        bool is_today { false };
+        bool is_selected { false };
+        bool is_hovered { false };
+        bool is_outside_selected_month { false };
+    };
+
     enum Mode {
         Month,
         Year
@@ -34,6 +47,8 @@ public:
         MonthOnly,
         YearOnly
     };
+
+    virtual ~Calendar() override = default;
 
     void set_selected_date(Core::DateTime date_time) { m_selected_date = date_time; }
     Core::DateTime selected_date() const { return m_selected_date; }
@@ -77,20 +92,21 @@ public:
 
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
     virtual void config_i32_did_change(StringView, StringView, StringView, i32 value) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void paint_tile(GUI::Painter&, GUI::Calendar::Tile&, Gfx::IntRect&, int x_offset, int y_offset, int day_offset);
 
     Function<void()> on_scroll;
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
     Function<void()> on_month_click;
 
-private:
+protected:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
-    virtual ~Calendar() override = default;
 
+private:
     static size_t day_of_week_index(DeprecatedString const&);
 
     virtual void resize_event(GUI::ResizeEvent&) override;
-    virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
@@ -127,18 +143,6 @@ private:
     };
     Vector<MonthTile> m_months;
 
-    struct Tile {
-        unsigned year;
-        unsigned month;
-        unsigned day;
-        Gfx::IntRect rect;
-        int width { 0 };
-        int height { 0 };
-        bool is_today { false };
-        bool is_selected { false };
-        bool is_hovered { false };
-        bool is_outside_selected_month { false };
-    };
     Vector<Tile> m_tiles[12];
 
     bool m_grid { true };

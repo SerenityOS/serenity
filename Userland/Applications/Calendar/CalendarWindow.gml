@@ -10,7 +10,7 @@
         }
     }
 
-    @GUI::Calendar {
+    @::Calendar::EventCalendar {
         name: "calendar"
     }
 }

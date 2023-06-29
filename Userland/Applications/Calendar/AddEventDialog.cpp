@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,9 +19,12 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Font/FontDatabase.h>
 
-AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
+namespace Calendar {
+
+AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_manager, Window* parent_window)
     : Dialog(parent_window)
     , m_date_time(date_time)
+    , m_event_manager(event_manager)
 {
     resize(158, 130);
     set_title("Add Event");
@@ -42,6 +45,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     add_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
 
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
+    event_title_textbox.set_name("event_title_textbox");
     event_title_textbox.set_fixed_height(20);
 
     auto& middle_container = widget->add<GUI::Widget>();
@@ -92,8 +96,9 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     auto& ok_button = button_container.add<GUI::Button>("OK"_short_string);
     ok_button.set_fixed_size(80, 20);
-    ok_button.on_click = [this](auto) {
-        dbgln("TODO: Add event icon on specific tile");
+    ok_button.on_click = [&](auto) {
+        add_event_to_calendar().release_value_but_fixme_should_propagate_errors();
+
         done(ExecResult::OK);
     };
 
@@ -108,6 +113,19 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     starting_month_combo.on_change = [update_starting_day_range](auto, auto) { update_starting_day_range(); };
 
     event_title_textbox.set_focus(true);
+}
+
+ErrorOr<void> AddEventDialog::add_event_to_calendar()
+{
+    JsonObject event;
+    auto start_date = TRY(String::formatted("{}-{:0>2d}-{:0>2d}", m_date_time.year(), m_date_time.month(), m_date_time.day()));
+    auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
+    event.set("start_date", JsonValue(start_date));
+    event.set("summary", JsonValue(summary));
+    TRY(m_event_manager.add_event(event));
+    m_event_manager.set_dirty(true);
+
+    return {};
 }
 
 int AddEventDialog::MonthListModel::row_count(const GUI::ModelIndex&) const
@@ -175,4 +193,6 @@ GUI::Variant AddEventDialog::MeridiemListModel::data(const GUI::ModelIndex& inde
         }
     }
     return {};
+}
+
 }
