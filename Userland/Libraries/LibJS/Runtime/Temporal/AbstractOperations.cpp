@@ -605,7 +605,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         MUST(date_options->create_data_property_or_throw(vm.names.overflow, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "constrain"sv))));
 
         // h. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
-        result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, *date_options));
+        result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, date_options));
 
         // i. Let offsetString be ? Get(value, "offset").
         offset_string = TRY(value_object.get(vm.names.offset));
