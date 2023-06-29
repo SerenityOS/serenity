@@ -164,6 +164,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
 {
     auto const& containing_block = m_state.get(*table_wrapper().containing_block());
+    auto table_width_is_auto = table_box().computed_values().width().is_auto();
 
     for (auto& cell : m_cells) {
         auto const& computed_values = cell.box->computed_values();
@@ -180,7 +181,7 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels border_right = is_collapse ? cell_state.border_right : computed_values.border_right().width;
 
         auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
-        auto width = computed_values.width().is_length() ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
+        auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
         auto min_content_height = calculate_min_content_height(cell.box, available_space.width);
         auto max_content_height = calculate_max_content_height(cell.box, available_space.width);
         auto min_content_width = calculate_min_content_width(cell.box);
@@ -194,7 +195,7 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             min_width = max(min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
 
         CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
-        CSSPixels max_width = computed_values.width().is_length() ? width : max_content_width;
+        CSSPixels max_width = (computed_values.width().is_length() || !table_width_is_auto) ? width : max_content_width;
         if (!should_treat_max_height_as_none(cell.box, available_space.height))
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
         if (!should_treat_max_width_as_none(cell.box, available_space.width))
