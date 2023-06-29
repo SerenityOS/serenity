@@ -150,6 +150,7 @@ namespace JS {
     P(deleteProperty)                        \
     P(deref)                                 \
     P(description)                           \
+    P(detached)                              \
     P(difference)                            \
     P(dir)                                   \
     P(direction)                             \

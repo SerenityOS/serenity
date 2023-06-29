@@ -26,6 +26,7 @@ ThrowCompletionOr<void> ArrayBufferPrototype::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.slice, slice, 2, attr);
     define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.detached, detached_getter, {}, Attribute::Configurable);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
@@ -146,6 +147,20 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 
     // 6. Return 𝔽(length).
     return Value(length);
+}
+
+// 25.1.5.4 get ArrayBuffer.prototype.detached, https://tc39.es/proposal-arraybuffer-transfer/#sec-get-arraybuffer.prototype.detached
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::detached_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+    // FIXME: Check for shared buffer
+
+    // 4. Return IsDetachedBuffer(O).
+    return Value(array_buffer_object->is_detached());
 }
 
 }
