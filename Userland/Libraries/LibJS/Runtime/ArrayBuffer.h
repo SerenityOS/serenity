@@ -147,17 +147,49 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
     }
 }
 
-// Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer().
+// Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer(), https://tc39.es/ecma262/#sec-getvaluefrombuffer
 template<typename T>
 ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
+    // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!is_detached());
 
+    // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+
+    // 3. Let block be arrayBuffer.[[ArrayBufferData]].
+    auto& block = buffer();
+
+    // 4. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
     auto element_size = sizeof(T);
 
-    // FIXME: Check for shared buffer
+    ByteBuffer raw_value;
 
-    auto raw_value = TRY_OR_THROW_OOM(vm, buffer_impl().slice(byte_index, element_size));
+    // FIXME: 5. If IsSharedArrayBuffer(arrayBuffer) is true, then
+    if (false) {
+        // FIXME: a. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+        // FIXME: b. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+        // FIXME: c. If isTypedArray is true and IsNoTearConfiguration(type, order) is true, let noTear be true; otherwise let noTear be false.
+        // FIXME: d. Let rawValue be a List of length elementSize whose elements are nondeterministically chosen byte values.
+        // FIXME: e. NOTE: In implementations, rawValue is the result of a non-atomic or atomic read instruction on the underlying hardware. The nondeterminism is a semantic prescription of the memory model to describe observable behaviour of hardware with weak consistency.
+        // FIXME: f. Let readEvent be ReadSharedMemory { [[Order]]: order, [[NoTear]]: noTear, [[Block]]: block, [[ByteIndex]]: byteIndex, [[ElementSize]]: elementSize }.
+        // FIXME: g. Append readEvent to eventsRecord.[[EventList]].
+        // FIXME: h. Append Chosen Value Record { [[Event]]: readEvent, [[ChosenValue]]: rawValue } to execution.[[ChosenValues]].
+    }
+    // 6. Else,
+    else {
+        // a. Let rawValue be a List whose elements are bytes from block at indices in the interval from byteIndex (inclusive) to byteIndex + elementSize (exclusive).
+        raw_value = TRY_OR_THROW_OOM(vm, block.slice(byte_index, element_size));
+    }
+
+    // 7. Assert: The number of elements in rawValue is elementSize.
+    VERIFY(raw_value.size() == element_size);
+
+    // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    //    NOTE: Done by default parameter at declaration of this function.
+
+    // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
     return raw_bytes_to_numeric<T>(vm, move(raw_value), is_little_endian);
 }
 
