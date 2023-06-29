@@ -110,30 +110,59 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, F
 template<typename T>
 static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_endian)
 {
+    // 1. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
+    //    NOTE: Used in step 6, but not needed with our implementation of that step.
+
+    // 2. If isLittleEndian is false, reverse the order of the elements of rawBytes.
     if (!is_little_endian) {
         VERIFY(raw_value.size() % 2 == 0);
         for (size_t i = 0; i < raw_value.size() / 2; ++i)
             swap(raw_value[i], raw_value[raw_value.size() - 1 - i]);
     }
+
+    // 3. If type is Float32, then
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
     if constexpr (IsSame<UnderlyingBufferDataType, float>) {
+        // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary32 value.
         float value;
         raw_value.span().copy_to({ &value, sizeof(float) });
+
+        // b. If value is an IEEE 754-2019 binary32 NaN value, return the NaN Number value.
         if (isnan(value))
             return js_nan();
+
+        // c. Return the Number value that corresponds to value.
         return Value(value);
     }
+
+    // 4. If type is Float64, then
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
+        // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary64 value.
         double value;
         raw_value.span().copy_to({ &value, sizeof(double) });
+
+        // b. If value is an IEEE 754-2019 binary64 NaN value, return the NaN Number value.
         if (isnan(value))
             return js_nan();
+
+        // c. Return the Number value that corresponds to value.
         return Value(value);
     }
+
+    // NOTE: Not in spec, sanity check for steps below.
     if constexpr (!IsIntegral<UnderlyingBufferDataType>)
         VERIFY_NOT_REACHED();
+
+    // 5. If IsUnsignedElementType(type) is true, then
+    //     a. Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of an unsigned little-endian binary number.
+    // 6. Else,
+    //     a. Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of a binary little-endian two's complement number of bit length elementSize × 8.
+    //
+    // NOTE: The signed/unsigned logic above is implemented in step 7 by the IsSigned<> check, and in step 8 by JS::Value constructor overloads.
     UnderlyingBufferDataType int_value = 0;
     raw_value.span().copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
+
+    // 7. If IsBigIntElementType(type) is true, return the BigInt value that corresponds to intValue.
     if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
             static_assert(IsSame<UnderlyingBufferDataType, i64>);
@@ -142,7 +171,9 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
             static_assert(IsOneOf<UnderlyingBufferDataType, u64, double>);
             return BigInt::create(vm, Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { int_value } });
         }
-    } else {
+    }
+    // 8. Otherwise, return the Number value that corresponds to intValue.
+    else {
         return Value(int_value);
     }
 }
