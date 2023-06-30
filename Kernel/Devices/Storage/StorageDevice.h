@@ -8,8 +8,8 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Devices/Storage/DiskPartition.h>
 #include <Kernel/Devices/Storage/StorageController.h>
+#include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
 
@@ -68,9 +68,9 @@ public:
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
-    Vector<NonnullLockRefPtr<DiskPartition>> const& partitions() const { return m_partitions; }
+    Vector<NonnullLockRefPtr<StorageDevicePartition>> const& partitions() const { return m_partitions; }
 
-    void add_partition(NonnullLockRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
+    void add_partition(NonnullLockRefPtr<StorageDevicePartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
 
     LUNAddress const& logical_unit_number_address() const { return m_logical_unit_number_address; }
 
@@ -98,7 +98,7 @@ private:
     virtual void will_be_destroyed() override;
 
     mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;
-    Vector<NonnullLockRefPtr<DiskPartition>> m_partitions;
+    Vector<NonnullLockRefPtr<StorageDevicePartition>> m_partitions;
 
     LUNAddress const m_logical_unit_number_address;
 
