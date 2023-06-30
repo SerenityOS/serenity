@@ -6694,7 +6694,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 
     for (auto& declaration_or_at_rule : declarations_and_at_rules) {
         if (declaration_or_at_rule.is_at_rule()) {
-            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: CSS at-rules are not allowed in @font-family; discarding.");
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: CSS at-rules are not allowed in @font-face; discarding.");
             continue;
         }
 
@@ -6787,7 +6787,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             continue;
         }
 
-        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-family; discarding.", declaration.name());
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-face; discarding.", declaration.name());
     }
 
     if (!font_family.has_value()) {
