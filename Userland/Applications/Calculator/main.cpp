@@ -61,13 +61,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& constants_menu = window->add_menu(TRY("&Constants"_string));
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
 
-    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Pi"_short_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create(TRY("&Euler's Number"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Phi"_short_string, TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
 
@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<unsigned> last_rounding_mode = 1;
     for (unsigned i {}; i < rounding_modes.size(); ++i) {
-        auto round_action = GUI::Action::create_checkable(DeprecatedString::formatted("To &{} Digits", rounding_modes[i]),
+        auto round_action = GUI::Action::create_checkable(TRY(String::formatted("To &{} Digits", rounding_modes[i])),
             [&widget, rounding_mode = rounding_modes[i], &last_rounding_mode, i](auto&) {
                 widget->set_rounding_length(rounding_mode);
                 last_rounding_mode = i;
@@ -89,11 +89,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     constexpr auto format { "&Custom - {}..."sv };
-    auto round_custom = GUI::Action::create_checkable(DeprecatedString::formatted(format, 0), [&](auto& action) {
+    auto round_custom = GUI::Action::create_checkable(TRY(String::formatted(format, 0)), [&](auto& action) {
         int custom_rounding_length = widget->rounding_length();
         auto result = GUI::InputBox::show_numeric(window, custom_rounding_length, 0, 100, "Digits to Round"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
-            action.set_text(DeprecatedString::formatted(format, custom_rounding_length));
+            action.set_text(String::formatted(format, custom_rounding_length).release_value_but_fixme_should_propagate_errors());
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
@@ -103,12 +103,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     widget->set_rounding_custom(round_custom, format);
 
-    auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
+    auto shrink_action = GUI::Action::create(TRY("&Shrink..."_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
         int shrink_length = widget->rounding_length();
         auto result = GUI::InputBox::show_numeric(window, shrink_length, 0, 100, "Digits to Shrink"sv);
         if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
             round_custom->set_checked(true);
-            round_custom->set_text(DeprecatedString::formatted(format, shrink_length));
+            round_custom->set_text(String::formatted(format, shrink_length).release_value_but_fixme_should_propagate_errors());
             widget->set_rounding_length(shrink_length);
             widget->shrink(shrink_length);
         }
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& help_menu = window->add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action(TRY("Calculator"_string), app_icon, window));
 
     window->show();
 

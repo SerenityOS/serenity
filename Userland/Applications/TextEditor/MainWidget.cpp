@@ -105,15 +105,15 @@ MainWidget::MainWidget()
     };
     m_wrap_around_checkbox->set_checked(true);
 
-    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_next_action = GUI::Action::create("Find &Next"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResults::Yes);
     });
 
-    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_previous_action = GUI::Action::create("Find Pr&evious"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResults::Yes);
     });
 
-    m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
+    m_replace_action = GUI::Action::create("Rep&lace"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
@@ -133,7 +133,7 @@ MainWidget::MainWidget()
         }
     });
 
-    m_replace_all_action = GUI::Action::create("Replace &All", { Mod_Ctrl, Key_F2 }, [&](auto&) {
+    m_replace_all_action = GUI::Action::create("Replace &All"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_F2 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         auto length_delta = substitute.length() - needle.length();
@@ -196,7 +196,7 @@ MainWidget::MainWidget()
         m_editor->set_focus(true);
     };
 
-    m_vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+    m_vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
             m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
         else
@@ -204,7 +204,7 @@ MainWidget::MainWidget()
     });
     m_vim_emulation_setting_action->set_checked(false);
 
-    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("&Find/Replace..."_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
@@ -246,7 +246,7 @@ MainWidget::MainWidget()
     m_editor->on_selection_change = [this] { update_statusbar(); };
     m_editor->on_highlighter_change = [this] { update_statusbar(); };
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
+    m_new_action = GUI::Action::create("&New"_short_string, { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
@@ -312,7 +312,7 @@ MainWidget::MainWidget()
     });
 
     auto file_manager_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_open_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
+    m_open_folder_action = GUI::Action::create("Reveal in File Manager"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
         auto lexical_path = LexicalPath(m_path);
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
@@ -383,7 +383,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (response.is_error())
             return;
 
@@ -414,18 +414,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(*m_replace_all_action));
 
     m_no_preview_action = GUI::Action::create_checkable(
-        "&No Preview", [this](auto&) {
+        TRY("&No Preview"_string), [this](auto&) {
             set_preview_mode(PreviewMode::None);
         });
 
     m_markdown_preview_action = GUI::Action::create_checkable(
-        "&Markdown Preview", [this](auto&) {
+        TRY("&Markdown Preview"_string), [this](auto&) {
             set_preview_mode(PreviewMode::Markdown);
         },
         this);
 
     m_html_preview_action = GUI::Action::create_checkable(
-        "&HTML Preview", [this](auto&) {
+        TRY("&HTML Preview"_string), [this](auto&) {
             set_preview_mode(PreviewMode::HTML);
         },
         this);
@@ -435,7 +435,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_preview_actions.add_action(*m_html_preview_action);
     m_preview_actions.set_exclusive(true);
 
-    m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
+    m_layout_toolbar_action = GUI::Action::create_checkable(TRY("&Toolbar"_string), [&](auto& action) {
         action.is_checked() ? m_toolbar_container->set_visible(true) : m_toolbar_container->set_visible(false);
         Config::write_bool("TextEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
@@ -443,7 +443,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
 
-    m_layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
+    m_layout_statusbar_action = GUI::Action::create_checkable(TRY("&Status Bar"_string), [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
         Config::write_bool("TextEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
         update_statusbar();
@@ -452,7 +452,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 
-    m_layout_ruler_action = GUI::Action::create_checkable("&Ruler", [&](auto& action) {
+    m_layout_ruler_action = GUI::Action::create_checkable(TRY("&Ruler"_string), [&](auto& action) {
         action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
         Config::write_bool("TextEditor"sv, "Layout"sv, "ShowRuler"sv, action.is_checked());
     });
@@ -468,7 +468,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(view_menu->try_add_separator());
 
-    TRY(view_menu->try_add_action(GUI::Action::create("Change &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
+    TRY(view_menu->try_add_action(GUI::Action::create(TRY("Change &Font..."_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, &m_editor->font(), false);
             if (picker->exec() == GUI::Dialog::ExecResult::OK) {
@@ -482,15 +482,15 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_wrapping_mode_actions.set_exclusive(true);
     auto wrapping_mode_menu = TRY(view_menu->try_add_submenu(TRY("&Wrapping Mode"_string)));
-    m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
+    m_no_wrapping_action = GUI::Action::create_checkable(TRY("&No Wrapping"_string), [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "None"sv);
     });
-    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
+    m_wrap_anywhere_action = GUI::Action::create_checkable(TRY("Wrap &Anywhere"_string), [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "Anywhere"sv);
     });
-    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
+    m_wrap_at_words_action = GUI::Action::create_checkable(TRY("Wrap at &Words"_string), [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "Words"sv);
     });
@@ -517,19 +517,19 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_soft_tab_width_actions.set_exclusive(true);
     auto soft_tab_width_menu = TRY(view_menu->try_add_submenu(TRY("&Tab Width"_string)));
-    m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
+    m_soft_tab_1_width_action = GUI::Action::create_checkable("1"_short_string, [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });
-    m_soft_tab_2_width_action = GUI::Action::create_checkable("2", [&](auto&) {
+    m_soft_tab_2_width_action = GUI::Action::create_checkable("2"_short_string, [&](auto&) {
         m_editor->set_soft_tab_width(2);
     });
-    m_soft_tab_4_width_action = GUI::Action::create_checkable("4", [&](auto&) {
+    m_soft_tab_4_width_action = GUI::Action::create_checkable("4"_short_string, [&](auto&) {
         m_editor->set_soft_tab_width(4);
     });
-    m_soft_tab_8_width_action = GUI::Action::create_checkable("8", [&](auto&) {
+    m_soft_tab_8_width_action = GUI::Action::create_checkable("8"_short_string, [&](auto&) {
         m_editor->set_soft_tab_width(8);
     });
-    m_soft_tab_16_width_action = GUI::Action::create_checkable("16", [&](auto&) {
+    m_soft_tab_16_width_action = GUI::Action::create_checkable("16"_short_string, [&](auto&) {
         m_editor->set_soft_tab_width(16);
     });
 
@@ -549,10 +549,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(view_menu->try_add_separator());
 
-    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("T&railing Whitespace", [&](auto&) {
+    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable(TRY("T&railing Whitespace"_string), [&](auto&) {
         m_editor->set_visualize_trailing_whitespace(m_visualize_trailing_whitespace_action->is_checked());
     });
-    m_visualize_leading_whitespace_action = GUI::Action::create_checkable("L&eading Whitespace", [&](auto&) {
+    m_visualize_leading_whitespace_action = GUI::Action::create_checkable(TRY("L&eading Whitespace"_string), [&](auto&) {
         m_editor->set_visualize_leading_whitespace(m_visualize_leading_whitespace_action->is_checked());
     });
 
@@ -563,7 +563,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_visualize_trailing_whitespace_action));
     TRY(view_menu->try_add_action(*m_visualize_leading_whitespace_action));
 
-    m_cursor_line_highlighting_action = GUI::Action::create_checkable("L&ine Highlighting", [&](auto&) {
+    m_cursor_line_highlighting_action = GUI::Action::create_checkable(TRY("L&ine Highlighting"_string), [&](auto&) {
         m_editor->set_cursor_line_highlighting(m_cursor_line_highlighting_action->is_checked());
     });
 
@@ -572,7 +572,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(view_menu->try_add_action(*m_cursor_line_highlighting_action));
 
-    m_relative_line_number_action = GUI::Action::create_checkable("R&elative Line Number", [&](auto& action) {
+    m_relative_line_number_action = GUI::Action::create_checkable(TRY("R&elative Line Number"_string), [&](auto& action) {
         m_editor->set_relative_line_number(action.is_checked());
         Config::write_bool("TextEditor"sv, "View"sv, "RelativeLineNumber"sv, action.is_checked());
     });
@@ -595,7 +595,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.set_exclusive(true);
 
     auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_short_string));
-    m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
+    m_plain_text_highlight = GUI::Action::create_checkable(TRY("&Plain Text"_string), [&](auto&) {
         m_statusbar->set_text(1, "Plain Text"_string.release_value_but_fixme_should_propagate_errors());
         m_editor->set_syntax_highlighter({});
         m_editor->update();
@@ -605,84 +605,84 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_plain_text_highlight);
     TRY(syntax_menu->try_add_action(*m_plain_text_highlight));
 
-    m_cpp_highlight = GUI::Action::create_checkable("&C++", [&](auto&) {
+    m_cpp_highlight = GUI::Action::create_checkable("&C++"_short_string, [&](auto&) {
         m_editor->set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_cpp_highlight);
     TRY(syntax_menu->try_add_action(*m_cpp_highlight));
 
-    m_cmake_highlight = GUI::Action::create_checkable("C&Make", [&](auto&) {
+    m_cmake_highlight = GUI::Action::create_checkable("C&Make"_short_string, [&](auto&) {
         m_editor->set_syntax_highlighter(make<CMake::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_cmake_highlight);
     TRY(syntax_menu->try_add_action(*m_cmake_highlight));
 
-    m_cmakecache_highlight = GUI::Action::create_checkable("CM&akeCache", [&](auto&) {
+    m_cmakecache_highlight = GUI::Action::create_checkable(TRY("CM&akeCache"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<CMake::Cache::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_cmakecache_highlight);
     TRY(syntax_menu->try_add_action(*m_cmakecache_highlight));
 
-    m_js_highlight = GUI::Action::create_checkable("&JavaScript", [&](auto&) {
+    m_js_highlight = GUI::Action::create_checkable(TRY("&JavaScript"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_js_highlight);
     TRY(syntax_menu->try_add_action(*m_js_highlight));
 
-    m_css_highlight = GUI::Action::create_checkable("C&SS", [&](auto&) {
+    m_css_highlight = GUI::Action::create_checkable("C&SS"_short_string, [&](auto&) {
         m_editor->set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_css_highlight);
     TRY(syntax_menu->try_add_action(*m_css_highlight));
 
-    m_html_highlight = GUI::Action::create_checkable("&HTML File", [&](auto&) {
+    m_html_highlight = GUI::Action::create_checkable(TRY("&HTML File"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_html_highlight);
     TRY(syntax_menu->try_add_action(*m_html_highlight));
 
-    m_git_highlight = GUI::Action::create_checkable("Gi&t Commit", [&](auto&) {
+    m_git_highlight = GUI::Action::create_checkable(TRY("Gi&t Commit"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_git_highlight);
     TRY(syntax_menu->try_add_action(*m_git_highlight));
 
-    m_gml_highlight = GUI::Action::create_checkable("&GML", [&](auto&) {
+    m_gml_highlight = GUI::Action::create_checkable(TRY("&GML"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_gml_highlight);
     TRY(syntax_menu->try_add_action(*m_gml_highlight));
 
-    m_ini_highlight = GUI::Action::create_checkable("&INI File", [&](auto&) {
+    m_ini_highlight = GUI::Action::create_checkable(TRY("&INI File"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_ini_highlight);
     TRY(syntax_menu->try_add_action(*m_ini_highlight));
 
-    m_markdown_highlight = GUI::Action::create_checkable("Ma&rkdown", [&](auto&) {
+    m_markdown_highlight = GUI::Action::create_checkable(TRY("Ma&rkdown"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<Markdown::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_markdown_highlight);
     TRY(syntax_menu->try_add_action(*m_markdown_highlight));
 
-    m_shell_highlight = GUI::Action::create_checkable("Sh&ell File", [&](auto&) {
+    m_shell_highlight = GUI::Action::create_checkable(TRY("Sh&ell File"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_shell_highlight);
     TRY(syntax_menu->try_add_action(*m_shell_highlight));
 
-    m_sql_highlight = GUI::Action::create_checkable("S&QL File", [&](auto&) {
+    m_sql_highlight = GUI::Action::create_checkable(TRY("S&QL File"_string), [&](auto&) {
         m_editor->set_syntax_highlighter(make<SQL::AST::SyntaxHighlighter>());
         m_editor->update();
     });
@@ -694,7 +694,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/TextEditor.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Text Editor"_string), GUI::Icon::default_icon("app-text-editor"sv), &window)));
 
     auto wrapping_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu(TRY("&Wrapping Mode"_string)));
     TRY(wrapping_statusbar_menu->try_add_action(*m_no_wrapping_action));

@@ -87,12 +87,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&New Game"_string), { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.setup(player_name);
     })));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(TRY(Cards::make_cards_settings_action(window))));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Settings"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
     TRY(game_menu->try_add_separator());
@@ -103,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Hearts.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Hearts", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Hearts"_string), app_icon, window)));
 
     window->set_resizable(false);
     window->resize(Hearts::Game::width, Hearts::Game::height + statusbar.max_height().as_int());

@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& help_menu = window->add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Mail", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Mail"_string.release_value_but_fixme_should_propagate_errors(), app_icon, window));
 
     window->on_close_request = [&] {
         mail_widget->on_window_close();

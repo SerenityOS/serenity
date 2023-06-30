@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/FlappyBug.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Flappy Bug", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Flappy Bug"_string), app_icon, window)));
 
     window->show();
 

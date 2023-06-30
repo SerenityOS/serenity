@@ -255,7 +255,7 @@ void BoardWidget::place_pattern(size_t row, size_t column)
 
 void BoardWidget::setup_patterns()
 {
-    auto add_pattern = [&](DeprecatedString name, NonnullOwnPtr<Pattern> pattern) {
+    auto add_pattern = [&](String name, NonnullOwnPtr<Pattern> pattern) {
         auto action = GUI::Action::create(move(name), [this, pattern = pattern.ptr()](const GUI::Action&) {
             on_pattern_selection(pattern);
         });
@@ -373,18 +373,18 @@ void BoardWidget::setup_patterns()
         "OO..OOO"
     };
 
-    add_pattern("Blinker", make<Pattern>(move(blinker)));
-    add_pattern("Toad", make<Pattern>(move(toad)));
-    add_pattern("Glider", make<Pattern>(move(glider)));
-    add_pattern("Lightweight Spaceship", make<Pattern>(move(lightweight_spaceship)));
-    add_pattern("Middleweight Spaceship", make<Pattern>(move(middleweight_spaceship)));
-    add_pattern("Heavyweight Spaceship", make<Pattern>(move(heavyweight_spaceship)));
-    add_pattern("Infinite 1", make<Pattern>(move(infinite_1)));
-    add_pattern("Infinite 2", make<Pattern>(move(infinite_2)));
-    add_pattern("Infinite 3", make<Pattern>(move(infinite_3)));
-    add_pattern("R-Pentomino", make<Pattern>(move(r_pentomino)));
-    add_pattern("Diehard", make<Pattern>(move(diehard)));
-    add_pattern("Acorn", make<Pattern>(move(acorn)));
-    add_pattern("Simkin's Glider Gun", make<Pattern>(move(simkin_glider_gun)));
-    add_pattern("Gosper's Glider Gun", make<Pattern>(move(gosper_glider_gun)));
+    add_pattern("Blinker"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(blinker)));
+    add_pattern("Toad"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(toad)));
+    add_pattern("Glider"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(glider)));
+    add_pattern("Lightweight Spaceship"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(lightweight_spaceship)));
+    add_pattern("Middleweight Spaceship"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(middleweight_spaceship)));
+    add_pattern("Heavyweight Spaceship"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(heavyweight_spaceship)));
+    add_pattern("Infinite 1"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(infinite_1)));
+    add_pattern("Infinite 2"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(infinite_2)));
+    add_pattern("Infinite 3"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(infinite_3)));
+    add_pattern("R-Pentomino"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(r_pentomino)));
+    add_pattern("Diehard"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(diehard)));
+    add_pattern("Acorn"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(acorn)));
+    add_pattern("Simkin's Glider Gun"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(simkin_glider_gun)));
+    add_pattern("Gosper's Glider Gun"_string.release_value_but_fixme_should_propagate_errors(), make<Pattern>(move(gosper_glider_gun)));
 }

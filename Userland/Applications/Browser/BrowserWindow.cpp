@@ -237,21 +237,21 @@ void BrowserWindow::build_menus()
     });
 
     m_view_source_action = GUI::Action::create(
-        "View &Source", { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
+        "View &Source"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
             active_tab().view().get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page"_string.release_value_but_fixme_should_propagate_errors());
 
     m_inspect_dom_tree_action = GUI::Action::create(
-        "Inspect &DOM Tree", { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
+        "Inspect &DOM Tree"_string.release_value_but_fixme_should_propagate_errors(), { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page"_string.release_value_but_fixme_should_propagate_errors());
 
     m_inspect_dom_node_action = GUI::Action::create(
-        "&Inspect Element", g_icon_bag.inspect, [this](auto&) {
+        "&Inspect Element"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.inspect, [this](auto&) {
             active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
         },
         this);
@@ -262,7 +262,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
-        "Open &JS Console", { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
+        "Open &JS Console"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_I }, g_icon_bag.filetype_javascript, [this](auto&) {
             active_tab().show_console_window();
         },
         this);
@@ -270,7 +270,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(js_console_action);
 
     auto storage_window_action = GUI::Action::create(
-        "Open S&torage Inspector", g_icon_bag.cookie, [this](auto&) {
+        "Open S&torage Inspector"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.cookie, [this](auto&) {
             active_tab().show_storage_inspector();
         },
         this);
@@ -278,7 +278,7 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(storage_window_action);
 
     auto history_window_action = GUI::Action::create(
-        "Open &History Window", g_icon_bag.history, [this](auto&) {
+        "Open &History Window"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.history, [this](auto&) {
             active_tab().show_history_inspector();
         },
         this);
@@ -288,7 +288,7 @@ void BrowserWindow::build_menus()
     auto& settings_menu = add_menu("&Settings"_string.release_value_but_fixme_should_propagate_errors());
 
     m_change_homepage_action = GUI::Action::create(
-        "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
+        "Set Homepage URL..."_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.go_home, [this](auto&) {
             String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, Browser::default_homepage_url)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter a URL:"sv, "Change Homepage"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
@@ -314,7 +314,7 @@ void BrowserWindow::build_menus()
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
         m_color_scheme_actions.set_exclusive(true);
 
-        auto add_color_scheme_action = [&](auto& name, Web::CSS::PreferredColorScheme preference_value) {
+        auto add_color_scheme_action = [&](auto name, Web::CSS::PreferredColorScheme preference_value) {
             auto action = GUI::Action::create_checkable(
                 name, [=, this](auto&) {
                     Config::write_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Web::CSS::preferred_color_scheme_to_string(preference_value));
@@ -327,13 +327,13 @@ void BrowserWindow::build_menus()
             m_color_scheme_actions.add_action(action);
         };
 
-        add_color_scheme_action("Follow System Theme", Web::CSS::PreferredColorScheme::Auto);
-        add_color_scheme_action("Light", Web::CSS::PreferredColorScheme::Light);
-        add_color_scheme_action("Dark", Web::CSS::PreferredColorScheme::Dark);
+        add_color_scheme_action("Follow System Theme"_string.release_value_but_fixme_should_propagate_errors(), Web::CSS::PreferredColorScheme::Auto);
+        add_color_scheme_action("Light"_string.release_value_but_fixme_should_propagate_errors(), Web::CSS::PreferredColorScheme::Light);
+        add_color_scheme_action("Dark"_string.release_value_but_fixme_should_propagate_errors(), Web::CSS::PreferredColorScheme::Dark);
     }
 
     settings_menu.add_separator();
-    auto open_settings_action = GUI::Action::create("Browser &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("Browser &Settings"_string.release_value_but_fixme_should_propagate_errors(), Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
         });
@@ -341,49 +341,49 @@ void BrowserWindow::build_menus()
 
     auto& debug_menu = add_menu("&Debug"_short_string);
     debug_menu.add_action(GUI::Action::create(
-        "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
+        "Dump &DOM Tree"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.dom_tree, [this](auto&) {
             active_tab().view().debug_request("dump-dom-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &Layout Tree", g_icon_bag.layout, [this](auto&) {
+        "Dump &Layout Tree"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.layout, [this](auto&) {
             active_tab().view().debug_request("dump-layout-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &Paint Tree", g_icon_bag.layout, [this](auto&) {
+        "Dump &Paint Tree"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.layout, [this](auto&) {
             active_tab().view().debug_request("dump-paint-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump S&tacking Context Tree", g_icon_bag.layers, [this](auto&) {
+        "Dump S&tacking Context Tree"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.layers, [this](auto&) {
             active_tab().view().debug_request("dump-stacking-context-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &Style Sheets", g_icon_bag.filetype_css, [this](auto&) {
+        "Dump &Style Sheets"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_css, [this](auto&) {
             active_tab().view().debug_request("dump-style-sheets");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump &All Resolved Styles", g_icon_bag.filetype_css, [this](auto&) {
+        "Dump &All Resolved Styles"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_css, [this](auto&) {
             active_tab().view().debug_request("dump-all-resolved-styles");
         },
         this));
-    debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump &History"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
         active_tab().m_history.dump();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump C&ookies", g_icon_bag.cookie, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump C&ookies"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.cookie, [this](auto&) {
         auto& tab = active_tab();
         if (tab.on_dump_cookies)
             tab.on_dump_cookies();
     }));
-    debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage", g_icon_bag.local_storage, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.local_storage, [this](auto&) {
         active_tab().view().debug_request("dump-local-storage");
     }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
-        "Line &Box Borders", [this](auto& action) {
+        "Line &Box Borders"_string.release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
             active_tab().view().debug_request("set-line-box-borders", action.is_checked() ? "on" : "off");
         },
         this);
@@ -391,16 +391,16 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(line_box_borders_action);
 
     debug_menu.add_separator();
-    debug_menu.add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Collect &Garbage"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
         active_tab().view().debug_request("collect-garbage");
     }));
-    debug_menu.add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Clear &Cache"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
         active_tab().view().debug_request("clear-cache");
     }));
 
     m_user_agent_spoof_actions.set_exclusive(true);
     auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent"_string.release_value_but_fixme_should_propagate_errors());
-    m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
+    m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
     m_disable_user_agent_spoofing->set_status_tip(String::from_utf8(Web::default_user_agent).release_value_but_fixme_should_propagate_errors());
@@ -409,7 +409,7 @@ void BrowserWindow::build_menus()
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
     m_disable_user_agent_spoofing->set_checked(true);
 
-    auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto user_agent) {
+    auto add_user_agent = [this, &spoof_user_agent_menu](auto name, auto user_agent) {
         auto action = GUI::Action::create_checkable(name, [this, user_agent](auto&) {
             active_tab().view().debug_request("spoof-user-agent", user_agent);
         });
@@ -417,14 +417,14 @@ void BrowserWindow::build_menus()
         spoof_user_agent_menu.add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
-    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"sv);
-    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"sv);
-    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15"sv);
-    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36"sv);
-    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0"sv);
-    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"sv);
+    add_user_agent("Chrome Linux Desktop"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"sv);
+    add_user_agent("Firefox Linux Desktop"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"sv);
+    add_user_agent("Safari macOS Desktop"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15"sv);
+    add_user_agent("Chrome Android Mobile"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36"sv);
+    add_user_agent("Firefox Android Mobile"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0"sv);
+    add_user_agent("Safari iOS Mobile"_string.release_value_but_fixme_should_propagate_errors(), "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"sv);
 
-    auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
+    auto custom_user_agent = GUI::Action::create_checkable("Custom..."_string.release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
         String user_agent;
         if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv, GUI::InputType::NonemptyText) != GUI::InputBox::ExecResult::OK) {
             m_disable_user_agent_spoofing->activate();
@@ -438,7 +438,7 @@ void BrowserWindow::build_menus()
 
     debug_menu.add_separator();
     auto scripting_enabled_action = GUI::Action::create_checkable(
-        "Enable Scripting", [this](auto& action) {
+        "Enable Scripting"_string.release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
             active_tab().view().debug_request("scripting", action.is_checked() ? "on" : "off");
         },
         this);
@@ -446,7 +446,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(scripting_enabled_action);
 
     auto block_pop_ups_action = GUI::Action::create_checkable(
-        "Block Pop-ups", [this](auto& action) {
+        "Block Pop-ups"_string.release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
             active_tab().view().debug_request("block-pop-ups", action.is_checked() ? "on" : "off");
         },
         this);
@@ -454,7 +454,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(block_pop_ups_action);
 
     auto same_origin_policy_action = GUI::Action::create_checkable(
-        "Enable Same-Origin &Policy", [this](auto& action) {
+        "Enable Same-Origin &Policy"_string.release_value_but_fixme_should_propagate_errors(), [this](auto& action) {
             active_tab().view().debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
@@ -474,7 +474,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     bool search_engine_set = false;
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
-        "Disable", [](auto&) {
+        TRY("Disable"_string), [](auto&) {
             g_search_engine = {};
             Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         },
@@ -494,7 +494,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 if (!json_item.is_object())
                     continue;
                 auto search_engine = json_item.as_object();
-                auto name = search_engine.get_deprecated_string("title"sv).value();
+                auto name = String::from_deprecated_string(search_engine.get_deprecated_string("title"sv).value()).release_value_but_fixme_should_propagate_errors();
                 auto url_format = search_engine.get_deprecated_string("url_format"sv).value();
 
                 auto action = GUI::Action::create_checkable(
@@ -515,7 +515,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
         }
     }
 
-    auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
+    auto custom_search_engine_action = GUI::Action::create_checkable(TRY("Custom..."_string), [&](auto& action) {
         String search_engine;
         if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, GUI::InputType::NonemptyText, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK) {
             m_disable_search_engine_action->activate();

@@ -24,23 +24,23 @@ namespace HackStudio {
 
 ErrorOr<void> DebugInfoWidget::init_toolbar()
 {
-    m_continue_action = GUI::Action::create("Continue", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"sv)), [](auto&) {
+    m_continue_action = GUI::Action::create(TRY("Continue"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Continue);
     });
 
-    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"sv)), [](auto&) {
+    m_singlestep_action = GUI::Action::create(TRY("Step Over"_string), { Mod_None, Key_F10 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOver);
     });
 
-    m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"sv)), [](auto&) {
+    m_step_in_action = GUI::Action::create(TRY("Step In"_string), { Mod_None, Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceSingleStep);
     });
 
-    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"sv)), [](auto&) {
+    m_step_out_action = GUI::Action::create(TRY("Step Out"_string), { Mod_Shift, Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"sv)), [](auto&) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOut);
     });
 
-    m_pause_action = GUI::Action::create("Pause", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-pause.png"sv)), [](auto&) {
+    m_pause_action = GUI::Action::create(TRY("Pause"_string), {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-pause.png"sv)), [](auto&) {
         Debugger::the().stop_debuggee();
     });
 
@@ -120,7 +120,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
 
     auto* variable = static_cast<Debug::DebugInfo::VariableInfo const*>(index.internal_data());
     if (does_variable_support_writing(variable)) {
-        context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
+        context_menu->add_action(GUI::Action::create("Change value"_string.release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             String value;
             if (GUI::InputBox::show(window(), value, "Enter new value:"sv, "Set variable value"sv) == GUI::InputBox::ExecResult::OK) {
                 auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
@@ -131,14 +131,14 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
 
     auto variable_address = variable->location_data.address;
     if (Debugger::the().session()->watchpoint_exists(variable_address)) {
-        context_menu->add_action(GUI::Action::create("Remove watchpoint", [variable_address](auto&) {
+        context_menu->add_action(GUI::Action::create("Remove watchpoint"_string.release_value_but_fixme_should_propagate_errors(), [variable_address](auto&) {
             Debugger::the().session()->remove_watchpoint(variable_address);
         }));
     } else {
         auto& backtrace_model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
         auto current_frame = m_backtrace_view->selection().first().row();
         auto ebp = backtrace_model.frames()[current_frame].frame_base;
-        context_menu->add_action(GUI::Action::create("Add watchpoint", [variable_address, ebp](auto&) {
+        context_menu->add_action(GUI::Action::create("Add watchpoint"_string.release_value_but_fixme_should_propagate_errors(), [variable_address, ebp](auto&) {
             Debugger::the().session()->insert_watchpoint(variable_address, ebp);
         }));
     }

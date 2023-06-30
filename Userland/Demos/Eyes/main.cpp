@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_alpha_hit_threshold(window_frame_enabled ? 0 : 1);
     };
 
-    auto show_window_frame_action = GUI::Action::create_checkable("Show Window &Frame", [&](auto& action) {
+    auto show_window_frame_action = GUI::Action::create_checkable(TRY("Show Window &Frame"_string), [&](auto& action) {
         set_window_frame_enabled(action.is_checked());
     });
     set_window_frame_enabled(!hide_window_frame);
@@ -94,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Eyes.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Eyes Demo"_string), app_icon, window)));
 
     auto eyes_widget = TRY(window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
     eyes_widget->on_context_menu_request = [&](auto& event) {

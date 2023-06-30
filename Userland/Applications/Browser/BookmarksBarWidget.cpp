@@ -130,7 +130,7 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
 
     m_context_menu = GUI::Menu::construct();
     auto default_action = GUI::Action::create(
-        "&Open", g_icon_bag.go_to, [this](auto&) {
+        "&Open"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.go_to, [this](auto&) {
             if (on_bookmark_click)
                 on_bookmark_click(m_context_menu_url, Open::InSameTab);
         },
@@ -138,13 +138,13 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
     m_context_menu_default_action = default_action;
     m_context_menu->add_action(default_action);
     m_context_menu->add_action(GUI::Action::create(
-        "Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+        "Open in New &Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_tab, [this](auto&) {
             if (on_bookmark_click)
                 on_bookmark_click(m_context_menu_url, Open::InNewTab);
         },
         this));
     m_context_menu->add_action(GUI::Action::create(
-        "Open in New Window", g_icon_bag.new_window, [this](auto&) {
+        "Open in New Window"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_window, [this](auto&) {
             if (on_bookmark_click) {
                 on_bookmark_click(m_context_menu_url, Open::InNewWindow);
             }
@@ -152,7 +152,7 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
         this));
     m_context_menu->add_separator();
     m_context_menu->add_action(GUI::Action::create(
-        "&Edit...", g_icon_bag.rename, [this](auto&) {
+        "&Edit..."_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.rename, [this](auto&) {
             if (auto result = edit_bookmark(m_context_menu_url); result.is_error())
                 GUI::MessageBox::show_error(this->window(), MUST(String::formatted("Failed to edit bookmark: {}", result.error())));
         },
@@ -270,7 +270,7 @@ void BookmarksBarWidget::update_content_size()
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
             bookmark->set_visible(false);
-            m_additional_menu->add_action(GUI::Action::create(bookmark->text().to_deprecated_string(), g_icon_bag.filetype_html, [&](auto&) { bookmark->on_click(0); }));
+            m_additional_menu->add_action(GUI::Action::create(bookmark->text(), g_icon_bag.filetype_html, [&](auto&) { bookmark->on_click(0); }));
         }
     }
 }

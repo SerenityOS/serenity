@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     auto const app_name = "ColorLines"sv;
-    auto const title = "Color Lines"sv;
+    auto const title = TRY("Color Lines"_string);
     auto const man_file = "/usr/share/man/man6/ColorLines.md"sv;
 
     Config::pledge_domain(app_name);
@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(false);
-    window->set_title(title);
+    window->set_title(title.to_deprecated_string());
     window->resize(436, 481);
     window->set_resizable(false);
 
@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&New Game"_string), { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game->reset();
     })));
     TRY(game_menu->try_add_separator());

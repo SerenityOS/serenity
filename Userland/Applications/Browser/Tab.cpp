@@ -143,7 +143,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_back_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_back_title_history()) {
             i++;
-            m_go_back_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
+            m_go_back_context_menu->add_action(GUI::Action::create(String::from_utf8(url).release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_html, [this, i](auto&) { go_back(i); }));
         }
         m_go_back_context_menu->popup(go_back_button.screen_relative_rect().bottom_left().moved_up(1));
     };
@@ -156,7 +156,7 @@ Tab::Tab(BrowserWindow& window)
         m_go_forward_context_menu = GUI::Menu::construct();
         for (auto& url : m_history.get_forward_title_history()) {
             i++;
-            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_deprecated_string(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
+            m_go_forward_context_menu->add_action(GUI::Action::create(String::from_utf8(url).release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_html, [this, i](auto&) { go_forward(i); }));
         }
         m_go_forward_context_menu->popup(go_forward_button.screen_relative_rect().bottom_left().moved_up(1));
     };
@@ -184,7 +184,7 @@ Tab::Tab(BrowserWindow& window)
             load(url.release_value());
     };
 
-    m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
+    m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         auto [data, mime_type, _] = GUI::Clipboard::the().fetch_data_and_type();
         if (!mime_type.starts_with("text/"sv))
             return;
@@ -196,7 +196,7 @@ Tab::Tab(BrowserWindow& window)
     }));
 
     auto bookmark_action = GUI::Action::create(
-        "Bookmark current URL", { Mod_Ctrl, Key_D }, [this](auto&) {
+        "Bookmark current URL"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_D }, [this](auto&) {
             if (auto result = bookmark_current_url(); result.is_error())
                 GUI::MessageBox::show_error(this->window().main_widget()->window(), MUST(String::formatted("Failed to bookmark URL: {}", result.error())));
         },
@@ -318,20 +318,20 @@ Tab::Tab(BrowserWindow& window)
     };
 
     m_link_context_menu = GUI::Menu::construct();
-    auto link_default_action = GUI::Action::create("&Open", g_icon_bag.go_to, [this](auto&) {
+    auto link_default_action = GUI::Action::create("&Open"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.go_to, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "", 0);
     });
     m_link_context_menu->add_action(link_default_action);
     m_link_context_menu_default_action = link_default_action;
-    m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Copy URL", g_icon_bag.copy, [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Copy URL"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Download"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.download, [this](auto&) {
         start_download(m_link_context_menu_url);
     }));
     m_link_context_menu->add_separator();
@@ -345,22 +345,22 @@ Tab::Tab(BrowserWindow& window)
     };
 
     m_image_context_menu = GUI::Menu::construct();
-    m_image_context_menu->add_action(GUI::Action::create("&Open Image", g_icon_bag.filetype_image, [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Open Image"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_image, [this](auto&) {
         view().on_link_click(m_image_context_menu_url, "", 0);
     }));
-    m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_image_context_menu_url, "_blank", 0);
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Copy Image", g_icon_bag.copy, [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Copy Image"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.copy, [this](auto&) {
         if (m_image_context_menu_bitmap.is_valid())
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
-    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", g_icon_bag.copy, [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Download"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.download, [this](auto&) {
         start_download(m_image_context_menu_url);
     }));
     m_image_context_menu->add_separator();
@@ -374,16 +374,16 @@ Tab::Tab(BrowserWindow& window)
         m_image_context_menu->popup(screen_position);
     };
 
-    m_media_context_menu_play_pause_action = GUI::Action::create("&Play", g_icon_bag.play, [this](auto&) {
+    m_media_context_menu_play_pause_action = GUI::Action::create("&Play"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.play, [this](auto&) {
         view().toggle_media_play_state();
     });
-    m_media_context_menu_mute_unmute_action = GUI::Action::create("&Mute", g_icon_bag.mute, [this](auto&) {
+    m_media_context_menu_mute_unmute_action = GUI::Action::create("&Mute"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.mute, [this](auto&) {
         view().toggle_media_mute_state();
     });
-    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls", [this](auto&) {
+    m_media_context_menu_controls_action = GUI::Action::create_checkable("Show &Controls"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         view().toggle_media_controls_state();
     });
-    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop", [this](auto&) {
+    m_media_context_menu_loop_action = GUI::Action::create_checkable("&Loop"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         view().toggle_media_loop_state();
     });
 
@@ -393,18 +393,18 @@ Tab::Tab(BrowserWindow& window)
     m_audio_context_menu->add_action(*m_media_context_menu_controls_action);
     m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
     m_audio_context_menu->add_separator();
-    m_audio_context_menu->add_action(GUI::Action::create("&Open Audio", g_icon_bag.filetype_audio, [this](auto&) {
+    m_audio_context_menu->add_action(GUI::Action::create("&Open Audio"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_audio, [this](auto&) {
         view().on_link_click(m_media_context_menu_url, "", 0);
     }));
-    m_audio_context_menu->add_action(GUI::Action::create("Open Audio in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+    m_audio_context_menu->add_action(GUI::Action::create("Open Audio in New &Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_media_context_menu_url, "_blank", 0);
     }));
     m_audio_context_menu->add_separator();
-    m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
+    m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
     }));
     m_audio_context_menu->add_separator();
-    m_audio_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+    m_audio_context_menu->add_action(GUI::Action::create("&Download"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.download, [this](auto&) {
         start_download(m_media_context_menu_url);
     }));
     m_audio_context_menu->add_separator();
@@ -416,18 +416,18 @@ Tab::Tab(BrowserWindow& window)
     m_video_context_menu->add_action(*m_media_context_menu_controls_action);
     m_video_context_menu->add_action(*m_media_context_menu_loop_action);
     m_video_context_menu->add_separator();
-    m_video_context_menu->add_action(GUI::Action::create("&Open Video", g_icon_bag.filetype_video, [this](auto&) {
+    m_video_context_menu->add_action(GUI::Action::create("&Open Video"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_video, [this](auto&) {
         view().on_link_click(m_media_context_menu_url, "", 0);
     }));
-    m_video_context_menu->add_action(GUI::Action::create("Open Video in New &Tab", g_icon_bag.new_tab, [this](auto&) {
+    m_video_context_menu->add_action(GUI::Action::create("Open Video in New &Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.new_tab, [this](auto&) {
         view().on_link_click(m_media_context_menu_url, "_blank", 0);
     }));
     m_video_context_menu->add_separator();
-    m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL", g_icon_bag.copy, [this](auto&) {
+    m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.copy, [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_media_context_menu_url.to_deprecated_string());
     }));
     m_video_context_menu->add_separator();
-    m_video_context_menu->add_action(GUI::Action::create("&Download", g_icon_bag.download, [this](auto&) {
+    m_video_context_menu->add_action(GUI::Action::create("&Download"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.download, [this](auto&) {
         start_download(m_media_context_menu_url);
     }));
     m_video_context_menu->add_separator();
@@ -438,18 +438,18 @@ Tab::Tab(BrowserWindow& window)
 
         if (menu.is_playing) {
             m_media_context_menu_play_pause_action->set_icon(g_icon_bag.pause);
-            m_media_context_menu_play_pause_action->set_text("&Pause"sv);
+            m_media_context_menu_play_pause_action->set_text("&Pause"_short_string);
         } else {
             m_media_context_menu_play_pause_action->set_icon(g_icon_bag.play);
-            m_media_context_menu_play_pause_action->set_text("&Play"sv);
+            m_media_context_menu_play_pause_action->set_text("&Play"_short_string);
         }
 
         if (menu.is_muted) {
             m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.unmute);
-            m_media_context_menu_mute_unmute_action->set_text("Un&mute"sv);
+            m_media_context_menu_mute_unmute_action->set_text("Un&mute"_short_string);
         } else {
             m_media_context_menu_mute_unmute_action->set_icon(g_icon_bag.mute);
-            m_media_context_menu_mute_unmute_action->set_text("&Mute"sv);
+            m_media_context_menu_mute_unmute_action->set_text("&Mute"_short_string);
         }
 
         m_media_context_menu_controls_action->set_checked(menu.has_user_agent_controls);
@@ -539,7 +539,7 @@ Tab::Tab(BrowserWindow& window)
     };
 
     auto focus_location_box_action = GUI::Action::create(
-        "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
+        "Focus location box"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->set_focus(true);
             m_location_box->select_current_line();
         },
@@ -586,15 +586,15 @@ Tab::Tab(BrowserWindow& window)
     m_tab_context_menu->add_action(GUI::CommonActions::make_close_tab_action([this](auto&) {
         on_tab_close_request(*this);
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", g_icon_bag.duplicate_tab, [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.duplicate_tab, [this](auto&) {
         on_tab_open_request(url());
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", g_icon_bag.close_other_tabs, [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.close_other_tabs, [this](auto&) {
         on_tab_close_other_request(*this);
     }));
 
     auto take_visible_screenshot_action = GUI::Action::create(
-        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+        "Take &Visible Screenshot"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Visible); result.is_error()) {
                 auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
                 GUI::MessageBox::show_error(&this->window(), error);
@@ -604,7 +604,7 @@ Tab::Tab(BrowserWindow& window)
     take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"_string.release_value_but_fixme_should_propagate_errors());
 
     auto take_full_screenshot_action = GUI::Action::create(
-        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+        "Take &Full Screenshot"_string.release_value_but_fixme_should_propagate_errors(), g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = view().take_screenshot(WebView::ViewImplementation::ScreenshotType::Full); result.is_error()) {
                 auto error = String::formatted("{}", result.error()).release_value_but_fixme_should_propagate_errors();
                 GUI::MessageBox::show_error(&this->window(), error);

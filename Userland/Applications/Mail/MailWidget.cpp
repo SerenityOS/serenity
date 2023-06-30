@@ -61,13 +61,13 @@ MailWidget::MailWidget()
     };
 
     m_link_context_menu = GUI::Menu::construct();
-    auto link_default_action = GUI::Action::create("&Open in Browser", [this](auto&) {
+    auto link_default_action = GUI::Action::create("&Open in Browser"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         m_web_view->on_link_click(m_link_context_menu_url, "", 0);
     });
     m_link_context_menu->add_action(link_default_action);
     m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Copy URL", [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Copy URL"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_deprecated_string());
     }));
 
@@ -77,15 +77,15 @@ MailWidget::MailWidget()
     };
 
     m_image_context_menu = GUI::Menu::construct();
-    m_image_context_menu->add_action(GUI::Action::create("&Copy Image", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Copy Image"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         if (m_image_context_menu_bitmap.is_valid())
             GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
     }));
-    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("Copy Image &URL"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_deprecated_string());
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Open Image in Browser", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Open Image in Browser"_string.release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         m_web_view->on_link_click(m_image_context_menu_url, "", 0);
     }));
 

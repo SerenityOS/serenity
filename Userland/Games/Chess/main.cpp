@@ -90,15 +90,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&Resign", { Mod_None, Key_F3 }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Resign"_string), { Mod_None, Key_F3 }, [&](auto&) {
         widget->resign();
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Flip Board"_string), { Mod_Ctrl, Key_F }, [&](auto&) {
         widget->flip_board();
     })));
     TRY(game_menu->try_add_separator());
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Import PGN..."_string), { Mod_Ctrl, Key_O }, [&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
             .allowed_file_types = Vector {
                 GUI::FileTypeFilter { "PGN Files", { { "pgn" } } },
@@ -114,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             dbgln("Imported PGN file from {}", result.value().filename());
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Export PGN..."_string), { Mod_Ctrl, Key_S }, [&](auto&) {
         auto result = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "pgn");
         if (result.is_error())
             return;
@@ -124,13 +124,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             dbgln("Exported PGN file to {}", result.value().filename());
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&Copy FEN"_string), { Mod_Ctrl, Key_C }, [&](auto&) {
         GUI::Clipboard::the().set_data(widget->get_fen().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN."sv, "Copy FEN"sv, GUI::MessageBox::Type::Information);
     })));
     TRY(game_menu->try_add_separator());
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&New Game"_string), { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (widget->board().game_result() == Chess::Board::Result::NotFinished) {
             if (widget->resign() < 0)
                 return;
@@ -140,14 +140,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_separator());
 
     auto settings_action = GUI::Action::create(
-        "Chess &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
+        TRY("Chess &Settings"_string), {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
             GUI::Process::spawn_or_show_error(window, "/bin/GamesSettings"sv, Array { "--open-tab", "chess" });
         },
         window);
     settings_action->set_status_tip(TRY("Open the Game Settings for Chess"_string));
     TRY(game_menu->try_add_action(settings_action));
 
-    auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
+    auto show_available_moves_action = GUI::Action::create_checkable(TRY("Show Available Moves"_string), [&](auto& action) {
         widget->set_show_available_moves(action.is_checked());
         widget->update();
         Config::write_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, action.is_checked());
@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
     auto engine_submenu = TRY(engine_menu->try_add_submenu("&Engine"_short_string));
-    auto human_engine_checkbox = GUI::Action::create_checkable("Human", [&](auto&) {
+    auto human_engine_checkbox = GUI::Action::create_checkable("Human"_short_string, [&](auto&) {
         widget->set_engine(nullptr);
     });
     human_engine_checkbox->set_checked(true);
@@ -173,7 +173,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(engine_submenu->try_add_action(human_engine_checkbox));
 
     for (auto const& engine : engines) {
-        auto action = GUI::Action::create_checkable(engine.name, [&](auto&) {
+        auto action = GUI::Action::create_checkable(TRY(String::from_utf8(engine.name)), [&](auto&) {
             auto new_engine = Engine::construct(engine.path);
             new_engine->on_connection_lost = [&]() {
                 if (!widget->want_engine_move())
@@ -197,7 +197,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Chess.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Chess"_short_string, app_icon, window)));
 
     window->show();
     widget->reset();

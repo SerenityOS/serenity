@@ -170,12 +170,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_source_model();
     };
 
-    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+    auto disassembly_action = GUI::Action::create_checkable(TRY("Show &Disassembly"_string), { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         disassembly_view->set_visible(action.is_checked());
         update_disassembly_model();
     });
 
-    auto source_action = GUI::Action::create_checkable("Show &Source", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
+    auto source_action = GUI::Action::create_checkable(TRY("Show &Source"_string), { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/x86.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto& action) {
         source_view->set_visible(action.is_checked());
         update_source_model();
     });
@@ -270,19 +270,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto view_menu = TRY(window->try_add_menu("&View"_short_string));
 
-    auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+    auto invert_action = GUI::Action::create_checkable(TRY("&Invert Tree"_string), { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checked(false);
     TRY(view_menu->try_add_action(invert_action));
 
-    auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
+    auto top_functions_action = GUI::Action::create_checkable(TRY("&Top Functions"_string), { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
     });
     top_functions_action->set_checked(false);
     TRY(view_menu->try_add_action(top_functions_action));
 
-    auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    auto percent_action = GUI::Action::create_checkable(TRY("Show &Percentages"_string), { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
         tree_view->update();
         disassembly_view->update();
@@ -299,7 +299,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Profiler.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Profiler"_string), app_icon, window)));
 
     window->show();
     return app->exec();

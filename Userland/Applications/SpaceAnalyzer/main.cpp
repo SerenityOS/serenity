@@ -26,8 +26,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
 
-static constexpr auto APP_NAME = "Space Analyzer"sv;
-
 static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& tree_map_widget, bool include_last_node = true)
 {
     StringBuilder path_builder;
@@ -43,12 +41,14 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    String app_name = TRY("Space Analyzer"_string);
+
     auto app = TRY(GUI::Application::create(arguments));
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(APP_NAME);
+    window->set_title(app_name.to_deprecated_string());
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     tree_map_widget.set_focus(true);
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));
-    TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(file_menu->try_add_action(GUI::Action::create(TRY("&Analyze"_string), { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
@@ -81,11 +81,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(app_name, app_icon, window)));
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the node's context menu.
-    auto open_action = GUI::Action::create("Open in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
+    auto open_action = GUI::Action::create(TRY("Open in File Manager"_string), { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         auto path_string = get_absolute_path_to_selected_node(tree_map_widget);
         if (path_string.is_empty())
             return;
@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto copy_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv));
-    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
+    auto copy_path_action = GUI::Action::create(TRY("Copy Path to Clipboard"_string), { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(tree_map_widget));
     });
     auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
@@ -176,9 +176,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         delete_action->set_enabled(FileSystem::can_delete_or_move(selected_node_path));
         if (FileSystem::is_directory(selected_node_path))
-            open_action->set_text("Open in File Manager");
+            open_action->set_text("Open in File Manager"_string.release_value_but_fixme_should_propagate_errors());
         else
-            open_action->set_text("Reveal in File Manager");
+            open_action->set_text("Reveal in File Manager"_string.release_value_but_fixme_should_propagate_errors());
 
         context_menu->popup(event.screen_position());
     };

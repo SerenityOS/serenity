@@ -68,12 +68,12 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
 
-    m_play_pause_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
+    m_play_pause_action = GUI::Action::create("Play"_short_string, { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
     });
 
     m_cycle_sizing_modes_action = GUI::Action::create(
-        "Sizing", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
+        TRY("Sizing"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
             cycle_sizing_modes();
         });
 
@@ -87,19 +87,19 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     find_descendant_of_type_named<GUI::Button>("sizing")->set_action(*m_cycle_sizing_modes_action);
     find_descendant_of_type_named<GUI::Button>("fullscreen")->set_action(*m_toggle_fullscreen_action);
 
-    m_size_fit_action = GUI::Action::create_checkable("&Fit", [&](auto&) {
+    m_size_fit_action = GUI::Action::create_checkable("&Fit"_short_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::Fit);
     });
 
-    m_size_fill_action = GUI::Action::create_checkable("Fi&ll", [&](auto&) {
+    m_size_fill_action = GUI::Action::create_checkable("Fi&ll"_short_string, [&](auto&) {
         set_sizing_mode(VideoSizingMode::Fill);
     });
 
-    m_size_stretch_action = GUI::Action::create_checkable("&Stretch", [&](auto&) {
+    m_size_stretch_action = GUI::Action::create_checkable(TRY("&Stretch"_string), [&](auto&) {
         set_sizing_mode(VideoSizingMode::Stretch);
     });
 
-    m_size_fullsize_action = GUI::Action::create_checkable("F&ull Size", [&](auto&) {
+    m_size_fullsize_action = GUI::Action::create_checkable(TRY("F&ull Size"_string), [&](auto&) {
         set_sizing_mode(VideoSizingMode::FullSize);
     });
 
@@ -174,7 +174,7 @@ void VideoPlayerWidget::update_play_pause_icon()
     if (!m_playback_manager) {
         m_play_pause_action->set_enabled(false);
         m_play_pause_action->set_icon(m_play_icon);
-        m_play_pause_action->set_text("Play"sv);
+        m_play_pause_action->set_text("Play"_short_string);
         return;
     }
 
@@ -182,10 +182,10 @@ void VideoPlayerWidget::update_play_pause_icon()
 
     if (m_playback_manager->is_playing() || m_was_playing_before_seek) {
         m_play_pause_action->set_icon(m_pause_icon);
-        m_play_pause_action->set_text("Pause"sv);
+        m_play_pause_action->set_text("Pause"_short_string);
     } else {
         m_play_pause_action->set_icon(m_play_icon);
-        m_play_pause_action->set_text("Play"sv);
+        m_play_pause_action->set_text("Play"_short_string);
     }
 }
 
@@ -403,7 +403,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
-    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
+    m_use_fast_seeking = GUI::Action::create_checkable(TRY("&Fast Seeking"_string), [&](auto&) {});
     TRY(playback_menu->try_add_action(*m_use_fast_seeking));
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 
@@ -428,7 +428,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // Help menu
     auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Video Player", TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Video Player"_string), TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
 
     return {};
 }

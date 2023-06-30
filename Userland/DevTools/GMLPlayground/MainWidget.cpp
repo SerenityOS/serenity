@@ -195,7 +195,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text().to_deprecated_string());
         if (response.is_error())
             return;
         load_file(response.release_value());
@@ -218,7 +218,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(m_editor->go_to_line_or_column_action()));
     TRY(edit_menu->try_add_separator());
 
-    auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
+    auto format_gml_action = GUI::Action::create(TRY("&Format GML"_string), { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(m_editor->text());
         if (!formatted_gml_or_error.is_error()) {
             m_editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value());
@@ -232,7 +232,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
     TRY(edit_menu->try_add_action(format_gml_action));
 
-    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+    auto vim_emulation_setting_action = GUI::Action::create_checkable(TRY("&Vim Emulation"_string), { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
             m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
         else
@@ -245,7 +245,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_views_group.set_exclusive(true);
     m_views_group.set_unchecking_allowed(false);
 
-    m_view_frame_action = GUI::Action::create_checkable("&Frame", [&](auto&) {
+    m_view_frame_action = GUI::Action::create_checkable(TRY("&Frame"_string), [&](auto&) {
         dbgln("View switched to frame");
         m_preview = m_preview_frame_widget;
         m_editor->on_change();
@@ -257,7 +257,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_views_group.add_action(*m_view_frame_action);
     m_view_frame_action->set_checked(true);
 
-    m_view_window_action = GUI::Action::create_checkable("&Window", [&](auto&) {
+    m_view_window_action = GUI::Action::create_checkable(TRY("&Window"_string), [&](auto&) {
         dbgln("View switched to window");
         m_preview = m_preview_window_widget;
         m_editor->on_change();
@@ -277,7 +277,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/GMLPlayground.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("GML Playground", m_icon, &window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("GML Playground"_string), m_icon, &window)));
 
     (void)TRY(m_toolbar->try_add_action(open_action));
     (void)TRY(m_toolbar->try_add_action(*m_save_action));

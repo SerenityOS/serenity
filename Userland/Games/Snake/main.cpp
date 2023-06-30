@@ -85,12 +85,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&New Game"_string), { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
     })));
-    static DeprecatedString const pause_text = "&Pause Game"sv;
+    static String const pause_text = TRY("&Pause Game"_string);
     auto const pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
-    static DeprecatedString const continue_text = "&Continue Game"sv;
+    static String const continue_text = TRY("&Continue Game"_string);
     auto const continue_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     TRY(game_menu->try_add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     })));
 
-    auto change_snake_color = GUI::Action::create("&Change Snake Color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+    auto change_snake_color = GUI::Action::create(TRY("&Change Snake Color"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         auto was_paused = game.is_paused();
         if (!was_paused)
             game.pause();
@@ -126,9 +126,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     skin_menu->set_icon(app_icon.bitmap_for_size(16));
 
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {
-        auto action = TRY(GUI::Action::try_create_checkable(name, {}, [&, enable_color](auto& action) {
+        auto action = TRY(GUI::Action::try_create_checkable(TRY(String::from_utf8(name)), {}, [&, enable_color](auto& action) {
             Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
-            game.set_skin_name(action.text());
+            game.set_skin_name(action.text().to_deprecated_string());
             change_snake_color->set_enabled(enable_color);
         }));
 
@@ -155,7 +155,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Snake.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Snake"_short_string, app_icon, window)));
 
     window->show();
 

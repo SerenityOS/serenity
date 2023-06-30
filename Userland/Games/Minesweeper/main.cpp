@@ -60,13 +60,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create(TRY("&New Game"_string), { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
     })));
 
     TRY(game_menu->try_add_separator());
 
-    auto chord_toggler_action = GUI::Action::create_checkable("&Single-click Chording", [&](auto& action) {
+    auto chord_toggler_action = GUI::Action::create_checkable(TRY("&Single-click Chording"_string), [&](auto& action) {
         field->set_single_chording(action.is_checked());
     });
     chord_toggler_action->set_checked(field->is_single_chording());
@@ -82,28 +82,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup difficulty_actions;
     difficulty_actions.set_exclusive(true);
 
-    auto action = GUI::Action::create_checkable("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
+    auto action = GUI::Action::create_checkable(TRY("&Beginner"_string), { Mod_Ctrl, Key_B }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Beginner);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Beginner);
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
+    action = GUI::Action::create_checkable(TRY("&Intermediate"_string), { Mod_Ctrl, Key_I }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Intermediate);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Intermediate);
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
+    action = GUI::Action::create_checkable(TRY("&Expert"_string), { Mod_Ctrl, Key_E }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Expert);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Expert);
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
+    action = GUI::Action::create_checkable(TRY("&Madwoman"_string), { Mod_Ctrl, Key_M }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Madwoman);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Madwoman);
@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     difficulty_actions.add_action(action);
 
     TRY(difficulty_menu->try_add_separator());
-    action = GUI::Action::create_checkable("&Custom Game...", { Mod_Ctrl, Key_C }, [&](auto&) {
+    action = GUI::Action::create_checkable(TRY("&Custom Game..."_string), { Mod_Ctrl, Key_C }, [&](auto&) {
         CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Minesweeper"_string), app_icon, window)));
 
     window->show();
 

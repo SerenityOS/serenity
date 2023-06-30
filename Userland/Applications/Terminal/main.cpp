@@ -333,7 +333,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_scroll_bar = Config::read_bool("Terminal"sv, "Terminal"sv, "ShowScrollBar"sv, true);
     terminal->set_show_scrollbar(show_scroll_bar);
 
-    auto open_settings_action = GUI::Action::create("Terminal &Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)),
+    auto open_settings_action = GUI::Action::create(TRY("Terminal &Settings"_string), TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)),
         [&](auto&) {
             GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings"sv);
         });
@@ -342,7 +342,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(terminal->context_menu().try_add_action(open_settings_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));
-    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
+    TRY(file_menu->try_add_action(GUI::Action::create(TRY("Open New &Terminal"_string), { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(window, "/bin/Terminal"sv);
     })));
 
@@ -394,7 +394,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(terminal->copy_action()));
     TRY(edit_menu->try_add_action(terminal->paste_action()));
     TRY(edit_menu->try_add_separator());
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)),
+    TRY(edit_menu->try_add_action(GUI::Action::create(TRY("&Find..."_string), { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)),
         [&](auto&) {
             find_window->show();
             find_window->move_to_front();
@@ -429,7 +429,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Terminal.md"), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Terminal"_string), app_icon, window)));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)

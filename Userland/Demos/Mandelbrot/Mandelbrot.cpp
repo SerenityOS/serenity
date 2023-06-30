@@ -417,7 +417,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& export_submenu = file_menu->add_submenu("&Export"_short_string);
 
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP...",
+    TRY(export_submenu.try_add_action(GUI::Action::create(TRY("As &BMP..."_string),
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
             if (!export_path.has_value())
@@ -425,7 +425,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::BMP); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
+    TRY(export_submenu.try_add_action(GUI::Action::create(TRY("As &PNG..."_string), { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
@@ -433,7 +433,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::PNG); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI...",
+    TRY(export_submenu.try_add_action(GUI::Action::create(TRY("As &QOI..."_string),
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
             if (!export_path.has_value())
@@ -476,7 +476,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Mandelbrot Demo", app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(TRY("Mandelbrot Demo"_string), app_icon, window)));
 
     window->show();
     window->set_cursor(Gfx::StandardCursor::Zoom);

@@ -37,7 +37,7 @@ void spawn_terminal(GUI::Window* window, StringView directory)
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(LauncherHandler const&)> launch_handler)
 {
     auto icon = GUI::FileIconProvider::icon_for_executable(details().executable).bitmap_for_size(16);
-    return GUI::Action::create(details().name, move(icon), [this, launch_handler = move(launch_handler)](auto&) {
+    return GUI::Action::create(String::from_deprecated_string(details().name).release_value_but_fixme_should_propagate_errors(), move(icon), [this, launch_handler = move(launch_handler)](auto&) {
         launch_handler(*this);
     });
 }
@@ -576,7 +576,7 @@ void DirectoryView::handle_selection_change()
 
 void DirectoryView::setup_actions()
 {
-    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    m_mkdir_action = GUI::Action::create("&New Directory..."_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         String value;
         auto icon = Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"sv).release_value_but_fixme_should_propagate_errors();
         if (GUI::InputBox::show(window(), value, "Enter a name:"sv, "New Directory"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::InputBox::ExecResult::OK) {
@@ -589,7 +589,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+    m_touch_action = GUI::Action::create("New &File..."_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         String value;
         auto icon = Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors();
         if (GUI::InputBox::show(window(), value, "Enter a name:"sv, "New File"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::InputBox::ExecResult::OK) {
@@ -616,7 +616,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_open_terminal_action = GUI::Action::create("Open &Terminal Here"_string.release_value_but_fixme_should_propagate_errors(), Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         spawn_terminal(window(), path());
     });
 
@@ -628,26 +628,26 @@ void DirectoryView::setup_actions()
         window());
 
     m_force_delete_action = GUI::Action::create(
-        "Delete Without Confirmation", { Mod_Shift, Key_Delete },
+        "Delete Without Confirmation"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Shift, Key_Delete },
         [this](auto&) { do_delete(false); },
         window());
 
     m_view_as_icons_action = GUI::Action::create_checkable(
-        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+        "View as &Icons"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Icon);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Icon"sv);
         },
         window());
 
     m_view_as_table_action = GUI::Action::create_checkable(
-        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+        "View as &Table"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Table);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Table"sv);
         },
         window());
 
     m_view_as_columns_action = GUI::Action::create_checkable(
-        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+        "View as &Columns"_string.release_value_but_fixme_should_propagate_errors(), { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
             set_view_mode(DirectoryView::ViewMode::Columns);
             Config::write_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Columns"sv);
         },
