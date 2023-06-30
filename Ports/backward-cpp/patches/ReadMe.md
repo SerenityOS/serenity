@@ -10,3 +10,8 @@ test: Don't use program_invocation_name on Serenity
 backward: Pretend to be Linux, with some modifications
 
 
+## `0003-BackwardConfig-also-link-against-libsframe-when-stat.patch`
+
+BackwardConfig: also link against libsframe when statically linking against libbfd
+
+

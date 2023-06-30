@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andre Herbst <moormaster@gmx.net>
+Date: Fri, 30 Jun 2023 22:06:28 +0200
+Subject: [PATCH] BackwardConfig: also link against libsframe when statically
+ linking against libbfd
+
+---
+ BackwardConfig.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BackwardConfig.cmake b/BackwardConfig.cmake
+index a982adcd64fcc7e6a2813b5fd2a735b557519837..9cea9aa5552063a4790df3b2ed360adb023fdd5b 100644
+--- a/BackwardConfig.cmake
++++ b/BackwardConfig.cmake
+@@ -139,7 +139,7 @@ if (${STACK_DETAILS_AUTO_DETECT})
+ 		# If we attempt to link against static bfd, make sure to link its dependencies, too
+ 		get_filename_component(bfd_lib_ext "${LIBBFD_LIBRARY}" EXT)
+ 		if (bfd_lib_ext STREQUAL "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+-			list(APPEND _BACKWARD_LIBRARIES iberty z)
++			list(APPEND _BACKWARD_LIBRARIES iberty sframe z)
+ 		endif()
+ 
+ 		set(STACK_DETAILS_DW FALSE)
