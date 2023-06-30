@@ -868,7 +868,7 @@ InsertTextCommand::InsertTextCommand(TextDocument& document, DeprecatedString co
 
 ErrorOr<String> InsertTextCommand::action_text() const
 {
-    return String::from_utf8("Insert Text"sv);
+    return "Insert Text"_string;
 }
 
 bool InsertTextCommand::merge_with(GUI::Command const& other)
@@ -970,7 +970,7 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, DeprecatedString co
 
 ErrorOr<String> RemoveTextCommand::action_text() const
 {
-    return String::from_utf8("Remove Text"sv);
+    return "Remove Text"_string;
 }
 
 bool RemoveTextCommand::merge_with(GUI::Command const& other)

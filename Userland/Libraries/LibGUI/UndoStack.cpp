@@ -114,7 +114,7 @@ void UndoStack::clear()
 ErrorOr<Optional<String>> UndoStack::undo_action_text() const
 {
     if (!can_undo())
-        return Optional<String>();
+        return OptionalNone {};
     return m_stack[m_stack_index - 1]->action_text();
 }
 

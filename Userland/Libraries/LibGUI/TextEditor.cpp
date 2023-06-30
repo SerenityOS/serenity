@@ -1803,7 +1803,7 @@ void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
     auto end = GUI::TextPosition(last_line_index, line(last_line_index).length());
     auto range = GUI::TextRange(start, end);
     auto normalized_range = range.normalized();
-    execute<ReplaceAllTextCommand>(text, range, String::from_utf8("GML Playground Format Text"sv).release_value_but_fixme_should_propagate_errors());
+    execute<ReplaceAllTextCommand>(text, range, "GML Playground Format Text"_string.release_value_but_fixme_should_propagate_errors());
     did_change();
     set_cursor(normalized_range.start());
     update();

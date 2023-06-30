@@ -425,7 +425,7 @@ bool MoveLineUpOrDownCommand::merge_with(GUI::Command const&)
 
 ErrorOr<String> MoveLineUpOrDownCommand::action_text() const
 {
-    return String::from_utf8("Move a line"sv);
+    return "Move a line"_string;
 }
 
 bool MoveLineUpOrDownCommand::valid_operation(EditingEngine& engine, VerticalDirection direction)
