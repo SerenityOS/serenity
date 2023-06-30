@@ -22,6 +22,11 @@ struct ClampedU8 {
 // 25.1.1 Notation (read-modify-write modification function), https://tc39.es/ecma262/#sec-arraybuffer-notation
 using ReadWriteModifyFunction = Function<ByteBuffer(ByteBuffer, ByteBuffer)>;
 
+enum class PreserveResizability {
+    FixedLength,
+    PreserveResizability
+};
+
 class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
@@ -98,6 +103,7 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM&, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>

@@ -182,4 +182,51 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
     return target_buffer;
 }
 
+// 25.1.2.14 ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Perform ? RequireInternalSlot(arrayBuffer, [[ArrayBufferData]]).
+
+    // FIXME: 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+
+    // 3. If newLength is undefined, then
+    // a. Let newByteLength be arrayBuffer.[[ArrayBufferByteLength]].
+    // 4. Else,
+    // a. Let newByteLength be ? ToIndex(newLength).
+    auto new_byte_length = new_length.is_undefined() ? array_buffer.byte_length() : TRY(new_length.to_index(vm));
+
+    // 5. If IsDetachedBuffer(arrayBuffer) is true, throw a TypeError exception.
+    if (array_buffer.is_detached())
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+
+    // FIXME: 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
+    // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+    // 7. Else,
+    // a. Let newMaxByteLength be empty.
+
+    // 8. If arrayBuffer.[[ArrayBufferDetachKey]] is not undefined, throw a TypeError exception.
+    if (!array_buffer.detach_key().is_undefined())
+        return vm.throw_completion<TypeError>(ErrorType::DetachKeyMismatch, array_buffer.detach_key(), js_undefined());
+
+    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, FIXME: newMaxByteLength).
+    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length));
+
+    // 10. Let copyLength be min(newByteLength, arrayBuffer.[[ArrayBufferByteLength]]).
+    auto copy_length = min(new_byte_length, array_buffer.byte_length());
+
+    // 11. Let fromBlock be arrayBuffer.[[ArrayBufferData]].
+    // 12. Let toBlock be newBuffer.[[ArrayBufferData]].
+    // 13. Perform CopyDataBlockBytes(toBlock, 0, fromBlock, 0, copyLength).
+    // 14. NOTE: Neither creation of the new Data Block nor copying from the old Data Block are observable. Implementations may implement this method as a zero-copy move or a realloc.
+    copy_data_block_bytes(new_buffer->buffer(), 0, array_buffer.buffer(), 0, copy_length);
+
+    // 15. Perform ! DetachArrayBuffer(arrayBuffer).
+    TRY(detach_array_buffer(vm, array_buffer));
+
+    // 16. Return newBuffer.
+    return new_buffer;
+}
+
 }

@@ -22,6 +22,8 @@ private:
     explicit ArrayBufferPrototype(Realm&);
 
     JS_DECLARE_NATIVE_FUNCTION(slice);
+    JS_DECLARE_NATIVE_FUNCTION(transfer);
+    JS_DECLARE_NATIVE_FUNCTION(transfer_to_fixed_length);
     JS_DECLARE_NATIVE_FUNCTION(byte_length_getter);
     JS_DECLARE_NATIVE_FUNCTION(detached_getter);
 };
