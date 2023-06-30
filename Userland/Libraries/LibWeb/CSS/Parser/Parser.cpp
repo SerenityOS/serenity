@@ -4200,7 +4200,6 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function con
     if (function.name().equals_ignoring_ascii_case("rem"sv))
         return TRY(parse_rem_function(function));
 
-    dbgln_if(CSS_PARSER_DEBUG, "We didn't implement `{}` function yet", function.name());
     return nullptr;
 }
 
