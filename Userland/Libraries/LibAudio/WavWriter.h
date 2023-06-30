@@ -10,6 +10,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
+#include <LibAudio/Encoder.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
 #include <LibCore/File.h>
@@ -17,7 +18,7 @@
 
 namespace Audio {
 
-class WavWriter {
+class WavWriter : public Encoder {
     AK_MAKE_NONCOPYABLE(WavWriter);
     AK_MAKE_NONMOVABLE(WavWriter);
 
@@ -26,8 +27,8 @@ public:
     WavWriter(int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
     ~WavWriter();
 
-    ErrorOr<void> write_samples(Span<Sample> samples);
-    void finalize(); // You can finalize manually or let the destructor do it.
+    virtual ErrorOr<void> write_samples(ReadonlySpan<Sample> samples) override;
+    virtual ErrorOr<void> finalize() override;
 
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }

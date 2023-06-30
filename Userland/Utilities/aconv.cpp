@@ -137,7 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (writer.has_value())
-            (*writer)->finalize();
+            TRY((*writer)->finalize());
         if (output != "-"sv)
             outln();
     } else {
