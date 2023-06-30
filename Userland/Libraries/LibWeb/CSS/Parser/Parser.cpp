@@ -3407,32 +3407,12 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
         }
     }
 
-    auto calc_type = calculation_tree->resolved_type();
+    auto calc_type = calculation_tree->determine_type(m_context.current_property_id());
     if (!calc_type.has_value()) {
         dbgln_if(CSS_PARSER_DEBUG, "calc() resolved as invalid!!!");
         return nullptr;
     }
-
-    [[maybe_unused]] auto to_string = [](CalculatedStyleValue::ResolvedType type) {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return "Angle"sv;
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return "Frequency"sv;
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return "Integer"sv;
-        case CalculatedStyleValue::ResolvedType::Length:
-            return "Length"sv;
-        case CalculatedStyleValue::ResolvedType::Number:
-            return "Number"sv;
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return "Percentage"sv;
-        case CalculatedStyleValue::ResolvedType::Time:
-            return "Time"sv;
-        }
-        VERIFY_NOT_REACHED();
-    };
-    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
+    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", calc_type->dump());
 
     return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value());
 }
@@ -4127,7 +4107,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
         if (!function_node)
             return nullptr;
 
-        auto function_type = function_node->resolved_type();
+        auto function_type = function_node->determine_type(m_context.current_property_id());
         if (!function_type.has_value())
             return nullptr;
 
@@ -8266,6 +8246,13 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         }
         return {};
     };
+    auto any_property_accepts_type_percentage = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_type(property, value_type) && property_accepts_type(property, ValueType::Percentage))
+                return property;
+        }
+        return {};
+    };
     auto any_property_accepts_identifier = [](ReadonlySpan<PropertyID> property_ids, ValueID identifier) -> Optional<PropertyID> {
         for (auto const& property : property_ids) {
             if (property_accepts_identifier(property, identifier))
@@ -8416,34 +8403,41 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
             (void)tokens.next_token();
             auto& calculated = maybe_dynamic->as_calculated();
-            switch (calculated.resolved_type()) {
-            case CalculatedStyleValue::ResolvedType::Angle:
+            if (calculated.resolves_to_angle_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_angle()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Frequency:
+            } else if (calculated.resolves_to_frequency_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_frequency()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Integer:
-            case CalculatedStyleValue::ResolvedType::Number:
+            } else if (calculated.resolves_to_number_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Number); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_number()) {
                 if (property_accepts_numeric) {
                     auto property_or_resolved = property_accepting_integer.value_or_lazy_evaluated([property_accepting_number]() { return property_accepting_number.value(); });
                     return PropertyAndValue { property_or_resolved, calculated };
                 }
-                break;
-            case CalculatedStyleValue::ResolvedType::Length:
+            } else if (calculated.resolves_to_length_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_length()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Percentage:
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+            } else if (calculated.resolves_to_time_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Time:
+            } else if (calculated.resolves_to_time()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
+            } else if (calculated.resolves_to_percentage()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+                    return PropertyAndValue { *property, calculated };
             }
         }
     }
