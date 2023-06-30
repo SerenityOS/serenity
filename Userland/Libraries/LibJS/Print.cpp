@@ -384,13 +384,20 @@ ErrorOr<void> print_promise(JS::PrintContext& print_context, JS::Promise const& 
 
 ErrorOr<void> print_array_buffer(JS::PrintContext& print_context, JS::ArrayBuffer const& array_buffer, HashTable<JS::Object*>& seen_objects)
 {
-    auto& buffer = array_buffer.buffer();
-    auto byte_length = array_buffer.byte_length();
     TRY(print_type(print_context, "ArrayBuffer"sv));
+
+    auto byte_length = array_buffer.byte_length();
     TRY(js_out(print_context, "\n  byteLength: "));
     TRY(print_value(print_context, JS::Value((double)byte_length), seen_objects));
+    if (array_buffer.is_detached()) {
+        TRY(js_out(print_context, "\n  Detached"));
+        return {};
+    }
+
     if (byte_length == 0)
         return {};
+
+    auto& buffer = array_buffer.buffer();
     TRY(js_out(print_context, "\n"));
     for (size_t i = 0; i < byte_length; ++i) {
         TRY(js_out(print_context, "{:02x}", buffer[i]));
