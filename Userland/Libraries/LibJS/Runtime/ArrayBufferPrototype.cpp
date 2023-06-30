@@ -138,15 +138,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer
 
+    // NOTE: These steps are done in byte_length()
     // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
-    if (array_buffer_object->is_detached())
-        return Value(0);
-
     // 5. Let length be O.[[ArrayBufferByteLength]].
-    auto length = array_buffer_object->byte_length();
-
     // 6. Return 𝔽(length).
-    return Value(length);
+    return Value(array_buffer_object->byte_length());
 }
 
 // 25.1.5.4 get ArrayBuffer.prototype.detached, https://tc39.es/proposal-arraybuffer-transfer/#sec-get-arraybuffer.prototype.detached
