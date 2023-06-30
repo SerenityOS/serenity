@@ -25,6 +25,8 @@ ThrowCompletionOr<void> ArrayBufferPrototype::initialize(Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.slice, slice, 2, attr);
+    define_native_function(realm, vm.names.transfer, transfer, 0, attr);
+    define_native_function(realm, vm.names.transferToFixedLength, transfer_to_fixed_length, 0, attr);
     define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.detached, detached_getter, {}, Attribute::Configurable);
 
@@ -157,6 +159,28 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::detached_getter)
 
     // 4. Return IsDetachedBuffer(O).
     return Value(array_buffer_object->is_detached());
+}
+
+// 25.1.5.5 ArrayBuffer.prototype.transfer ( [ newLength ] ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfer
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::transfer)
+{
+    // 1. Let O be the this value.
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // 2. Return ? ArrayBufferCopyAndDetach(O, newLength, preserve-resizability).
+    auto new_length = vm.argument(0);
+    return TRY(array_buffer_copy_and_detach(vm, array_buffer_object, new_length, PreserveResizability::PreserveResizability));
+}
+
+// 25.1.5.6 ArrayBuffer.prototype.transferToFixedLength ( [ newLength ] ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::transfer_to_fixed_length)
+{
+    // 1. Let O be the this value.
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // 2. Return ? ArrayBufferCopyAndDetach(O, newLength, fixed-length).
+    auto new_length = vm.argument(0);
+    return TRY(array_buffer_copy_and_detach(vm, array_buffer_object, new_length, PreserveResizability::FixedLength));
 }
 
 }

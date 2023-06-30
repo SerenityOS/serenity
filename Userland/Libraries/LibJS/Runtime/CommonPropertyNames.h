@@ -547,6 +547,8 @@ namespace JS {
     P(toZonedDateTimeISO)                    \
     P(trace)                                 \
     P(trailingZeroDisplay)                   \
+    P(transfer)                              \
+    P(transferToFixedLength)                 \
     P(trim)                                  \
     P(trimEnd)                               \
     P(trimLeft)                              \
