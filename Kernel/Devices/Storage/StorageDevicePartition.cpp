@@ -6,12 +6,13 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 
 namespace Kernel {
 
-NonnullLockRefPtr<StorageDevicePartition> StorageDevicePartition::create(BlockDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
+NonnullLockRefPtr<StorageDevicePartition> StorageDevicePartition::create(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
 {
     auto partition_or_error = DeviceManagement::try_create_device<StorageDevicePartition>(device, minor_number, metadata);
     // FIXME: Find a way to propagate errors
@@ -19,7 +20,7 @@ NonnullLockRefPtr<StorageDevicePartition> StorageDevicePartition::create(BlockDe
     return partition_or_error.release_value();
 }
 
-StorageDevicePartition::StorageDevicePartition(BlockDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
+StorageDevicePartition::StorageDevicePartition(StorageDevice& device, MinorNumber minor_number, Partition::DiskPartitionMetadata metadata)
     : BlockDevice(100, minor_number, device.block_size())
     , m_device(device)
     , m_metadata(metadata)
