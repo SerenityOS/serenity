@@ -11,6 +11,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <AK/Variant.h>
+#include <LibCrypto/Checksum/CRC16.h>
 #include <LibCrypto/Checksum/CRC8.h>
 
 namespace Audio {
@@ -28,6 +29,11 @@ namespace Audio {
 // The polynomial used here is known as CRC-8-CCITT.
 static constexpr u8 flac_polynomial = 0x07;
 using FlacFrameHeaderCRC = Crypto::Checksum::CRC8<flac_polynomial>;
+
+// 11.23. FRAME_FOOTER
+// The polynomial used here is known as CRC-16-IBM.
+static constexpr u16 ibm_polynomial = 0xA001;
+using IBMCRC = Crypto::Checksum::CRC16<ibm_polynomial>;
 
 // 11.8 BLOCK_TYPE (7 bits)
 enum class FlacMetadataBlockType : u8 {

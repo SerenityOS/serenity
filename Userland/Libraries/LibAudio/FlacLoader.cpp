@@ -384,10 +384,9 @@ LoaderSamples FlacLoaderPlugin::next_frame()
             dbgln("FLAC Warning: Inserting seek point for sample {} failed: {}", sample_index, maybe_error.release_error());
     }
 
-    auto checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<FlacFrameHeaderCRC>>(MaybeOwned<Stream>(*m_stream)));
-    BigEndianInputBitStream bit_stream { MaybeOwned<Stream> { *checksum_stream } };
-
-    // TODO: Check the CRC-16 checksum by keeping track of read data.
+    auto frame_checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<IBMCRC>>(MaybeOwned<Stream>(*m_stream)));
+    auto header_checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<FlacFrameHeaderCRC>>(MaybeOwned<Stream>(*frame_checksum_stream)));
+    BigEndianInputBitStream bit_stream { MaybeOwned<Stream> { *header_checksum_stream } };
 
     // 11.22. FRAME_HEADER
     u16 sync_code = TRY(bit_stream.read_bits<u16>(14));
@@ -431,14 +430,14 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     }
 
     // It does not matter whether we extract the checksum from the digest here, or extract the digest 0x00 after processing the checksum.
-    auto const calculated_checksum = checksum_stream->digest();
+    auto const calculated_header_checksum = header_checksum_stream->digest();
     // 11.22.11. FRAME CRC
-    u8 specified_checksum = TRY(bit_stream.read_bits<u8>(8));
+    u8 specified_header_checksum = TRY(bit_stream.read_bits<u8>(8));
     VERIFY(bit_stream.is_aligned_to_byte_boundary());
-    if (specified_checksum != calculated_checksum)
-        dbgln("FLAC frame {}: Calculated header checksum {:02x} is different from specified checksum {:02x}", m_current_sample_or_frame, calculated_checksum, specified_checksum);
+    if (specified_header_checksum != calculated_header_checksum)
+        dbgln("FLAC frame {}: Calculated header checksum {:02x} is different from specified checksum {:02x}", m_current_sample_or_frame, calculated_header_checksum, specified_header_checksum);
 
-    dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {:02x}{}", sample_count, bit_depth, frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, specified_checksum, specified_checksum != calculated_checksum ? " (checksum error)"sv : ""sv);
+    dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {:02x}{}", sample_count, bit_depth, frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, specified_header_checksum, specified_header_checksum != calculated_header_checksum ? " (checksum error)"sv : ""sv);
 
     m_current_frame = FlacFrameHeader {
         sample_count,
@@ -466,9 +465,11 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     bit_stream.align_to_byte_boundary();
 
     // 11.23. FRAME_FOOTER
-    // TODO: check checksum, see above
-    [[maybe_unused]] u16 footer_checksum = TRY(bit_stream.read_bits<u16>(16));
-    dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
+    auto const calculated_frame_checksum = frame_checksum_stream->digest();
+    auto const specified_frame_checksum = TRY(bit_stream.read_bits<u16>(16));
+    if (calculated_frame_checksum != specified_frame_checksum)
+        dbgln("FLAC frame {}: Calculated frame checksum {:04x} is different from specified checksum {:04x}", m_current_sample_or_frame, calculated_frame_checksum, specified_frame_checksum);
+    dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {:04x}{}", specified_frame_checksum, specified_frame_checksum != calculated_frame_checksum ? " (checksum error)"sv : ""sv);
 
     FixedArray<Sample> samples;
 
