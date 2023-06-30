@@ -65,51 +65,54 @@ public:
         Value m_value;
     };
 
-    static ErrorOr<ValueComparingNonnullRefPtr<CalculatedStyleValue>> create(NonnullOwnPtr<CalculationNode> calculation, ResolvedType resolved_type)
+    static ErrorOr<ValueComparingNonnullRefPtr<CalculatedStyleValue>> create(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) CalculatedStyleValue(move(calculation), resolved_type));
     }
 
     ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
-    ResolvedType resolved_type() const { return m_resolved_type; }
 
-    bool resolves_to_angle() const { return m_resolved_type == ResolvedType::Angle; }
+    bool resolves_to_angle() const { return m_resolved_type.matches_angle(); }
+    bool resolves_to_angle_percentage() const { return m_resolved_type.matches_angle_percentage(); }
     Optional<Angle> resolve_angle() const;
     Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
 
-    bool resolves_to_frequency() const { return m_resolved_type == ResolvedType::Frequency; }
+    bool resolves_to_frequency() const { return m_resolved_type.matches_frequency(); }
+    bool resolves_to_frequency_percentage() const { return m_resolved_type.matches_frequency_percentage(); }
     Optional<Frequency> resolve_frequency() const;
     Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
 
-    bool resolves_to_length() const { return m_resolved_type == ResolvedType::Length; }
+    bool resolves_to_length() const { return m_resolved_type.matches_length(); }
+    bool resolves_to_length_percentage() const { return m_resolved_type.matches_length_percentage(); }
     [[nodiscard]] Optional<Length> resolve_length(Length::ResolutionContext const&) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
 
-    bool resolves_to_percentage() const { return m_resolved_type == ResolvedType::Percentage; }
+    bool resolves_to_percentage() const { return m_resolved_type.matches_percentage(); }
     Optional<Percentage> resolve_percentage() const;
 
-    bool resolves_to_time() const { return m_resolved_type == ResolvedType::Time; }
+    bool resolves_to_time() const { return m_resolved_type.matches_time(); }
+    bool resolves_to_time_percentage() const { return m_resolved_type.matches_time_percentage(); }
     Optional<Time> resolve_time() const;
     Optional<Time> resolve_time_percentage(Time const& percentage_basis) const;
 
-    bool resolves_to_integer() const { return m_resolved_type == ResolvedType::Integer; }
-    bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
+    bool resolves_to_number() const { return m_resolved_type.matches_number(); }
+    bool resolves_to_number_percentage() const { return m_resolved_type.matches_number_percentage(); }
     Optional<double> resolve_number() const;
     Optional<i64> resolve_integer();
 
     bool contains_percentage() const;
 
 private:
-    explicit CalculatedStyleValue(NonnullOwnPtr<CalculationNode> calculation, ResolvedType resolved_type)
+    explicit CalculatedStyleValue(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
         : StyleValue(Type::Calculated)
         , m_resolved_type(resolved_type)
         , m_calculation(move(calculation))
     {
     }
 
-    ResolvedType m_resolved_type;
+    CSSNumericType m_resolved_type;
     NonnullOwnPtr<CalculationNode> m_calculation;
 };
 
