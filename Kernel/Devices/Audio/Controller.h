@@ -6,18 +6,12 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Device.h>
+#include <AK/Types.h>
 #include <Kernel/Devices/Audio/Channel.h>
-#include <Kernel/Devices/Device.h>
-#include <Kernel/Library/LockWeakable.h>
-#include <Kernel/Locking/Mutex.h>
-#include <Kernel/Memory/PhysicalAddress.h>
-#include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Security/Random.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

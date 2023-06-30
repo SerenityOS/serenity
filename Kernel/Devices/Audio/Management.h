@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <AK/Badge.h>
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/OwnPtr.h>
-#include <AK/Types.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/Audio/Controller.h>
 
 namespace Kernel {
