@@ -141,7 +141,7 @@ ErrorOr<void> AudioPlayerLoop::write_wav_if_needed()
             m_wav_percent_written.store(100);
             m_track_manager.reset();
             m_track_manager.set_should_loop(true);
-            wav_writer.finalize();
+            TRY(wav_writer.finalize());
 
             return {};
         }));
