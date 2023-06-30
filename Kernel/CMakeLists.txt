@@ -131,10 +131,10 @@ set(KERNEL_SOURCES
     Devices/Storage/SD/SDHostController.cpp
     Devices/Storage/SD/SDMemoryCard.cpp
     Devices/Storage/USB/BulkSCSIInterface.cpp
-    Devices/Storage/DiskPartition.cpp
     Devices/Storage/StorageController.cpp
     Devices/Storage/StorageDevice.cpp
     Devices/Storage/StorageManagement.cpp
+    Devices/Storage/StorageDevicePartition.cpp
     SanCov.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp

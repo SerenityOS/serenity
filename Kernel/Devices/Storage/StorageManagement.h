@@ -8,10 +8,10 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/Storage/DiskPartition.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageController.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <LibPartition/PartitionTable.h>

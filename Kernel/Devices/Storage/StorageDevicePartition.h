@@ -13,12 +13,12 @@
 
 namespace Kernel {
 
-class DiskPartition final : public BlockDevice {
+class StorageDevicePartition final : public BlockDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<DiskPartition> create(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
-    virtual ~DiskPartition();
+    static NonnullLockRefPtr<StorageDevicePartition> create(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
+    virtual ~StorageDevicePartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
 
@@ -31,7 +31,7 @@ public:
     Partition::DiskPartitionMetadata const& metadata() const;
 
 private:
-    DiskPartition(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
+    StorageDevicePartition(BlockDevice&, MinorNumber, Partition::DiskPartitionMetadata);
     virtual StringView class_name() const override;
 
     LockWeakPtr<BlockDevice> m_device;

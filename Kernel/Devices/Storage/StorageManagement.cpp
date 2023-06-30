@@ -221,7 +221,7 @@ ErrorOr<void> StorageManagement::enumerate_device_partitions(StorageDevice& devi
 {
     auto partition_table = TRY(try_to_initialize_partition_table(device));
     for (auto partition_metadata : partition_table->partitions()) {
-        auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata);
+        auto disk_partition = StorageDevicePartition::create(device, generate_partition_minor_number(), partition_metadata);
         device.add_partition(disk_partition);
     }
 
