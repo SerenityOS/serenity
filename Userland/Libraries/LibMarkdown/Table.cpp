@@ -69,7 +69,7 @@ Vector<String> Table::render_lines_for_terminal(size_t view_width) const
         builder.clear();
     }
 
-    lines.append(String::from_utf8_short_string(""sv));
+    lines.append(String {});
 
     return lines;
 }

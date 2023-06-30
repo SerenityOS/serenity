@@ -68,7 +68,7 @@ Vector<String> CodeBlock::render_lines_for_terminal(size_t) const
 
     for (auto const& line : m_code.split('\n'))
         lines.append(String::formatted("{}{}", indentation, line).release_value_but_fixme_should_propagate_errors());
-    lines.append(String::from_utf8_short_string(""sv));
+    lines.append(String {});
 
     return lines;
 }

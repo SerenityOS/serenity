@@ -14,7 +14,7 @@ namespace Markdown {
 
 String HorizontalRule::render_to_html(bool) const
 {
-    return String::from_utf8("<hr />\n"sv).release_value_but_fixme_should_propagate_errors();
+    return "<hr />\n"_string.release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<String> HorizontalRule::render_lines_for_terminal(size_t view_width) const

@@ -30,7 +30,7 @@ String Paragraph::render_to_html(bool tight) const
 
 Vector<String> Paragraph::render_lines_for_terminal(size_t) const
 {
-    return Vector<String> { String::formatted("  {}", m_text.render_for_terminal()).release_value_but_fixme_should_propagate_errors(), String::from_utf8_short_string(""sv) };
+    return Vector<String> { String::formatted("  {}", m_text.render_for_terminal()).release_value_but_fixme_should_propagate_errors(), String {} };
 }
 
 RecursionDecision Paragraph::walk(Visitor& visitor) const
