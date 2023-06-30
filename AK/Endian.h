@@ -129,10 +129,19 @@ struct Traits<BigEndian<T>> : public GenericTraits<BigEndian<T>> {
     static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
+constexpr u16 bitswap(u16 v)
+{
+    v = ((v >> 1) & 0x5555) | ((v & 0x5555) << 1);    // even & odd bits
+    v = ((v >> 2) & 0x3333) | ((v & 0x3333) << 2);    // pairs
+    v = ((v >> 4) & 0x0F0F) | ((v & 0x0F0F) << 4);    // nibbles
+    return ((v >> 8) & 0x00FF) | ((v & 0x00FF) << 8); // bytes
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::BigEndian;
+using AK::bitswap;
 using AK::LittleEndian;
 using AK::NetworkOrdered;
 #endif
