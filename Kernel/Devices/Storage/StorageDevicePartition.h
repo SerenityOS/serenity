@@ -24,9 +24,13 @@ public:
 
     // ^BlockDevice
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
-    virtual bool can_write(OpenFileDescription const&, u64) const override;
+
+    // NOTE: Technically we need to query the underlying StorageDevice,
+    // but since it will always return true in both of these methods,
+    // we can return true here too.
+    virtual bool can_read(OpenFileDescription const&, u64) const override { return true; }
+    virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
 
     Partition::DiskPartitionMetadata const& metadata() const;
 

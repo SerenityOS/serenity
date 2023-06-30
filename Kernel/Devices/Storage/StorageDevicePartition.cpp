@@ -47,30 +47,24 @@ void StorageDevicePartition::start_request(AsyncBlockDeviceRequest& request)
 
 ErrorOr<size_t> StorageDevicePartition::read(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
+    // NOTE: The last available offset is actually just after the last addressable block.
+    if (offset >= (m_metadata.end_block() - m_metadata.start_block() + 1) * block_size())
+        return 0;
+    size_t nread = min(static_cast<size_t>((m_metadata.end_block() - m_metadata.start_block() + 1) - offset), len);
     u64 adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::read offset={}, adjust={}, len={}", fd.offset(), adjust, len);
-    return m_device.strong_ref()->read(fd, offset + adjust, outbuf, len);
-}
-
-bool StorageDevicePartition::can_read(OpenFileDescription const& fd, u64 offset) const
-{
-    u64 adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::can_read offset={}, adjust={}", offset, adjust);
-    return m_device.strong_ref()->can_read(fd, offset + adjust);
+    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::read offset={}, adjust={}, len={}", fd.offset(), adjust, nread);
+    return m_device.strong_ref()->read(fd, offset + adjust, outbuf, nread);
 }
 
 ErrorOr<size_t> StorageDevicePartition::write(OpenFileDescription& fd, u64 offset, UserOrKernelBuffer const& inbuf, size_t len)
 {
+    // NOTE: The last available offset is actually just after the last addressable block.
+    if (offset >= (m_metadata.end_block() - m_metadata.start_block() + 1) * block_size())
+        return Error::from_errno(ENOSPC);
+    size_t nwrite = min(static_cast<size_t>((m_metadata.end_block() - m_metadata.start_block() + 1) - offset), len);
     u64 adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::write offset={}, adjust={}, len={}", offset, adjust, len);
-    return m_device.strong_ref()->write(fd, offset + adjust, inbuf, len);
-}
-
-bool StorageDevicePartition::can_write(OpenFileDescription const& fd, u64 offset) const
-{
-    u64 adjust = m_metadata.start_block() * block_size();
-    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::can_write offset={}, adjust={}", offset, adjust);
-    return m_device.strong_ref()->can_write(fd, offset + adjust);
+    dbgln_if(OFFD_DEBUG, "StorageDevicePartition::write offset={}, adjust={}, len={}", offset, adjust, nwrite);
+    return m_device.strong_ref()->write(fd, offset + adjust, inbuf, nwrite);
 }
 
 StringView StorageDevicePartition::class_name() const
