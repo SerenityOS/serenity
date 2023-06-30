@@ -32,15 +32,15 @@ public:
         TimerTask,
         JavaScriptEngine,
 
-        // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
-        // Keep this field last, to serve as the base value of all unique task sources.
-        UniqueTaskSourceStart,
-
         // https://html.spec.whatwg.org/multipage/webappapis.html#navigation-and-traversal-task-source
         NavigationAndTraversal,
 
         // https://w3c.github.io/FileAPI/#fileReadingTaskSource
         FileReading,
+
+        // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
+        // Keep this field last, to serve as the base value of all unique task sources.
+        UniqueTaskSourceStart,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
