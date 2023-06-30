@@ -1405,7 +1405,7 @@ public:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, DeprecatedString name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
+    ClassExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
         : Expression(source_range)
         , m_name(move(name))
         , m_source_text(move(source_text))
@@ -1415,7 +1415,8 @@ public:
     {
     }
 
-    StringView name() const { return m_name; }
+    StringView name() const { return m_name ? m_name->string().view() : ""sv; }
+
     DeprecatedString const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression const> constructor() const { return m_constructor; }
 
@@ -1424,7 +1425,7 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
-    bool has_name() const { return !m_name.is_empty(); }
+    bool has_name() const { return m_name; }
 
     ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
     ThrowCompletionOr<ECMAScriptFunctionObject*> create_class_constructor(VM&, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
@@ -1432,7 +1433,7 @@ public:
 private:
     virtual bool is_class_expression() const override { return true; }
 
-    DeprecatedString m_name;
+    RefPtr<Identifier const> m_name;
     DeprecatedString m_source_text;
     RefPtr<FunctionExpression const> m_constructor;
     RefPtr<Expression const> m_super_class;

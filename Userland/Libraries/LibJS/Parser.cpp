@@ -1071,12 +1071,17 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
     RefPtr<FunctionExpression const> constructor;
     HashTable<DeprecatedFlyString> found_private_names;
 
-    DeprecatedFlyString class_name = expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)
-        ? consume_identifier_reference().DeprecatedFlyString_value()
-        : "";
+    RefPtr<Identifier const> class_name { nullptr };
+    if (expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)) {
+        class_name = create_ast_node<Identifier const>(
+            { m_source_code, rule_start.position(), position() },
+            consume_identifier_reference().DeprecatedFlyString_value()
+        );
+    }
 
-    check_identifier_name_for_assignment_validity(class_name, true);
-    if (m_state.in_class_static_init_block && class_name == "await"sv)
+    if (class_name)
+        check_identifier_name_for_assignment_validity(class_name->string(), true);
+    if (m_state.in_class_static_init_block && class_name && class_name->string() == "await"sv)
         syntax_error("Identifier must not be a reserved word in modules ('await')");
 
     if (match(TokenType::Extends)) {
@@ -1365,12 +1370,12 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
             constructor_body->append(create_ast_node<ReturnStatement>({ m_source_code, rule_start.position(), position() }, move(super_call)));
 
             constructor = create_ast_node<FunctionExpression>(
-                { m_source_code, rule_start.position(), position() }, class_name, "",
+                { m_source_code, rule_start.position(), position() }, class_name ? class_name->string() : "", "",
                 move(constructor_body), Vector { FunctionParameter { move(argument_name), nullptr, true } }, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
-                { m_source_code, rule_start.position(), position() }, class_name, "",
+                { m_source_code, rule_start.position(), position() }, class_name ? class_name->string() : "", "",
                 move(constructor_body), Vector<FunctionParameter> {}, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
