@@ -1852,7 +1852,7 @@ Completion ClassExpression::execute(Interpreter& interpreter) const
 
     // 1. Let className be StringValue of BindingIdentifier.
     // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto* value = TRY(class_definition_evaluation(interpreter.vm(), m_name, m_name.is_null() ? "" : m_name));
+    auto* value = TRY(class_definition_evaluation(interpreter.vm(), name(), name()));
 
     // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
     value->set_source_text(m_source_text);
@@ -2311,7 +2311,7 @@ ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrV
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("ClassExpression: \"{}\"", m_name);
+    outln("ClassExpression: \"{}\"", name());
 
     print_indent(indent);
     outln("(Constructor)");
