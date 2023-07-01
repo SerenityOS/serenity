@@ -775,7 +775,7 @@ void TableFormattingContext::position_row_boxes()
         row_state.set_content_width(row_width);
         row_state.set_content_x(row_left_offset);
         row_state.set_content_y(row_top_offset);
-        row_top_offset += row_state.content_height();
+        row_top_offset += row_state.content_height() + border_spacing_vertical();
     }
 
     CSSPixels row_group_top_offset = table_state.border_top + table_state.padding_top;
@@ -801,9 +801,6 @@ void TableFormattingContext::position_row_boxes()
     });
 
     auto total_content_height = max(row_top_offset, row_group_top_offset) - table_state.offset.y() - table_state.padding_top;
-    // The height of a table is the sum of the row heights plus any cell spacing or borders.
-    // Note that we've already added one vertical border-spacing to row_top_offset, so it's sufficient to multiply it by row count here.
-    total_content_height += m_rows.size() * border_spacing_vertical();
     m_table_height = max(total_content_height, m_table_height);
 }
 
@@ -856,7 +853,7 @@ void TableFormattingContext::position_cell_boxes()
         // FIXME: Account for visibility.
         cell_state.offset = row_state.offset.translated(
             cell_state.border_box_left() + m_columns[cell.column_index].left_offset + cell.column_index * border_spacing_horizontal(),
-            cell_state.border_box_top() + cell.row_index * border_spacing_vertical());
+            cell_state.border_box_top());
     }
 }
 
