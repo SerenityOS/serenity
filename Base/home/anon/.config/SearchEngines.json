@@ -27,6 +27,10 @@
         "title": "Mojeek",
         "url_format": "https://www.mojeek.com/search?q={}"
     },
+     {
+        "title": "Wiby",
+        "url_format": "https://wiby.me/?q={}"
+    },
     {
         "title": "Yandex",
         "url_format": "https://yandex.com/search/?text={}"
