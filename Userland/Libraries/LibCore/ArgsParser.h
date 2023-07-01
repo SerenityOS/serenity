@@ -67,7 +67,7 @@ public:
         char const* name { nullptr };
         int min_values { 0 };
         int max_values { 1 };
-        Function<bool(StringView)> accept_value;
+        Function<ErrorOr<bool>(StringView)> accept_value;
     };
 
     bool parse(Span<StringView> arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);

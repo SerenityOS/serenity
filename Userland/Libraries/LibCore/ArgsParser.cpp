@@ -191,7 +191,7 @@ bool ArgsParser::parse(Span<StringView> arguments, FailureBehavior failure_behav
         auto& arg = m_positional_args[i];
         for (int j = 0; j < num_values_for_arg[i]; j++) {
             StringView value = arguments[option_index++];
-            if (!arg.accept_value(value)) {
+            if (!MUST(arg.accept_value(value))) {
                 warnln("Invalid value for argument {}", arg.name);
                 fail();
                 return false;
@@ -615,7 +615,7 @@ void ArgsParser::add_positional_argument(DeprecatedString& value, char const* he
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = s;
             return true;
         }
@@ -630,7 +630,7 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = s;
             return true;
         }
@@ -645,12 +645,8 @@ void ArgsParser::add_positional_argument(String& value, char const* help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView s) {
-            auto value_or_error = String::from_utf8(s);
-            if (value_or_error.is_error())
-                return false;
-
-            value = value_or_error.release_value();
+        [&value](StringView s) -> ErrorOr<bool> {
+            value = TRY_OR_ERROR_IF_NOT_OOM(String::from_utf8(s), s);
             return true;
         }
     };
@@ -665,7 +661,7 @@ void ArgsParser::add_positional_argument(I& value, char const* help_string, char
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView view) {
+        [&value](StringView view) -> ErrorOr<bool> {
             Optional<I> opt;
             if constexpr (IsSigned<I>)
                 opt = view.to_int<I>();
@@ -694,7 +690,7 @@ void ArgsParser::add_positional_argument(double& value, char const* help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             auto opt = s.to_double();
             value = opt.value_or(0.0);
             return opt.has_value();
@@ -710,8 +706,8 @@ void ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char 
         name,
         required == Required::Yes ? 1 : 0,
         INT_MAX,
-        [&values](StringView s) {
-            values.append(s);
+        [&values](StringView s) -> ErrorOr<bool> {
+            TRY_OR_ERROR_IF_NOT_OOM(values.try_append(s), s);
             return true;
         }
     };
@@ -725,8 +721,8 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
         name,
         required == Required::Yes ? 1 : 0,
         INT_MAX,
-        [&values](StringView s) {
-            values.append(s);
+        [&values](StringView s) -> ErrorOr<bool> {
+            TRY_OR_ERROR_IF_NOT_OOM(values.try_append(s), s);
             return true;
         }
     };
