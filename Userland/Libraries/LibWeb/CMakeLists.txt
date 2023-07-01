@@ -475,6 +475,7 @@ set(SOURCES
     Painting/SVGTextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
+    Painting/TableBordersPainting.cpp
     Painting/TextPaintable.cpp
     Painting/VideoPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
