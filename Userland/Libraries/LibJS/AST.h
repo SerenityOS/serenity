@@ -609,6 +609,7 @@ public:
     }
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const = 0;
+    virtual ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const = 0;
 
     // 8.1.3 Static Semantics: IsConstantDeclaration, https://tc39.es/ecma262/#sec-static-semantics-isconstantdeclaration
     virtual bool is_constant_declaration() const { return false; }
@@ -625,6 +626,11 @@ public:
     Completion execute(Interpreter&) const override { return {}; }
 
     ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&&) const override
+    {
+        VERIFY_NOT_REACHED();
+    }
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override
     {
         VERIFY_NOT_REACHED();
     }
@@ -650,6 +656,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
     void dump(int indent) const;
 
     ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     bool contains_expression() const;
 
@@ -729,8 +736,9 @@ protected:
 
     void dump(int indent, DeprecatedString const& class_name) const;
 
-private:
     RefPtr<Identifier const> m_name { nullptr };
+
+private:
     DeprecatedString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
@@ -761,6 +769,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
     virtual bool is_function_declaration() const override { return true; }
 
@@ -1458,6 +1468,8 @@ public:
 private:
     virtual bool is_class_expression() const override { return true; }
 
+    friend ClassDeclaration;
+
     RefPtr<Identifier const> m_name;
     DeprecatedString m_source_text;
     RefPtr<FunctionExpression const> m_constructor;
@@ -1478,6 +1490,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
     virtual bool is_lexical_declaration() const override { return true; }
 
@@ -1785,6 +1799,8 @@ public:
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
 
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
+
     virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
 
     virtual bool is_lexical_declaration() const override { return m_declaration_kind != DeclarationKind::Var; }
@@ -1808,6 +1824,8 @@ public:
     virtual void dump(int indent) const override;
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
     virtual bool is_constant_declaration() const override { return true; };
 
