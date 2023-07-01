@@ -24,6 +24,10 @@
 #    include <serenity.h>
 #endif
 
+#ifdef HAS_ADDRESS_SANITIZER
+#    include <sanitizer/asan_interface.h>
+#endif
+
 namespace JS {
 
 #ifdef AK_OS_SERENITY
@@ -132,6 +136,46 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
     }
 }
 
+static void add_possible_value(HashTable<FlatPtr>& possible_pointers, FlatPtr data)
+{
+    if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
+        // Because Value stores pointers in non-canonical form we have to check if the top bytes
+        // match any pointer-backed tag, in that case we have to extract the pointer to its
+        // canonical form and add that as a possible pointer.
+        if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
+            possible_pointers.set(Value::extract_pointer_bits(data));
+        else
+            possible_pointers.set(data);
+    } else {
+        static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
+        // In the 32-bit case we will look at the top and bottom part of Value separately we just
+        // add both the upper and lower bytes as possible pointers.
+        possible_pointers.set(data);
+    }
+}
+
+#ifdef HAS_ADDRESS_SANITIZER
+__attribute__((no_sanitize("address"))) void Heap::gather_asan_fake_stack_roots(HashTable<FlatPtr>& possible_pointers, FlatPtr addr)
+{
+    void* begin = nullptr;
+    void* end = nullptr;
+    void* real_stack = __asan_addr_is_in_fake_stack(__asan_get_current_fake_stack(), reinterpret_cast<void*>(addr), &begin, &end);
+
+    if (real_stack != nullptr) {
+        for (auto* real_stack_addr = reinterpret_cast<void const* const*>(begin); real_stack_addr < end; ++real_stack_addr) {
+            void const* real_address = *real_stack_addr;
+            if (real_address == nullptr)
+                continue;
+            add_possible_value(possible_pointers, reinterpret_cast<FlatPtr>(real_address));
+        }
+    }
+}
+#else
+void Heap::gather_asan_fake_stack_roots(HashTable<FlatPtr>&, FlatPtr)
+{
+}
+#endif
+
 __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
 {
     FlatPtr dummy;
@@ -145,32 +189,16 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
     auto* raw_jmp_buf = reinterpret_cast<FlatPtr const*>(buf);
 
-    auto add_possible_value = [&](FlatPtr data) {
-        if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
-            // Because Value stores pointers in non-canonical form we have to check if the top bytes
-            // match any pointer-backed tag, in that case we have to extract the pointer to its
-            // canonical form and add that as a possible pointer.
-            if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
-                possible_pointers.set(Value::extract_pointer_bits(data));
-            else
-                possible_pointers.set(data);
-        } else {
-            static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
-            // In the 32-bit case we will look at the top and bottom part of Value separately we just
-            // add both the upper and lower bytes as possible pointers.
-            possible_pointers.set(data);
-        }
-    };
-
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); ++i)
-        add_possible_value(raw_jmp_buf[i]);
+        add_possible_value(possible_pointers, raw_jmp_buf[i]);
 
     auto stack_reference = bit_cast<FlatPtr>(&dummy);
     auto& stack_info = m_vm.stack_info();
 
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
-        add_possible_value(data);
+        add_possible_value(possible_pointers, data);
+        gather_asan_fake_stack_roots(possible_pointers, data);
     }
 
     // NOTE: If we have any custom ranges registered, scan those as well.
@@ -178,7 +206,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     if (s_custom_ranges_for_conservative_scan) {
         for (auto& custom_range : *s_custom_ranges_for_conservative_scan) {
             for (size_t i = 0; i < (custom_range.value / sizeof(FlatPtr)); ++i) {
-                add_possible_value(custom_range.key[i]);
+                add_possible_value(possible_pointers, custom_range.key[i]);
             }
         }
     }
