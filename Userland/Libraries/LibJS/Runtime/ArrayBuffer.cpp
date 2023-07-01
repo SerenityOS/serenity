@@ -229,4 +229,21 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     return new_buffer;
 }
 
+// 25.2.1.1 AllocateSharedArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatesharedarraybuffer
+ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
+{
+    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]] »).
+    auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::shared_array_buffer_prototype, nullptr));
+
+    // FIXME: 2. Let block be ? CreateSharedByteDataBlock(byteLength).
+    auto block = TRY(create_byte_data_block(vm, byte_length));
+
+    // 3. Set obj.[[ArrayBufferData]] to block.
+    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    obj->set_buffer(move(block));
+
+    // 5. Return obj.
+    return obj;
+}
+
 }

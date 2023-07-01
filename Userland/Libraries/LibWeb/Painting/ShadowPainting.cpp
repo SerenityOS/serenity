@@ -32,8 +32,12 @@ static void paint_inner_box_shadow(PaintContext& context, CSSPixelRect const& co
     DevicePixels offset_y = context.rounded_device_pixels(box_shadow_data.offset_y);
     DevicePixels blur_radius = context.rounded_device_pixels(box_shadow_data.blur_radius);
     DevicePixels spread_distance = context.rounded_device_pixels(box_shadow_data.spread_distance);
-    auto spread_distance_value = spread_distance.value();
-    auto shadows_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, device_content_rect.size().to_type<int>());
+    auto shadows_bitmap_rect = device_content_rect.inflated(
+        blur_radius.value() + offset_y.value(),
+        blur_radius.value() + abs(offset_x.value()),
+        blur_radius.value() + abs(offset_y.value()),
+        blur_radius.value() + offset_x.value());
+    auto shadows_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, shadows_bitmap_rect.size().to_type<int>());
     if (shadows_bitmap.is_error()) {
         dbgln("Unable to allocate temporary bitmap {} for box-shadow rendering: {}", device_content_rect, shadows_bitmap.error());
         return;
@@ -42,11 +46,15 @@ static void paint_inner_box_shadow(PaintContext& context, CSSPixelRect const& co
     Gfx::Painter shadow_painter { *shadow_bitmap };
     Gfx::AntiAliasingPainter shadow_aa_painter { shadow_painter };
     auto device_content_rect_int = device_content_rect.to_type<int>();
-    auto outer_shadow_rect = device_content_rect_int.translated(-device_content_rect_int.x(), -device_content_rect_int.y());
-    auto inner_shadow_rect = outer_shadow_rect.translated({ offset_x, offset_y });
-    inner_shadow_rect.inflate(-spread_distance_value, -spread_distance_value, -spread_distance_value, -spread_distance_value);
-    outer_shadow_rect = outer_shadow_rect.translated(-blur_radius.value(), -blur_radius.value());
-    outer_shadow_rect.set_size(outer_shadow_rect.width() + blur_radius.value(), outer_shadow_rect.height() + blur_radius.value());
+    auto origin_device_content_rect = device_content_rect_int.translated(-device_content_rect_int.x(), -device_content_rect_int.y());
+    auto outer_shadow_rect = origin_device_content_rect.translated({ offset_x + blur_radius.value(), offset_y + blur_radius.value() });
+    auto spread_distance_value = spread_distance.value();
+    auto inner_shadow_rect = outer_shadow_rect.inflated(-spread_distance_value, -spread_distance_value, -spread_distance_value, -spread_distance_value);
+    outer_shadow_rect.inflate(
+        blur_radius.value() + offset_y.value(),
+        blur_radius.value() + abs(offset_x.value()),
+        blur_radius.value() + abs(offset_y.value()),
+        blur_radius.value() + offset_x.value());
     auto top_left_corner = border_radii_shrunken.top_left.as_corner(context);
     auto top_right_corner = border_radii_shrunken.top_right.as_corner(context);
     auto bottom_right_corner = border_radii_shrunken.bottom_right.as_corner(context);
@@ -63,7 +71,7 @@ static void paint_inner_box_shadow(PaintContext& context, CSSPixelRect const& co
     filter.process_rgba(blur_radius.value(), box_shadow_data.color);
     Gfx::PainterStateSaver save { painter };
     painter.add_clip_rect(device_content_rect_int);
-    painter.blit({ device_content_rect_int.left(), device_content_rect_int.top() },
+    painter.blit({ device_content_rect_int.left() - blur_radius.value(), device_content_rect_int.top() - blur_radius.value() },
         *shadow_bitmap, shadow_bitmap->rect(), box_shadow_data.color.alpha() / 255.);
 }
 
