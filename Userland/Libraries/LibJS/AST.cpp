@@ -2308,6 +2308,14 @@ ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrV
     return callback(m_class_expression->name());
 }
 
+ThrowCompletionOr<void> ClassDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    if (!m_class_expression->m_name)
+        return {};
+
+    return callback(*m_class_expression->m_name);
+}
+
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
@@ -2447,6 +2455,23 @@ ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoi
     return {};
 }
 
+ThrowCompletionOr<void> BindingPattern::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : entries) {
+        auto const& alias = entry.alias;
+        if (alias.has<NonnullRefPtr<Identifier const>>()) {
+            TRY(callback(alias.get<NonnullRefPtr<Identifier const>>()));
+        } else if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
+            TRY(alias.get<NonnullRefPtr<BindingPattern const>>()->for_each_bound_identifier(forward<decltype(callback)>(callback)));
+        } else {
+            auto const& name = entry.name;
+            if (name.has<NonnullRefPtr<Identifier const>>())
+                TRY(callback(name.get<NonnullRefPtr<Identifier const>>()));
+        }
+    }
+    return {};
+}
+
 void BindingPattern::dump(int indent) const
 {
     print_indent(indent);
@@ -2539,6 +2564,13 @@ ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_name(ThrowCompletion
     if (name().is_empty())
         return {};
     return callback(name());
+}
+
+ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    if (!m_name)
+        return {};
+    return callback(*m_name);
 }
 
 void FunctionExpression::dump(int indent) const
@@ -3099,6 +3131,23 @@ ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletion
     return {};
 }
 
+ThrowCompletionOr<void> VariableDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : declarations()) {
+        TRY(entry->target().visit(
+            [&](NonnullRefPtr<Identifier const> const& id) {
+                return callback(id);
+            },
+            [&](NonnullRefPtr<BindingPattern const> const& binding) {
+                return binding->for_each_bound_identifier([&](auto const& id) {
+                    return callback(id);
+                });
+            }));
+    }
+
+    return {};
+}
+
 void VariableDeclaration::dump(int indent) const
 {
     char const* declaration_kind_string = nullptr;
@@ -3151,6 +3200,16 @@ ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrV
     for (auto const& entry : m_declarations) {
         VERIFY(entry->target().has<NonnullRefPtr<Identifier const>>());
         TRY(callback(entry->target().get<NonnullRefPtr<Identifier const>>()->string()));
+    }
+
+    return {};
+}
+
+ThrowCompletionOr<void> UsingDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : m_declarations) {
+        VERIFY(entry->target().has<NonnullRefPtr<Identifier const>>());
+        TRY(callback(entry->target().get<NonnullRefPtr<Identifier const>>()));
     }
 
     return {};
