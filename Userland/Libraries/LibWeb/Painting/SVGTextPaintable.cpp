@@ -38,9 +38,12 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto& painter = context.painter();
 
+    auto& text_element = layout_box().dom_node();
+    auto const* svg_element = text_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto svg_element_rect = svg_element->paintable_box()->absolute_rect();
+
     Gfx::PainterStateSaver save_painter { painter };
-    auto& svg_context = context.svg_context();
-    auto svg_context_offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>();
+    auto svg_context_offset = context.floored_device_point(svg_element_rect.location()).to_type<int>();
     painter.translate(svg_context_offset);
 
     auto const& dom_node = layout_box().dom_node();

@@ -66,15 +66,16 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto& geometry_element = layout_box().dom_node();
 
+    auto const* svg_element = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
+    auto svg_element_rect = svg_element->paintable_box()->absolute_rect();
+
     Gfx::AntiAliasingPainter painter { context.painter() };
-    auto& svg_context = context.svg_context();
 
     // FIXME: This should not be trucated to an int.
     Gfx::PainterStateSaver save_painter { context.painter() };
-    auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
+    auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
-    auto const* svg_element = geometry_element.shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
 
     auto transform = layout_box().layout_transform();
@@ -102,7 +103,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto svg_viewport = [&] {
         if (maybe_view_box.has_value())
             return Gfx::FloatRect { maybe_view_box->min_x, maybe_view_box->min_y, maybe_view_box->width, maybe_view_box->height };
-        return Gfx::FloatRect { { 0, 0 }, svg_context.svg_element_size().to_type<double>().to_type<float>() };
+        return Gfx::FloatRect { { 0, 0 }, svg_element_rect.size().to_type<double>().to_type<float>() };
     }();
 
     SVG::SVGPaintContext paint_context {
@@ -111,26 +112,25 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         .transform = paint_transform
     };
 
-    auto fill_opacity = geometry_element.fill_opacity().value_or(svg_context.fill_opacity());
-    auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(svg_context.fill_rule()));
-
+    auto fill_opacity = geometry_element.fill_opacity().value_or(1);
+    auto winding_rule = to_gfx_winding_rule(geometry_element.fill_rule().value_or(SVG::FillRule::Nonzero));
     if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
         painter.fill_path(
             closed_path(),
             *paint_style,
             fill_opacity,
             winding_rule);
-    } else if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()).with_opacity(fill_opacity); fill_color.alpha() > 0) {
+    } else if (auto fill_color = geometry_element.fill_color(); fill_color.has_value()) {
         painter.fill_path(
             closed_path(),
-            fill_color,
+            fill_color->with_opacity(fill_opacity),
             winding_rule);
     }
 
-    auto stroke_opacity = geometry_element.stroke_opacity().value_or(svg_context.stroke_opacity());
+    auto stroke_opacity = geometry_element.stroke_opacity().value_or(1);
 
     // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
-    float stroke_thickness = geometry_element.stroke_width().value_or(svg_context.stroke_width()) * viewbox_scale;
+    float stroke_thickness = geometry_element.stroke_width().value_or(1) * viewbox_scale;
 
     if (auto paint_style = geometry_element.stroke_paint_style(paint_context); paint_style.has_value()) {
         painter.stroke_path(
@@ -138,10 +138,10 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             *paint_style,
             stroke_thickness,
             stroke_opacity);
-    } else if (auto stroke_color = geometry_element.stroke_color().value_or(svg_context.stroke_color()).with_opacity(stroke_opacity); stroke_color.alpha() > 0) {
+    } else if (auto stroke_color = geometry_element.stroke_color(); stroke_color.has_value()) {
         painter.stroke_path(
             path,
-            stroke_color,
+            stroke_color->with_opacity(stroke_opacity),
             stroke_thickness);
     }
 }

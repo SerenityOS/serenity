@@ -30,9 +30,6 @@ void SVGSVGPaintable::before_children_paint(PaintContext& context, PaintPhase ph
     if (phase != PaintPhase::Foreground)
         return;
 
-    if (!context.has_svg_context())
-        context.set_svg_context(SVGContext(absolute_rect()));
-
     context.painter().save();
     context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
 }
@@ -44,7 +41,6 @@ void SVGSVGPaintable::after_children_paint(PaintContext& context, PaintPhase pha
         return;
 
     context.painter().restore();
-    context.clear_svg_context();
 }
 
 }
