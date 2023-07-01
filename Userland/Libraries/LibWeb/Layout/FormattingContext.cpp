@@ -1372,7 +1372,7 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
 
 CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, AvailableSize const& available_width, CSS::Size const& width) const
 {
-    auto width_of_containing_block = available_width.to_px();
+    auto width_of_containing_block = available_width.to_px_or_zero();
     auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
     if (width.is_auto()) {
         return width.resolved(box, width_of_containing_block_as_length_for_resolve);
