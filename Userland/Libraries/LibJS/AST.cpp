@@ -314,7 +314,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, Depre
         given_name = "";
     auto has_own_name = !name().is_empty();
 
-    auto const& used_name = has_own_name ? name() : given_name;
+    auto const used_name = has_own_name ? name() : given_name.view();
     auto environment = NonnullGCPtr { *vm.running_execution_context().lexical_environment };
     if (has_own_name) {
         VERIFY(environment);
@@ -4805,7 +4805,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within script, do
         TRY(for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
             // i. Let F be StringValue of the BindingIdentifier of f.
-            auto& function_name = function_declaration.name();
+            auto function_name = function_declaration.name();
 
             // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for script, then
             // Note: This step is already performed during parsing and for_each_function_hoistable_with_annexB_extension so this always passes here.

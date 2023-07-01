@@ -663,9 +663,41 @@ struct FunctionParameter {
     bool is_rest { false };
 };
 
+class Identifier final : public Expression {
+public:
+    explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
+        : Expression(source_range)
+        , m_string(move(string))
+    {
+    }
+
+    DeprecatedFlyString const& string() const { return m_string; }
+
+    bool is_local() const { return m_local_variable_index.has_value(); }
+    size_t local_variable_index() const
+    {
+        VERIFY(m_local_variable_index.has_value());
+        return m_local_variable_index.value();
+    }
+    void set_local_variable_index(size_t index) { m_local_variable_index = index; }
+
+    virtual Completion execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+private:
+    virtual bool is_identifier() const override { return true; }
+
+    DeprecatedFlyString m_string;
+    mutable EnvironmentCoordinate m_cached_environment_coordinate;
+
+    Optional<size_t> m_local_variable_index;
+};
+
 class FunctionNode {
 public:
-    DeprecatedFlyString const& name() const { return m_name; }
+    StringView name() const { return m_name ? m_name->string().view() : ""sv; }
     DeprecatedString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
     Vector<FunctionParameter> const& parameters() const { return m_parameters; };
@@ -698,7 +730,7 @@ protected:
     void dump(int indent, DeprecatedString const& class_name) const;
 
 private:
-    DeprecatedFlyString m_name;
+    RefPtr<Identifier const> m_name { nullptr };
     DeprecatedString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
@@ -1257,38 +1289,6 @@ private:
     regex::RegexOptions<ECMAScriptFlags> m_parsed_flags;
     DeprecatedString m_pattern;
     DeprecatedString m_flags;
-};
-
-class Identifier final : public Expression {
-public:
-    explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
-        : Expression(source_range)
-        , m_string(move(string))
-    {
-    }
-
-    DeprecatedFlyString const& string() const { return m_string; }
-
-    bool is_local() const { return m_local_variable_index.has_value(); }
-    size_t local_variable_index() const
-    {
-        VERIFY(m_local_variable_index.has_value());
-        return m_local_variable_index.value();
-    }
-    void set_local_variable_index(size_t index) { m_local_variable_index = index; }
-
-    virtual Completion execute(Interpreter&) const override;
-    virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-
-private:
-    virtual bool is_identifier() const override { return true; }
-
-    DeprecatedFlyString m_string;
-    mutable EnvironmentCoordinate m_cached_environment_coordinate;
-
-    Optional<size_t> m_local_variable_index;
 };
 
 class PrivateIdentifier final : public Expression {
