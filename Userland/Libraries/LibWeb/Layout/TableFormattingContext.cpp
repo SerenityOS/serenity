@@ -931,13 +931,19 @@ void TableFormattingContext::border_conflict_resolution()
     // https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution
     BorderConflictFinder finder(this);
     for (auto& cell : m_cells) {
+        auto& cell_state = m_state.get_mutable(cell.box);
+        cell_state.set_table_cell_coordinates(
+            Painting::PaintableBox::TableCellCoordinates {
+                .row_index = cell.row_index,
+                .column_index = cell.column_index,
+                .row_span = cell.row_span,
+                .column_span = cell.column_span });
         if (cell.box->computed_values().border_collapse() == CSS::BorderCollapse::Separate) {
             continue;
         }
         // Execute steps 1, 2 and 3 of the algorithm for each edge.
         Painting::BordersData override_borders_data;
         auto const& cell_style = cell.box->computed_values();
-        auto& cell_state = m_state.get_mutable(cell.box);
         auto winning_border_left = cell_style.border_left();
         for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Left)) {
             winning_border_left = winning_border_style(winning_border_left, border_data_conflicting_edge(conflicting_edge));
