@@ -481,6 +481,12 @@ static ErrorOr<void> refine_coefficient(Scan& scan, auto& coefficient)
     return {};
 }
 
+enum class JPEGDecodingMode {
+    Sequential,
+    Progressive
+};
+
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
@@ -495,7 +501,7 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     auto* select_component = get_component(macroblock, scan_component.component.index);
     auto& coefficient = select_component[0];
 
-    if (scan.successive_approximation_high > 0) {
+    if (DecodingMode == JPEGDecodingMode::Progressive && scan.successive_approximation_high > 0) {
         TRY(refine_coefficient(scan, coefficient));
         return {};
     }
@@ -525,8 +531,14 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     return {};
 }
 
-static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
+template<JPEGDecodingMode DecodingMode>
+static ALWAYS_INLINE ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
 {
+    // OPTIMIZATION: This is a fast path for sequential JPEGs, these
+    //               only supports EOB with a value of one block.
+    if constexpr (DecodingMode == JPEGDecodingMode::Sequential)
+        return symbol == 0x00;
+
     // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
     // Note: We also use it for non-progressive encoding as it supports both EOB and ZRL
 
@@ -555,6 +567,7 @@ static bool is_progressive(StartOfFrame::FrameType frame_type)
         || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT_Arithmetic;
 }
 
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
@@ -587,7 +600,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (!in_zrl && scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
             saved_symbol = TRY(scan.huffman_stream.next_symbol(ac_table));
 
-            if (!TRY(read_eob(scan, *saved_symbol))) {
+            if (!TRY(read_eob<DecodingMode>(scan, *saved_symbol))) {
                 to_skip = *saved_symbol >> 4;
 
                 in_zrl = *saved_symbol == JPEG_ZRL;
@@ -596,17 +609,30 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
                     saved_symbol.clear();
                 }
 
-                if (!in_zrl && is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
-                    // G.1.2.3 - Coding model for subsequent scans of successive approximation
-                    // Bit sign from rule a
-                    saved_bit_for_rule_a = TRY(scan.huffman_stream.read_bits(1));
+                if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                    j += to_skip - 1;
+                    to_skip = 0;
+                    in_zrl = false;
+                    continue;
                 }
+
+                if constexpr (DecodingMode == JPEGDecodingMode::Progressive) {
+                    if (!in_zrl && scan.successive_approximation_high != 0) {
+                        // G.1.2.3 - Coding model for subsequent scans of successive approximation
+                        // Bit sign from rule a
+                        saved_bit_for_rule_a = TRY(scan.huffman_stream.read_bits(1));
+                    }
+                }
+            } else if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                break;
             }
         }
 
-        if (coefficient != 0) {
-            TRY(refine_coefficient(scan, coefficient));
-            continue;
+        if constexpr (DecodingMode == JPEGDecodingMode::Progressive) {
+            if (coefficient != 0) {
+                TRY(refine_coefficient(scan, coefficient));
+                continue;
+            }
         }
 
         if (to_skip > 0) {
@@ -619,7 +645,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (scan.end_of_bands_run_count > 0)
             continue;
 
-        if (is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
+        if (DecodingMode == JPEGDecodingMode::Progressive && scan.successive_approximation_high != 0) {
             // G.1.2.3 - Coding model for subsequent scans of successive approximation
             if (auto const low_bits = *saved_symbol & 0x0F; low_bits != 1) {
                 dbgln_if(JPEG_DEBUG, "AC coefficient low bits isn't equal to 1: {}!", low_bits);
@@ -675,6 +701,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto const& scan_component : context.current_scan->components) {
@@ -699,15 +726,20 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
 
                 Macroblock& block = macroblocks[macroblock_index];
 
-                if (context.current_scan->spectral_selection_start == 0)
-                    TRY(add_dc(context, block, scan_component));
-                if (context.current_scan->spectral_selection_end != 0)
-                    TRY(add_ac(context, block, scan_component));
+                if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                    TRY(add_dc<DecodingMode>(context, block, scan_component));
+                    TRY(add_ac<DecodingMode>(context, block, scan_component));
+                } else {
+                    if (context.current_scan->spectral_selection_start == 0)
+                        TRY(add_dc<DecodingMode>(context, block, scan_component));
+                    if (context.current_scan->spectral_selection_end != 0)
+                        TRY(add_ac<DecodingMode>(context, block, scan_component));
 
-                // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
-                if (context.current_scan->end_of_bands_run_count > 0) {
-                    --context.current_scan->end_of_bands_run_count;
-                    continue;
+                    // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+                    if (context.current_scan->end_of_bands_run_count > 0) {
+                        --context.current_scan->end_of_bands_run_count;
+                        continue;
+                    }
                 }
             }
         }
@@ -763,7 +795,13 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
                 }
             }
 
-            if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
+            auto result = [&]() {
+                if (is_progressive(context.frame.type))
+                    return build_macroblocks<JPEGDecodingMode::Progressive>(context, macroblocks, hcursor, vcursor);
+                return build_macroblocks<JPEGDecodingMode::Sequential>(context, macroblocks, hcursor, vcursor);
+            }();
+
+            if (result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}: {}", i, result.error());
                     dbgln("Huffman stream byte offset {}", context.stream.byte_offset());
