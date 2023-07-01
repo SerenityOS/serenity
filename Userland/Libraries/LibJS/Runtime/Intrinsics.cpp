@@ -90,8 +90,6 @@
 #include <LibJS/Runtime/ShadowRealmConstructor.h>
 #include <LibJS/Runtime/ShadowRealmPrototype.h>
 #include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/SharedArrayBufferConstructor.h>
-#include <LibJS/Runtime/SharedArrayBufferPrototype.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/StringPrototype.h>

@@ -662,16 +662,6 @@ void BrowserWindow::moveEvent(QMoveEvent* event)
     }
 }
 
-void BrowserWindow::wheelEvent(QWheelEvent* event)
-{
-    if ((event->modifiers() & Qt::ControlModifier) != 0) {
-        if (event->angleDelta().y() > 0)
-            zoom_in();
-        else if (event->angleDelta().y() < 0)
-            zoom_out();
-    }
-}
-
 bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {

@@ -206,9 +206,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
 
     if (in_frame)
-        push_register_window(in_frame, executable.number_of_registers);
+        m_register_windows.append(in_frame);
     else
-        push_register_window(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), Vector<UnwindInfo> {}), executable.number_of_registers);
+        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), Vector<UnwindInfo> {}));
+
+    registers().resize(executable.number_of_registers);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
@@ -304,7 +306,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         }
     }
 
-    auto frame = pop_register_window();
+    auto frame = m_register_windows.take_last();
 
     Value return_value = js_undefined();
     if (!m_return_value.is_empty()) {
@@ -449,20 +451,6 @@ ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode c
 Realm& Interpreter::realm()
 {
     return *m_vm.current_realm();
-}
-
-void Interpreter::push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> window, size_t register_count)
-{
-    m_register_windows.append(move(window));
-    this->window().registers.resize(register_count);
-    m_current_register_window = this->window().registers;
-}
-
-Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> Interpreter::pop_register_window()
-{
-    auto window = m_register_windows.take_last();
-    m_current_register_window = m_register_windows.is_empty() ? Span<Value> {} : this->window().registers;
-    return window;
 }
 
 }

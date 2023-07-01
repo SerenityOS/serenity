@@ -101,15 +101,10 @@ private:
         return const_cast<Interpreter*>(this)->window();
     }
 
-    Span<Value> registers() { return m_current_register_window; }
-    ReadonlySpan<Value> registers() const { return m_current_register_window; }
-
-    void push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>, size_t register_count);
-    [[nodiscard]] Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> pop_register_window();
+    MarkedVector<Value>& registers() { return window().registers; }
 
     VM& m_vm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
-    Span<Value> m_current_register_window;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
     Value m_return_value;
