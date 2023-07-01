@@ -950,10 +950,11 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         if (!line_builder)
             y += side_data.y_offset;
 
+        auto top_margin_edge = y - box_state.margin_box_top();
         side_data.all_boxes.append(adopt_own(*new FloatingBox {
             .box = box,
             .offset_from_edge = offset_from_edge,
-            .top_margin_edge = y - box_state.margin_box_top(),
+            .top_margin_edge = top_margin_edge,
             .bottom_margin_edge = y + box_state.content_height() + box_state.margin_box_bottom(),
         }));
         side_data.current_boxes.append(*side_data.all_boxes.last());
@@ -971,7 +972,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
         // If the new box was inserted below the bottom of the opposite side,
         // we reset the other side back to its edge.
-        if (y > other_side_data.y_offset)
+        if (top_margin_edge > other_side_data.y_offset)
             other_side_data.clear();
     };
 
