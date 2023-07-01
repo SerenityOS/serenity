@@ -12,7 +12,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/PixelUnits.h>
-#include <LibWeb/SVG/SVGContext.h>
 
 namespace Web {
 
@@ -22,11 +21,6 @@ public:
 
     Gfx::Painter& painter() const { return m_painter; }
     Palette const& palette() const { return m_palette; }
-
-    bool has_svg_context() const { return m_svg_context.has_value(); }
-    SVGContext& svg_context();
-    void set_svg_context(SVGContext);
-    void clear_svg_context();
 
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
@@ -60,7 +54,6 @@ public:
         clone.m_device_viewport_rect = m_device_viewport_rect;
         clone.m_should_show_line_box_borders = m_should_show_line_box_borders;
         clone.m_focus = m_focus;
-        clone.m_svg_context = m_svg_context;
         return clone;
     }
 
@@ -69,7 +62,6 @@ public:
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;
-    Optional<SVGContext> m_svg_context;
     double m_device_pixels_per_css_pixel { 0 };
     DevicePixelRect m_device_viewport_rect;
     bool m_should_show_line_box_borders { false };

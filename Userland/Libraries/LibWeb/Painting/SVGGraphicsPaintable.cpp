@@ -24,26 +24,4 @@ Layout::SVGGraphicsBox const& SVGGraphicsPaintable::layout_box() const
     return static_cast<Layout::SVGGraphicsBox const&>(layout_node());
 }
 
-void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const
-{
-    SVGPaintable::before_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
-        return;
-
-    auto& graphics_element = layout_box().dom_node();
-
-    if (auto fill_rule = graphics_element.fill_rule(); fill_rule.has_value())
-        context.svg_context().set_fill_rule(*fill_rule);
-    if (auto fill_color = graphics_element.fill_color(); fill_color.has_value())
-        context.svg_context().set_fill_color(*fill_color);
-    if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value())
-        context.svg_context().set_stroke_color(*stroke_color);
-    if (auto stroke_width = graphics_element.stroke_width(); stroke_width.has_value())
-        context.svg_context().set_stroke_width(*stroke_width);
-    if (auto fill_opacity = graphics_element.fill_opacity(); fill_opacity.has_value())
-        context.svg_context().set_fill_opacity(*fill_opacity);
-    if (auto stroke_opacity = graphics_element.stroke_opacity(); stroke_opacity.has_value())
-        context.svg_context().set_stroke_opacity(*stroke_opacity);
-}
-
 }
