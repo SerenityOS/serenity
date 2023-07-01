@@ -385,7 +385,6 @@ run_gdb() {
                 fi
                 LAGOM_EXECUTABLE="$arg"
                 if [ "$LAGOM_EXECUTABLE" = "ladybird" ]; then
-                    LAGOM_EXECUTABLE="Ladybird/ladybird"
                     # FIXME: Make ladybird less cwd-dependent while in the build directory
                     cd "$BUILD_DIR/Ladybird"
                 fi
