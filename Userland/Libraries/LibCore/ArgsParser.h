@@ -51,7 +51,7 @@ public:
         char const* long_name { nullptr };
         char short_name { 0 };
         char const* value_name { nullptr };
-        Function<bool(StringView)> accept_value;
+        Function<ErrorOr<bool>(StringView)> accept_value;
         OptionHideMode hide_mode { OptionHideMode::None };
 
         DeprecatedString name_for_display() const

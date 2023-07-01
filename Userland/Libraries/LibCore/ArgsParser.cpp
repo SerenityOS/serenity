@@ -16,6 +16,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#define TRY_OR_ERROR_IF_NOT_OOM(expr, user_input)                                              \
+    ({                                                                                         \
+        auto&& _value = expr;                                                                  \
+        if (_value.is_error() && _value.error().is_errno() && _value.error().code() == ENOMEM) \
+            return _value.release_error();                                                     \
+        if (_value.is_error()) {                                                               \
+            warnln("Error while processing argument '{}': {}", user_input, _value.error());    \
+            return false;                                                                      \
+        }                                                                                      \
+        _value.release_value();                                                                \
+    })
+
 namespace Core {
 
 ArgsParser::ArgsParser()
@@ -111,7 +123,7 @@ bool ArgsParser::parse(Span<StringView> arguments, FailureBehavior failure_behav
         VERIFY(found_option);
 
         StringView arg = found_option->argument_mode != OptionArgumentMode::None ? result.optarg_value.value_or({}) : StringView {};
-        if (!found_option->accept_value(arg)) {
+        if (!MUST(found_option->accept_value(arg))) {
             warnln("\033[31mInvalid value for option \033[1m{}\033[22m\033[0m", found_option->name_for_display());
             fail();
             return false;
@@ -387,7 +399,7 @@ void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideM
         long_name,
         short_name,
         nullptr,
-        [](StringView) {
+        [](StringView) -> ErrorOr<bool> {
             return true;
         },
         hide_mode,
@@ -403,7 +415,7 @@ void ArgsParser::add_option(bool& value, char const* help_string, char const* lo
         long_name,
         short_name,
         nullptr,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             VERIFY(s.is_empty());
             value = true;
             return true;
@@ -421,7 +433,7 @@ void ArgsParser::add_option(DeprecatedString& value, char const* help_string, ch
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = s;
             return true;
         },
@@ -438,12 +450,8 @@ void ArgsParser::add_option(String& value, char const* help_string, char const* 
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
-            auto value_or_error = String::from_utf8(s);
-            if (value_or_error.is_error())
-                return false;
-
-            value = value_or_error.release_value();
+        [&value](StringView s) -> ErrorOr<bool> {
+            value = TRY_OR_ERROR_IF_NOT_OOM(String::from_utf8(s), s);
             return true;
         },
         hide_mode,
@@ -459,7 +467,7 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = s;
             return true;
         },
@@ -477,7 +485,7 @@ void ArgsParser::add_option(I& value, char const* help_string, char const* long_
         long_name,
         short_name,
         value_name,
-        [&value](StringView view) {
+        [&value](StringView view) -> ErrorOr<bool> {
             Optional<I> opt;
             if constexpr (IsSigned<I>)
                 opt = view.to_int<I>();
@@ -507,7 +515,7 @@ void ArgsParser::add_option(double& value, char const* help_string, char const* 
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             auto opt = s.to_double();
             value = opt.value_or(0.0);
             return opt.has_value();
@@ -525,7 +533,7 @@ void ArgsParser::add_option(Optional<double>& value, char const* help_string, ch
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = s.to_double();
             return value.has_value();
         },
@@ -542,7 +550,7 @@ void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, ch
         long_name,
         short_name,
         value_name,
-        [&value](StringView s) {
+        [&value](StringView s) -> ErrorOr<bool> {
             value = AK::StringUtils::convert_to_uint<size_t>(s);
             return value.has_value();
         },
@@ -559,7 +567,7 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
         long_name,
         short_name,
         value_name,
-        [&values, separator](StringView s) {
+        [&values, separator](StringView s) -> ErrorOr<bool> {
             bool parsed_all_values = true;
 
             s.for_each_split_view(separator, SplitBehavior::Nothing, [&](auto value) {
@@ -585,8 +593,8 @@ void ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_s
         long_name,
         short_name,
         value_name,
-        [&values](StringView s) {
-            values.append(s);
+        [&values](StringView s) -> ErrorOr<bool> {
+            TRY_OR_ERROR_IF_NOT_OOM(values.try_append(s), s);
             return true;
         },
         hide_mode
