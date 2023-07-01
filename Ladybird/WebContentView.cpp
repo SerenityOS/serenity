@@ -262,6 +262,16 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
     return Key_Invalid;
 }
 
+void WebContentView::wheelEvent(QWheelEvent* event)
+{
+    if (!event->modifiers().testFlag(Qt::ControlModifier)) {
+        QAbstractScrollArea::wheelEvent(event);
+        event->accept();
+        return;
+    }
+    event->ignore();
+}
+
 void WebContentView::mouseMoveEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);

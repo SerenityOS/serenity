@@ -24,7 +24,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (10,17.734375) content-size 43.21875x7.734375 table-row children: not-inline
+            Box <tr> at (10,19.734375) content-size 43.21875x7.734375 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (11,23.601562) content-size 0x0 table-cell [BFC] children: not-inline

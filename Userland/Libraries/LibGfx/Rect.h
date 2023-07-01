@@ -656,8 +656,8 @@ public:
             }
         };
 
-        check_distance({ top_left(), top_right() });
-        check_distance({ bottom_left(), bottom_right() });
+        check_distance({ top_left(), top_right().moved_left(1) });
+        check_distance({ bottom_left().moved_up(1), bottom_right().translated(-1) });
         if (height() > 2) {
             check_distance({ { x(), y() + 1 }, { x(), bottom() - 2 } });
             check_distance({ { right() - 1, y() + 1 }, { right() - 1, bottom() - 2 } });

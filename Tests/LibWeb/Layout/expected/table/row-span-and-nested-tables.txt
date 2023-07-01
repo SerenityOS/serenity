@@ -44,7 +44,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                           TextNode <#text>
                       BlockContainer <(anonymous)> (not painted) children: inline
                         TextNode <#text>
-                      Box <tr> at (45.5625,49.46875) content-size 26.265625x29.46875 table-row children: not-inline
+                      Box <tr> at (45.5625,51.46875) content-size 26.265625x29.46875 table-row children: not-inline
                         BlockContainer <(anonymous)> (not painted) children: inline
                           TextNode <#text>
                         BlockContainer <td> at (51.5625,57.46875) content-size 14.265625x17.46875 table-cell [BFC] children: inline
@@ -56,7 +56,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                           TextNode <#text>
                       BlockContainer <(anonymous)> (not painted) children: inline
                         TextNode <#text>
-                      Box <tr> at (45.5625,78.9375) content-size 26.265625x29.46875 table-row children: not-inline
+                      Box <tr> at (45.5625,82.9375) content-size 26.265625x29.46875 table-row children: not-inline
                         BlockContainer <(anonymous)> (not painted) children: inline
                           TextNode <#text>
                         BlockContainer <td> at (51.5625,88.9375) content-size 14.265625x17.46875 table-cell [BFC] children: inline
@@ -76,7 +76,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (11,65.203125) content-size 67.828125x54.203125 table-row children: not-inline
+            Box <tr> at (11,67.203125) content-size 67.828125x54.203125 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (17,85.570312) content-size 11.5625x17.46875 table-cell [BFC] children: inline
