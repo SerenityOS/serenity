@@ -196,6 +196,8 @@ set(SOURCES
     Runtime/ShadowRealmConstructor.cpp
     Runtime/ShadowRealmPrototype.cpp
     Runtime/Shape.cpp
+    Runtime/SharedArrayBufferConstructor.cpp
+    Runtime/SharedArrayBufferPrototype.cpp
     Runtime/StringConstructor.cpp
     Runtime/StringIterator.cpp
     Runtime/StringIteratorPrototype.cpp

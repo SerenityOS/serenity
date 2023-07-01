@@ -63,6 +63,7 @@
 #include <LibJS/Runtime/SetConstructor.h>
 #include <LibJS/Runtime/ShadowRealmConstructor.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/SharedArrayBufferConstructor.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SuppressedErrorConstructor.h>
@@ -158,6 +159,7 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.RegExp, attr, [](auto& realm) -> Value { return realm.intrinsics().regexp_constructor(); });
     global.define_intrinsic_accessor(vm.names.Set, attr, [](auto& realm) -> Value { return realm.intrinsics().set_constructor(); });
     global.define_intrinsic_accessor(vm.names.ShadowRealm, attr, [](auto& realm) -> Value { return realm.intrinsics().shadow_realm_constructor(); });
+    global.define_intrinsic_accessor(vm.names.SharedArrayBuffer, attr, [](auto& realm) -> Value { return realm.intrinsics().shared_array_buffer_constructor(); });
     global.define_intrinsic_accessor(vm.names.String, attr, [](auto& realm) -> Value { return realm.intrinsics().string_constructor(); });
     global.define_intrinsic_accessor(vm.names.SuppressedError, attr, [](auto& realm) -> Value { return realm.intrinsics().suppressed_error_constructor(); });
     global.define_intrinsic_accessor(vm.names.Symbol, attr, [](auto& realm) -> Value { return realm.intrinsics().symbol_constructor(); });
