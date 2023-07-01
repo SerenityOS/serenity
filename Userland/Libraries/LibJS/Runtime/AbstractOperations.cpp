@@ -845,7 +845,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within body, do
         TRY(program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
             // i. Let F be StringValue of the BindingIdentifier of f.
-            auto& function_name = function_declaration.name();
+            auto function_name = function_declaration.name();
 
             // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for body, then
             // Note: This is checked during parsing and for_each_function_hoistable_with_annexB_extension so it always passes here.

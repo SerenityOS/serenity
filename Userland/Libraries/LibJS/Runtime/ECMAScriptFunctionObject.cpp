@@ -534,7 +534,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
         //       an exception should not result from `for_each_function_hoistable_with_annexB_extension`.
         MUST(scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
-            auto& function_name = function_declaration.name();
+            auto function_name = function_declaration.name();
             if (parameter_names.contains(function_name))
                 return;
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
