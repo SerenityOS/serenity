@@ -20,6 +20,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/TableBordersPainting.h>
 
 namespace Web::Painting {
 
@@ -69,33 +70,6 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
         return PaintPhase::Overlay;
     default:
         VERIFY_NOT_REACHED();
-    }
-}
-
-static void collect_cell_boxes_with_collapsed_borders(Vector<PaintableBox const*>& cell_boxes, Layout::Node const& box)
-{
-    box.for_each_child([&](auto& child) {
-        if (child.display().is_table_cell() && child.computed_values().border_collapse() == CSS::BorderCollapse::Collapse) {
-            VERIFY(is<Layout::Box>(child) && child.paintable());
-            cell_boxes.append(static_cast<Layout::Box const&>(child).paintable_box());
-        } else {
-            collect_cell_boxes_with_collapsed_borders(cell_boxes, child);
-        }
-    });
-}
-
-static void paint_table_collapsed_borders(PaintContext& context, Layout::Node const& box)
-{
-    Vector<PaintableBox const*> cell_boxes;
-    collect_cell_boxes_with_collapsed_borders(cell_boxes, box);
-    for (auto const cell_box : cell_boxes) {
-        auto borders_data = cell_box->override_borders_data().has_value() ? cell_box->override_borders_data().value() : BordersData {
-            .top = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(),
-            .right = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(),
-            .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),
-            .left = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(),
-        };
-        paint_all_borders(context, cell_box->absolute_border_box_rect(), cell_box->normalized_border_radii_data(), borders_data);
     }
 }
 

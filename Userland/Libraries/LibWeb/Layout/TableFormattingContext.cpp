@@ -857,7 +857,7 @@ void TableFormattingContext::position_cell_boxes()
     }
 }
 
-static bool border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b)
+bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b)
 {
     // Implements criteria for steps 1, 2 and 3 of border conflict resolution algorithm.
     static HashMap<CSS::LineStyle, unsigned> const line_style_score = {
@@ -900,7 +900,7 @@ static bool border_is_less_specific(const CSS::BorderData& a, const CSS::BorderD
 
 static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, const CSS::BorderData& b)
 {
-    return border_is_less_specific(a, b) ? b : a;
+    return TableFormattingContext::border_is_less_specific(a, b) ? b : a;
 }
 
 const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(TableFormattingContext::ConflictingEdge const& conflicting_edge)

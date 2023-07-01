@@ -32,6 +32,8 @@ public:
         return verify_cast<TableWrapper>(*table_box().containing_block());
     }
 
+    static bool border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b);
+
 private:
     CSSPixels run_caption_layout(LayoutMode, CSS::CaptionSide);
     CSSPixels compute_capmin();
