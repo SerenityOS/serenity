@@ -144,6 +144,7 @@ private:
 
     bool compute_validity() const;
     DeprecatedString serialize_data_url() const;
+    DeprecatedString serialize_host() const;
 
     static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static void append_percent_encoded(StringBuilder&, u32 code_point);

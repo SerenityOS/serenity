@@ -294,6 +294,29 @@ DeprecatedString URL::serialize_data_url() const
     return builder.to_deprecated_string();
 }
 
+static inline bool host_is_ipv4_address(DeprecatedString const& host)
+{
+    return host.to_uint().has_value();
+}
+
+static inline DeprecatedString serialize_ipv4_address(u32 address)
+{
+    return DeprecatedString::formatted("{}.{}.{}.{}", (address >> 24) % 256, (address >> 16) % 256, (address >> 8) % 256, address % 256);
+}
+
+// https://url.spec.whatwg.org/#concept-host-serializer
+DeprecatedString URL::serialize_host() const
+{
+    // 1. If host is an IPv4 address, return the result of running the IPv4 serializer on host.
+    if (host_is_ipv4_address(m_host))
+        return serialize_ipv4_address(*m_host.to_uint());
+
+    // FIXME: 2. Otherwise, if host is an IPv6 address, return U+005B ([), followed by the result of running the IPv6 serializer on host, followed by U+005D (]).
+
+    // 3. Otherwise, host is a domain, opaque host, or empty host, return host.
+    return m_host;
+}
+
 // https://url.spec.whatwg.org/#concept-url-serializer
 DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 {
@@ -315,7 +338,7 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
             builder.append('@');
         }
 
-        builder.append(m_host);
+        builder.append(serialize_host());
         if (m_port.has_value())
             builder.appendff(":{}", *m_port);
     }
