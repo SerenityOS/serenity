@@ -65,6 +65,9 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         return EINVAL;
     }
 
+    if (super_block.s_state == EXT2_ERROR_FS)
+        dmesgln("Ext2FS: Was not unmounted cleanly, file system may be erroneous!");
+
     if constexpr (EXT2_DEBUG) {
         dmesgln("Ext2FS: {} inodes, {} blocks", super_block.s_inodes_count, super_block.s_blocks_count);
         dmesgln("Ext2FS: Block size: {}", EXT2_BLOCK_SIZE(&super_block));
@@ -105,6 +108,12 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     }
 
     m_root_inode = TRY(build_root_inode());
+
+    // Set filesystem to "error" state until we unmount cleanly.
+    dmesgln("Ext2FS: Mount successful, setting superblock to error state.");
+    m_super_block.s_state = EXT2_ERROR_FS;
+    TRY(flush_super_block());
+
     return {};
 }
 
@@ -534,16 +543,33 @@ unsigned Ext2FS::free_inode_count() const
 
 ErrorOr<void> Ext2FS::prepare_to_clear_last_mount(Inode& mount_guest_inode)
 {
-    (void)mount_guest_inode;
     MutexLocker locker(m_lock);
+    bool any_inode_busy = false;
     for (auto& it : m_inode_cache) {
-        if (it.value->ref_count() > 1)
-            return EBUSY;
+        // We hold the last reference to the root inode, and the VFS Mount object holds the last reference to the mount_guest_inode,
+        // so they are allowed to have one more reference.
+        if ((it.value == m_root_inode || it.value->identifier() == mount_guest_inode.identifier()) && it.value->ref_count() > 2) {
+            dbgln_if(EXT2_DEBUG, "Ext2FS: Ignoring root or mount point inode's last reference");
+            continue;
+        }
+        // The Inode::all_instances list always holds one reference to all inodes, which we disregard.
+        if (it.value->ref_count() > 1) {
+            dbgln_if(EXT2_DEBUG, "Ext2FS: Busy inode {} ({} refs)", it.value->index(), it.value->ref_count());
+            any_inode_busy = true;
+        }
     }
+    if (any_inode_busy)
+        return EBUSY;
 
     BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
     m_inode_cache.clear();
     m_root_inode = nullptr;
+
+    // Mark filesystem as valid before unmount.
+    dmesgln("Ext2FS: Clean unmount, setting superblock to valid state");
+    m_super_block.s_state = EXT2_VALID_FS;
+    TRY(flush_super_block());
+
     return {};
 }
 
