@@ -11,6 +11,7 @@
 #include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
+#include <AK/Tuple.h>
 #include <AK/URLParser.h>
 #include <AK/Utf8View.h>
 
@@ -42,6 +43,69 @@ static Optional<DeprecatedString> parse_opaque_host(StringView input)
     // FIXME: If input contains a code point that is not a URL code point and not U+0025 (%), validation error.
     // FIXME: If input contains a U+0025 (%) and the two code points following it are not ASCII hex digits, validation error.
     return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
+}
+
+// https://url.spec.whatwg.org/#ipv4-number-parser
+static Optional<Tuple<size_t, bool>> parse_ipv4_number(StringView input)
+{
+    // 1. If input is the empty string, then return failure.
+    if (input.is_empty())
+        return OptionalNone {};
+
+    // 2. Let validationError be false.
+    bool validation_error = false;
+
+    // 3. Let R be 10.
+    u8 radix = 10;
+
+    // 4. If input contains at least two code points and the first two code points are either "0X" or "0x", then:
+    if (input.length() >= 2 && (input.starts_with("0X"sv) || input.starts_with("0x"sv))) {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first two code points from input.
+        input = input.substring_view(2);
+
+        // 3. Set R to 16.
+        radix = 16;
+    }
+
+    // 5. Otherwise, if input contains at least two code points and the first code point is U+0030 (0), then:
+    if (input.length() >= 2 && input.starts_with('0')) {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first code point from input.
+        input = input.substring_view(1);
+
+        // 3. Set R to 8.
+        radix = 8;
+    }
+
+    // 6. If input is the empty string, then return (0, true).
+    if (input.is_empty())
+        return Tuple<size_t, bool> { 0, true };
+
+    // 7. If input contains a code point that is not a radix-R digit, then return failure.
+    if (radix == 8 && !all_of(input, [](auto character) { return is_ascii_octal_digit(character); }))
+        return OptionalNone {};
+    if (radix == 10 && !all_of(input, [](auto character) { return is_ascii_digit(character); }))
+        return OptionalNone {};
+    if (radix == 16 && !all_of(input, [](auto character) { return is_ascii_hex_digit(character); }))
+        return OptionalNone {};
+
+    // 8. Let output be the mathematical integer value that is represented by input in radix-R notation, using ASCII hex digits for digits with values 0 through 15.
+    Optional<u32> output;
+    if (radix == 8)
+        output = AK::StringUtils::convert_to_uint_from_octal(input);
+    else if (radix == 10)
+        output = input.to_uint();
+    else if (radix == 16)
+        output = AK::StringUtils::convert_to_uint_from_hex(input);
+    VERIFY(output.has_value());
+
+    // 9. Return (output, validationError).
+    return Tuple<size_t, bool> { static_cast<size_t>(*output), validation_error };
 }
 
 static Optional<DeprecatedString> parse_ipv4_address(StringView input)
