@@ -107,10 +107,10 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_wrapper(BitmapFormat format, IntSi
     return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale_factor)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale_factor, Optional<IntSize> ideal_size)
 {
     if (scale_factor > 1 && path.starts_with("/res/"sv)) {
-        auto load_scaled_bitmap = [](StringView path, int scale_factor) -> ErrorOr<NonnullRefPtr<Bitmap>> {
+        auto load_scaled_bitmap = [](StringView path, int scale_factor, Optional<IntSize> ideal_size) -> ErrorOr<NonnullRefPtr<Bitmap>> {
             LexicalPath lexical_path { path };
             StringBuilder highdpi_icon_path;
             TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
@@ -118,7 +118,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
             auto highdpi_icon_string = highdpi_icon_path.string_view();
             auto file = TRY(Core::File::open(highdpi_icon_string, Core::File::OpenMode::Read));
 
-            auto bitmap = TRY(load_from_file(move(file), highdpi_icon_string));
+            auto bitmap = TRY(load_from_file(move(file), highdpi_icon_string, ideal_size));
             if (bitmap->width() % scale_factor != 0 || bitmap->height() % scale_factor != 0)
                 return Error::from_string_literal("Bitmap::load_from_file: HighDPI image size should be divisible by scale factor");
             bitmap->m_size.set_width(bitmap->width() / scale_factor);
@@ -127,7 +127,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
             return bitmap;
         };
 
-        auto scaled_bitmap_or_error = load_scaled_bitmap(path, scale_factor);
+        auto scaled_bitmap_or_error = load_scaled_bitmap(path, scale_factor, ideal_size);
         if (!scaled_bitmap_or_error.is_error())
             return scaled_bitmap_or_error.release_value();
 
@@ -139,15 +139,20 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
     }
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
-    return load_from_file(move(file), path);
+    return load_from_file(move(file), path, ideal_size);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> file, StringView path)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> file, StringView path, Optional<IntSize> ideal_size)
 {
     auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type)) {
-        auto frame = TRY(decoder->frame(0));
+    return load_from_bytes(mapped_file->bytes(), ideal_size, mime_type);
+}
+
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Optional<IntSize> ideal_size, Optional<DeprecatedString> mine_type)
+{
+    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(bytes, mine_type)) {
+        auto frame = TRY(decoder->frame(0, ideal_size));
         if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();
     }
