@@ -728,17 +728,27 @@ int ungetc(int c, FILE* stream)
     return ok ? c : EOF;
 }
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputc.html
-int fputc(int ch, FILE* stream)
+int fputc_unlocked(int ch, FILE* stream)
 {
     VERIFY(stream);
     u8 byte = ch;
-    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(&byte, 1);
     if (nwritten == 0)
         return EOF;
     VERIFY(nwritten == 1);
     return byte;
+}
+
+int putc_unlocked(int ch, FILE* stream)
+{
+    return fputc_unlocked(ch, stream);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputc.html
+int fputc(int ch, FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    return fputc_unlocked(ch, stream);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/putc.html
@@ -809,17 +819,21 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     return fread_unlocked(ptr, size, nmemb, stream);
 }
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwrite.html
-size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
+size_t fwrite_unlocked(void const* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
-
-    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<u8 const*>(ptr), size * nmemb);
     if (!nwritten)
         return 0;
     return nwritten / size;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwrite.html
+size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    return fwrite_unlocked(ptr, size, nmemb, stream);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fseek.html

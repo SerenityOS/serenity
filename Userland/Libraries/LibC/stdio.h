@@ -105,4 +105,8 @@ FILE* popen(char const* command, char const* type);
 int pclose(FILE*);
 char* ctermid(char* s);
 
+int putc_unlocked(int ch, FILE* stream);
+int fputc_unlocked(int ch, FILE* stream);
+size_t fwrite_unlocked(void const* ptr, size_t size, size_t nmemb, FILE* stream);
+
 __END_DECLS
