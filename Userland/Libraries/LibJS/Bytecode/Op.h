@@ -770,17 +770,16 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
-// NOTE: This instruction is variable-width depending on the number of arguments!
-class Call final : public Instruction {
-public:
-    enum class CallType {
-        Call,
-        Construct,
-        DirectEval,
-    };
+enum class CallType {
+    Call,
+    Construct,
+    DirectEval,
+};
 
-    Call(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
-        : Instruction(Type::Call)
+class CallWithArgumentArray final : public Instruction {
+public:
+    CallWithArgumentArray(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
+        : Instruction(Type::CallWithArgumentArray)
         , m_callee(callee)
         , m_this_value(this_value)
         , m_type(type)
@@ -802,11 +801,10 @@ private:
     Optional<StringTableIndex> m_expression_string;
 };
 
-// NOTE: This instruction is variable-width depending on the number of arguments!
-class SuperCall : public Instruction {
+class SuperCallWithArgumentArray : public Instruction {
 public:
-    explicit SuperCall(bool is_synthetic)
-        : Instruction(Type::SuperCall)
+    explicit SuperCallWithArgumentArray(bool is_synthetic)
+        : Instruction(Type::SuperCallWithArgumentArray)
         , m_is_synthetic(is_synthetic)
     {
     }

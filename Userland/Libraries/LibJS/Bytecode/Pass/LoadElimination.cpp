@@ -124,7 +124,7 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             // Attribute accesses (`a.o` or `a[o]`) may result in calls to getters or setters
             // or may trigger proxies
             // So these are treated like calls
-        case Call:
+        case CallWithArgumentArray:
             // Calls, especially to local functions and eval, may poison visible and
             // cached variables, hence we need to clear the lookup cache after emitting them
             // FIXME: In strict mode and with better identifier metrics, we might be able

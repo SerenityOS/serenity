@@ -694,7 +694,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     return argument_values;
 }
 
-Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
+Completion CallWithArgumentArray::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
 {
     auto& vm = interpreter.vm();
     auto callee = interpreter.reg(m_callee);
@@ -705,7 +705,7 @@ Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter,
     return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type);
 }
 
-ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
 
@@ -738,7 +738,7 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
-ThrowCompletionOr<void> SuperCall::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> SuperCallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     // 1. Let newTarget be GetNewTarget().
@@ -896,7 +896,7 @@ void CopyObjectExcludingProperties::replace_references_impl(Register from, Regis
     }
 }
 
-void Call::replace_references_impl(Register from, Register to)
+void CallWithArgumentArray::replace_references_impl(Register from, Register to)
 {
     if (m_callee == from)
         m_callee = to;
@@ -1383,30 +1383,30 @@ DeprecatedString JumpUndefined::to_deprecated_string_impl(Bytecode::Executable c
     return DeprecatedString::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
 }
 
-DeprecatedString Call::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+DeprecatedString CallWithArgumentArray::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     StringView type;
     switch (m_type) {
-    case Call::CallType::Call:
+    case CallType::Call:
         type = ""sv;
         break;
-    case Call::CallType::Construct:
+    case CallType::Construct:
         type = " (Construct)"sv;
         break;
-    case Call::CallType::DirectEval:
+    case CallType::DirectEval:
         type = " (DirectEval)"sv;
         break;
     }
 
     if (m_expression_string.has_value())
-        return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+        return DeprecatedString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
 
-    return DeprecatedString::formatted("Call{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
+    return DeprecatedString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
 }
 
-DeprecatedString SuperCall::to_deprecated_string_impl(Bytecode::Executable const&) const
+DeprecatedString SuperCallWithArgumentArray::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return "SuperCall arguments:[...acc]"sv;
+    return "SuperCallWithArgumentArray arguments:[...acc]"sv;
 }
 
 DeprecatedString NewFunction::to_deprecated_string_impl(Bytecode::Executable const&) const
