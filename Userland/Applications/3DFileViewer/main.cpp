@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -32,7 +33,6 @@ class GLContextWidget final : public GUI::Frame {
     C_OBJECT(GLContextWidget);
 
 public:
-    bool load_path(DeprecatedString const& fname);
     bool load_file(String const& filename, NonnullOwnPtr<Core::File> file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
@@ -288,18 +288,6 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
-bool GLContextWidget::load_path(DeprecatedString const& filename)
-{
-    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), filename);
-
-    if (file.is_error() && file.error().code() != ENOENT) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    return load_file(file.value().filename(), file.value().release_stream());
-}
-
 bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     if (!filename.bytes_as_string_view().ends_with(".obj"sv)) {
@@ -349,6 +337,15 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::create(arguments));
+
+    StringView filename;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(filename, "3D model file to open", "path", Core::ArgsParser::Required::No);
+    args_parser.parse(arguments);
+
+    if (filename.is_empty())
+        filename = "/home/anon/Documents/3D Models/teapot.obj"sv;
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec map_fixed"));
 
@@ -571,8 +568,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
-    widget->load_path(filename);
+    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename);
+    if (file.is_error() && file.error().code() != ENOENT) {
+        GUI::MessageBox::show(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+        return 1;
+    }
+    widget->load_file(file.value().filename(), file.value().release_stream());
 
     return app->exec();
 }
