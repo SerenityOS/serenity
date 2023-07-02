@@ -4,11 +4,11 @@ Date: Sat, 11 Mar 2023 15:17:34 -0700
 Subject: [PATCH] backward: Pretend to be Linux, with some modifications
 
 ---
- backward.hpp | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ backward.hpp | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/backward.hpp b/backward.hpp
-index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e09e3731c 100644
+index 670aa45853997c515974bb9411d7a9e72aeeee78..25e70cc6d0d1e508ac42e63ea3fa8b56992cfb27 100644
 --- a/backward.hpp
 +++ b/backward.hpp
 @@ -63,7 +63,7 @@
@@ -20,7 +20,7 @@ index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e
  #define BACKWARD_SYSTEM_LINUX
  #elif defined(__APPLE__)
  #define BACKWARD_SYSTEM_DARWIN
-@@ -213,7 +213,9 @@
+@@ -219,7 +219,9 @@
  #endif
  #include <signal.h>
  #include <sys/stat.h>
@@ -28,9 +28,9 @@ index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e
  #include <syscall.h>
 +#endif
  #include <unistd.h>
- 
- #if BACKWARD_HAS_BFD == 1
-@@ -737,7 +739,7 @@ public:
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
+@@ -742,7 +744,7 @@ public:
  protected:
    void load_thread_info() {
  #ifdef BACKWARD_SYSTEM_LINUX
@@ -39,7 +39,7 @@ index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e
      _thread_id = static_cast<size_t>(syscall(SYS_gettid));
  #else
      _thread_id = static_cast<size_t>(gettid());
-@@ -4140,7 +4142,9 @@ public:
+@@ -4171,7 +4173,9 @@ public:
        SIGBUS,  // Bus error (bad memory access)
        SIGFPE,  // Floating point exception
        SIGILL,  // Illegal Instruction
@@ -49,7 +49,7 @@ index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e
        SIGQUIT, // Quit from keyboard
        SIGSEGV, // Invalid memory reference
        SIGSYS,  // Bad argument to routine (SVr4)
-@@ -4231,6 +4235,8 @@ public:
+@@ -4262,6 +4266,8 @@ public:
      error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__rip);
  #elif defined(__APPLE__)
      error_addr = reinterpret_cast<void *>(uctx->uc_mcontext->__ss.__eip);
@@ -58,12 +58,13 @@ index ac7ad51738f8d13f07a6162d421b191696c9f84a..03f4f7546c4e59f3b17529c61a0f387e
  #else
  #warning ":/ sorry, ain't know no nothing none not of your architecture!"
  #endif
-@@ -4245,7 +4251,7 @@ public:
-     printer.address = true;
+@@ -4277,7 +4283,8 @@ public:
      printer.print(st, stderr);
  
--#if _XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L
-+#if (_XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L) && !defined(__serenity__)
+ #if (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 700) || \
+-    (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L)
++    (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L) && \
++    !defined(__serenity__)
      psiginfo(info, nullptr);
  #else
      (void)info;
