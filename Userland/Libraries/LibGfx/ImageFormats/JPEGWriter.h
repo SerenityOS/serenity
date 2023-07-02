@@ -11,9 +11,15 @@
 
 namespace Gfx {
 
+struct JPEGEncoderOptions {
+    u8 quality { 75 };
+};
+
 class JPEGWriter {
 public:
-    static ErrorOr<void> encode(Stream&, Bitmap const&);
+    using Options = JPEGEncoderOptions;
+
+    static ErrorOr<void> encode(Stream&, Bitmap const&, Options const& = {});
 
 private:
     JPEGWriter() = delete;
