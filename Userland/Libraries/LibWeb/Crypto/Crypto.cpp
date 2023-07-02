@@ -52,7 +52,7 @@ WebIDL::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
     auto& typed_array = static_cast<JS::TypedArrayBase&>(array.as_object());
 
     // 2. If the byteLength of array is greater than 65536, throw a QuotaExceededError and terminate the algorithm.
-    if (typed_array.byte_length() > 65536)
+    if (typed_array.idempotent_byte_length() > 65536)
         return WebIDL::QuotaExceededError::create(realm(), "array's byteLength may not be greater than 65536");
 
     // IMPLEMENTATION DEFINED: If the viewed array buffer is detached, throw a InvalidStateError and terminate the algorithm.

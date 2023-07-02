@@ -1348,7 +1348,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_enqueue(ReadableByteSt
     auto byte_offset = typed_array->byte_offset();
 
     // 5. Let byteLength be chunk.[[ByteLength]].
-    auto byte_length = typed_array->byte_length();
+    auto byte_length = typed_array->idempotent_byte_length();
 
     // 6. If ! IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (buffer->is_detached()) {

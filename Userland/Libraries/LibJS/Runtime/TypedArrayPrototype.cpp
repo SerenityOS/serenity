@@ -103,7 +103,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& nam
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
-    auto initial_length = typed_array->array_length();
+    auto initial_length = typed_array->idempotent_array_length();
 
     auto* callback_function = TRY(callback_from_args(vm, name));
 
@@ -125,7 +125,7 @@ static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, DeprecatedString 
 {
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
-    auto initial_length = typed_array->array_length();
+    auto initial_length = typed_array->idempotent_array_length();
 
     auto* callback_function = TRY(callback_from_args(vm, name));
 
@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(vm));
@@ -220,7 +220,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
     return Value(buffer);
 }
 
-// 23.2.3.3 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
+// 23.2.3.3 get %TypedArray%.prototype.byteLength, https://tc39.es/proposal-resizablearraybuffer/#sec-get-%typedarray%.prototype.bytelength
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 {
     // 1. Let O be the this value.
@@ -232,18 +232,17 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
     auto* buffer = typed_array->viewed_array_buffer();
     VERIFY(buffer);
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
-        return Value(0);
+    // 5. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 6. Let size be O.[[ByteLength]].
-    auto size = typed_array->byte_length();
+    // 6. Let size be IntegerIndexedObjectByteLength(O, getBufferByteLength).
+    auto size = integer_indexed_object_byte_length(vm, *typed_array, get_buffer_byte_length);
 
     // 7. Return 𝔽(size).
     return Value(size);
 }
 
-// 23.2.3.4 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
+// 23.2.3.4 get %TypedArray%.prototype.byteOffset, https://tc39.es/proposal-resizablearraybuffer/#sec-get-%typedarray%.prototype.bytelength
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 {
     // 1. Let O be the this value.
@@ -255,101 +254,125 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
     auto* buffer = typed_array->viewed_array_buffer();
     VERIFY(buffer);
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
+    // 5. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // 6. If IsIntegerIndexedObjectOutOfBounds(O, getBufferByteLength) is true, return +0𝔽.
+    if (is_integer_indexed_object_out_of_bounds(vm, *typed_array, get_buffer_byte_length))
         return Value(0);
 
-    // 6. Let offset be O.[[ByteOffset]].
+    // 7. Let offset be O.[[ByteOffset]].
     auto offset = typed_array->byte_offset();
 
-    // 7. Return 𝔽(offset).
+    // 8. Return 𝔽(offset).
     return Value(offset);
 }
 
-// 23.2.3.6 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
+// 23.2.3.6 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-%typedarray%.prototype.copywithin
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 3. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
+    // 4. Let len be IntegerIndexedObjectLength(O, getBufferByteLength).
+    auto length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+    // 5. Assert: len is not out-of-bounds.
+    VERIFY(length.has_value());
+
+    // 6. Let relativeTarget be ? ToIntegerOrInfinity(target).
     auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
     double to;
     if (Value(relative_target).is_negative_infinity()) {
-        // 5. If relativeTarget is -∞, let to be 0.
+        // 7. If relativeTarget is -∞, let to be 0.
         to = 0.0;
     } else if (relative_target < 0) {
-        // 6. Else if relativeTarget < 0, let to be max(len + relativeTarget, 0)
-        to = max(length + relative_target, 0.0);
+        // 8. Else if relativeTarget < 0, let to be max(len + relativeTarget, 0)
+        to = max(length.value() + relative_target, 0.0);
     } else {
-        // 7. Else, let to be min(relativeTarget, len).
-        to = min(relative_target, (double)length);
+        // 9. Else, let to be min(relativeTarget, len).
+        to = min(relative_target, (double)length.value());
     }
 
-    // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
+    // 10. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     double from;
     if (Value(relative_start).is_negative_infinity()) {
-        // 9. If relativeStart is -∞, let from be 0.
+        // 11. If relativeStart is -∞, let from be 0.
         from = 0.0;
     } else if (relative_start < 0) {
-        // 10. Else if relativeStart < 0, let from be max(len + relativeStart, 0).
-        from = max(length + relative_start, 0.0);
+        // 12. Else if relativeStart < 0, let from be max(len + relativeStart, 0).
+        from = max(length.value() + relative_start, 0.0);
     } else {
-        // 11. Else, let from be min(relativeStart, len).
-        from = min(relative_start, (double)length);
+        // 13. Else, let from be min(relativeStart, len).
+        from = min(relative_start, (double)length.value());
     }
 
     double relative_end;
 
-    // 12. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    // 14. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     if (vm.argument(2).is_undefined())
-        relative_end = length;
+        relative_end = length.value();
     else
         relative_end = TRY(vm.argument(2).to_integer_or_infinity(vm));
 
     double final;
     if (Value(relative_end).is_negative_infinity()) {
-        // 13. If relativeEnd is -∞, let final be 0.
+        // 15. If relativeEnd is -∞, let final be 0.
         final = 0.0;
     } else if (relative_end < 0) {
-        // 14. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
-        final = max(length + relative_end, 0.0);
+        // 16. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
+        final = max(length.value() + relative_end, 0.0);
     } else {
-        // 15. Else, let final be min(relativeEnd, len).
-        final = min(relative_end, (double)length);
+        // 17. Else, let final be min(relativeEnd, len).
+        final = min(relative_end, (double)length.value());
     }
 
-    // 16. Let count be min(final - from, len - to).
-    double count = min(final - from, length - to);
+    // 18. Let count be min(final - from, len - to).
+    double count = min(final - from, length.value() - to);
 
-    // 17. If count > 0, then
+    // 19. If count > 0, then
     if (count > 0.0) {
         // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
 
         // b. Let buffer be O.[[ViewedArrayBuffer]].
         auto buffer = typed_array->viewed_array_buffer();
 
-        // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-        if (buffer->is_detached())
-            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+        // c. set getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+        get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-        // d. Let elementSize be TypedArrayElementSize(O).
+        // d. Let len be IntegerIndexedObjectLength(O, getBufferByteLength).
+        length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+        // e. If len is out-of-bounds, throw a TypeError exception.
+        if (!length.has_value())
+            return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "length");
+
+        // f. Let typedArrayName be the String value of O.[[TypedArrayName]].
+        // g. Let elementSize be the Element Size value specified in Table 67 for typedArrayName.
         auto element_size = typed_array->element_size();
 
-        // e. Let byteOffset be O.[[ByteOffset]].
+        // FIXME: Not exactly sure what we should do when overflow occurs.
+        //        Just return as if succeeded for now. (This goes for steps h to m)
+
+        // h. Let bufferByteLen be len × elementSize.
+        Checked<size_t> buffer_byte_length = length.value();
+        buffer_byte_length *= element_size;
+        if (buffer_byte_length.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: buffer_byte_length overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        // i. Let byteOffset be O.[[ByteOffset]].
         auto byte_offset = typed_array->byte_offset();
 
-        // FIXME: Not exactly sure what we should do when overflow occurs.
-        //        Just return as if succeeded for now. (This goes for steps g to j)
-
-        // f. Let toByteIndex be to × elementSize + byteOffset.
+        // j. Let toByteIndex be to × elementSize + byteOffset.
         Checked<size_t> to_byte_index_checked = static_cast<size_t>(to);
         to_byte_index_checked *= element_size;
         to_byte_index_checked += byte_offset;
@@ -358,7 +381,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             return typed_array;
         }
 
-        // g. Let fromByteIndex be from × elementSize + byteOffset.
+        // k. Let fromByteIndex be from × elementSize + byteOffset.
         Checked<size_t> from_byte_index_checked = static_cast<size_t>(from);
         from_byte_index_checked *= element_size;
         from_byte_index_checked += byte_offset;
@@ -367,7 +390,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             return typed_array;
         }
 
-        // h. Let countBytes be count × elementSize.
+        // l. Let countBytes be count × elementSize.
         Checked<size_t> count_bytes_checked = static_cast<size_t>(count);
         count_bytes_checked *= element_size;
         if (count_bytes_checked.has_overflow()) {
@@ -388,7 +411,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 
         i8 direction;
 
-        // i. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
+        // m. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
         if (from_byte_index < to_byte_index && to_byte_index < from_plus_count.value()) {
             // i. Let direction be -1.
             direction = -1;
@@ -406,31 +429,34 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             // iii. Set toByteIndex to toByteIndex + countBytes - 1.
             to_byte_index = to_plus_count.value() - 1;
         }
-        // j. Else,
+        // l. Else,
         else {
             // i. Let direction be 1.
             direction = 1;
         }
 
-        // k. Repeat, while countBytes > 0,
+        // o. Repeat, while countBytes > 0,
         for (; count_bytes > 0; --count_bytes) {
-            // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-            auto value = buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered);
+            // i. If fromByteIndex < bufferByteLen and toByteIndex < bufferByteLen, then
+            if (from_byte_index < buffer_byte_length && to_byte_index < buffer_byte_length) {
+                // 1. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
+                auto value = buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered);
 
-            // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-            buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered);
+                // 2. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
+                buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered);
 
-            // iii. Set fromByteIndex to fromByteIndex + direction.
-            from_byte_index += direction;
+                // 3. Set fromByteIndex to fromByteIndex + direction.
+                from_byte_index += direction;
 
-            // iv. Set toByteIndex to toByteIndex + direction.
-            to_byte_index += direction;
+                // 4. Set toByteIndex to toByteIndex + direction.
+                to_byte_index += direction;
+            }
 
-            // v. Set countBytes to countBytes - 1.
+            // ii. Set countBytes to countBytes - 1.
         }
     }
 
-    // 18. Return O.
+    // 20. Return O.
     return typed_array;
 }
 
@@ -461,61 +487,76 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
     return Value(result);
 }
 
-// 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
+// 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-%typedarray%.prototype.fill
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 3. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // 4. Let len be IntegerIndexedObjectLength(O, getBufferByteLength).
+    auto length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+    // 5. Assert: len is not out-of-bounds.
+    VERIFY(length.has_value());
 
     Value value;
-    // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
+    // 6. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
         value = TRY(vm.argument(0).to_bigint(vm));
-    // 5. Otherwise, set value to ? ToNumber(value).
+    // 7. Otherwise, set value to ? ToNumber(value).
     else
         value = TRY(vm.argument(0).to_number(vm));
 
-    // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
+    // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     u32 k;
-    // 7. If relativeStart is -∞, let k be 0.
+    // 9. If relativeStart is -∞, let k be 0.
     if (Value(relative_start).is_negative_infinity())
         k = 0;
-    // 8. Else if relativeStart < 0, let k be max(len + relativeStart, 0).
+    // 10. Else if relativeStart < 0, let k be max(len + relativeStart, 0).
     else if (relative_start < 0)
-        k = max(length + relative_start, 0);
-    // 9. Else, let k be min(relativeStart, len).
+        k = max(length.value() + relative_start, 0);
+    // 11. Else, let k be min(relativeStart, len).
     else
-        k = min(relative_start, length);
+        k = min(relative_start, length.value());
 
-    // 10. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    // 12. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     double relative_end;
     if (vm.argument(2).is_undefined())
-        relative_end = length;
+        relative_end = length.value();
     else
         relative_end = TRY(vm.argument(2).to_integer_or_infinity(vm));
 
     u32 final;
-    // 11. If relativeEnd is -∞, let final be 0.
+    // 13. If relativeEnd is -∞, let final be 0.
     if (Value(relative_end).is_negative_infinity())
         final = 0;
-    // 12. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
+    // 14. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
     else if (relative_end < 0)
-        final = max(length + relative_end, 0);
-    // 13. Else, let final be min(relativeEnd, len).
+        final = max(length.value() + relative_end, 0);
+    // 15. Else, let final be min(relativeEnd, len).
     else
-        final = min(relative_end, length);
+        final = min(relative_end, length.value());
 
-    // 14. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    if (typed_array->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 16. Set getBufferByteLength to MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 15. Repeat, while k < final,
+    // 17. Set len to IntegerIndexedObjectLength(O, getBufferByteLength).
+    length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+    // 18. If len is out-of-bounds, throw a TypeError exception.
+    if (!length.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "length");
+
+    // 19. Set final to min(final, len).
+    final = min(final, length.value());
+
+    // 20. Repeat, while k < final,
     for (; k < final; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Perform ! Set(O, Pk, value, true).
@@ -524,7 +565,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         // c. Set k to k + 1.
     }
 
-    // 16. Return O.
+    // 21. Return O.
     return typed_array;
 }
 
@@ -536,7 +577,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto initial_length = typed_array->array_length();
+    auto initial_length = typed_array->idempotent_array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, "filter"));
@@ -665,7 +706,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If len is 0, return false.
     if (length == 0)
@@ -728,7 +769,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If len is 0, return -1𝔽.
     if (length == 0)
@@ -798,7 +839,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If separator is undefined, let sep be ",".
     // 5. Else, let sep be ? ToString(separator).
@@ -858,7 +899,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If len = 0, return -1𝔽.
     if (length == 0)
@@ -914,7 +955,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     return Value(-1);
 }
 
-// 23.2.3.21 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
+// 23.2.3.21 get %TypedArray%.prototype.length, https://tc39.es/proposal-resizablearraybuffer/#sec-get-%typedarray%.prototype.length
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 {
     // 1. Let O be the this value.
@@ -926,15 +967,18 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
     auto* buffer = typed_array->viewed_array_buffer();
     VERIFY(buffer);
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
+    // 5. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // 6. Let length be IntegerIndexedObjectLength(O, getBufferByteLength).
+    auto length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+    // 7. If length is out-of-bounds, set length to 0.
+    if (!length.has_value())
         return Value(0);
 
-    // 6. Let length be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
-
-    // 7. Return 𝔽(length).
-    return Value(length);
+    // 8. Return 𝔽(length).
+    return Value(length.value());
 }
 
 // 23.2.3.22 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
@@ -945,7 +989,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto initial_length = typed_array->array_length();
+    auto initial_length = typed_array->idempotent_array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, "map"));
@@ -985,7 +1029,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, vm.names.reduce.as_string()));
@@ -1039,7 +1083,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, vm.names.reduce.as_string()));
@@ -1093,7 +1137,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. Let middle be floor(len / 2).
     auto middle = length / 2;
@@ -1125,25 +1169,24 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
     return typed_array;
 }
 
-// 23.2.3.26.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
+// 23.2.3.26.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/proposal-resizablearraybuffer/#sec-settypedarrayfromtypedarray
 static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArrayBase& target, double target_offset, TypedArrayBase& source)
 {
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     auto* target_buffer = target.viewed_array_buffer();
 
-    // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (target_buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 2. Let getTargetBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_target_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 3. Let targetLength be target.[[ArrayLength]].
-    auto target_length = target.array_length();
+    // 3. Let targetLength be IntegerIndexedObjectLength(target, getTargetBufferByteLength).
+    auto target_length = integer_indexed_object_length(vm, target, get_target_buffer_byte_length);
 
-    // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
+    // 4. If targetLength is out-of-bounds, throw a TypeError exception.
+    if (!target_length.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
+
+    // 5. Let srcBuffer be source.[[ViewedArrayBuffer]].
     auto* source_buffer = source.viewed_array_buffer();
-
-    // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (source_buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 6. Let targetType be TypedArrayElementType(target).
     // 7. Let targetElementSize be TypedArrayElementSize(target).
@@ -1156,38 +1199,45 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
     // 10. Let srcElementSize be TypedArrayElementSize(source).
     auto source_element_size = source.element_size();
 
-    // 11. Let srcLength be source.[[ArrayLength]].
-    auto source_length = source.array_length();
+    // 11. Let getSrcBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_source_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 12. Let srcByteOffset be source.[[ByteOffset]].
+    // 12. Let srcLength be IntegerIndexedObjectLength(source, getSrcBufferByteLength).
+    auto source_length = integer_indexed_object_length(vm, source, get_source_buffer_byte_length);
+
+    // 13. If srcLength is out-of-bounds, throw a TypeError exception.
+    if (!source_length.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "source length");
+
+    // 14. Let srcByteOffset be source.[[ByteOffset]].
     auto source_byte_offset = source.byte_offset();
 
-    // 13. If targetOffset is +∞, throw a RangeError exception.
+    // 15. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
-    // 14. If srcLength + targetOffset > targetLength, throw a RangeError exception.
-    Checked<size_t> checked = source_length;
+    // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+    Checked<size_t> checked = source_length.value();
     checked += static_cast<u32>(target_offset);
-    if (checked.has_overflow() || checked.value() > target_length)
+    if (checked.has_overflow() || checked > target_length.value())
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
-    // 15. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
+    // 17. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
     if (target.content_type() != source.content_type())
         return vm.throw_completion<TypeError>(ErrorType::TypedArrayInvalidCopy, target.class_name(), source.class_name());
 
-    // FIXME: 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
+    // FIXME: 18. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
     // FIXME: a. If srcBuffer.[[ArrayBufferData]] and targetBuffer.[[ArrayBufferData]] are the same Shared Data Block values, let same be true; else let same be false.
 
-    // 17. Else, let same be SameValue(srcBuffer, targetBuffer).
+    // 19. Else, let same be SameValue(srcBuffer, targetBuffer).
     auto same = same_value(source_buffer, target_buffer);
 
     size_t source_byte_index = 0;
 
-    // 18. If same is true, then
+    // 20. If same is true, then
     if (same) {
-        // a. Let srcByteLength be source.[[ByteLength]].
-        auto source_byte_length = source.byte_length();
+        // a. Let srcByteLength be IntegerIndexedObjectByteLength(source, getSrcBufferByteLength).
+        auto source_byte_length = integer_indexed_object_byte_length(vm, source, get_source_buffer_byte_length);
 
         // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength).
         source_buffer = TRY(clone_array_buffer(vm, *source_buffer, source_byte_offset, source_byte_length));
@@ -1195,12 +1245,12 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         // c. Let srcByteIndex be 0.
         source_byte_index = 0;
     }
-    // 19. Else, let srcByteIndex be srcByteOffset.
+    // 21. Else, let srcByteIndex be srcByteOffset.
     else {
         source_byte_index = source_byte_offset;
     }
 
-    // 20. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
+    // 22. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
     Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
     checked_target_byte_index *= target_element_size;
     checked_target_byte_index += target_byte_offset;
@@ -1208,15 +1258,15 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target byte index");
     auto target_byte_index = checked_target_byte_index.value();
 
-    // 21. Let limit be targetByteIndex + targetElementSize × srcLength.
-    Checked<size_t> checked_limit(source_length);
+    // 23. Let limit be targetByteIndex + targetElementSize × srcLength.
+    Checked<size_t> checked_limit(source_length.value());
     checked_limit *= target_element_size;
     checked_limit += target_byte_index;
     if (checked_limit.has_overflow())
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target limit");
     auto limit = checked_limit.value();
 
-    // 22. If srcType is the same as targetType, then
+    // 24. If srcType is the same as targetType, then
     if (source.element_name() == target.element_name()) {
         // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
         // b. Repeat, while targetByteIndex < limit,
@@ -1226,7 +1276,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         //     iv. Set targetByteIndex to targetByteIndex + 1.
         target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data() + source_byte_index, limit - target_byte_index);
     }
-    // 23. Else,
+    // 25. Else,
     else {
         // a. Repeat, while targetByteIndex < limit,
         while (target_byte_index < limit) {
@@ -1241,7 +1291,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         }
     }
 
-    // 24. Return unused.
+    // 26. Return unused.
     return {};
 }
 
@@ -1256,7 +1306,7 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArra
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 3. Let targetLength be target.[[ArrayLength]].
-    auto target_length = target.array_length();
+    auto target_length = target.idempotent_array_length();
 
     // 4. Let src be ? ToObject(source).
     auto src = TRY(source.to_object(vm));
@@ -1338,7 +1388,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
     return js_undefined();
 }
 
-// 23.2.3.27 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
+// 23.2.3.27 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/proposal-resizablearraybuffer/#sec-%typedarray%.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 {
     auto start = vm.argument(0);
@@ -1348,62 +1398,75 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     // 2. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 3. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
+    // NOTE: Seems like there's an implicit assert here as length is not checked for oob
+    // 4. Let len be IntegerIndexedObjectLength(O, getBufferByteLength).
+    auto length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
+
+    // 5. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(start.to_integer_or_infinity(vm));
 
     i32 k = 0;
 
-    // 5. If relativeStart is -∞, let k be 0.
+    // 6. If relativeStart is -∞, let k be 0.
     if (Value(relative_start).is_negative_infinity())
         k = 0;
-    // 6. Else if relativeStart < 0, let k be max(len + relativeStart, 0).
+    // 7. Else if relativeStart < 0, let k be max(len + relativeStart, 0).
     else if (relative_start < 0)
-        k = max(length + relative_start, 0);
-    // 7. Else, let k be min(relativeStart, len).
+        k = max(length.value() + relative_start, 0);
+    // 8. Else, let k be min(relativeStart, len).
     else
-        k = min(relative_start, length);
+        k = min(relative_start, length.value());
 
     double relative_end = 0;
 
-    // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    // 9. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     if (end.is_undefined())
-        relative_end = length;
+        relative_end = length.value();
     else
         relative_end = TRY(end.to_integer_or_infinity(vm));
 
     i32 final = 0;
 
-    // 9. If relativeEnd is -∞, let final be 0.
+    // 10. If relativeEnd is -∞, let final be 0.
     if (Value(relative_end).is_negative_infinity())
         final = 0;
-    // 10. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
+    // 11. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
     else if (relative_end < 0)
-        final = max(length + relative_end, 0);
-    // 11. Else, let final be min(relativeEnd, len).
+        final = max(length.value() + relative_end, 0);
+    // 12. Else, let final be min(relativeEnd, len).
     else
-        final = min(relative_end, length);
+        final = min(relative_end, length.value());
 
-    // 12. Let count be max(final - k, 0).
+    // 13. Let count be max(final - k, 0).
     auto count = max(final - k, 0);
 
-    // 13. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
+    // 14. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
     MarkedVector<Value> arguments(vm.heap());
     arguments.empend(count);
     auto* new_array = TRY(typed_array_species_create(vm, *typed_array, move(arguments)));
 
-    // 14. If count > 0, then
+    // 15. If count > 0, then
     if (count > 0) {
-        // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-        if (typed_array->viewed_array_buffer()->is_detached())
-            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+        // a. Set getBufferByteLength to MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+        get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-        // b. Let srcType be TypedArrayElementType(O).
-        // c. Let targetType be TypedArrayElementType(A).
+        // b. Set len to IntegerIndexedObjectLength(O, getBufferByteLength).
+        length = integer_indexed_object_length(vm, *typed_array, get_buffer_byte_length);
 
-        // d. If srcType is different from targetType, then
+        // c. If len is out-of-bounds, throw a TypeError exception.
+        if (!length.has_value())
+            return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "length");
+
+        // d. Set final to min(final, len).
+        final = min(final, length.value());
+
+        // e. Let srcType be TypedArrayElementType(O).
+        // f. Let targetType be TypedArrayElementType(A).
+
+        // g. If srcType is different from targetType, then
         if (typed_array->element_name() != new_array->element_name()) {
             // i. Let n be 0.
             // ii. Repeat, while k < final,
@@ -1419,7 +1482,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
                 // 5. Set n to n + 1.
             }
         }
-        // e. Else,
+        // h. Else,
         else {
             // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
             auto& source_buffer = *typed_array->viewed_array_buffer();
@@ -1447,7 +1510,9 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
                 return new_array;
             }
 
-            // viii. Let limit be targetByteIndex + count × elementSize.
+            // NOTE: This step causes an out of bounds the spec doesn't take into acount the source byte index
+            // We currently do viii. Let limit be min(targetByteIndex + count × elementSize, len × elementSize - source_byte_index).
+            // viii. Let limit be min(targetByteIndex + count × elementSize, len × elementSize).
             Checked<u32> limit = count;
             limit *= element_size;
             limit += target_byte_index;
@@ -1455,6 +1520,16 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
                 dbgln("TypedArrayPrototype::slice: limit overflowed, returning as if succeeded.");
                 return new_array;
             }
+
+            Checked<u32> bytes_to_end_from_source = length.value();
+            bytes_to_end_from_source *= element_size;
+            bytes_to_end_from_source -= source_byte_index;
+            if (bytes_to_end_from_source.has_overflow()) {
+                dbgln("TypedArrayPrototype::slice: bytes_to_end_from_source overflowed, returning as if succeeded.");
+                return new_array;
+            }
+
+            limit = min(limit.value(), bytes_to_end_from_source.value());
 
             // ix. Repeat, while targetByteIndex < limit,
             for (; target_byte_index < limit.value(); ++source_byte_index, ++target_byte_index) {
@@ -1501,7 +1576,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 4. Let len be obj.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 5. NOTE: The following closure performs a numeric comparison rather than the string comparison used in 23.1.3.30.
     // 6. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
@@ -1539,50 +1614,64 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     auto* buffer = typed_array->viewed_array_buffer();
 
-    // 5. Let srcLength be O.[[ArrayLength]].
-    auto source_length = typed_array->array_length();
+    // 5. Let getSrcBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_src_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
-    // 6. Let relativeBegin be ? ToIntegerOrInfinity(begin).
+    // 6. Let srcLength be IntegerIndexedObjectLength(O, getSrcBufferByteLength).
+    // 7. If srcLength is out-of-bounds, set srcLength to 0.
+    auto source_length_or_oob = integer_indexed_object_length(vm, *typed_array, get_src_buffer_byte_length);
+    auto source_length = source_length_or_oob.has_value() ? source_length_or_oob.value() : 0;
+
+    // 8. Let relativeBegin be ? ToIntegerOrInfinity(begin).
     auto relative_begin = TRY(begin.to_integer_or_infinity(vm));
 
     i32 begin_index = 0;
 
-    // 7. If relativeBegin is -∞, let beginIndex be 0.
+    // 9. If relativeBegin is -∞, let beginIndex be 0.
     if (Value(relative_begin).is_negative_infinity())
         begin_index = 0;
-    // 8. Else if relativeBegin < 0, let beginIndex be max(srcLength + relativeBegin, 0).
+    // 10. Else if relativeBegin < 0, let beginIndex be max(srcLength + relativeBegin, 0).
     else if (relative_begin < 0)
         begin_index = max(source_length + relative_begin, 0);
-    // 9. Else, let beginIndex be min(relativeBegin, srcLength).
+    // 11. Else, let beginIndex be min(relativeBegin, srcLength).
     else
         begin_index = min(relative_begin, source_length);
 
     double relative_end = 0;
 
-    // 10. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
-    if (end.is_undefined())
-        relative_end = source_length;
-    else
-        relative_end = TRY(end.to_integer_or_infinity(vm));
+    // 12. If O.[[ArrayLength]] is auto and end is undefined, then
+    Value new_length;
+    if (typed_array->is_array_length_auto() && end.is_undefined()) {
+        // a. Let newLength be undefined.
+        new_length = js_undefined();
+    }
+    // 13. Else,
+    else {
+        // a. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
+        if (end.is_undefined())
+            relative_end = source_length;
+        else
+            relative_end = TRY(end.to_integer_or_infinity(vm));
 
-    i32 end_index = 0;
+        i32 end_index = 0;
 
-    // 11. If relativeEnd is -∞, let endIndex be 0.
-    if (Value(relative_end).is_negative_infinity())
-        end_index = 0;
-    // 12. Else if relativeEnd < 0, let endIndex be max(srcLength + relativeEnd, 0).
-    else if (relative_end < 0)
-        end_index = max(source_length + relative_end, 0);
-    // 13. Else, let endIndex be min(relativeEnd, srcLength).
-    else
-        end_index = min(relative_end, source_length);
+        // b. If relativeEnd is -∞, let endIndex be 0.
+        if (Value(relative_end).is_negative_infinity())
+            end_index = 0;
+        // c. Else if relativeEnd < 0, let endIndex be max(srcLength + relativeEnd, 0).
+        else if (relative_end < 0)
+            end_index = max(source_length + relative_end, 0);
+        // d. Else, let endIndex be min(relativeEnd, srcLength).
+        else
+            end_index = min(relative_end, source_length);
 
-    // 14. Let newLength be max(endIndex - beginIndex, 0).
-    auto new_length = max(end_index - begin_index, 0);
+        // e. Let newLength be max(endIndex - beginIndex, 0).
+        new_length = Value(max(end_index - begin_index, 0));
+    }
 
-    // 15. Let elementSize be TypedArrayElementSize(O).
-    // 16. Let srcByteOffset be O.[[ByteOffset]].
-    // 17. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
+    // 14. Let elementSize be TypedArrayElementSize(O).
+    // 15. Let srcByteOffset be O.[[ByteOffset]].
+    // 16. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
     Checked<u32> begin_byte_offset = begin_index;
     begin_byte_offset *= typed_array->element_size();
     begin_byte_offset += typed_array->byte_offset();
@@ -1591,13 +1680,17 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
         return typed_array;
     }
 
-    // 18. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
+    // 17. If newLength is undefined, then
+    // a. Let argumentsList be « buffer, 𝔽(beginByteOffset) ».
+    // 18. Else,
+    // a. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
     MarkedVector<Value> arguments(vm.heap());
     arguments.empend(buffer);
     arguments.empend(begin_byte_offset.value());
-    arguments.empend(new_length);
+    if (!new_length.is_undefined())
+        arguments.empend(new_length);
 
-    // 19. Return ? TypedArraySpeciesCreate(O, argumentsList).
+    // 18. Return ? TypedArraySpeciesCreate(O, argumentsList).
     return TRY(typed_array_species_create(vm, *typed_array, move(arguments)));
 }
 
@@ -1618,7 +1711,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     // 2. Let len be ? ToLength(? Get(array, "length")).
     // The implementation of the algorithm may be optimized with the knowledge that the this value is an object that
     // has a fixed length and whose integer-indexed properties are not sparse.
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 3. Let separator be the implementation-defined list-separator String value appropriate for the host environment's current locale (such as ", ").
     constexpr auto separator = ',';
@@ -1663,7 +1756,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_reversed)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let length be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. Let A be ? TypedArrayCreateSameType(O, « 𝔽(length) »).
     MarkedVector<Value> arguments(vm.heap());
@@ -1708,7 +1801,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 4. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 5. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());
@@ -1761,7 +1854,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
     // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    auto length = typed_array->idempotent_array_length();
 
     // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(index.to_integer_or_infinity(vm));

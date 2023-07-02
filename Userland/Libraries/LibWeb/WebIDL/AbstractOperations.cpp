@@ -42,7 +42,7 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         offset = es_buffer_source.byte_offset();
 
         // 3. Set length to esBufferSource.[[ByteLength]].
-        length = es_buffer_source.byte_length();
+        length = es_buffer_source.idempotent_byte_length();
     } else if (is<JS::DataView>(buffer_source)) {
         auto const& es_buffer_source = static_cast<JS::DataView const&>(buffer_source);
 

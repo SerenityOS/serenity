@@ -27,7 +27,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM& vm, Value typed_array_va
     return static_cast<TypedArrayBase*>(this_object.ptr());
 }
 
-// 23.2.4.4 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
+// 23.2.4.4 ValidateTypedArray ( O ), https://tc39.es/proposal-resizablearraybuffer/#sec-validatetypedarray
 ThrowCompletionOr<void> validate_typed_array(VM& vm, TypedArrayBase& typed_array)
 {
     // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
@@ -37,16 +37,20 @@ ThrowCompletionOr<void> validate_typed_array(VM& vm, TypedArrayBase& typed_array
     // 2. Assert: O has a [[ViewedArrayBuffer]] internal slot.
 
     // 3. Let buffer be O.[[ViewedArrayBuffer]].
-    auto* buffer = typed_array.viewed_array_buffer();
+    static_cast<void>(typed_array.viewed_array_buffer());
 
-    // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 4. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
 
+    // 5. If IsIntegerIndexedObjectOutOfBounds(O, getBufferByteLength) is true, throw a TypeError exception.
+    if (is_integer_indexed_object_out_of_bounds(vm, typed_array, get_buffer_byte_length))
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "validate_typed_array");
+
+    // 6. Return unused
     return {};
 }
 
-// 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
+// 23.2.5.1.3 InitializeTypedArrayFromArrayBuffer ( O, buffer, byteOffset, length ), https://tc39.es/proposal-resizablearraybuffer/#sec-initializetypedarrayfromarraybuffer
 static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(VM& vm, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
 {
     // 1. Let elementSize be TypedArrayElementSize(O).
@@ -59,73 +63,90 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_buffer(VM& vm, 
     if (offset % element_size != 0)
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidByteOffset, typed_array.class_name(), element_size, offset);
 
+    // 4. Let bufferIsResizable be IsResizableArrayBuffer(buffer).
+    auto buffer_is_resizable = array_buffer.is_resizable();
+
     size_t new_length { 0 };
 
-    // 4. If length is not undefined, then
+    // 5. If length is not undefined, then
     if (!length.is_undefined()) {
         // a. Let newLength be ? ToIndex(length).
         new_length = TRY(length.to_index(vm));
     }
 
-    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // 6. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-    auto buffer_byte_length = array_buffer.byte_length();
+    // 7. Let bufferByteLength be ArrayBufferByteLength(buffer, SeqCst).
+    auto buffer_byte_length = array_buffer_byte_length(vm, array_buffer, ArrayBuffer::Order::SeqCst);
 
     Checked<size_t> new_byte_length;
 
-    // 7. If length is undefined, then
-    if (length.is_undefined()) {
-        // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
-        if (buffer_byte_length % element_size != 0)
-            return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
-
-        // b. Let newByteLength be bufferByteLength - offset.
-        // c. If newByteLength < 0, throw a RangeError exception.
+    // 8. If length is undefined and bufferIsResizable is true, then
+    if (length.is_undefined() && buffer_is_resizable) {
+        // a. If offset > bufferByteLength, throw a RangeError exception.
         if (offset > buffer_byte_length)
             return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
-        new_byte_length = buffer_byte_length;
-        new_byte_length -= offset;
+
+        // a. Set O.[[ByteLength]] to auto.
+        typed_array.set_byte_length_to_auto();
+
+        // c. Set O.[[ArrayLength]] to auto.
+        typed_array.set_array_length_to_auto();
     }
-    // 8. Else,
+    // 9. Else,
     else {
-        // a. Let newByteLength be newLength × elementSize.
-        new_byte_length = new_length;
-        new_byte_length *= element_size;
+        // a. If length is undefined, then
+        if (length.is_undefined()) {
+            // i. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
+            if (buffer_byte_length % element_size != 0)
+                return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
 
-        // b. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
-        Checked<size_t> new_byte_end = new_byte_length;
-        new_byte_end += offset;
+            // ii. Let newByteLength be bufferByteLength - offset.
+            new_byte_length = buffer_byte_length;
+            new_byte_length -= offset;
 
-        if (new_byte_end.has_overflow())
-            return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
+            // NOTE: The overflow check handles this step
+            // iii. If newByteLength < 0, throw a RangeError exception.
+            if (new_byte_length.has_overflow())
+                return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
+        }
+        // b. Else,
+        else {
+            // i. Let newByteLength be newLength × elementSize.
+            new_byte_length = new_length;
+            new_byte_length *= element_size;
 
-        if (new_byte_end.value() > buffer_byte_length)
-            return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
+            // ii. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
+            Checked<size_t> new_byte_end = new_byte_length;
+            new_byte_end += offset;
+
+            if (new_byte_end.has_overflow())
+                return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
+
+            if (new_byte_end.value() > buffer_byte_length)
+                return vm.throw_completion<RangeError>(ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
+        }
+
+        // c. Set O.[[ByteLength]] to newByteLength.
+        typed_array.set_byte_length(new_byte_length.value());
+
+        // d. Set O.[[ArrayLength]] to newByteLength / elementSize
+        typed_array.set_array_length(new_byte_length.value() / element_size);
     }
 
-    if (new_byte_length.has_overflow())
-        return vm.throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
-
-    // 9. Set O.[[ViewedArrayBuffer]] to buffer.
+    // 10. Set O.[[ViewedArrayBuffer]] to buffer.
     typed_array.set_viewed_array_buffer(&array_buffer);
-
-    // 10. Set O.[[ByteLength]] to newByteLength.
-    typed_array.set_byte_length(new_byte_length.value());
 
     // 11. Set O.[[ByteOffset]] to offset.
     typed_array.set_byte_offset(offset);
-
-    // 12. Set O.[[ArrayLength]] to newByteLength / elementSize.
-    typed_array.set_array_length(new_byte_length.value() / element_size);
 
     // 13. Return unused.
     return {};
 }
 
-// 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray
+// 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/proposal-resizablearraybuffer/#sec-initializetypedarrayfromtypedarray
 template<typename T>
 static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, TypedArray<T>& dest_array, TypedArrayBase& src_array)
 {
@@ -135,59 +156,58 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, T
     auto* src_data = src_array.viewed_array_buffer();
     VERIFY(src_data);
 
-    // 2. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-    if (src_data->is_detached())
-        return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
-
-    // 3. Let elementType be TypedArrayElementType(O).
-    // 4. Let elementSize be TypedArrayElementSize(O).
+    // 2. Let elementType be TypedArrayElementType(O).
+    // 3. Let elementSize be TypedArrayElementSize(O).
     auto element_size = dest_array.element_size();
 
-    // 5. Let srcType be TypedArrayElementType(srcArray).
-    // 6. Let srcElementSize be TypedArrayElementSize(srcArray).
+    // 4. Let getSrcBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_src_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // 5. Let elementLength be IntegerIndexedObjectLength(srcArray, getSrcBufferByteLength).
+    auto element_length = integer_indexed_object_length(vm, src_array, get_src_buffer_byte_length);
+
+    // 6. If elementLength is out-of-bounds, throw a TypeError exception.
+    if (!element_length.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "element length");
+
+    // 7. Let srcType be TypedArrayElementType(srcArray).
+    // 8. Let srcElementSize be TypedArrayElementSize(srcArray).
     auto src_element_size = src_array.element_size();
 
-    // 7. Let srcByteOffset be srcArray.[[ByteOffset]].
+    // 9. Let srcByteOffset be srcArray.[[ByteOffset]].
     auto src_byte_offset = src_array.byte_offset();
 
-    // 8. Let elementLength be srcArray.[[ArrayLength]].
-    auto element_length = src_array.array_length();
-
-    // 9. Let byteLength be elementSize × elementLength.
+    // 10. Let byteLength be elementSize × elementLength.
     Checked<size_t> byte_length = element_size;
-    byte_length *= element_length;
+    byte_length *= element_length.value();
     if (byte_length.has_overflow())
         return vm.template throw_completion<RangeError>(ErrorType::InvalidLength, "typed array");
 
     ArrayBuffer* data = nullptr;
 
-    // 10. If elementType is the same as srcType, then
+    // 11. If elementType is the same as srcType, then
     if (dest_array.element_name() == src_array.element_name()) {
         // a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength).
         data = TRY(clone_array_buffer(vm, *src_data, src_byte_offset, byte_length.value()));
     }
-    // 11. Else,
+    // 12. Else,
     else {
         // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
         data = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), byte_length.value()));
 
-        // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-        if (src_data->is_detached())
-            return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
-
-        // c. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
+        // b. If srcArray.[[ContentType]] ≠ O.[[ContentType]], throw a TypeError exception.
         if (src_array.content_type() != dest_array.content_type())
             return vm.template throw_completion<TypeError>(ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
 
-        // d. Let srcByteIndex be srcByteOffset.
+        // c. Let srcByteIndex be srcByteOffset.
         u64 src_byte_index = src_byte_offset;
 
-        // e. Let targetByteIndex be 0.
+        // d. Let targetByteIndex be 0.
         u64 target_byte_index = 0;
 
-        // f. Let count be elementLength.
-        // g. Repeat, while count > 0,
-        for (u32 i = 0; i < element_length; ++i) {
+        // e. Let count be elementLength.
+        // f. Repeat, while count > 0,
+        for (u32 i = 0; i < element_length.value(); ++i) {
             // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
             auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
 
@@ -204,19 +224,19 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(VM& vm, T
         }
     }
 
-    // 12. Set O.[[ViewedArrayBuffer]] to data.
+    // 13. Set O.[[ViewedArrayBuffer]] to data.
     dest_array.set_viewed_array_buffer(data);
 
-    // 13. Set O.[[ByteLength]] to byteLength.
+    // 14. Set O.[[ByteLength]] to byteLength.
     dest_array.set_byte_length(byte_length.value());
 
-    // 14. Set O.[[ByteOffset]] to 0.
+    // 15. Set O.[[ByteOffset]] to 0.
     dest_array.set_byte_offset(0);
 
-    // 15. Set O.[[ArrayLength]] to elementLength.
-    dest_array.set_array_length(element_length);
+    // 16. Set O.[[ArrayLength]] to elementLength.
+    dest_array.set_array_length(element_length.value());
 
-    // 16. Return unused.
+    // 17. Return unused.
     return {};
 }
 
@@ -332,7 +352,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& co
     // 3. If argumentList is a List of a single Number, then
     if (first_argument.has_value() && first_argument->is_number()) {
         // a. If newTypedArray.[[ArrayLength]] < ℝ(argumentList[0]), throw a TypeError exception.
-        if (typed_array.array_length() < first_argument->as_double())
+        if (typed_array.idempotent_array_length() < first_argument->as_double())
             return vm.throw_completion<TypeError>(ErrorType::InvalidLength, "typed array");
     }
 
@@ -411,6 +431,141 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y,
 
     // 10. Return +0𝔽.
     return 0;
+}
+
+// 3.3 IntegerIndexedObjectByteLength ( O, getBufferByteLength ), https://tc39.es/proposal-resizablearraybuffer/#sec-integerindexedobjectbytelength
+size_t integer_indexed_object_byte_length(VM& vm, TypedArrayBase const& typed_array, IdempotentArrayBufferByteLengthGetter& get_buffer_byte_length)
+{
+    // 1. Let length be IntegerIndexedObjectLength(O, getBufferByteLength).
+    auto length = integer_indexed_object_length(vm, typed_array, get_buffer_byte_length);
+
+    // 2. If length is out-of-bounds or length = 0, return 0.
+    if (!length.has_value() || length.value() == 0)
+        return 0;
+
+    // 3. If O.[[ByteLength]] is not auto, return O.[[ByteLength]].
+    if (!typed_array.is_byte_length_auto())
+        return typed_array.byte_length().value();
+
+    // 4. Let elementSize be TypedArrayElementSize(O).
+    auto element_size = typed_array.element_size();
+
+    // 5. Return length × elementSize.
+    Checked<size_t> object_byte_length = length.value();
+    object_byte_length *= element_size;
+
+    // FIXME: Not exactly sure what we should do when overflow occurs.
+    //        Just return 0 as if it succeeded for now.
+    if (object_byte_length.has_overflow()) {
+        dbgln("integer_indexed_object_byte_length(): object_byte_length overflowed, returning as if succeeded.");
+        return 0;
+    }
+
+    return object_byte_length.value();
+}
+
+// 3.4 IntegerIndexedObjectLength ( O, getBufferByteLength ), https://tc39.es/proposal-resizablearraybuffer/#sec-integerindexedobjectbytelength
+Optional<size_t> integer_indexed_object_length(VM& vm, TypedArrayBase const& typed_array, IdempotentArrayBufferByteLengthGetter& get_buffer_byte_length)
+{
+    // 1. If IsIntegerIndexedObjectOutOfBounds(O, getBufferByteLength) is true, return out-of-bounds.
+    if (is_integer_indexed_object_out_of_bounds(vm, typed_array, get_buffer_byte_length))
+        return {};
+
+    // 2. If O.[[ArrayLength]] is not auto, return O.[[ArrayLength]].
+    if (!typed_array.is_array_length_auto())
+        return typed_array.array_length().value();
+
+    // 3. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array.viewed_array_buffer();
+
+    // 4. Let bufferByteLength be getBufferByteLength(buffer).
+    auto buffer_byte_length = get_buffer_byte_length(vm, *buffer);
+
+    // 5. Assert: IsResizableArrayBuffer(buffer) is true.
+    VERIFY(buffer->is_resizable());
+
+    // 6. Let byteOffset be O.[[ByteOffset]].
+    auto byte_offset = typed_array.byte_offset();
+
+    // 7. Let elementSize be TypedArrayElementSize(O).
+    auto element_size = typed_array.element_size();
+
+    // NOTE: Integer division implicitly floors
+    // 8. Return floor((bufferByteLength - byteOffset) / elementSize).
+    return (buffer_byte_length - byte_offset) / element_size;
+}
+
+// 3.5 IsIntegerIndexedObjectOutOfBounds ( O, getBufferByteLength ), https://tc39.es/proposal-resizablearraybuffer/#sec-integerindexedobjectbytelength
+bool is_integer_indexed_object_out_of_bounds(VM& vm, TypedArrayBase const& typed_array, IdempotentArrayBufferByteLengthGetter& get_buffer_byte_length)
+{
+    // 1. Let buffer be O.[[ViewedArrayBuffer]].
+    auto buffer = typed_array.viewed_array_buffer();
+
+    // 2. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return true.
+    if (buffer->is_detached())
+        return true;
+
+    // 3. Let bufferByteLength be getBufferByteLength(buffer).
+    auto buffer_byte_length = get_buffer_byte_length(vm, *buffer);
+
+    // 4. Let byteOffsetStart be O.[[ByteOffset]].
+    auto byte_offset_start = typed_array.byte_offset();
+
+    // 5. If O.[[ArrayLength]] is auto, then
+    Checked<size_t> byte_offset_end;
+    if (typed_array.is_array_length_auto()) {
+        // a. Let byteOffsetEnd be bufferByteLength.
+        byte_offset_end = buffer_byte_length;
+    }
+    // 6. Else,
+    else {
+        // a. Let elementSize be TypedArrayElementSize(O).
+        auto element_size = typed_array.element_size();
+
+        // b. Let byteOffsetEnd be byteOffsetStart + O.[[ArrayLength]] × elementSize.
+        byte_offset_end = typed_array.array_length().value();
+        byte_offset_end *= element_size;
+        byte_offset_end += byte_offset_start;
+
+        // FIXME: Not exactly sure what we should do when overflow occurs.
+        //        Just return true as if it succeeded for now.
+        if (byte_offset_end.has_overflow()) {
+            dbgln("is_integer_indexed_object_out_of_bounds(): byte_offset_end overflowed, returning as if succeeded.");
+            return true;
+        }
+    }
+
+    // 7. If byteOffsetStart > bufferByteLength or byteOffsetEnd > bufferByteLength, return true.
+    if (byte_offset_start > buffer_byte_length || byte_offset_end > buffer_byte_length)
+        return true;
+
+    // 8. NOTE: 0-length TypedArrays are not considered out-of-bounds.
+    // 9. Return false.
+    return false;
+}
+
+// 3.6 IsArrayBufferViewOutOfBounds ( O ), https://tc39.es/proposal-resizablearraybuffer/#sec-isarraybufferviewoutofbounds
+bool is_array_buffer_view_out_of_bounds(VM& vm, TypedArrayBase const& typed_array)
+{
+    // 1. Let buffer be O.[[ViewedArrayBuffer]].
+    auto buffer = typed_array.viewed_array_buffer();
+
+    // 2. If IsDetachedBuffer(buffer) is true, return true.
+    if (buffer->is_detached())
+        return true;
+
+    // 3. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // FIXME: 4. If IsSharedArrayBuffer(buffer) is true, then
+    // a. Assert: If O has a [[DataView]] internal slot, IsViewOutOfBounds(O, getBufferByteLength) is false. Else, IsIntegerIndexedObjectOutOfBounds(O, getBufferByteLength) is false.
+    // b. NOTE: SharedArrayBuffers can only grow, and views on it cannot go out of bounds after construction. This is special-cased in this operation to avoid shared memory loads of the buffer's byte length, which are not necessary for this check.
+    // c. Return false.
+
+    // FIXME: 5. If O has a [[DataView]] internal slot, return IsViewOutOfBounds(O, getBufferByteLength).
+
+    // 6. Return IsIntegerIndexedObjectOutOfBounds(O, getBufferByteLength).
+    return is_integer_indexed_object_out_of_bounds(vm, typed_array, get_buffer_byte_length);
 }
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
