@@ -8,6 +8,8 @@
 
 namespace Diff {
 
+class Parser;
+
 struct Hunk;
 struct HunkLocation;
 struct Line;
