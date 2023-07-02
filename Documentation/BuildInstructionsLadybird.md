@@ -7,7 +7,7 @@ Qt6 development packages and a C++20 capable compiler are required. gcc-12 or cl
 On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
-sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev libqt6svg6-dev qt6-tools-dev-tools qt6-multimedia-dev
+sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools qt6-multimedia-dev
 ```
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
@@ -19,12 +19,12 @@ sudo apt install qt6-wayland
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-svg qt6-tools qt6-wayland qt6-multimedia
+sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland qt6-multimedia
 ```
 
 On Fedora or derivatives:
 ```
-sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel
+sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel
 ```
 
 On openSUSE:
