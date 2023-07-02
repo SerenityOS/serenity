@@ -1353,6 +1353,11 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
 
 Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // The completion value of a VariableDeclaration is empty, but there might already be a non-empty
+    // completion value in the accumulator. We need to save it and restore it after the declaration executed.
+    auto saved_accumulator = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(saved_accumulator);
+
     for (auto& declarator : m_declarations) {
         if (declarator->init()) {
             if (auto const* lhs = declarator->target().get_pointer<NonnullRefPtr<Identifier const>>()) {
@@ -1367,6 +1372,7 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
         }
     }
 
+    generator.emit<Bytecode::Op::Load>(saved_accumulator);
     return {};
 }
 
