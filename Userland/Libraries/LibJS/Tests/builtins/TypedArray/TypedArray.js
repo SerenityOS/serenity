@@ -390,3 +390,19 @@ test("source is not the same value as the receiver, and the index is invalid", (
         expect(receiver[2]).toBeUndefined();
     });
 });
+
+test("resizing array buffer changes typed array length", () => {
+    TYPED_ARRAYS.forEach(T => {
+        const resizable = new ArrayBuffer(4 * T.BYTES_PER_ELEMENT, {
+            maxByteLength: 8 * T.BYTES_PER_ELEMENT,
+        });
+        const array = new T(resizable);
+        expect(array.byteLength).toBe(4 * T.BYTES_PER_ELEMENT);
+
+        resizable.resize(8 * T.BYTES_PER_ELEMENT);
+        expect(array.byteLength).toBe(8 * T.BYTES_PER_ELEMENT);
+
+        resizable.resize(0);
+        expect(array.byteLength).toBe(0);
+    });
+});
