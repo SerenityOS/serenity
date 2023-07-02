@@ -36,7 +36,25 @@ void ArrayBufferConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-// 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
+// 25.1.3.6 GetArrayBufferMaxByteLengthOption ( options ), https://tc39.es/ecma262/#sec-getarraybuffermaxbytelengthoption
+static ThrowCompletionOr<Optional<size_t>> get_max_byte_length_option(VM& vm, Value options)
+{
+    // 1. If options is not an Object, return empty.
+    if (!options.is_object())
+        return Optional<size_t> {};
+
+    // 2. Let maxByteLength be ? Get(options, "maxByteLength").
+    auto max_byte_length = TRY(options.get(vm, vm.names.maxByteLength));
+
+    // 3. If maxByteLength is undefined, return empty.
+    if (max_byte_length.is_undefined())
+        return Optional<size_t> {};
+
+    // 4. Return ? ToIndex(maxByteLength).
+    return TRY(max_byte_length.to_index(vm));
+}
+
+// 25.1.4.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
 ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
@@ -45,10 +63,12 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
 }
 
-// 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
+// 25.1.4.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
 ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+
+    auto options = vm.argument(1);
 
     // 2. Let byteLength be ? ToIndex(length).
     auto byte_length_or_error = vm.argument(0).to_index(vm);
@@ -62,11 +82,14 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
         return error;
     }
 
-    // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
+    // 3. Let requestedMaxByteLength be ? GetArrayBufferMaxByteLengthOption(options).
+    auto requested_max_byte_length = TRY(get_max_byte_length_option(vm, options));
+
+    // 4. Return ? AllocateArrayBuffer(NewTarget, byteLength, requestedMaxByteLength).
+    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value(), requested_max_byte_length));
 }
 
-// 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
+// 25.1.5.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 {
     auto arg = vm.argument(0);
@@ -85,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
     return Value(false);
 }
 
-// 25.1.4.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
+// 25.1.5.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
     // 1. Return the this value.

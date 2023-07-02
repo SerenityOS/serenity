@@ -346,6 +346,7 @@ namespace JS {
     P(leftContext)                           \
     P(map)                                   \
     P(max)                                   \
+    P(maxByteLength)                         \
     P(maximize)                              \
     P(mergeFields)                           \
     P(message)                               \
@@ -421,6 +422,8 @@ namespace JS {
     P(reject)                                \
     P(relativeTo)                            \
     P(repeat)                                \
+    P(resize)                                \
+    P(resizable)                             \
     P(resolve)                               \
     P(resolvedOptions)                       \
     P(reverse)                               \

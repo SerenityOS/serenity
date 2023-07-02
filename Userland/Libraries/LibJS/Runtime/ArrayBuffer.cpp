@@ -136,21 +136,45 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer const&
     // 7. Return unused.
 }
 
-// 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
+// 25.1.3.1 AllocateArrayBuffer ( constructor, byteLength [ , maxByteLength ] ), https://tc39.es/ecma262/#sec-allocatearraybuffer
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length)
 {
-    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+    // 1. Let slots be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
+
+    // 2. If maxByteLength is present and maxByteLength is not empty, let allocatingResizableBuffer be true; otherwise let allocatingResizableBuffer be false.
+    auto allocating_resizable_buffer = max_byte_length.has_value();
+
+    // 3. If allocatingResizableBuffer is true, then
+    if (allocating_resizable_buffer) {
+        // a. If byteLength > maxByteLength, throw a RangeError exception.
+        if (byte_length > max_byte_length.value())
+            return vm.throw_completion<RangeError>(ErrorType::InvalidByteLengthForResizableArrayBuffer, byte_length, max_byte_length.value());
+
+        // b. Append [[ArrayBufferMaxByteLength]] to slots.
+    }
+
+    // 4. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", slots).
     auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
-    // 2. Let block be ? CreateByteDataBlock(byteLength).
+    // 5. Let block be ? CreateByteDataBlock(byteLength).
     auto block = TRY(create_byte_data_block(vm, byte_length));
 
-    // 3. Set obj.[[ArrayBufferData]] to block.
+    // 6. Set obj.[[ArrayBufferData]] to block.
     obj->set_data_block(move(block));
 
-    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    // 7. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
-    // 5. Return obj.
+    // 8. If allocatingResizableBuffer is true, then
+    if (allocating_resizable_buffer) {
+        // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
+        // b. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations reserve the right to throw if, for example, virtual memory cannot be reserved up front.
+        TRY_OR_THROW_OOM(vm, obj->buffer().try_ensure_capacity(max_byte_length.value()));
+
+        // c. Set obj.[[ArrayBufferMaxByteLength]] to maxByteLength.
+        obj->set_max_byte_length(max_byte_length);
+    }
+
+    // 9. Return obj.
     return obj.ptr();
 }
 
@@ -201,13 +225,15 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
 }
 
 // 25.1.2.14 ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
-ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability)
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability)
 {
     auto& realm = *vm.current_realm();
 
     // 1. Perform ? RequireInternalSlot(arrayBuffer, [[ArrayBufferData]]).
 
-    // FIXME: 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    // 2. If IsSharedArrayBuffer(arrayBuffer) is true, throw a TypeError exception.
+    if (array_buffer.is_shared_array_buffer())
+        return vm.throw_completion<TypeError>(ErrorType::ThisCannotBeSharedArrayBuffer);
 
     // 3. If newLength is undefined, then
     // a. Let newByteLength be arrayBuffer.[[ArrayBufferByteLength]].
@@ -219,8 +245,16 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // FIXME: 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
-    // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+    Optional<size_t> new_max_byte_length;
+
+    // FIXME: Proposal is out-dated for this step, the spec now uses IsFixedLengthArrayBuffer
+    // 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
+    if (preserve_resizability == PreserveResizability::PreserveResizability && !array_buffer.is_fixed_length()) {
+        // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+        new_max_byte_length = array_buffer.max_byte_length();
+    }
+
+    // NOTE: Implicitly done in Optional default constructor
     // 7. Else,
     // a. Let newMaxByteLength be empty.
 
@@ -228,8 +262,8 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     if (!array_buffer.detach_key().is_undefined())
         return vm.throw_completion<TypeError>(ErrorType::DetachKeyMismatch, array_buffer.detach_key(), js_undefined());
 
-    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, FIXME: newMaxByteLength).
-    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length));
+    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, newMaxByteLength).
+    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length, new_max_byte_length));
 
     // 10. Let copyLength be min(newByteLength, arrayBuffer.[[ArrayBufferByteLength]]).
     auto copy_length = min(new_byte_length, array_buffer.byte_length());
@@ -262,6 +296,22 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM& vm
 
     // 5. Return obj.
     return obj;
+}
+
+// 25.1.3.2 ArrayBufferByteLength ( arrayBuffer, order ), https://tc39.es/ecma262/#sec-arraybufferbytelength
+size_t array_buffer_byte_length(VM&, ArrayBuffer const& array_buffer, ArrayBuffer::Order)
+{
+    // FIXME: 1. If IsSharedArrayBuffer(arrayBuffer) is true and arrayBuffer has an [[ArrayBufferByteLengthData]] internal slot, then
+    // a. Let bufferByteLengthBlock be arrayBuffer.[[ArrayBufferByteLengthData]].
+    // b. Let rawLength be GetRawBytesFromSharedBlock(bufferByteLengthBlock, 0, biguint64, true, order).
+    // c. Let isLittleEndian be the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    // d. Return ℝ(RawBytesToNumeric(biguint64, rawLength, isLittleEndian)).
+
+    // 2. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!array_buffer.is_detached());
+
+    // 3. Return arrayBuffer.[[ArrayBufferByteLength]].
+    return array_buffer.byte_length();
 }
 
 }
