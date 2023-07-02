@@ -5,3 +5,8 @@
 Mark a possibly-unused variable as [[maybe_unused]]
 
 
+## `0002-Build-against-freetype.patch`
+
+Build against freetype
+
+
