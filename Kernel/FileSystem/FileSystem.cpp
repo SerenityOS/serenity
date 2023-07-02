@@ -27,11 +27,11 @@ FileSystem::~FileSystem()
 {
 }
 
-ErrorOr<void> FileSystem::prepare_to_unmount()
+ErrorOr<void> FileSystem::prepare_to_unmount(Inode& mount_guest_inode)
 {
     return m_attach_count.with([&](auto& attach_count) -> ErrorOr<void> {
         if (attach_count == 1)
-            return prepare_to_clear_last_mount();
+            return prepare_to_clear_last_mount(mount_guest_inode);
         return {};
     });
 }

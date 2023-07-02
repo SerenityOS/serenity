@@ -41,7 +41,7 @@ public:
     virtual unsigned total_inode_count() const { return 0; }
     virtual unsigned free_inode_count() const { return 0; }
 
-    ErrorOr<void> prepare_to_unmount();
+    ErrorOr<void> prepare_to_unmount(Inode& mount_guest_inode);
 
     struct DirectoryEntryView {
         DirectoryEntryView(StringView name, InodeIdentifier, u8 file_type);
@@ -69,7 +69,7 @@ protected:
     void set_block_size(u64 size) { m_block_size = size; }
     void set_fragment_size(size_t size) { m_fragment_size = size; }
 
-    virtual ErrorOr<void> prepare_to_clear_last_mount() { return {}; }
+    virtual ErrorOr<void> prepare_to_clear_last_mount([[maybe_unused]] Inode& mount_guest_inode) { return {}; }
 
     mutable Mutex m_lock { "FS"sv };
 

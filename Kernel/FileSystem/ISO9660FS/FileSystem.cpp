@@ -80,7 +80,7 @@ u8 ISO9660FS::internal_file_type_to_directory_entry_type(DirectoryEntryView cons
     return DT_REG;
 }
 
-ErrorOr<void> ISO9660FS::prepare_to_clear_last_mount()
+ErrorOr<void> ISO9660FS::prepare_to_clear_last_mount(Inode&)
 {
     // FIXME: Do proper cleaning here.
     BlockBasedFileSystem::remove_disk_cache_before_last_unmount();

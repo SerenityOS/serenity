@@ -40,7 +40,7 @@ public:
 private:
     Plan9FS(OpenFileDescription&);
 
-    virtual ErrorOr<void> prepare_to_clear_last_mount() override;
+    virtual ErrorOr<void> prepare_to_clear_last_mount(Inode&) override;
 
     virtual bool is_initialized_while_locked() override;
     virtual ErrorOr<void> initialize_while_locked() override;

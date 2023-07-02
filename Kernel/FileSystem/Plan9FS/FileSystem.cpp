@@ -21,7 +21,7 @@ Plan9FS::Plan9FS(OpenFileDescription& file_description)
 {
 }
 
-ErrorOr<void> Plan9FS::prepare_to_clear_last_mount()
+ErrorOr<void> Plan9FS::prepare_to_clear_last_mount(Inode&)
 {
     // FIXME: Do proper cleaning here.
     return {};
