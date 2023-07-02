@@ -18,7 +18,7 @@
     O(BitwiseOr)                     \
     O(BitwiseXor)                    \
     O(BlockDeclarationInstantiation) \
-    O(Call)                          \
+    O(CallWithArgumentArray)         \
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \
     O(CopyObjectExcludingProperties) \
@@ -89,7 +89,7 @@
     O(StrictlyEquals)                \
     O(StrictlyInequals)              \
     O(Sub)                           \
-    O(SuperCall)                     \
+    O(SuperCallWithArgumentArray)    \
     O(Throw)                         \
     O(ThrowIfNotObject)              \
     O(ThrowIfNullish)                \

@@ -344,7 +344,7 @@ Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Gen
         TRY(arguments_to_array_for_call(generator, m_arguments));
     }
 
-    generator.emit<Bytecode::Op::SuperCall>(m_is_synthetic == IsPartOfSyntheticConstructor::Yes);
+    generator.emit<Bytecode::Op::SuperCallWithArgumentArray>(m_is_synthetic == IsPartOfSyntheticConstructor::Yes);
 
     return {};
 }
@@ -1465,20 +1465,20 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
 
     TRY(arguments_to_array_for_call(generator, arguments()));
 
-    Bytecode::Op::Call::CallType call_type;
+    Bytecode::Op::CallType call_type;
     if (is<NewExpression>(*this)) {
-        call_type = Bytecode::Op::Call::CallType::Construct;
+        call_type = Bytecode::Op::CallType::Construct;
     } else if (m_callee->is_identifier() && static_cast<Identifier const&>(*m_callee).string() == "eval"sv) {
-        call_type = Bytecode::Op::Call::CallType::DirectEval;
+        call_type = Bytecode::Op::CallType::DirectEval;
     } else {
-        call_type = Bytecode::Op::Call::CallType::Call;
+        call_type = Bytecode::Op::CallType::Call;
     }
 
     Optional<Bytecode::StringTableIndex> expression_string_index;
     if (auto expression_string = this->expression_string(); expression_string.has_value())
         expression_string_index = generator.intern_string(expression_string.release_value());
 
-    generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg, expression_string_index);
+    generator.emit<Bytecode::Op::CallWithArgumentArray>(call_type, callee_reg, this_reg, expression_string_index);
 
     return {};
 }
@@ -1582,7 +1582,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // i. Let innerResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]], « received.[[Value]] »).
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
-        generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, next_method_register, iterator_register);
+        generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, next_method_register, iterator_register);
 
         // FIXME: ii. If generatorKind is async, set innerResult to ? Await(innerResult).
 
@@ -1654,7 +1654,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
-        generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, throw_method_register, iterator_register);
+        generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, throw_method_register, iterator_register);
 
         // FIXME: 2. If generatorKind is async, set innerResult to ? Await(innerResult).
 
@@ -1742,7 +1742,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
-        generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, return_method_register, iterator_register);
+        generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, return_method_register, iterator_register);
 
         // FIXME: v. If generatorKind is async, set innerReturnResult to ? Await(innerReturnResult).
 
@@ -2047,7 +2047,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     else
         generator.emit<Bytecode::Op::NewArray>();
 
-    generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, tag_reg, this_reg);
+    generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, tag_reg, this_reg);
     return {};
 }
 
@@ -2815,7 +2815,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::G
         TRY(reference.visit(
             [&](OptionalChain::Call const& call) -> Bytecode::CodeGenerationErrorOr<void> {
                 TRY(arguments_to_array_for_call(generator, call.arguments));
-                generator.emit<Bytecode::Op::Call>(Bytecode::Op::Call::CallType::Call, current_value_register, current_base_register);
+                generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, current_value_register, current_base_register);
 
                 generator.emit<Bytecode::Op::Store>(current_value_register);
 
