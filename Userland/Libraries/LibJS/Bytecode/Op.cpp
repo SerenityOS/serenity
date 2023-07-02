@@ -660,10 +660,7 @@ ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& in
     VERIFY(env.has_super_binding());
 
     // 3. Let baseValue be ? env.GetSuperBase().
-    auto base_value = TRY(env.get_super_base());
-
-    // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    interpreter.accumulator() = TRY(require_object_coercible(vm, base_value));
+    interpreter.accumulator() = TRY(env.get_super_base());
 
     return {};
 }
