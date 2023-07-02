@@ -50,6 +50,19 @@ Interpreter::~Interpreter()
 {
 }
 
+void Interpreter::visit_edges(Cell::Visitor& visitor)
+{
+    if (m_return_value.has_value())
+        visitor.visit(*m_return_value);
+    if (m_saved_return_value.has_value())
+        visitor.visit(*m_saved_return_value);
+    if (m_saved_exception.has_value())
+        visitor.visit(*m_saved_exception);
+    for (auto& window : m_register_windows) {
+        window.visit([&](auto& value) { value->visit_edges(visitor); });
+    }
+}
+
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Environment> lexical_environment_override)
 {
@@ -223,7 +236,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
             auto ran_or_error = instruction.execute(*this);
             if (ran_or_error.is_error()) {
                 auto exception_value = *ran_or_error.throw_completion().value();
-                m_saved_exception = make_handle(exception_value);
+                m_saved_exception = exception_value;
                 if (unwind_contexts().is_empty())
                     break;
                 auto& unwind_context = unwind_contexts().last();
@@ -254,7 +267,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
                 will_jump = true;
                 break;
             }
-            if (!m_return_value.is_empty()) {
+            if (m_return_value.has_value()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
                 //       hence we need to set a flag to not do so,
@@ -273,7 +286,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
-                m_saved_return_value = make_handle(m_return_value);
+                m_saved_return_value = m_return_value;
                 m_return_value = {};
                 m_current_block = unwind_context.finalizer;
                 // the unwind_context will be pop'ed when entering the finally block
@@ -284,7 +297,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         if (pc.at_end())
             break;
 
-        if (!m_saved_exception.is_null())
+        if (m_saved_exception.has_value())
             break;
 
         if (will_return)
@@ -307,12 +320,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     auto frame = pop_register_window();
 
     Value return_value = js_undefined();
-    if (!m_return_value.is_empty()) {
-        return_value = m_return_value;
-        m_return_value = {};
-    } else if (!m_saved_return_value.is_null() && m_saved_exception.is_null()) {
-        return_value = m_saved_return_value.value();
-        m_saved_return_value = {};
+    if (m_return_value.has_value()) {
+        return_value = m_return_value.release_value();
+    } else if (m_saved_return_value.has_value() && !m_saved_exception.has_value()) {
+        return_value = m_saved_return_value.release_value();
     }
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
@@ -330,7 +341,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
 
     vm().finish_execution_generation();
 
-    if (!m_saved_exception.is_null()) {
+    if (m_saved_exception.has_value()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
         m_saved_return_value = {};
@@ -361,15 +372,12 @@ void Interpreter::leave_unwind_context()
 
 ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume_label)
 {
-    if (!m_saved_exception.is_null()) {
-        auto result = throw_completion(m_saved_exception.value());
-        m_saved_exception = {};
-        return result;
+    if (m_saved_exception.has_value()) {
+        return throw_completion(m_saved_exception.release_value());
     }
 
-    if (!m_saved_return_value.is_null()) {
-        do_return(m_saved_return_value.value());
-        m_saved_return_value = {};
+    if (m_saved_return_value.has_value()) {
+        do_return(m_saved_return_value.release_value());
         return {};
     }
 

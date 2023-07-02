@@ -10,7 +10,6 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/FunctionKind.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
@@ -21,9 +20,22 @@ class InstructionStreamIterator;
 class PassManager;
 
 struct RegisterWindow {
-    MarkedVector<Value> registers;
-    MarkedVector<GCPtr<Environment>> saved_lexical_environments;
-    MarkedVector<GCPtr<Environment>> saved_variable_environments;
+    void visit_edges(Cell::Visitor& visitor)
+    {
+        for (auto const& value : registers)
+            visitor.visit(value);
+        for (auto const& environment : saved_lexical_environments)
+            visitor.visit(environment);
+        for (auto const& environment : saved_variable_environments)
+            visitor.visit(environment);
+        for (auto& context : unwind_contexts) {
+            visitor.visit(context.lexical_environment);
+            visitor.visit(context.variable_environment);
+        }
+    }
+    Vector<Value> registers;
+    Vector<GCPtr<Environment>> saved_lexical_environments;
+    Vector<GCPtr<Environment>> saved_variable_environments;
     Vector<UnwindInfo> unwind_contexts;
 };
 
@@ -90,6 +102,8 @@ public:
 
     VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 
+    void visit_edges(Cell::Visitor&);
+
 private:
     RegisterWindow& window()
     {
@@ -112,10 +126,10 @@ private:
     Span<Value> m_current_register_window;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
-    Value m_return_value;
-    Handle<Value> m_saved_return_value;
+    Optional<Value> m_return_value;
+    Optional<Value> m_saved_return_value;
+    Optional<Value> m_saved_exception;
     Executable const* m_current_executable { nullptr };
-    Handle<Value> m_saved_exception;
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };

@@ -10,6 +10,7 @@
 #include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
@@ -270,6 +271,10 @@ void Heap::mark_live_cells(HashTable<Cell*> const& roots)
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
     MarkingVisitor visitor(roots);
+
+    if (auto* bytecode_interpreter = vm().bytecode_interpreter_if_exists())
+        bytecode_interpreter->visit_edges(visitor);
+
     visitor.mark_all_live_cells();
 
     for (auto& inverse_root : m_uprooted_cells)
