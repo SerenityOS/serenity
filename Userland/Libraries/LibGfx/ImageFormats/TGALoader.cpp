@@ -264,7 +264,7 @@ size_t TGAImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     auto bits_per_pixel = m_context->header.bits_per_pixel;
     auto color_map = m_context->header.color_map_type;

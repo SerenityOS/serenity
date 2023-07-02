@@ -1548,7 +1548,7 @@ size_t BMPImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("BMPImageDecoderPlugin: Invalid frame index");

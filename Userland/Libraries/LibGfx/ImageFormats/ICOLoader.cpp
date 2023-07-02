@@ -255,7 +255,7 @@ size_t ICOImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("ICOImageDecoderPlugin: Invalid frame index");

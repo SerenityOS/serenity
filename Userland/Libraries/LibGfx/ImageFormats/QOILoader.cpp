@@ -212,7 +212,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(Readonl
     return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
 }
 
-ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("Invalid frame index");
