@@ -5,7 +5,12 @@ files="https://github.com/harfbuzz/harfbuzz/releases/download/${version}/harfbuz
 useconfigure='true'
 auth_type='sha256'
 depends=("freetype" "libicu")
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DHB_HAVE_FREETYPE=ON" "-DHB_HAVE_ICU=ON")
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+    '-DHB_HAVE_FREETYPE=ON'
+    '-DHB_HAVE_ICU=ON'
+    '-DCMAKE_C_FLAGS=-lfreetype'
+)
 
 configure() {
     run mkdir -p build
