@@ -895,6 +895,28 @@ static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, con
     return a;
 }
 
+const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(TableFormattingContext::ConflictingEdge const& conflicting_edge)
+{
+    auto const& style = conflicting_edge.element->computed_values();
+    switch (conflicting_edge.side) {
+    case ConflictingSide::Top: {
+        return style.border_top();
+    }
+    case ConflictingSide::Bottom: {
+        return style.border_bottom();
+    }
+    case ConflictingSide::Left: {
+        return style.border_left();
+    }
+    case ConflictingSide::Right: {
+        return style.border_right();
+    }
+    default: {
+        VERIFY_NOT_REACHED();
+    }
+    }
+}
+
 void TableFormattingContext::border_conflict_resolution()
 {
     // Partially implements border conflict resolution, as described in
@@ -908,26 +930,30 @@ void TableFormattingContext::border_conflict_resolution()
         Painting::BordersData override_borders_data;
         auto const& cell_style = cell.box->computed_values();
         auto& cell_state = m_state.get_mutable(cell.box);
-        for (auto const conflicting_element : finder.conflicting_elements(cell, ConflictingEdge::Left)) {
-            auto const& other_style = conflicting_element->computed_values();
-            override_borders_data.left = winning_border_style(cell_style.border_left(), other_style.border_left());
-            cell_state.border_left = override_borders_data.left.width;
+        auto winning_border_left = cell_style.border_left();
+        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Left)) {
+            winning_border_left = winning_border_style(winning_border_left, border_data_conflicting_edge(conflicting_edge));
         }
-        for (auto const conflicting_element : finder.conflicting_elements(cell, ConflictingEdge::Right)) {
-            auto const& other_style = conflicting_element->computed_values();
-            override_borders_data.right = winning_border_style(cell_style.border_right(), other_style.border_right());
-            cell_state.border_right = override_borders_data.right.width;
+        override_borders_data.left = winning_border_left;
+        cell_state.border_left = winning_border_left.width;
+        auto winning_border_right = cell_style.border_right();
+        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Right)) {
+            winning_border_right = winning_border_style(winning_border_right, border_data_conflicting_edge(conflicting_edge));
         }
-        for (auto const conflicting_element : finder.conflicting_elements(cell, ConflictingEdge::Top)) {
-            auto const& other_style = conflicting_element->computed_values();
-            override_borders_data.top = winning_border_style(cell_style.border_top(), other_style.border_top());
-            cell_state.border_top = override_borders_data.top.width;
+        override_borders_data.right = winning_border_right;
+        cell_state.border_right = winning_border_right.width;
+        auto winning_border_top = cell_style.border_top();
+        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Top)) {
+            winning_border_top = winning_border_style(winning_border_top, border_data_conflicting_edge(conflicting_edge));
         }
-        for (auto const conflicting_element : finder.conflicting_elements(cell, ConflictingEdge::Bottom)) {
-            auto const& other_style = conflicting_element->computed_values();
-            override_borders_data.bottom = winning_border_style(cell_style.border_bottom(), other_style.border_bottom());
-            cell_state.border_bottom = override_borders_data.bottom.width;
+        override_borders_data.top = winning_border_top;
+        cell_state.border_top = winning_border_top.width;
+        auto winning_border_bottom = cell_style.border_bottom();
+        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Bottom)) {
+            winning_border_bottom = winning_border_style(winning_border_bottom, border_data_conflicting_edge(conflicting_edge));
         }
+        override_borders_data.bottom = winning_border_bottom;
+        cell_state.border_bottom = override_borders_data.bottom.width;
         // FIXME: 4. If border styles differ only in color, then a style set on a cell wins over one on a row, which wins over a
         //           row group, column, column group and, lastly, table. When two elements of the same type conflict, then the one
         //           further to the left (if the table's 'direction' is 'ltr'; right, if it is 'rtl') and further to the top wins.
@@ -995,21 +1021,41 @@ void TableFormattingContext::BorderConflictFinder::collect_conflicting_col_eleme
     }
 }
 
-Vector<Node const*> TableFormattingContext::BorderConflictFinder::conflicting_elements(Cell const& cell, TableFormattingContext::ConflictingEdge edge) const
+Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderConflictFinder::conflicting_edges(
+    Cell const& cell, TableFormattingContext::ConflictingSide edge) const
 {
     // FIXME: Conflicting elements can be cells, rows, row groups, columns, column groups, and the table itself,
-    //        but we only consider 'col' elements in a 'colgroup', the table and the cell itself for now.
-    Vector<Node const*> result = { cell.box };
-    auto is_top = cell.row_index == 0;
-    auto is_left = cell.column_index == 0;
-    auto is_right = cell.column_index == m_context->m_columns.size() - 1;
-    auto is_bottom = cell.row_index == m_context->m_rows.size() - 1;
-    auto conflicts_top_or_bottom = (is_top && edge == ConflictingEdge::Top) || (is_bottom && edge == ConflictingEdge::Bottom);
-    if (conflicts_top_or_bottom || (is_left && edge == ConflictingEdge::Left) || (is_right && edge == ConflictingEdge::Right)) {
-        result.append(&m_context->table_box());
+    //        but we only consider 'col' elements in a 'colgroup' and the table itself for now.
+    Vector<ConflictingEdge> result = {};
+    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
+        result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Left });
     }
-    if (m_col_elements_by_index[cell.column_index] && (conflicts_top_or_bottom || edge == ConflictingEdge::Left || edge == ConflictingEdge::Right)) {
-        result.append(m_col_elements_by_index[cell.column_index]);
+    if (cell.column_index >= cell.column_span && m_col_elements_by_index[cell.column_index - cell.column_span] && edge == ConflictingSide::Left) {
+        result.append({ m_col_elements_by_index[cell.column_index - cell.column_span], ConflictingSide::Right });
+    }
+    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Right) {
+        result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Right });
+    }
+    if (cell.column_index + cell.column_span < m_col_elements_by_index.size() && m_col_elements_by_index[cell.column_index + cell.column_span] && edge == ConflictingSide::Right) {
+        result.append({ m_col_elements_by_index[cell.column_index + cell.column_span], ConflictingSide::Left });
+    }
+    if (cell.row_index == 0 && edge == ConflictingSide::Top) {
+        if (m_col_elements_by_index[cell.column_index]) {
+            result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Top });
+        }
+        result.append({ &m_context->table_box(), ConflictingSide::Top });
+    }
+    if (cell.row_index == m_context->m_rows.size() - 1 && edge == ConflictingSide::Bottom) {
+        if (m_col_elements_by_index[cell.column_index]) {
+            result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Bottom });
+        }
+        result.append({ &m_context->table_box(), ConflictingSide::Bottom });
+    }
+    if (cell.column_index == 0 && edge == ConflictingSide::Left) {
+        result.append({ &m_context->table_box(), ConflictingSide::Left });
+    }
+    if (cell.column_index == m_context->m_columns.size() - 1 && edge == ConflictingSide::Right) {
+        result.append({ &m_context->table_box(), ConflictingSide::Right });
     }
     return result;
 }

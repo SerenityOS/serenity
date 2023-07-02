@@ -120,17 +120,24 @@ private:
 
     CSSPixels compute_row_content_height(Cell const& cell) const;
 
-    enum class ConflictingEdge {
+    enum class ConflictingSide {
         Top,
-        Right,
         Bottom,
         Left,
+        Right,
     };
+
+    struct ConflictingEdge {
+        Node const* element;
+        ConflictingSide side;
+    };
+
+    const CSS::BorderData& border_data_conflicting_edge(ConflictingEdge const& conflicting_edge);
 
     class BorderConflictFinder {
     public:
         BorderConflictFinder(TableFormattingContext const* context);
-        Vector<Node const*> conflicting_elements(Cell const&, ConflictingEdge) const;
+        Vector<ConflictingEdge> conflicting_edges(Cell const&, ConflictingSide) const;
 
     private:
         void collect_conflicting_col_elements();
