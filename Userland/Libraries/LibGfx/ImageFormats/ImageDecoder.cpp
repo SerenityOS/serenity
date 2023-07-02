@@ -17,6 +17,7 @@
 #include <LibGfx/ImageFormats/PPMLoader.h>
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
+#include <LibGfx/ImageFormats/TinyVGLoader.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 
 namespace Gfx {
@@ -39,6 +40,7 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
         { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
         { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
         { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
+        { TinyVGImageDecoderPlugin::sniff, TinyVGImageDecoderPlugin::create },
         { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
     };
 
