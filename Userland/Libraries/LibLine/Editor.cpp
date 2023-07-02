@@ -759,11 +759,15 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
 
     m_history_cursor = m_history.size();
 
-    refresh_display().release_value_but_fixme_should_propagate_errors();
+    if (auto refresh_result = refresh_display(); refresh_result.is_error())
+        m_input_error = Error::ReadFailure;
 
     Core::EventLoop loop;
 
     m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Type::Read);
+
+    if (m_input_error.has_value())
+        loop.quit(Exit);
 
     m_notifier->on_activation = [&] {
         if (try_update_once().is_error())
