@@ -26,16 +26,12 @@ struct RegisterWindow {
             visitor.visit(value);
         for (auto const& environment : saved_lexical_environments)
             visitor.visit(environment);
-        for (auto const& environment : saved_variable_environments)
-            visitor.visit(environment);
         for (auto& context : unwind_contexts) {
             visitor.visit(context.lexical_environment);
-            visitor.visit(context.variable_environment);
         }
     }
     Vector<Value> registers;
     Vector<GCPtr<Environment>> saved_lexical_environments;
-    Vector<GCPtr<Environment>> saved_variable_environments;
     Vector<UnwindInfo> unwind_contexts;
 };
 
@@ -70,7 +66,6 @@ public:
     Value& reg(Register const& r) { return registers()[r.index()]; }
 
     auto& saved_lexical_environment_stack() { return window().saved_lexical_environments; }
-    auto& saved_variable_environment_stack() { return window().saved_variable_environments; }
     auto& unwind_contexts() { return window().unwind_contexts; }
 
     void jump(Label const& label)

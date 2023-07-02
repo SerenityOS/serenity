@@ -221,7 +221,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     if (in_frame)
         push_register_window(in_frame, executable.number_of_registers);
     else
-        push_register_window(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), Vector<UnwindInfo> {}), executable.number_of_registers);
+        push_register_window(make<RegisterWindow>(), executable.number_of_registers);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
@@ -244,7 +244,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
                     break;
                 if (unwind_context.handler) {
                     vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
-                    vm().running_execution_context().variable_environment = unwind_context.variable_environment;
                     m_current_block = unwind_context.handler;
                     unwind_context.handler = nullptr;
 
@@ -361,8 +360,7 @@ void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<
         m_current_executable,
         handler_target.has_value() ? &handler_target->block() : nullptr,
         finalizer_target.has_value() ? &finalizer_target->block() : nullptr,
-        vm().running_execution_context().lexical_environment,
-        vm().running_execution_context().variable_environment);
+        vm().running_execution_context().lexical_environment);
 }
 
 void Interpreter::leave_unwind_context()
