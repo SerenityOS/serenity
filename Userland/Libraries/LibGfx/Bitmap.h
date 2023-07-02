@@ -28,7 +28,8 @@
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpeg") \
     __ENUMERATE_IMAGE_FORMAT(dds, ".dds")   \
     __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")   \
-    __ENUMERATE_IMAGE_FORMAT(tga, ".tga")
+    __ENUMERATE_IMAGE_FORMAT(tga, ".tga")   \
+    __ENUMERATE_IMAGE_FORMAT(tvg, ".tvg")
 
 namespace Gfx {
 
