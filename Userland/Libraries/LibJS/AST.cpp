@@ -2461,8 +2461,12 @@ void BindingPattern::dump(int indent) const
             outln("(Identifier)");
             if (entry.name.has<NonnullRefPtr<Identifier const>>()) {
                 entry.name.get<NonnullRefPtr<Identifier const>>()->dump(indent + 3);
-            } else {
+            } else if (entry.name.has<NonnullRefPtr<Expression const>>()) {
                 entry.name.get<NonnullRefPtr<Expression const>>()->dump(indent + 3);
+            } else {
+                VERIFY(entry.name.has<Empty>());
+                print_indent(indent + 3);
+                outln("<empty>");
             }
         } else if (entry.is_elision()) {
             print_indent(indent + 2);
