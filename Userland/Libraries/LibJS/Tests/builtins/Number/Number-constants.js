@@ -8,4 +8,6 @@ test("basic functionality", () => {
     expect(Number.POSITIVE_INFINITY).toBe(Infinity);
     expect(Number.NEGATIVE_INFINITY).toBe(-Infinity);
     expect(Number.NaN).toBeNaN();
+    expect(Number.MIN_VALUE).toBeGreaterThan(0);
+    expect(Number.MIN_VALUE / 2.0).toBe(0);
 });
