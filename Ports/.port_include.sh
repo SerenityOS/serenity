@@ -776,7 +776,7 @@ do_dev() {
         do_installdepends
     fi
     if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
-        if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
+        if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
             do_clean
         fi
     fi
