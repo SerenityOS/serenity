@@ -49,6 +49,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool strip_color_profile = false;
     args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
 
+    u8 quality = 75;
+    args_parser.add_option(quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
+
     args_parser.parse(arguments);
 
     if (out_path.is_empty() ^ no_output) {
@@ -154,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
         return 0;
     } else if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame));
+        TRY(Gfx::JPEGWriter::encode(*buffered_stream, *frame, { .quality = quality }));
         return 0;
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
