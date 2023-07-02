@@ -513,11 +513,8 @@ ThrowCompletionOr<Reference> make_super_property_reference(VM& vm, Value actual_
     // 3. Let baseValue be ? env.GetSuperBase().
     auto base_value = TRY(env.get_super_base());
 
-    // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    auto bv = TRY(require_object_coercible(vm, base_value));
-
-    // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-    return Reference { bv, property_key, actual_this, strict };
+    // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+    return Reference { base_value, property_key, actual_this, strict };
 }
 
 // 19.2.1.1 PerformEval ( x, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
