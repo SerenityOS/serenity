@@ -776,6 +776,38 @@ enum class CallType {
     DirectEval,
 };
 
+class Call final : public Instruction {
+public:
+    Call(CallType type, Register callee, Register this_value, Register first_argument, u32 argument_count, Optional<StringTableIndex> expression_string = {})
+        : Instruction(Type::Call)
+        , m_callee(callee)
+        , m_this_value(this_value)
+        , m_first_argument(first_argument)
+        , m_argument_count(argument_count)
+        , m_type(type)
+        , m_expression_string(expression_string)
+    {
+    }
+
+    CallType call_type() const { return m_type; }
+    Register callee() const { return m_callee; }
+    Register this_value() const { return m_this_value; }
+    Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register);
+
+private:
+    Register m_callee;
+    Register m_this_value;
+    Register m_first_argument;
+    u32 m_argument_count { 0 };
+    CallType m_type;
+    Optional<StringTableIndex> m_expression_string;
+};
+
 class CallWithArgumentArray final : public Instruction {
 public:
     CallWithArgumentArray(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
@@ -787,12 +819,15 @@ public:
     {
     }
 
+    CallType call_type() const { return m_type; }
+    Register callee() const { return m_callee; }
+    Register this_value() const { return m_this_value; }
+    Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
+
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register);
-
-    Completion throw_type_error_for_callee(Bytecode::Interpreter&, StringView callee_type) const;
 
 private:
     Register m_callee;

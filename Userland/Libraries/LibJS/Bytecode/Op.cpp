@@ -694,47 +694,67 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     return argument_values;
 }
 
-Completion CallWithArgumentArray::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
+static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter, auto& call, StringView callee_type)
 {
     auto& vm = interpreter.vm();
-    auto callee = interpreter.reg(m_callee);
+    auto callee = interpreter.reg(call.callee());
 
-    if (m_expression_string.has_value())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
+    if (call.expression_string().has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
 
     return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type);
 }
 
-ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
+static ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, auto& call, Value callee)
+{
+    if (call.call_type() == CallType::Call && !callee.is_function())
+        return throw_type_error_for_callee(interpreter, call, "function"sv);
+    if (call.call_type() == CallType::Construct && !callee.is_constructor())
+        return throw_type_error_for_callee(interpreter, call, "constructor"sv);
+    return {};
+}
+
+static ThrowCompletionOr<void> perform_call(Interpreter& interpreter, auto& call, Value callee, MarkedVector<Value> argument_values)
 {
     auto& vm = interpreter.vm();
-
-    auto callee = interpreter.reg(m_callee);
-
-    if (m_type == CallType::Call && !callee.is_function())
-        return throw_type_error_for_callee(interpreter, "function"sv);
-    if (m_type == CallType::Construct && !callee.is_constructor())
-        return throw_type_error_for_callee(interpreter, "constructor"sv);
-
+    auto this_value = interpreter.reg(call.this_value());
     auto& function = callee.as_function();
-
-    auto this_value = interpreter.reg(m_this_value);
-
-    auto argument_values = argument_list_evaluation(interpreter);
-
     Value return_value;
-    if (m_type == CallType::DirectEval) {
+    if (call.call_type() == CallType::DirectEval) {
         if (callee == interpreter.realm().intrinsics().eval_function())
             return_value = TRY(perform_eval(vm, !argument_values.is_empty() ? argument_values[0].value_or(JS::js_undefined()) : js_undefined(), vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct));
         else
-            return_value = TRY(call(vm, function, this_value, move(argument_values)));
-    } else if (m_type == CallType::Call)
-        return_value = TRY(call(vm, function, this_value, move(argument_values)));
+            return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
+    } else if (call.call_type() == CallType::Call)
+        return_value = TRY(JS::call(vm, function, this_value, move(argument_values)));
     else
         return_value = TRY(construct(vm, function, move(argument_values)));
 
     interpreter.accumulator() = return_value;
     return {};
+}
+
+ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto callee = interpreter.reg(m_callee);
+
+    TRY(throw_if_needed_for_call(interpreter, *this, callee));
+
+    MarkedVector<Value> argument_values(vm.heap());
+    argument_values.ensure_capacity(m_argument_count);
+    for (u32 i = 0; i < m_argument_count; ++i) {
+        argument_values.unchecked_append(interpreter.reg(Register { m_first_argument.index() + i }));
+    }
+    return perform_call(interpreter, *this, callee, move(argument_values));
+}
+
+ThrowCompletionOr<void> CallWithArgumentArray::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto callee = interpreter.reg(m_callee);
+    TRY(throw_if_needed_for_call(interpreter, *this, callee));
+    auto argument_values = argument_list_evaluation(interpreter);
+    return perform_call(interpreter, *this, callee, move(argument_values));
 }
 
 // 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
@@ -894,6 +914,18 @@ void CopyObjectExcludingProperties::replace_references_impl(Register from, Regis
         if (m_excluded_names[i] == from)
             m_excluded_names[i] = to;
     }
+}
+
+void Call::replace_references_impl(Register from, Register to)
+{
+    if (m_callee == from)
+        m_callee = to;
+
+    if (m_this_value == from)
+        m_this_value = to;
+
+    if (m_first_argument == from)
+        m_first_argument = to;
 }
 
 void CallWithArgumentArray::replace_references_impl(Register from, Register to)
@@ -1383,24 +1415,32 @@ DeprecatedString JumpUndefined::to_deprecated_string_impl(Bytecode::Executable c
     return DeprecatedString::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
 }
 
+static StringView call_type_to_string(CallType type)
+{
+    switch (type) {
+    case CallType::Call:
+        return ""sv;
+    case CallType::Construct:
+        return " (Construct)"sv;
+    case CallType::DirectEval:
+        return " (DirectEval)"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+DeprecatedString Call::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    auto type = call_type_to_string(m_type);
+    if (m_expression_string.has_value())
+        return DeprecatedString::formatted("Call{} callee:{}, this:{}, first_arg:{} ({})", type, m_callee, m_this_value, m_first_argument, executable.get_string(m_expression_string.value()));
+    return DeprecatedString::formatted("Call{} callee:{}, this:{}, first_arg:{}", type, m_callee, m_first_argument, m_this_value);
+}
+
 DeprecatedString CallWithArgumentArray::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    StringView type;
-    switch (m_type) {
-    case CallType::Call:
-        type = ""sv;
-        break;
-    case CallType::Construct:
-        type = " (Construct)"sv;
-        break;
-    case CallType::DirectEval:
-        type = " (DirectEval)"sv;
-        break;
-    }
-
+    auto type = call_type_to_string(m_type);
     if (m_expression_string.has_value())
         return DeprecatedString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc] ({})", type, m_callee, m_this_value, executable.get_string(m_expression_string.value()));
-
     return DeprecatedString::formatted("CallWithArgumentArray{} callee:{}, this:{}, arguments:[...acc]", type, m_callee, m_this_value);
 }
 

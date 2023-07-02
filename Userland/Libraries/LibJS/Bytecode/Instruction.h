@@ -18,6 +18,7 @@
     O(BitwiseOr)                     \
     O(BitwiseXor)                    \
     O(BlockDeclarationInstantiation) \
+    O(Call)                          \
     O(CallWithArgumentArray)         \
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \

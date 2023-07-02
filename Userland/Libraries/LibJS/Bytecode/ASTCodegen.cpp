@@ -1463,8 +1463,6 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     }
 
-    TRY(arguments_to_array_for_call(generator, arguments()));
-
     Bytecode::Op::CallType call_type;
     if (is<NewExpression>(*this)) {
         call_type = Bytecode::Op::CallType::Construct;
@@ -1478,7 +1476,26 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     if (auto expression_string = this->expression_string(); expression_string.has_value())
         expression_string_index = generator.intern_string(expression_string.release_value());
 
-    generator.emit<Bytecode::Op::CallWithArgumentArray>(call_type, callee_reg, this_reg, expression_string_index);
+    bool has_spread = any_of(arguments(), [](auto& argument) { return argument.is_spread; });
+
+    if (has_spread) {
+        TRY(arguments_to_array_for_call(generator, arguments()));
+        generator.emit<Bytecode::Op::CallWithArgumentArray>(call_type, callee_reg, this_reg, expression_string_index);
+    } else {
+        Optional<Bytecode::Register> first_argument_reg {};
+        for (size_t i = 0; i < arguments().size(); ++i) {
+            auto reg = generator.allocate_register();
+            if (!first_argument_reg.has_value())
+                first_argument_reg = reg;
+        }
+        u32 register_offset = 0;
+        for (auto const& argument : arguments()) {
+            TRY(argument.value->generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Store>(Bytecode::Register { first_argument_reg.value().index() + register_offset });
+            register_offset += 1;
+        }
+        generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg, first_argument_reg.value_or(Bytecode::Register { 0 }), arguments().size(), expression_string_index);
+    }
 
     return {};
 }
