@@ -1032,19 +1032,24 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
 
     for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
         if (is_rest) {
-            VERIFY(name.has<NonnullRefPtr<Identifier const>>());
-            VERIFY(alias.has<Empty>());
             VERIFY(!initializer);
+            if (name.has<NonnullRefPtr<Identifier const>>()) {
+                auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
+                auto interned_identifier = generator.intern_identifier(identifier);
 
-            auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
-            auto interned_identifier = generator.intern_identifier(identifier);
+                generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
+                if (create_variables)
+                    generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                generator.emit<Bytecode::Op::SetVariable>(interned_identifier, initialization_mode);
 
-            generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
-            if (create_variables)
-                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-            generator.emit<Bytecode::Op::SetVariable>(interned_identifier, initialization_mode);
-
-            return {};
+                return {};
+            }
+            if (alias.has<NonnullRefPtr<MemberExpression const>>()) {
+                generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
+                TRY(generator.emit_store_to_reference(alias.get<NonnullRefPtr<MemberExpression const>>()));
+                return {};
+            }
+            VERIFY_NOT_REACHED();
         }
 
         Bytecode::StringTableIndex name_index;
