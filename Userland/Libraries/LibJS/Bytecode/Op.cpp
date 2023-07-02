@@ -48,8 +48,9 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(VM& vm, Object* object, Value value, PropertyKey name, PropertyKind kind)
+static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value value, PropertyKey name, PropertyKind kind)
 {
+    auto object = TRY(base.to_object(vm));
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
         // The generator should only pass us functions for getters and setters.
         VERIFY(value.is_function());
@@ -70,9 +71,9 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Object* object, Value
         break;
     }
     case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, value, object));
+        bool succeeded = TRY(object->internal_set(name, value, base));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, base.to_string_without_side_effects()));
         break;
     }
     case PropertyKind::Spread:
@@ -548,9 +549,9 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto& vm = interpreter.vm();
     // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
     auto value = interpreter.accumulator();
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto base = interpreter.reg(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    TRY(put_by_property_key(vm, object, value, name, m_kind));
+    TRY(put_by_property_key(vm, base, value, name, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
@@ -1017,10 +1018,10 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
     auto value = interpreter.accumulator();
 
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto base = interpreter.reg(m_base);
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    TRY(put_by_property_key(vm, object, value, property_key, m_kind));
+    TRY(put_by_property_key(vm, base, value, property_key, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
