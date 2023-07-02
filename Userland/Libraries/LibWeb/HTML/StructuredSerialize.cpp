@@ -365,9 +365,9 @@ private:
             vector.append(bit_cast<u32*>(&serialized_buffer_size), 2);
             vector.extend(move(buffer_serialized));             // [[ArrayBufferSerialized]]
             TRY(serialize_string(vector, view.element_name())); // [[Constructor]]
-            vector.append(view.byte_length());
+            vector.append(view.auto_unaware_byte_length());
             vector.append(view.byte_offset());
-            vector.append(view.array_length());
+            vector.append(view.auto_unaware_array_length());
         }
         return {};
     }

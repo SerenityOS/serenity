@@ -79,13 +79,11 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(VM& vm)
     return typed_array_from(vm, this_value);
 }
 
-static ThrowCompletionOr<TypedArrayBase*> validate_typed_array_from_this(VM& vm)
+static ThrowCompletionOr<IntegerIndexedObjectRecord> validate_typed_array_from_this(VM& vm)
 {
     auto* typed_array = TRY(typed_array_from_this(vm));
 
-    TRY(validate_typed_array(vm, *typed_array));
-
-    return typed_array;
+    return TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
 }
 
 static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, DeprecatedString const& name)
@@ -100,9 +98,10 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(VM& vm, DeprecatedS
 
 static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto iieo_record = TRY(validate_typed_array_from_this(vm));
+    auto const* typed_array = iieo_record.object;
 
-    auto initial_length = typed_array->array_length();
+    auto initial_length = integer_indexed_object_length(vm, iieo_record);
 
     auto* callback_function = TRY(callback_from_args(vm, name));
 
@@ -122,9 +121,10 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, DeprecatedString const& nam
 
 static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, DeprecatedString const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto iieo_record = TRY(validate_typed_array_from_this(vm));
+    auto const* typed_array = iieo_record.object;
 
-    auto initial_length = typed_array->array_length();
+    auto initial_length = integer_indexed_object_length(vm, iieo_record);
 
     auto* callback_function = TRY(callback_from_args(vm, name));
 
@@ -169,11 +169,13 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, Typ
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(vm));
@@ -227,18 +229,15 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
     auto* typed_array = TRY(typed_array_from_this(vm));
 
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    auto* buffer = typed_array->viewed_array_buffer();
-    VERIFY(buffer);
+    VERIFY(typed_array->viewed_array_buffer());
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
-        return Value(0);
+    // 4. Let iieoRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+    auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
 
-    // 6. Let size be O.[[ByteLength]].
-    auto size = typed_array->byte_length();
+    // 5. Let size be IntegerIndexedObjectByteLength(iieoRecord).
+    auto size = integer_indexed_object_byte_length(vm, iieo_record);
 
-    // 7. Return 𝔽(size).
+    // 6. Return 𝔽(size).
     return Value(size);
 }
 
@@ -250,12 +249,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
     auto* typed_array = TRY(typed_array_from_this(vm));
 
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    auto* buffer = typed_array->viewed_array_buffer();
-    VERIFY(buffer);
+    VERIFY(typed_array->viewed_array_buffer());
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
+    // 4. Let iieoRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+    auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
+
+    // 5. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, return +0𝔽.
+    if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
         return Value(0);
 
     // 6. Let offset be O.[[ByteOffset]].
@@ -269,11 +269,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
     auto relative_target = TRY(vm.argument(0).to_integer_or_infinity(vm));
@@ -333,22 +335,37 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
         // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
 
         // b. Let buffer be O.[[ViewedArrayBuffer]].
-        auto buffer = typed_array->viewed_array_buffer();
+        auto* buffer = typed_array->viewed_array_buffer();
 
-        // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-        if (buffer->is_detached())
-            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+        // c. Set iieoRecord to MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+        iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
 
-        // d. Let elementSize be TypedArrayElementSize(O).
+        // d. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, throw a TypeError exception.
+        if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
+            return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "this");
+
+        // e. Set len to IntegerIndexedObjectLength(iieoRecord).
+        length = integer_indexed_object_length(vm, iieo_record);
+
+        // f. Let elementSize be TypedArrayElementSize(O).
         auto element_size = typed_array->element_size();
 
-        // e. Let byteOffset be O.[[ByteOffset]].
+        // g. Let byteOffset be O.[[ByteOffset]].
         auto byte_offset = typed_array->byte_offset();
 
         // FIXME: Not exactly sure what we should do when overflow occurs.
-        //        Just return as if succeeded for now. (This goes for steps g to j)
+        //        Just return as if succeeded for now. (This goes for steps h to m)
 
-        // f. Let toByteIndex be to × elementSize + byteOffset.
+        // h. Let bufferByteLimit be len × elementSize + byteOffset.
+        Checked<size_t> buffer_byte_limit = length;
+        buffer_byte_limit *= element_size;
+        buffer_byte_limit += byte_offset;
+        if (buffer_byte_limit.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: buffer_byte_limit overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        // i. Let toByteIndex be to × elementSize + byteOffset.
         Checked<size_t> to_byte_index_checked = static_cast<size_t>(to);
         to_byte_index_checked *= element_size;
         to_byte_index_checked += byte_offset;
@@ -357,7 +374,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             return typed_array;
         }
 
-        // g. Let fromByteIndex be from × elementSize + byteOffset.
+        // j. Let fromByteIndex be from × elementSize + byteOffset.
         Checked<size_t> from_byte_index_checked = static_cast<size_t>(from);
         from_byte_index_checked *= element_size;
         from_byte_index_checked += byte_offset;
@@ -366,7 +383,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             return typed_array;
         }
 
-        // h. Let countBytes be count × elementSize.
+        // k. Let countBytes be count × elementSize.
         Checked<size_t> count_bytes_checked = static_cast<size_t>(count);
         count_bytes_checked *= element_size;
         if (count_bytes_checked.has_overflow()) {
@@ -387,7 +404,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 
         i8 direction;
 
-        // i. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
+        // l. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
         if (from_byte_index < to_byte_index && to_byte_index < from_plus_count.value()) {
             // i. Let direction be -1.
             direction = -1;
@@ -405,27 +422,35 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
             // iii. Set toByteIndex to toByteIndex + countBytes - 1.
             to_byte_index = to_plus_count.value() - 1;
         }
-        // j. Else,
+        // m. Else,
         else {
             // i. Let direction be 1.
             direction = 1;
         }
 
-        // k. Repeat, while countBytes > 0,
+        // n. Repeat, while countBytes > 0,
         for (; count_bytes > 0; --count_bytes) {
-            // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-            auto value = MUST_OR_THROW_OOM(buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered));
+            // i. If fromByteIndex < bufferByteLimit and toByteIndex < bufferByteLimit, then
+            if (from_byte_index < buffer_byte_limit && to_byte_index < buffer_byte_limit) {
+                // 1. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
+                auto value = MUST_OR_THROW_OOM(buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered));
 
-            // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-            MUST_OR_THROW_OOM(buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered));
+                // 2. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
+                MUST_OR_THROW_OOM(buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered));
 
-            // iii. Set fromByteIndex to fromByteIndex + direction.
-            from_byte_index += direction;
+                // 3. Set fromByteIndex to fromByteIndex + direction.
+                from_byte_index += direction;
 
-            // iv. Set toByteIndex to toByteIndex + direction.
-            to_byte_index += direction;
+                // 4. Set toByteIndex to toByteIndex + direction.
+                to_byte_index += direction;
 
-            // v. Set countBytes to countBytes - 1.
+                // 5. Set countBytes to countBytes - 1.
+            }
+            // ii. Else,
+            else {
+                // 1. Set countBytes to 0.
+                break;
+            }
         }
     }
 
@@ -439,8 +464,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
     auto& realm = *vm.current_realm();
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
+
+    // 2. Perform ? ValidateTypedArray(O, seq-cst).
+    static_cast<void>(TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst)));
 
     // 3. Return CreateArrayIterator(O, key+value).
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::KeyAndValue);
@@ -464,11 +491,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     Value value;
     // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
@@ -510,11 +539,20 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     else
         final = min(relative_end, length);
 
-    // 14. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    if (typed_array->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 14. Set iieoRecord to MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+    iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
 
-    // 15. Repeat, while k < final,
+    // 15. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, throw a TypeError exception.
+    if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
+        return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "this");
+
+    // 16. Set len to IntegerIndexedObjectLength(iieoRecord).
+    length = integer_indexed_object_length(vm, iieo_record);
+
+    // 17. Set final to min(final, len).
+    final = min(final, length);
+
+    // 18. Repeat, while k < final,
     for (; k < final; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Perform ! Set(O, Pk, value, true).
@@ -523,7 +561,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         // c. Set k to k + 1.
     }
 
-    // 16. Return O.
+    // 19. Return O.
     return typed_array;
 }
 
@@ -531,11 +569,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto initial_length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, "filter"));
@@ -543,14 +583,14 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     // 5. Let kept be a new empty List.
     MarkedVector<Value> kept(vm.heap());
 
-    // 7. Let captured be 0.
+    // 6. Let captured be 0.
     size_t captured = 0;
 
-    auto this_value = vm.argument(1);
+    auto this_value = vm.this_value();
 
-    // 5. Let k be 0.
+    // 7. Let k be 0.
     // 8. Repeat, while k < len,
-    for (size_t i = 0; i < initial_length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Let kValue be ! Get(O, Pk).
         auto value = MUST(typed_array->get(i));
@@ -660,11 +700,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If len is 0, return false.
     if (length == 0)
@@ -723,11 +765,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If len is 0, return -1𝔽.
     if (length == 0)
@@ -793,11 +837,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If separator is undefined, let sep be ",".
     // 5. Else, let sep be ? ToString(separator).
@@ -839,8 +885,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
     auto& realm = *vm.current_realm();
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
+
+    // 2. Perform ? ValidateTypedArray(O, seq-cst).
+    static_cast<void>(TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst)));
 
     // 3. Return CreateArrayIterator(O, key).
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Key);
@@ -853,11 +901,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     auto from_index = vm.argument(1);
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If len = 0, return -1𝔽.
     if (length == 0)
@@ -921,16 +971,17 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
     auto* typed_array = TRY(typed_array_from_this(vm));
 
     // 3. Assert: O has [[ViewedArrayBuffer]] and [[ArrayLength]] internal slots.
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    auto* buffer = typed_array->viewed_array_buffer();
-    VERIFY(buffer);
+    VERIFY(typed_array->viewed_array_buffer());
 
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (buffer->is_detached())
+    // 4. Let iieoRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+    auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
+
+    // 5. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, return +0𝔽.
+    if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
         return Value(0);
 
-    // 6. Let length be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 6. Let length be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 7. Return 𝔽(length).
     return Value(length);
@@ -940,25 +991,27 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto initial_length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, "map"));
 
     // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());
-    arguments.empend(initial_length);
+    arguments.empend(length);
     auto* return_array = TRY(typed_array_species_create(vm, *typed_array, move(arguments)));
 
     auto this_value = vm.argument(1);
 
     // 6. Let k be 0.
     // 7. Repeat, while k < len,
-    for (size_t i = 0; i < initial_length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Let kValue be ! Get(O, Pk).
         auto value = MUST(typed_array->get(i));
@@ -980,11 +1033,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, vm.names.reduce.as_string()));
@@ -1030,15 +1085,17 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
     return accumulator;
 }
 
-// 23.2.3.24 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
+// 23.2.3.24 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, vm.names.reduce.as_string()));
@@ -1088,11 +1145,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let middle be floor(len / 2).
     auto middle = length / 2;
@@ -1130,63 +1189,66 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     auto* target_buffer = target.viewed_array_buffer();
 
-    // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (target_buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 2. Let targetRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(target, seq-cst).
+    auto target_record = make_integer_indexed_object_with_buffer_witness_record(vm, target, ArrayBuffer::Order::SeqCst);
 
-    // 3. Let targetLength be target.[[ArrayLength]].
-    auto target_length = target.array_length();
+    // 3. If IsIntegerIndexedObjectOutOfBounds(targetRecord) is true, throw a TypeError exception.
+    if (is_integer_indexed_object_out_of_bounds(vm, target_record))
+        return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "target");
 
-    // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
+    // 4. Let targetLength be IntegerIndexedObjectLength(targetRecord).
+    auto target_length = integer_indexed_object_length(vm, target_record);
+
+    // 5. Let srcBuffer be source.[[ViewedArrayBuffer]].
     auto* source_buffer = source.viewed_array_buffer();
 
-    // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (source_buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 6. Let srcRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(source, seq-cst).
+    auto source_record = make_integer_indexed_object_with_buffer_witness_record(vm, source, ArrayBuffer::Order::SeqCst);
 
-    // 6. Let targetType be TypedArrayElementType(target).
-    // 7. Let targetElementSize be TypedArrayElementSize(target).
+    // 7. If IsIntegerIndexedObjectOutOfBounds(srcRecord) is true, throw a TypeError exception.
+    if (is_integer_indexed_object_out_of_bounds(vm, source_record))
+        return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "source");
+
+    // 8. Let srcLength be IntegerIndexedObjectLength(srcRecord).
+    auto source_length = integer_indexed_object_length(vm, source_record);
+
+    // 9. Let targetType be TypedArrayElementType(target).
+    // 10. Let targetElementSize be TypedArrayElementSize(target).
     auto target_element_size = target.element_size();
 
-    // 8. Let targetByteOffset be target.[[ByteOffset]].
+    // 11. Let targetByteOffset be target.[[ByteOffset]].
     auto target_byte_offset = target.byte_offset();
 
-    // 9. Let srcType be TypedArrayElementType(source).
-    // 10. Let srcElementSize be TypedArrayElementSize(source).
+    // 12. Let srcType be TypedArrayElementType(source).
+    // 13. Let srcElementSize be TypedArrayElementSize(source).
     auto source_element_size = source.element_size();
 
-    // 11. Let srcLength be source.[[ArrayLength]].
-    auto source_length = source.array_length();
-
-    // 12. Let srcByteOffset be source.[[ByteOffset]].
+    // 14. Let srcByteOffset be source.[[ByteOffset]].
     auto source_byte_offset = source.byte_offset();
 
-    // 13. If targetOffset is +∞, throw a RangeError exception.
+    // 15. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayInvalidTargetOffset, "finite");
 
-    // 14. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+    // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     Checked<size_t> checked = source_length;
     checked += static_cast<u32>(target_offset);
-    if (checked.has_overflow() || checked.value() > target_length)
+    if (checked.has_overflow() || checked > target_length)
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflowOrOutOfBounds, "target length");
 
-    // 15. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
+    // 17. If target.[[ContentType]] ≠ source.[[ContentType]], throw a TypeError exception.
     if (target.content_type() != source.content_type())
         return vm.throw_completion<TypeError>(ErrorType::TypedArrayInvalidCopy, target.class_name(), source.class_name());
 
-    // FIXME: 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
+    // FIXME: 18. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
     // FIXME: a. If srcBuffer.[[ArrayBufferData]] and targetBuffer.[[ArrayBufferData]] are the same Shared Data Block values, let same be true; else let same be false.
-
-    // 17. Else, let same be SameValue(srcBuffer, targetBuffer).
-    auto same = same_value(source_buffer, target_buffer);
 
     size_t source_byte_index = 0;
 
-    // 18. If same is true, then
-    if (same) {
-        // a. Let srcByteLength be source.[[ByteLength]].
-        auto source_byte_length = source.byte_length();
+    // 19. If SameValue(srcBuffer, targetBuffer) is true or FIXME: sameSharedArrayBuffer is true, then
+    if (same_value(source_buffer, target_buffer)) {
+        // a. Let srcByteLength be IntegerIndexedObjectByteLength(srcRecord).
+        auto source_byte_length = integer_indexed_object_byte_length(vm, source_record);
 
         // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength).
         source_buffer = TRY(clone_array_buffer(vm, *source_buffer, source_byte_offset, source_byte_length));
@@ -1194,12 +1256,12 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         // c. Let srcByteIndex be 0.
         source_byte_index = 0;
     }
-    // 19. Else, let srcByteIndex be srcByteOffset.
+    // 20. Else, let srcByteIndex be srcByteOffset.
     else {
         source_byte_index = source_byte_offset;
     }
 
-    // 20. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
+    // 21. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
     Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
     checked_target_byte_index *= target_element_size;
     checked_target_byte_index += target_byte_offset;
@@ -1207,7 +1269,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target byte index");
     auto target_byte_index = checked_target_byte_index.value();
 
-    // 21. Let limit be targetByteIndex + targetElementSize × srcLength.
+    // 22. Let limit be targetByteIndex + targetElementSize × srcLength.
     Checked<size_t> checked_limit(source_length);
     checked_limit *= target_element_size;
     checked_limit += target_byte_index;
@@ -1215,7 +1277,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         return vm.throw_completion<RangeError>(ErrorType::TypedArrayOverflow, "target limit");
     auto limit = checked_limit.value();
 
-    // 22. If srcType is the same as targetType, then
+    // 23. If srcType is the same as targetType, then
     if (source.element_name() == target.element_name()) {
         // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
         // b. Repeat, while targetByteIndex < limit,
@@ -1225,7 +1287,7 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         //     iv. Set targetByteIndex to targetByteIndex + 1.
         target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data() + source_byte_index, limit - target_byte_index);
     }
-    // 23. Else,
+    // 24. Else,
     else {
         // a. Repeat, while targetByteIndex < limit,
         while (target_byte_index < limit) {
@@ -1240,22 +1302,22 @@ static ThrowCompletionOr<void> set_typed_array_from_typed_array(VM& vm, TypedArr
         }
     }
 
-    // 24. Return unused.
+    // 25. Return unused.
     return {};
 }
 
 // 23.2.3.26.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
 static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArrayBase& target, double target_offset, Value source)
 {
-    // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
-    auto* target_buffer = target.viewed_array_buffer();
+    // 1. Let targetRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(target, seq-cst).
+    auto target_record = make_integer_indexed_object_with_buffer_witness_record(vm, target, ArrayBuffer::Order::SeqCst);
 
-    // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (target_buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 2. If IsIntegerIndexedObjectOutOfBounds(targetRecord) is true, throw a TypeError exception.
+    if (is_integer_indexed_object_out_of_bounds(vm, target_record))
+        return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "target");
 
-    // 3. Let targetLength be target.[[ArrayLength]].
-    auto target_length = target.array_length();
+    // 3. Let targetLength be IntegerIndexedObjectLength(targetRecord).
+    auto target_length = integer_indexed_object_length(vm, target_record);
 
     // 4. Let src be ? ToObject(source).
     auto src = TRY(source.to_object(vm));
@@ -1344,11 +1406,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     auto end = vm.argument(1);
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(start.to_integer_or_infinity(vm));
@@ -1395,15 +1459,74 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
     // 14. If count > 0, then
     if (count > 0) {
-        // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-        if (typed_array->viewed_array_buffer()->is_detached())
-            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+        // a. Set iieoRecord to MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+        iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
 
-        // b. Let srcType be TypedArrayElementType(O).
-        // c. Let targetType be TypedArrayElementType(A).
+        // b. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, throw a TypeError exception.
+        if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
+            return vm.throw_completion<TypeError>(ErrorType::IntegerIndexedObjectOutOfRange, "this");
 
-        // d. If srcType is different from targetType, then
-        if (typed_array->element_name() != new_array->element_name()) {
+        // c. Set len to IntegerIndexedObjectLength(iieoRecord).
+        length = integer_indexed_object_length(vm, iieo_record);
+
+        // d. Set final to min(final, len).
+        final = min(final, length);
+
+        // e. Let srcType be TypedArrayElementType(O).
+        // f. Let targetType be TypedArrayElementType(A).
+
+        // g. If srcType is targetType, then
+        if (typed_array->element_name() == new_array->element_name()) {
+            // i. NOTE: The transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+
+            // ii. Let srcBuffer be O.[[ViewedArrayBuffer]].
+            auto& source_buffer = *typed_array->viewed_array_buffer();
+
+            // iii. Let targetBuffer be A.[[ViewedArrayBuffer]].
+            auto& target_buffer = *new_array->viewed_array_buffer();
+
+            // iv. Let elementSize be TypedArrayElementSize(O).
+            auto element_size = typed_array->element_size();
+
+            // v. Let srcByteOffset be O.[[ByteOffset]].
+            auto source_byte_offset = typed_array->byte_offset();
+
+            // vi. Let srcByteIndex be (k × elementSize) + srcByteOffset.
+            Checked<u32> source_byte_index = k;
+            source_byte_index *= element_size;
+            source_byte_index += source_byte_offset;
+            if (source_byte_index.has_overflow()) {
+                dbgln("TypedArrayPrototype::slice: source_byte_index overflowed, returning as if succeeded.");
+                return new_array;
+            }
+
+            // vii. Let targetByteIndex be A.[[ByteOffset]].
+            auto target_byte_index = new_array->byte_offset();
+
+            // viii. Let limit be targetByteIndex + min(count, len) × elementSize.
+            Checked<u32> limit = min(count, length);
+            limit *= element_size;
+            // FIXME: This causes a crash in the test (/test262/test/staging/ArrayBuffer/resizable/slice-species-create-resizes.js).
+            // limit += target_byte_index;
+            if (limit.has_overflow()) {
+                dbgln("TypedArrayPrototype::slice: limit overflowed, returning as if succeeded.");
+                return new_array;
+            }
+
+            // ix. Repeat, while targetByteIndex < limit,
+            for (; target_byte_index < limit.value(); ++source_byte_index, ++target_byte_index) {
+                // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+                auto value = MUST_OR_THROW_OOM(source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered));
+
+                // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, uint8, value, true, unordered).
+                MUST_OR_THROW_OOM(target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered));
+
+                // 3. Set srcByteIndex to srcByteIndex + 1.
+                // 4. Set targetByteIndex to targetByteIndex + 1.
+            }
+        }
+        // h. Else,
+        else {
             // i. Let n be 0.
             // ii. Repeat, while k < final,
             for (i32 n = 0; k < final; ++k, ++n) {
@@ -1416,55 +1539,6 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 
                 // 4. Set k to k + 1.
                 // 5. Set n to n + 1.
-            }
-        }
-        // e. Else,
-        else {
-            // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
-            auto& source_buffer = *typed_array->viewed_array_buffer();
-
-            // ii. Let targetBuffer be A.[[ViewedArrayBuffer]].
-            auto& target_buffer = *new_array->viewed_array_buffer();
-
-            // iii. Let elementSize be TypedArrayElementSize(O).
-            auto element_size = typed_array->element_size();
-
-            // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-
-            // v. Let srcByteOffset be O.[[ByteOffset]].
-            auto source_byte_offset = typed_array->byte_offset();
-
-            // vi. Let targetByteIndex be A.[[ByteOffset]].
-            auto target_byte_index = new_array->byte_offset();
-
-            // vii. Let srcByteIndex be (k × elementSize) + srcByteOffset.
-            Checked<u32> source_byte_index = k;
-            source_byte_index *= element_size;
-            source_byte_index += source_byte_offset;
-            if (source_byte_index.has_overflow()) {
-                dbgln("TypedArrayPrototype::slice: source_byte_index overflowed, returning as if succeeded.");
-                return new_array;
-            }
-
-            // viii. Let limit be targetByteIndex + count × elementSize.
-            Checked<u32> limit = count;
-            limit *= element_size;
-            limit += target_byte_index;
-            if (limit.has_overflow()) {
-                dbgln("TypedArrayPrototype::slice: limit overflowed, returning as if succeeded.");
-                return new_array;
-            }
-
-            // ix. Repeat, while targetByteIndex < limit,
-            for (; target_byte_index < limit.value(); ++source_byte_index, ++target_byte_index) {
-                // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-                auto value = MUST_OR_THROW_OOM(source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered));
-
-                // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-                MUST_OR_THROW_OOM(target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered));
-
-                // 3. Set srcByteIndex to srcByteIndex + 1.
-                // 4. Set targetByteIndex to targetByteIndex + 1.
             }
         }
     }
@@ -1496,11 +1570,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
 
     // 2. Let obj be the this value.
-    // 3. Perform ? ValidateTypedArray(obj).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 4. Let len be obj.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 3. Let iieoRecord be ? ValidateTypedArray(obj, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 4. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 5. NOTE: The following closure performs a numeric comparison rather than the string comparison used in 23.1.3.30.
     // 6. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
@@ -1538,50 +1614,42 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     auto* buffer = typed_array->viewed_array_buffer();
 
-    // 5. Let srcLength be O.[[ArrayLength]].
-    auto source_length = typed_array->array_length();
+    // 5. Let srcRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+    auto source_record = make_integer_indexed_object_with_buffer_witness_record(vm, *typed_array, ArrayBuffer::Order::SeqCst);
 
-    // 6. Let relativeBegin be ? ToIntegerOrInfinity(begin).
+    size_t source_length = 0;
+
+    // 6. If IsIntegerIndexedObjectOutOfBounds(srcRecord) is true, then
+    if (is_integer_indexed_object_out_of_bounds(vm, source_record)) {
+        // a. Let srcLength be 0.
+        source_length = 0;
+    }
+    // 7. Else,
+    else {
+        // a. Let srcLength be IntegerIndexedObjectLength(srcRecord).
+        source_length = integer_indexed_object_length(vm, source_record);
+    }
+
+    // 8. Let relativeBegin be ? ToIntegerOrInfinity(begin).
     auto relative_begin = TRY(begin.to_integer_or_infinity(vm));
 
     i32 begin_index = 0;
 
-    // 7. If relativeBegin is -∞, let beginIndex be 0.
+    // 9. If relativeBegin is -∞, let beginIndex be 0.
     if (Value(relative_begin).is_negative_infinity())
         begin_index = 0;
-    // 8. Else if relativeBegin < 0, let beginIndex be max(srcLength + relativeBegin, 0).
+    // 10. Else if relativeBegin < 0, let beginIndex be max(srcLength + relativeBegin, 0).
     else if (relative_begin < 0)
         begin_index = max(source_length + relative_begin, 0);
-    // 9. Else, let beginIndex be min(relativeBegin, srcLength).
+    // 11. Else, let beginIndex be min(relativeBegin, srcLength).
     else
         begin_index = min(relative_begin, source_length);
 
     double relative_end = 0;
 
-    // 10. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
-    if (end.is_undefined())
-        relative_end = source_length;
-    else
-        relative_end = TRY(end.to_integer_or_infinity(vm));
-
-    i32 end_index = 0;
-
-    // 11. If relativeEnd is -∞, let endIndex be 0.
-    if (Value(relative_end).is_negative_infinity())
-        end_index = 0;
-    // 12. Else if relativeEnd < 0, let endIndex be max(srcLength + relativeEnd, 0).
-    else if (relative_end < 0)
-        end_index = max(source_length + relative_end, 0);
-    // 13. Else, let endIndex be min(relativeEnd, srcLength).
-    else
-        end_index = min(relative_end, source_length);
-
-    // 14. Let newLength be max(endIndex - beginIndex, 0).
-    auto new_length = max(end_index - begin_index, 0);
-
-    // 15. Let elementSize be TypedArrayElementSize(O).
-    // 16. Let srcByteOffset be O.[[ByteOffset]].
-    // 17. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
+    // 12. Let elementSize be TypedArrayElementSize(O).
+    // 13. Let srcByteOffset be O.[[ByteOffset]].
+    // 14. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
     Checked<u32> begin_byte_offset = begin_index;
     begin_byte_offset *= typed_array->element_size();
     begin_byte_offset += typed_array->byte_offset();
@@ -1590,13 +1658,44 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
         return typed_array;
     }
 
-    // 18. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
     MarkedVector<Value> arguments(vm.heap());
-    arguments.empend(buffer);
-    arguments.empend(begin_byte_offset.value());
-    arguments.empend(new_length);
 
-    // 19. Return ? TypedArraySpeciesCreate(O, argumentsList).
+    // 15. If O.[[ArrayLength]] is auto and end is undefined, then
+    if (typed_array->is_array_length_auto() && end.is_undefined()) {
+        // a. Let argumentsList be « buffer, 𝔽(beginByteOffset) ».
+        arguments.empend(buffer);
+        arguments.empend(begin_byte_offset.value());
+    }
+    // 16. Else,
+    else {
+        // a. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
+        if (end.is_undefined())
+            relative_end = source_length;
+        else
+            relative_end = TRY(end.to_integer_or_infinity(vm));
+
+        i32 end_index = 0;
+
+        // b. If relativeEnd is -∞, let endIndex be 0.
+        if (Value(relative_end).is_negative_infinity())
+            end_index = 0;
+        // c. Else if relativeEnd < 0, let endIndex be max(srcLength + relativeEnd, 0).
+        else if (relative_end < 0)
+            end_index = max(source_length + relative_end, 0);
+        // d. Else, let endIndex be min(relativeEnd, srcLength).
+        else
+            end_index = min(relative_end, source_length);
+
+        // e. Let newLength be max(endIndex - beginIndex, 0).
+        auto new_length = Value(max(end_index - begin_index, 0));
+
+        // f. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
+        arguments.empend(buffer);
+        arguments.empend(begin_byte_offset.value());
+        arguments.empend(new_length);
+    }
+
+    // 17. Return ? TypedArraySpeciesCreate(O, argumentsList).
     return TRY(typed_array_species_create(vm, *typed_array, move(arguments)));
 }
 
@@ -1607,17 +1706,20 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
-    // This function is not generic. ValidateTypedArray is applied to the this value prior to evaluating the algorithm.
+    // This method is not generic. ValidateTypedArray is called with the this value and seq-cst as arguments prior to evaluating the algorithm.
     // If its result is an abrupt completion that exception is thrown instead of evaluating the algorithm.
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
 
     // 1. Let array be ? ToObject(this value).
     // NOTE: Handled by ValidateTypedArray
 
+    // NOTE: This is a distinct method that implements the same algorithm as Array.prototype.toLocaleString as defined in 23.1.3.32
+    // except that IntegerIndexedObjectLength is called in place of performing a [[Get]] of "length".
     // 2. Let len be ? ToLength(? Get(array, "length")).
     // The implementation of the algorithm may be optimized with the knowledge that the this value is an object that
     // has a fixed length and whose integer-indexed properties are not sparse.
-    auto length = typed_array->array_length();
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 3. Let separator be the implementation-defined list-separator String value appropriate for the host environment's current locale (such as ", ").
     constexpr auto separator = ',';
@@ -1658,11 +1760,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_reversed)
 {
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let length be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let length be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let A be ? TypedArrayCreateSameType(O, « 𝔽(length) »).
     MarkedVector<Value> arguments(vm.heap());
@@ -1701,13 +1805,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be the this value.
-    auto object = TRY(vm.this_value().to_object(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    // 3. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
 
-    // 4. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 4. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 5. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());
@@ -1722,7 +1826,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     };
 
     // 8. Let sortedList be ? SortIndexedProperties(O, len, SortCompare, read-through-holes).
-    auto sorted_list = TRY(sort_indexed_properties(vm, object, length, sort_compare, Holes::ReadThroughHoles));
+    auto sorted_list = TRY(sort_indexed_properties(vm, *typed_array, length, sort_compare, Holes::ReadThroughHoles));
 
     // 9. Let j be 0.
     // 10. Repeat, while j < len,
@@ -1742,8 +1846,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
     auto& realm = *vm.current_realm();
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
+
+    // 2. Perform ? ValidateTypedArray(O, seq-cst).
+    static_cast<void>(TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst)));
 
     // 3. Return CreateArrayIterator(O, value).
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Value);
@@ -1756,11 +1862,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
     auto value = vm.argument(1);
 
     // 1. Let O be the this value.
-    // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+    auto* typed_array = TRY(typed_array_from_this(vm));
 
-    // 3. Let len be O.[[ArrayLength]].
-    auto length = typed_array->array_length();
+    // 2. Let iieoRecord be ? ValidateTypedArray(O, seq-cst).
+    auto iieo_record = TRY(validate_typed_array(vm, *typed_array, ArrayBuffer::Order::SeqCst));
+
+    // 3. Let len be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
 
     // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(index.to_integer_or_infinity(vm));

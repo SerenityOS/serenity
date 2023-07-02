@@ -43,6 +43,7 @@
     M(IndexOutOfRange, "Index {} is out of range of array length {}")                                                                   \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
+    M(IntegerIndexedObjectOutOfRange, "Integer indexed object '{}' is out of range")                                                    \
     M(IntlInvalidDateTimeFormatOption, "Option {} cannot be set when also providing {}")                                                \
     M(IntlInvalidKey, "{} is not a valid key")                                                                                          \
     M(IntlInvalidLanguageTag, "{} is not a structurally valid language tag")                                                            \

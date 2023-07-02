@@ -445,12 +445,25 @@ ErrorOr<void> print_number(JS::PrintContext& print_context, T number)
 ErrorOr<void> print_typed_array(JS::PrintContext& print_context, JS::TypedArrayBase const& typed_array_base, HashTable<JS::Object*>& seen_objects)
 {
     auto& array_buffer = *typed_array_base.viewed_array_buffer();
-    auto length = typed_array_base.array_length();
+    auto iieo_record = JS::make_integer_indexed_object_with_buffer_witness_record(print_context.vm, typed_array_base, JS::ArrayBuffer::Order::SeqCst);
+    auto length = JS::integer_indexed_object_length(print_context.vm, iieo_record);
     TRY(print_type(print_context, typed_array_base.class_name()));
     TRY(js_out(print_context, "\n  length: "));
-    TRY(print_value(print_context, JS::Value(length), seen_objects));
+    if (JS::is_integer_indexed_object_out_of_bounds(print_context.vm, iieo_record)) {
+        TRY(js_out(print_context, "out of bounds"));
+        return {};
+    } else if (typed_array_base.is_array_length_auto()) {
+        TRY(js_out(print_context, "auto({})", length));
+    } else {
+        TRY(print_value(print_context, JS::Value(length), seen_objects));
+    }
     TRY(js_out(print_context, "\n  byteLength: "));
-    TRY(print_value(print_context, JS::Value(typed_array_base.byte_length()), seen_objects));
+    auto byte_length = JS::integer_indexed_object_byte_length(print_context.vm, iieo_record);
+    if (typed_array_base.is_byte_length_auto()) {
+        TRY(js_out(print_context, "auto({})", byte_length));
+    } else {
+        TRY(print_value(print_context, JS::Value(byte_length), seen_objects));
+    }
     TRY(js_out(print_context, "\n  buffer: "));
     TRY(print_type(print_context, "ArrayBuffer"sv));
     if (array_buffer.is_detached())

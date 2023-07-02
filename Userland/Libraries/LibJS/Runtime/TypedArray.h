@@ -20,8 +20,19 @@ namespace JS {
 
 class TypedArrayBase;
 
+// 10.4.5.8 Integer-Indexed Object With Buffer Witness Records, https://tc39.es/ecma262/#sec-integer-indexed-object-with-buffer-witness-records
+struct IntegerIndexedObjectRecord {
+    TypedArrayBase const* object;
+    Optional<size_t> cached_buffer_byte_length;
+};
+
 ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM&, Value);
-ThrowCompletionOr<void> validate_typed_array(VM&, TypedArrayBase&);
+ThrowCompletionOr<IntegerIndexedObjectRecord> validate_typed_array(VM&, TypedArrayBase&, ArrayBuffer::Order);
+IntegerIndexedObjectRecord make_integer_indexed_object_with_buffer_witness_record(VM&, TypedArrayBase const&, ArrayBuffer::Order);
+size_t integer_indexed_object_byte_length(VM&, IntegerIndexedObjectRecord const&);
+size_t integer_indexed_object_length(VM&, IntegerIndexedObjectRecord const&);
+bool is_integer_indexed_object_out_of_bounds(VM&, IntegerIndexedObjectRecord const&);
+bool is_array_buffer_view_out_of_bounds(VM&, TypedArrayBase const&);
 
 class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);
@@ -34,15 +45,33 @@ public:
 
     using IntrinsicConstructor = NonnullGCPtr<TypedArrayConstructor> (Intrinsics::*)();
 
-    u32 array_length() const { return m_array_length; }
-    u32 byte_length() const { return m_byte_length; }
+    bool is_array_length_auto() const { return !m_array_length.has_value(); }
+    Optional<u32> array_length() const { return m_array_length; }
+    bool is_byte_length_auto() const { return !m_byte_length.has_value(); }
+    Optional<u32> byte_length() const { return m_byte_length; }
     u32 byte_offset() const { return m_byte_offset; }
     ContentType content_type() const { return m_content_type; }
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }
     IntrinsicConstructor intrinsic_constructor() const { return m_intrinsic_constructor; }
 
+    // FIXME: Some functions in other web specs aren't aware of array/byte length potentionally being auto
+    // These functions performs the steps to get the array/byte length that is used in other parts of the EMCAScript spec
+    size_t auto_unaware_array_length() const
+    {
+        auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm(), *this, ArrayBuffer::Order::SeqCst);
+        return is_integer_indexed_object_out_of_bounds(vm(), iieo_record) ? 0 : integer_indexed_object_length(vm(), iieo_record);
+    }
+
+    size_t auto_unaware_byte_length() const
+    {
+        auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm(), *this, ArrayBuffer::Order::SeqCst);
+        return is_integer_indexed_object_out_of_bounds(vm(), iieo_record) ? 0 : integer_indexed_object_byte_length(vm(), iieo_record);
+    }
+
     void set_array_length(u32 length) { m_array_length = length; }
+    void set_array_length_to_auto() { m_array_length = {}; }
     void set_byte_length(u32 length) { m_byte_length = length; }
+    void set_byte_length_to_auto() { m_byte_length = {}; }
     void set_byte_offset(u32 offset) { m_byte_offset = offset; }
     void set_viewed_array_buffer(ArrayBuffer* array_buffer) { m_viewed_array_buffer = array_buffer; }
 
@@ -67,8 +96,8 @@ protected:
     {
     }
 
-    u32 m_array_length { 0 };
-    u32 m_byte_length { 0 };
+    Optional<u32> m_array_length { 0 };
+    Optional<u32> m_byte_length { 0 };
     u32 m_byte_offset { 0 };
     ContentType m_content_type { ContentType::Number };
     GCPtr<ArrayBuffer> m_viewed_array_buffer;
@@ -78,9 +107,11 @@ private:
     virtual void visit_edges(Visitor&) override;
 };
 
-// 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
+// 10.4.5.14 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
 inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
+    auto& vm = typed_array.vm();
+
     // 1. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return false.
     if (typed_array.viewed_array_buffer()->is_detached())
         return false;
@@ -90,15 +121,28 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
     if (!property_index.is_index())
         return false;
 
-    // 4. If ℝ(index) < 0 or ℝ(index) ≥ O.[[ArrayLength]], return false.
-    if (property_index.as_index() >= typed_array.array_length())
+    // 4. Let iieoRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, unordered).
+    auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, typed_array, ArrayBuffer::Order::Unordered);
+
+    // 5. NOTE: Bounds checking is not a synchronizing operation when O's backing buffer is a growable SharedArrayBuffer.
+
+    // 6. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is true, return false.
+    if (is_integer_indexed_object_out_of_bounds(vm, iieo_record))
         return false;
 
-    // 5. Return true.
+    // 7. Let length be IntegerIndexedObjectLength(iieoRecord).
+    auto length = integer_indexed_object_length(vm, iieo_record);
+
+    // NOTE: ℝ(index) < 0 is always false as index is unsigned
+    // 8. If ℝ(index) < 0 or ℝ(index) ≥ length, return false.
+    if (property_index.as_index() >= length)
+        return false;
+
+    // 9. Return true.
     return true;
 }
 
-// 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
+// 10.4.5.15 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
 template<typename T>
 inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
@@ -126,7 +170,7 @@ inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const
     return typed_array.viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
 }
 
-// 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
+// 10.4.5.16 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
 // NOTE: In error cases, the function will return as if it succeeded.
 template<typename T>
 inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed_array, CanonicalIndex property_index, Value value)
@@ -382,19 +426,25 @@ public:
     {
         auto& vm = this->vm();
 
-        // 1. Let keys be a new empty List.
+        // 1. Let iieoRecord be MakeIntegerIndexedObjectWithBufferWitnessRecord(O, seq-cst).
+        auto iieo_record = make_integer_indexed_object_with_buffer_witness_record(vm, *this, ArrayBuffer::Order::SeqCst);
+
+        // 2. Let keys be a new empty List.
         auto keys = MarkedVector<Value> { heap() };
 
-        // 2. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false, then
-        if (!m_viewed_array_buffer->is_detached()) {
-            // a. For each integer i starting with 0 such that i < O.[[ArrayLength]], in ascending order, do
-            for (size_t i = 0; i < m_array_length; ++i) {
+        // 3. If IsIntegerIndexedObjectOutOfBounds(iieoRecord) is false, then
+        if (!is_integer_indexed_object_out_of_bounds(vm, iieo_record)) {
+            // a. Let length be IntegerIndexedObjectLength(iieoRecord).
+            auto length = integer_indexed_object_length(vm, iieo_record);
+
+            // b. For each integer i starting with 0 such that i < len, in ascending order, do
+            for (size_t i = 0; i < length; ++i) {
                 // i. Add ! ToString(𝔽(i)) as the last element of keys.
                 keys.append(PrimitiveString::create(vm, DeprecatedString::number(i)));
             }
         }
 
-        // 3. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+        // 4. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table()) {
             if (it.key.is_string()) {
                 // a. Add P as the last element of keys.
@@ -402,7 +452,7 @@ public:
             }
         }
 
-        // 4. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+        // 5. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
         for (auto& it : shape().property_table()) {
             if (it.key.is_symbol()) {
                 // a. Add P as the last element of keys.
@@ -410,7 +460,7 @@ public:
             }
         }
 
-        // 5. Return keys.
+        // 6. Return keys.
         return { move(keys) };
     }
 
@@ -418,11 +468,12 @@ public:
 
     ReadonlySpan<UnderlyingBufferDataType> data() const
     {
-        return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
+        return { reinterpret_cast<UnderlyingBufferDataType const*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), auto_unaware_array_length() };
     }
+
     Span<UnderlyingBufferDataType> data()
     {
-        return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
+        return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), auto_unaware_array_length() };
     }
 
     virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); }

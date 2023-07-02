@@ -54,7 +54,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
         if (typed_array.viewed_array_buffer()->is_detached())
             return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-        length = typed_array.array_length();
+        // FIXME: shouldn't be auto unaware, however it seems this function needs to be re-written entirely
+        length = typed_array.auto_unaware_array_length();
     } else {
         length = TRY(length_of_array_like(vm, array));
     }
