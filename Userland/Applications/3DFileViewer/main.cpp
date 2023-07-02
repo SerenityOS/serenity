@@ -569,8 +569,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename);
-    if (file.is_error() && file.error().code() != ENOENT) {
-        GUI::MessageBox::show(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
+    if (file.is_error()) {
+        if (file.error().code() != ENOENT)
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return 1;
     }
     widget->load_file(file.value().filename(), file.value().release_stream());
