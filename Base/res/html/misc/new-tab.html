@@ -49,6 +49,7 @@
                 <button type="button" onclick="search('frogfind')">FrogFind</button>
                 <button type="button" onclick="search('github')">GitHub</button>
                 <button type="button" onclick="search('google')">Google</button>
+                <button type="button" onclick="search('wiby')">Wiby</button>
                 <button type="button" onclick="search('yandex')">Yandex</button>
             </div>
         </form>
@@ -85,6 +86,9 @@
                 url.searchParams.set("q", query);
             } else if (searchEngine == "google") {
                 url = new URL("https://google.com/search");
+                url.searchParams.set("q", query);
+            } else if (searchEngine == "wiby") {
+                url = new URL("https://wiby.me");
                 url.searchParams.set("q", query);
             } else if (searchEngine == "yandex") {
                 url = new URL("https://yandex.com/search");
