@@ -388,14 +388,20 @@ ErrorOr<void> print_array_buffer(JS::PrintContext& print_context, JS::ArrayBuffe
 
     auto byte_length = array_buffer.byte_length();
     TRY(js_out(print_context, "\n  byteLength: "));
-    TRY(print_value(print_context, JS::Value((double)byte_length), seen_objects));
+    TRY(print_value(print_context, JS::Value(byte_length), seen_objects));
     if (array_buffer.is_detached()) {
-        TRY(js_out(print_context, "\n  Detached"));
+        TRY(js_out(print_context, "\n  (detached)"));
         return {};
     }
 
     if (byte_length == 0)
         return {};
+
+    auto max_byte_length = array_buffer.max_byte_length();
+    if (max_byte_length.has_value()) {
+        TRY(js_out(print_context, "\n  maxByteLength: "));
+        TRY(print_value(print_context, JS::Value(max_byte_length.value()), seen_objects));
+    }
 
     auto& buffer = array_buffer.buffer();
     TRY(js_out(print_context, "\n"));
