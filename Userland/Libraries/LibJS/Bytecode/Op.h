@@ -579,6 +579,29 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class GetByIdWithThis final : public Instruction {
+public:
+    GetByIdWithThis(IdentifierTableIndex property, Register this_value)
+        : Instruction(Type::GetByIdWithThis)
+        , m_property(property)
+        , m_this_value(this_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    IdentifierTableIndex m_property;
+    Register m_this_value;
+};
+
 class GetPrivateById final : public Instruction {
 public:
     explicit GetPrivateById(IdentifierTableIndex property)
@@ -646,6 +669,35 @@ private:
     PropertyKind m_kind;
 };
 
+class PutByIdWithThis final : public Instruction {
+public:
+    PutByIdWithThis(Register base, Register this_value, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutByIdWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+        , m_property(property)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
+    IdentifierTableIndex m_property;
+    PropertyKind m_kind;
+};
+
 class PutPrivateById final : public Instruction {
 public:
     explicit PutPrivateById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
@@ -709,6 +761,31 @@ private:
     Register m_base;
 };
 
+class GetByValueWithThis final : public Instruction {
+public:
+    GetByValueWithThis(Register base, Register this_value)
+        : Instruction(Type::GetByValueWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
+};
+
 class PutByValue final : public Instruction {
 public:
     PutByValue(Register base, Register property, PropertyKind kind = PropertyKind::KeyValue)
@@ -726,11 +803,44 @@ public:
     {
         if (m_base == from)
             m_base = to;
+        if (m_property == from)
+            m_property = to;
     }
 
 private:
     Register m_base;
     Register m_property;
+    PropertyKind m_kind;
+};
+
+class PutByValueWithThis final : public Instruction {
+public:
+    PutByValueWithThis(Register base, Register property, Register this_value, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutByValueWithThis)
+        , m_base(base)
+        , m_property(property)
+        , m_this_value(this_value)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_property == from)
+            m_property = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_property;
+    Register m_this_value;
     PropertyKind m_kind;
 };
 

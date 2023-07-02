@@ -377,13 +377,30 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                 // b. ReturnIfAbrupt(lref).
                 Optional<Bytecode::Register> base_object_register;
                 Optional<Bytecode::Register> computed_property_register;
+                Optional<Bytecode::Register> this_value_register;
+
+                bool lhs_is_super_expression = false;
 
                 if (is<MemberExpression>(*lhs)) {
                     auto& expression = static_cast<MemberExpression const&>(*lhs);
-                    TRY(expression.object().generate_bytecode(generator));
-
+                    lhs_is_super_expression = is<SuperExpression>(expression.object());
                     base_object_register = generator.allocate_register();
-                    generator.emit<Bytecode::Op::Store>(*base_object_register);
+
+                    if (!lhs_is_super_expression) {
+                        TRY(expression.object().generate_bytecode(generator));
+                        generator.emit<Bytecode::Op::Store>(*base_object_register);
+                    } else {
+                        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+                        // 1. Let env be GetThisEnvironment().
+                        // 2. Let actualThis be ? env.GetThisBinding().
+                        this_value_register = generator.allocate_register();
+                        generator.emit<Bytecode::Op::ResolveThisBinding>();
+                        generator.emit<Bytecode::Op::Store>(*this_value_register);
+
+                        // SuperProperty : super [ Expression ]
+                        // 3. Let propertyNameReference be ? Evaluation of Expression.
+                        // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+                    }
 
                     if (expression.is_computed()) {
                         TRY(expression.property().generate_bytecode(generator));
@@ -400,6 +417,18 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                             &expression,
                             "Unimplemented non-computed member expression"sv
                         };
+                    }
+
+                    if (lhs_is_super_expression) {
+                        // 5/7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+                        // https://tc39.es/ecma262/#sec-makesuperpropertyreference
+                        // 1. Let env be GetThisEnvironment().
+                        // 2. Assert: env.HasSuperBinding() is true.
+                        // 3. Let baseValue be ? env.GetSuperBase().
+                        // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+                        generator.emit<Bytecode::Op::ResolveSuperBase>();
+                        generator.emit<Bytecode::Op::Store>(*base_object_register);
                     }
                 } else if (is<Identifier>(*lhs)) {
                     // NOTE: For Identifiers, we cannot perform GetVariable and then write into the reference it retrieves, only SetVariable can do this.
@@ -428,10 +457,16 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                     auto& expression = static_cast<MemberExpression const&>(*lhs);
 
                     if (expression.is_computed()) {
-                        generator.emit<Bytecode::Op::PutByValue>(*base_object_register, *computed_property_register);
+                        if (!lhs_is_super_expression)
+                            generator.emit<Bytecode::Op::PutByValue>(*base_object_register, *computed_property_register);
+                        else
+                            generator.emit<Bytecode::Op::PutByValueWithThis>(*base_object_register, *computed_property_register, *this_value_register);
                     } else if (expression.property().is_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(expression.property()).string());
-                        generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref);
+                        if (!lhs_is_super_expression)
+                            generator.emit<Bytecode::Op::PutById>(*base_object_register, identifier_table_ref);
+                        else
+                            generator.emit<Bytecode::Op::PutByIdWithThis>(*base_object_register, *this_value_register, identifier_table_ref);
                     } else if (expression.property().is_private_identifier()) {
                         auto identifier_table_ref = generator.intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
                         generator.emit<Bytecode::Op::PutPrivateById>(*base_object_register, identifier_table_ref);
@@ -1435,11 +1470,11 @@ static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expr
             auto super_base_register = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(super_base_register);
             generator.emit<Bytecode::Op::Load>(*computed_property_value_register);
-            generator.emit<Bytecode::Op::GetByValue>(super_base_register);
+            generator.emit<Bytecode::Op::GetByValueWithThis>(super_base_register, this_reg);
         } else {
             // 3. Let propertyKey be StringValue of IdentifierName.
             auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            generator.emit<Bytecode::Op::GetByIdWithThis>(identifier_table_ref, this_reg);
         }
     } else {
         TRY(member_expression.object().generate_bytecode(generator));

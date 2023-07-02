@@ -122,9 +122,13 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             // These can trigger proxies, which call into user code
             // So these are treated like calls
         case GetByValue:
+        case GetByValueWithThis:
         case GetById:
+        case GetByIdWithThis:
         case PutByValue:
+        case PutByValueWithThis:
         case PutById:
+        case PutByIdWithThis:
             // Attribute accesses (`a.o` or `a[o]`) may result in calls to getters or setters
             // or may trigger proxies
             // So these are treated like calls
