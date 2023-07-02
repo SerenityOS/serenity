@@ -8,10 +8,10 @@ Subject: [PATCH] Hardcode default path because `confstr` is missing
  1 file changed, 4 insertions(+)
 
 diff --git a/src/job.c b/src/job.c
-index 8116855..914935a 100644
+index ea885614a3862ea1a40d2ed12d78985c17d2ceb7..28d12a84cd9406633b4c8868fbc7527e07e56942 100644
 --- a/src/job.c
 +++ b/src/job.c
-@@ -2387,6 +2387,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
+@@ -2430,6 +2430,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
      /* execvp() will use a default PATH if none is set; emulate that.  */
      if (p == NULL)
        {
@@ -19,7 +19,7 @@ index 8116855..914935a 100644
          size_t l = confstr (_CS_PATH, NULL, 0);
          if (l)
            {
-@@ -2394,6 +2395,9 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
+@@ -2437,6 +2438,9 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
              confstr (_CS_PATH, dp, l);
              p = dp;
            }

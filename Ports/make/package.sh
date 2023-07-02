@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='make'
-version='4.4'
+version='4.4.1'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=("build-aux/config.sub")
