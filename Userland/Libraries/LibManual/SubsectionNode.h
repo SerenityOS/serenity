@@ -21,6 +21,7 @@ public:
     virtual ErrorOr<String> path() const override;
     virtual ErrorOr<String> name() const override;
     virtual PageNode const* document() const override;
+    virtual unsigned section_number() const override { return m_parent->section_number(); }
 
 protected:
     NonnullRefPtr<SectionNode const> m_parent;

@@ -28,6 +28,7 @@ public:
     virtual ErrorOr<String> name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
     virtual PageNode const* document() const override { return this; };
+    virtual unsigned section_number() const override;
 
     virtual ErrorOr<String> path() const override;
 

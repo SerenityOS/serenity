@@ -32,6 +32,7 @@ public:
     virtual Node const* parent() const override { return nullptr; }
     virtual ErrorOr<String> name() const override;
     String const& section_name() const { return m_section; }
+    virtual unsigned section_number() const override { return m_section.to_number<unsigned>().value_or(0); }
     virtual ErrorOr<String> path() const override;
     virtual PageNode const* document() const override { return nullptr; }
 
