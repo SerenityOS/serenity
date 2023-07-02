@@ -7,6 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
+#include <AK/IntegralMath.h>
 #include <AK/Optional.h>
 #include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
@@ -110,8 +111,79 @@ static Optional<Tuple<size_t, bool>> parse_ipv4_number(StringView input)
 
 static Optional<DeprecatedString> parse_ipv4_address(StringView input)
 {
-    // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
-    return input;
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view('.');
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. IPv4-empty-part validation error.
+        report_validation_error();
+
+        // 2. If parts’s size is greater than 1, then remove the last item from parts.
+        if (parts.size() > 1)
+            parts.remove(parts.size() - 1);
+    }
+
+    // 3. If parts’s size is greater than 4, IPv4-too-many-parts validation error, return failure.
+    if (parts.size() > 4) {
+        report_validation_error();
+        return OptionalNone {};
+    }
+
+    // 4. Let numbers be an empty list.
+    Vector<size_t> numbers;
+
+    // 5. For each part of parts:
+    for (auto part : parts) {
+        // 1. Let result be the result of parsing part.
+        auto result = parse_ipv4_number(part);
+
+        // 2. If result is failure, IPv4-non-numeric-part validation error, return failure.
+        if (!result.has_value()) {
+            report_validation_error();
+            return OptionalNone {};
+        }
+
+        // 3. If result[1] is true, IPv4-non-decimal-part validation error.
+        if (result->get<1>())
+            report_validation_error();
+
+        // 4. Append result[0] to numbers.
+        numbers.append(result->get<0>());
+    }
+
+    // 6. If any item in numbers is greater than 255, IPv4-out-of-range-part validation error.
+    if (any_of(numbers, [](auto number) { return number > 255; }))
+        report_validation_error();
+
+    // 7. If any but the last item in numbers is greater than 255, then return failure.
+    if (any_of(numbers.span().slice(0, numbers.size() - 1), [](auto number) { return number > 255; }))
+        return OptionalNone {};
+
+    // 8. If the last item in numbers is greater than or equal to 256^(5 − numbers’s size), then return failure.
+    if (numbers.last() >= AK::pow<size_t>(256, 5 - numbers.size()))
+        return OptionalNone {};
+
+    // 9. Let ipv4 be the last item in numbers.
+    auto ipv4 = numbers.last();
+
+    // 10. Remove the last item from numbers.
+    numbers.remove(numbers.size() - 1);
+
+    // 11. Let counter be 0.
+    size_t counter = 0;
+
+    // 12. For each n of numbers:
+    for (auto number : numbers) {
+        // 1. Increment ipv4 by n × 256^(3 − counter).
+        ipv4 += number * AK::pow<size_t>(256, 3 - counter);
+
+        // 2. Increment counter by 1.
+        counter++;
+    }
+
+    // 13. Return ipv4.
+    return DeprecatedString::number(ipv4);
 }
 
 // https://url.spec.whatwg.org/#concept-host-parser
