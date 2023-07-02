@@ -400,6 +400,7 @@ if (BUILD_LAGOM)
         JS
         Line
         Locale
+        Manual
         Markdown
         PDF
         Regex
@@ -548,7 +549,7 @@ if (BUILD_LAGOM)
         target_link_libraries(lzcat LibCompress LibCore LibMain)
 
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
-        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain)
+        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain LibManual)
 
         if (NOT EMSCRIPTEN)
             add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)

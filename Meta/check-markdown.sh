@@ -23,4 +23,5 @@ if [ -z "$SERENITY_SOURCE_DIR" ] ; then
     export SERENITY_SOURCE_DIR
 fi
 
-find AK Base Documentation Kernel Meta Ports Tests Userland -path Tests/LibWeb/WPT/wpt -prune -o -type f -name '*.md' -print0 | xargs -0 "${MARKDOWN_CHECK_BINARY}" README.md CONTRIBUTING.md
+# shellcheck disable=SC2086 # Word splitting is intentional here
+find AK Base Documentation Kernel Meta Ports Tests Userland -path Tests/LibWeb/WPT/wpt -prune -o -type f -name '*.md' -print0 | xargs -0 "${MARKDOWN_CHECK_BINARY}" -b "${SERENITY_SOURCE_DIR}/Base" $EXTRA_MARKDOWN_CHECK_ARGS README.md CONTRIBUTING.md
