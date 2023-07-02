@@ -475,14 +475,12 @@ ErrorOr<void> add_scan_header(Stream& stream)
 
 }
 
-ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap)
+ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
 
-    // FIXME: Let's take the quality as an option instead of hardcoding it
-    //        (there might also be a bug with quantization tables :^)).
-    context.set_luminance_quantization_table(s_default_luminance_quantization_table, 100);
-    context.set_chrominance_quantization_table(s_default_chrominance_quantization_table, 100);
+    context.set_luminance_quantization_table(s_default_luminance_quantization_table, options.quality);
+    context.set_chrominance_quantization_table(s_default_chrominance_quantization_table, options.quality);
 
     context.dc_luminance_huffman_table = s_default_dc_luminance_huffman_table;
     context.dc_chrominance_huffman_table = s_default_dc_chrominance_huffman_table;
