@@ -22,6 +22,9 @@ struct ClampedU8 {
 // 25.1.1 Notation (read-modify-write modification function), https://tc39.es/ecma262/#sec-arraybuffer-notation
 using ReadWriteModifyFunction = Function<ByteBuffer(ByteBuffer, ByteBuffer)>;
 
+// 1.1.4 Abstract Closure for MakeIdempotentArrayBufferByteLengthGetter, https://tc39.es/proposal-resizablearraybuffer/#sec-makeidempotentarraybufferbytelengthgetter
+using IdempotentArrayBufferByteLengthGetter = SafeFunction<size_t(VM&, ArrayBuffer&)>;
+
 enum class PreserveResizability {
     FixedLength,
     PreserveResizability
@@ -45,6 +48,10 @@ public:
         return buffer_impl().size();
     }
 
+    // [[ArrayBufferMaxByteLength]]
+    Optional<size_t> const& max_byte_length() const { return m_max_byte_length; }
+    void set_max_byte_length(Optional<size_t> new_max_byte_length) { m_max_byte_length = move(new_max_byte_length); }
+
     // [[ArrayBufferData]]
     ByteBuffer& buffer() { return buffer_impl(); }
     ByteBuffer const& buffer() const { return buffer_impl(); }
@@ -64,6 +71,16 @@ public:
         if (m_buffer.has<Empty>())
             return true;
         // 2. Return false.
+        return false;
+    }
+
+    // 1.1.5 IsResizableArrayBuffer ( arrayBuffer ), https://tc39.es/proposal-resizablearraybuffer/#sec-isresizablearraybuffer
+    bool is_resizable() const
+    {
+        // 1. If arrayBuffer has an [[ArrayBufferMaxByteLength]] internal slot, return true.
+        if (m_max_byte_length.has_value())
+            return true;
+        // 2. Return false
         return false;
     }
 
@@ -97,14 +114,18 @@ private:
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
     // but are required to be available for the use of various harnesses like the Test262 test runner.
     Value m_detach_key;
+    Optional<size_t> m_max_byte_length;
 };
 
+ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size);
 void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_block, u64 from_index, u64 count);
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length = {});
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
 ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM&, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability);
 ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
+size_t array_buffer_byte_length(VM&, ArrayBuffer const& array_buffer, ArrayBuffer::Order order);
+IdempotentArrayBufferByteLengthGetter make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order order);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>

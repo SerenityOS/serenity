@@ -58,6 +58,7 @@
     M(IntlNonNumericOr2DigitAfterNumericOr2Digit, "Styles other than 'numeric' and '2-digit' may not be used in smaller units after "   \
                                                   "being used in larger units")                                                         \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                                                     \
+    M(InvalidByteLengthForResizableArrayBuffer, "Invalid byte length for ArrayBuffer {} when the max byte length is {}")                \
     M(InvalidCodePoint, "Invalid code point {}, must be an integer no less than 0 and no greater than 0x10FFFF")                        \
     M(InvalidFormat, "Invalid {} format")                                                                                               \
     M(InvalidFractionDigits, "Fraction Digits must be an integer no less than 0, and no greater than 100")                              \
@@ -214,6 +215,7 @@
     M(RegExpObjectBadFlag, "Invalid RegExp flag '{}'")                                                                                  \
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(RegExpObjectIncompatibleFlags, "RegExp flag '{}' is incompatible with flag '{}'")                                                 \
+    M(ResizingNonResizableArray, "Tried to resize an ArrayBuffer that is not resizable")                                                \
     M(RestrictedFunctionPropertiesAccess, "Restricted function properties like 'callee', 'caller' and 'arguments' may "                 \
                                           "not be accessed in strict mode")                                                             \
     M(RestrictedGlobalProperty, "Cannot declare global property '{}'")                                                                  \

@@ -14,6 +14,8 @@
 
 namespace JS {
 
+ThrowCompletionOr<Optional<size_t>> get_max_byte_length_option(VM& vm, Value options);
+
 ArrayBufferConstructor::ArrayBufferConstructor(Realm& realm)
     : NativeFunction(realm.vm().names.ArrayBuffer.as_string(), realm.intrinsics().function_prototype())
 {
@@ -39,6 +41,7 @@ ThrowCompletionOr<void> ArrayBufferConstructor::initialize(Realm& realm)
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
+// 1.2.1 ArrayBuffer ( length [ , options ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybuffer-constructor
 ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
@@ -48,9 +51,12 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
+// 1.2.1 ArrayBuffer ( length [ , options ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybuffer-constructor
 ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+
+    auto options = vm.argument(1);
 
     // 2. Let byteLength be ? ToIndex(length).
     auto byte_length_or_error = vm.argument(0).to_index(vm);
@@ -64,8 +70,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
         return error;
     }
 
-    // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
+    // 3. Let requestedMaxByteLength be ? GetArrayBufferMaxByteLengthOption(options).
+    auto requested_max_byte_length = TRY(get_max_byte_length_option(vm, options));
+
+    // 4. Return ? AllocateArrayBuffer(NewTarget, byteLength, requestedMaxByteLength).
+    return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value(), requested_max_byte_length));
 }
 
 // 25.1.4.1 ArrayBuffer.isView ( arg ), https://tc39.es/ecma262/#sec-arraybuffer.isview
@@ -92,6 +101,24 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
     // 1. Return the this value.
     return vm.this_value();
+}
+
+// 1.1.6 GetArrayBufferMaxByteLengthOption ( options ), https://tc39.es/proposal-resizablearraybuffer/#sec-getarraybuffermaxbytelengthoption
+ThrowCompletionOr<Optional<size_t>> get_max_byte_length_option(VM& vm, Value options)
+{
+    // 1. If Type(options) is not Object, return empty
+    if (!options.is_object())
+        return Optional<size_t> {};
+
+    // 2. Let maxByteLength be ? Get(options, "maxByteLength").
+    auto max_byte_length = TRY(options.get(vm, vm.names.maxByteLength));
+
+    // 3. If maxByteLength is undefined, return empty.
+    if (max_byte_length.is_undefined())
+        return Optional<size_t> {};
+
+    // 4. Return ? ToIndex(maxByteLength).
+    return TRY(max_byte_length.to_index(vm));
 }
 
 }

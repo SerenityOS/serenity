@@ -24,11 +24,14 @@ ThrowCompletionOr<void> ArrayBufferPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(realm, vm.names.resize, resize, 1, attr);
     define_native_function(realm, vm.names.slice, slice, 2, attr);
     define_native_function(realm, vm.names.transfer, transfer, 0, attr);
     define_native_function(realm, vm.names.transferToFixedLength, transfer_to_fixed_length, 0, attr);
     define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.detached, detached_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.resizable, resizable_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.maxByteLength, max_byte_length_getter, {}, Attribute::Configurable);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
@@ -115,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     if (new_array_buffer_object->byte_length() < new_length)
         return vm.throw_completion<TypeError>(ErrorType::SpeciesConstructorReturned, "an ArrayBuffer smaller than requested");
 
-    // 22. NOTE: Side-effects of the above steps may have detached O.
+    // 22. NOTE: Side-effects of the above steps may have detached or resized O.
     // 23. If IsDetachedBuffer(O) is true, throw a TypeError exception.
     if (array_buffer_object->is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
@@ -126,8 +129,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     // 25. Let toBuf be new.[[ArrayBufferData]].
     auto& to_buf = new_array_buffer_object->buffer();
 
-    // 26. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
-    copy_data_block_bytes(to_buf, 0, from_buf, first, new_length);
+    // 26. If first < O.[[ArrayBufferByteLength]], then
+    if (first < array_buffer_object->byte_length()) {
+        // a. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, min(O.[[ArrayBufferByteLength]], newLen)).
+        copy_data_block_bytes(to_buf, 0, from_buf, first, new_length);
+    }
 
     // 27. Return new.
     return new_array_buffer_object;
@@ -184,6 +190,102 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::transfer_to_fixed_length)
     // 2. Return ? ArrayBufferCopyAndDetach(O, newLength, fixed-length).
     auto new_length = vm.argument(0);
     return TRY(array_buffer_copy_and_detach(vm, array_buffer_object, new_length, PreserveResizability::FixedLength));
+}
+
+// 1.3.2 get ArrayBuffer.prototype.maxByteLength, https://tc39.es/proposal-resizablearraybuffer/#sec-get-arraybuffer.prototype.maxbytelength
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::max_byte_length_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // FIXME: 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+
+    // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
+    if (array_buffer_object->is_detached())
+        return Value(0);
+
+    size_t length;
+
+    // 5. If IsResizableArrayBuffer(O) is true, then
+    if (array_buffer_object->is_resizable()) {
+        // a. Let length be O.[[ArrayBufferMaxByteLength]].
+        length = array_buffer_object->max_byte_length().value();
+    }
+    // 6. Else,
+    else {
+        // a. Let length be O.[[ArrayBufferByteLength]].
+        length = array_buffer_object->byte_length();
+    }
+
+    // 7. Return 𝔽(length).
+    return Value(length);
+}
+
+// 1.3.3 get ArrayBuffer.prototype.resizable, https://tc39.es/proposal-resizablearraybuffer/#sec-get-arraybuffer.prototype.resizable
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::resizable_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // FIXME: 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+
+    // 4. Return IsResizableArrayBuffer(O).
+    return array_buffer_object->is_resizable();
+}
+
+// 1.3.5 ArrayBuffer.prototype.resize ( newLength ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybuffer.prototype.resize
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::resize)
+{
+    // 1. Let O be the this value.
+    auto array_buffer_object = TRY(typed_this_value(vm));
+
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferMaxByteLength]]).
+    if (!array_buffer_object->is_resizable())
+        return vm.throw_completion<TypeError>(ErrorType::ResizingNonResizableArray);
+
+    // FIXME: 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+
+    // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
+    if (array_buffer_object->is_detached())
+        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+
+    // 5. Let newByteLength be ? ToIntegerOrInfinity(newLength).
+    auto new_byte_length = TRY(vm.argument(0).to_integer_or_infinity(vm));
+
+    // NOTE: newByteLength < 0 is always false as new_byte_length is unsigned
+    // 6. If newByteLength < 0 or newByteLength > O.[[ArrayBufferMaxByteLength]], throw a RangeError exception.
+    if (new_byte_length < 0 || new_byte_length > array_buffer_object->max_byte_length().value())
+        return vm.throw_completion<RangeError>(ErrorType::InvalidByteLengthForResizableArrayBuffer, new_byte_length, array_buffer_object->max_byte_length().value());
+
+    // 7. Let hostHandled be ? HostResizeArrayBuffer(O, newByteLength)
+    auto host_handled = TRY(vm.host_resize_array_buffer(*array_buffer_object, new_byte_length));
+
+    // 8. If hostHandled is handled, return undefined.
+    if (host_handled == HostHandled::Handled)
+        return js_undefined();
+
+    // 9. Let oldBlock be O.[[ArrayBufferData]].
+    auto old_block = array_buffer_object->buffer();
+
+    // 10. Let newBlock be ? CreateByteDataBlock(newByteLength).
+    auto new_block = TRY(create_byte_data_block(vm, new_byte_length));
+
+    // 11. Let copyLength be min(newByteLength, O.[[ArrayBufferByteLength]]).
+    auto copy_length = min(new_byte_length, array_buffer_object->byte_length());
+
+    // 12. Perform CopyDataBlockBytes(newBlock, 0, oldBlock, 0, copyLength).
+    copy_data_block_bytes(new_block, 0, old_block, 0, copy_length);
+
+    // 13. NOTE: Neither creation of the new Data Block nor copying from the old Data Block are observable. Implementations reserve the right to implement this method as in-place growth or shrinkage.
+
+    // 14. Set O.[[ArrayBufferData]] to newBlock.
+    // 15. Set O.[[ArrayBufferByteLength]] to newLength.
+    array_buffer_object->set_buffer(new_block);
+
+    // 16. Return undefined.
+    return js_undefined();
 }
 
 }

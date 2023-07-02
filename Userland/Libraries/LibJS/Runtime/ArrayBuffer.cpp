@@ -51,7 +51,7 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 6.2.9.1 CreateByteDataBlock ( size ), https://tc39.es/ecma262/#sec-createbytedatablock
-static ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
+ThrowCompletionOr<ByteBuffer> create_byte_data_block(VM& vm, size_t size)
 {
     // 1. If size > 2^53 - 1, throw a RangeError exception.
     if (size > MAX_ARRAY_LIKE_INDEX)
@@ -119,20 +119,42 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_
 }
 
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length)
+// 1.1.2 AllocateArrayBuffer ( constructor, byteLength [ , maxByteLength ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-allocatearraybuffer
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM& vm, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length)
 {
-    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
+    // 1. Let slots be « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] ».
+
+    // 2. If maxByteLength is present and not empty, then
+    if (max_byte_length.has_value()) {
+        // a. If byteLength > maxByteLength, throw a RangeError exception.
+        if (byte_length > max_byte_length.value())
+            return vm.throw_completion<RangeError>(ErrorType::InvalidByteLengthForResizableArrayBuffer, byte_length, max_byte_length.value());
+
+        // b. Append [[ArrayBufferMaxByteLength]] to slots.
+    }
+
+    // 3. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", slots).
     auto obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(vm, constructor, &Intrinsics::array_buffer_prototype, nullptr));
 
-    // 2. Let block be ? CreateByteDataBlock(byteLength).
+    // 4. Let block be ? CreateByteDataBlock(byteLength).
     auto block = TRY(create_byte_data_block(vm, byte_length));
 
-    // 3. Set obj.[[ArrayBufferData]] to block.
+    // 5. Set obj.[[ArrayBufferData]] to block.
     obj->set_buffer(move(block));
 
-    // 4. Set obj.[[ArrayBufferByteLength]] to byteLength.
+    // 6. Set obj.[[ArrayBufferByteLength]] to byteLength.
 
-    // 5. Return obj.
+    // 7. If maxByteLength is present and not empty, then
+    if (max_byte_length.has_value()) {
+        // a. If it is not possible to create a Data Block block consisting of maxByteLength bytes, throw a RangeError exception.
+        // b. NOTE: Resizable ArrayBuffers are designed to be implementable with in-place growth. Implementations reserve the right to throw if, for example, virtual memory cannot be reserved up front.
+        TRY_OR_THROW_OOM(vm, obj->buffer().try_ensure_capacity(max_byte_length.value()));
+
+        // c. Set obj.[[ArrayBufferMaxByteLength]] to maxByteLength.
+        obj->set_max_byte_length(max_byte_length);
+    }
+
+    // 8. Return obj.
     return obj.ptr();
 }
 
@@ -183,7 +205,7 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
 }
 
 // 25.1.2.14 ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability ), https://tc39.es/proposal-arraybuffer-transfer/#sec-arraybuffer.prototype.transfertofixedlength
-ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability)
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability)
 {
     auto& realm = *vm.current_realm();
 
@@ -201,8 +223,15 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // FIXME: 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
-    // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+    Optional<size_t> new_max_byte_length;
+
+    // 6. If preserveResizability is preserve-resizability and IsResizableArrayBuffer(arrayBuffer) is true, then
+    if (preserve_resizability == PreserveResizability::PreserveResizability && array_buffer.is_resizable()) {
+        // a. Let newMaxByteLength be arrayBuffer.[[ArrayBufferMaxByteLength]].
+        new_max_byte_length = array_buffer.max_byte_length();
+    }
+
+    // NOTE: Implicitly done in Optional default constructor
     // 7. Else,
     // a. Let newMaxByteLength be empty.
 
@@ -210,8 +239,8 @@ ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM& vm, ArrayBuffer
     if (!array_buffer.detach_key().is_undefined())
         return vm.throw_completion<TypeError>(ErrorType::DetachKeyMismatch, array_buffer.detach_key(), js_undefined());
 
-    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, FIXME: newMaxByteLength).
-    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length));
+    // 9. Let newBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, newByteLength, newMaxByteLength).
+    auto* new_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), new_byte_length, new_max_byte_length));
 
     // 10. Let copyLength be min(newByteLength, arrayBuffer.[[ArrayBufferByteLength]]).
     auto copy_length = min(new_byte_length, array_buffer.byte_length());
@@ -244,6 +273,58 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM& vm
 
     // 5. Return obj.
     return obj;
+}
+
+// 1.1.3 ArrayBufferByteLength ( arrayBuffer, order ), https://tc39.es/proposal-resizablearraybuffer/#sec-arraybufferlength
+size_t array_buffer_byte_length(VM&, ArrayBuffer const& array_buffer, ArrayBuffer::Order)
+{
+    // FIXME: 1. If IsSharedArrayBuffer(arrayBuffer) is true and arrayBuffer has an [[ArrayBufferByteLengthData]] internal slot, then
+    // a. Let bufferByteLengthBlock be arrayBuffer.[[ArrayBufferByteLengthData]].
+    // b. Return ℝ(GetValueFromBuffer(bufferByteLengthBlock, 0, BigUint64, true, order)).
+
+    // 2. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!array_buffer.is_detached());
+
+    // 3. Return arrayBuffer.[[ArrayBufferByteLength]].
+    return array_buffer.byte_length();
+}
+
+// 1.1.4 MakeIdempotentArrayBufferByteLengthGetter ( order ), https://tc39.es/proposal-resizablearraybuffer/#sec-makeidempotentarraybufferbytelengthgetter
+IdempotentArrayBufferByteLengthGetter make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order order)
+{
+    // 1. NOTE: The [[ArrayBuffer]] slot is used for editorial clarity only, that a getter should only be used with a single ArrayBuffer.
+
+    // 2. Let lengthStorage be { [[ArrayBuffer]]: empty, [[ByteLength]]: empty }.
+    struct LengthStorage {
+        Optional<ArrayBuffer&> array_buffer;
+        Optional<size_t> byte_length;
+    };
+
+    auto length_storage = LengthStorage { {}, {} };
+
+    // 3. Let getter be a new Abstract Closure with parameters (buffer) that captures lengthStorage and order and performs the following steps when called:
+    auto getter = [length_storage, order](VM& vm, ArrayBuffer& buffer) mutable {
+        // a. If lengthStorage.[[ByteLength]] is empty, then
+        if (!length_storage.byte_length.has_value()) {
+            // i. Assert: lengthStorage.[[ArrayBuffer]] is empty.
+            VERIFY(!length_storage.array_buffer.has_value());
+
+            // ii. Set lengthStorage.[[ArrayBuffer]] to buffer.
+            length_storage.array_buffer = { buffer };
+
+            // iii. Set lengthStorage.[[ByteLength]] to ArrayBufferByteLength(buffer, order).
+            length_storage.byte_length = { array_buffer_byte_length(vm, buffer, order) };
+        }
+
+        // b. Assert: SameValue(lengthStorage.[[ArrayBuffer]], buffer) is true.
+        VERIFY(same_value(Value(&length_storage.array_buffer.value()), Value(&buffer)));
+
+        // c. Return lengthStorage.[[ByteLength]].
+        return length_storage.byte_length.value();
+    };
+
+    // 4. Return getter.
+    return getter;
 }
 
 }

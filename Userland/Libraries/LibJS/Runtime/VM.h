@@ -29,6 +29,11 @@ namespace JS {
 class Identifier;
 struct BindingPattern;
 
+enum class HostHandled {
+    Handled,
+    Unhandled
+};
+
 class VM : public RefCounted<VM> {
 public:
     struct CustomData {
@@ -270,6 +275,7 @@ public:
     Function<JobCallback(FunctionObject&)> host_make_job_callback;
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
+    Function<ThrowCompletionOr<HostHandled>(ArrayBuffer&, size_t)> host_resize_array_buffer;
 
     // Execute a specific AST node either in AST or BC interpreter, depending on which one is enabled by default.
     // NOTE: This is meant as a temporary stopgap until everything is bytecode.
