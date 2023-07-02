@@ -857,9 +857,9 @@ void TableFormattingContext::position_cell_boxes()
     }
 }
 
-static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, const CSS::BorderData& b)
+static bool border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b)
 {
-    // Implements steps 1, 2 and 3 of border conflict resolution algorithm.
+    // Implements criteria for steps 1, 2 and 3 of border conflict resolution algorithm.
     static HashMap<CSS::LineStyle, unsigned> const line_style_score = {
         { CSS::LineStyle::Inset, 0 },
         { CSS::LineStyle::Groove, 1 },
@@ -870,29 +870,37 @@ static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, con
         { CSS::LineStyle::Solid, 6 },
         { CSS::LineStyle::Double, 7 },
     };
+
     if (a.line_style == CSS::LineStyle::Hidden) {
-        return a;
+        return false;
     }
+
     if (b.line_style == CSS::LineStyle::Hidden) {
-        return b;
+        return true;
     }
+
     if (a.line_style == CSS::LineStyle::None) {
-        return b;
+        return true;
     }
     if (b.line_style == CSS::LineStyle::None) {
-        return a;
+        return false;
     }
     if (a.width > b.width) {
-        return a;
+        return false;
     } else if (a.width < b.width) {
-        return b;
+        return true;
     }
     if (*line_style_score.get(a.line_style) > *line_style_score.get(b.line_style)) {
-        return a;
+        return false;
     } else if (*line_style_score.get(a.line_style) < *line_style_score.get(b.line_style)) {
-        return b;
+        return true;
     }
-    return a;
+    return false;
+}
+
+static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, const CSS::BorderData& b)
+{
+    return border_is_less_specific(a, b) ? b : a;
 }
 
 const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(TableFormattingContext::ConflictingEdge const& conflicting_edge)
