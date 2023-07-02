@@ -2372,6 +2372,9 @@ Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode:
 
     // EnterObjectEnvironment sets the running execution context's lexical_environment to a new Object Environment.
     generator.start_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
+
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+
     TRY(m_body->generate_bytecode(generator));
     generator.end_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
 
