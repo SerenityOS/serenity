@@ -48,7 +48,7 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value value, PropertyKey name, PropertyKind kind)
+static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, PropertyKind kind)
 {
     auto object = TRY(base.to_object(vm));
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
@@ -71,7 +71,7 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value val
         break;
     }
     case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, value, base));
+        bool succeeded = TRY(object->internal_set(name, value, this_value));
         if (!succeeded && vm.in_strict_mode())
             return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, base.to_string_without_side_effects()));
         break;
@@ -523,12 +523,11 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interprete
     return {};
 }
 
-ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
+static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value)
 {
     auto& vm = interpreter.vm();
 
-    auto const& name = interpreter.current_executable().get_identifier(m_property);
-    auto base_value = interpreter.accumulator();
+    auto const& name = interpreter.current_executable().get_identifier(property);
 
     // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
     GCPtr<Object> base_obj;
@@ -547,8 +546,21 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
         base_obj = TRY(base_value.to_object(vm));
     }
 
-    interpreter.accumulator() = TRY(base_obj->internal_get(name, base_value));
+    interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value));
     return {};
+}
+
+ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_value = interpreter.accumulator();
+    return get_by_id(interpreter, m_property, base_value, base_value);
+}
+
+ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_value = interpreter.accumulator();
+    auto this_value = interpreter.reg(m_this_value);
+    return get_by_id(interpreter, m_property, base_value, this_value);
 }
 
 ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -582,7 +594,19 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    TRY(put_by_property_key(vm, base, value, name, m_kind));
+    TRY(put_by_property_key(vm, base, base, value, name, m_kind));
+    interpreter.accumulator() = value;
+    return {};
+}
+
+ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+    auto base = interpreter.reg(m_base);
+    PropertyKey name = interpreter.current_executable().get_identifier(m_property);
+    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
@@ -1042,6 +1066,21 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
+ThrowCompletionOr<void> GetByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+
+    auto property_key = TRY(property_key_value.to_property_key(vm));
+
+    interpreter.accumulator() = TRY(object->internal_get(property_key, interpreter.reg(m_this_value)));
+    return {};
+}
+
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1052,7 +1091,22 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     auto base = interpreter.reg(m_base);
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    TRY(put_by_property_key(vm, base, value, property_key, m_kind));
+    TRY(put_by_property_key(vm, base, base, value, property_key, m_kind));
+    interpreter.accumulator() = value;
+    return {};
+}
+
+ThrowCompletionOr<void> PutByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+
+    auto base = interpreter.reg(m_base);
+
+    auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
+    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, property_key, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
@@ -1411,6 +1465,17 @@ DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& 
     return DeprecatedString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
+DeprecatedString PutByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return DeprecatedString::formatted("PutByIdWithThis kind:{} base:{}, property:{} ({}) this_value:{}", kind, m_base, m_property, executable.identifier_table->get(m_property), m_this_value);
+}
+
 DeprecatedString PutPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = m_kind == PropertyKind::Getter
@@ -1425,6 +1490,11 @@ DeprecatedString PutPrivateById::to_deprecated_string_impl(Bytecode::Executable 
 DeprecatedString GetById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
+DeprecatedString GetByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("GetByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
 }
 
 DeprecatedString GetPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
@@ -1611,6 +1681,11 @@ DeprecatedString GetByValue::to_deprecated_string_impl(Bytecode::Executable cons
     return DeprecatedString::formatted("GetByValue base:{}", m_base);
 }
 
+DeprecatedString GetByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetByValueWithThis base:{} this_value:{}", m_base, m_this_value);
+}
+
 DeprecatedString PutByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     auto kind = m_kind == PropertyKind::Getter
@@ -1620,6 +1695,17 @@ DeprecatedString PutByValue::to_deprecated_string_impl(Bytecode::Executable cons
         : "property";
 
     return DeprecatedString::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
+}
+
+DeprecatedString PutByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return DeprecatedString::formatted("PutByValueWithThis kind:{} base:{}, property:{} this_value:{}", kind, m_base, m_property, m_this_value);
 }
 
 DeprecatedString DeleteByValue::to_deprecated_string_impl(Bytecode::Executable const&) const

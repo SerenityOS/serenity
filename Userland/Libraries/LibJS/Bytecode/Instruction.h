@@ -34,7 +34,9 @@
     O(EnterObjectEnvironment)        \
     O(Exp)                           \
     O(GetById)                       \
+    O(GetByIdWithThis)               \
     O(GetByValue)                    \
+    O(GetByValueWithThis)            \
     O(GetIterator)                   \
     O(GetMethod)                     \
     O(GetNewTarget)                  \
@@ -80,7 +82,9 @@
     O(Not)                           \
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
+    O(PutByIdWithThis)               \
     O(PutByValue)                    \
+    O(PutByValueWithThis)            \
     O(PutPrivateById)                \
     O(ResolveThisBinding)            \
     O(ResolveSuperBase)              \
