@@ -398,8 +398,8 @@ ErrorOr<void> add_quantization_table(Stream& stream, QuantizationTable const& ta
     // Pq and Tq
     TRY(stream.write_value<u8>((0 << 4) | table.id));
 
-    for (auto coefficient : table.table)
-        TRY(stream.write_value<u8>(coefficient));
+    for (u8 i = 0; i < 64; ++i)
+        TRY(stream.write_value<u8>(table.table[zigzag_map[i]]));
 
     return {};
 }
