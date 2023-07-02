@@ -564,6 +564,7 @@ struct PullIntoDescriptor;
 struct QueuingStrategy;
 struct QueuingStrategyInit;
 struct ReadableStreamGetReaderOptions;
+struct Transformer;
 struct UnderlyingSink;
 struct UnderlyingSource;
 }
