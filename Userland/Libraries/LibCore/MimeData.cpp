@@ -78,6 +78,8 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "image/x-targa"sv;
     if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
         return "image/webp"sv;
+    if (path.ends_with(".tvg"sv, CaseSensitivity::CaseInsensitive))
+        return "image/tinyvg"sv;
     if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
         return "text/markdown"sv;
     if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
@@ -168,6 +170,7 @@ StringView guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(zip, "application/zip"sv, 0, 2, 0x50, 0x4B)                                                                       \
     __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff"sv, 0, 4, 'I', 'I', '*', 0x00)                                                                  \
     __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff"sv, 0, 4, 'M', 'M', 0x00, '*')                                                        \
+    __ENUMERATE_MIME_TYPE_HEADER(tinyvg, "image/tinyvg"sv, 0, 2, 0x72, 0x56)                                                                       \
     __ENUMERATE_MIME_TYPE_HEADER(wasm, "application/wasm"sv, 0, 4, 0x00, 'a', 's', 'm')                                                            \
     __ENUMERATE_MIME_TYPE_HEADER(wav, "audio/wav"sv, 8, 4, 'W', 'A', 'V', 'E')                                                                     \
     __ENUMERATE_MIME_TYPE_HEADER(webp, "image/webp"sv, 8, 4, 'W', 'E', 'B', 'P')                                                                   \
