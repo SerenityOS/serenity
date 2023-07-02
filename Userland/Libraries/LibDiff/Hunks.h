@@ -9,6 +9,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -58,9 +59,20 @@ struct Hunk {
     Vector<Line> lines;
 };
 
-ErrorOr<Vector<Hunk>> parse_hunks(StringView diff);
-HunkLocation parse_hunk_location(StringView location_line);
+class Parser : public GenericLexer {
+public:
+    using GenericLexer::GenericLexer;
+
+    ErrorOr<Vector<Hunk>> parse_hunks();
+
+private:
+    Optional<HunkLocation> consume_unified_location();
+    bool consume_line_number(size_t& number);
 };
+
+ErrorOr<Vector<Hunk>> parse_hunks(StringView diff);
+
+}
 
 template<>
 struct AK::Formatter<Diff::Line::Operation> : Formatter<FormatString> {
