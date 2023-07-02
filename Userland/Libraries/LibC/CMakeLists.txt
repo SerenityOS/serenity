@@ -5,6 +5,7 @@ set(LIBC_SOURCES
     cxxabi.cpp
     dirent.cpp
     dlfcn.cpp
+    err.cpp
     fcntl.cpp
     fenv.cpp
     fnmatch.cpp
