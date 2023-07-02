@@ -1978,7 +1978,7 @@ size_t JPEGImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("JPEGImageDecoderPlugin: Invalid frame index");

@@ -40,7 +40,7 @@ public:
     virtual size_t loop_count() = 0;
     virtual size_t frame_count() = 0;
     virtual size_t first_animated_frame_index() = 0;
-    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) = 0;
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() = 0;
 
 protected:
@@ -61,7 +61,7 @@ public:
     size_t loop_count() const { return m_plugin->loop_count(); }
     size_t frame_count() const { return m_plugin->frame_count(); }
     size_t first_animated_frame_index() const { return m_plugin->first_animated_frame_index(); }
-    ErrorOr<ImageFrameDescriptor> frame(size_t index) const { return m_plugin->frame(index); }
+    ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) const { return m_plugin->frame(index, ideal_size); }
     ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
 
 private:
