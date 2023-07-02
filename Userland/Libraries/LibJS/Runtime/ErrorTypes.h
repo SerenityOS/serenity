@@ -28,6 +28,7 @@
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(DataViewOutOfRangeByteOffset, "Data view byte offset {} is out of range for buffer with length {}")                               \
+    M(DataViewOverflowOrOutOfBounds, "Overflow or out of bounds in {}")                                                                 \
     M(DerivedConstructorReturningInvalidValue, "Derived constructor return invalid value")                                              \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \

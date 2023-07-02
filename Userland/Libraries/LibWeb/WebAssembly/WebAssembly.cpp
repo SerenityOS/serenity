@@ -311,7 +311,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
         data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.idempotent_byte_length());
     } else if (is<JS::DataView>(buffer_object)) {
         auto& buffer = static_cast<JS::DataView&>(*buffer_object);
-        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
+        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.idempotent_byte_length());
     } else {
         return vm.throw_completion<JS::TypeError>("Not a BufferSource"sv);
     }

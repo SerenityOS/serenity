@@ -53,7 +53,7 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
         offset = es_buffer_source.byte_offset();
 
         // 3. Set length to esBufferSource.[[ByteLength]].
-        length = es_buffer_source.byte_length();
+        length = es_buffer_source.idempotent_byte_length();
     }
     // 6. Otherwise:
     else {

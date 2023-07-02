@@ -42,6 +42,7 @@ ThrowCompletionOr<Value> DataViewConstructor::call()
 }
 
 // 25.3.2.1 DataView ( buffer [ , byteOffset [ , byteLength ] ] ), https://tc39.es/ecma262/#sec-dataview-buffer-byteoffset-bytelength
+// 5.2.1 DataView ( buffer [ , byteOffset [ , byteLength ] ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-dataview-buffer-byteoffset-bytelength
 ThrowCompletionOr<NonnullGCPtr<Object>> DataViewConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
@@ -64,41 +65,70 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DataViewConstructor::construct(FunctionO
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
     // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-    auto buffer_byte_length = array_buffer.byte_length();
+    auto buffer_byte_length = array_buffer_byte_length(vm, array_buffer, ArrayBuffer::Order::SeqCst);
 
     // 6. If offset > bufferByteLength, throw a RangeError exception.
     if (offset > buffer_byte_length)
         return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, offset, buffer_byte_length);
 
-    size_t view_byte_length;
+    // 7. Let bufferIsResizable be IsResizableArrayBuffer(buffer).
+    auto buffer_is_resizable = array_buffer.is_resizable();
 
-    // 7. If byteLength is undefined, then
-    if (byte_length.is_undefined()) {
+    // 8. Let byteLengthChecked be empty.
+    auto byte_length_checked = Optional<size_t> {};
+
+    Optional<size_t> view_byte_length;
+
+    // 9. If bufferIsResizable is true and byteLength is undefined, then
+    if (buffer_is_resizable && byte_length.is_undefined()) {
+        // a. Let viewByteLength be auto.
+        view_byte_length = {};
+    }
+    // 10. Else if byteLength is undefined, then
+    else if (byte_length.is_undefined()) {
         // a. Let viewByteLength be bufferByteLength - offset.
         view_byte_length = buffer_byte_length - offset;
     }
-    // 8. Else,
+    // 11. Else,
     else {
-        // a. Let viewByteLength be ? ToIndex(byteLength).
-        view_byte_length = TRY(byte_length.to_index(vm));
+        // a. Set byteLengthChecked to ? ToIndex(byteLength).
+        byte_length_checked = TRY(byte_length.to_index(vm));
 
-        // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
-        auto const checked_add = AK::make_checked(view_byte_length) + AK::make_checked(offset);
+        // b. Let viewByteLength be ? byteLengthChecked
+        view_byte_length = byte_length_checked.value();
+
+        // c. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
+        auto const checked_add = AK::make_checked(view_byte_length.value()) + AK::make_checked(offset);
         if (checked_add.has_overflow() || checked_add.value() > buffer_byte_length)
             return vm.throw_completion<RangeError>(ErrorType::InvalidLength, vm.names.DataView);
     }
 
-    // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
-    // 11. Set O.[[ViewedArrayBuffer]] to buffer.
-    // 12. Set O.[[ByteLength]] to viewByteLength.
-    // 13. Set O.[[ByteOffset]] to offset.
+    // 12. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
+    // 18. Set O.[[ViewedArrayBuffer]] to buffer.
+    // 19. Set O.[[ByteLength]] to viewByteLength.
+    // 20. Set O.[[ByteOffset]] to offset.
     auto data_view = TRY(ordinary_create_from_constructor<DataView>(vm, new_target, &Intrinsics::data_view_prototype, &array_buffer, view_byte_length, offset));
 
-    // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+    // 13. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (array_buffer.is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    // 14. Return O.
+    // 14. Let getBufferByteLength be MakeIdempotentArrayBufferByteLengthGetter(SeqCst).
+    auto get_buffer_byte_length = make_idempotent_array_buffer_byte_length_getter(ArrayBuffer::Order::SeqCst);
+
+    // 15. Set bufferByteLength be getBufferByteLength(buffer).
+    buffer_byte_length = get_buffer_byte_length(vm, array_buffer);
+
+    // 16. If offset > bufferByteLength, throw a RangeError exception.
+    if (offset > buffer_byte_length)
+        return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, offset, buffer_byte_length);
+
+    // 17. If byteLengthChecked is not empty, then
+    // a. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
+    if (byte_length_checked.has_value() && offset + view_byte_length.value() > buffer_byte_length)
+        return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, offset + view_byte_length.value(), buffer_byte_length);
+
+    // 21. Return O.
     return data_view;
 }
 
