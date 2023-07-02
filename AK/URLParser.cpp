@@ -186,6 +186,37 @@ static Optional<DeprecatedString> parse_ipv4_address(StringView input)
     return DeprecatedString::number(ipv4);
 }
 
+// https://url.spec.whatwg.org/#ends-in-a-number-checker
+static bool ends_in_a_number(StringView input)
+{
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view('.');
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. If parts’s size is 1, then return false.
+        if (parts.size() == 1)
+            return false;
+
+        // 2. Remove the last item from parts.
+        parts.remove(parts.size() - 1);
+    }
+
+    // 3. Let last be the last item in parts.
+    auto last = parts.last();
+
+    // 4. If last is non-empty and contains only ASCII digits, then return true.
+    if (!last.is_empty() && all_of(last, [](auto character) { return is_ascii_digit(character); }))
+        return true;
+
+    // 5. If parsing last as an IPv4 number does not return failure, then return true.
+    if (parse_ipv4_number(last).has_value())
+        return true;
+
+    // 6. Return false.
+    return false;
+}
+
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
 static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
@@ -216,8 +247,9 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         }
     }
 
-    auto ipv4_host = parse_ipv4_address(ascii_domain);
-    return ipv4_host;
+    if (ends_in_a_number(ascii_domain))
+        return parse_ipv4_address(ascii_domain);
+    return ascii_domain;
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
