@@ -27,6 +27,8 @@
 #include <syscall.h>
 #include <unistd.h>
 
+char* program_invocation_short_name;
+
 static constinit pthread_mutex_t s_open_streams_lock = __PTHREAD_MUTEX_INITIALIZER;
 
 // The list of open files is initialized in __stdio_init.

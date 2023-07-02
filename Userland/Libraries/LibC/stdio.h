@@ -31,6 +31,8 @@ __BEGIN_DECLS
 #define L_tmpnam 256
 #define P_tmpdir "/tmp"
 
+extern char* program_invocation_short_name;
+
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;

@@ -45,6 +45,8 @@ int _entry(int argc, char** argv, char** env)
 
     s_global_initializers_ran = true;
 
+    program_invocation_short_name = argv[0];
+
     _init();
 
     int status = main(argc, argv, environ);
