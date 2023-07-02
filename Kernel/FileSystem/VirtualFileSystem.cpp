@@ -275,7 +275,7 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
                 if (custody_path->view() != mountpoint_path->view())
                     continue;
                 NonnullRefPtr<FileSystem> fs = mount.guest_fs();
-                TRY(fs->prepare_to_unmount());
+                TRY(fs->prepare_to_unmount(mount.guest()));
                 fs->mounted_count({}).with([&](auto& mounted_count) {
                     VERIFY(mounted_count > 0);
                     if (mounted_count == 1) {

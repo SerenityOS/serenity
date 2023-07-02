@@ -532,8 +532,9 @@ unsigned Ext2FS::free_inode_count() const
     return super_block().s_free_inodes_count;
 }
 
-ErrorOr<void> Ext2FS::prepare_to_clear_last_mount()
+ErrorOr<void> Ext2FS::prepare_to_clear_last_mount(Inode& mount_guest_inode)
 {
+    (void)mount_guest_inode;
     MutexLocker locker(m_lock);
     for (auto& it : m_inode_cache) {
         if (it.value->ref_count() > 1)

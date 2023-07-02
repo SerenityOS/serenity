@@ -70,7 +70,7 @@ private:
     virtual ErrorOr<void> initialize_while_locked() override;
     virtual bool is_initialized_while_locked() override;
 
-    virtual ErrorOr<void> prepare_to_clear_last_mount() override;
+    virtual ErrorOr<void> prepare_to_clear_last_mount(Inode& mount_guest_inode) override;
     ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
     ErrorOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
     ErrorOr<NonnullRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
