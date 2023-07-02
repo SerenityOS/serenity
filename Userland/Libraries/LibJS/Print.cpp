@@ -501,7 +501,13 @@ ErrorOr<void> print_data_view(JS::PrintContext& print_context, JS::DataView cons
 {
     TRY(print_type(print_context, "DataView"sv));
     TRY(js_out(print_context, "\n  byteLength: "));
-    TRY(print_value(print_context, JS::Value(data_view.byte_length()), seen_objects));
+    auto view_record = JS::make_data_view_with_buffer_witness_record(print_context.vm, data_view, JS::ArrayBuffer::Order::Unordered);
+    if (JS::is_view_out_of_bounds(view_record)) {
+        TRY(js_out(print_context, "(out of bounds)"));
+    } else {
+        auto byte_length = JS::get_view_byte_length(view_record);
+        TRY(print_value(print_context, JS::Value(byte_length), seen_objects));
+    }
     TRY(js_out(print_context, "\n  byteOffset: "));
     TRY(print_value(print_context, JS::Value(data_view.byte_offset()), seen_objects));
     TRY(js_out(print_context, "\n  buffer: "));

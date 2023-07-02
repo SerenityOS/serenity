@@ -51,7 +51,7 @@ void DataViewPrototype::initialize(Realm& realm)
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DataView.as_string()), Attribute::Configurable);
 }
 
-// 25.3.1.1 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
+// 25.3.1.5 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue
 template<typename T>
 static ThrowCompletionOr<Value> get_view_value(VM& vm, Value request_index, Value is_little_endian)
 {
@@ -65,38 +65,40 @@ static ThrowCompletionOr<Value> get_view_value(VM& vm, Value request_index, Valu
     // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
     auto little_endian = is_little_endian.to_boolean();
 
-    // 5. Let buffer be view.[[ViewedArrayBuffer]].
-    auto buffer = view->viewed_array_buffer();
-
-    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (buffer->is_detached())
-        return vm.template throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
-
-    // 7. Let viewOffset be view.[[ByteOffset]].
+    // 5. Let viewOffset be view.[[ByteOffset]].
     auto view_offset = view->byte_offset();
 
-    // 8. Let viewSize be view.[[ByteLength]].
-    auto view_size = view->byte_length();
+    // 6. Let viewRecord be MakeDataViewWithBufferWitnessRecord(view, unordered).
+    auto view_record = make_data_view_with_buffer_witness_record(vm, *view, ArrayBuffer::Order::Unordered);
 
-    // 9. Let elementSize be the Element Size value specified in Table 68 for Element Type type.
+    // 7. NOTE: Bounds checking is not a synchronizing operation when view's backing buffer is a growable SharedArrayBuffer.
+
+    // 8. If IsViewOutOfBounds(viewRecord) is true, throw a TypeError exception.
+    if (is_view_out_of_bounds(view_record))
+        return vm.throw_completion<TypeError>(ErrorType::DataViewOutOfBounds);
+
+    // 9. Let viewSize be GetViewByteLength(viewRecord).
+    auto view_size = get_view_byte_length(view_record);
+
+    // 10. Let elementSize be the Element Size value specified in Table 71 for Element Type type.
     auto element_size = sizeof(T);
-
-    // 11. Let bufferIndex be getIndex + viewOffset.
-    Checked<size_t> buffer_index = get_index;
-    buffer_index += view_offset;
 
     Checked<size_t> end_index = get_index;
     end_index += element_size;
 
-    // 10. If getIndex + elementSize > viewSize, throw a RangeError exception.
+    // 12. Let bufferIndex be getIndex + viewOffset.
+    Checked<size_t> buffer_index = get_index;
+    buffer_index += view_offset;
+
+    // 11. If getIndex + elementSize > viewSize, throw a RangeError exception.
     if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
         return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
-    // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-    return buffer->get_value<T>(buffer_index.value(), false, ArrayBuffer::Order::Unordered, little_endian);
+    // 13. Return GetValueFromBuffer(view.[[ViewedArrayBuffer]], bufferIndex, type, false, unordered, isLittleEndian).
+    return view->viewed_array_buffer()->get_value<T>(buffer_index.value(), false, ArrayBuffer::Order::Unordered, little_endian);
 }
 
-// 25.3.1.2 SetViewValue ( view, requestIndex, isLittleEndian, type, value ), https://tc39.es/ecma262/#sec-setviewvalue
+// 25.3.1.6 SetViewValue ( view, requestIndex, isLittleEndian, type, value ), https://tc39.es/ecma262/#sec-setviewvalue
 template<typename T>
 static ThrowCompletionOr<Value> set_view_value(VM& vm, Value request_index, Value is_little_endian, Value value)
 {
@@ -119,37 +121,39 @@ static ThrowCompletionOr<Value> set_view_value(VM& vm, Value request_index, Valu
     // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
     auto little_endian = is_little_endian.to_boolean();
 
-    // 7. Let buffer be view.[[ViewedArrayBuffer]].
-    auto buffer = view->viewed_array_buffer();
-
-    // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (buffer->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
-
-    // 9. Let viewOffset be view.[[ByteOffset]].
+    // 7. Let viewOffset be view.[[ByteOffset]].
     auto view_offset = view->byte_offset();
 
-    // 10. Let viewSize be view.[[ByteLength]].
-    auto view_size = view->byte_length();
+    // 8. Let viewRecord be MakeDataViewWithBufferWitnessRecord(view, unordered).
+    auto view_record = make_data_view_with_buffer_witness_record(vm, *view, ArrayBuffer::Order::Unordered);
 
-    // 11. Let elementSize be the Element Size value specified in Table 68 for Element Type type.
+    // 9. NOTE: Bounds checking is not a synchronizing operation when view's backing buffer is a growable SharedArrayBuffer.
+
+    // 10. If IsViewOutOfBounds(viewRecord) is true, throw a TypeError exception.
+    if (is_view_out_of_bounds(view_record))
+        return vm.throw_completion<TypeError>(ErrorType::DataViewOutOfBounds);
+
+    // 11. Let viewSize be GetViewByteLength(viewRecord).
+    auto view_size = get_view_byte_length(view_record);
+
+    // 12. Let elementSize be the Element Size value specified in Table 68 for Element Type type.
     auto element_size = sizeof(T);
 
-    // 13. Let bufferIndex be getIndex + viewOffset.
+    // 14. Let bufferIndex be getIndex + viewOffset.
     Checked<size_t> buffer_index = get_index;
     buffer_index += view_offset;
 
     Checked<size_t> end_index = get_index;
     end_index += element_size;
 
-    // 12. If getIndex + elementSize > viewSize, throw a RangeError exception.
+    // 13. If getIndex + elementSize > viewSize, throw a RangeError exception.
     if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size)
         return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
-    // 14. Perform SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-    MUST_OR_THROW_OOM(buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian));
+    // 15. Perform SetValueInBuffer(view.[[ViewedArrayBuffer]], bufferIndex, type, numberValue, false, unordered, isLittleEndian).
+    MUST_OR_THROW_OOM(view->viewed_array_buffer()->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian));
 
-    // 15. Return undefined.
+    // 16. Return undefined.
     return js_undefined();
 }
 
@@ -174,14 +178,18 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
     auto data_view = TRY(typed_this_value(vm));
 
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (data_view->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 4. Let viewRecord be MakeDataViewWithBufferWitnessRecord(O, seq-cst).
+    auto view_record = make_data_view_with_buffer_witness_record(vm, *data_view, ArrayBuffer::Order::SeqCst);
 
-    // 6. Let size be O.[[ByteLength]].
+    // 5. If IsViewOutOfBounds(viewRecord) is true, throw a TypeError exception.
+    if (is_view_out_of_bounds(view_record))
+        return vm.throw_completion<TypeError>(ErrorType::DataViewOutOfBounds);
+
+    // 6. Let size be GetViewByteLength(viewRecord).
+    auto size = get_view_byte_length(view_record);
+
     // 7. Return 𝔽(size).
-    return Value(data_view->byte_length());
+    return Value(size);
 }
 
 // 25.3.4.3 get DataView.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset
@@ -192,14 +200,18 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
     auto data_view = TRY(typed_this_value(vm));
 
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (data_view->viewed_array_buffer()->is_detached())
-        return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
+    // 4. Let viewRecord be MakeDataViewWithBufferWitnessRecord(O, seq-cst).
+    auto view_record = make_data_view_with_buffer_witness_record(vm, *data_view, ArrayBuffer::Order::SeqCst);
+
+    // 5. If IsViewOutOfBounds(viewRecord) is true, throw a TypeError exception.
+    if (is_view_out_of_bounds(view_record))
+        return vm.throw_completion<TypeError>(ErrorType::DataViewOutOfBounds);
 
     // 6. Let offset be O.[[ByteOffset]].
+    auto offset = data_view->byte_offset();
+
     // 7. Return 𝔽(offset).
-    return Value(data_view->byte_offset());
+    return Value(offset);
 }
 
 // 25.3.4.5 DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64

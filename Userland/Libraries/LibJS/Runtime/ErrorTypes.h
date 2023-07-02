@@ -27,6 +27,7 @@
     M(ClassIsAbstract, "Abstract class {} cannot be constructed directly")                                                              \
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
+    M(DataViewOutOfBounds, "Data view is out of bounds")                                                                                \
     M(DataViewOutOfRangeByteOffset, "Data view byte offset {} is out of range for buffer with length {}")                               \
     M(DerivedConstructorReturningInvalidValue, "Derived constructor return invalid value")                                              \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \

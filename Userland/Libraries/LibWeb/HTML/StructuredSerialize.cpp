@@ -349,7 +349,7 @@ private:
             vector.append(bit_cast<u32*>(&serialized_buffer_size), 2);
             vector.extend(move(buffer_serialized));           // [[ArrayBufferSerialized]]
             TRY(serialize_string(vector, "DataView"_string)); // [[Constructor]]
-            vector.append(view.byte_length());
+            vector.append(view.auto_unaware_byte_length());
             vector.append(view.byte_offset());
         }
 
