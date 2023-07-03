@@ -310,24 +310,9 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
     if (button != GUI::MouseButton::Primary)
         return DispatchEventOfSameName::Yes;
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
-
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
-
-    auto toggle_playback = [&]() -> WebIDL::ExceptionOr<void> {
-        if (media_element.paused())
-            TRY(media_element.play());
-        else
-            TRY(media_element.pause());
-        return {};
-    };
-
     if (cached_layout_boxes.control_box_rect.has_value() && cached_layout_boxes.control_box_rect->contains(position)) {
         if (cached_layout_boxes.playback_button_rect.has_value() && cached_layout_boxes.playback_button_rect->contains(position)) {
-            toggle_playback().release_value_but_fixme_should_propagate_errors();
+            media_element.toggle_playback().release_value_but_fixme_should_propagate_errors();
             return DispatchEventOfSameName::Yes;
         }
 
@@ -339,7 +324,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
         return DispatchEventOfSameName::No;
     }
 
-    toggle_playback().release_value_but_fixme_should_propagate_errors();
+    media_element.toggle_playback().release_value_but_fixme_should_propagate_errors();
     return DispatchEventOfSameName::Yes;
 }
 
