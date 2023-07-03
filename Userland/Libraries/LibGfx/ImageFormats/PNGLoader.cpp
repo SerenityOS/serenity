@@ -128,7 +128,7 @@ enum RenderingIntent {
 };
 
 struct AnimationFrame {
-    fcTL_Chunk const& fcTL;
+    fcTL_Chunk fcTL;
     RefPtr<Bitmap> bitmap;
     ByteBuffer compressed_data;
 
