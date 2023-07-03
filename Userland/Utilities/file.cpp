@@ -168,6 +168,7 @@ static ErrorOr<Optional<String>> elf_details(StringView description, StringView 
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif"sv, "GIF image data"sv, image_details)                                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg"sv, "JPEG image data"sv, image_details)                               \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png"sv, "PNG image data"sv, image_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/tinyvg"sv, "TinyVG vector graphics"sv, image_details)                      \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/webp"sv, "WebP image data"sv, image_details)                               \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-bitmap"sv, "PBM image data"sv, image_details)                   \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-graymap"sv, "PGM image data"sv, image_details)                  \
