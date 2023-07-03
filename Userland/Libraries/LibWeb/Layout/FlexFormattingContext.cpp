@@ -216,6 +216,8 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
             auto& box_state = m_state.get(item.box);
             if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_flex_container->space)))
                 independent_formatting_context->parent_context_did_dimension_child_root_box();
+
+            compute_inset(item.box);
         }
     }
 }
