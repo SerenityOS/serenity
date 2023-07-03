@@ -37,9 +37,9 @@ void SVGElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_dataset);
 }
 
-void SVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
     update_use_elements_that_reference_this();
 }

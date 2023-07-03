@@ -104,7 +104,7 @@ public:
     virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
     // ^HTMLElement
-    virtual void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
+    virtual void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
     virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     // ^FormAssociatedElement

@@ -32,9 +32,9 @@ JS::ThrowCompletionOr<void> SVGGraphicsElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGGraphicsElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGElement::parse_attribute(name, value);
+    SVGElement::attribute_changed(name, value);
     if (name == "transform"sv) {
         auto transform_list = AttributeParser::parse_transform(value);
         if (transform_list.has_value())

@@ -121,7 +121,7 @@ public:
     Vector<FlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value);
     virtual void did_remove_attribute(DeprecatedFlyString const&);
 
     struct [[nodiscard]] RequiredInvalidationAfterStyleChange {

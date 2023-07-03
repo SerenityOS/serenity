@@ -28,7 +28,7 @@ class HTMLImageElement final
 public:
     virtual ~HTMLImageElement() override;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual void did_remove_attribute(DeprecatedFlyString const& name) override;
 
     DeprecatedString alt() const { return attribute(HTML::AttributeNames::alt); }

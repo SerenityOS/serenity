@@ -493,9 +493,9 @@ void HTMLInputElement::did_lose_focus()
     });
 }
 
-void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLInputElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {
         // When the checked content attribute is added, if the control does not have dirty checkedness,
         // the user agent must set the checkedness of the element to true

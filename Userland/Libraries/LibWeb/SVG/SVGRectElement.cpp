@@ -26,9 +26,9 @@ JS::ThrowCompletionOr<void> SVGRectElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGRectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGRectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGeometryElement::parse_attribute(name, value);
+    SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::x) {
         m_x = AttributeParser::parse_coordinate(value);

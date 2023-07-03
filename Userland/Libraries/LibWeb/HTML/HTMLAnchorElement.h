@@ -43,7 +43,7 @@ private:
     void run_activation_behavior(Web::DOM::Event const&);
 
     // ^DOM::Element
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // ^HTML::HTMLHyperlinkElementUtils

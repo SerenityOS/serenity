@@ -84,9 +84,9 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLMediaElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::src)
         load_element().release_value_but_fixme_should_propagate_errors();

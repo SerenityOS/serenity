@@ -33,9 +33,9 @@ JS::ThrowCompletionOr<void> HTMLOptionElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void HTMLOptionElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLOptionElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::selected) {
         // Except where otherwise specified, when the element is created, its selectedness must be set to true

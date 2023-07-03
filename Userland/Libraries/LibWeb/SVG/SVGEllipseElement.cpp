@@ -24,9 +24,9 @@ JS::ThrowCompletionOr<void> SVGEllipseElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGEllipseElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGEllipseElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGeometryElement::parse_attribute(name, value);
+    SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::cx) {
         m_center_x = AttributeParser::parse_coordinate(value);

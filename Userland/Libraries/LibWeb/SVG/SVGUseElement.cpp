@@ -46,9 +46,9 @@ void SVGUseElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_document_observer);
 }
 
-void SVGUseElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGUseElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
     // https://svgwg.org/svg2-draft/struct.html#UseLayout
     if (name == SVG::AttributeNames::x) {
@@ -87,7 +87,7 @@ void SVGUseElement::svg_element_changed(SVGElement& svg_element)
         return;
     }
 
-    // NOTE: We need to check the ancestor because parse_attribute of a child doesn't call children_changed on the parent(s)
+    // NOTE: We need to check the ancestor because attribute_changed of a child doesn't call children_changed on the parent(s)
     if (to_clone == &svg_element || to_clone->is_ancestor_of(svg_element)) {
         clone_element_tree_as_our_shadow_tree(to_clone);
     }

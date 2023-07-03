@@ -145,7 +145,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
         attribute->set_value(value);
     }
 
-    parse_attribute(attribute->local_name(), value);
+    attribute_changed(attribute->local_name(), value);
 
     if (value != old_value) {
         invalidate_style_after_attribute_change(name);
@@ -261,7 +261,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
             auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, ""));
             m_attributes->append_attribute(new_attribute);
 
-            parse_attribute(new_attribute->local_name(), "");
+            attribute_changed(new_attribute->local_name(), "");
 
             invalidate_style_after_attribute_change(name);
 
@@ -361,7 +361,7 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(Infra::is_ascii_whitespace);

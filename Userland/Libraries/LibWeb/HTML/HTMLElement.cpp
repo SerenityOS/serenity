@@ -228,9 +228,9 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Element::parse_attribute(name, value);
+    Element::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::contenteditable) {
         if ((!value.is_null() && value.is_empty()) || value.equals_ignoring_ascii_case("true"sv)) {
