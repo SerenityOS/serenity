@@ -46,16 +46,12 @@ void HTMLVideoElement::attribute_changed(DeprecatedFlyString const& name, Deprec
 {
     Base::attribute_changed(name, value);
 
-    if (name == HTML::AttributeNames::poster)
-        determine_element_poster_frame(value).release_value_but_fixme_should_propagate_errors();
-}
-
-void HTMLVideoElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::poster)
-        determine_element_poster_frame({}).release_value_but_fixme_should_propagate_errors();
+    if (name == HTML::AttributeNames::poster) {
+        if (value.is_null())
+            determine_element_poster_frame({}).release_value_but_fixme_should_propagate_errors();
+        else
+            determine_element_poster_frame(value).release_value_but_fixme_should_propagate_errors();
+    }
 }
 
 JS::GCPtr<Layout::Node> HTMLVideoElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

@@ -227,9 +227,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
 void Element::remove_attribute(DeprecatedFlyString const& name)
 {
     m_attributes->remove_attribute(name);
-
-    did_remove_attribute(name);
-
+    attribute_changed(name, {});
     invalidate_style_after_attribute_change(name);
 }
 
@@ -275,9 +273,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
     // 5. Otherwise, if force is not given or is false, remove an attribute given qualifiedName and this, and then return false.
     if (!force.has_value() || !force.value()) {
         m_attributes->remove_attribute(name);
-
-        did_remove_attribute(name);
-
+        attribute_changed(name, {});
         invalidate_style_after_attribute_change(name);
     }
 
@@ -373,19 +369,16 @@ void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedStrin
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
-        if (m_inline_style && m_inline_style->is_updating())
-            return;
-        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
-        set_needs_style_update(true);
-    }
-}
-
-void Element::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    if (name == HTML::AttributeNames::style) {
-        if (m_inline_style) {
-            m_inline_style = nullptr;
+        if (value.is_null()) {
+            if (!m_inline_style) {
+                m_inline_style = nullptr;
+                set_needs_style_update(true);
+            }
+        } else {
+            // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
+            if (m_inline_style && m_inline_style->is_updating())
+                return;
+            m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
             set_needs_style_update(true);
         }
     }

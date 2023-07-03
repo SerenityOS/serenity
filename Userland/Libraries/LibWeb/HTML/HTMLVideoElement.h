@@ -48,7 +48,6 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 

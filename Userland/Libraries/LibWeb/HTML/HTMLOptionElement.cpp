@@ -38,22 +38,17 @@ void HTMLOptionElement::attribute_changed(DeprecatedFlyString const& name, Depre
     HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::selected) {
-        // Except where otherwise specified, when the element is created, its selectedness must be set to true
-        // if the element has a selected attribute. Whenever an option element's selected attribute is added,
-        // if its dirtiness is false, its selectedness must be set to true.
-        if (!m_dirty)
-            m_selected = true;
-    }
-}
-
-void HTMLOptionElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    HTMLElement::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::selected) {
-        // Whenever an option element's selected attribute is removed, if its dirtiness is false, its selectedness must be set to false.
-        if (!m_dirty)
-            m_selected = false;
+        if (value.is_null()) {
+            // Whenever an option element's selected attribute is removed, if its dirtiness is false, its selectedness must be set to false.
+            if (!m_dirty)
+                m_selected = false;
+        } else {
+            // Except where otherwise specified, when the element is created, its selectedness must be set to true
+            // if the element has a selected attribute. Whenever an option element's selected attribute is added,
+            // if its dirtiness is false, its selectedness must be set to true.
+            if (!m_dirty)
+                m_selected = true;
+        }
     }
 }
 
