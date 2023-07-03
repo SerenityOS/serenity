@@ -729,21 +729,28 @@ static bool decode_png_chunks(PNGLoadingContext& context)
     return true;
 }
 
+static ErrorOr<PNG::FilterType> read_filter(PNGLoadingContext& context, Streamer& streamer)
+{
+    PNG::FilterType filter;
+    if (!streamer.read(filter)) {
+        context.state = PNGLoadingContext::State::Error;
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
+    }
+
+    if (to_underlying(filter) > 4) {
+        context.state = PNGLoadingContext::State::Error;
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
+    }
+
+    return filter;
+}
+
 static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBuffer& decompression_buffer)
 {
     Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
 
     for (int y = 0; y < context.height; ++y) {
-        PNG::FilterType filter;
-        if (!streamer.read(filter)) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
-        }
-
-        if (to_underlying(filter) > 4) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
-        }
+        auto const filter = TRY(read_filter(context, streamer));
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
@@ -820,16 +827,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         return {};
 
     for (int y = 0; y < subimage_context.height; ++y) {
-        PNG::FilterType filter;
-        if (!streamer.read(filter)) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
-        }
-
-        if (to_underlying(filter) > 4) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
-        }
+        auto const filter = TRY(read_filter(context, streamer));
 
         subimage_context.scanlines.append({ filter });
         auto& scanline_buffer = subimage_context.scanlines.last().data;
