@@ -7,6 +7,7 @@
 #include <AK/HashTable.h>
 #include <AK/Result.h>
 #include <AK/SourceLocation.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Try.h>
 #include <LibWasm/AbstractMachine/Validator.h>
 #include <LibWasm/Printer/Printer.h>
@@ -56,7 +57,10 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
                 },
                 [this](TableType const& type) { m_context.tables.append(type); },
                 [this](MemoryType const& type) { m_context.memories.append(type); },
-                [this](GlobalType const& type) { m_context.globals.append(type); });
+                [this](GlobalType const& type) {
+                    m_globals_without_internal_globals.append(type);
+                    m_context.globals.append(type);
+                });
         }
     });
 
@@ -93,6 +97,7 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
         for (auto& memory : section.memories())
             m_context.memories.unchecked_append(memory.type());
     });
+
     module.for_each_section_of_type<GlobalSection>([this](GlobalSection const& section) {
         m_context.globals.ensure_capacity(m_context.globals.size() + section.entries().size());
         for (auto& global : section.entries())
@@ -213,12 +218,20 @@ ErrorOr<void, ValidationError> Validator::validate(ElementSection const& section
                     return Errors::invalid("active element initializer type"sv, ValueType(ValueType::I32), expression_result.result_types);
                 return {};
             }));
+
+        for (auto& expression : segment.init) {
+            auto result = TRY(validate(expression, { segment.type }));
+            if (!result.is_constant)
+                return Errors::invalid("element initializer"sv);
+        }
     }
     return {};
 }
 
 ErrorOr<void, ValidationError> Validator::validate(GlobalSection const& section)
 {
+    TemporaryChange omit_internal_globals { m_context.globals, m_globals_without_internal_globals };
+
     for (auto& entry : section.entries()) {
         auto& type = entry.type();
         TRY(validate(type));

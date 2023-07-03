@@ -334,6 +334,7 @@ private:
     Vector<ChildScopeKind> m_entered_scopes;
     Vector<BlockDetails> m_block_details;
     Vector<FunctionType> m_entered_blocks;
+    Vector<GlobalType> m_globals_without_internal_globals;
 };
 
 }
