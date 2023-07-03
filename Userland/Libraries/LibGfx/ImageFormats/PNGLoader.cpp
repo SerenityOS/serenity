@@ -1331,10 +1331,7 @@ ErrorOr<void> PNGImageDecoderPlugin::initialize()
 
 bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    PNGLoadingContext context;
-    context.data = context.data_current_ptr = data.data();
-    context.data_size = data.size();
-    return decode_png_header(context);
+    return data.size() >= 8 && (PNG::header == data.trim(8));
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
