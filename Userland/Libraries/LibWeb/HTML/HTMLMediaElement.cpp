@@ -1864,6 +1864,27 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandl
         TRY(toggle_playback());
         break;
 
+    case KeyCode::Key_Home:
+        set_current_time(0);
+        break;
+    case KeyCode::Key_End:
+        set_current_time(duration());
+        break;
+
+    case KeyCode::Key_Left:
+    case KeyCode::Key_Right: {
+        static constexpr double time_skipped_per_key_press = 5.0;
+        auto current_time = this->current_time();
+
+        if (key == KeyCode::Key_Left)
+            current_time = max(0.0, current_time - time_skipped_per_key_press);
+        else
+            current_time = min(duration(), current_time + time_skipped_per_key_press);
+
+        set_current_time(current_time);
+        break;
+    }
+
     default:
         break;
     }
