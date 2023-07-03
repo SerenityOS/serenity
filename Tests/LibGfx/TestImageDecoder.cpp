@@ -206,6 +206,25 @@ TEST_CASE(test_png)
     expect_single_frame(*plugin_decoder);
 }
 
+TEST_CASE(test_apng)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/animated_png.png"sv)));
+    EXPECT(Gfx::PNGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 20u);
+    EXPECT(plugin_decoder->is_animated());
+    EXPECT_EQ(plugin_decoder->loop_count(), 0u);
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(100, 100));
+
+    for (size_t frame_index = 0; frame_index < plugin_decoder->frame_count(); ++frame_index) {
+        auto frame = MUST(plugin_decoder->frame(frame_index));
+        EXPECT_EQ(frame.image->size(), Gfx::IntSize(100, 100));
+    }
+}
+
 TEST_CASE(test_ppm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.ppm"sv)));
