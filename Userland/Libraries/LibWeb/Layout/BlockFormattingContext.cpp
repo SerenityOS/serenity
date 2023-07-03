@@ -988,6 +988,8 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     if (line_builder)
         line_builder->recalculate_available_space();
 
+    compute_inset(box);
+
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
