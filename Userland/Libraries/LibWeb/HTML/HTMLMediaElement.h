@@ -37,6 +37,8 @@ class HTMLMediaElement : public HTMLElement {
 public:
     virtual ~HTMLMediaElement() override;
 
+    virtual bool is_focusable() const override { return true; }
+
     void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
     JS::GCPtr<MediaError> error() const { return m_error; }
