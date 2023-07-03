@@ -20,6 +20,10 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             Op::NewArray const& array_instruction = static_cast<Op::NewArray const&>(*it);
             if (size_t element_count = array_instruction.element_count())
                 array_ranges.set_range<true, false>(array_instruction.start().index(), element_count);
+        } else if ((*it).type() == Instruction::Type::Call) {
+            auto const& call_instruction = static_cast<Op::Call const&>(*it);
+            if (size_t element_count = call_instruction.argument_count())
+                array_ranges.set_range<true, false>(call_instruction.first_argument().index(), element_count);
         }
     }
 
