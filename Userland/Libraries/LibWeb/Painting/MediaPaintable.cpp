@@ -321,7 +321,8 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             return DispatchEventOfSameName::Yes;
         }
 
-        return DispatchEventOfSameName::No;
+        if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position))
+            return DispatchEventOfSameName::No;
     }
 
     media_element.toggle_playback().release_value_but_fixme_should_propagate_errors();
