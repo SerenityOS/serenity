@@ -2639,25 +2639,31 @@ void HTMLParser::handle_in_cell(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::InBody, token);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intabletext
 void HTMLParser::handle_in_table_text(HTMLToken& token)
 {
     if (token.is_character()) {
+        // A character token that is U+0000 NULL
         if (token.code_point() == 0) {
+            // Parse error. Ignore the token.
             log_parse_error();
             return;
         }
-
+        // Any other character token
+        // Append the character token to the pending table character tokens list.
         m_pending_table_character_tokens.append(move(token));
         return;
     }
 
+    // Anything else
+
+    // If any of the tokens in the pending table character tokens list
+    // are character tokens that are not ASCII whitespace, then this is a parse error:
+    // reprocess the character tokens in the pending table character tokens list using
+    // the rules given in the "anything else" entry in the "in table" insertion mode.
     for (auto& pending_token : m_pending_table_character_tokens) {
         VERIFY(pending_token.is_character());
         if (!pending_token.is_parser_whitespace()) {
-            // If any of the tokens in the pending table character tokens list
-            // are character tokens that are not ASCII whitespace, then this is a parse error:
-            // reprocess the character tokens in the pending table character tokens list using
-            // the rules given in the "anything else" entry in the "in table" insertion mode.
             log_parse_error();
             m_foster_parenting = true;
             process_using_the_rules_for(InsertionMode::InBody, token);
@@ -2666,10 +2672,12 @@ void HTMLParser::handle_in_table_text(HTMLToken& token)
         }
     }
 
+    // Otherwise, insert the characters given by the pending table character tokens list.
     for (auto& pending_token : m_pending_table_character_tokens) {
         insert_character(pending_token.code_point());
     }
 
+    // Switch the insertion mode to the original insertion mode and reprocess the token.
     m_insertion_mode = m_original_insertion_mode;
     process_using_the_rules_for(m_insertion_mode, token);
 }
