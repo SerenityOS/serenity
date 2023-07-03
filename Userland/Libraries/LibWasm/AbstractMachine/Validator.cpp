@@ -2112,6 +2112,8 @@ VALIDATE_INSTRUCTION(br_table)
     auto stack_to_check = stack_snapshot;
     for (auto& label : args.labels) {
         auto& label_types = m_context.labels[label.value()].types();
+        if (label_types.size() != arity)
+            return Errors::invalid("br_table label arity mismatch"sv);
         for (size_t i = 0; i < arity; ++i)
             TRY(stack_to_check.take(label_types[label_types.size() - i - 1]));
         stack_to_check = stack_snapshot;
