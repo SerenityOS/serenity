@@ -1609,6 +1609,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             y_start + child_box_state.border_top + child_box_state.padding_top + child_box_state.margin_top
         };
 
+        compute_inset(child_box);
+
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
         if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
             independent_formatting_context->parent_context_did_dimension_child_root_box();
