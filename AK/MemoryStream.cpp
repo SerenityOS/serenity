@@ -114,7 +114,7 @@ Bytes FixedMemoryStream::bytes()
     VERIFY(m_writing_enabled);
     return m_bytes;
 }
-ReadonlyBytes FixedMemoryStream::bytes() const
+ReadonlyBytes FixedMemoryStream::readonly_bytes() const
 {
     return m_bytes;
 }
