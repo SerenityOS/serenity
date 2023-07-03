@@ -210,4 +210,12 @@ ErrorOr<void> write_context(Hunk const& hunk, Stream& stream, ColorOutput color_
     return write_hunk_as_context(split_lines.old_lines, split_lines.new_lines, hunk.location, stream, color_output);
 }
 
+ErrorOr<void> write_context_header(StringView old_path, StringView new_path, Stream& stream)
+{
+    TRY(stream.write_formatted("*** {}\n", old_path));
+    TRY(stream.write_formatted("--- {}\n", new_path));
+
+    return stream.write_formatted("***************\n");
+}
+
 }
