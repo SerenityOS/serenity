@@ -258,9 +258,6 @@ void InlineLevelIterator::enter_text_node(Layout::TextNode const& text_node)
     if (text_node.dom_node().is_editable() && !text_node.dom_node().is_uninteresting_whitespace_node())
         do_collapse = false;
 
-    // FIXME: The const_cast here is gross.
-    const_cast<TextNode&>(text_node).compute_text_for_rendering(do_collapse);
-
     m_text_node_context = TextNodeContext {
         .do_collapse = do_collapse,
         .do_wrap_lines = do_wrap_lines,

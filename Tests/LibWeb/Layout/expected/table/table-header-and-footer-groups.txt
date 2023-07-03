@@ -1,0 +1,18 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x216 [BFC] children: not-inline
+    TableWrapper <(anonymous)> at (9,9) content-size 300x200 [BFC] children: not-inline
+      Box <body.table> at (10,10) content-size 298x198 table-box [TFC] children: not-inline
+        Box <div.bottom> at (10,10) content-size 298x0 table-footer-group children: inline
+          Box <(anonymous)> at (10,10) content-size 298x0 table-row children: inline
+            BlockContainer <(anonymous)> at (10,10) content-size 298x0 table-cell [BFC] children: inline
+              line 0 width: 56.109375, height: 0, bottom: 0, baseline: 4.796875
+                frag 0 from TextNode start: 0, length: 6, rect: [10,10 56.109375x0]
+                  "bottom"
+              TextNode <#text>
+        Box <div.top> at (10,10) content-size 298x0 table-header-group children: inline
+          Box <(anonymous)> at (10,10) content-size 298x0 table-row children: inline
+            BlockContainer <(anonymous)> at (10,10) content-size 298x0 table-cell [BFC] children: inline
+              line 0 width: 26.640625, height: 0, bottom: 0, baseline: 4.796875
+                frag 0 from TextNode start: 0, length: 3, rect: [10,10 26.640625x0]
+                  "top"
+              TextNode <#text>

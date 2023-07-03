@@ -41,9 +41,32 @@ static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& st
     return string;
 }
 
-// NOTE: This collapses whitespace into a single ASCII space if collapse is true.
-void TextNode::compute_text_for_rendering(bool collapse)
+DeprecatedString const& TextNode::text_for_rendering() const
 {
+    if (m_text_for_rendering.is_null())
+        const_cast<TextNode*>(this)->compute_text_for_rendering();
+    return m_text_for_rendering;
+}
+
+// NOTE: This collapses whitespace into a single ASCII space if the CSS white-space property tells us to.
+void TextNode::compute_text_for_rendering()
+{
+    bool collapse = [](CSS::WhiteSpace white_space) {
+        switch (white_space) {
+        case CSS::WhiteSpace::Normal:
+        case CSS::WhiteSpace::Nowrap:
+        case CSS::WhiteSpace::PreLine:
+            return true;
+        case CSS::WhiteSpace::Pre:
+        case CSS::WhiteSpace::PreWrap:
+            return false;
+        }
+        VERIFY_NOT_REACHED();
+    }(computed_values().white_space());
+
+    if (dom_node().is_editable() && !dom_node().is_uninteresting_whitespace_node())
+        collapse = false;
+
     auto data = apply_text_transform(dom_node().data(), computed_values().text_transform()).release_value_but_fixme_should_propagate_errors();
 
     if (dom_node().is_password_input()) {
