@@ -363,6 +363,8 @@ Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
         return Selector::PseudoElement::ProgressValue;
     } else if (name.equals_ignoring_ascii_case("placeholder"sv)) {
         return Selector::PseudoElement::Placeholder;
+    } else if (name.equals_ignoring_ascii_case("selection"sv)) {
+        return Selector::PseudoElement::Selection;
     }
     return {};
 }
