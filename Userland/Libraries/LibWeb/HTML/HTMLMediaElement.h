@@ -84,6 +84,7 @@ public:
     bool potentially_playing() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
+    WebIDL::ExceptionOr<void> toggle_playback();
 
     double volume() const { return m_volume; }
     WebIDL::ExceptionOr<void> set_volume(double);

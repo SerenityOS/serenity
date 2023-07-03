@@ -366,6 +366,23 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
     return {};
 }
 
+WebIDL::ExceptionOr<void> HTMLMediaElement::toggle_playback()
+{
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+
+    if (potentially_playing())
+        TRY(pause());
+    else
+        TRY(play());
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-volume
 WebIDL::ExceptionOr<void> HTMLMediaElement::set_volume(double volume)
 {
