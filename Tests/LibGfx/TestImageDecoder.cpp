@@ -74,7 +74,7 @@ TEST_CASE(test_gif)
 
 TEST_CASE(test_not_ico)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie.png"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
     EXPECT(!Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize().is_error());
@@ -198,7 +198,7 @@ TEST_CASE(test_pgm)
 
 TEST_CASE(test_png)
 {
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie.png"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
     EXPECT(Gfx::PNGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
     MUST(plugin_decoder->initialize());
