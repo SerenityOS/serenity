@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumberFormat.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibArchive/Zip.h>
 #include <LibAudio/Loader.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
@@ -104,6 +106,30 @@ static ErrorOr<Optional<String>> gzip_details(StringView description, StringView
     return TRY(String::formatted("{}, {}", description, gzip_details.value()));
 }
 
+static ErrorOr<Optional<String>> zip_details(StringView description, StringView path)
+{
+    auto mapped_file = TRY(Core::MappedFile::map(path));
+    auto zip_file = Archive::Zip::try_create(mapped_file->bytes());
+    u32 files = 0;
+    u32 directories = 0;
+    u64 total_bytes = 0;
+    TRY(zip_file->for_each_member([&](auto zip_member) -> ErrorOr<IterationDecision> {
+        if (zip_member.is_directory)
+            directories++;
+        else
+            files++;
+        total_bytes += zip_member.uncompressed_size;
+        return IterationDecision::Continue;
+    }));
+    return TRY(String::formatted("{}, {} {}, {} {} totaling {} uncompressed",
+        description,
+        directories,
+        directories == 1 ? "directory" : "directories",
+        files,
+        files == 1 ? "file" : "files",
+        AK::human_readable_size(total_bytes)));
+}
+
 static ErrorOr<Optional<String>> elf_details(StringView description, StringView path)
 {
     auto mapped_file = TRY(Core::MappedFile::map(path));
@@ -146,6 +172,7 @@ static ErrorOr<Optional<String>> elf_details(StringView description, StringView 
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/tar"sv, "tape archive"sv, description_only)                          \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/wasm"sv, "WebAssembly bytecode"sv, description_only)                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed"sv, "7-Zip archive"sv, description_only)             \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/zip"sv, "ZIP archive"sv, zip_details)                                \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/flac"sv, "FLAC audio"sv, audio_details)                                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi"sv, "MIDI notes"sv, audio_details)                                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg"sv, "MP3 audio"sv, audio_details)                                     \
