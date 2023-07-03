@@ -1885,6 +1885,24 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandl
         break;
     }
 
+    case KeyCode::Key_Up:
+    case KeyCode::Key_Down: {
+        static constexpr double volume_change_per_key_press = 0.1;
+        auto volume = this->volume();
+
+        if (key == KeyCode::Key_Up)
+            volume = min(1.0, volume + volume_change_per_key_press);
+        else
+            volume = max(0.0, volume - volume_change_per_key_press);
+
+        TRY(set_volume(volume));
+        break;
+    }
+
+    case KeyCode::Key_M:
+        set_muted(!muted());
+        break;
+
     default:
         break;
     }
