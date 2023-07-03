@@ -745,6 +745,11 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         }
     }
 
+    if (auto* element = m_browsing_context->active_document()->focused_element(); is<HTML::HTMLMediaElement>(element)) {
+        auto& media_element = static_cast<HTML::HTMLMediaElement&>(*element);
+        media_element.handle_keydown({}, key).release_value_but_fixme_should_propagate_errors();
+    }
+
     if (m_browsing_context->cursor_position().is_valid() && m_browsing_context->cursor_position().node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
             if (!m_browsing_context->decrement_cursor_position_offset()) {
