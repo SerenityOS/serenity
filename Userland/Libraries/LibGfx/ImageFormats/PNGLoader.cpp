@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -76,8 +77,8 @@ struct CodingIndependentCodePoints {
 static_assert(AssertSize<CodingIndependentCodePoints, 4>());
 
 struct EmbeddedICCProfile {
-    StringView profile_name;
-    ReadonlyBytes compressed_data;
+    String profile_name;
+    ByteBuffer compressed_data;
 };
 
 struct Scanline {
@@ -1080,7 +1081,10 @@ static ErrorOr<void> process_iCCP(ReadonlyBytes data, PNGLoadingContext& context
     if (compression_method != 0)
         return Error::from_string_literal("Unsupported compression method in the iCCP chunk");
 
-    context.embedded_icc_profile = EmbeddedICCProfile { { data.data(), profile_name_length }, data.slice(profile_name_length + 2) };
+    auto profile_name = TRY(String::from_utf8({ data.data(), profile_name_length }));
+    auto profile_data = TRY(ByteBuffer::copy(data.slice(profile_name_length + 2)));
+
+    context.embedded_icc_profile = EmbeddedICCProfile { move(profile_name), move(profile_data) };
 
     return {};
 }
