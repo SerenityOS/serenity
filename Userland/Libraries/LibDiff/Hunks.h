@@ -31,6 +31,8 @@ struct Line {
         Removal = '-',
         Context = ' ',
 
+        // NOTE: This should only be used when deconstructing a hunk into old and new lines (context format)
+        Change = '!',
     };
 
     static constexpr Operation operation_from_symbol(char symbol)
