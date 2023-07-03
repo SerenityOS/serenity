@@ -739,6 +739,16 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         auto& wrapper_computed_values = static_cast<TableWrapper*>(parent())->m_computed_values;
         transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
     }
+
+    // Update any anonymous children that inherit from this node.
+    // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style
+    //        data structure somehow, so this wasn't necessary.
+    for_each_child([&](auto& child) {
+        if (child.is_anonymous()) {
+            auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
+            child_computed_values.inherit_from(computed_values);
+        }
+    });
 }
 
 bool Node::is_root_element() const
