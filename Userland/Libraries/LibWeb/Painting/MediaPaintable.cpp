@@ -293,17 +293,22 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
     auto& media_element = *verify_cast<HTML::HTMLMediaElement>(layout_box().dom_node());
     auto const& cached_layout_boxes = media_element.cached_layout_boxes({});
 
-    auto was_tracking_mouse = media_element.layout_mouse_tracking_component({}).has_value();
-    auto was_tracking_timeline = media_element.layout_mouse_tracking_component({}) == HTML::HTMLMediaElement::MouseTrackingComponent::Timeline;
-    media_element.set_layout_mouse_tracking_component({}, {});
-
-    if (was_tracking_mouse) {
-        if (was_tracking_timeline) {
+    if (auto const& mouse_tracking_component = media_element.layout_mouse_tracking_component({}); mouse_tracking_component.has_value()) {
+        switch (*mouse_tracking_component) {
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Timeline:
             set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::No);
             media_element.set_layout_display_time({}, {});
+            break;
+
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
+            if (auto* page = browsing_context().page())
+                page->client().page_did_leave_tooltip_area();
+            break;
         }
 
         const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(nullptr);
+        media_element.set_layout_mouse_tracking_component({}, {});
+
         return DispatchEventOfSameName::Yes;
     }
 
@@ -342,8 +347,15 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
             break;
 
         case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
-            if (cached_layout_boxes.volume_rect.has_value())
+            if (cached_layout_boxes.volume_rect.has_value()) {
                 set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+
+                if (auto* page = browsing_context().page()) {
+                    auto volume = static_cast<u8>(media_element.volume() * 100.0);
+                    page->client().page_did_enter_tooltip_area(position, DeprecatedString::formatted("{}%", volume));
+                }
+            }
+
             break;
         }
     }
