@@ -75,9 +75,9 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLImageElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
         m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());

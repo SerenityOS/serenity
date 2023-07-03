@@ -703,7 +703,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:concept-element-attributes-change-ext
 void EventTarget::element_event_handler_attribute_changed(FlyString const& local_name, Optional<String> const& value)
 {
-    // NOTE: Step 1 of this algorithm was handled in HTMLElement::parse_attribute.
+    // NOTE: Step 1 of this algorithm was handled in HTMLElement::attribute_changed.
 
     // 2. Let eventTarget be the result of determining the target of an event handler given element and localName.
     // NOTE: element is `this`.

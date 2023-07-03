@@ -47,9 +47,9 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_preparation_time_document.ptr());
 }
 
-void HTMLScriptElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLScriptElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin)
         m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());

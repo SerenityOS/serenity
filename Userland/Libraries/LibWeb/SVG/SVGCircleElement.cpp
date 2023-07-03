@@ -24,9 +24,9 @@ JS::ThrowCompletionOr<void> SVGCircleElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGCircleElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGCircleElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGeometryElement::parse_attribute(name, value);
+    SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::cx) {
         m_center_x = AttributeParser::parse_coordinate(value);

@@ -62,7 +62,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element

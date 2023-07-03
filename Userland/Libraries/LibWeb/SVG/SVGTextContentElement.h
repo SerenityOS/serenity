@@ -18,7 +18,7 @@ class SVGTextContentElement : public SVGGraphicsElement {
 public:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     WebIDL::ExceptionOr<int> get_number_of_chars() const;
 

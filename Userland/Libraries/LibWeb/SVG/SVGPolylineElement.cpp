@@ -24,9 +24,9 @@ JS::ThrowCompletionOr<void> SVGPolylineElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGPolylineElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGPolylineElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGeometryElement::parse_attribute(name, value);
+    SVGGeometryElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::points) {
         m_points = AttributeParser::parse_points(value);

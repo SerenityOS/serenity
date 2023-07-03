@@ -97,9 +97,9 @@ JS::ThrowCompletionOr<void> SVGPathElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGPathElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGPathElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGeometryElement::parse_attribute(name, value);
+    SVGGeometryElement::attribute_changed(name, value);
 
     if (name == "d") {
         m_instructions = AttributeParser::parse_path_data(value);

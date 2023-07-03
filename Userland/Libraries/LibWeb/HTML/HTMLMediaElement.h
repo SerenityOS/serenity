@@ -124,7 +124,7 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual void did_remove_attribute(DeprecatedFlyString const&) override;
     virtual void removed_from(DOM::Node*) override;
     virtual void children_changed() override;

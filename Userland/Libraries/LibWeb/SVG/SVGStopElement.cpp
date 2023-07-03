@@ -19,9 +19,9 @@ SVGStopElement::SVGStopElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-void SVGStopElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGStopElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGElement::parse_attribute(name, value);
+    SVGElement::attribute_changed(name, value);
     if (name == SVG::AttributeNames::offset) {
         m_offset = AttributeParser::parse_number_percentage(value);
     }

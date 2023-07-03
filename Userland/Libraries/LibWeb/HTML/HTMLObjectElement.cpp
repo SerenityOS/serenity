@@ -41,9 +41,9 @@ JS::ThrowCompletionOr<void> HTMLObjectElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void HTMLObjectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    NavigableContainer::parse_attribute(name, value);
+    NavigableContainer::attribute_changed(name, value);
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
     // Whenever one of the following conditions occur:
