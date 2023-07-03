@@ -22,8 +22,8 @@ ErrorOr<NonnullRefPtr<SectionNode>> SectionNode::try_create_from_number(StringVi
     if (!maybe_section_number.has_value())
         return Error::from_string_literal("Section is not a number");
     auto section_number = maybe_section_number.release_value();
-    if (section_number > number_of_sections)
-        return Error::from_string_literal("Section number too large");
+    if (section_number < 1 || section_number > number_of_sections)
+        return Error::from_string_literal("Section number is not valid");
     return sections[section_number - 1];
 }
 
