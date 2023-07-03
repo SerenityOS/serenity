@@ -497,16 +497,30 @@ void HTMLInputElement::attribute_changed(DeprecatedFlyString const& name, Deprec
 {
     HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::checked) {
-        // When the checked content attribute is added, if the control does not have dirty checkedness,
-        // the user agent must set the checkedness of the element to true
-        if (!m_dirty_checkedness)
-            set_checked(true, ChangeSource::Programmatic);
+        if (value.is_null()) {
+            // When the checked content attribute is removed, if the control does not have dirty checkedness,
+            // the user agent must set the checkedness of the element to false.
+            if (!m_dirty_checkedness)
+                set_checked(false, ChangeSource::Programmatic);
+        } else {
+            // When the checked content attribute is added, if the control does not have dirty checkedness,
+            // the user agent must set the checkedness of the element to true
+            if (!m_dirty_checkedness)
+                set_checked(true, ChangeSource::Programmatic);
+        }
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value);
     } else if (name == HTML::AttributeNames::value) {
-        if (!m_dirty_value) {
-            m_value = value_sanitization_algorithm(value);
-            update_placeholder_visibility();
+        if (value.is_null()) {
+            if (!m_dirty_value) {
+                m_value = DeprecatedString::empty();
+                update_placeholder_visibility();
+            }
+        } else {
+            if (!m_dirty_value) {
+                m_value = value_sanitization_algorithm(value);
+                update_placeholder_visibility();
+            }
         }
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
@@ -526,25 +540,6 @@ HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(Stri
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
     return HTMLInputElement::TypeAttributeState::Text;
-}
-
-void HTMLInputElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    HTMLElement::did_remove_attribute(name);
-    if (name == HTML::AttributeNames::checked) {
-        // When the checked content attribute is removed, if the control does not have dirty checkedness,
-        // the user agent must set the checkedness of the element to false.
-        if (!m_dirty_checkedness)
-            set_checked(false, ChangeSource::Programmatic);
-    } else if (name == HTML::AttributeNames::value) {
-        if (!m_dirty_value) {
-            m_value = DeprecatedString::empty();
-            update_placeholder_visibility();
-        }
-    } else if (name == HTML::AttributeNames::placeholder) {
-        if (m_placeholder_text_node)
-            m_placeholder_text_node->set_data({});
-    }
 }
 
 DeprecatedString HTMLInputElement::type() const
@@ -1104,5 +1099,4 @@ bool HTMLInputElement::is_submit_button() const
     return type_state() == TypeAttributeState::SubmitButton
         || type_state() == TypeAttributeState::ImageButton;
 }
-
 }

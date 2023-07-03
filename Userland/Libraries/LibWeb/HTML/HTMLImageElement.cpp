@@ -80,7 +80,11 @@ void HTMLImageElement::attribute_changed(DeprecatedFlyString const& name, Deprec
     HTMLElement::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
-        m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+        if (value.is_null()) {
+            m_cors_setting = CORSSettingAttribute::NoCORS;
+        } else {
+            m_cors_setting = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+        }
     }
 
     if (name.is_one_of(HTML::AttributeNames::src, HTML::AttributeNames::srcset)) {
@@ -90,15 +94,6 @@ void HTMLImageElement::attribute_changed(DeprecatedFlyString const& name, Deprec
     if (name == HTML::AttributeNames::alt) {
         if (layout_node())
             verify_cast<Layout::ImageBox>(*layout_node()).dom_node_did_update_alt_text({});
-    }
-}
-
-void HTMLImageElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::crossorigin) {
-        m_cors_setting = CORSSettingAttribute::NoCORS;
     }
 }
 

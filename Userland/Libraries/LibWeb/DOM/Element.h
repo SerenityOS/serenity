@@ -122,7 +122,6 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value);
-    virtual void did_remove_attribute(DeprecatedFlyString const&);
 
     struct [[nodiscard]] RequiredInvalidationAfterStyleChange {
         bool repaint { false };

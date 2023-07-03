@@ -149,25 +149,6 @@ void HTMLLinkElement::resource_did_load()
     }
 }
 
-void HTMLLinkElement::did_remove_attribute(DeprecatedFlyString const& attr)
-{
-    if (m_relationship & Relationship::Stylesheet) {
-        // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
-        // The appropriate times to fetch and process this type of link are:
-        if (
-            // - When the href attribute of the link element of an external resource link that is already browsing-context connected is changed.
-            attr == AttributeNames::href ||
-            // - When the disabled attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
-            attr == AttributeNames::disabled ||
-            // - When the crossorigin attribute of the link element of an external resource link that is already browsing-context connected is set, changed, or removed.
-            attr == AttributeNames::crossorigin
-            // FIXME: - When the type attribute of the link element of an external resource link that is already browsing-context connected, but was previously not obtained due to the type attribute specifying an unsupported type, is removed or changed.
-        ) {
-            fetch_and_process_linked_resource();
-        }
-    }
-}
-
 // https://html.spec.whatwg.org/multipage/semantics.html#create-link-options-from-element
 HTMLLinkElement::LinkProcessingOptions HTMLLinkElement::create_link_options()
 {

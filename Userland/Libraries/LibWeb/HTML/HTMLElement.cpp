@@ -233,15 +233,19 @@ void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedS
     Element::attribute_changed(name, value);
 
     if (name == HTML::AttributeNames::contenteditable) {
-        if ((!value.is_null() && value.is_empty()) || value.equals_ignoring_ascii_case("true"sv)) {
-            // "true", an empty string or a missing value map to the "true" state.
-            m_content_editable_state = ContentEditableState::True;
-        } else if (value.equals_ignoring_ascii_case("false"sv)) {
-            // "false" maps to the "false" state.
-            m_content_editable_state = ContentEditableState::False;
-        } else {
-            // Having no such attribute or an invalid value maps to the "inherit" state.
+        if (value.is_null()) {
             m_content_editable_state = ContentEditableState::Inherit;
+        } else {
+            if (value.is_empty() || value.equals_ignoring_ascii_case("true"sv)) {
+                // "true", an empty string or a missing value map to the "true" state.
+                m_content_editable_state = ContentEditableState::True;
+            } else if (value.equals_ignoring_ascii_case("false"sv)) {
+                // "false" maps to the "false" state.
+                m_content_editable_state = ContentEditableState::False;
+            } else {
+                // Having no such attribute or an invalid value maps to the "inherit" state.
+                m_content_editable_state = ContentEditableState::Inherit;
+            }
         }
     }
 
@@ -254,14 +258,6 @@ void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedS
     }
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
-}
-
-void HTMLElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-    if (name == HTML::AttributeNames::contenteditable) {
-        m_content_editable_state = ContentEditableState::Inherit;
-    }
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-focus

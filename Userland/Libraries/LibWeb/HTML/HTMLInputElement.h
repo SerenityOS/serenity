@@ -105,7 +105,6 @@ public:
 
     // ^HTMLElement
     virtual void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

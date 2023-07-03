@@ -88,20 +88,16 @@ void HTMLMediaElement::attribute_changed(DeprecatedFlyString const& name, Deprec
 {
     Base::attribute_changed(name, value);
 
-    if (name == HTML::AttributeNames::src)
+    if (name == HTML::AttributeNames::src) {
         load_element().release_value_but_fixme_should_propagate_errors();
-    else if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
-    else if (name == HTML::AttributeNames::muted)
+    } else if (name == HTML::AttributeNames::crossorigin) {
+        if (value.is_null())
+            m_crossorigin = cors_setting_attribute_from_keyword({});
+        else
+            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    } else if (name == HTML::AttributeNames::muted) {
         set_muted(true);
-}
-
-void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword({});
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-83

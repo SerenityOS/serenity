@@ -46,7 +46,6 @@ private:
     virtual void resource_did_load() override;
 
     // ^ HTMLElement
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     struct LinkProcessingOptions {
