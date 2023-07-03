@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
@@ -164,9 +165,9 @@ struct PNGLoadingContext {
         BitmapDecoded,
     };
     State state { State::NotDecoded };
-    u8 const* data { nullptr };
-    u8 const* data_current_ptr { nullptr };
-    size_t data_size { 0 };
+
+    LittleEndianInputBitStream& stream;
+
     int width { -1 };
     int height { -1 };
     u8 bit_depth { 0 };
@@ -200,6 +201,11 @@ struct PNGLoadingContext {
     Optional<ByteBuffer> decompressed_icc_profile;
     Optional<RenderingIntent> sRGB_rendering_intent;
 
+    PNGLoadingContext(LittleEndianInputBitStream& stream)
+        : stream(stream)
+    {
+    }
+
     Checked<int> compute_row_size_for_width(int width)
     {
         Checked<int> row_size = width;
@@ -216,7 +222,7 @@ struct PNGLoadingContext {
 
     PNGLoadingContext create_subimage_context(int width, int height)
     {
-        PNGLoadingContext subimage_context;
+        PNGLoadingContext subimage_context(stream);
         subimage_context.state = State::ChunksDecoded;
         subimage_context.width = width;
         subimage_context.height = height;
@@ -230,54 +236,7 @@ struct PNGLoadingContext {
     }
 };
 
-class Streamer {
-public:
-    Streamer(u8 const* data, size_t size)
-        : m_data_ptr(data)
-        , m_size_remaining(size)
-    {
-    }
-
-    template<typename T>
-    bool read(T& value)
-    {
-        if (m_size_remaining < sizeof(T))
-            return false;
-        value = *((NetworkOrdered<T> const*)m_data_ptr);
-        m_data_ptr += sizeof(T);
-        m_size_remaining -= sizeof(T);
-        return true;
-    }
-
-    bool read_bytes(u8* buffer, size_t count)
-    {
-        if (m_size_remaining < count)
-            return false;
-        memcpy(buffer, m_data_ptr, count);
-        m_data_ptr += count;
-        m_size_remaining -= count;
-        return true;
-    }
-
-    bool wrap_bytes(ReadonlyBytes& buffer, size_t count)
-    {
-        if (m_size_remaining < count)
-            return false;
-        buffer = ReadonlyBytes { m_data_ptr, count };
-        m_data_ptr += count;
-        m_size_remaining -= count;
-        return true;
-    }
-
-    u8 const* current_data_ptr() const { return m_data_ptr; }
-    bool at_end() const { return !m_size_remaining; }
-
-private:
-    u8 const* m_data_ptr { nullptr };
-    size_t m_size_remaining { 0 };
-};
-
-static ErrorOr<void> process_chunk(Streamer&, PNGLoadingContext& context);
+static ErrorOr<void> process_chunk(LittleEndianInputBitStream&, PNGLoadingContext& context);
 
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
@@ -593,19 +552,15 @@ static bool decode_png_header(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::HeaderDecoded)
         return true;
 
-    if (!context.data || context.data_size < sizeof(PNG::header)) {
-        dbgln_if(PNG_DEBUG, "Missing PNG header");
-        context.state = PNGLoadingContext::State::Error;
-        return false;
-    }
+    Array<u8, 8> header {};
+    context.stream.read_until_filled(header).release_value_but_fixme_should_propagate_errors();
 
-    if (memcmp(context.data, PNG::header.span().data(), sizeof(PNG::header)) != 0) {
+    if (header != PNG::header) {
         dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
-    context.data_current_ptr = context.data + sizeof(PNG::header);
     context.state = PNGLoadingContext::HeaderDecoded;
     return true;
 }
@@ -620,16 +575,11 @@ static bool decode_png_size(PNGLoadingContext& context)
             return false;
     }
 
-    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
-
-    Streamer streamer(context.data_current_ptr, data_remaining);
-    while (!streamer.at_end() && !context.has_seen_iend) {
-        if (auto result = process_chunk(streamer, context); result.is_error()) {
+    while (!context.has_seen_iend) {
+        if (auto result = process_chunk(context.stream, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
-
-        context.data_current_ptr = streamer.current_data_ptr();
 
         if (context.width && context.height) {
             context.state = PNGLoadingContext::State::SizeDecoded;
@@ -650,16 +600,11 @@ static bool decode_png_image_data_chunk(PNGLoadingContext& context)
             return false;
     }
 
-    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
-
-    Streamer streamer(context.data_current_ptr, data_remaining);
-    while (!streamer.at_end() && !context.has_seen_iend) {
-        if (auto result = process_chunk(streamer, context); result.is_error()) {
+    while (!context.has_seen_iend) {
+        if (auto result = process_chunk(context.stream, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
-
-        context.data_current_ptr = streamer.current_data_ptr();
 
         if (context.state >= PNGLoadingContext::State::ImageDataChunkDecoded)
             return true;
@@ -679,16 +624,11 @@ static bool decode_png_animation_data_chunks(PNGLoadingContext& context, u32 req
         return false;
     }
 
-    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
-
-    Streamer streamer(context.data_current_ptr, data_remaining);
-    while (!streamer.at_end() && !context.has_seen_iend) {
-        if (auto result = process_chunk(streamer, context); result.is_error()) {
+    while (!context.has_seen_iend) {
+        if (auto result = process_chunk(context.stream, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
-
-        context.data_current_ptr = streamer.current_data_ptr();
 
         if (context.last_completed_animation_frame_index.has_value()) {
             if (requested_animation_frame_index <= context.last_completed_animation_frame_index.value())
@@ -711,47 +651,40 @@ static bool decode_png_chunks(PNGLoadingContext& context)
             return false;
     }
 
-    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
-
-    context.compressed_data.ensure_capacity(context.data_size);
-
-    Streamer streamer(context.data_current_ptr, data_remaining);
-    while (!streamer.at_end() && !context.has_seen_iend) {
-        if (auto result = process_chunk(streamer, context); result.is_error()) {
+    while (!context.has_seen_iend) {
+        if (auto result = process_chunk(context.stream, context); result.is_error()) {
             // Ignore failed chunk and just consider chunk decoding being done.
             // decode_png_bitmap() will check whether we got all required ones anyway.
             break;
         }
-
-        context.data_current_ptr = streamer.current_data_ptr();
     }
 
     context.state = PNGLoadingContext::State::ChunksDecoded;
     return true;
 }
 
-static ErrorOr<PNG::FilterType> read_filter(PNGLoadingContext& context, Streamer& streamer)
+static ErrorOr<PNG::FilterType> read_filter(PNGLoadingContext& context, Stream& stream)
 {
-    PNG::FilterType filter;
-    if (!streamer.read(filter)) {
+    auto maybe_filter = stream.read_value<PNG::FilterType>();
+    if (maybe_filter.is_error()) {
         context.state = PNGLoadingContext::State::Error;
         return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
     }
 
-    if (to_underlying(filter) > 4) {
+    if (to_underlying(maybe_filter.value()) > 4) {
         context.state = PNGLoadingContext::State::Error;
         return Error::from_string_literal("PNGImageDecoderPlugin: Invalid PNG filter");
     }
 
-    return filter;
+    return maybe_filter.value();
 }
 
-static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBuffer& decompression_buffer)
+static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBuffer const& decompression_buffer)
 {
-    Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
+    FixedMemoryStream stream { decompression_buffer };
 
     for (int y = 0; y < context.height; ++y) {
-        auto const filter = TRY(read_filter(context, streamer));
+        auto const filter = TRY(read_filter(context, stream));
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
@@ -759,10 +692,9 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBu
         if (row_size.has_overflow())
             return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
 
-        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
-        }
+        auto const old_offset = stream.offset();
+        TRY(stream.discard(row_size.value()));
+        scanline_buffer = stream.readonly_bytes().slice(old_offset, row_size.value());
     }
 
     context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
@@ -819,8 +751,9 @@ static int adam7_startx[8] = { 0, 0, 4, 0, 2, 0, 1, 0 };
 static int adam7_stepy[8] = { 1, 8, 8, 8, 4, 4, 2, 2 };
 static int adam7_stepx[8] = { 1, 8, 8, 4, 4, 2, 2, 1 };
 
-static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
+static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, ByteBuffer const& decompression_buffer, int pass)
 {
+    auto stream = FixedMemoryStream { decompression_buffer };
     auto subimage_context = context.create_subimage_context(adam7_width(context, pass), adam7_height(context, pass));
 
     // For small images, some passes might be empty
@@ -828,7 +761,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         return {};
 
     for (int y = 0; y < subimage_context.height; ++y) {
-        auto const filter = TRY(read_filter(context, streamer));
+        auto const filter = TRY(read_filter(context, stream));
 
         subimage_context.scanlines.append({ filter });
         auto& scanline_buffer = subimage_context.scanlines.last().data;
@@ -836,10 +769,10 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         auto row_size = context.compute_row_size_for_width(subimage_context.width);
         if (row_size.has_overflow())
             return Error::from_string_literal("PNGImageDecoderPlugin: Row size overflow");
-        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
-            context.state = PNGLoadingContext::State::Error;
-            return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
-        }
+
+        auto const old_offset = stream.offset();
+        TRY(stream.discard(row_size.value()));
+        scanline_buffer = stream.readonly_bytes().slice(old_offset, row_size.value());
     }
 
     subimage_context.bitmap = TRY(Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
@@ -854,12 +787,11 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
     return {};
 }
 
-static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context, ByteBuffer& decompression_buffer)
+static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context, ByteBuffer const& decompression_buffer)
 {
-    Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
     context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     for (int pass = 1; pass <= 7; ++pass)
-        TRY(decode_adam7_pass(context, streamer, pass));
+        TRY(decode_adam7_pass(context, decompression_buffer, pass));
     return {};
 }
 
@@ -1203,30 +1135,18 @@ static void process_IEND(ReadonlyBytes, PNGLoadingContext& context)
     context.has_seen_iend = true;
 }
 
-static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& context)
+static ErrorOr<void> process_chunk(LittleEndianInputBitStream& stream, PNGLoadingContext& context)
 {
-    u32 chunk_size;
-    if (!streamer.read(chunk_size)) {
-        dbgln_if(PNG_DEBUG, "Bail at chunk_size");
-        return Error::from_string_literal("Error while reading from Streamer");
-    }
+    u32 const chunk_size = TRY(stream.read_value<NetworkOrdered<u32>>());
 
     Array<u8, 4> chunk_type_buffer;
     StringView const chunk_type { chunk_type_buffer.span() };
-    if (!streamer.read_bytes(chunk_type_buffer.data(), chunk_type_buffer.size())) {
-        dbgln_if(PNG_DEBUG, "Bail at chunk_type");
-        return Error::from_string_literal("Error while reading from Streamer");
-    }
-    ReadonlyBytes chunk_data;
-    if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
-        dbgln_if(PNG_DEBUG, "Bail at chunk_data");
-        return Error::from_string_literal("Error while reading from Streamer");
-    }
-    u32 chunk_crc;
-    if (!streamer.read(chunk_crc)) {
-        dbgln_if(PNG_DEBUG, "Bail at chunk_crc");
-        return Error::from_string_literal("Error while reading from Streamer");
-    }
+    TRY(stream.read_until_filled(chunk_type_buffer));
+
+    auto chunk_data = TRY(ByteBuffer::create_uninitialized(chunk_size));
+    TRY(stream.read_until_filled(chunk_data));
+
+    u32 const chunk_crc = TRY(stream.read_value<NetworkOrdered<u32>>());
     dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
     if (chunk_type == "IHDR"sv)
@@ -1258,11 +1178,10 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
     return {};
 }
 
-PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size)
+PNGImageDecoderPlugin::PNGImageDecoderPlugin(NonnullOwnPtr<Stream> stream)
+    : m_stream(move(stream))
 {
-    m_context = make<PNGLoadingContext>();
-    m_context->data = m_context->data_current_ptr = data;
-    m_context->data_size = size;
+    m_context = make<PNGLoadingContext>(m_stream);
 }
 
 PNGImageDecoderPlugin::~PNGImageDecoderPlugin() = default;
@@ -1338,7 +1257,8 @@ bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size()));
+    auto stream = TRY(try_make<FixedMemoryStream>(data));
+    return adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(move(stream)));
 }
 
 bool PNGImageDecoderPlugin::is_animated()

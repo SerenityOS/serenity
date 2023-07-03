@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BitStream.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
@@ -31,11 +32,12 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    PNGImageDecoderPlugin(u8 const*, size_t);
+    PNGImageDecoderPlugin(NonnullOwnPtr<Stream>);
     bool ensure_image_data_chunk_was_decoded();
     bool ensure_animation_frame_was_decoded(u32);
 
     OwnPtr<PNGLoadingContext> m_context;
+    LittleEndianInputBitStream m_stream;
 };
 
 }
