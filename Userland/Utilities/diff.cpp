@@ -20,12 +20,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser parser;
 
     bool unified = false;
+    bool context = false;
     StringView filename1;
     StringView filename2;
 
     parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
     parser.add_option(unified, "Write diff in unified format", nullptr, 'u');
+    parser.add_option(context, "Write diff in context format", nullptr, 'c');
     parser.parse(arguments);
 
     auto file1 = TRY(Core::File::open(filename1, Core::File::OpenMode::Read));
@@ -34,13 +36,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto const color_output = TRY(Core::System::isatty(STDOUT_FILENO)) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
-    size_t context = unified ? 3 : 0;
-    auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()), context));
+    size_t number_context_lines = unified || context ? 3 : 0;
+    auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()), number_context_lines));
 
     if (unified) {
         TRY(Diff::write_unified_header(filename1, filename2, *out));
         for (auto const& hunk : hunks)
             TRY(Diff::write_unified(hunk, *out, color_output));
+    } else if (context) {
+        TRY(Diff::write_context_header(filename1, filename2, *out));
+        for (auto const& hunk : hunks)
+            TRY(Diff::write_context(hunk, *out, color_output));
     } else {
         for (auto const& hunk : hunks)
             TRY(Diff::write_normal(hunk, *out, color_output));
