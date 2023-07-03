@@ -1857,6 +1857,20 @@ void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPt
     environment_settings.clean_up_after_running_script();
 }
 
+WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandler>, KeyCode key)
+{
+    switch (key) {
+    case KeyCode::Key_Space:
+        TRY(toggle_playback());
+        break;
+
+    default:
+        break;
+    }
+
+    return {};
+}
+
 void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time)
 {
     if (display_time.has_value() && !m_display_time.has_value()) {
