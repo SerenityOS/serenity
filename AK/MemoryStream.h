@@ -32,7 +32,7 @@ public:
     virtual ErrorOr<void> write_until_depleted(ReadonlyBytes bytes) override;
 
     Bytes bytes();
-    ReadonlyBytes bytes() const;
+    ReadonlyBytes readonly_bytes() const;
     size_t offset() const;
     size_t remaining() const;
 
