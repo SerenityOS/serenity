@@ -2473,60 +2473,106 @@ void HTMLParser::clear_the_stack_back_to_a_table_body_context()
         VERIFY(m_parsing_fragment);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-intr
 void HTMLParser::handle_in_row(HTMLToken& token)
 {
+    // A start tag whose tag name is one of: "th", "td"
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::th, HTML::TagNames::td)) {
+        // Clear the stack back to a table row context.
         clear_the_stack_back_to_a_table_row_context();
+
+        // Insert an HTML element for the token, then switch the insertion mode to "in cell".
         (void)insert_html_element(token);
         m_insertion_mode = InsertionMode::InCell;
+
+        // Insert a marker at the end of the list of active formatting elements.
         m_list_of_active_formatting_elements.add_marker();
         return;
     }
 
+    // An end tag whose tag name is "tr"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::tr) {
+        // If the stack of open elements does not have a tr element in table scope, this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tr)) {
             log_parse_error();
             return;
         }
+
+        // Otherwise:
+        // Clear the stack back to a table row context.
         clear_the_stack_back_to_a_table_row_context();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+
+        // Switch the insertion mode to "in table body".
         m_insertion_mode = InsertionMode::InTableBody;
         return;
     }
 
+    // A start tag whose tag name is one of: "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
+    // An end tag whose tag name is "table"
     if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr))
         || (token.is_end_tag() && token.tag_name() == HTML::TagNames::table)) {
+
+        // If the stack of open elements does not have a tr element in table scope, this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tr)) {
             log_parse_error();
             return;
         }
+
+        // Otherwise:
+        // Clear the stack back to a table row context.
         clear_the_stack_back_to_a_table_row_context();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+
+        // Switch the insertion mode to "in table body".
         m_insertion_mode = InsertionMode::InTableBody;
+
+        // Reprocess the token.
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
 
+    // An end tag whose tag name is one of: "tbody", "tfoot", "thead"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead)) {
+        // If the stack of open elements does not have an element in table scope that is an HTML element with the same tag name as the token, this is a parse error; ignore the token.
         if (!m_stack_of_open_elements.has_in_table_scope(token.tag_name())) {
             log_parse_error();
             return;
         }
+
+        // If the stack of open elements does not have a tr element in table scope, ignore the token.
         if (!m_stack_of_open_elements.has_in_table_scope(HTML::TagNames::tr)) {
             return;
         }
+
+        // Otherwise:
+        // Clear the stack back to a table row context.
         clear_the_stack_back_to_a_table_row_context();
+
+        // Pop the current node (which will be a tr element) from the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+
+        // Switch the insertion mode to "in table body".
         m_insertion_mode = InsertionMode::InTableBody;
+
+        // Reprocess the token.
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
 
+    // An end tag whose tag name is one of: "body", "caption", "col", "colgroup", "html", "td", "th"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::body, HTML::TagNames::caption, HTML::TagNames::col, HTML::TagNames::colgroup, HTML::TagNames::html, HTML::TagNames::td, HTML::TagNames::th)) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // Anything else:
+    // Process the token using the rules for the "in table" insertion mode.
     process_using_the_rules_for(InsertionMode::InTable, token);
 }
 
