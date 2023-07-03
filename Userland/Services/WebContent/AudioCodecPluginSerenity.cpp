@@ -92,6 +92,9 @@ void AudioCodecPluginSerenity::seek(double position)
 {
     m_position = set_loader_position(m_loader, position, m_duration);
 
+    m_connection->clear_client_buffer();
+    m_connection->async_clear_buffer();
+
     if (on_playback_position_updated)
         on_playback_position_updated(m_position);
 }
