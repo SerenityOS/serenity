@@ -1001,7 +1001,11 @@ DOM::Text* HTMLParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     if (adjusted_insertion_location.insert_before_sibling) {
-        TODO();
+        if (adjusted_insertion_location.insert_before_sibling->previous_sibling() && adjusted_insertion_location.insert_before_sibling->previous_sibling()->is_text())
+            return static_cast<DOM::Text*>(adjusted_insertion_location.insert_before_sibling->previous_sibling());
+        auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "").release_allocated_value_but_fixme_should_propagate_errors();
+        adjusted_insertion_location.parent->insert_before(*new_text_node, *adjusted_insertion_location.insert_before_sibling);
+        return new_text_node;
     }
     if (adjusted_insertion_location.parent->is_document())
         return nullptr;
@@ -2661,20 +2665,18 @@ void HTMLParser::handle_in_table_text(HTMLToken& token)
     // are character tokens that are not ASCII whitespace, then this is a parse error:
     // reprocess the character tokens in the pending table character tokens list using
     // the rules given in the "anything else" entry in the "in table" insertion mode.
-    for (auto& pending_token : m_pending_table_character_tokens) {
-        VERIFY(pending_token.is_character());
-        if (!pending_token.is_parser_whitespace()) {
-            log_parse_error();
+    if (any_of(m_pending_table_character_tokens, [](auto const& token) { return !token.is_parser_whitespace(); })) {
+        log_parse_error();
+        for (auto& pending_token : m_pending_table_character_tokens) {
             m_foster_parenting = true;
-            process_using_the_rules_for(InsertionMode::InBody, token);
+            process_using_the_rules_for(InsertionMode::InBody, pending_token);
             m_foster_parenting = false;
-            return;
         }
-    }
-
-    // Otherwise, insert the characters given by the pending table character tokens list.
-    for (auto& pending_token : m_pending_table_character_tokens) {
-        insert_character(pending_token.code_point());
+    } else {
+        // Otherwise, insert the characters given by the pending table character tokens list.
+        for (auto& pending_token : m_pending_table_character_tokens) {
+            insert_character(pending_token.code_point());
+        }
     }
 
     // Switch the insertion mode to the original insertion mode and reprocess the token.
