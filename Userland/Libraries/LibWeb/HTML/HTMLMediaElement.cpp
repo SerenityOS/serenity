@@ -1578,6 +1578,9 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#blocked-media-element
@@ -1856,6 +1859,9 @@ void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, 
     }
 
     m_display_time = move(display_time);
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
 }
 
 double HTMLMediaElement::layout_display_time(Badge<Painting::MediaPaintable>) const
