@@ -312,11 +312,20 @@ public:
     ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexical_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
     void block_declaration_instantiation(VM&, Environment*) const;
 
     ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
+
+    Vector<DeprecatedFlyString> const& local_variables_names() const { return m_local_variables_names; }
+    size_t add_local_variable(DeprecatedFlyString name)
+    {
+        auto index = m_local_variables_names.size();
+        m_local_variables_names.append(name);
+        return index;
+    }
 
 protected:
     explicit ScopeNode(SourceRange source_range)
@@ -332,6 +341,8 @@ private:
     Vector<NonnullRefPtr<Declaration const>> m_var_declarations;
 
     Vector<NonnullRefPtr<FunctionDeclaration const>> m_functions_hoistable_with_annexB_extension;
+
+    Vector<DeprecatedFlyString> m_local_variables_names;
 };
 
 // ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
@@ -659,6 +670,7 @@ public:
     Statement const& body() const { return *m_body; }
     Vector<FunctionParameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
+    Vector<DeprecatedFlyString> const& local_variables_names() const { return m_local_variables_names; }
     bool is_strict_mode() const { return m_is_strict_mode; }
     bool might_need_arguments_object() const { return m_might_need_arguments_object; }
     bool contains_direct_call_to_eval() const { return m_contains_direct_call_to_eval; }
@@ -666,7 +678,7 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(DeprecatedFlyString name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+    FunctionNode(RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -677,6 +689,7 @@ protected:
         , m_might_need_arguments_object(might_need_arguments_object)
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
         , m_is_arrow_function(is_arrow_function)
+        , m_local_variables_names(local_variables_names)
     {
         if (m_is_arrow_function)
             VERIFY(!m_might_need_arguments_object);
@@ -695,6 +708,8 @@ private:
     bool m_might_need_arguments_object : 1 { false };
     bool m_contains_direct_call_to_eval : 1 { false };
     bool m_is_arrow_function : 1 { false };
+
+    Vector<DeprecatedFlyString> m_local_variables_names;
 };
 
 class FunctionDeclaration final
@@ -703,9 +718,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, DeprecatedFlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
+    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
         : Declaration(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
     {
     }
 
@@ -729,9 +744,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, DeprecatedFlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
     {
     }
 
@@ -1254,6 +1269,14 @@ public:
 
     DeprecatedFlyString const& string() const { return m_string; }
 
+    bool is_local() const { return m_local_variable_index.has_value(); }
+    size_t local_variable_index() const
+    {
+        VERIFY(m_local_variable_index.has_value());
+        return m_local_variable_index.value();
+    }
+    void set_local_variable_index(size_t index) { m_local_variable_index = index; }
+
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
@@ -1264,6 +1287,8 @@ private:
 
     DeprecatedFlyString m_string;
     mutable EnvironmentCoordinate m_cached_environment_coordinate;
+
+    Optional<size_t> m_local_variable_index;
 };
 
 class PrivateIdentifier final : public Expression {

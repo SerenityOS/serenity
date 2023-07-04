@@ -342,6 +342,8 @@ private:
         }
     };
 
+    NonnullRefPtr<Identifier const> create_identifier_and_register_in_current_scope(SourceRange range, DeprecatedFlyString string);
+
     NonnullRefPtr<SourceCode const> m_source_code;
     Vector<Position> m_rule_starts;
     ParserState m_state;
