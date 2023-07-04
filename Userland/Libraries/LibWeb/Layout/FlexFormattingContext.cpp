@@ -2125,10 +2125,13 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         //  Fallthrough
     case CSS::AlignItems::Start:
     case CSS::AlignItems::FlexStart:
+    case CSS::AlignItems::SelfStart:
     case CSS::AlignItems::Stretch:
+    case CSS::AlignItems::Normal:
         cross_offset = -half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
         break;
     case CSS::AlignItems::End:
+    case CSS::AlignItems::SelfEnd:
     case CSS::AlignItems::FlexEnd:
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
