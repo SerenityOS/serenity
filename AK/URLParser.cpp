@@ -442,7 +442,8 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
             break;
         // -> relative state, https://url.spec.whatwg.org/#relative-state
         case State::Relative:
-            // FIXME: 1. Assert: base’s scheme is not "file".
+            // 1. Assert: base’s scheme is not "file".
+            VERIFY(base_url->scheme() != "file");
 
             // 2. Set url’s scheme to base’s scheme.
             url->m_scheme = base_url->m_scheme;
