@@ -25,7 +25,7 @@ struct FileTypeFilter {
 
     static FileTypeFilter image_files()
     {
-        return FileTypeFilter { "Image Files", Vector<DeprecatedString> { "png", "gif", "bmp", "dip", "pbm", "pgm", "ppm", "ico", "jpeg", "jpg", "dds", "qoi", "webp", "tvg" } };
+        return FileTypeFilter { "Image Files", Vector<DeprecatedString> { "png", "gif", "bmp", "dip", "pbm", "pgm", "ppm", "ico", "jpeg", "jpg", "jxl", "dds", "qoi", "webp", "tvg" } };
     }
 };
 
