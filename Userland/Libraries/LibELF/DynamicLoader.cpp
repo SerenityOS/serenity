@@ -599,7 +599,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
             *patch_ptr += m_dynamic_object->base_address().get();
         break;
     }
-    case R_AARCH64_TLS_TPREL64:
+    case R_AARCH64_TLS_TPREL:
     case R_X86_64_TPOFF64: {
         auto symbol = relocation.symbol();
         FlatPtr symbol_value;

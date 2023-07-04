@@ -184,26 +184,22 @@ static char const* object_symbol_binding_to_string(ElfW(Word) type)
     }
 }
 
-static char const* object_relocation_type_to_string(ElfW(Word) type)
+static char const* object_relocation_type_to_string(ElfW(Half) machine, ElfW(Word) type)
 {
-    switch (type) {
-#if ARCH(X86_64)
-    case R_X86_64_NONE:
-        return "R_X86_64_NONE";
-    case R_X86_64_64:
-        return "R_X86_64";
-    case R_X86_64_GLOB_DAT:
-        return "R_x86_64_GLOB_DAT";
-    case R_X86_64_JUMP_SLOT:
-        return "R_X86_64_JUMP_SLOT";
-    case R_X86_64_RELATIVE:
-        return "R_X86_64_RELATIVE";
-    case R_X86_64_TPOFF64:
-        return "R_X86_64_TPOFF64";
-#endif
-    default:
-        return "(?)";
+#define ENUMERATE_RELOCATION(name) \
+    case name:                     \
+        return #name;
+    if (machine == EM_X86_64) {
+        switch (type) {
+            __ENUMERATE_X86_64_DYNAMIC_RELOCS(ENUMERATE_RELOCATION)
+        }
+    } else if (machine == EM_AARCH64) {
+        switch (type) {
+            __ENUMERATE_AARCH64_DYNAMIC_RELOCS(ENUMERATE_RELOCATION)
+        }
     }
+#undef ENUMERATE_RELOCATION
+    return "(?)";
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -483,9 +479,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->relocation_section().name(), object->relocation_section().offset(), object->relocation_section().entry_count());
                 outln("  Offset{}      Type                Sym Value{}   Sym Name", addr_padding, addr_padding);
-                object->relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
+                object->relocation_section().for_each_relocation([&](const ELF::DynamicObject::Relocation& reloc) {
                     out("  {:p} ", reloc.offset());
-                    out(" {:18} ", object_relocation_type_to_string(reloc.type()));
+                    out(" {:18} ", object_relocation_type_to_string(header.e_machine, reloc.type()));
                     out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
@@ -498,9 +494,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->plt_relocation_section().name(), object->plt_relocation_section().offset(), object->plt_relocation_section().entry_count());
                 outln("  Offset{}      Type                Sym Value{}   Sym Name", addr_padding, addr_padding);
-                object->plt_relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
+                object->plt_relocation_section().for_each_relocation([&](const ELF::DynamicObject::Relocation& reloc) {
                     out("  {:p} ", reloc.offset());
-                    out(" {:18} ", object_relocation_type_to_string(reloc.type()));
+                    out(" {:18} ", object_relocation_type_to_string(header.e_machine, reloc.type()));
                     out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
