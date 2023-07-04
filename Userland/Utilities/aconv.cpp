@@ -144,6 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (output != "-"sv)
             out("Writing: \033[s");
 
+        auto start = MonotonicTime::now();
         while (input_loader->loaded_samples() < input_loader->total_samples()) {
             auto samples_or_error = input_loader->get_more_samples();
             if (samples_or_error.is_error()) {
@@ -159,6 +160,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 fflush(stdout);
             }
         }
+        auto end = MonotonicTime::now();
+        auto seconds_to_write = (end - start).to_milliseconds() / 1000.0;
+        dbgln("Wrote {} samples in {:.3f}s, {:3.2f}% realtime", input_loader->loaded_samples(), seconds_to_write, input_loader->loaded_samples() / static_cast<double>(input_loader->sample_rate()) / seconds_to_write * 100.0);
 
         if (writer.has_value())
             TRY((*writer)->finalize());
