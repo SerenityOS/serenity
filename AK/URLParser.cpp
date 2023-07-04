@@ -681,18 +681,17 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
 
             }
             // 4. Otherwise:
-            // FIXME: Implement closer to spec text. From reading it, shouldn't we be appending [ or ] to buffer as well? Step 3. below does not have an 'otherwise'.
-            //
-            // 1. If c is U+005B ([), then set insideBrackets to true.
-            else if (code_point == '[') {
-                inside_brackets = true;
-            }
-            // 2. If c is U+005D (]), then set insideBrackets to false.
-            else if (code_point == ']') {
-                inside_brackets = false;
-            }
-            // 3. Append c to buffer.
             else {
+                // 1. If c is U+005B ([), then set insideBrackets to true.
+                if (code_point == '[') {
+                    inside_brackets = true;
+                }
+                // 2. If c is U+005D (]), then set insideBrackets to false.
+                else if (code_point == ']') {
+                    inside_brackets = false;
+                }
+
+                // 3. Append c to buffer.
                 buffer.append_code_point(code_point);
             }
             break;
