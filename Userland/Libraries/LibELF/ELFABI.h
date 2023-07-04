@@ -816,15 +816,51 @@ struct elf_args {
 
 #define R_X86_64_NONE 0
 #define R_X86_64_64 1
+#define R_X86_64_COPY 5
 #define R_X86_64_GLOB_DAT 6
 #define R_X86_64_JUMP_SLOT 7
 #define R_X86_64_RELATIVE 8
+#define R_X86_64_DTPMOD64 16
+#define R_X86_64_DTPOFF64 17
 #define R_X86_64_TPOFF64 18
+#define R_X86_64_TLSDESC 36
 #define R_X86_64_IRELATIVE 37
 
+#define __ENUMERATE_X86_64_DYNAMIC_RELOCS(R) \
+    R(R_X86_64_NONE)                         \
+    R(R_X86_64_64)                           \
+    R(R_X86_64_COPY)                         \
+    R(R_X86_64_GLOB_DAT)                     \
+    R(R_X86_64_JUMP_SLOT)                    \
+    R(R_X86_64_RELATIVE)                     \
+    R(R_X86_64_DTPMOD64)                     \
+    R(R_X86_64_DTPOFF64)                     \
+    R(R_X86_64_TPOFF64)                      \
+    R(R_X86_64_TLSDESC)                      \
+    R(R_X86_64_IRELATIVE)
+
+/* 5.7.12 Dynamic relocations https://github.com/ARM-software/abi-aa/blob/2023q1-release/aaelf64/aaelf64.rst#dynamic-relocations */
+#define R_AARCH64_NONE 0
 #define R_AARCH64_ABS64 257
+#define R_AARCH64_COPY 1024
 #define R_AARCH64_GLOB_DAT 1025
 #define R_AARCH64_JUMP_SLOT 1026
 #define R_AARCH64_RELATIVE 1027
-#define R_AARCH64_TLS_TPREL64 1030
+#define R_AARCH64_TLS_DTPMOD 1028
+#define R_AARCH64_TLS_DTPREL 1029
+#define R_AARCH64_TLS_TPREL 1030
+#define R_AARCH64_TLSDESC 1031
 #define R_AARCH64_IRELATIVE 1032
+
+#define __ENUMERATE_AARCH64_DYNAMIC_RELOCS(R) \
+    R(R_AARCH64_NONE)                         \
+    R(R_AARCH64_ABS64)                        \
+    R(R_AARCH64_COPY)                         \
+    R(R_AARCH64_GLOB_DAT)                     \
+    R(R_AARCH64_JUMP_SLOT)                    \
+    R(R_AARCH64_RELATIVE)                     \
+    R(R_AARCH64_TLS_DTPMOD)                   \
+    R(R_AARCH64_TLS_DTPREL)                   \
+    R(R_AARCH64_TLS_TPREL)                    \
+    R(R_AARCH64_TLSDESC)                      \
+    R(R_AARCH64_IRELATIVE)
