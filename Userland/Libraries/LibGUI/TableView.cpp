@@ -193,9 +193,10 @@ void TableView::keydown_event(KeyEvent& event)
 
     auto is_delete = event.key() == Key_Delete;
     auto is_backspace = event.key() == Key_Backspace;
+    auto is_escape = event.key() == Key_Escape;
     auto is_clear = is_delete || is_backspace;
     auto has_ctrl = event.modifiers() & KeyModifier::Mod_Ctrl;
-    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_clear) && !has_ctrl) {
+    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_clear) && !has_ctrl && !is_escape) {
         begin_editing(cursor_index());
         if (m_editing_delegate) {
             if (is_delete) {
