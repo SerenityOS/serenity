@@ -26,6 +26,7 @@
     __ENUMERATE_IMAGE_FORMAT(ico, ".ico")   \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpg")  \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpeg") \
+    __ENUMERATE_IMAGE_FORMAT(jxl, ".jxl")   \
     __ENUMERATE_IMAGE_FORMAT(dds, ".dds")   \
     __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")   \
     __ENUMERATE_IMAGE_FORMAT(tga, ".tga")   \

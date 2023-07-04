@@ -123,6 +123,7 @@ static Array const s_registered_mime_type = {
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '7', 'a' } },
     MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '9', 'a' } },
     MimeType { .name = "image/jpeg"sv, .common_extensions = { ".jpg"sv, ".jpeg"sv }, .description = "JPEG image data"sv, .magic_bytes = Vector<u8> { 0xFF, 0xD8, 0xFF } },
+    MimeType { .name = "image/jxl"sv, .common_extensions = { ".jxl"sv }, .description = "JPEG XL image data"sv, .magic_bytes = Vector<u8> { 0xFF, 0x0A } },
     MimeType { .name = "image/png"sv, .common_extensions = { ".png"sv }, .description = "PNG image data"sv, .magic_bytes = Vector<u8> { 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A } },
     MimeType { .name = "image/svg+xml"sv, .common_extensions = { ".svg"sv }, .description = "Scalable Vector Graphics image"sv },
     MimeType { .name = "image/tiff"sv, .common_extensions = { ".tiff"sv }, .description = "TIFF image data"sv, .magic_bytes = Vector<u8> { 'I', 'I', '*', 0x00 } },
