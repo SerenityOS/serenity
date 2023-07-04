@@ -27,6 +27,7 @@
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
+#include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebView/RequestServerAdapter.h>
@@ -54,7 +55,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPlugin);
 
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
+#if defined(HAVE_PULSEAUDIO)
+        return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
+#else
         return Ladybird::AudioCodecPluginQt::create(move(loader));
+#endif
     });
 
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));

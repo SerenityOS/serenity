@@ -29,3 +29,7 @@ target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia Lib
 if (ANDROID)
     link_android_libs(WebContent)
 endif()
+
+if (HAVE_PULSEAUDIO)
+    target_compile_definitions(WebContent PRIVATE HAVE_PULSEAUDIO=1)
+endif()
