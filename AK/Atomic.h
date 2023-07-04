@@ -356,7 +356,7 @@ public:
     {
     }
 
-    T volatile** ptr() noexcept
+    T* volatile* ptr() noexcept
     {
         return &m_value;
     }
