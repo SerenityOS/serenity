@@ -193,12 +193,43 @@ public:
 
     Type type() const { return m_type; }
 
+    // https://www.w3.org/TR/css-values-4/#calculation-tree-operator-nodes
     bool is_operator_node() const
     {
-        // FIXME: Check for operator node types once they exist
-        return is_calc_operator_node();
+        return is_calc_operator_node() || is_math_function_node();
     }
 
+    bool is_math_function_node() const
+    {
+        switch (m_type) {
+        case Type::Min:
+        case Type::Max:
+        case Type::Clamp:
+        case Type::Abs:
+        case Type::Sign:
+        case Type::Sin:
+        case Type::Cos:
+        case Type::Tan:
+        case Type::Asin:
+        case Type::Acos:
+        case Type::Atan:
+        case Type::Atan2:
+        case Type::Pow:
+        case Type::Sqrt:
+        case Type::Hypot:
+        case Type::Log:
+        case Type::Exp:
+        case Type::Round:
+        case Type::Mod:
+        case Type::Rem:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    // https://www.w3.org/TR/css-values-4/#calculation-tree-calc-operator-nodes
     bool is_calc_operator_node() const
     {
         return first_is_one_of(m_type, Type::Sum, Type::Product, Type::Negate, Type::Invert);
