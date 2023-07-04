@@ -9,7 +9,6 @@
 #define REFPTR_SCRUB_BYTE 0xe0
 
 #include <AK/Assertions.h>
-#include <AK/Atomic.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
