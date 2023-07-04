@@ -803,8 +803,12 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     continue;
                 }
             }
+            // 5. Otherwise, set state to path state, and decrease pointer by 1.
+            else {
+                state = State::Path;
+                continue;
+            }
 
-            // FIXME: 5. Otherwise, set state to path state, and decrease pointer by 1.
             break;
         // -> file slash state, https://url.spec.whatwg.org/#file-slash-state
         case State::FileSlash:
