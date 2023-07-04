@@ -440,11 +440,13 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {:02x}{}", sample_count, bit_depth, frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, specified_header_checksum, specified_header_checksum != calculated_header_checksum ? " (checksum error)"sv : ""sv);
 
     m_current_frame = FlacFrameHeader {
-        sample_count,
-        frame_sample_rate,
-        channel_type,
-        bit_depth,
-        specified_checksum,
+        .sample_rate = frame_sample_rate,
+        .sample_count = static_cast<u16>(sample_count),
+        .sample_or_frame_index = static_cast<u32>(m_current_sample_or_frame),
+        .blocking_strategy = static_cast<BlockingStrategy>(blocking_strategy),
+        .channels = channel_type,
+        .bit_depth = bit_depth,
+        .checksum = specified_header_checksum,
     };
 
     u8 subframe_count = frame_channel_type_to_channel_count(channel_type);
