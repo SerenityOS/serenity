@@ -563,8 +563,8 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
 
                 StringBuilder builder;
 
-                // FIXME: 4. For each codePoint in buffer:
-                for (auto c : Utf8View(builder.string_view())) {
+                // 4. For each codePoint in buffer:
+                for (auto c : Utf8View(buffer.string_view())) {
                     // 1. If codePoint is U+003A (:) and passwordTokenSeen is false, then set passwordTokenSeen to true and continue.
                     if (c == ':' && !password_token_seen) {
                         password_token_seen = true;
