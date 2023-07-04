@@ -6,6 +6,8 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/Types.h>
+#include <LibAudio/Encoder.h>
+#include <LibAudio/FlacWriter.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/ArgsParser.h>
@@ -90,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (input_format.is_empty()) {
         auto loader_or_error = Audio::Loader::create(input);
         if (loader_or_error.is_error()) {
-            warnln("Could not guess codec for input file '{}'. Try forcing a codec with '--i:c:a'", input);
+            warnln("Could not guess codec for input file '{}'. Try forcing a codec with '--input-audio-codec'", input);
             return 1;
         }
         input_loader = loader_or_error.release_value();
@@ -104,9 +106,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         output_format = TRY(guess_format_from_extension(output));
     VERIFY(!output_format.is_empty());
 
-    if (output_format == "wav"sv) {
-        Optional<NonnullOwnPtr<Audio::WavWriter>> writer;
-        if (!output.is_empty()) {
+    Optional<NonnullOwnPtr<Audio::Encoder>> writer;
+    if (!output.is_empty()) {
+        if (output_format == "wav"sv) {
             auto parsed_output_sample_format = input_loader->pcm_format();
             if (!output_sample_format.is_empty())
                 parsed_output_sample_format = TRY(parse_sample_format(output_sample_format));
@@ -116,7 +118,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 static_cast<int>(input_loader->sample_rate()),
                 input_loader->num_channels(),
                 parsed_output_sample_format)));
+        } else if (output_format == "flac"sv) {
+            auto parsed_output_sample_format = input_loader->pcm_format();
+            if (!output_sample_format.is_empty())
+                parsed_output_sample_format = TRY(parse_sample_format(output_sample_format));
+
+            if (!Audio::is_integer_format(parsed_output_sample_format)) {
+                warnln("FLAC does not support sample format {}", Audio::sample_format_name(parsed_output_sample_format));
+                return 1;
+            }
+
+            auto output_stream = TRY(Core::OutputBufferedFile::create(TRY(Core::File::open(output, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate))));
+            auto flac_writer = TRY(Audio::FlacWriter::create(
+                move(output_stream),
+                static_cast<int>(input_loader->sample_rate()),
+                input_loader->num_channels(),
+                Audio::pcm_bits_per_sample(parsed_output_sample_format)));
+            TRY(flac_writer->finalize_header_format());
+            writer.emplace(move(flac_writer));
+        } else {
+            warnln("Codec {} is not supported for encoding", output_format);
+            return 1;
         }
+
         if (output != "-"sv)
             out("Writing: \033[s");
 
@@ -140,8 +164,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             TRY((*writer)->finalize());
         if (output != "-"sv)
             outln();
-    } else {
-        warnln("Codec {} is not supported for encoding", output_format);
     }
 
     return 0;

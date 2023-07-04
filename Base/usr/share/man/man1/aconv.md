@@ -26,7 +26,7 @@ Note that `aconv` currently only supports codecs which have their own bespoke co
 
 * `mp3` (decode): MPEG Layer III audio codec and container.
 * `wav` (decode, encode): RIFF WAVE audio codec and container. Supports sample formats `u8` and `s16le` for writing.
-* `flac` (decode): Free Lossless Audio Codec and container.
+* `flac` (decode, encode): Free Lossless Audio Codec and container. Supports all integer sample formats for writing.
 * `qoa` (decode): Quite Okay Audio codec and container.
 
 ### Supported Sample Formats
