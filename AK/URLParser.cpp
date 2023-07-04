@@ -302,12 +302,15 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                 buffer.append_as_lowercase(code_point);
                 state = State::Scheme;
             }
-            // FIXME: 2. Otherwise, if state override is not given, set state to no scheme state and decrease pointer by 1.
-            else {
+            // 2. Otherwise, if state override is not given, set state to no scheme state and decrease pointer by 1.
+            else if (!state_override.has_value()) {
                 state = State::NoScheme;
                 continue;
             }
-            // FIXME: 3. Otherwise, return failure.
+            // 3. Otherwise, return failure.
+            else {
+                return {};
+            }
             break;
         // -> scheme state, https://url.spec.whatwg.org/#scheme-state
         case State::Scheme:
@@ -371,15 +374,17 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     state = State::CannotBeABaseUrlPath;
                 }
             }
-            // FIXME: 3. Otherwise, if state override is not given, set buffer to the empty string, state to no scheme state, and start over (from the first code point in input).
-            else {
+            // 3. Otherwise, if state override is not given, set buffer to the empty string, state to no scheme state, and start over (from the first code point in input).
+            else if (!state_override.has_value()) {
                 buffer.clear();
                 state = State::NoScheme;
                 iterator = input.begin();
                 continue;
             }
-
-            // FIXME: 4. Otherwise, return failure.
+            // 4. Otherwise, return failure.
+            else {
+                return {};
+            }
             break;
         // -> no scheme state, https://url.spec.whatwg.org/#no-scheme-state
         case State::NoScheme:
@@ -614,7 +619,11 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
         // -> hostname state, https://url.spec.whatwg.org/#hostname-state
         case State::Host:
         case State::Hostname:
-            // FIXME: 1. If state override is given and url’s scheme is "file", then decrease pointer by 1 and set state to file host state.
+            // 1. If state override is given and url’s scheme is "file", then decrease pointer by 1 and set state to file host state.
+            if (state_override.has_value() && url->scheme() == "file") {
+                state = State::FileHost;
+                continue;
+            }
 
             // 2. Otherwise, if c is U+003A (:) and insideBrackets is false, then:
             if (code_point == ':' && !inside_brackets) {
@@ -696,8 +705,10 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
             // 2. Otherwise, if one of the following is true:
             //    * c is the EOF code point, U+002F (/), U+003F (?), or U+0023 (#)
             //    * url is special and c is U+005C (\)
-            //    * FIXME: state override is given
-            else if (code_point == end_of_file || code_point == '/' || code_point == '?' || code_point == '#' || (url->is_special() && code_point == '\\')) {
+            //    * state override is given
+            else if ((code_point == end_of_file || code_point == '/' || code_point == '?' || code_point == '#')
+                || (url->is_special() && code_point == '\\')
+                || state_override.has_value()) {
                 // then:
 
                 // 1. If buffer is not the empty string, then:
@@ -830,8 +841,7 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
             //    NOTE: decreasing the pointer is done at the bottom of this block.
             if (code_point == end_of_file || code_point == '/' || code_point == '\\' || code_point == '?' || code_point == '#') {
                 // 1. If state override is not given and buffer is a Windows drive letter, file-invalid-Windows-drive-letter-host validation error, set state to path state.
-                // FIXME: Check state override.
-                if (is_windows_drive_letter(buffer.string_view())) {
+                if (!state_override.has_value() && is_windows_drive_letter(buffer.string_view())) {
                     report_validation_error();
                     state = State::Path;
                 }
@@ -891,14 +901,12 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     continue;
             }
             // 2. Otherwise, if state override is not given and c is U+003F (?), set url’s query to the empty string and state to query state.
-            // FIXME: Check for state override
-            else if (code_point == '?') {
+            else if (!state_override.has_value() && code_point == '?') {
                 url->m_query = "";
                 state = State::Query;
             }
             // 3. Otherwise, if state override is not given and c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
-            // FIXME: Check for state override
-            else if (code_point == '#') {
+            else if (!state_override.has_value() && code_point == '#') {
                 url->m_fragment = "";
                 state = State::Fragment;
             }
@@ -911,15 +919,20 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                 if (code_point != '/')
                     continue;
             }
-            // FIXME: 5. Otherwise, if state override is given and url’s host is null, append the empty string to url’s path.
+            // 5. Otherwise, if state override is given and url’s host is null, append the empty string to url’s path.
+            else if (state_override.has_value() && url->host().is_empty()) {
+                url->append_slash();
+            }
             break;
         // -> path state, https://url.spec.whatwg.org/#path-state
         case State::Path:
             // 1. If one of the following is true:
             //    * c is the EOF code point or U+002F (/)
             //    * url is special and c is U+005C (\)
-            //    * FIXME: state override is not given and c is U+003F (?) or U+0023 (#)
-            if (code_point == end_of_file || code_point == '/' || (url->is_special() && code_point == '\\') || code_point == '?' || code_point == '#') {
+            //    * state override is not given and c is U+003F (?) or U+0023 (#)
+            if ((code_point == end_of_file || code_point == '/')
+                || (url->is_special() && code_point == '\\')
+                || (!state_override.has_value() && (code_point == '?' || code_point == '#'))) {
                 // then:
 
                 // 1. If url is special and c is U+005C (\), invalid-reverse-solidus validation error.
@@ -1023,9 +1036,10 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
             //        then set encoding to UTF-8.
 
             // 2. If one of the following is true:
-            //    * FIXME: state override is not given and c is U+0023 (#)
+            //    * state override is not given and c is U+0023 (#)
             //    * c is the EOF code point
-            if (code_point == end_of_file || code_point == '#') {
+            if ((!state_override.has_value() && code_point == '#')
+                || code_point == end_of_file) {
                 VERIFY(url->m_query == "");
                 // then:
 
