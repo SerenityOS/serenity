@@ -823,22 +823,23 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                 state = State::FileHost;
             }
             // 2. Otherwise:
-            // 1. If base is non-null and base’s scheme is "file", then:
-            else if (base_url.has_value() && base_url->m_scheme == "file") {
-                // 1. Set url’s host to base’s host.
-                url->m_paths = base_url->m_paths;
-                url->m_paths.remove(url->m_paths.size() - 1);
+            else {
+                // 1. If base is non-null and base’s scheme is "file", then:
+                if (base_url.has_value() && base_url->m_scheme == "file") {
+                    // 1. Set url’s host to base’s host.
+                    url->m_paths = base_url->m_paths;
+                    url->m_paths.remove(url->m_paths.size() - 1);
 
-                // 2. If the code point substring from pointer to the end of input does not start with a Windows drive letter and base’s path[0] is a normalized Windows drive letter, then append base’s path[0] to url’s path.
-                auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
-                if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_paths[0]))
-                    url->append_path(base_url->m_paths[0], URL::ApplyPercentEncoding::No);
+                    // 2. If the code point substring from pointer to the end of input does not start with a Windows drive letter and base’s path[0] is a normalized Windows drive letter, then append base’s path[0] to url’s path.
+                    auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
+                    if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_paths[0]))
+                        url->append_path(base_url->m_paths[0], URL::ApplyPercentEncoding::No);
+                }
 
-                // FIXME: This should be done outside of this file block, see below.
+                // 2. Set state to path state, and decrease pointer by 1.
                 state = State::Path;
                 continue;
             }
-            // FIXME: 2. Set state to path state, and decrease pointer by 1.
             break;
         // -> file host state, https://url.spec.whatwg.org/#file-host-state
         case State::FileHost:
