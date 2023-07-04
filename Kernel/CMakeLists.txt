@@ -47,6 +47,7 @@ set(KERNEL_SOURCES
     Devices/Audio/IntelHDA/Codec.cpp
     Devices/Audio/IntelHDA/Controller.cpp
     Devices/Audio/IntelHDA/Format.cpp
+    Devices/Audio/IntelHDA/InterruptHandler.cpp
     Devices/Audio/IntelHDA/Stream.cpp
     Devices/Audio/Management.cpp
     Devices/BlockDevice.cpp

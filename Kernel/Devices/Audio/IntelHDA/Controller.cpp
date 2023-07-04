@@ -10,6 +10,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Audio/IntelHDA/Codec.h>
+#include <Kernel/Devices/Audio/IntelHDA/InterruptHandler.h>
 #include <Kernel/Devices/Audio/IntelHDA/Stream.h>
 #include <Kernel/Devices/Audio/IntelHDA/Timing.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -30,7 +31,6 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> Controller::create(PCI:
 
 UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> controller_io_window)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
-    , PCIIRQHandler(*this, device_identifier().interrupt_line().value())
     , m_controller_io_window(move(controller_io_window))
 {
 }
@@ -39,7 +39,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
 {
     // Enable DMA and interrupts
     PCI::enable_bus_mastering(device_identifier());
-    enable_irq();
+    m_interrupt_handler = TRY(InterruptHandler::create(*this));
 
     // 3.3.3, 3.3.4: Controller version
     auto version_minor = m_controller_io_window->read8(ControllerRegister::VersionMinor);
@@ -299,7 +299,7 @@ ErrorOr<void> Controller::reset()
     return {};
 }
 
-bool Controller::handle_irq(Kernel::RegisterState const&)
+ErrorOr<bool> Controller::handle_interrupt(Badge<InterruptHandler>)
 {
     // Check if any interrupt status bit is set
     auto interrupt_status = m_controller_io_window->read32(ControllerRegister::InterruptStatus);
@@ -308,11 +308,8 @@ bool Controller::handle_irq(Kernel::RegisterState const&)
 
     // FIXME: Actually look at interrupt_status and iterate over streams as soon as
     //        we support multiple streams.
-    if (m_output_path) {
-        auto maybe_error = m_output_path->output_stream().handle_interrupt({});
-        if (maybe_error.is_error())
-            dbgln("IntelHDA: Error during interrupt handling: {}", maybe_error.error());
-    }
+    if (m_output_path)
+        TRY(m_output_path->output_stream().handle_interrupt({}));
 
     return true;
 }
