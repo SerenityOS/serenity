@@ -695,7 +695,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
     case FlacSubframeType::Constant: {
         // 11.26. SUBFRAME_CONSTANT
         u64 constant_value = TRY(bit_input.read_bits<u64>(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
-        dbgln_if(AFLACLOADER_DEBUG, "Constant subframe: {}", constant_value);
+        dbgln_if(AFLACLOADER_DEBUG, "  Constant subframe: {}", constant_value);
 
         VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
         i64 constant = sign_extend(static_cast<u64>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
@@ -705,17 +705,17 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
         break;
     }
     case FlacSubframeType::Fixed: {
-        dbgln_if(AFLACLOADER_DEBUG, "Fixed LPC subframe order {}", subframe_header.order);
+        dbgln_if(AFLACLOADER_DEBUG, "  Fixed LPC subframe order {}", subframe_header.order);
         samples = TRY(decode_fixed_lpc(subframe_header, bit_input));
         break;
     }
     case FlacSubframeType::Verbatim: {
-        dbgln_if(AFLACLOADER_DEBUG, "Verbatim subframe");
+        dbgln_if(AFLACLOADER_DEBUG, "  Verbatim subframe");
         samples = TRY(decode_verbatim(subframe_header, bit_input));
         break;
     }
     case FlacSubframeType::LPC: {
-        dbgln_if(AFLACLOADER_DEBUG, "Custom LPC subframe order {}", subframe_header.order);
+        dbgln_if(AFLACLOADER_DEBUG, "  Custom LPC subframe order {}", subframe_header.order);
         TRY(decode_custom_lpc(samples, subframe_header, bit_input));
         break;
     }
@@ -790,7 +790,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
         coefficients.unchecked_append(coefficient);
     }
 
-    dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
+    dbgln_if(AFLACLOADER_DEBUG, "    {}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
     TRY(decode_residual(decoded, subframe, bit_input));
 
@@ -833,7 +833,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 
     TRY(decode_residual(decoded, subframe, bit_input));
 
-    dbgln_if(AFLACLOADER_DEBUG, "decoded length {}, {} order predictor", decoded.size(), subframe.order);
+    dbgln_if(AFLACLOADER_DEBUG, "    decoded length {}, {} order predictor, now at file offset {:x}", decoded.size(), subframe.order, TRY(m_stream->tell()));
 
     // Skip these comments if you don't care about the neat math behind fixed LPC :^)
     // These coefficients for the recursive prediction formula are the only ones that can be resolved to polynomial predictor functions.
@@ -892,6 +892,8 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
     auto residual_mode = static_cast<FlacResidualMode>(TRY(bit_input.read_bits<u8>(2)));
     u8 partition_order = TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
+
+    dbgln_if(AFLACLOADER_DEBUG, "    {}-bit Rice partitions, {} total (order {})", residual_mode == FlacResidualMode::Rice4Bit ? "4"sv : "5"sv, partitions, partition_order);
 
     if (partitions > m_current_frame->sample_count)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too many Rice partitions, each partition must contain at least one sample" };
