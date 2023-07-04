@@ -44,12 +44,12 @@ static constexpr LoaderPluginInitializer s_initializers[] = {
 
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
+    auto stream = TRY(Core::InputBufferedFile::create(TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
 ErrorOr<NonnullRefPtr<Loader>, LoaderError> Loader::create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
+    auto stream = TRY(try_make<FixedMemoryStream>(buffer));
     return adopt_ref(*new (nothrow) Loader(TRY(Loader::create_plugin(move(stream)))));
 }
 
@@ -70,7 +70,7 @@ LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
 {
     size_t remaining_samples = total_samples() - loaded_samples();
     size_t samples_to_read = min(remaining_samples, samples_to_read_from_input);
-    auto samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
+    auto samples = TRY(FixedArray<Sample>::create(samples_to_read));
 
     size_t sample_index = 0;
 
@@ -98,11 +98,11 @@ LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
                 if (count < chunk.size()) {
                     auto remaining_samples_count = chunk.size() - count;
                     // We will always have an empty buffer at this point!
-                    LOADER_TRY(m_buffer.try_append(chunk.span().offset(count), remaining_samples_count));
+                    TRY(m_buffer.try_append(chunk.span().offset(count), remaining_samples_count));
                 }
             } else {
                 // We're now past what the user requested. Transfer the entirety of the data into the buffer.
-                LOADER_TRY(m_buffer.try_append(chunk.data(), chunk.size()));
+                TRY(m_buffer.try_append(chunk.data(), chunk.size()));
             }
             sample_index += chunk.size();
         }
