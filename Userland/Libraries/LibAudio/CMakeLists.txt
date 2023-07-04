@@ -8,6 +8,7 @@ set(SOURCES
     WavWriter.cpp
     Metadata.cpp
     MP3Loader.cpp
+    PlaybackStream.cpp
     QOALoader.cpp
     QOATypes.cpp
     UserSampleQueue.cpp
@@ -25,5 +26,17 @@ if (SERENITYOS)
     )
 endif()
 
+if (HAVE_PULSEAUDIO)
+    list(APPEND SOURCES
+        PlaybackStreamPulseAudio.cpp
+        PulseAudioWrappers.cpp
+    )
+endif()
+
 serenity_lib(LibAudio audio)
 target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading LibUnicode LibCrypto)
+
+if (HAVE_PULSEAUDIO)
+    target_link_libraries(LibAudio PRIVATE pulse)
+    target_compile_definitions(LibAudio PRIVATE HAVE_PULSEAUDIO=1)
+endif()
