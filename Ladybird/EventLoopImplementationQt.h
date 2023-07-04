@@ -6,15 +6,19 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/EventLoopImplementation.h>
+#include <QEvent>
 #include <QEventLoop>
 #include <QSocketNotifier>
 #include <QTimer>
 
 namespace Ladybird {
+
+class EventLoopImplementationQtEventTarget;
 
 class EventLoopManagerQt final : public Core::EventLoopManager {
 public:
@@ -29,13 +33,28 @@ public:
     virtual void unregister_notifier(Core::Notifier&) override;
 
     virtual void did_post_event() override;
+    static bool event_target_received_event(Badge<EventLoopImplementationQtEventTarget>, QEvent* event);
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual int register_signal(int, Function<void(int)>) override { return 0; }
     virtual void unregister_signal(int) override { }
 
 private:
-    QTimer m_process_core_events_timer;
+    NonnullOwnPtr<EventLoopImplementationQtEventTarget> m_main_thread_event_target;
+};
+
+class QtEventLoopManagerEvent final : public QEvent {
+public:
+    static QEvent::Type process_event_queue_event_type()
+    {
+        static auto const type = static_cast<QEvent::Type>(QEvent::registerEventType());
+        return type;
+    }
+
+    QtEventLoopManagerEvent(QEvent::Type type)
+        : QEvent(type)
+    {
+    }
 };
 
 class EventLoopImplementationQt final : public Core::EventLoopImplementation {
