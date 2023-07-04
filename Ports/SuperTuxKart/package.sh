@@ -9,6 +9,7 @@ workdir="${port}-${version}-src"
 launcher_name='SuperTuxKart'
 launcher_category='Games'
 launcher_command='/usr/local/bin/supertuxkart'
+icon_file='data/supertuxkart_16.png'
 depends=(
     'curl'
     'freetype'
