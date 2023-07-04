@@ -84,6 +84,7 @@ set(SOURCES
     BrowserWindow.cpp
     ConsoleWidget.cpp
     EventLoopImplementationQt.cpp
+    EventLoopImplementationQtEventTarget.cpp
     HelperProcess.cpp
     InspectorWidget.cpp
     LocationEdit.cpp

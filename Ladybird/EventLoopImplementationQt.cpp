@@ -5,6 +5,7 @@
  */
 
 #include "EventLoopImplementationQt.h"
+#include "EventLoopImplementationQtEventTarget.h"
 #include <AK/IDAllocator.h>
 #include <LibCore/Event.h>
 #include <LibCore/Notifier.h>
@@ -149,16 +150,21 @@ void EventLoopManagerQt::unregister_notifier(Core::Notifier& notifier)
 
 void EventLoopManagerQt::did_post_event()
 {
-    m_process_core_events_timer.start();
+    QCoreApplication::postEvent(m_main_thread_event_target.ptr(), new QtEventLoopManagerEvent(QtEventLoopManagerEvent::process_event_queue_event_type()));
+}
+
+bool EventLoopManagerQt::event_target_received_event(Badge<EventLoopImplementationQtEventTarget>, QEvent* event)
+{
+    if (event->type() == QtEventLoopManagerEvent::process_event_queue_event_type()) {
+        Core::ThreadEventQueue::current().process();
+        return true;
+    }
+    return false;
 }
 
 EventLoopManagerQt::EventLoopManagerQt()
+    : m_main_thread_event_target(make<EventLoopImplementationQtEventTarget>())
 {
-    m_process_core_events_timer.setSingleShot(true);
-    m_process_core_events_timer.setInterval(0);
-    QObject::connect(&m_process_core_events_timer, &QTimer::timeout, [] {
-        Core::ThreadEventQueue::current().process();
-    });
 }
 
 EventLoopManagerQt::~EventLoopManagerQt() = default;

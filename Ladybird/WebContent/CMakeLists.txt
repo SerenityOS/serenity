@@ -9,6 +9,7 @@ set(WEBCONTENT_SOURCES
     ../AudioCodecPluginQt.cpp
     ../AudioThread.cpp
     ../EventLoopImplementationQt.cpp
+    ../EventLoopImplementationQtEventTarget.cpp
     ../FontPlugin.cpp
     ../HelperProcess.cpp
     ../ImageCodecPlugin.cpp
