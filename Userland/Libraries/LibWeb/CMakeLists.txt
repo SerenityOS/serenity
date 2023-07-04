@@ -489,6 +489,7 @@ set(SOURCES
     PermissionsPolicy/AutoplayAllowlist.cpp
     PixelUnits.cpp
     Platform/AudioCodecPlugin.cpp
+    Platform/AudioCodecPluginAgnostic.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp
