@@ -244,6 +244,7 @@ public:
         if (m_parent_scope && !m_function_parameters.has_value()) {
             m_parent_scope->m_contains_access_to_arguments_object |= m_contains_access_to_arguments_object;
             m_parent_scope->m_contains_direct_call_to_eval |= m_contains_direct_call_to_eval;
+            m_parent_scope->m_contains_await_expression |= m_contains_await_expression;
         }
 
         VERIFY(m_parser.m_state.current_scope_pusher == this);
