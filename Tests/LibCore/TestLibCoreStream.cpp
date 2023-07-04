@@ -111,6 +111,24 @@ BENCHMARK_CASE(file_tell)
     }
 }
 
+TEST_CASE(file_buffered_write_and_seek)
+{
+    auto file = TRY_OR_FAIL(Core::OutputBufferedFile::create(TRY_OR_FAIL(Core::File::open("/tmp/file-buffered-write-test.txt"sv, Core::File::OpenMode::Truncate | Core::File::OpenMode::ReadWrite))));
+
+    TRY_OR_FAIL(file->write_some("0123456789"sv.bytes()));
+    EXPECT_EQ(file->tell().release_value(), 10ul);
+
+    // Reads don't go through the buffer, so after we seek, the data must be available from the underlying file.
+    TRY_OR_FAIL(file->seek(0, AK::SeekMode::SetPosition));
+    auto first_byte = TRY_OR_FAIL(file->read_value<u8>());
+    EXPECT_EQ(first_byte, static_cast<u8>('0'));
+
+    TRY_OR_FAIL(file->seek(9, AK::SeekMode::SetPosition));
+    auto last_byte = TRY_OR_FAIL(file->read_value<u8>());
+    EXPECT_EQ(last_byte, static_cast<u8>('9'));
+    EXPECT_EQ(file->tell().release_value(), 10ul);
+}
+
 TEST_CASE(file_adopt_fd)
 {
     int rc = ::open("/usr/Tests/LibCore/long_lines.txt", O_RDONLY);
