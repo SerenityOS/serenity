@@ -10,6 +10,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/URL.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -341,18 +342,41 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         // The CSS environment encoding is the result of running the following steps: [CSSSYNTAX]
         //     1. If the element has a charset attribute, get an encoding from that attribute's value. If that succeeds, return the resulting encoding. [ENCODING]
         //     2. Otherwise, return the document's character encoding. [DOM]
-        m_loaded_style_sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), *response.url()), body_bytes.template get<ByteBuffer>());
 
-        if (m_loaded_style_sheet) {
-            m_loaded_style_sheet->set_owner_node(this);
-            m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media));
-            document().style_sheets().add_sheet(*m_loaded_style_sheet);
+        DeprecatedString encoding;
+        if (auto charset = attribute(HTML::AttributeNames::charset); !charset.is_null())
+            encoding = charset;
+        else
+            encoding = document().encoding_or_default();
+
+        auto decoder = TextCodec::decoder_for(encoding);
+
+        if (!decoder.has_value()) {
+            // If we don't support the encoding yet, let's error out instead of trying to decode it as something it's most likely not.
+            dbgln("FIXME: Style sheet encoding '{}' is not supported yet", encoding);
+            dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
         } else {
-            dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
-        }
+            auto const& encoded_string = body_bytes.get<ByteBuffer>();
+            auto maybe_decoded_string = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, encoded_string);
+            if (maybe_decoded_string.is_error()) {
+                dbgln("Style sheet {} claimed to be '{}' but decoding failed", response.url().value_or(AK::URL()), encoding);
+                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+            } else {
+                auto const decoded_string = maybe_decoded_string.release_value();
+                m_loaded_style_sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), *response.url()), decoded_string);
 
-        // 2. Fire an event named load at el.
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                if (m_loaded_style_sheet) {
+                    m_loaded_style_sheet->set_owner_node(this);
+                    m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media));
+                    document().style_sheets().add_sheet(*m_loaded_style_sheet);
+                } else {
+                    dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
+                }
+
+                // 2. Fire an event named load at el.
+                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+            }
+        }
     }
     // 5. Otherwise, fire an event named error at el.
     else {
