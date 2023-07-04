@@ -142,6 +142,10 @@
 #    cmakedefine01 FILE_WATCHER_DEBUG
 #endif
 
+#ifndef FLAC_ENCODER_DEBUG
+#    cmakedefine01 FLAC_ENCODER_DEBUG
+#endif
+
 #ifndef GEMINI_DEBUG
 #    cmakedefine01 GEMINI_DEBUG
 #endif

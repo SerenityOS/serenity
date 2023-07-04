@@ -852,6 +852,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     // http://mi.eng.cam.ac.uk/reports/svr-ftp/auto-pdf/robinson_tr156.pdf page 4
     // The coefficients for order 4 are undocumented in the original FLAC specification(s), but can now be found in
     // https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#section-10.2.5
+    // FIXME: Share this code with predict_fixed_lpc().
     switch (subframe.order) {
     case 0:
         // s_0(t) = 0

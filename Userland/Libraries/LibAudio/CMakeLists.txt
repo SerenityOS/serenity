@@ -5,6 +5,7 @@ set(SOURCES
     RIFFTypes.cpp
     WavLoader.cpp
     FlacLoader.cpp
+    FlacWriter.cpp
     WavWriter.cpp
     Metadata.cpp
     MP3Loader.cpp
