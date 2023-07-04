@@ -86,10 +86,19 @@ struct FlacRawMetadataBlock {
     ByteBuffer data;
 };
 
+enum class BlockingStrategy : u8 {
+    Fixed = 0,
+    Variable = 1,
+};
+
 // 11.22. FRAME_HEADER
 struct FlacFrameHeader {
-    u32 sample_count;
     u32 sample_rate;
+    // Referred to as “block size” in the specification.
+    u16 sample_count;
+    // If blocking strategy is fixed, this encodes the frame index instead of the sample index.
+    u32 sample_or_frame_index;
+    BlockingStrategy blocking_strategy;
     FlacFrameChannelType channels;
     u8 bit_depth;
     u8 checksum;
