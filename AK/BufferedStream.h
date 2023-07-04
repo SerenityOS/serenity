@@ -310,10 +310,10 @@ private:
     BufferedHelper<T> m_helper;
 };
 
-template<StreamLike T>
-class OutputBufferedStream final : public Stream {
+template<SeekableStreamLike T>
+class OutputBufferedSeekable : public SeekableStream {
 public:
-    static ErrorOr<NonnullOwnPtr<OutputBufferedStream<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16 * KiB)
+    static ErrorOr<NonnullOwnPtr<OutputBufferedSeekable<T>>> create(NonnullOwnPtr<T> stream, size_t buffer_size = 16 * KiB)
     {
         if (buffer_size == 0)
             return Error::from_errno(EINVAL);
@@ -322,11 +322,11 @@ public:
 
         auto buffer = TRY(CircularBuffer::create_empty(buffer_size));
 
-        return adopt_nonnull_own_or_enomem(new OutputBufferedStream<T>(move(stream), move(buffer)));
+        return adopt_nonnull_own_or_enomem(new OutputBufferedSeekable<T>(move(stream), move(buffer)));
     }
 
-    OutputBufferedStream(OutputBufferedStream&& other) = default;
-    OutputBufferedStream& operator=(OutputBufferedStream&& other) = default;
+    OutputBufferedSeekable(OutputBufferedSeekable&& other) = default;
+    OutputBufferedSeekable& operator=(OutputBufferedSeekable&& other) = default;
 
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override
     {
@@ -368,13 +368,31 @@ public:
         return {};
     }
 
-    virtual ~OutputBufferedStream() override
+    // Since tell() doesn't involve moving the write offset, we can skip flushing the buffer here.
+    virtual ErrorOr<size_t> tell() const override
+    {
+        return TRY(m_stream->tell()) + m_buffer.used_space();
+    }
+
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode mode) override
+    {
+        TRY(flush_buffer());
+        return m_stream->seek(offset, mode);
+    }
+
+    virtual ErrorOr<void> truncate(size_t length) override
+    {
+        TRY(flush_buffer());
+        return m_stream->truncate(length);
+    }
+
+    virtual ~OutputBufferedSeekable() override
     {
         MUST(flush_buffer());
     }
 
 private:
-    OutputBufferedStream(NonnullOwnPtr<T> stream, CircularBuffer buffer)
+    OutputBufferedSeekable(NonnullOwnPtr<T> stream, CircularBuffer buffer)
         : m_stream(move(stream))
         , m_buffer(move(buffer))
     {
@@ -389,5 +407,5 @@ private:
 #if USING_AK_GLOBALLY
 using AK::BufferedHelper;
 using AK::InputBufferedSeekable;
-using AK::OutputBufferedStream;
+using AK::OutputBufferedSeekable;
 #endif
