@@ -947,8 +947,8 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
 
                 // 2. If buffer is a double-dot URL path segment, then:
                 if (is_double_dot_path_segment(buffer.string_view())) {
-                    // FIXME: 1. Shorten url’s path.
-                    if (!url->m_paths.is_empty() && !(url->m_scheme == "file" && url->m_paths.size() == 1 && is_normalized_windows_drive_letter(url->m_paths[0])))
+                    // 1. Shorten url’s path.
+                    if (!url->m_paths.is_empty())
                         url->m_paths.remove(url->m_paths.size() - 1);
 
                     // 2. If neither c is U+002F (/), nor url is special and c is U+005C (\), append the empty string to url’s path.
