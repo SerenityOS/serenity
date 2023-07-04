@@ -39,6 +39,11 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
             return;
         }
+        if (name == HTML::AttributeNames::valign) {
+            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::VerticalAlign, parsed_value.release_nonnull());
+            return;
+        }
         if (name == HTML::AttributeNames::align) {
             if (value.equals_ignoring_ascii_case("center"sv) || value.equals_ignoring_ascii_case("middle"sv)) {
                 style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebCenter).release_value_but_fixme_should_propagate_errors());
