@@ -124,6 +124,10 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
 endif()
 
+if (ENABLE_COMPILETIME_FORMAT_CHECK)
+    add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
+endif()
+
 if (ENABLE_LAGOM_MOLD)
     add_link_options(-fuse-ld=mold)
 endif()
