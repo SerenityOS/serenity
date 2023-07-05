@@ -21,6 +21,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool unified = false;
     bool context = false;
+
+    Optional<size_t> unified_format_context;
+    Optional<size_t> context_format_context;
+
     StringView filename1;
     StringView filename2;
 
@@ -28,6 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
     parser.add_option(unified, "Write diff in unified format", nullptr, 'u');
     parser.add_option(context, "Write diff in context format", nullptr, 'c');
+    parser.add_option(unified_format_context, "Write diff in unified format with the given number of context lines", "unified", 'U', "lines");
+    parser.add_option(context_format_context, "Write diff in context format with the given number of context lines", "context", 'C', "lines");
     parser.parse(arguments);
 
     auto file1 = TRY(Core::File::open(filename1, Core::File::OpenMode::Read));
@@ -36,7 +42,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto const color_output = TRY(Core::System::isatty(STDOUT_FILENO)) ? Diff::ColorOutput::Yes : Diff::ColorOutput::No;
 
-    size_t number_context_lines = unified || context ? 3 : 0;
+    size_t number_context_lines = 0;
+
+    if (unified_format_context.has_value()) {
+        number_context_lines = *unified_format_context;
+        unified = true;
+    } else if (context_format_context.has_value()) {
+        number_context_lines = *context_format_context;
+        context = true;
+    } else if (context || unified) {
+        // Default for these formats is 3, but 0 in normal format.
+        number_context_lines = 3;
+    }
+
     auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()), number_context_lines));
 
     if (unified) {
