@@ -563,6 +563,13 @@ CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_
     return cross_size / aspect_ratio;
 }
 
+CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const
+{
+    if (is_row_layout())
+        return main_size / aspect_ratio;
+    return main_size * aspect_ratio;
+}
+
 // This function takes a size in the main axis and adjusts it according to the aspect ratio of the box
 // if the min/max constraints in the cross axis forces us to come up with a new main axis size.
 CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const& box, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const
@@ -1149,6 +1156,11 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     if (should_treat_cross_size_as_auto(item.box)) {
         // Item has automatic cross size, layout with "fit-content"
+
+        if (item.box->has_preferred_aspect_ratio() && item.main_size.has_value()) {
+            item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
+            return;
+        }
 
         CSSPixels fit_content_cross_size = 0;
         if (is_row_layout()) {
