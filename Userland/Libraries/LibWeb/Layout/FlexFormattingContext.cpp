@@ -1356,6 +1356,14 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                     initial_offset = space_between_items / 2.0;
                 }
                 break;
+            case CSS::JustifyContent::SpaceEvenly:
+                space_between_items = flex_line.remaining_free_space / (number_of_items + 1);
+                if (is_direction_reverse()) {
+                    initial_offset = inner_main_size(flex_container()) - space_between_items;
+                } else {
+                    initial_offset = space_between_items;
+                }
+                break;
             }
         }
 
@@ -1593,6 +1601,21 @@ void FlexFormattingContext::align_all_flex_lines()
             start_of_current_line = gap_size / 2;
             break;
         }
+        case CSS::AlignContent::SpaceEvenly: {
+            auto leftover_free_space = cross_size_of_flex_container - sum_of_flex_line_cross_sizes;
+            if (leftover_free_space < 0) {
+                // If the leftover free-space is negative this value is identical to center.
+                start_of_current_line = (cross_size_of_flex_container / 2) - (sum_of_flex_line_cross_sizes / 2);
+                break;
+            }
+
+            gap_size = leftover_free_space / (m_flex_lines.size() + 1);
+
+            // The spacing between the first/last lines and the flex container edges is the size of the spacing between flex lines.
+            start_of_current_line = gap_size;
+            break;
+        }
+
         case CSS::AlignContent::Stretch:
             start_of_current_line = 0;
             break;
@@ -2180,6 +2203,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         break;
     case CSS::JustifyContent::Center:
     case CSS::JustifyContent::SpaceAround:
+    case CSS::JustifyContent::SpaceEvenly:
         pack_from_end = false;
         main_offset = inner_main_size(flex_container()) / 2.0 - inner_main_size(box) / 2.0;
         break;
