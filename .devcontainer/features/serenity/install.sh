@@ -33,7 +33,7 @@ install_llvm_key() {
 apt update -y
 apt install -y build-essential cmake ninja-build ccache shellcheck
 if [ "${ENABLE_LADYBIRD}" = "true" ]; then
-    apt install -y libgl1-mesa-dev qt6-base-dev qt6-tools-dev-tools qt6-wayland
+    apt install -y libgl1-mesa-dev qt6-base-dev qt6-tools-dev-tools qt6-wayland qt6-multimedia-dev
 fi
 if [ "${ENABLE_SERENITY}" = "true" ]; then
     apt install -y curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs genext2fs qemu-system-gui qemu-system-x86 qemu-utils rsync unzip texinfo libssl-dev
