@@ -285,7 +285,6 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
         return {};
 
     auto maybe_target_seekpoint = m_seektable.seek_point_before(sample_index);
-    auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
     // No seektable or no fitting entry: Perform normal forward read
     if (!maybe_target_seekpoint.has_value()) {
         if (sample_index < m_loaded_samples) {
@@ -310,11 +309,15 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
         }
     }
 
-    // Skip frames until we're within the seek tolerance.
-    while (sample_index - m_loaded_samples > seek_tolerance) {
+    // Skip frames until we're just before the target sample.
+    VERIFY(m_loaded_samples <= sample_index);
+    size_t frame_start_location;
+    while (m_loaded_samples <= sample_index) {
+        frame_start_location = TRY(m_stream->tell());
         (void)TRY(next_frame());
         m_loaded_samples += m_current_frame->sample_count;
     }
+    TRY(m_stream->seek(frame_start_location, SeekMode::SetPosition));
 
     return {};
 }
