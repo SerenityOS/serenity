@@ -39,6 +39,8 @@ public:
     // [[Realm]]
     virtual Realm* realm() const { return nullptr; }
 
+    virtual Vector<DeprecatedFlyString> const& local_variables_names() const { VERIFY_NOT_REACHED(); };
+
 protected:
     explicit FunctionObject(Realm&, Object* prototype);
     explicit FunctionObject(Object& prototype);
