@@ -67,6 +67,7 @@ set(LIBC_SOURCES
     termios.cpp
     time.cpp
     times.cpp
+    tls.cpp
     ulimit.cpp
     unistd.cpp
     utime.cpp
@@ -99,7 +100,7 @@ file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(ASM_SOURCES "arch/aarch64/setjmp.S")
-    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/aarch64/entry.S ../LibELF/Arch/aarch64/plt_trampoline.S)
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/aarch64/entry.S ../LibELF/Arch/aarch64/plt_trampoline.S ../LibELF/Arch/aarch64/tls.S)
     set(CRTI_SOURCE "arch/aarch64/crti.S")
     set(CRTN_SOURCE "arch/aarch64/crtn.S")
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
