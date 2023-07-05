@@ -401,7 +401,7 @@ void LayoutState::UsedValues::set_max_content_width()
 {
     width_constraint = SizeConstraint::MaxContent;
     m_content_width = INFINITY;
-    m_has_definite_height = false;
+    m_has_definite_width = false;
 }
 
 }
