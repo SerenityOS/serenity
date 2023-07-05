@@ -23,4 +23,6 @@ List open files of a processes. This can mean actual files in the file system, s
 
 * `filename`: Filename
 
-<!-- Auto-generated through ArgsParser -->
+## See Also
+* [`pmap`(1)](help://man/1/pmap)
+* [`ps`(1)](help://man/1/ps)

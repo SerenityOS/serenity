@@ -25,14 +25,8 @@ for i in ( \
             (config 1) \
             (fortune 1) \
             (grep 1) \
-            (gunzip 1) \
-            (gzip 1) \
-            (ifconfig 1) \
-            (lsof 1) \
             (nc 1) \
-            (netstat 1) \
             (nl 1) \
-            (ntpquery 1) \
             (passwd 1) \
             (readelf 1) \
             (shot 1) \
@@ -40,9 +34,7 @@ for i in ( \
             (strace 1) \
             (tr 1) \
             (traceroute 1) \
-            (tree 1) \
             (truncate 1) \
-            (utmpupdate 1) \
         ) {
     filename="generated_manpages/man$i[1]/$i[0].md"
     mkdir -p "generated_manpages/man$i[1]"

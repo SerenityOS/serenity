@@ -49,3 +49,4 @@ Additionally, the name `defaults` is accepted and ignored.
 ## See also
 
 * [`mount`(2)](help://man/2/mount)
+* [`umount`(8)](help://man/8/umount)

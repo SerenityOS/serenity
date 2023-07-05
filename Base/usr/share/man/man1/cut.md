@@ -47,3 +47,7 @@ $ echo "serenity is cool" | cut -b 5
 n
 
 ```
+
+## See Also
+* [`head`(1)](help://man/1/head)
+* [`cat`(1)](help://man/1/cat)

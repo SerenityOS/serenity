@@ -40,6 +40,6 @@ You should manually check all users to ensure that no user remain in this group.
 ```
 
 ## See Also
-
-* [`useradd`(8)](help://man/8/groupadd)
-
+* [`userdel`(8)](help://man/8/userdel)
+* [`groupadd`(8)](help://man/8/groupadd)
+* [`groups`(1)](help://man/1/groups)

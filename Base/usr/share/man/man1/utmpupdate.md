@@ -19,4 +19,5 @@ $ utmpupdate [--create] [--delete] [--PID PID] [--from From] <tty>
 
 * `tty`: TTY name
 
-<!-- Auto-generated through ArgsParser -->
+## See also
+* [`w`(1)](help://man/1/w)

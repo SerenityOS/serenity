@@ -23,3 +23,6 @@ $ pkill [--count] [--ignore-case] [--echo] [--newest] [--oldest] [--older second
 ## Arguments
 
 * `process-name`: Process name to search for
+
+## See Also
+* [`ps`(1)](help://man/1/ps)

@@ -48,3 +48,6 @@ $ sort < file1 | comm -12c - file2_sorted | less
 # and print a summary
 $ comm -123it file1_sorted file2_sorted
 ```
+
+## See also
+* [`cmp`(1)](help://man/1/cmp)

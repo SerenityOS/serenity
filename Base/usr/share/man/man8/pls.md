@@ -35,3 +35,6 @@ Password:
 root
 #
 ```
+
+## See also
+* [`su`(1)](help://man/1/su)

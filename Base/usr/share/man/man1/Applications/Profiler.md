@@ -50,4 +50,4 @@ $ Profiler perfcore.123
 ## See also
 
 * [`perfcore`(5)](help://man/5/perfcore)
-
+* [`profile`(1)](help://man/1/profile)

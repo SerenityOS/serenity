@@ -21,3 +21,6 @@ $ gml-format [--inplace] [path...]
 ```sh
 $ gml-format -i /home/anon/example.gml
 ```
+
+## See Also
+* [`GML`(5)](help://man/5/GML)
