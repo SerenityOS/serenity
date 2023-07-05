@@ -98,6 +98,7 @@ class ContentStyleValue;
 class CustomIdentStyleValue;
 class Display;
 class DisplayStyleValue;
+class EasingStyleValue;
 class EdgeStyleValue;
 class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;

@@ -101,6 +101,7 @@ public:
         Content,
         CustomIdent,
         Display,
+        Easing,
         Edge,
         FilterValueList,
         Flex,
@@ -158,6 +159,7 @@ public:
     bool is_content() const { return type() == Type::Content; }
     bool is_custom_ident() const { return type() == Type::CustomIdent; }
     bool is_display() const { return type() == Type::Display; }
+    bool is_easing() const { return type() == Type::Easing; }
     bool is_edge() const { return type() == Type::Edge; }
     bool is_filter_value_list() const { return type() == Type::FilterValueList; }
     bool is_flex() const { return type() == Type::Flex; }
@@ -214,6 +216,7 @@ public:
     ContentStyleValue const& as_content() const;
     CustomIdentStyleValue const& as_custom_ident() const;
     DisplayStyleValue const& as_display() const;
+    EasingStyleValue const& as_easing() const;
     EdgeStyleValue const& as_edge() const;
     FilterValueListStyleValue const& as_filter_value_list() const;
     FlexFlowStyleValue const& as_flex_flow() const;
@@ -267,6 +270,7 @@ public:
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
     CustomIdentStyleValue& as_custom_ident() { return const_cast<CustomIdentStyleValue&>(const_cast<StyleValue const&>(*this).as_custom_ident()); }
     DisplayStyleValue& as_display() { return const_cast<DisplayStyleValue&>(const_cast<StyleValue const&>(*this).as_display()); }
+    EasingStyleValue& as_easing() { return const_cast<EasingStyleValue&>(const_cast<StyleValue const&>(*this).as_easing()); }
     EdgeStyleValue& as_edge() { return const_cast<EdgeStyleValue&>(const_cast<StyleValue const&>(*this).as_edge()); }
     FilterValueListStyleValue& as_filter_value_list() { return const_cast<FilterValueListStyleValue&>(const_cast<StyleValue const&>(*this).as_filter_value_list()); }
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }

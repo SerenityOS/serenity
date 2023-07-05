@@ -45,6 +45,7 @@
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
@@ -7037,6 +7038,108 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
     if (style_values.is_empty())
         return nullptr;
     return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
+}
+
+ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValue>& tokens)
+{
+    auto transaction = tokens.begin_transaction();
+
+    tokens.skip_whitespace();
+
+    auto const& part = tokens.next_token();
+
+    StringView name;
+    Optional<Vector<ComponentValue> const&> arguments;
+    if (part.is(Token::Type::Ident)) {
+        name = part.token().ident();
+    } else if (part.is_function()) {
+        name = part.function().name();
+        arguments = part.function().values();
+    } else {
+        return nullptr;
+    }
+
+    auto maybe_function = easing_function_from_string(name);
+    if (!maybe_function.has_value())
+        return nullptr;
+
+    auto function = maybe_function.release_value();
+    auto function_metadata = easing_function_metadata(function);
+
+    if (function_metadata.parameters.is_empty() && arguments.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: 0", name);
+        return nullptr;
+    }
+
+    StyleValueVector values;
+    size_t argument_index = 0;
+    if (arguments.has_value()) {
+        auto argument_tokens = TokenStream { *arguments };
+        auto arguments_values = parse_a_comma_separated_list_of_component_values(argument_tokens);
+        if (arguments_values.size() > function_metadata.parameters.size()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}", name, function_metadata.parameters.size());
+            return nullptr;
+        }
+        for (auto& argument_values : arguments_values) {
+            if (argument_values.size() != 1) {
+                dbgln_if(CSS_PARSER_DEBUG, "Too many values in argument to {}. max: 1", name);
+                return nullptr;
+            }
+
+            auto& value = argument_values[0];
+            switch (function_metadata.parameters[argument_index].type) {
+            case EasingFunctionParameterType::Number: {
+                if (value.is(Token::Type::Number))
+                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::NumberZeroToOne: {
+                if (value.is(Token::Type::Number) && value.token().number_value() >= 0 && value.token().number_value() <= 1)
+                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::Integer: {
+                if (value.is(Token::Type::Number) && value.token().number().is_integer())
+                    values.append(TRY(IntegerStyleValue::create(value.token().number().integer_value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::StepPosition: {
+                if (!value.is(Token::Type::Ident))
+                    return nullptr;
+                auto ident = TRY(parse_identifier_value(value));
+                if (!ident)
+                    return nullptr;
+                switch (ident->to_identifier()) {
+                case ValueID::JumpStart:
+                case ValueID::JumpEnd:
+                case ValueID::JumpNone:
+                case ValueID::Start:
+                case ValueID::End:
+                    TRY(values.try_append(*ident));
+                    break;
+                default:
+                    return nullptr;
+                }
+            }
+            }
+
+            ++argument_index;
+        }
+    }
+
+    if (argument_index < function_metadata.parameters.size() && !function_metadata.parameters[argument_index].is_optional) {
+        dbgln_if(CSS_PARSER_DEBUG, "Required parameter at position {} is missing", argument_index);
+        return nullptr;
+    }
+
+    transaction.commit();
+    return EasingStyleValue::create(function, move(values));
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
