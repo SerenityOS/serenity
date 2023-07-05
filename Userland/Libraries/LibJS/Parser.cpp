@@ -4988,7 +4988,8 @@ template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u16, Opt
 NonnullRefPtr<Identifier const> Parser::create_identifier_and_register_in_current_scope(SourceRange range, DeprecatedFlyString string)
 {
     auto id = create_ast_node<Identifier const>(range, string);
-    m_state.current_scope_pusher->register_identifier(const_cast<Identifier&>(*id));
+    if (m_state.current_scope_pusher)
+        m_state.current_scope_pusher->register_identifier(const_cast<Identifier&>(*id));
     return id;
 }
 
