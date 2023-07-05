@@ -8,11 +8,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.ab> at (108,8) content-size 684x17.46875 children: not-inline
         BlockContainer <(anonymous)> at (108,8) content-size 684x0 children: inline
           TextNode <#text>
+        BlockContainer <div> at (108,8) content-size 684x0 children: inline
+          TextNode <#text>
           BlockContainer <div.a> at (108,8) content-size 14.265625x17.46875 floating [BFC] children: inline
             line 0 width: 14.265625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
               frag 0 from TextNode start: 0, length: 1, rect: [108,8 14.265625x17.46875]
                 "A"
             TextNode <#text>
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (108,8) content-size 684x0 children: inline
           TextNode <#text>
         BlockContainer <div.b> at (122.265625,8) content-size 669.734375x17.46875 [BFC] children: inline
           line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
