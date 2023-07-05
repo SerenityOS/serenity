@@ -40,6 +40,8 @@ Optional<SeekPoint const&> SeekTable::seek_point_before(u64 sample_index) const
         ++nearby_seek_point_index;
     while (nearby_seek_point_index > 0 && m_seek_points[nearby_seek_point_index].sample_index > sample_index)
         --nearby_seek_point_index;
+    if (m_seek_points[nearby_seek_point_index].sample_index > sample_index)
+        return {};
     return m_seek_points[nearby_seek_point_index];
 }
 
