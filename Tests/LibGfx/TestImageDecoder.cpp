@@ -187,6 +187,16 @@ TEST_CASE(test_jpeg_empty_icc)
     expect_single_frame_of_size(*plugin_decoder, { 80, 80 });
 }
 
+TEST_CASE(test_jpeg_grayscale_with_app14)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jpg/grayscale_app14.jpg"sv)));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    expect_single_frame_of_size(*plugin_decoder, { 80, 80 });
+}
+
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pbm"sv)));
