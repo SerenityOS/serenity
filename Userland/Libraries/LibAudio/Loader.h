@@ -70,7 +70,7 @@ public:
     virtual u16 num_channels() = 0;
 
     // Human-readable name of the file format, of the form <full abbreviation> (.<ending>)
-    virtual DeprecatedString format_name() = 0;
+    virtual StringView format_name() = 0;
     virtual PcmSampleFormat pcm_format() = 0;
 
     Metadata const& metadata() const { return m_metadata; }
@@ -102,7 +102,7 @@ public:
     int total_samples() const { return m_plugin->total_samples(); }
     u32 sample_rate() const { return m_plugin->sample_rate(); }
     u16 num_channels() const { return m_plugin->num_channels(); }
-    DeprecatedString format_name() const { return m_plugin->format_name(); }
+    StringView format_name() const { return m_plugin->format_name(); }
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
     PcmSampleFormat pcm_format() const { return m_plugin->pcm_format(); }
     Metadata const& metadata() const { return m_plugin->metadata(); }

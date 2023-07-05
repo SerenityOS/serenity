@@ -63,7 +63,7 @@ ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(NonnullO
         TRY(stream->seek(0, SeekMode::SetPosition));
     }
 
-    return LoaderError { "No loader plugin available" };
+    return LoaderError { FlyString::from_utf8("No loader plugin available"sv).release_value() };
 }
 
 LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)

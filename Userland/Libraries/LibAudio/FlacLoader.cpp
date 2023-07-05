@@ -5,9 +5,8 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
+#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
@@ -15,6 +14,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/TypedTransfer.h>
 #include <AK/UFixedBigInt.h>
@@ -62,11 +62,11 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
-#define FLAC_VERIFY(check, category, msg)                                                                                \
-    do {                                                                                                                 \
-        if (!(check)) {                                                                                                  \
-            return LoaderError { category, TRY(m_stream->tell()), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                \
+#define FLAC_VERIFY(check, category, msg)                                                                           \
+    do {                                                                                                            \
+        if (!(check)) {                                                                                             \
+            return LoaderError { category, TRY(m_stream->tell()), TRY(String::formatted("FLAC header: {}", msg)) }; \
+        }                                                                                                           \
     } while (0)
 
     // Magic number
@@ -163,19 +163,19 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     auto const mime_string_length = TRY(picture_block_bytes.read_bits(32));
     auto offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + mime_string_length >= block.data.size())
-        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture MIME type exceeds available data" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), TRY(FlyString::from_utf8("Picture MIME type exceeds available data"sv)) };
 
     // "The MIME type string, in printable ASCII characters 0x20-0x7E."
     picture.mime_string = TRY(String::from_stream(memory_stream, mime_string_length));
     for (auto code_point : picture.mime_string.code_points()) {
         if (code_point < 0x20 || code_point > 0x7E)
-            return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture MIME type is not ASCII in range 0x20 - 0x7E" };
+            return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), TRY(FlyString::from_utf8("Picture MIME type is not ASCII in range 0x20 - 0x7E"sv)) };
     }
 
     auto const description_string_length = TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + description_string_length >= block.data.size())
-        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture description exceeds available data" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), TRY(FlyString::from_utf8("Picture description exceeds available data"sv)) };
 
     picture.description_string = TRY(String::from_stream(memory_stream, description_string_length));
 
@@ -188,7 +188,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     auto const picture_size = TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + picture_size > block.data.size())
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(TRY(m_stream->tell())), "Picture size exceeds available data" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(TRY(m_stream->tell())), TRY(FlyString::from_utf8("Picture size exceeds available data"sv)) };
 
     TRY(memory_stream.seek(picture_size, SeekMode::FromCurrentPosition));
     picture.data = Vector<u8> { block.data.bytes().slice(offset_before_seeking, picture_size) };
@@ -306,7 +306,7 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
         dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
         auto position = target_seekpoint.byte_offset + m_data_start_location;
         if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
-            return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
+            return LoaderError { LoaderError::Category::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position).release_value() };
         m_loaded_samples = target_seekpoint.sample_index;
     }
 
@@ -358,11 +358,11 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 // 11.21. FRAME
 LoaderSamples FlacLoaderPlugin::next_frame()
 {
-#define FLAC_VERIFY(check, category, msg)                                                                                                         \
-    do {                                                                                                                                          \
-        if (!(check)) {                                                                                                                           \
-            return LoaderError { category, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                                         \
+#define FLAC_VERIFY(check, category, msg)                                                                                                               \
+    do {                                                                                                                                                \
+        if (!(check)) {                                                                                                                                 \
+            return LoaderError { category, static_cast<size_t>(m_current_sample_or_frame), String::formatted("FLAC header: {}", msg).release_value() }; \
+        }                                                                                                                                               \
     } while (0)
 
     auto frame_byte_index = TRY(m_stream->tell());
@@ -518,7 +518,7 @@ ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_count_code(u8 sample_
     // single codes
     switch (sample_count_code) {
     case 0:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Reserved block size" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Reserved block size"sv)) };
     case 1:
         return 192;
     case 6:
@@ -567,7 +567,7 @@ ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_rate_code(u8 sample_r
     case 14:
         return FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10;
     default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Invalid sample rate code" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Invalid sample rate code"sv)) };
     }
 }
 
@@ -582,7 +582,7 @@ ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_c
     case 2:
         return 12;
     case 3:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Reserved sample size" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Reserved sample size"sv)) };
     case 4:
         return 16;
     case 5:
@@ -592,7 +592,7 @@ ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_c
     case 7:
         return 32;
     default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unsupported sample size {}", bit_depth_code) };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(String::formatted("Unsupported sample size {}", bit_depth_code)) };
     }
 }
 
@@ -629,12 +629,12 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
 
     // zero-bit padding
     if (TRY(bit_stream.read_bit()) != 0)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Zero bit padding" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Zero bit padding"sv)) };
 
     // 11.25.1. SUBFRAME TYPE
     u8 subframe_code = TRY(bit_stream.read_bits<u8>(6));
     if ((subframe_code >= 0b000010 && subframe_code <= 0b000111) || (subframe_code > 0b001100 && subframe_code < 0b100000))
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Subframe type" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Subframe type"sv)) };
 
     FlacSubframeType subframe_type;
     u8 order = 0;
@@ -703,7 +703,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
         break;
     }
     default:
-        return LoaderError { LoaderError::Category::Unimplemented, static_cast<size_t>(m_current_sample_or_frame), "Unhandled FLAC subframe type" };
+        return LoaderError { LoaderError::Category::Unimplemented, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Unhandled FLAC subframe type"sv)) };
     }
 
     for (size_t i = 0; i < samples.size(); ++i) {
@@ -741,7 +741,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
 {
     // LPC must provide at least as many samples as its order.
     if (subframe.order > m_current_frame->sample_count)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Too small frame for LPC order"sv)) };
 
     Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
@@ -757,7 +757,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
     // precision of the coefficients
     u8 lpc_precision = TRY(bit_input.read_bits<u8>(4));
     if (lpc_precision == 0b1111)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Invalid linear predictor coefficient precision" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Invalid linear predictor coefficient precision"sv)) };
     lpc_precision += 1;
 
     // shift needed on the data (signed!)
@@ -800,7 +800,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 {
     // LPC must provide at least as many samples as its order.
     if (subframe.order > m_current_frame->sample_count)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Too small frame for LPC order"sv)) };
 
     Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
@@ -861,7 +861,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
             decoded[i] += 4 * decoded[i - 1] - 6 * decoded[i - 2] + 4 * decoded[i - 3] - decoded[i - 4];
         break;
     default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unrecognized predictor order {}", subframe.order) };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(String::formatted("Unrecognized predictor order {}", subframe.order)) };
     }
     return decoded;
 }
@@ -876,7 +876,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
     size_t partitions = 1 << partition_order;
 
     if (partitions > m_current_frame->sample_count)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too many Rice partitions, each partition must contain at least one sample" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Too many Rice partitions, each partition must contain at least one sample"sv)) };
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
         // 11.30.2. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB
@@ -893,7 +893,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
             decoded.extend(move(rice_partition));
         }
     } else
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Reserved residual coding method" };
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("Reserved residual coding method"sv)) };
 
     return {};
 }
@@ -912,7 +912,7 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
         residual_sample_count = m_current_frame->sample_count / partitions;
     if (partition_index == 0) {
         if (subframe.order > residual_sample_count)
-            return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "First Rice partition must advertise more residuals than LPC order" };
+            return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), TRY(FlyString::from_utf8("First Rice partition must advertise more residuals than LPC order"sv)) };
         residual_sample_count -= subframe.order;
     }
 
