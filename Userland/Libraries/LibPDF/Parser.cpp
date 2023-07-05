@@ -446,7 +446,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     ReadonlyBytes bytes;
 
     auto maybe_length = dict->get(CommonNames::Length);
-    if (maybe_length.has_value() && m_document->can_resolve_refefences()) {
+    if (maybe_length.has_value() && m_document->can_resolve_references()) {
         // The PDF writer has kindly provided us with the direct length of the stream
         m_reader.save();
         auto length = TRY(m_document->resolve_to<int>(maybe_length.value()));
