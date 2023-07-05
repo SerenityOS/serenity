@@ -149,6 +149,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     ExecutionContext callee_context(heap());
 
+    callee_context.local_variables.resize(m_local_variables_names.size());
+
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
     if (auto* interpreter = vm.interpreter_if_exists())
@@ -217,6 +219,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     }
 
     ExecutionContext callee_context(heap());
+
+    callee_context.local_variables.resize(m_local_variables_names.size());
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
