@@ -2705,8 +2705,14 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     //         1. Assert: iterationKind is iterate.
     //         2. Return ? IteratorClose(iteratorRecord, status).
 
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+
     // l. Let result be the result of evaluating stmt.
     TRY(body.generate_bytecode(generator));
+
+    auto result_register = generator.allocate_register();
+    if (!generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::Store>(result_register);
 
     // m. Set the running execution context's LexicalEnvironment to oldEnv.
     if (has_lexical_binding)
@@ -2730,6 +2736,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
 
     generator.switch_to_basic_block(loop_end);
+    generator.emit<Bytecode::Op::Load>(result_register);
     return {};
 }
 
