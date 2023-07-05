@@ -325,7 +325,8 @@ bool FlacLoaderPlugin::should_insert_seekpoint_at(u64 sample_index) const
     auto const max_seekpoint_distance = (maximum_seekpoint_distance_ms * m_sample_rate) / 1000;
     auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
     auto const current_seekpoint_distance = m_seektable.seek_point_sample_distance_around(sample_index).value_or(NumericLimits<u64>::max());
-    auto const distance_to_previous_seekpoint = sample_index - m_seektable.seek_point_before(sample_index).value_or({ 0, 0 }).sample_index;
+    auto const previous_seekpoint = m_seektable.seek_point_before(sample_index);
+    auto const distance_to_previous_seekpoint = previous_seekpoint.has_value() ? sample_index - previous_seekpoint->sample_index : NumericLimits<u64>::max();
 
     // We insert a seekpoint only under two conditions:
     // - The seek points around us are spaced too far for what the loader recommends.
