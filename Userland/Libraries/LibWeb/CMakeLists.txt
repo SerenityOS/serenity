@@ -89,6 +89,7 @@ set(SOURCES
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
+    CSS/StyleValues/EasingStyleValue.cpp
     CSS/StyleValues/EdgeStyleValue.cpp
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
@@ -612,6 +613,7 @@ generate_css_implementation()
 set(GENERATED_SOURCES
     ARIA/AriaRoles.cpp
     CSS/DefaultStyleSheetSource.cpp
+    CSS/EasingFunctions.cpp
     CSS/Enums.cpp
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp

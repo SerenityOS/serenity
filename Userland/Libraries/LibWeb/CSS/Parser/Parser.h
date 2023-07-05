@@ -352,6 +352,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
     ErrorOr<RefPtr<StyleValue>> parse_text_decoration_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_easing_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_transform_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_transform_origin_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
