@@ -503,10 +503,14 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
-            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
-                if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
-                    MUST(environment->create_mutable_binding(vm, name, false));
-                    MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
+            MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
+                if (!parameter_names.contains(id.string()) && instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                    if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                        callee_context.local_variables[id.local_variable_index()] = js_undefined();
+                    } else {
+                        MUST(environment->create_mutable_binding(vm, id.string(), false));
+                        MUST(environment->initialize_binding(vm, id.string(), js_undefined(), Environment::InitializeBindingHint::Normal));
+                    }
                 }
             }));
         }
@@ -518,18 +522,23 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding`, `get_binding_value` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
-            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
-                if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+            MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
+                if (instantiated_var_names.set(id.string()) != AK::HashSetResult::InsertedNewEntry)
                     return;
-                MUST(var_environment->create_mutable_binding(vm, name, false));
+                MUST(var_environment->create_mutable_binding(vm, id.string(), false));
 
                 Value initial_value;
-                if (!parameter_names.contains(name) || function_names.contains(name))
+                if (!parameter_names.contains(id.string()) || function_names.contains(id.string()))
                     initial_value = js_undefined();
                 else
-                    initial_value = MUST(environment->get_binding_value(vm, name, false));
+                    initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
 
-                MUST(var_environment->initialize_binding(vm, name, initial_value, Environment::InitializeBindingHint::Normal));
+                if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                    // NOTE: Local variables are supported only in bytecode interpreter
+                    callee_context.local_variables[id.local_variable_index()] = initial_value;
+                } else {
+                    MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
+                }
             }));
         }
     }
@@ -586,11 +595,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
-        MUST(declaration.for_each_bound_name([&](auto const& name) {
+        MUST(declaration.for_each_bound_identifier([&](auto const& id) {
+            if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                // NOTE: Local variables are supported only in bytecode interpreter
+                return;
+            }
             if (declaration.is_constant_declaration())
-                MUST(lex_environment->create_immutable_binding(vm, name, true));
+                MUST(lex_environment->create_immutable_binding(vm, id.string(), true));
             else
-                MUST(lex_environment->create_mutable_binding(vm, name, false));
+                MUST(lex_environment->create_mutable_binding(vm, id.string(), false));
         }));
     }));
 
