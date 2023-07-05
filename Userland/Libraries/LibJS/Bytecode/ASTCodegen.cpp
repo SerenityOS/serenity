@@ -671,6 +671,7 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block }, label_set);
     generator.begin_breakable_scope(Bytecode::Label { end_block }, label_set);
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     TRY(m_body->generate_bytecode(generator));
     generator.end_breakable_scope();
     generator.end_continuable_scope();
