@@ -847,6 +847,7 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
     generator.switch_to_basic_block(*body_block_ptr);
     generator.begin_continuable_scope(Bytecode::Label { m_update ? *update_block_ptr : *test_block_ptr }, label_set);
     generator.begin_breakable_scope(Bytecode::Label { end_block }, label_set);
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     TRY(m_body->generate_bytecode(generator));
     generator.end_breakable_scope();
     generator.end_continuable_scope();
