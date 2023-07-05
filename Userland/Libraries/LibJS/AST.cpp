@@ -4488,6 +4488,16 @@ ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrV
     return {};
 }
 
+ThrowCompletionOr<void> ScopeNode::for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto& declaration : m_var_declarations) {
+        TRY(declaration->for_each_bound_identifier([&](auto const& id) {
+            return callback(id);
+        }));
+    }
+    return {};
+}
+
 ThrowCompletionOr<void> ScopeNode::for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const
 {
     for (ssize_t i = m_var_declarations.size() - 1; i >= 0; i--) {
