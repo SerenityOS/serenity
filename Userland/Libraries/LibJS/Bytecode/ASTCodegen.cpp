@@ -2303,8 +2303,13 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
 
 Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    auto accumulator_backup_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(accumulator_backup_reg);
+
     TRY(m_class_expression->generate_bytecode(generator));
     generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+
+    generator.emit<Bytecode::Op::Load>(accumulator_backup_reg);
     return {};
 }
 
