@@ -141,7 +141,7 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
-        emit<Bytecode::Op::GetVariable>(intern_identifier(identifier.string()));
+        TRY(identifier.generate_bytecode(*this));
         return {};
     }
     if (is<MemberExpression>(node)) {
@@ -217,7 +217,7 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
-        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()));
+        emit_set_variable(identifier);
         return {};
     }
     if (is<MemberExpression>(node)) {
@@ -304,6 +304,15 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
 
     // NOTE: The rest of the steps are handled by Delete{Variable,ByValue,Id}.
     return {};
+}
+
+void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op::SetVariable::InitializationMode initialization_mode, Bytecode::Op::EnvironmentMode mode)
+{
+    if (identifier.is_local()) {
+        emit<Bytecode::Op::SetLocal>(identifier.local_variable_index());
+    } else {
+        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), initialization_mode, mode);
+    }
 }
 
 void Generator::generate_break()

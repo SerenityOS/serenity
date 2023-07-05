@@ -221,7 +221,11 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
     case UnaryOp::Typeof:
         if (is<Identifier>(*m_lhs)) {
             auto& identifier = static_cast<Identifier const&>(*m_lhs);
-            generator.emit<Bytecode::Op::TypeofVariable>(generator.intern_identifier(identifier.string()));
+            if (identifier.is_local()) {
+                generator.emit<Bytecode::Op::TypeofLocal>(identifier.local_variable_index());
+            } else {
+                generator.emit<Bytecode::Op::TypeofVariable>(generator.intern_identifier(identifier.string()));
+            }
             break;
         }
 
@@ -291,7 +295,11 @@ Bytecode::CodeGenerationErrorOr<void> RegExpLiteral::generate_bytecode(Bytecode:
 
 Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::GetVariable>(generator.intern_identifier(m_string));
+    if (is_local()) {
+        generator.emit<Bytecode::Op::GetLocal>(local_variable_index());
+    } else {
+        generator.emit<Bytecode::Op::GetVariable>(generator.intern_identifier(m_string));
+    }
     return {};
 }
 
@@ -415,7 +423,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                 // e. Perform ? PutValue(lref, rval).
                 if (is<Identifier>(*lhs)) {
                     auto& identifier = static_cast<Identifier const&>(*lhs);
-                    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier.string()));
+                    generator.emit_set_variable(identifier);
                 } else if (is<MemberExpression>(*lhs)) {
                     auto& expression = static_cast<MemberExpression const&>(*lhs);
 
@@ -1043,13 +1051,15 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
         if (is_rest) {
             VERIFY(!initializer);
             if (name.has<NonnullRefPtr<Identifier const>>()) {
-                auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
-                auto interned_identifier = generator.intern_identifier(identifier);
+                auto identifier = name.get<NonnullRefPtr<Identifier const>>();
+                auto interned_identifier = generator.intern_identifier(identifier->string());
 
                 generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
-                if (create_variables)
+                if (create_variables) {
+                    VERIFY(!identifier->is_local());
                     generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-                generator.emit<Bytecode::Op::SetVariable>(interned_identifier, initialization_mode);
+                }
+                generator.emit_set_variable(*identifier, initialization_mode);
 
                 return {};
             }
@@ -1126,19 +1136,19 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
                 };
             }
 
-            auto& identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
-            auto identifier_ref = generator.intern_identifier(identifier);
+            auto const& identifier = *name.get<NonnullRefPtr<Identifier const>>();
+            auto identifier_ref = generator.intern_identifier(identifier.string());
             if (create_variables)
                 generator.emit<Bytecode::Op::CreateVariable>(identifier_ref, Bytecode::Op::EnvironmentMode::Lexical, false);
-            generator.emit<Bytecode::Op::SetVariable>(identifier_ref, initialization_mode);
+            generator.emit_set_variable(identifier, initialization_mode);
         } else if (alias.has<NonnullRefPtr<MemberExpression const>>()) {
             TRY(generator.emit_store_to_reference(alias.get<NonnullRefPtr<MemberExpression const>>()));
         } else {
-            auto& identifier = alias.get<NonnullRefPtr<Identifier const>>()->string();
-            auto identifier_ref = generator.intern_identifier(identifier);
+            auto const& identifier = *alias.get<NonnullRefPtr<Identifier const>>();
+            auto identifier_ref = generator.intern_identifier(identifier.string());
             if (create_variables)
                 generator.emit<Bytecode::Op::CreateVariable>(identifier_ref, Bytecode::Op::EnvironmentMode::Lexical, false);
-            generator.emit<Bytecode::Op::SetVariable>(identifier_ref, initialization_mode);
+            generator.emit_set_variable(identifier, initialization_mode);
         }
     }
     return {};
@@ -1189,7 +1199,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 auto interned_index = generator.intern_identifier(identifier->string());
                 if (create_variables)
                     generator.emit<Bytecode::Op::CreateVariable>(interned_index, Bytecode::Op::EnvironmentMode::Lexical, false);
-                generator.emit<Bytecode::Op::SetVariable>(interned_index, initialization_mode);
+                generator.emit_set_variable(*identifier, initialization_mode);
                 return {};
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
@@ -1355,7 +1365,7 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
 
     return declarator.target().visit(
         [&](NonnullRefPtr<Identifier const> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode);
+            generator.emit_set_variable(*id, initialization_mode);
             return {};
         },
         [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
@@ -2309,7 +2319,7 @@ Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Byteco
     generator.emit<Bytecode::Op::Store>(accumulator_backup_reg);
 
     TRY(m_class_expression->generate_bytecode(generator));
-    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(m_class_expression.ptr()->name()), Bytecode::Op::SetVariable::InitializationMode::Initialize);
+    generator.emit_set_variable(*m_class_expression.ptr()->m_name, Bytecode::Op::SetVariable::InitializationMode::Initialize);
 
     generator.emit<Bytecode::Op::Load>(accumulator_backup_reg);
     return {};
@@ -2464,9 +2474,10 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
             auto& variable = variable_declaration.declarations().first();
             if (variable->init()) {
                 VERIFY(variable->target().has<NonnullRefPtr<Identifier const>>());
-                auto binding_id = generator.intern_identifier(variable->target().get<NonnullRefPtr<Identifier const>>()->string());
-                TRY(generator.emit_named_evaluation_if_anonymous_function(*variable->init(), binding_id));
-                generator.emit<Bytecode::Op::SetVariable>(binding_id);
+                auto identifier = variable->target().get<NonnullRefPtr<Identifier const>>();
+                auto identifier_table_ref = generator.intern_identifier(identifier->string());
+                TRY(generator.emit_named_evaluation_if_anonymous_function(*variable->init(), identifier_table_ref));
+                generator.emit_set_variable(*identifier);
             }
         } else {
             // 1. Let oldEnv be the running execution context's LexicalEnvironment.
@@ -2652,11 +2663,10 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         if (!destructuring) {
             // 1. Assert: lhs binds a single name.
             // 2. Let lhsName be the sole element of BoundNames of lhs.
-            auto lhs_name = variable_declaration.declarations().first()->target().get<NonnullRefPtr<Identifier const>>()->string();
+            auto lhs_name = variable_declaration.declarations().first()->target().get<NonnullRefPtr<Identifier const>>();
             // 3. Let lhsRef be ! ResolveBinding(lhsName).
             // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
-            auto identifier = generator.intern_identifier(lhs_name);
-            generator.emit<Bytecode::Op::SetVariable>(identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+            generator.emit_set_variable(*lhs_name, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
         }
     }
     // i. If destructuring is false, then

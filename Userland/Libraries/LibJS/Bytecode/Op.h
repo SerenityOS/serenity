@@ -484,6 +484,25 @@ private:
     InitializationMode m_initialization_mode { InitializationMode::Set };
 };
 
+class SetLocal final : public Instruction {
+public:
+    explicit SetLocal(size_t index)
+        : Instruction(Type::SetLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index;
+};
+
 class GetVariable final : public Instruction {
 public:
     explicit GetVariable(IdentifierTableIndex identifier)
@@ -503,6 +522,25 @@ private:
     IdentifierTableIndex m_identifier;
 
     Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
+};
+
+class GetLocal final : public Instruction {
+public:
+    explicit GetLocal(size_t index)
+        : Instruction(Type::GetLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index;
 };
 
 class DeleteVariable final : public Instruction {
@@ -1336,6 +1374,23 @@ public:
 
 private:
     IdentifierTableIndex m_identifier;
+};
+
+class TypeofLocal final : public Instruction {
+public:
+    explicit TypeofLocal(size_t index)
+        : Instruction(Type::TypeofLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    size_t m_index;
 };
 
 }

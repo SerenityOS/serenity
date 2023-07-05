@@ -422,6 +422,17 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+ThrowCompletionOr<void> GetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    if (vm.running_execution_context().local_variables[m_index].is_empty()) {
+        auto const& variable_name = vm.running_execution_context().function->local_variables_names()[m_index];
+        return interpreter.vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
+    }
+    interpreter.accumulator() = vm.running_execution_context().local_variables[m_index];
+    return {};
+}
+
 ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -503,6 +514,12 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
         TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(vm, name, interpreter.accumulator()));
         break;
     }
+    return {};
+}
+
+ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.vm().running_execution_context().local_variables[m_index] = interpreter.accumulator();
     return {};
 }
 
@@ -1240,6 +1257,14 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const& value = vm.running_execution_context().local_variables[m_index];
+    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
+    return {};
+}
+
 ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = TRY(interpreter.accumulator().to_numeric(interpreter.vm()));
@@ -1335,6 +1360,11 @@ DeprecatedString GetVariable::to_deprecated_string_impl(Bytecode::Executable con
     return DeprecatedString::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
+DeprecatedString GetLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetLocal {}", m_index);
+}
+
 DeprecatedString DeleteVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
@@ -1363,6 +1393,11 @@ DeprecatedString SetVariable::to_deprecated_string_impl(Bytecode::Executable con
                                                                                              : "InitializeOrSet";
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
     return DeprecatedString::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+DeprecatedString SetLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("SetLocal {}", m_index);
 }
 
 DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
@@ -1650,6 +1685,11 @@ DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable co
 DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+DeprecatedString TypeofLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("TypeofLocal {}", m_index);
 }
 
 DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const&) const

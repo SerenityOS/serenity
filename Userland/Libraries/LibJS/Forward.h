@@ -184,6 +184,7 @@ class HeapBlock;
 struct ImportEntry;
 class ImportStatement;
 class Interpreter;
+class Identifier;
 class Intrinsics;
 struct IteratorRecord;
 class MetaProperty;

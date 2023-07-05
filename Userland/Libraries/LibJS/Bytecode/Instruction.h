@@ -41,6 +41,7 @@
     O(GetObjectPropertyIterator)     \
     O(GetPrivateById)                \
     O(GetVariable)                   \
+    O(GetLocal)                      \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
     O(HasPrivateId)                  \
@@ -87,6 +88,7 @@
     O(RightShift)                    \
     O(ScheduleJump)                  \
     O(SetVariable)                   \
+    O(SetLocal)                      \
     O(Store)                         \
     O(StrictlyEquals)                \
     O(StrictlyInequals)              \
@@ -98,6 +100,7 @@
     O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \
+    O(TypeofLocal)                   \
     O(UnaryMinus)                    \
     O(UnaryPlus)                     \
     O(UnsignedRightShift)            \
