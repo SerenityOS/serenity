@@ -9,6 +9,7 @@
 
 #include "CalculatedStyleValue.h"
 #include <LibWeb/CSS/Percentage.h>
+#include <LibWeb/CSS/PropertyID.h>
 
 namespace Web::CSS {
 
@@ -42,6 +43,27 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [](Percentage const& percentage) { return percentage.value(); },
         [](Time const& time) { return time.to_seconds(); });
 };
+
+static Optional<CSSNumericType> add_the_types(Vector<NonnullOwnPtr<CalculationNode>> const& nodes, PropertyID property_id)
+{
+    Optional<CSSNumericType> left_type;
+    for (auto const& value : nodes) {
+        auto right_type = value->determine_type(property_id);
+        if (!right_type.has_value())
+            return {};
+
+        if (left_type.has_value()) {
+            left_type = left_type->added_to(right_type.value());
+        } else {
+            left_type = right_type;
+        }
+
+        if (!left_type.has_value())
+            return {};
+    }
+
+    return left_type;
+}
 
 static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleValue::ResolvedType type, double value)
 {
@@ -99,6 +121,59 @@ Optional<CalculatedStyleValue::ResolvedType> NumericCalculationNode::resolved_ty
         [](Length const&) { return CalculatedStyleValue::ResolvedType::Length; },
         [](Percentage const&) { return CalculatedStyleValue::ResolvedType::Percentage; },
         [](Time const&) { return CalculatedStyleValue::ResolvedType::Time; });
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> NumericCalculationNode::determine_type(PropertyID property_id) const
+{
+    // Anything else is a terminal value, whose type is determined based on its CSS type:
+    return m_value.visit(
+        [](Number const&) {
+            // -> <number>
+            // -> <integer>
+            //    the type is «[ ]» (empty map)
+            return CSSNumericType {};
+        },
+        [](Length const&) {
+            // -> <length>
+            //    the type is «[ "length" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Length, 1 };
+        },
+        [](Angle const&) {
+            // -> <angle>
+            //    the type is «[ "angle" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
+        },
+        [](Time const&) {
+            // -> <time>
+            //    the type is «[ "time" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Time, 1 };
+        },
+        [](Frequency const&) {
+            // -> <frequency>
+            //    the type is «[ "frequency" → 1 ]»
+            return CSSNumericType { CSSNumericType::BaseType::Frequency, 1 };
+        },
+        // FIXME: <resolution>
+        // FIXME: <flex>
+        // NOTE: <calc-constant> is a separate node type. (FIXME: Should it be?)
+        [property_id](Percentage const&) {
+            // -> <percentage>
+            //    If, in the context in which the math function containing this calculation is placed,
+            //    <percentage>s are resolved relative to another type of value (such as in width,
+            //    where <percentage> is resolved against a <length>), and that other type is not <number>,
+            //    the type is determined as the other type.
+            auto percentage_resolved_type = property_resolves_percentages_relative_to(property_id);
+            if (percentage_resolved_type.has_value() && percentage_resolved_type != ValueType::Number && percentage_resolved_type != ValueType::Percentage) {
+                auto base_type = CSSNumericType::base_type_from_value_type(*percentage_resolved_type);
+                VERIFY(base_type.has_value());
+                return CSSNumericType { base_type.value(), 1 };
+            }
+
+            //    Otherwise, the type is «[ "percent" → 1 ]».
+            return CSSNumericType { CSSNumericType::BaseType::Percent, 1 };
+        });
+    // In all cases, the associated percent hint is null.
 }
 
 bool NumericCalculationNode::contains_percentage() const
@@ -183,6 +258,15 @@ Optional<CalculatedStyleValue::ResolvedType> SumCalculationNode::resolved_type()
         return {};
     }
     return type;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> SumCalculationNode::determine_type(PropertyID property_id) const
+{
+    // At a + or - sub-expression, attempt to add the types of the left and right arguments.
+    // If this returns failure, the entire calculation’s type is failure.
+    // Otherwise, the sub-expression’s type is the returned type.
+    return add_the_types(m_values, property_id);
 }
 
 bool SumCalculationNode::contains_percentage() const
@@ -287,6 +371,30 @@ Optional<CalculatedStyleValue::ResolvedType> ProductCalculationNode::resolved_ty
     return type;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> ProductCalculationNode::determine_type(PropertyID property_id) const
+{
+    // At a * sub-expression, multiply the types of the left and right arguments.
+    // The sub-expression’s type is the returned result.
+    Optional<CSSNumericType> left_type;
+    for (auto const& value : m_values) {
+        auto right_type = value->determine_type(property_id);
+        if (!right_type.has_value())
+            return {};
+
+        if (left_type.has_value()) {
+            left_type = left_type->multiplied_by(right_type.value());
+        } else {
+            left_type = right_type;
+        }
+
+        if (!left_type.has_value())
+            return {};
+    }
+
+    return left_type;
+}
+
 bool ProductCalculationNode::contains_percentage() const
 {
     for (auto const& value : m_values) {
@@ -353,6 +461,13 @@ Optional<CalculatedStyleValue::ResolvedType> NegateCalculationNode::resolved_typ
     return m_value->resolved_type();
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> NegateCalculationNode::determine_type(PropertyID property_id) const
+{
+    // NOTE: `- foo` doesn't change the type
+    return m_value->determine_type(property_id);
+}
+
 bool NegateCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
@@ -403,6 +518,17 @@ Optional<CalculatedStyleValue::ResolvedType> InvertCalculationNode::resolved_typ
     if (type == CalculatedStyleValue::ResolvedType::Integer)
         return CalculatedStyleValue::ResolvedType::Number;
     return type;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> InvertCalculationNode::determine_type(PropertyID property_id) const
+{
+    // At a / sub-expression, let left type be the result of finding the types of its left argument,
+    // and right type be the result of finding the types of its right argument and then inverting it.
+    // The sub-expression’s type is the result of multiplying the left type and right type.
+    // NOTE: An InvertCalculationNode only represents the right argument here, and the multiplication
+    //       is handled in the parent ProductCalculationNode.
+    return m_value->determine_type(property_id).map([](auto& it) { return it.inverted(); });
 }
 
 bool InvertCalculationNode::contains_percentage() const
@@ -461,6 +587,13 @@ Optional<CalculatedStyleValue::ResolvedType> MinCalculationNode::resolved_type()
 {
     // NOTE: We check during parsing that all values have the same type.
     return m_values[0]->resolved_type();
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> MinCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    return add_the_types(m_values, property_id);
 }
 
 bool MinCalculationNode::contains_percentage() const
@@ -539,6 +672,13 @@ Optional<CalculatedStyleValue::ResolvedType> MaxCalculationNode::resolved_type()
 {
     // NOTE: We check during parsing that all values have the same type.
     return m_values[0]->resolved_type();
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> MaxCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    return add_the_types(m_values, property_id);
 }
 
 bool MaxCalculationNode::contains_percentage() const
@@ -621,6 +761,23 @@ Optional<CalculatedStyleValue::ResolvedType> ClampCalculationNode::resolved_type
     return m_min_value->resolved_type();
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> ClampCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    auto min_type = m_min_value->determine_type(property_id);
+    auto center_type = m_center_value->determine_type(property_id);
+    auto max_type = m_max_value->determine_type(property_id);
+
+    if (!min_type.has_value() || !center_type.has_value() || !max_type.has_value())
+        return {};
+
+    auto result = min_type->added_to(*center_type);
+    if (!result.has_value())
+        return {};
+    return result->added_to(*max_type);
+}
+
 bool ClampCalculationNode::contains_percentage() const
 {
     return m_min_value->contains_percentage() || m_center_value->contains_percentage() || m_max_value->contains_percentage();
@@ -696,6 +853,13 @@ Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type()
     return m_value->resolved_type();
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> AbsCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The type of its contained calculation.
+    return m_value->determine_type(property_id);
+}
+
 bool AbsCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
@@ -751,6 +915,13 @@ ErrorOr<String> SignCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Integer;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> SignCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
 }
 
 bool SignCalculationNode::contains_percentage() const
@@ -820,6 +991,15 @@ Optional<CalculatedStyleValue::ResolvedType> ConstantCalculationNode::resolved_t
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> ConstantCalculationNode::determine_type(PropertyID) const
+{
+    // Anything else is a terminal value, whose type is determined based on its CSS type:
+    // -> <calc-constant>
+    //    the type is «[ ]» (empty map)
+    return CSSNumericType {};
+}
+
 CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe_unused]] Optional<Length::ResolutionContext const&> context, [[maybe_unused]] CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     switch (m_constant) {
@@ -877,6 +1057,13 @@ Optional<CalculatedStyleValue::ResolvedType> SinCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> SinCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
+}
+
 bool SinCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
@@ -929,6 +1116,13 @@ ErrorOr<String> CosCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> CosCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Number;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> CosCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
 }
 
 bool CosCalculationNode::contains_percentage() const
@@ -985,6 +1179,13 @@ Optional<CalculatedStyleValue::ResolvedType> TanCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> TanCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
+}
+
 bool TanCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
@@ -1037,6 +1238,13 @@ ErrorOr<String> AsinCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> AsinCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> AsinCalculationNode::determine_type(PropertyID) const
+{
+    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
 bool AsinCalculationNode::contains_percentage() const
@@ -1093,6 +1301,13 @@ Optional<CalculatedStyleValue::ResolvedType> AcosCalculationNode::resolved_type(
     return CalculatedStyleValue::ResolvedType::Angle;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> AcosCalculationNode::determine_type(PropertyID) const
+{
+    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
+}
+
 bool AcosCalculationNode::contains_percentage() const
 {
     return m_value->contains_percentage();
@@ -1145,6 +1360,13 @@ ErrorOr<String> AtanCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> AtanCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> AtanCalculationNode::determine_type(PropertyID) const
+{
+    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
 bool AtanCalculationNode::contains_percentage() const
@@ -1202,6 +1424,13 @@ ErrorOr<String> Atan2CalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> Atan2CalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Angle;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> Atan2CalculationNode::determine_type(PropertyID) const
+{
+    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
 bool Atan2CalculationNode::contains_percentage() const
@@ -1267,6 +1496,13 @@ Optional<CalculatedStyleValue::ResolvedType> PowCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> PowCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
+}
+
 CalculatedStyleValue::CalculationResult PowCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_x->resolve(context, percentage_basis);
@@ -1322,6 +1558,13 @@ Optional<CalculatedStyleValue::ResolvedType> SqrtCalculationNode::resolved_type(
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> SqrtCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
+}
+
 CalculatedStyleValue::CalculationResult SqrtCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_value->resolve(context, percentage_basis);
@@ -1374,6 +1617,13 @@ Optional<CalculatedStyleValue::ResolvedType> HypotCalculationNode::resolved_type
 {
     // NOTE: We check during parsing that all values have the same type.
     return m_values[0]->resolved_type();
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> HypotCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    return add_the_types(m_values, property_id);
 }
 
 bool HypotCalculationNode::contains_percentage() const
@@ -1450,6 +1700,13 @@ Optional<CalculatedStyleValue::ResolvedType> LogCalculationNode::resolved_type()
     return CalculatedStyleValue::ResolvedType::Number;
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> LogCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
+}
+
 CalculatedStyleValue::CalculationResult LogCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
 {
     auto node_a = m_x->resolve(context, percentage_basis);
@@ -1503,6 +1760,13 @@ ErrorOr<String> ExpCalculationNode::to_string() const
 Optional<CalculatedStyleValue::ResolvedType> ExpCalculationNode::resolved_type() const
 {
     return CalculatedStyleValue::ResolvedType::Number;
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> ExpCalculationNode::determine_type(PropertyID) const
+{
+    // «[ ]» (empty map).
+    return CSSNumericType {};
 }
 
 CalculatedStyleValue::CalculationResult ExpCalculationNode::resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
@@ -1572,6 +1836,19 @@ Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type
 {
     // Note: We check during parsing that all values have the same type
     return m_x->resolved_type();
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> RoundCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    auto x_type = m_x->determine_type(property_id);
+    auto y_type = m_y->determine_type(property_id);
+
+    if (!x_type.has_value() || !y_type.has_value())
+        return {};
+
+    return x_type->added_to(*y_type);
 }
 
 bool RoundCalculationNode::contains_percentage() const
@@ -1662,6 +1939,19 @@ Optional<CalculatedStyleValue::ResolvedType> ModCalculationNode::resolved_type()
     return m_x->resolved_type();
 }
 
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> ModCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    auto x_type = m_x->determine_type(property_id);
+    auto y_type = m_y->determine_type(property_id);
+
+    if (!x_type.has_value() || !y_type.has_value())
+        return {};
+
+    return x_type->added_to(*y_type);
+}
+
 bool ModCalculationNode::contains_percentage() const
 {
     return m_x->contains_percentage() || m_y->contains_percentage();
@@ -1725,6 +2015,19 @@ Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type()
 {
     // Note: We check during parsing that all values have the same type
     return m_x->resolved_type();
+}
+
+// https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+Optional<CSSNumericType> RemCalculationNode::determine_type(PropertyID property_id) const
+{
+    // The result of adding the types of its comma-separated calculations.
+    auto x_type = m_x->determine_type(property_id);
+    auto y_type = m_y->determine_type(property_id);
+
+    if (!x_type.has_value() || !y_type.has_value())
+        return {};
+
+    return x_type->added_to(*y_type);
 }
 
 bool RemCalculationNode::contains_percentage() const
