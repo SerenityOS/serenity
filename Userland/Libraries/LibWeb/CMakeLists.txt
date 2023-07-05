@@ -26,6 +26,7 @@ set(SOURCES
     CSS/CSSKeyframesRule.cpp
     CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
+    CSS/CSSNumericType.cpp
     CSS/CSSRule.cpp
     CSS/CSSRuleList.cpp
     CSS/CSSStyleDeclaration.cpp
