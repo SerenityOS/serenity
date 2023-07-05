@@ -16,6 +16,7 @@
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
+#include <LibGfx/ImageFormats/ExifReader.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGShared.h>
 
@@ -452,6 +453,8 @@ struct JPEGLoadingContext {
 
     Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
+
+    ExifMetadata exif_metadata;
 };
 
 static inline auto* get_component(Macroblock& block, unsigned component)
@@ -1133,6 +1136,28 @@ static ErrorOr<void> read_colour_encoding(JPEGStream& stream, [[maybe_unused]] J
     return {};
 }
 
+static ErrorOr<void> read_exif(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
+{
+    // This refers to Exif's specification, see ExifReader for more information.
+    // 4.7.2.2. - APP1 internal structure
+    if (bytes_to_read <= 1) {
+        TRY(stream.discard(bytes_to_read));
+        return {};
+    }
+
+    // Discard padding byte
+    TRY(stream.discard(1));
+
+    auto exif_buffer = TRY(ByteBuffer::create_uninitialized(bytes_to_read - 1));
+    TRY(stream.read_until_filled(exif_buffer));
+
+    FixedMemoryStream memory_buffer { exif_buffer.bytes() };
+
+    context.exif_metadata = TRY(ExifReader::read(memory_buffer));
+
+    return {};
+}
+
 static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     // B.2.4.6 - Application data syntax
@@ -1157,6 +1182,8 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
 
     auto app_id = TRY(builder.to_string());
 
+    if (app_marker_number == 1 && app_id == "Exif"sv)
+        return read_exif(stream, context, bytes_to_read);
     if (app_marker_number == 2 && app_id == "ICC_PROFILE"sv)
         return read_icc_profile(stream, context, bytes_to_read);
     if (app_marker_number == 14 && app_id == "Adobe"sv)
