@@ -64,6 +64,7 @@ set(SOURCES
     TextDirection.cpp
     TextLayout.cpp
     Triangle.cpp
+    VectorGraphic.cpp
     WindowTheme.cpp
 )
 
