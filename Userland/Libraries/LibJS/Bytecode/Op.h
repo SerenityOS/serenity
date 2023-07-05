@@ -558,6 +558,23 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class HasPrivateId final : public Instruction {
+public:
+    explicit HasPrivateId(IdentifierTableIndex property)
+        : Instruction(Type::HasPrivateId)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_property;
+};
+
 enum class PropertyKind {
     Getter,
     Setter,

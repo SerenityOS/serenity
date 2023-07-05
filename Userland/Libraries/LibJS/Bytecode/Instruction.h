@@ -43,6 +43,7 @@
     O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
+    O(HasPrivateId)                  \
     O(ImportCall)                    \
     O(In)                            \
     O(Increment)                     \
