@@ -300,15 +300,14 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
 
         // When a small seek happens, we may already be closer to the target than the seekpoint.
         if (sample_index - target_seekpoint.sample_index > sample_index - m_loaded_samples) {
-            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target ({} samples): not seeking", sample_index - m_loaded_samples);
-            return {};
+            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target ({} samples): ignoring seek point", sample_index - m_loaded_samples);
+        } else {
+            dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
+            auto position = target_seekpoint.byte_offset + m_data_start_location;
+            if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
+                return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
+            m_loaded_samples = target_seekpoint.sample_index;
         }
-
-        dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
-        auto position = target_seekpoint.byte_offset + m_data_start_location;
-        if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
-            return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
-        m_loaded_samples = target_seekpoint.sample_index;
     }
 
     // Skip frames until we're within the seek tolerance.
