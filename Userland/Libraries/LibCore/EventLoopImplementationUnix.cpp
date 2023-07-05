@@ -153,10 +153,8 @@ retry:
             max_fd = fd;
     };
 
-    int max_fd_added = -1;
     // The wake pipe informs us of POSIX signals as well as manual calls to wake()
     add_fd_to_set(thread_data.wake_pipe_fds[0], read_fds);
-    max_fd = max(max_fd, max_fd_added);
 
     for (auto& notifier : thread_data.notifiers) {
         if (notifier->type() == Notifier::Type::Read)
