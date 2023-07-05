@@ -467,6 +467,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
                     pseudo_class_description = "Root";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Host:
+                    pseudo_class_description = "Host";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
                     pseudo_class_description = "FirstOfType";
                     break;
