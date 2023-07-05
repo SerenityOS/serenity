@@ -80,6 +80,10 @@ public:
     InodeWatcher const* inode_watcher() const;
     InodeWatcher* inode_watcher();
 
+    bool is_mount_file() const;
+    MountFile const* mount_file() const;
+    MountFile* mount_file();
+
     bool is_master_pty() const;
     MasterPTY const* master_pty() const;
     MasterPTY* master_pty();

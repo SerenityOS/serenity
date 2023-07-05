@@ -801,7 +801,7 @@ size_t WebPImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index >= frame_count())
         return Error::from_string_literal("WebPImageDecoderPlugin: Invalid frame index");

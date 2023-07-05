@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
- * Copyright (c) 2022, Gregory Bertilson <Zaggy1024@gmail.com>
+ * Copyright (c) 2022-2023, Gregory Bertilson <Zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,9 +18,14 @@ namespace Video::Matroska {
 
 #define TRY_READ(expression) DECODER_TRY(DecoderErrorCategory::Corrupted, expression)
 
-// Elements IDs and types are listed at this URL:
-// https://www.matroska.org/technical/elements.html
+// RFC 8794 - Extensible Binary Meta Language
+// https://datatracker.ietf.org/doc/html/rfc8794
 constexpr u32 EBML_MASTER_ELEMENT_ID = 0x1A45DFA3;
+constexpr u32 EBML_CRC32_ELEMENT_ID = 0xBF;
+constexpr u32 EBML_VOID_ELEMENT_ID = 0xEC;
+
+// Matroska elements' IDs and types are listed at this URL:
+// https://www.matroska.org/technical/elements.html
 constexpr u32 SEGMENT_ELEMENT_ID = 0x18538067;
 constexpr u32 DOCTYPE_ELEMENT_ID = 0x4282;
 constexpr u32 DOCTYPE_VERSION_ELEMENT_ID = 0x4287;
@@ -98,35 +103,69 @@ DecoderErrorOr<Reader> Reader::from_data(ReadonlyBytes data)
     return reader;
 }
 
-static DecoderErrorOr<void> parse_master_element(Streamer& streamer, [[maybe_unused]] StringView element_name, Function<DecoderErrorOr<IterationDecision>(u64, size_t)> element_consumer)
+// Returns the position of the first element that is read from this master element.
+static DecoderErrorOr<size_t> parse_master_element(Streamer& streamer, [[maybe_unused]] StringView element_name, Function<DecoderErrorOr<IterationDecision>(u64)> element_consumer)
 {
     auto element_data_size = TRY_READ(streamer.read_variable_size_integer());
     dbgln_if(MATROSKA_DEBUG, "{} has {} octets of data.", element_name, element_data_size);
+
+    bool first_element = true;
+    auto first_element_position = streamer.position();
 
     streamer.push_octets_read();
     while (streamer.octets_read() < element_data_size) {
         dbgln_if(MATROSKA_TRACE_DEBUG, "====== Reading  element ======");
         auto element_id = TRY_READ(streamer.read_variable_size_integer(false));
-        auto element_position = streamer.position();
         dbgln_if(MATROSKA_TRACE_DEBUG, "{:s} element ID is {:#010x}", element_name, element_id);
 
-        auto result = element_consumer(element_id, element_position);
+        if (element_id == EBML_CRC32_ELEMENT_ID) {
+            // The CRC-32 Element contains a 32-bit Cyclic Redundancy Check value of all the
+            // Element Data of the Parent Element as stored except for the CRC-32 Element itself.
+            // When the CRC-32 Element is present, the CRC-32 Element MUST be the first ordered
+            // EBML Element within its Parent Element for easier reading.
+            if (!first_element)
+                return DecoderError::corrupted("CRC32 element must be the first child"sv);
+
+            // All Top-Level Elements of an EBML Document that are Master Elements SHOULD include a
+            // CRC-32 Element as a Child Element. The CRC in use is the IEEE-CRC-32 algorithm as used
+            // in the [ISO3309] standard and in Section 8.1.1.6.2 of [ITU.V42], with initial value of
+            // 0xFFFFFFFF. The CRC value MUST be computed on a little-endian bytestream and MUST use
+            // little-endian storage.
+
+            // FIXME: Currently we skip the CRC-32 Element instead of checking it. It may be worth
+            //        verifying the contents of the SeekHead, Segment Info, and Tracks Elements.
+            //        Note that Cluster Elements tend to be quite large, so verifying their integrity
+            //        will result in longer buffering times in streamed contexts, so it may not be
+            //        worth the effort checking those. It would also prevent error correction in
+            //        video codecs from taking effect.
+            TRY_READ(streamer.read_unknown_element());
+            continue;
+        }
+        if (element_id == EBML_VOID_ELEMENT_ID) {
+            // Used to void data or to avoid unexpected behaviors when using damaged data.
+            // The content is discarded. Also used to reserve space in a subelement for later use.
+            TRY_READ(streamer.read_unknown_element());
+            continue;
+        }
+
+        auto result = element_consumer(element_id);
         if (result.is_error())
             return DecoderError::format(result.error().category(), "{} -> {}", element_name, result.error().description());
         if (result.release_value() == IterationDecision::Break)
             break;
 
         dbgln_if(MATROSKA_TRACE_DEBUG, "Read {} octets of the {} so far.", streamer.octets_read(), element_name);
+        first_element = false;
     }
     streamer.pop_octets_read();
 
-    return {};
+    return first_element_position;
 }
 
 static DecoderErrorOr<EBMLHeader> parse_ebml_header(Streamer& streamer)
 {
     EBMLHeader header;
-    TRY(parse_master_element(streamer, "Header"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Header"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case DOCTYPE_ELEMENT_ID:
             header.doc_type = TRY_READ(streamer.read_string());
@@ -170,11 +209,11 @@ DecoderErrorOr<void> Reader::parse_initial_data()
 
 static DecoderErrorOr<void> parse_seek_head(Streamer& streamer, size_t base_position, HashMap<u32, size_t>& table)
 {
-    return parse_master_element(streamer, "SeekHead"sv, [&](u64 seek_head_child_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "SeekHead"sv, [&](u64 seek_head_child_id) -> DecoderErrorOr<IterationDecision> {
         if (seek_head_child_id == SEEK_ELEMENT_ID) {
             Optional<u64> seek_id;
             Optional<u64> seek_position;
-            TRY(parse_master_element(streamer, "Seek"sv, [&](u64 seek_entry_child_id, size_t) -> DecoderErrorOr<IterationDecision> {
+            TRY(parse_master_element(streamer, "Seek"sv, [&](u64 seek_entry_child_id) -> DecoderErrorOr<IterationDecision> {
                 switch (seek_entry_child_id) {
                 case SEEK_ID_ELEMENT_ID:
                     seek_id = TRY_READ(streamer.read_u64());
@@ -212,7 +251,8 @@ static DecoderErrorOr<void> parse_seek_head(Streamer& streamer, size_t base_posi
         }
 
         return IterationDecision::Continue;
-    });
+    }));
+    return {};
 }
 
 DecoderErrorOr<Optional<size_t>> Reader::find_first_top_level_element_with_id([[maybe_unused]] StringView element_name, u32 element_id)
@@ -272,7 +312,7 @@ DecoderErrorOr<Optional<size_t>> Reader::find_first_top_level_element_with_id([[
 static DecoderErrorOr<SegmentInformation> parse_information(Streamer& streamer)
 {
     SegmentInformation segment_information;
-    TRY(parse_master_element(streamer, "Segment Information"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Segment Information"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case TIMESTAMP_SCALE_ID:
             segment_information.set_timestamp_scale(TRY_READ(streamer.read_u64()));
@@ -331,7 +371,7 @@ static DecoderErrorOr<TrackEntry::ColorFormat> parse_video_color_information(Str
 {
     TrackEntry::ColorFormat color_format {};
 
-    TRY(parse_master_element(streamer, "Colour"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Colour"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case PRIMARIES_ID:
             color_format.color_primaries = static_cast<ColorPrimaries>(TRY_READ(streamer.read_u64()));
@@ -363,7 +403,7 @@ static DecoderErrorOr<TrackEntry::VideoTrack> parse_video_track_information(Stre
 {
     TrackEntry::VideoTrack video_track {};
 
-    TRY(parse_master_element(streamer, "VideoTrack"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "VideoTrack"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case PIXEL_WIDTH_ID:
             video_track.pixel_width = TRY_READ(streamer.read_u64());
@@ -390,7 +430,7 @@ static DecoderErrorOr<TrackEntry::AudioTrack> parse_audio_track_information(Stre
 {
     TrackEntry::AudioTrack audio_track {};
 
-    TRY(parse_master_element(streamer, "AudioTrack"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "AudioTrack"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case CHANNELS_ID:
             audio_track.channels = TRY_READ(streamer.read_u64());
@@ -413,7 +453,7 @@ static DecoderErrorOr<TrackEntry::AudioTrack> parse_audio_track_information(Stre
 static DecoderErrorOr<TrackEntry> parse_track_entry(Streamer& streamer)
 {
     TrackEntry track_entry;
-    TRY(parse_master_element(streamer, "Track"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Track"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case TRACK_NUMBER_ID:
             track_entry.set_track_number(TRY_READ(streamer.read_u64()));
@@ -461,7 +501,7 @@ static DecoderErrorOr<TrackEntry> parse_track_entry(Streamer& streamer)
 
 DecoderErrorOr<void> Reader::parse_tracks(Streamer& streamer)
 {
-    return parse_master_element(streamer, "Tracks"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Tracks"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         if (element_id == TRACK_ENTRY_ID) {
             auto track_entry = TRY(parse_track_entry(streamer));
             dbgln_if(MATROSKA_DEBUG, "Parsed track {}", track_entry.track_number());
@@ -471,7 +511,8 @@ DecoderErrorOr<void> Reader::parse_tracks(Streamer& streamer)
         }
 
         return IterationDecision::Continue;
-    });
+    }));
+    return {};
 }
 
 DecoderErrorOr<void> Reader::for_each_track(TrackEntryCallback callback)
@@ -517,12 +558,8 @@ constexpr size_t get_element_id_size(u32 element_id)
 static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer, u64 timestamp_scale)
 {
     Optional<u64> timestamp;
-    size_t first_element_position = 0;
 
-    TRY(parse_master_element(streamer, "Cluster"sv, [&](u64 element_id, size_t position) -> DecoderErrorOr<IterationDecision> {
-        if (first_element_position == 0)
-            first_element_position = position - get_element_id_size(element_id);
-
+    auto first_element_position = TRY(parse_master_element(streamer, "Cluster"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case TIMESTAMP_ID:
             timestamp = TRY_READ(streamer.read_u64());
@@ -648,7 +685,7 @@ static DecoderErrorOr<CueTrackPosition> parse_cue_track_position(Streamer& strea
 
     bool had_cluster_position = false;
 
-    TRY_READ(parse_master_element(streamer, "CueTrackPositions"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY_READ(parse_master_element(streamer, "CueTrackPositions"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case CUE_TRACK_ID:
             track_position.set_track_number(TRY_READ(streamer.read_u64()));
@@ -692,7 +729,7 @@ static DecoderErrorOr<CuePoint> parse_cue_point(Streamer& streamer, u64 timestam
 {
     CuePoint cue_point;
 
-    TRY(parse_master_element(streamer, "CuePoint"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "CuePoint"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case CUE_TIME_ID: {
             // On https://www.matroska.org/technical/elements.html, spec says of the CueTime element:
@@ -735,7 +772,7 @@ DecoderErrorOr<void> Reader::parse_cues(Streamer& streamer)
 {
     m_cues.clear();
 
-    TRY(parse_master_element(streamer, "Cues"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+    TRY(parse_master_element(streamer, "Cues"sv, [&](u64 element_id) -> DecoderErrorOr<IterationDecision> {
         switch (element_id) {
         case CUE_POINT_ID: {
             auto cue_point = TRY(parse_cue_point(streamer, TRY(segment_information()).timestamp_scale()));
@@ -972,7 +1009,7 @@ ErrorOr<i16> Streamer::read_i16()
 
 ErrorOr<u64> Streamer::read_variable_size_integer(bool mask_length)
 {
-    dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", data());
+    dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT from offset {:p}", position());
     auto length_descriptor = TRY(read_octet());
     dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT, first byte is {:#02x}", length_descriptor);
     if (length_descriptor == 0)

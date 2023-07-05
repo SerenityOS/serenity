@@ -10,6 +10,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/Audio/IntelHDA/Codec.h>
+#include <Kernel/Devices/Audio/IntelHDA/InterruptHandler.h>
 #include <Kernel/Devices/Audio/IntelHDA/Stream.h>
 #include <Kernel/Devices/Audio/IntelHDA/Timing.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -36,8 +37,9 @@ UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_
 
 UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
 {
-    // Enable DMA
+    // Enable DMA and interrupts
     PCI::enable_bus_mastering(device_identifier());
+    m_interrupt_handler = TRY(InterruptHandler::create(*this));
 
     // 3.3.3, 3.3.4: Controller version
     auto version_minor = m_controller_io_window->read8(ControllerRegister::VersionMinor);
@@ -163,6 +165,13 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::configure_output_route()
         // Create output path
         auto output_path = TRY(OutputPath::create(move(path), move(output_stream)));
         TRY(output_path->activate());
+
+        // Enable controller and stream interrupts for this output stream
+        auto interrupt_control = m_controller_io_window->read32(ControllerRegister::InterruptControl);
+        interrupt_control |= InterruptControlFlag::GlobalInterruptEnable;
+        interrupt_control |= 1u << (m_number_of_input_streams + output_stream_index);
+        m_controller_io_window->write32(ControllerRegister::InterruptControl, interrupt_control);
+
         return output_path;
     };
 
@@ -288,6 +297,21 @@ ErrorOr<void> Controller::reset()
 
     dbgln_if(INTEL_HDA_DEBUG, "Controller reset");
     return {};
+}
+
+ErrorOr<bool> Controller::handle_interrupt(Badge<InterruptHandler>)
+{
+    // Check if any interrupt status bit is set
+    auto interrupt_status = m_controller_io_window->read32(ControllerRegister::InterruptStatus);
+    if ((interrupt_status & InterruptStatusFlag::GlobalInterruptStatus) == 0)
+        return false;
+
+    // FIXME: Actually look at interrupt_status and iterate over streams as soon as
+    //        we support multiple streams.
+    if (m_output_path)
+        TRY(m_output_path->output_stream().handle_interrupt({}));
+
+    return true;
 }
 
 RefPtr<AudioChannel> Controller::audio_channel(u32 index) const

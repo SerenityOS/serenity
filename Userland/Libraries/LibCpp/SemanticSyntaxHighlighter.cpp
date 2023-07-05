@@ -55,7 +55,7 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
 
         // FIXME: Computing the diff on the entire document's tokens is quite inefficient.
         //        An improvement over this could be only including the tokens that are in edited text ranges in the diff.
-        auto diff_hunks = Diff::from_text(previous.view(), current.view());
+        auto diff_hunks = Diff::from_text(previous.view(), current.view()).release_value_but_fixme_should_propagate_errors();
         for (auto& token : current_tokens) {
             new_tokens_info.append(CodeComprehension::TokenInfo { CodeComprehension::TokenInfo::SemanticType::Unknown,
                 token.start().line, token.start().column, token.end().line, token.end().column });
@@ -63,14 +63,14 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
         size_t previous_token_index = 0;
         size_t current_token_index = 0;
         for (auto const& hunk : diff_hunks) {
-            for (; previous_token_index < hunk.original_start_line; ++previous_token_index) {
+            for (; previous_token_index < hunk.location.old_range.start_line; ++previous_token_index) {
                 new_tokens_info[current_token_index].type = m_tokens_info[previous_token_index].type;
                 ++current_token_index;
             }
-            for (size_t i = 0; i < hunk.added_lines.size(); ++i) {
+            for (size_t i = 0; i < hunk.location.new_range.number_of_lines; ++i) {
                 ++current_token_index;
             }
-            for (size_t i = 0; i < hunk.removed_lines.size(); ++i) {
+            for (size_t i = 0; i < hunk.location.old_range.number_of_lines; ++i) {
                 ++previous_token_index;
             }
         }

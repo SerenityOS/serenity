@@ -18,8 +18,7 @@ struct UnwindInfo {
     BasicBlock const* handler;
     BasicBlock const* finalizer;
 
-    Handle<Environment> lexical_environment;
-    Handle<Environment> variable_environment;
+    JS::GCPtr<Environment> lexical_environment;
 };
 
 class BasicBlock {

@@ -19,7 +19,7 @@ class SVGUseElement final : public SVGGraphicsElement {
 public:
     virtual ~SVGUseElement() override = default;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     virtual void inserted() override;
 
@@ -40,6 +40,8 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual bool is_svg_use_element() const override { return true; }
+
     Optional<StringView> parse_id_from_href(DeprecatedString const& href);
 
     JS::GCPtr<DOM::Element> referenced_element();
@@ -54,5 +56,12 @@ private:
 
     JS::GCPtr<DOM::DocumentObserver> m_document_observer;
 };
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Node::fast_is<SVG::SVGUseElement>() const { return is_svg_use_element(); }
 
 }

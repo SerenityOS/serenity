@@ -22,6 +22,11 @@ struct ClampedU8 {
 // 25.1.1 Notation (read-modify-write modification function), https://tc39.es/ecma262/#sec-arraybuffer-notation
 using ReadWriteModifyFunction = Function<ByteBuffer(ByteBuffer, ByteBuffer)>;
 
+enum class PreserveResizability {
+    FixedLength,
+    PreserveResizability
+};
+
 class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
@@ -32,7 +37,15 @@ public:
 
     virtual ~ArrayBuffer() override = default;
 
-    size_t byte_length() const { return buffer_impl().size(); }
+    size_t byte_length() const
+    {
+        if (is_detached())
+            return 0;
+
+        return buffer_impl().size();
+    }
+
+    // [[ArrayBufferData]]
     ByteBuffer& buffer() { return buffer_impl(); }
     ByteBuffer const& buffer() const { return buffer_impl(); }
 
@@ -43,7 +56,16 @@ public:
     void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
 
     void detach_buffer() { m_buffer = Empty {}; }
-    bool is_detached() const { return m_buffer.has<Empty>(); }
+
+    // 25.1.2.2 IsDetachedBuffer ( arrayBuffer ), https://tc39.es/ecma262/#sec-isdetachedbuffer
+    bool is_detached() const
+    {
+        // 1. If arrayBuffer.[[ArrayBufferData]] is null, return true.
+        if (m_buffer.has<Empty>())
+            return true;
+        // 2. Return false.
+        return false;
+    }
 
     enum Order {
         SeqCst,
@@ -81,6 +103,8 @@ void copy_data_block_bytes(ByteBuffer& to_block, u64 to_index, ByteBuffer& from_
 ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
 ThrowCompletionOr<void> detach_array_buffer(VM&, ArrayBuffer& array_buffer, Optional<Value> key = {});
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM&, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length);
+ThrowCompletionOr<ArrayBuffer*> array_buffer_copy_and_detach(VM&, ArrayBuffer& array_buffer, Value new_length, PreserveResizability preserve_resizability);
+ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, FunctionObject& constructor, size_t byte_length);
 
 // 25.1.2.9 RawBytesToNumeric ( type, rawBytes, isLittleEndian ), https://tc39.es/ecma262/#sec-rawbytestonumeric
 template<typename T>
@@ -209,11 +233,43 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
 {
     auto& vm = this->vm();
 
+    // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!is_detached());
+
+    // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+
+    // 3. Assert: value is a BigInt if IsBigIntElementType(type) is true; otherwise, value is a Number.
+    if constexpr (IsIntegral<T> && sizeof(T) == 8)
+        VERIFY(value.is_bigint());
+    else
+        VERIFY(value.is_number());
+
+    // 4. Let block be arrayBuffer.[[ArrayBufferData]].
+    auto& block = buffer();
+
+    // FIXME: 5. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
+
+    // 6. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    //    NOTE: Done by default parameter at declaration of this function.
+
+    // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
     auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
 
-    // FIXME: Check for shared buffer
+    // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
+    if (false) {
+        // FIXME: a. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+        // FIXME: b. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+        // FIXME: c. If isTypedArray is true and IsNoTearConfiguration(type, order) is true, let noTear be true; otherwise let noTear be false.
+        // FIXME: d. Append WriteSharedMemory { [[Order]]: order, [[NoTear]]: noTear, [[Block]]: block, [[ByteIndex]]: byteIndex, [[ElementSize]]: elementSize, [[Payload]]: rawBytes } to eventsRecord.[[EventList]].
+    }
+    // 9. Else,
+    else {
+        // a. Store the individual bytes of rawBytes into block, starting at block[byteIndex].
+        raw_bytes.span().copy_to(block.span().slice(byte_index));
+    }
 
-    raw_bytes.span().copy_to(buffer_impl().span().slice(byte_index));
+    // 10. Return unused.
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer

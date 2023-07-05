@@ -70,17 +70,15 @@ static ErrorOr<void> process_strings_in_file(StringView path, bool show_paths, S
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     size_t processed_characters = 0;
     size_t string_offset_position = 0;
-    bool did_show_path = false;
     while (!file->is_eof()) {
         auto buffer_span = TRY(file->read_some(buffer));
         while (!buffer_span.is_empty()) {
             string_offset_position += processed_characters;
             processed_characters = process_characters_in_span(output_characters, buffer_span);
-            if (show_paths && !did_show_path) {
-                outln("path {}:", path);
-                did_show_path = true;
-            }
             if (output_characters.size() >= minimum_string_length && should_print_characters(output_characters)) {
+                if (show_paths)
+                    out("{}:", path);
+
                 print_characters(output_characters, string_offset_format, string_offset_position);
             }
             buffer_span = buffer_span.slice(processed_characters);
@@ -101,11 +99,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringOffsetFormat string_offset_format { StringOffsetFormat::None };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(minimum_string_length, "Specify the minimum string length.", nullptr, 'n', "number");
-    args_parser.add_option(show_paths, "Display the path for each matched file.", nullptr, 'p');
+    args_parser.add_option(minimum_string_length, "Specify the minimum string length.", "bytes", 'n', "number");
+    args_parser.add_option(show_paths, "Print the name of the file before each string.", "print-file-name", 'f');
     args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::Required,
         "Write offset relative to start of each file in (d)ec, (o)ct, or he(x) format.",
-        nullptr,
+        "radix",
         't',
         "format",
         [&string_offset_format](StringView value) {
@@ -120,6 +118,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             return true;
         } });
+    args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::None,
+        "Equivalent to specifying -t o.",
+        nullptr,
+        'o',
+        nullptr,
+        [&string_offset_format](auto) {
+            string_offset_format = StringOffsetFormat::Octal;
+            return true;
+        } });
     args_parser.set_general_help("Write the sequences of printable characters in files or pipes to stdout.");
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -132,8 +139,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (paths.is_empty())
         paths.append("-"sv);
 
-    for (auto const& path : paths)
-        TRY(process_strings_in_file(path, show_paths, string_offset_format, minimum_string_length));
+    bool has_errors = false;
+    for (auto const& path : paths) {
+        auto maybe_error = process_strings_in_file(path, show_paths, string_offset_format, minimum_string_length);
+        if (maybe_error.is_error()) {
+            warnln("strings: '{}'. {}", path, strerror(maybe_error.error().code()));
+            has_errors = true;
+        }
+    }
 
-    return 0;
+    return has_errors ? 1 : 0;
 }

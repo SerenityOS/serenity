@@ -14,6 +14,7 @@
 #include <AK/StringBuilder.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -23,6 +24,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
@@ -65,6 +67,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     , m_error_messages(move(error_messages))
     , m_custom_data(move(custom_data))
 {
+    m_bytecode_interpreter = make<Bytecode::Interpreter>(*this);
+
     m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
 
     for (size_t i = 0; i < single_ascii_character_strings.size(); ++i)
@@ -166,6 +170,8 @@ VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     };
 }
 
+VM::~VM() = default;
+
 String const& VM::error_message(ErrorMessage type) const
 {
     VERIFY(type < ErrorMessage::__Count);
@@ -194,6 +200,18 @@ Interpreter* VM::interpreter_if_exists()
     if (m_interpreters.is_empty())
         return nullptr;
     return m_interpreters.last();
+}
+
+Bytecode::Interpreter& VM::bytecode_interpreter()
+{
+    return *m_bytecode_interpreter;
+}
+
+Bytecode::Interpreter* VM::bytecode_interpreter_if_exists()
+{
+    if (!Bytecode::Interpreter::enabled())
+        return nullptr;
+    return m_bytecode_interpreter;
 }
 
 void VM::push_interpreter(Interpreter& interpreter)
@@ -269,16 +287,16 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
     if (is<FunctionExpression>(expression)) {
         auto& function = static_cast<FunctionExpression const&>(expression);
         if (!function.has_name()) {
-            return function.instantiate_ordinary_function_expression(interpreter(), name);
+            return function.instantiate_ordinary_function_expression(*this, name);
         }
     } else if (is<ClassExpression>(expression)) {
         auto& class_expression = static_cast<ClassExpression const&>(expression);
         if (!class_expression.has_name()) {
-            return TRY(class_expression.class_definition_evaluation(interpreter(), {}, name));
+            return TRY(class_expression.class_definition_evaluation(*this, {}, name));
         }
     }
 
-    return TRY(expression.execute(interpreter())).release_value();
+    return execute_ast_node(expression);
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
@@ -339,6 +357,19 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
     }
 }
 
+ThrowCompletionOr<Value> VM::execute_ast_node(ASTNode const& node)
+{
+    if (auto* bytecode_interpreter = bytecode_interpreter_if_exists()) {
+        auto executable = TRY(Bytecode::compile(*this, node, FunctionKind::Normal, ""sv));
+        auto result_or_error = bytecode_interpreter->run_and_return_frame(*current_realm(), *executable, nullptr);
+        if (result_or_error.value.is_error())
+            return result_or_error.value.release_error();
+        return result_or_error.frame->registers[0];
+    }
+
+    return TRY(node.execute(interpreter())).value();
+}
+
 // 13.15.5.3 Runtime Semantics: PropertyDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-propertydestructuringassignmentevaluation
 // 14.3.3.1 Runtime Semantics: PropertyBindingInitialization, https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization
 ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment)
@@ -379,7 +410,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
                 return identifier->string();
             },
             [&](NonnullRefPtr<Expression const> const& expression) -> ThrowCompletionOr<PropertyKey> {
-                auto result = TRY(expression->execute(interpreter())).release_value();
+                auto result = TRY(execute_ast_node(*expression));
                 return result.to_property_key(vm);
             }));
 
@@ -417,7 +448,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
             if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string()));
             else
-                value_to_assign = TRY(property.initializer->execute(interpreter())).release_value();
+                value_to_assign = TRY(execute_ast_node(*property.initializer));
         }
 
         if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
@@ -436,7 +467,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
 // 13.15.5.5 Runtime Semantics: IteratorDestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-iteratordestructuringassignmentevaluation
 // 8.5.3 Runtime Semantics: IteratorBindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-iteratorbindinginitialization
-ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment)
+ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment)
 {
     auto& vm = *this;
     auto& realm = *vm.current_realm();
@@ -554,7 +585,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string()));
             else
-                value = TRY(entry.initializer->execute(interpreter())).release_value();
+                value = TRY(execute_ast_node(*entry.initializer));
         }
 
         if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {

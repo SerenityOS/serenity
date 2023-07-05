@@ -27,7 +27,12 @@ Optional<SeekPoint const&> SeekTable::seek_point_before(u64 sample_index) const
         return {};
     size_t nearby_seek_point_index = 0;
     AK::binary_search(m_seek_points, sample_index, &nearby_seek_point_index, [](auto const& sample_index, auto const& seekpoint_candidate) {
-        return static_cast<i64>(sample_index) - static_cast<i64>(seekpoint_candidate.sample_index);
+        // Subtraction with i64 cast may cause overflow.
+        if (sample_index > seekpoint_candidate.sample_index)
+            return 1;
+        if (sample_index == seekpoint_candidate.sample_index)
+            return 0;
+        return -1;
     });
     // Binary search will always give us a close index, but it may be too large or too small.
     // By doing the index adjustment in this order, we will always find a seek point before the given sample.

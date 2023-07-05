@@ -38,12 +38,14 @@ private:
     void calculate_row_column_grid(Box const&);
     void compute_cell_measures(AvailableSpace const& available_space);
     template<class RowOrColumn>
+    void initialize_table_measures();
+    template<class RowOrColumn>
     void compute_table_measures();
     void compute_table_width();
     void distribute_width_to_columns();
     void compute_table_height(LayoutMode layout_mode);
     void distribute_height_to_rows();
-    void position_row_boxes(CSSPixels&);
+    void position_row_boxes();
     void position_cell_boxes();
     void border_conflict_resolution();
     CSSPixels border_spacing_horizontal() const;
@@ -67,6 +69,8 @@ private:
         CSSPixels max_size { 0 };
         CSSPixels used_width { 0 };
         double percentage_width { 0 };
+        // Store whether the column is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
+        bool is_constrained { false };
     };
 
     struct Row {

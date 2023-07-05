@@ -84,6 +84,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(select)                   \
     __ENUMERATE_HTML_EVENT(slotchange)               \
     __ENUMERATE_HTML_EVENT(stalled)                  \
+    __ENUMERATE_HTML_EVENT(statechange)              \
     __ENUMERATE_HTML_EVENT(storage)                  \
     __ENUMERATE_HTML_EVENT(submit)                   \
     __ENUMERATE_HTML_EVENT(suspend)                  \

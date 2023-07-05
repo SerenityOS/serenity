@@ -19,7 +19,17 @@ struct DiscoverFLACTestsHack {
                 Test::add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(
                     DeprecatedString::formatted("flac_spec_test_{}", path.basename()),
                     [path = move(path)]() {
-                        auto result = Audio::FlacLoaderPlugin::create(path.string());
+                        auto file = Core::File::open(path.string(), Core::File::OpenMode::Read);
+                        if (file.is_error()) {
+                            FAIL(DeprecatedString::formatted("{}", file.error()));
+                            return;
+                        }
+                        auto buffered_file = Core::InputBufferedFile::create(file.release_value());
+                        if (buffered_file.is_error()) {
+                            FAIL(DeprecatedString::formatted("{}", buffered_file.error()));
+                            return;
+                        }
+                        auto result = Audio::FlacLoaderPlugin::create(buffered_file.release_value());
                         if (result.is_error()) {
                             FAIL(DeprecatedString::formatted("{}", result.error()));
                             return;

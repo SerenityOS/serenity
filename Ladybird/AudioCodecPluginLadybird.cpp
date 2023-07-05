@@ -84,11 +84,12 @@ private:
     };
 
     struct AudioDevice {
-        static AudioDevice create()
+        static AudioDevice create(Audio::Loader const& loader)
         {
             auto const& device_info = QMediaDevices::defaultAudioOutput();
 
             auto format = device_info.preferredFormat();
+            format.setSampleRate(static_cast<int>(loader.sample_rate()));
             format.setChannelCount(2);
 
             auto audio_output = make<QAudioSink>(device_info, format);
@@ -129,7 +130,7 @@ private:
     void run() override
     {
         auto devices = make<QMediaDevices>();
-        auto audio_device = AudioDevice::create();
+        auto audio_device = AudioDevice::create(m_loader);
 
         connect(devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
             queue_task({ AudioTask::Type::RecreateAudioDevice }).release_value_but_fixme_should_propagate_errors();
@@ -160,22 +161,14 @@ private:
                     paused = Paused::Yes;
                     break;
 
-                case AudioTask::Type::Seek: {
+                case AudioTask::Type::Seek:
                     VERIFY(task.data.has_value());
-                    auto position = *task.data;
+                    m_position = Web::Platform::AudioCodecPlugin::set_loader_position(m_loader, *task.data, m_duration);
 
-                    auto duration = static_cast<double>(this->duration().to_milliseconds()) / 1000.0;
-                    position = position / duration * static_cast<double>(m_loader->total_samples());
-
-                    m_loader->seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
-
-                    if (paused == Paused::Yes) {
-                        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader, audio_output->format().sampleRate());
+                    if (paused == Paused::Yes)
                         Q_EMIT playback_position_updated(m_position);
-                    }
 
                     break;
-                }
 
                 case AudioTask::Type::Volume:
                     VERIFY(task.data.has_value());
@@ -183,7 +176,7 @@ private:
                     break;
 
                 case AudioTask::Type::RecreateAudioDevice:
-                    audio_device = AudioDevice::create();
+                    audio_device = AudioDevice::create(m_loader);
                     continue;
                 }
             }
@@ -218,10 +211,10 @@ private:
         auto channel_count = audio_output.format().channelCount();
         auto samples_to_load = bytes_available / bytes_per_sample / channel_count;
 
-        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, samples_to_load, audio_output.format().sampleRate()));
+        auto samples = TRY(Web::Platform::AudioCodecPlugin::read_samples_from_loader(*m_loader, samples_to_load));
         enqueue_samples(audio_output, io_device, move(samples));
 
-        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader, audio_output.format().sampleRate());
+        m_position = Web::Platform::AudioCodecPlugin::current_loader_position(m_loader);
         return Paused::No;
     }
 

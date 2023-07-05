@@ -150,12 +150,15 @@ namespace JS {
     P(deleteProperty)                        \
     P(deref)                                 \
     P(description)                           \
+    P(detached)                              \
     P(difference)                            \
+    P(dir)                                   \
     P(direction)                             \
     P(disambiguation)                        \
     P(disposed)                              \
     P(done)                                  \
     P(dotAll)                                \
+    P(drop)                                  \
     P(encodeURI)                             \
     P(encodeURIComponent)                    \
     P(endsWith)                              \
@@ -497,6 +500,7 @@ namespace JS {
     P(supportedLocalesOf)                    \
     P(supportedValuesOf)                     \
     P(symmetricDifference)                   \
+    P(take)                                  \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
@@ -509,6 +513,7 @@ namespace JS {
     P(timeZone)                              \
     P(timeZoneName)                          \
     P(timeZones)                             \
+    P(toArray)                               \
     P(toDateString)                          \
     P(toExponential)                         \
     P(toFixed)                               \
@@ -542,6 +547,8 @@ namespace JS {
     P(toZonedDateTimeISO)                    \
     P(trace)                                 \
     P(trailingZeroDisplay)                   \
+    P(transfer)                              \
+    P(transferToFixedLength)                 \
     P(trim)                                  \
     P(trimEnd)                               \
     P(trimLeft)                              \

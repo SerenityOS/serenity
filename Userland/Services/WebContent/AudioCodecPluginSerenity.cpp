@@ -38,16 +38,16 @@ AudioCodecPluginSerenity::AudioCodecPluginSerenity(NonnullRefPtr<Audio::Connecti
     auto duration = static_cast<double>(m_loader->total_samples()) / static_cast<double>(m_loader->sample_rate());
     m_duration = Duration::from_milliseconds(static_cast<i64>(duration * 1000.0));
 
-    m_device_sample_rate = m_connection->get_sample_rate();
-    m_device_samples_per_buffer = static_cast<size_t>(BUFFER_SIZE_MS / 1000.0 * static_cast<double>(m_device_sample_rate));
     m_samples_to_load_per_buffer = static_cast<size_t>(BUFFER_SIZE_MS / 1000.0 * static_cast<double>(m_loader->sample_rate()));
+
+    m_connection->set_self_sample_rate(m_loader->sample_rate());
 }
 
 AudioCodecPluginSerenity::~AudioCodecPluginSerenity() = default;
 
 ErrorOr<void> AudioCodecPluginSerenity::play_next_samples()
 {
-    while (m_connection->remaining_samples() < m_device_samples_per_buffer * ALWAYS_ENQUEUED_BUFFER_COUNT) {
+    while (m_connection->remaining_samples() < m_samples_to_load_per_buffer * ALWAYS_ENQUEUED_BUFFER_COUNT) {
         bool all_samples_loaded = m_loader->loaded_samples() >= m_loader->total_samples();
         bool audio_server_done = m_connection->remaining_samples() == 0;
 
@@ -62,10 +62,10 @@ ErrorOr<void> AudioCodecPluginSerenity::play_next_samples()
             break;
         }
 
-        auto samples = TRY(read_samples_from_loader(m_loader, m_samples_to_load_per_buffer, m_device_sample_rate));
+        auto samples = TRY(read_samples_from_loader(m_loader, m_samples_to_load_per_buffer));
         TRY(m_connection->async_enqueue(move(samples)));
 
-        m_position = current_loader_position(m_loader, m_device_sample_rate);
+        m_position = current_loader_position(m_loader);
     }
 
     return {};
@@ -90,11 +90,10 @@ void AudioCodecPluginSerenity::set_volume(double volume)
 
 void AudioCodecPluginSerenity::seek(double position)
 {
-    auto duration = static_cast<double>(this->duration().to_milliseconds()) / 1000.0;
-    position = position / duration * static_cast<double>(m_loader->total_samples());
+    m_position = set_loader_position(m_loader, position, m_duration);
 
-    m_loader->seek(static_cast<int>(position)).release_value_but_fixme_should_propagate_errors();
-    m_position = current_loader_position(m_loader, m_device_sample_rate);
+    m_connection->clear_client_buffer();
+    m_connection->async_clear_buffer();
 
     if (on_playback_position_updated)
         on_playback_position_updated(m_position);

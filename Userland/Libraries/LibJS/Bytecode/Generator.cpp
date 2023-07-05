@@ -198,6 +198,9 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
             } else if (expression.property().is_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
                 emit<Bytecode::Op::GetById>(identifier_table_ref);
+            } else if (expression.property().is_private_identifier()) {
+                auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+                emit<Bytecode::Op::GetPrivateById>(identifier_table_ref);
             } else {
                 return CodeGenerationError {
                     &expression,
@@ -238,6 +241,10 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
             emit<Bytecode::Op::Load>(value_reg);
             auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
             emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
+        } else if (expression.property().is_private_identifier()) {
+            emit<Bytecode::Op::Load>(value_reg);
+            auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+            emit<Bytecode::Op::PutPrivateById>(object_reg, identifier_table_ref);
         } else {
             return CodeGenerationError {
                 &expression,
@@ -445,12 +452,34 @@ void Generator::pop_home_object()
     m_home_objects.take_last();
 }
 
-void Generator::emit_new_function(FunctionNode const& function_node)
+void Generator::emit_new_function(FunctionExpression const& function_node, Optional<IdentifierTableIndex> lhs_name)
 {
     if (m_home_objects.is_empty())
-        emit<Op::NewFunction>(function_node);
+        emit<Op::NewFunction>(function_node, lhs_name);
     else
-        emit<Op::NewFunction>(function_node, m_home_objects.last());
+        emit<Op::NewFunction>(function_node, lhs_name, m_home_objects.last());
+}
+
+CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_function(Expression const& expression, Optional<IdentifierTableIndex> lhs_name)
+{
+    if (is<FunctionExpression>(expression)) {
+        auto const& function_expression = static_cast<FunctionExpression const&>(expression);
+        if (!function_expression.has_name()) {
+            TRY(function_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            return {};
+        }
+    }
+
+    if (is<ClassExpression>(expression)) {
+        auto const& class_expression = static_cast<ClassExpression const&>(expression);
+        if (!class_expression.has_name()) {
+            TRY(class_expression.generate_bytecode_with_lhs_name(*this, move(lhs_name)));
+            return {};
+        }
+    }
+
+    TRY(expression.generate_bytecode(*this));
+    return {};
 }
 
 }

@@ -489,6 +489,9 @@ if (BUILD_LAGOM)
         add_executable(abench ../../Userland/Utilities/abench.cpp)
         target_link_libraries(abench LibCore LibMain LibFileSystem LibAudio)
 
+        add_executable(aconv ../../Userland/Utilities/aconv.cpp)
+        target_link_libraries(aconv LibCore LibMain LibFileSystem LibAudio)
+
         if (NOT EMSCRIPTEN)
             add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
             target_link_libraries(adjtime LibCore LibMain)
@@ -551,6 +554,9 @@ if (BUILD_LAGOM)
             add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)
             target_link_libraries(ntpquery LibCore LibMain)
         endif()
+
+        add_executable(pdf ../../Userland/Utilities/pdf.cpp)
+        target_link_libraries(pdf LibCore LibPDF LibMain)
 
         add_executable(sql ../../Userland/Utilities/sql.cpp)
         target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
@@ -656,7 +662,6 @@ if (BUILD_LAGOM)
 
         # Extra tests from Tests/LibJS
         lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LibJS)
-        lagom_test(../../Tests/LibJS/test-bytecode-js.cpp LIBS LibJS)
         lagom_test(../../Tests/LibJS/test-value-js.cpp LIBS LibJS)
 
         # Spreadsheet

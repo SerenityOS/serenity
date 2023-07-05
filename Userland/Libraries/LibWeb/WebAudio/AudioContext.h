@@ -6,23 +6,55 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/AudioContextPrototype.h>
+#include <LibWeb/HighResolutionTime/DOMHighResTimeStamp.h>
 #include <LibWeb/WebAudio/BaseAudioContext.h>
 
 namespace Web::WebAudio {
+
+struct AudioContextOptions {
+    Bindings::AudioContextLatencyCategory latency_hint = Bindings::AudioContextLatencyCategory::Interactive;
+    Optional<float> sample_rate;
+};
+
+struct AudioTimestamp {
+    double context_time { 0 };
+    double performance_time { 0 };
+};
 
 // https://webaudio.github.io/web-audio-api/#AudioContext
 class AudioContext final : public BaseAudioContext {
     WEB_PLATFORM_OBJECT(AudioContext, BaseAudioContext);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioContext>> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioContext>> construct_impl(JS::Realm&, AudioContextOptions const& context_options = {});
 
     virtual ~AudioContext() override;
 
+    double base_latency() const { return m_base_latency; };
+    double output_latency() const { return m_output_latency; };
+    AudioTimestamp get_output_timestamp();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> resume();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> suspend();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> close();
+
 private:
-    explicit AudioContext(JS::Realm&);
+    explicit AudioContext(JS::Realm&, AudioContextOptions const& context_options);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
+
+    double m_base_latency { 0 };
+    double m_output_latency { 0 };
+
+    bool m_allowed_to_start = true;
+    Vector<JS::NonnullGCPtr<WebIDL::Promise>> m_pending_promises;
+    Vector<JS::NonnullGCPtr<WebIDL::Promise>> m_pending_resume_promises;
+    bool m_suspended_by_user = false;
+    HTML::UniqueTaskSource m_media_element_event_task_source {};
+
+    void queue_a_media_element_task(JS::SafeFunction<void()> steps);
+    bool start_rendering_audio_graph();
 };
 
 }

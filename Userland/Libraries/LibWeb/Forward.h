@@ -27,6 +27,7 @@ namespace Web::Bindings {
 class Intrinsics;
 class OptionConstructor;
 
+enum class AudioContextLatencyCategory;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;
 enum class DOMParserSupportedType;
@@ -550,6 +551,7 @@ class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
 struct PullIntoDescriptor;
+struct QueuingStrategy;
 struct QueuingStrategyInit;
 struct UnderlyingSink;
 struct UnderlyingSource;
@@ -602,6 +604,10 @@ class Table;
 namespace Web::WebAudio {
 class AudioContext;
 class BaseAudioContext;
+
+enum class AudioContextState;
+
+struct AudioContextOptions;
 }
 
 namespace Web::WebGL {

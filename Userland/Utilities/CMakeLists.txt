@@ -7,7 +7,7 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
-    adjtime aplay abench asctl bt checksum chres cksum copy fortune gunzip gzip init install keymap lsirq lsof lspci lzcat man mknod mktemp
+    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gunzip gzip init install keymap lsirq lsof lspci lzcat man mknod mktemp
     nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
@@ -72,6 +72,7 @@ install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/fgrep SYMBOLIC)"
 install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/rgrep SYMBOLIC)")
 
 target_link_libraries(abench PRIVATE LibAudio LibFileSystem)
+target_link_libraries(aconv PRIVATE LibAudio LibFileSystem)
 target_link_libraries(aplay PRIVATE LibAudio LibFileSystem LibIPC)
 target_link_libraries(asctl PRIVATE LibAudio LibIPC)
 target_link_libraries(bt PRIVATE LibSymbolication)
@@ -115,12 +116,14 @@ target_link_libraries(man PRIVATE LibMarkdown LibManual)
 target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown)
 target_link_libraries(matroska PRIVATE LibVideo)
 target_link_libraries(md PRIVATE LibMarkdown)
+target_link_libraries(mktemp PRIVATE LibFileSystem)
 target_link_libraries(mv PRIVATE LibFileSystem)
 target_link_libraries(network-settings PRIVATE LibCore LibMain)
 target_link_libraries(notify PRIVATE LibGfx LibGUI)
 target_link_libraries(open PRIVATE LibDesktop LibFileSystem)
 target_link_libraries(passwd PRIVATE LibCrypt)
 target_link_libraries(paste PRIVATE LibGUI)
+target_link_libraries(pdf PRIVATE LibPDF)
 target_link_libraries(pgrep PRIVATE LibRegex)
 target_link_libraries(pixelflut PRIVATE LibImageDecoderClient LibIPC LibGfx)
 target_link_libraries(pkill PRIVATE LibRegex)

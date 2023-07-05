@@ -30,9 +30,9 @@ JS::ThrowCompletionOr<void> SVGTextContentElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGTextContentElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGTextContentElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGraphicsElement::parse_attribute(name, value);
+    SVGGraphicsElement::attribute_changed(name, value);
 
     if (name == SVG::AttributeNames::x) {
         m_x = AttributeParser::parse_coordinate(value).value_or(m_x);

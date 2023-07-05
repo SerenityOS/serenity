@@ -10,6 +10,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Streams/QueuingStrategy.h>
 
 namespace Web::Streams {
 
@@ -30,12 +31,12 @@ public:
         Errored,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> construct_impl(JS::Realm&, Optional<JS::Handle<JS::Object>> const& underlying_source);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> construct_impl(JS::Realm&, Optional<JS::Handle<JS::Object>> const& underlying_source, QueuingStrategy const& = {});
 
     virtual ~ReadableStream() override;
 
-    bool locked();
-    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value view);
+    bool locked() const;
+    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value reason);
     WebIDL::ExceptionOr<ReadableStreamReader> get_reader();
 
     Optional<ReadableStreamController>& controller() { return m_controller; }

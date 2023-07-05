@@ -72,7 +72,7 @@ public:
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
     virtual size_t first_animated_frame_index() override;
-    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
@@ -168,7 +168,7 @@ size_t PortableImageDecoderPlugin<TContext>::first_animated_frame_index()
 }
 
 template<typename TContext>
-ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("PortableImageDecoderPlugin: Invalid frame index");

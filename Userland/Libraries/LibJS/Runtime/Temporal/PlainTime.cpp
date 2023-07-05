@@ -559,17 +559,17 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
             day_length_ns = ns_per_day;
 
         // b. Let quantity be (((((hour × 60 + minute) × 60 + second) × 1000 + millisecond) × 1000 + microsecond) × 1000 + nanosecond) / dayLengthNs.
-        quantity = (((((hour * 60 + minute) * 60 + second) * 1000 + millisecond) * 1000 + microsecond) * 1000 + nanosecond) / *day_length_ns;
+        quantity = (((((hour * 60.0 + minute) * 60.0 + second) * 1000.0 + millisecond) * 1000.0 + microsecond) * 1000.0 + nanosecond) / *day_length_ns;
     }
     // 4. Else if unit is "hour", then
     else if (unit == "hour"sv) {
         // a. Let quantity be (fractionalSecond / 60 + minute) / 60 + hour.
-        quantity = (fractional_second / 60 + minute) / 60 + hour;
+        quantity = (fractional_second / 60.0 + minute) / 60.0 + hour;
     }
     // 5. Else if unit is "minute", then
     else if (unit == "minute"sv) {
         // a. Let quantity be fractionalSecond / 60 + minute.
-        quantity = fractional_second / 60 + minute;
+        quantity = fractional_second / 60.0 + minute;
     }
     // 6. Else if unit is "second", then
     else if (unit == "second"sv) {

@@ -454,7 +454,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(block_pop_ups_action);
 
     auto same_origin_policy_action = GUI::Action::create_checkable(
-        "Enable Same Origin &Policy", [this](auto& action) {
+        "Enable Same-Origin &Policy", [this](auto& action) {
             active_tab().view().debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
@@ -681,7 +681,7 @@ void BrowserWindow::proxy_mappings_changed()
     });
 }
 
-void BrowserWindow::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void BrowserWindow::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain != "Browser")
         return;
@@ -707,7 +707,7 @@ void BrowserWindow::config_string_did_change(DeprecatedString const& domain, Dep
     // TODO: ColorScheme
 }
 
-void BrowserWindow::config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value)
+void BrowserWindow::config_bool_did_change(StringView domain, StringView group, StringView key, bool value)
 {
     dbgln("{} {} {} {}", domain, group, key, value);
     if (domain != "Browser" || group != "Preferences")

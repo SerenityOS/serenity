@@ -410,7 +410,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     fields = TRY(prepare_temporal_fields(vm, *fields, field_names, Vector<StringView> {}));
 
     // 12. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
-    auto result = TRY(interpret_temporal_date_time_fields(vm, calendar, *fields, *options));
+    auto result = TRY(interpret_temporal_date_time_fields(vm, calendar, *fields, options));
 
     // 13. Assert: IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
     VERIFY(is_valid_iso_date(result.year, result.month, result.day));

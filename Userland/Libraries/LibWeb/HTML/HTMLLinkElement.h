@@ -39,14 +39,13 @@ private:
     HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
-    void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
+    void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;
     virtual void resource_did_load() override;
 
     // ^ HTMLElement
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     struct LinkProcessingOptions {

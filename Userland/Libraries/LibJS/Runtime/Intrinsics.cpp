@@ -63,6 +63,8 @@
 #include <LibJS/Runtime/Intl/SegmenterPrototype.h>
 #include <LibJS/Runtime/Intl/SegmentsPrototype.h>
 #include <LibJS/Runtime/Intrinsics.h>
+#include <LibJS/Runtime/IteratorConstructor.h>
+#include <LibJS/Runtime/IteratorHelperPrototype.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
@@ -88,6 +90,8 @@
 #include <LibJS/Runtime/ShadowRealmConstructor.h>
 #include <LibJS/Runtime/ShadowRealmPrototype.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/SharedArrayBufferConstructor.h>
+#include <LibJS/Runtime/SharedArrayBufferPrototype.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -125,6 +129,7 @@
 #include <LibJS/Runtime/WeakRefPrototype.h>
 #include <LibJS/Runtime/WeakSetConstructor.h>
 #include <LibJS/Runtime/WeakSetPrototype.h>
+#include <LibJS/Runtime/WrapForValidIteratorPrototype.h>
 
 namespace JS {
 
@@ -198,6 +203,7 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_wrap_for_valid_iterator_prototype = heap().allocate<WrapForValidIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
     // These must be initialized before allocating...
     // - AggregateErrorPrototype, which uses ErrorPrototype as its prototype
@@ -355,6 +361,7 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_async_generator_prototype);
     visitor.visit(m_generator_prototype);
     visitor.visit(m_intl_segments_prototype);
+    visitor.visit(m_wrap_for_valid_iterator_prototype);
     visitor.visit(m_eval_function);
     visitor.visit(m_is_finite_function);
     visitor.visit(m_is_nan_function);

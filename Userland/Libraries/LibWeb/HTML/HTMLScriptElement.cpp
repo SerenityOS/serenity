@@ -47,24 +47,21 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_preparation_time_document.ptr());
 }
 
-void HTMLScriptElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLScriptElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
-    if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
-    else if (name == HTML::AttributeNames::referrerpolicy)
-        m_referrer_policy = ReferrerPolicy::from_string(value);
-}
-
-void HTMLScriptElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword({});
-    else if (name == HTML::AttributeNames::referrerpolicy)
-        m_referrer_policy.clear();
+    if (name == HTML::AttributeNames::crossorigin) {
+        if (value.is_null())
+            m_crossorigin = cors_setting_attribute_from_keyword({});
+        else
+            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    } else if (name == HTML::AttributeNames::referrerpolicy) {
+        if (value.is_null())
+            m_referrer_policy.clear();
+        else
+            m_referrer_policy = ReferrerPolicy::from_string(value);
+    }
 }
 
 void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& document)

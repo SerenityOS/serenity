@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Bytecode/CodeGenerationError.h>
+#include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/ClassFieldDefinition.h>
@@ -373,6 +374,8 @@ public:
 
     virtual void dump(int indent) const override;
 
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
     bool has_bound_name(DeprecatedFlyString const& name) const;
     Vector<ImportEntry> const& entries() const { return m_entries; }
     ModuleRequest const& module_request() const { return m_module_request; }
@@ -469,6 +472,8 @@ public:
     virtual Completion execute(Interpreter&) const override;
 
     virtual void dump(int indent) const override;
+
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     bool has_export(DeprecatedFlyString const& export_name) const;
 
@@ -734,10 +739,11 @@ public:
     virtual void dump(int indent) const override;
 
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
     bool has_name() const { return !name().is_empty(); }
 
-    Value instantiate_ordinary_function_expression(Interpreter&, DeprecatedFlyString given_name) const;
+    Value instantiate_ordinary_function_expression(VM&, DeprecatedFlyString given_name) const;
 
 private:
     virtual bool is_function_expression() const override { return true; }
@@ -993,6 +999,8 @@ public:
     }
 
     virtual Completion execute(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
     virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -1298,7 +1306,7 @@ public:
 
     // We use the Completion also as a ClassStaticBlockDefinition Record.
     using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const = 0;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const = 0;
 
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; };
 
@@ -1327,7 +1335,7 @@ public:
     virtual ElementKind class_element_kind() const override { return ElementKind::Method; }
 
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
@@ -1354,7 +1362,7 @@ public:
     virtual ElementKind class_element_kind() const override { return ElementKind::Field; }
 
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
     virtual Optional<DeprecatedFlyString> private_bound_identifier() const override;
 
 private:
@@ -1373,7 +1381,7 @@ public:
     }
 
     virtual ElementKind class_element_kind() const override { return ElementKind::StaticInitializer; }
-    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(Interpreter&, Object& home_object) const override;
+    virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const override;
 
     virtual void dump(int indent) const override;
 
@@ -1414,10 +1422,12 @@ public:
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
     bool has_name() const { return !m_name.is_empty(); }
 
-    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(Interpreter&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
+    ThrowCompletionOr<ECMAScriptFunctionObject*> create_class_constructor(VM&, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
 
 private:
     virtual bool is_class_expression() const override { return true; }
@@ -2023,6 +2033,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Completion execute(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     virtual bool is_import_call() const override { return true; }

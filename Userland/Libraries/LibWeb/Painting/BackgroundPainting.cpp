@@ -252,7 +252,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 x_step = image_rect.width();
                 repeat_x = false;
             } else {
-                auto space = fmod(background_positioning_area.width().to_float(), image_rect.width().to_float());
+                auto space = fmod(background_positioning_area.width().to_double(), image_rect.width().to_double());
                 x_step = image_rect.width() + (space / static_cast<double>(whole_images - 1));
                 repeat_x = true;
             }

@@ -56,7 +56,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    DeprecatedString res = html ? document->render_to_html() : document->render_for_terminal(view_width);
-    out("{}", res);
+    if (html) {
+        out("{}", document->render_to_html());
+    } else {
+        out("{}", TRY(document->render_for_terminal(view_width)));
+    }
+
     return 0;
 }

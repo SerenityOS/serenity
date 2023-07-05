@@ -52,7 +52,7 @@ void SprayTool::paint_it()
             continue;
         if (ypos < 0 || ypos >= bitmap.height())
             continue;
-        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(xpos, ypos, m_color);
+        set_pixel_with_possible_mask<Gfx::StorageFormat::BGRA8888>(xpos, ypos, m_color, bitmap);
     }
 
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));

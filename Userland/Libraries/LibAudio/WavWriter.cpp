@@ -5,21 +5,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Endian.h>
+#include <LibAudio/WavLoader.h>
 #include <LibAudio/WavWriter.h>
 
 namespace Audio {
 
-ErrorOr<NonnullOwnPtr<WavWriter>> WavWriter::create_from_file(StringView path, int sample_rate, u16 num_channels, u16 bits_per_sample)
+ErrorOr<NonnullOwnPtr<WavWriter>> WavWriter::create_from_file(StringView path, int sample_rate, u16 num_channels, PcmSampleFormat sample_format)
 {
-    auto wav_writer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) WavWriter(sample_rate, num_channels, bits_per_sample)));
+    auto wav_writer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) WavWriter(sample_rate, num_channels, sample_format)));
     TRY(wav_writer->set_file(path));
     return wav_writer;
 }
 
-WavWriter::WavWriter(int sample_rate, u16 num_channels, u16 bits_per_sample)
+WavWriter::WavWriter(int sample_rate, u16 num_channels, PcmSampleFormat sample_format)
     : m_sample_rate(sample_rate)
     , m_num_channels(num_channels)
-    , m_bits_per_sample(bits_per_sample)
+    , m_sample_format(sample_format)
 {
 }
 
@@ -39,15 +41,32 @@ ErrorOr<void> WavWriter::set_file(StringView path)
 
 ErrorOr<void> WavWriter::write_samples(Span<Sample> samples)
 {
-    m_data_sz += samples.size() * sizeof(Sample);
-
-    for (auto const& sample : samples) {
-        // FIXME: This only really works for 16-bit samples.
-        u16 left = static_cast<i16>(sample.left * static_cast<float>(1 << m_bits_per_sample));
-        u16 right = static_cast<i16>(sample.right * static_cast<float>(1 << m_bits_per_sample));
-        // FIXME: This ignores endianness.
-        TRY(m_file->write_value(left));
-        TRY(m_file->write_value(right));
+    switch (m_sample_format) {
+    // FIXME: For non-float formats, we don't add good quantization noise, leading to possibly unpleasant quantization artifacts.
+    case PcmSampleFormat::Uint8: {
+        constexpr float scale = static_cast<float>(NumericLimits<u8>::max()) * .5f;
+        for (auto const& sample : samples) {
+            u8 left = static_cast<u8>((sample.left + 1) * scale);
+            u8 right = static_cast<u8>((sample.right + 1) * scale);
+            TRY(m_file->write_value(left));
+            TRY(m_file->write_value(right));
+        }
+        m_data_sz += samples.size() * 2 * sizeof(u8);
+        break;
+    }
+    case PcmSampleFormat::Int16: {
+        constexpr float scale = static_cast<float>(NumericLimits<i16>::max());
+        for (auto const& sample : samples) {
+            u16 left = AK::convert_between_host_and_little_endian(static_cast<i16>(sample.left * scale));
+            u16 right = AK::convert_between_host_and_little_endian(static_cast<i16>(sample.right * scale));
+            TRY(m_file->write_value(left));
+            TRY(m_file->write_value(right));
+        }
+        m_data_sz += samples.size() * 2 * sizeof(u16);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
     }
 
     return {};
@@ -93,21 +112,22 @@ ErrorOr<void> WavWriter::write_header()
     static u32 fmt_size = 16;
     TRY(m_file->write_value(fmt_size));
 
-    // 1 for PCM
-    static u16 audio_format = 1;
+    static u16 audio_format = to_underlying(RIFF::WaveFormat::Pcm);
     TRY(m_file->write_value(audio_format));
 
     TRY(m_file->write_value(m_num_channels));
 
     TRY(m_file->write_value(m_sample_rate));
 
-    u32 byte_rate = m_sample_rate * m_num_channels * (m_bits_per_sample / 8);
+    VERIFY(m_sample_format == PcmSampleFormat::Int16 || m_sample_format == PcmSampleFormat::Uint8);
+    u16 bits_per_sample = pcm_bits_per_sample(m_sample_format);
+    u32 byte_rate = m_sample_rate * m_num_channels * (bits_per_sample / 8);
     TRY(m_file->write_value(byte_rate));
 
-    u16 block_align = m_num_channels * (m_bits_per_sample / 8);
+    u16 block_align = m_num_channels * (bits_per_sample / 8);
     TRY(m_file->write_value(block_align));
 
-    TRY(m_file->write_value(m_bits_per_sample));
+    TRY(m_file->write_value(bits_per_sample));
 
     // "data"
     static u32 chunk_id = 0x61746164;

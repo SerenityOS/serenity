@@ -21,7 +21,7 @@ public:
     explicit Job(GeminiRequest const&, Stream&);
     virtual ~Job() override = default;
 
-    virtual void start(Core::Socket&) override;
+    virtual void start(Core::BufferedSocketBase&) override;
     virtual void shutdown(ShutdownMode) override;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }

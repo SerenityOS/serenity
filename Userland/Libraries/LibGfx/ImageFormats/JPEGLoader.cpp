@@ -17,108 +17,9 @@
 #include <AK/Try.h>
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
-
-// These names are defined in B.1.1.3 - Marker assignments
-
-#define JPEG_APPN0 0XFFE0
-#define JPEG_APPN1 0XFFE1
-#define JPEG_APPN2 0XFFE2
-#define JPEG_APPN3 0XFFE3
-#define JPEG_APPN4 0XFFE4
-#define JPEG_APPN5 0XFFE5
-#define JPEG_APPN6 0XFFE6
-#define JPEG_APPN7 0XFFE7
-#define JPEG_APPN8 0XFFE8
-#define JPEG_APPN9 0XFFE9
-#define JPEG_APPN10 0XFFEA
-#define JPEG_APPN11 0XFFEB
-#define JPEG_APPN12 0XFFEC
-#define JPEG_APPN13 0XFFED
-#define JPEG_APPN14 0xFFEE
-#define JPEG_APPN15 0xFFEF
-
-#define JPEG_RESERVED1 0xFFF1
-#define JPEG_RESERVED2 0xFFF2
-#define JPEG_RESERVED3 0xFFF3
-#define JPEG_RESERVED4 0xFFF4
-#define JPEG_RESERVED5 0xFFF5
-#define JPEG_RESERVED6 0xFFF6
-#define JPEG_RESERVED7 0xFFF7
-#define JPEG_RESERVED8 0xFFF8
-#define JPEG_RESERVED9 0xFFF9
-#define JPEG_RESERVEDA 0xFFFA
-#define JPEG_RESERVEDB 0xFFFB
-#define JPEG_RESERVEDC 0xFFFC
-#define JPEG_RESERVEDD 0xFFFD
-
-#define JPEG_RST0 0xFFD0
-#define JPEG_RST1 0xFFD1
-#define JPEG_RST2 0xFFD2
-#define JPEG_RST3 0xFFD3
-#define JPEG_RST4 0xFFD4
-#define JPEG_RST5 0xFFD5
-#define JPEG_RST6 0xFFD6
-#define JPEG_RST7 0xFFD7
-
-#define JPEG_ZRL 0xF0
-
-#define JPEG_DHP 0xFFDE
-#define JPEG_EXP 0xFFDF
-
-#define JPEG_DAC 0XFFCC
-#define JPEG_DHT 0XFFC4
-#define JPEG_DQT 0XFFDB
-#define JPEG_EOI 0xFFD9
-#define JPEG_DRI 0XFFDD
-#define JPEG_SOF0 0XFFC0
-#define JPEG_SOF1 0XFFC1
-#define JPEG_SOF2 0xFFC2
-#define JPEG_SOF15 0xFFCF
-#define JPEG_SOI 0XFFD8
-#define JPEG_SOS 0XFFDA
-#define JPEG_COM 0xFFFE
+#include <LibGfx/ImageFormats/JPEGShared.h>
 
 namespace Gfx {
-
-constexpr static u8 zigzag_map[64] {
-    0, 1, 8, 16, 9, 2, 3, 10,
-    17, 24, 32, 25, 18, 11, 4, 5,
-    12, 19, 26, 33, 40, 48, 41, 34,
-    27, 20, 13, 6, 7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36,
-    29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46,
-    53, 60, 61, 54, 47, 55, 62, 63
-};
-
-using Marker = u16;
-
-/**
- * MCU means group of data units that are coded together. A data unit is an 8x8
- * block of component data. In interleaved scans, number of non-interleaved data
- * units of a component C is Ch * Cv, where Ch and Cv represent the horizontal &
- * vertical subsampling factors of the component, respectively. A MacroBlock is
- * an 8x8 block of RGB values before encoding, and 8x8 block of YCbCr values when
- * we're done decoding the huffman stream.
- */
-struct Macroblock {
-    union {
-        i16 y[64] = { 0 };
-        i16 r[64];
-    };
-
-    union {
-        i16 cb[64] = { 0 };
-        i16 g[64];
-    };
-
-    union {
-        i16 cr[64] = { 0 };
-        i16 b[64];
-    };
-
-    i16 k[64] = { 0 };
-};
 
 struct MacroblockMeta {
     u32 total { 0 };
@@ -580,6 +481,12 @@ static ErrorOr<void> refine_coefficient(Scan& scan, auto& coefficient)
     return {};
 }
 
+enum class JPEGDecodingMode {
+    Sequential,
+    Progressive
+};
+
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
@@ -594,7 +501,7 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     auto* select_component = get_component(macroblock, scan_component.component.index);
     auto& coefficient = select_component[0];
 
-    if (scan.successive_approximation_high > 0) {
+    if (DecodingMode == JPEGDecodingMode::Progressive && scan.successive_approximation_high > 0) {
         TRY(refine_coefficient(scan, coefficient));
         return {};
     }
@@ -624,8 +531,14 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     return {};
 }
 
-static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
+template<JPEGDecodingMode DecodingMode>
+static ALWAYS_INLINE ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
 {
+    // OPTIMIZATION: This is a fast path for sequential JPEGs, these
+    //               only supports EOB with a value of one block.
+    if constexpr (DecodingMode == JPEGDecodingMode::Sequential)
+        return symbol == 0x00;
+
     // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
     // Note: We also use it for non-progressive encoding as it supports both EOB and ZRL
 
@@ -654,6 +567,7 @@ static bool is_progressive(StartOfFrame::FrameType frame_type)
         || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT_Arithmetic;
 }
 
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
@@ -686,7 +600,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (!in_zrl && scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
             saved_symbol = TRY(scan.huffman_stream.next_symbol(ac_table));
 
-            if (!TRY(read_eob(scan, *saved_symbol))) {
+            if (!TRY(read_eob<DecodingMode>(scan, *saved_symbol))) {
                 to_skip = *saved_symbol >> 4;
 
                 in_zrl = *saved_symbol == JPEG_ZRL;
@@ -695,17 +609,30 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
                     saved_symbol.clear();
                 }
 
-                if (!in_zrl && is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
-                    // G.1.2.3 - Coding model for subsequent scans of successive approximation
-                    // Bit sign from rule a
-                    saved_bit_for_rule_a = TRY(scan.huffman_stream.read_bits(1));
+                if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                    j += to_skip - 1;
+                    to_skip = 0;
+                    in_zrl = false;
+                    continue;
                 }
+
+                if constexpr (DecodingMode == JPEGDecodingMode::Progressive) {
+                    if (!in_zrl && scan.successive_approximation_high != 0) {
+                        // G.1.2.3 - Coding model for subsequent scans of successive approximation
+                        // Bit sign from rule a
+                        saved_bit_for_rule_a = TRY(scan.huffman_stream.read_bits(1));
+                    }
+                }
+            } else if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                break;
             }
         }
 
-        if (coefficient != 0) {
-            TRY(refine_coefficient(scan, coefficient));
-            continue;
+        if constexpr (DecodingMode == JPEGDecodingMode::Progressive) {
+            if (coefficient != 0) {
+                TRY(refine_coefficient(scan, coefficient));
+                continue;
+            }
         }
 
         if (to_skip > 0) {
@@ -718,7 +645,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (scan.end_of_bands_run_count > 0)
             continue;
 
-        if (is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
+        if (DecodingMode == JPEGDecodingMode::Progressive && scan.successive_approximation_high != 0) {
             // G.1.2.3 - Coding model for subsequent scans of successive approximation
             if (auto const low_bits = *saved_symbol & 0x0F; low_bits != 1) {
                 dbgln_if(JPEG_DEBUG, "AC coefficient low bits isn't equal to 1: {}!", low_bits);
@@ -774,6 +701,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
+template<JPEGDecodingMode DecodingMode>
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto const& scan_component : context.current_scan->components) {
@@ -798,15 +726,20 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
 
                 Macroblock& block = macroblocks[macroblock_index];
 
-                if (context.current_scan->spectral_selection_start == 0)
-                    TRY(add_dc(context, block, scan_component));
-                if (context.current_scan->spectral_selection_end != 0)
-                    TRY(add_ac(context, block, scan_component));
+                if constexpr (DecodingMode == JPEGDecodingMode::Sequential) {
+                    TRY(add_dc<DecodingMode>(context, block, scan_component));
+                    TRY(add_ac<DecodingMode>(context, block, scan_component));
+                } else {
+                    if (context.current_scan->spectral_selection_start == 0)
+                        TRY(add_dc<DecodingMode>(context, block, scan_component));
+                    if (context.current_scan->spectral_selection_end != 0)
+                        TRY(add_ac<DecodingMode>(context, block, scan_component));
 
-                // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
-                if (context.current_scan->end_of_bands_run_count > 0) {
-                    --context.current_scan->end_of_bands_run_count;
-                    continue;
+                    // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+                    if (context.current_scan->end_of_bands_run_count > 0) {
+                        --context.current_scan->end_of_bands_run_count;
+                        continue;
+                    }
                 }
             }
         }
@@ -862,7 +795,13 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
                 }
             }
 
-            if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
+            auto result = [&]() {
+                if (is_progressive(context.frame.type))
+                    return build_macroblocks<JPEGDecodingMode::Progressive>(context, macroblocks, hcursor, vcursor);
+                return build_macroblocks<JPEGDecodingMode::Sequential>(context, macroblocks, hcursor, vcursor);
+            }();
+
+            if (result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}: {}", i, result.error());
                     dbgln("Huffman stream byte offset {}", context.stream.byte_offset());
@@ -2039,7 +1978,7 @@ size_t JPEGImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
         return Error::from_string_literal("JPEGImageDecoderPlugin: Invalid frame index");

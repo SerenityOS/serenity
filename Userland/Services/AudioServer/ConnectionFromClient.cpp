@@ -40,21 +40,14 @@ void ConnectionFromClient::set_buffer(Audio::AudioQueue const& buffer)
         did_misbehave("Received an invalid buffer");
         return;
     }
-    if (!m_queue)
+    if (!m_queue) {
         m_queue = m_mixer.create_queue(*this);
+        if (m_saved_sample_rate.has_value())
+            m_queue->set_sample_rate(m_saved_sample_rate.release_value());
+    }
 
     // This is ugly but we know nobody uses the buffer afterwards anyways.
     m_queue->set_buffer(make<Audio::AudioQueue>(move(const_cast<Audio::AudioQueue&>(buffer))));
-}
-
-void ConnectionFromClient::did_change_main_mix_muted_state(Badge<Mixer>, bool muted)
-{
-    async_main_mix_muted_state_changed(muted);
-}
-
-void ConnectionFromClient::did_change_main_mix_volume(Badge<Mixer>, double volume)
-{
-    async_main_mix_volume_changed(volume);
 }
 
 void ConnectionFromClient::did_change_client_volume(Badge<ClientAudioStream>, double volume)
@@ -62,24 +55,19 @@ void ConnectionFromClient::did_change_client_volume(Badge<ClientAudioStream>, do
     async_client_volume_changed(volume);
 }
 
-Messages::AudioServer::GetMainMixVolumeResponse ConnectionFromClient::get_main_mix_volume()
+Messages::AudioServer::GetSelfSampleRateResponse ConnectionFromClient::get_self_sample_rate()
 {
-    return m_mixer.main_volume();
+    if (m_queue)
+        return { m_queue->sample_rate() };
+    // Fall back to device sample rate since that would mean no resampling.
+    return m_mixer.audiodevice_get_sample_rate();
 }
-
-void ConnectionFromClient::set_main_mix_volume(double volume)
+void ConnectionFromClient::set_self_sample_rate(u32 sample_rate)
 {
-    m_mixer.set_main_volume(volume);
-}
-
-Messages::AudioServer::GetSampleRateResponse ConnectionFromClient::get_sample_rate()
-{
-    return { m_mixer.audiodevice_get_sample_rate() };
-}
-
-void ConnectionFromClient::set_sample_rate(u32 sample_rate)
-{
-    m_mixer.audiodevice_set_sample_rate(sample_rate);
+    if (m_queue)
+        m_queue->set_sample_rate(sample_rate);
+    else
+        m_saved_sample_rate = sample_rate;
 }
 
 Messages::AudioServer::GetSelfVolumeResponse ConnectionFromClient::get_self_volume()
@@ -109,16 +97,6 @@ void ConnectionFromClient::clear_buffer()
 {
     if (m_queue)
         m_queue->clear();
-}
-
-Messages::AudioServer::IsMainMixMutedResponse ConnectionFromClient::is_main_mix_muted()
-{
-    return m_mixer.is_muted();
-}
-
-void ConnectionFromClient::set_main_mix_muted(bool muted)
-{
-    m_mixer.set_muted(muted);
 }
 
 Messages::AudioServer::IsSelfMutedResponse ConnectionFromClient::is_self_muted()

@@ -812,10 +812,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_add_mask_action = GUI::Action::create(
         "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
             VERIFY(!active_layer->is_masked());
-            if (auto maybe_error = active_layer->create_mask(); maybe_error.is_error())
+            if (auto maybe_error = active_layer->create_mask(Layer::MaskType::BasicMask); maybe_error.is_error())
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer mask: {}", maybe_error.release_error())));
         }));
     TRY(m_layer_menu->try_add_action(*m_add_mask_action));
+
+    m_add_editing_mask_action = GUI::Action::create(
+        "Add E&diting Mask", { Mod_Ctrl | Mod_Alt, Key_E }, g_icon_bag.add_mask, create_layer_mask_callback("Add Editing Mask", [&](Layer* active_layer) {
+            VERIFY(!active_layer->is_masked());
+            if (auto maybe_error = active_layer->create_mask(Layer::MaskType::EditingMask); maybe_error.is_error())
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer mask: {}", maybe_error.release_error())));
+        }));
+    TRY(m_layer_menu->try_add_action(*m_add_editing_mask_action));
 
     m_delete_mask_action = GUI::Action::create(
         "Delete Mask", create_layer_mask_callback("Delete Mask", [&](Layer* active_layer) {
@@ -830,6 +838,20 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             active_layer->apply_mask();
         }));
     TRY(m_layer_menu->try_add_action(*m_apply_mask_action));
+
+    m_invert_mask_action = GUI::Action::create(
+        "Invert Mask", create_layer_mask_callback("Invert Mask", [&](Layer* active_layer) {
+            VERIFY(active_layer->is_masked());
+            active_layer->invert_mask();
+        }));
+    TRY(m_layer_menu->try_add_action(*m_invert_mask_action));
+
+    m_clear_mask_action = GUI::Action::create(
+        "Clear Mask", create_layer_mask_callback("Clear Mask", [&](Layer* active_layer) {
+            VERIFY(active_layer->is_masked());
+            active_layer->clear_mask();
+        }));
+    TRY(m_layer_menu->try_add_action(*m_clear_mask_action));
 
     TRY(m_layer_menu->try_add_separator());
 
@@ -1205,8 +1227,11 @@ void MainWidget::set_mask_actions_for_layer(Layer* layer)
 
     auto masked = layer->is_masked();
     m_add_mask_action->set_visible(!masked);
+    m_add_editing_mask_action->set_visible(!masked);
+    m_invert_mask_action->set_visible(masked);
+    m_clear_mask_action->set_visible(masked);
     m_delete_mask_action->set_visible(masked);
-    m_apply_mask_action->set_visible(masked);
+    m_apply_mask_action->set_visible(layer->mask_type() == Layer::MaskType::BasicMask);
 }
 
 void MainWidget::open_image(FileSystemAccessClient::File file)

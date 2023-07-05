@@ -32,6 +32,7 @@
     __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void)          \
     __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                                     \
     __JS_ENUMERATE(GeneratorFunction, generator_function, GeneratorFunctionPrototype, GeneratorFunctionConstructor, void)                      \
+    __JS_ENUMERATE(Iterator, iterator, IteratorPrototype, IteratorConstructor, void)                                                           \
     __JS_ENUMERATE(Map, map, MapPrototype, MapConstructor, void)                                                                               \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                                                             \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                                                                   \
@@ -39,6 +40,7 @@
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                                                             \
     __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                                                               \
     __JS_ENUMERATE(ShadowRealm, shadow_realm, ShadowRealmPrototype, ShadowRealmConstructor, void)                                              \
+    __JS_ENUMERATE(SharedArrayBuffer, shared_array_buffer, SharedArrayBufferPrototype, SharedArrayBufferConstructor, void)                     \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                                                             \
     __JS_ENUMERATE(SuppressedError, suppressed_error, SuppressedErrorPrototype, SuppressedErrorConstructor, void)                              \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                                                             \
@@ -106,10 +108,10 @@
     __JS_ENUMERATE(Temporal::Temporal, temporal)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES                         \
-    __JS_ENUMERATE(Iterator, iterator)                           \
     __JS_ENUMERATE(ArrayIterator, array_iterator)                \
     __JS_ENUMERATE(AsyncIterator, async_iterator)                \
     __JS_ENUMERATE(Intl::SegmentIterator, intl_segment_iterator) \
+    __JS_ENUMERATE(IteratorHelper, iterator_helper)              \
     __JS_ENUMERATE(MapIterator, map_iterator)                    \
     __JS_ENUMERATE(RegExpStringIterator, regexp_string_iterator) \
     __JS_ENUMERATE(SetIterator, set_iterator)                    \
@@ -183,6 +185,7 @@ struct ImportEntry;
 class ImportStatement;
 class Interpreter;
 class Intrinsics;
+struct IteratorRecord;
 class MetaProperty;
 class Module;
 struct ModuleRequest;
@@ -228,6 +231,7 @@ class AsyncFromSyncIteratorPrototype;
 class AsyncGenerator;
 class AsyncGeneratorPrototype;
 class GeneratorPrototype;
+class WrapForValidIteratorPrototype;
 
 class TypedArrayConstructor;
 class TypedArrayPrototype;

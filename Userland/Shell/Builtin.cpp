@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1092,16 +1092,51 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
 ErrorOr<int> Shell::builtin_umask(Main::Arguments arguments)
 {
     StringView mask_text;
+    bool symbolic_output = false;
 
     Core::ArgsParser parser;
+
+    parser.add_option(symbolic_output, "Produce symbolic output", "symbolic", 'S');
     parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
 
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
+    auto parse_symbolic_digit = [](int digit) -> ErrorOr<String> {
+        StringBuilder builder;
+
+        if ((digit & 4) == 0)
+            TRY(builder.try_append('r'));
+        if ((digit & 2) == 0)
+            TRY(builder.try_append('w'));
+        if ((digit & 1) == 0)
+            TRY(builder.try_append('x'));
+        if (builder.is_empty())
+            TRY(builder.try_append('-'));
+
+        return builder.to_string();
+    };
+
     if (mask_text.is_empty()) {
         mode_t old_mask = umask(0);
-        printf("%#o\n", old_mask);
+
+        if (symbolic_output) {
+            StringBuilder builder;
+
+            TRY(builder.try_append("u="sv));
+            TRY(builder.try_append(TRY(parse_symbolic_digit(old_mask >> 6 & 7)).bytes()));
+
+            TRY(builder.try_append(",g="sv));
+            TRY(builder.try_append(TRY(parse_symbolic_digit(old_mask >> 3 & 7)).bytes()));
+
+            TRY(builder.try_append(",o="sv));
+            TRY(builder.try_append(TRY(parse_symbolic_digit(old_mask >> 0 & 7)).bytes()));
+
+            outln("{}", builder.string_view());
+        } else {
+            outln("{:#o}", old_mask);
+        }
+
         umask(old_mask);
         return 0;
     }

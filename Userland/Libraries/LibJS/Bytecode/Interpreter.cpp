@@ -32,26 +32,35 @@ void Interpreter::set_enabled(bool enabled)
     s_bytecode_interpreter_enabled = enabled;
 }
 
-static Interpreter* s_current;
-bool g_dump_bytecode = false;
+static bool s_optimizations_enabled = false;
 
-Interpreter* Interpreter::current()
+void Interpreter::set_optimizations_enabled(bool enabled)
 {
-    return s_current;
+    s_optimizations_enabled = enabled;
 }
 
-Interpreter::Interpreter(Realm& realm)
-    : m_vm(realm.vm())
-    , m_realm(realm)
+bool g_dump_bytecode = false;
+
+Interpreter::Interpreter(VM& vm)
+    : m_vm(vm)
 {
-    VERIFY(!s_current);
-    s_current = this;
 }
 
 Interpreter::~Interpreter()
 {
-    VERIFY(s_current == this);
-    s_current = nullptr;
+}
+
+void Interpreter::visit_edges(Cell::Visitor& visitor)
+{
+    if (m_return_value.has_value())
+        visitor.visit(*m_return_value);
+    if (m_saved_return_value.has_value())
+        visitor.visit(*m_saved_return_value);
+    if (m_saved_exception.has_value())
+        visitor.visit(*m_saved_exception);
+    for (auto& window : m_register_windows) {
+        window.visit([&](auto& value) { value->visit_edges(visitor); });
+    }
 }
 
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
@@ -115,7 +124,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
         } else {
             auto executable = executable_result.release_value();
 
-            if (m_optimizations_enabled) {
+            if (s_optimizations_enabled) {
                 auto& passes = optimization_pipeline();
                 passes.perform(*executable);
             }
@@ -124,7 +133,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
                 executable->dump();
 
             // a. Set result to the result of evaluating script.
-            auto result_or_error = run_and_return_frame(*executable, nullptr);
+            auto result_or_error = run_and_return_frame(script_record.realm(), *executable, nullptr);
             if (result_or_error.value.is_error())
                 result = result_or_error.value.release_error();
             else
@@ -184,12 +193,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-void Interpreter::set_optimizations_enabled(bool enabled)
-{
-    m_optimizations_enabled = enabled;
-}
-
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -201,12 +205,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
-        execution_context.this_value = &m_realm->global_object();
+        execution_context.this_value = &realm.global_object();
         static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
-        execution_context.lexical_environment = &m_realm->global_environment();
-        execution_context.variable_environment = &m_realm->global_environment();
-        execution_context.realm = m_realm;
+        execution_context.lexical_environment = &realm.global_environment();
+        execution_context.variable_environment = &realm.global_environment();
+        execution_context.realm = realm;
         execution_context.is_strict_mode = executable.is_strict_mode;
         vm().push_execution_context(execution_context);
         pushed_execution_context = true;
@@ -215,11 +219,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
 
     if (in_frame)
-        m_register_windows.append(in_frame);
+        push_register_window(in_frame, executable.number_of_registers);
     else
-        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), Vector<UnwindInfo> {}));
-
-    registers().resize(executable.number_of_registers);
+        push_register_window(make<RegisterWindow>(), executable.number_of_registers);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
@@ -234,7 +236,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             auto ran_or_error = instruction.execute(*this);
             if (ran_or_error.is_error()) {
                 auto exception_value = *ran_or_error.throw_completion().value();
-                m_saved_exception = make_handle(exception_value);
+                m_saved_exception = exception_value;
                 if (unwind_contexts().is_empty())
                     break;
                 auto& unwind_context = unwind_contexts().last();
@@ -242,7 +244,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                     break;
                 if (unwind_context.handler) {
                     vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
-                    vm().running_execution_context().variable_environment = unwind_context.variable_environment;
                     m_current_block = unwind_context.handler;
                     unwind_context.handler = nullptr;
 
@@ -265,7 +266,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 will_jump = true;
                 break;
             }
-            if (!m_return_value.is_empty()) {
+            if (m_return_value.has_value()) {
                 will_return = true;
                 // Note: A `yield` statement will not go through a finally statement,
                 //       hence we need to set a flag to not do so,
@@ -284,7 +285,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
-                m_saved_return_value = make_handle(m_return_value);
+                m_saved_return_value = m_return_value;
                 m_return_value = {};
                 m_current_block = unwind_context.finalizer;
                 // the unwind_context will be pop'ed when entering the finally block
@@ -295,7 +296,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         if (pc.at_end())
             break;
 
-        if (!m_saved_exception.is_null())
+        if (m_saved_exception.has_value())
             break;
 
         if (will_return)
@@ -315,15 +316,13 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         }
     }
 
-    auto frame = m_register_windows.take_last();
+    auto frame = pop_register_window();
 
     Value return_value = js_undefined();
-    if (!m_return_value.is_empty()) {
-        return_value = m_return_value;
-        m_return_value = {};
-    } else if (!m_saved_return_value.is_null() && m_saved_exception.is_null()) {
-        return_value = m_saved_return_value.value();
-        m_saved_return_value = {};
+    if (m_return_value.has_value()) {
+        return_value = m_return_value.release_value();
+    } else if (m_saved_return_value.has_value() && !m_saved_exception.has_value()) {
+        return_value = m_saved_return_value.release_value();
     }
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
@@ -341,7 +340,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     vm().finish_execution_generation();
 
-    if (!m_saved_exception.is_null()) {
+    if (m_saved_exception.has_value()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
         m_saved_return_value = {};
@@ -361,8 +360,7 @@ void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<
         m_current_executable,
         handler_target.has_value() ? &handler_target->block() : nullptr,
         finalizer_target.has_value() ? &finalizer_target->block() : nullptr,
-        vm().running_execution_context().lexical_environment,
-        vm().running_execution_context().variable_environment);
+        vm().running_execution_context().lexical_environment);
 }
 
 void Interpreter::leave_unwind_context()
@@ -372,15 +370,12 @@ void Interpreter::leave_unwind_context()
 
 ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume_label)
 {
-    if (!m_saved_exception.is_null()) {
-        auto result = throw_completion(m_saved_exception.value());
-        m_saved_exception = {};
-        return result;
+    if (m_saved_exception.has_value()) {
+        return throw_completion(m_saved_exception.release_value());
     }
 
-    if (!m_saved_return_value.is_null()) {
-        do_return(m_saved_return_value.value());
-        m_saved_return_value = {};
+    if (m_saved_return_value.has_value()) {
+        do_return(m_saved_return_value.release_value());
         return {};
     }
 
@@ -395,29 +390,18 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
     return {};
 }
 
-VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope()
+VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope(Realm& realm)
 {
     if (!m_ast_interpreter)
-        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(m_realm);
+        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(realm);
 
     return { *m_ast_interpreter };
 }
 
-AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> Interpreter::s_optimization_pipelines {};
-
-Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::OptimizationLevel level)
+Bytecode::PassManager& Interpreter::optimization_pipeline()
 {
-    auto underlying_level = to_underlying(level);
-    VERIFY(underlying_level <= to_underlying(Interpreter::OptimizationLevel::__Count));
-    auto& entry = s_optimization_pipelines[underlying_level];
-
-    if (entry)
-        return *entry;
-
-    auto pm = make<PassManager>();
-    if (level == OptimizationLevel::None) {
-        // No optimization.
-    } else if (level == OptimizationLevel::Optimize) {
+    static auto s_optimization_pipeline = [] {
+        auto pm = make<Bytecode::PassManager>();
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::UnifySameBlocks>();
         pm->add<Passes::GenerateCFG>();
@@ -429,14 +413,9 @@ Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::Optimizat
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::PlaceBlocks>();
         pm->add<Passes::EliminateLoads>();
-    } else {
-        VERIFY_NOT_REACHED();
-    }
-
-    auto& passes = *pm;
-    entry = move(pm);
-
-    return passes;
+        return pm;
+    }();
+    return *s_optimization_pipeline;
 }
 
 size_t Interpreter::pc() const
@@ -447,6 +426,49 @@ size_t Interpreter::pc() const
 DeprecatedString Interpreter::debug_position() const
 {
     return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
+}
+
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+{
+    auto executable_result = Bytecode::Generator::generate(node, kind);
+    if (executable_result.is_error())
+        return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
+
+    auto bytecode_executable = executable_result.release_value();
+    bytecode_executable->name = name;
+
+    if (s_optimizations_enabled) {
+        auto& passes = Bytecode::Interpreter::optimization_pipeline();
+        passes.perform(*bytecode_executable);
+        if constexpr (JS_BYTECODE_DEBUG) {
+            dbgln("Optimisation passes took {}us", passes.elapsed());
+            dbgln("Compiled Bytecode::Block for function '{}':", name);
+        }
+    }
+
+    if (Bytecode::g_dump_bytecode)
+        bytecode_executable->dump();
+
+    return bytecode_executable;
+}
+
+Realm& Interpreter::realm()
+{
+    return *m_vm.current_realm();
+}
+
+void Interpreter::push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> window, size_t register_count)
+{
+    m_register_windows.append(move(window));
+    this->window().registers.resize(register_count);
+    m_current_register_window = this->window().registers;
+}
+
+Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> Interpreter::pop_register_window()
+{
+    auto window = m_register_windows.take_last();
+    m_current_register_window = m_register_windows.is_empty() ? Span<Value> {} : this->window().registers;
+    return window;
 }
 
 }

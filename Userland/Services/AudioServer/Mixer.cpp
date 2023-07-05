@@ -11,6 +11,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
+#include <AudioServer/ConnectionFromManagerClient.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Timer.h>
@@ -38,6 +39,7 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> d
 NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ConnectionFromClient& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));
+    queue->set_sample_rate(audiodevice_get_sample_rate());
     {
         Threading::MutexLocker const locker(m_pending_mutex);
         m_pending_mixing.append(*queue);
@@ -79,7 +81,7 @@ void Mixer::mix()
 
             for (auto& mixed_sample : mixed_buffer) {
                 Audio::Sample sample;
-                if (!queue->get_next_sample(sample))
+                if (!queue->get_next_sample(sample, audiodevice_get_sample_rate()))
                     break;
                 if (queue->is_muted())
                     continue;
@@ -127,7 +129,7 @@ void Mixer::set_main_volume(double volume)
     m_config->write_num_entry("Master", "Volume", static_cast<int>(volume * 100));
     request_setting_sync();
 
-    ConnectionFromClient::for_each([&](ConnectionFromClient& client) {
+    ConnectionFromManagerClient::for_each([&](auto& client) {
         client.did_change_main_mix_volume({}, main_volume());
     });
 }
@@ -141,7 +143,7 @@ void Mixer::set_muted(bool muted)
     m_config->write_bool_entry("Master", "Mute", m_muted);
     request_setting_sync();
 
-    ConnectionFromClient::for_each([muted](ConnectionFromClient& client) {
+    ConnectionFromManagerClient::for_each([muted](auto& client) {
         client.did_change_main_mix_muted_state({}, muted);
     });
 }
@@ -151,15 +153,22 @@ int Mixer::audiodevice_set_sample_rate(u32 sample_rate)
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_SET_SAMPLE_RATE, sample_rate);
     if (code != 0)
         dbgln("Error while setting sample rate to {}: ioctl error: {}", sample_rate, strerror(errno));
+    // Note that the effective sample rate may be different depending on device restrictions.
+    // Therefore, we delete our cache, but for efficency don't immediately read the sample rate back.
+    m_cached_sample_rate = {};
     return code;
 }
 
 u32 Mixer::audiodevice_get_sample_rate() const
 {
+    if (m_cached_sample_rate.has_value())
+        return m_cached_sample_rate.value();
     u32 sample_rate = 0;
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_SAMPLE_RATE, &sample_rate);
     if (code != 0)
         dbgln("Error while getting sample rate: ioctl error: {}", strerror(errno));
+    else
+        m_cached_sample_rate = sample_rate;
     return sample_rate;
 }
 

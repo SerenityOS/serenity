@@ -12,9 +12,9 @@
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
 #include <AK/MemoryStream.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
-#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -23,31 +23,27 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
+bool WavLoaderPlugin::sniff(SeekableStream& stream)
 {
-    auto stream = LOADER_TRY(Core::InputBufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
-    auto loader = make<WavLoaderPlugin>(move(stream));
+    auto riff = stream.read_value<RIFF::ChunkID>();
+    if (riff.is_error())
+        return false;
+    if (riff.value() != RIFF::riff_magic)
+        return false;
 
-    LOADER_TRY(loader->initialize());
+    auto size = stream.read_value<LittleEndian<u32>>();
+    if (size.is_error())
+        return false;
 
-    return loader;
+    auto wave = stream.read_value<RIFF::ChunkID>();
+    return !wave.is_error() && wave.value() == RIFF::wave_subformat_id;
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
+ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> WavLoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
-    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
-
-    LOADER_TRY(loader->initialize());
-
+    TRY(loader->parse_header());
     return loader;
-}
-
-MaybeLoaderError WavLoaderPlugin::initialize()
-{
-    LOADER_TRY(parse_header());
-
-    return {};
 }
 
 template<typename SampleReader>
@@ -56,12 +52,12 @@ MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(Stream& stream, Sampl
     switch (m_num_channels) {
     case 1:
         for (auto& sample : samples)
-            sample = Sample(LOADER_TRY(read_sample(stream)));
+            sample = Sample(TRY(read_sample(stream)));
         break;
     case 2:
         for (auto& sample : samples) {
-            auto left_channel_sample = LOADER_TRY(read_sample(stream));
-            auto right_channel_sample = LOADER_TRY(read_sample(stream));
+            auto left_channel_sample = TRY(read_sample(stream));
+            auto right_channel_sample = TRY(read_sample(stream));
             sample = Sample(left_channel_sample, right_channel_sample);
         }
         break;
@@ -110,7 +106,7 @@ static ErrorOr<double> read_sample(Stream& stream)
 
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
-    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
+    FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(samples_to_read));
     FixedMemoryStream stream { data };
 
     switch (m_sample_format) {
@@ -155,8 +151,8 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> WavLoaderPlugin::load_chunks(si
         bytes_to_read, m_num_channels, m_sample_rate,
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
 
-    auto sample_data = LOADER_TRY(ByteBuffer::create_zeroed(bytes_to_read));
-    LOADER_TRY(m_stream->read_until_filled(sample_data.bytes()));
+    auto sample_data = TRY(ByteBuffer::create_zeroed(bytes_to_read));
+    TRY(m_stream->read_until_filled(sample_data.bytes()));
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
@@ -173,7 +169,7 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 
     size_t sample_offset = m_byte_offset_of_data_samples + static_cast<size_t>(sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
 
-    LOADER_TRY(m_stream->seek(sample_offset, SeekMode::SetPosition));
+    TRY(m_stream->seek(sample_offset, SeekMode::SetPosition));
 
     m_loaded_samples = sample_index;
     return {};
@@ -182,11 +178,11 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 // Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 MaybeLoaderError WavLoaderPlugin::parse_header()
 {
-#define CHECK(check, category, msg)                                                                                                                 \
-    do {                                                                                                                                            \
-        if (!(check)) {                                                                                                                             \
-            return LoaderError { category, static_cast<size_t>(LOADER_TRY(m_stream->tell())), DeprecatedString::formatted("WAV header: {}", msg) }; \
-        }                                                                                                                                           \
+#define CHECK(check, category, msg)                                                                                                          \
+    do {                                                                                                                                     \
+        if (!(check)) {                                                                                                                      \
+            return LoaderError { category, static_cast<size_t>(TRY(m_stream->tell())), DeprecatedString::formatted("WAV header: {}", msg) }; \
+        }                                                                                                                                    \
     } while (0)
 
     auto riff = TRY(m_stream->read_value<RIFF::ChunkID>());

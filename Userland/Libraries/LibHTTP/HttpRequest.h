@@ -79,7 +79,7 @@ public:
     ByteBuffer const& body() const { return m_body; }
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
-    DeprecatedString method_name() const;
+    StringView method_name() const;
     ErrorOr<ByteBuffer> to_raw_request() const;
 
     void set_headers(HashMap<DeprecatedString, DeprecatedString> const&);
@@ -96,6 +96,6 @@ private:
     ByteBuffer m_body;
 };
 
-DeprecatedString to_deprecated_string(HttpRequest::Method);
+StringView to_string_view(HttpRequest::Method);
 
 }

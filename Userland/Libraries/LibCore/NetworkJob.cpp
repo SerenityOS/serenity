@@ -16,14 +16,6 @@ NetworkJob::NetworkJob(Stream& output_stream)
 {
 }
 
-void NetworkJob::start(Core::Socket&)
-{
-}
-
-void NetworkJob::shutdown(ShutdownMode)
-{
-}
-
 void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 {
     if (is_cancelled())

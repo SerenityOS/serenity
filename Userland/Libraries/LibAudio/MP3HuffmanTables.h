@@ -112,9 +112,12 @@ HuffmanDecodeResult<T> huffman_decode(BigEndianInputBitStream& bitstream, Readon
     size_t bits_read = 0;
 
     while (!node->is_leaf() && max_bits_to_read-- > 0) {
-        bool const direction = bitstream.read_bit().release_value_but_fixme_should_propagate_errors();
+        auto const maybe_direction = bitstream.read_bit();
+        if (maybe_direction.is_error())
+            return { bits_read, {} };
+
         ++bits_read;
-        if (direction) {
+        if (maybe_direction.value()) {
             if (node->left == -1)
                 return {};
             node = &tree[node->left];

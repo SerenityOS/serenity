@@ -149,8 +149,8 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
     auto draw_border = [&](auto const& border, auto const& radius, auto const& opposite_border, auto const& opposite_radius, auto p1_step_translate, auto p2_step_translate) {
         auto [p1, p2] = points_for_edge(edge, rect);
-        auto p1_step = radius ? 0 : border.width / device_pixel_width.value();
-        auto p2_step = opposite_radius ? 0 : opposite_border.width / device_pixel_width.value();
+        auto p1_step = radius ? 0 : context.enclosing_device_pixels(border.width).value() / device_pixel_width.value();
+        auto p2_step = opposite_radius ? 0 : context.enclosing_device_pixels(opposite_border.width).value() / device_pixel_width.value();
         for (DevicePixels i = 0; i < device_pixel_width; ++i) {
             draw_horizontal_or_vertical_line(p1, p2);
             p1_step_translate(p1, p1_step);

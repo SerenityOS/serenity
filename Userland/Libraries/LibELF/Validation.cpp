@@ -8,7 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <Kernel/API/serenity_limits.h>
-#include <LibC/elf.h>
+#include <LibELF/ELFABI.h>
 #include <LibELF/Validation.h>
 
 #ifndef KERNEL

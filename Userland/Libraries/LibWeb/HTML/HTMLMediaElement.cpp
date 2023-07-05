@@ -84,24 +84,20 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_fetch_controller);
 }
 
-void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLMediaElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    Base::parse_attribute(name, value);
+    Base::attribute_changed(name, value);
 
-    if (name == HTML::AttributeNames::src)
+    if (name == HTML::AttributeNames::src) {
         load_element().release_value_but_fixme_should_propagate_errors();
-    else if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
-    else if (name == HTML::AttributeNames::muted)
+    } else if (name == HTML::AttributeNames::crossorigin) {
+        if (value.is_null())
+            m_crossorigin = cors_setting_attribute_from_keyword({});
+        else
+            m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    } else if (name == HTML::AttributeNames::muted) {
         set_muted(true);
-}
-
-void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    Base::did_remove_attribute(name);
-
-    if (name == HTML::AttributeNames::crossorigin)
-        m_crossorigin = cors_setting_attribute_from_keyword({});
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-83
@@ -370,6 +366,23 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
     return {};
 }
 
+WebIDL::ExceptionOr<void> HTMLMediaElement::toggle_playback()
+{
+    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
+    //        context. This pushes one to allow the promise creation hook to run.
+    auto& environment_settings = document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+
+    if (potentially_playing())
+        TRY(pause());
+    else
+        TRY(play());
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-volume
 WebIDL::ExceptionOr<void> HTMLMediaElement::set_volume(double volume)
 {
@@ -476,7 +489,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
             m_fetch_controller->stop_fetch();
 
         // FIXME: 3. If the media element's assigned media provider object is a MediaSource object, then detach it.
-        // FIXME: 4. Forget the media element's media-resource-specific tracks.
+
+        // 4. Forget the media element's media-resource-specific tracks.
+        forget_media_resource_specific_tracks();
 
         // 5. If readyState is not set to HAVE_NOTHING, then set it to that state.
         if (m_ready_state != ReadyState::HaveNothing)
@@ -1139,12 +1154,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
         // 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
         //    not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
         // FIXME: Handle unbounded media resources.
-        auto duration = audio_track ? audio_track->duration() : video_track->duration();
-        set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
-
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.
         if (video_track && is<HTMLVideoElement>(*this)) {
+            auto duration = video_track ? video_track->duration() : audio_track->duration();
+            set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
+
             auto& video_element = verify_cast<HTMLVideoElement>(*this);
             video_element.set_video_width(video_track->pixel_width());
             video_element.set_video_height(video_track->pixel_height());
@@ -1152,6 +1167,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
             queue_a_media_element_task([this] {
                 dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::resize).release_value_but_fixme_should_propagate_errors());
             });
+        } else {
+            auto duration = audio_track ? audio_track->duration() : video_track->duration();
+            set_duration(static_cast<double>(duration.to_milliseconds()) / 1000.0);
         }
 
         // 6. Set the readyState attribute to HAVE_METADATA.
@@ -1573,6 +1591,9 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#blocked-media-element
@@ -1834,6 +1855,84 @@ void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPt
         WebIDL::reject_promise(realm, promise, error);
 
     environment_settings.clean_up_after_running_script();
+}
+
+WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandler>, KeyCode key)
+{
+    switch (key) {
+    case KeyCode::Key_Space:
+        TRY(toggle_playback());
+        break;
+
+    case KeyCode::Key_Home:
+        set_current_time(0);
+        break;
+    case KeyCode::Key_End:
+        set_current_time(duration());
+        break;
+
+    case KeyCode::Key_Left:
+    case KeyCode::Key_Right: {
+        static constexpr double time_skipped_per_key_press = 5.0;
+        auto current_time = this->current_time();
+
+        if (key == KeyCode::Key_Left)
+            current_time = max(0.0, current_time - time_skipped_per_key_press);
+        else
+            current_time = min(duration(), current_time + time_skipped_per_key_press);
+
+        set_current_time(current_time);
+        break;
+    }
+
+    case KeyCode::Key_Up:
+    case KeyCode::Key_Down: {
+        static constexpr double volume_change_per_key_press = 0.1;
+        auto volume = this->volume();
+
+        if (key == KeyCode::Key_Up)
+            volume = min(1.0, volume + volume_change_per_key_press);
+        else
+            volume = max(0.0, volume - volume_change_per_key_press);
+
+        TRY(set_volume(volume));
+        break;
+    }
+
+    case KeyCode::Key_M:
+        set_muted(!muted());
+        break;
+
+    default:
+        break;
+    }
+
+    return {};
+}
+
+void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time)
+{
+    if (display_time.has_value() && !m_display_time.has_value()) {
+        if (potentially_playing()) {
+            m_tracking_mouse_position_while_playing = true;
+            on_paused();
+        }
+    } else if (!display_time.has_value() && m_display_time.has_value()) {
+        if (m_tracking_mouse_position_while_playing) {
+            m_tracking_mouse_position_while_playing = false;
+            on_playing();
+        }
+    }
+
+    m_display_time = move(display_time);
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
+}
+
+double HTMLMediaElement::layout_display_time(Badge<Painting::MediaPaintable>) const
+{
+    return m_display_time.value_or(current_time());
 }
 
 }

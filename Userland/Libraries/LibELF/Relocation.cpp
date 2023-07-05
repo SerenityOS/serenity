@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/elf.h>
+#include <LibELF/ELFABI.h>
 #include <LibELF/Relocation.h>
 
 namespace ELF {

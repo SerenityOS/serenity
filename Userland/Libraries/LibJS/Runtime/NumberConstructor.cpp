@@ -46,7 +46,7 @@ ThrowCompletionOr<void> NumberConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.parseFloat, realm.intrinsics().parse_float_function(), attr);
     define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
-    define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);
+    define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min_denormal()), 0);
     define_direct_property(vm.names.MAX_SAFE_INTEGER, Value(MAX_SAFE_INTEGER_VALUE), 0);
     define_direct_property(vm.names.MIN_SAFE_INTEGER, Value(MIN_SAFE_INTEGER_VALUE), 0);
     define_direct_property(vm.names.NEGATIVE_INFINITY, js_negative_infinity(), 0);

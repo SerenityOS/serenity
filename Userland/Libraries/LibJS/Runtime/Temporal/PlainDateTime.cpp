@@ -75,16 +75,16 @@ bool iso_date_time_within_limits(i32 year, u8 month, u8 day, u8 hour, u8 minute,
 }
 
 // 5.5.2 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
-ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(VM& vm, Object& calendar, Object& fields, Object const& options)
+ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(VM& vm, Object& calendar, Object& fields, Object const* options)
 {
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
     auto unregulated_time_result = TRY(to_temporal_time_record(vm, fields));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(vm, &options));
+    auto overflow = TRY(to_temporal_overflow(vm, options));
 
     // 3. Let temporalDate be ? CalendarDateFromFields(calendar, fields, options).
-    auto* temporal_date = TRY(calendar_date_from_fields(vm, calendar, fields, &options));
+    auto* temporal_date = TRY(calendar_date_from_fields(vm, calendar, fields, options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
     auto time_result = TRY(regulate_time(vm, *unregulated_time_result.hour, *unregulated_time_result.minute, *unregulated_time_result.second, *unregulated_time_result.millisecond, *unregulated_time_result.microsecond, *unregulated_time_result.nanosecond, overflow));
@@ -157,7 +157,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Obje
         auto* fields = TRY(prepare_temporal_fields(vm, item_object, field_names, Vector<StringView> {}));
 
         // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
-        result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, *options));
+        result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, options));
     }
     // 4. Else,
     else {

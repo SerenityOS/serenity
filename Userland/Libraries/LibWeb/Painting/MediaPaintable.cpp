@@ -9,10 +9,11 @@
 #include <LibGUI/Event.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLAudioElement.h>
-#include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Painting/MediaPaintable.h>
 
 namespace Web::Painting {
@@ -59,7 +60,7 @@ void MediaPaintable::paint_media_controls(PaintContext& context, HTML::HTMLMedia
     context.painter().fill_rect(components.control_box_rect.to_type<int>(), control_box_color.with_alpha(0xd0));
 
     paint_control_bar_playback_button(context, media_element, components, mouse_position);
-    paint_control_bar_timeline(context, media_element, components, mouse_position);
+    paint_control_bar_timeline(context, media_element, components);
     paint_control_bar_timestamp(context, components);
     paint_control_bar_speaker(context, media_element, components, mouse_position);
     paint_control_bar_volume(context, media_element, components, mouse_position);
@@ -78,6 +79,13 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
 
     auto remaining_rect = components.control_box_rect;
     remaining_rect.shrink(component_padding * 2, 0);
+
+    auto timeline_rect_height = context.rounded_device_pixels(8);
+    if ((timeline_rect_height * 3) <= components.control_box_rect.height()) {
+        components.timeline_rect = components.control_box_rect;
+        components.timeline_rect.set_height(timeline_rect_height);
+        remaining_rect.take_from_top(timeline_rect_height);
+    }
 
     auto playback_button_rect_width = min(context.rounded_device_pixels(40), remaining_rect.width());
     components.playback_button_rect = remaining_rect;
@@ -101,25 +109,17 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
         remaining_rect.take_from_right(components.speaker_button_size + component_padding);
     }
 
-    auto current_time = human_readable_digital_time(round(media_element.current_time()));
+    auto display_time = human_readable_digital_time(round(media_element.layout_display_time({})));
     auto duration = human_readable_digital_time(isnan(media_element.duration()) ? 0 : round(media_element.duration()));
-    components.timestamp = String::formatted("{} / {}", current_time, duration).release_value_but_fixme_should_propagate_errors();
-
-    auto const& scaled_font = layout_node().scaled_font(context);
-    components.timestamp_font = scaled_font.with_size(10);
-    if (!components.timestamp_font)
-        components.timestamp_font = scaled_font;
+    components.timestamp = String::formatted("{} / {}", display_time, duration).release_value_but_fixme_should_propagate_errors();
+    components.timestamp_font = layout_node().scaled_font(context);
 
     auto timestamp_size = DevicePixels { static_cast<DevicePixels::Type>(ceilf(components.timestamp_font->width(components.timestamp))) };
     if (timestamp_size <= remaining_rect.width()) {
         components.timestamp_rect = remaining_rect;
-        components.timestamp_rect.take_from_left(remaining_rect.width() - timestamp_size);
-        remaining_rect.take_from_right(timestamp_size + component_padding);
+        components.timestamp_rect.take_from_right(remaining_rect.width() - timestamp_size);
+        remaining_rect.take_from_left(timestamp_size + component_padding);
     }
-
-    components.timeline_button_size = context.rounded_device_pixels(16);
-    if ((components.timeline_button_size * 3) <= remaining_rect.width())
-        components.timeline_rect = remaining_rect;
 
     media_element.cached_layout_boxes({}).control_box_rect = context.scale_to_css_rect(components.control_box_rect);
     media_element.cached_layout_boxes({}).playback_button_rect = context.scale_to_css_rect(components.playback_button_rect);
@@ -138,7 +138,7 @@ void MediaPaintable::paint_control_bar_playback_button(PaintContext& context, HT
     auto playback_button_offset_y = (components.playback_button_rect.height() - playback_button_size) / 2;
     auto playback_button_location = components.playback_button_rect.top_left().translated(playback_button_offset_x, playback_button_offset_y);
 
-    auto playback_button_is_hovered = mouse_position.has_value() && components.playback_button_rect.contains(*mouse_position);
+    auto playback_button_is_hovered = rect_is_hovered(media_element, components.playback_button_rect, mouse_position);
     auto playback_button_color = control_button_color(playback_button_is_hovered);
 
     if (media_element.paused()) {
@@ -164,35 +164,22 @@ void MediaPaintable::paint_control_bar_playback_button(PaintContext& context, HT
     }
 }
 
-void MediaPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components, Optional<DevicePixelPoint> const& mouse_position)
+void MediaPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTMLMediaElement const& media_element, Components const& components)
 {
     if (components.timeline_rect.is_empty())
         return;
 
-    auto timelime_scrub_rect = components.timeline_rect;
-    timelime_scrub_rect.shrink(components.timeline_button_size, timelime_scrub_rect.height() - components.timeline_button_size / 2);
-
-    auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.current_time() / media_element.duration();
-    auto playback_position = static_cast<double>(static_cast<int>(timelime_scrub_rect.width())) * playback_percentage;
+    auto playback_percentage = isnan(media_element.duration()) ? 0.0 : media_element.layout_display_time({}) / media_element.duration();
+    auto playback_position = static_cast<double>(static_cast<int>(components.timeline_rect.width())) * playback_percentage;
     auto timeline_button_offset_x = static_cast<DevicePixels>(round(playback_position));
 
-    Gfx::AntiAliasingPainter painter { context.painter() };
-
-    auto timeline_past_rect = timelime_scrub_rect;
+    auto timeline_past_rect = components.timeline_rect;
     timeline_past_rect.set_width(timeline_button_offset_x);
-    painter.fill_rect_with_rounded_corners(timeline_past_rect.to_type<int>(), control_highlight_color.lightened(), 4);
+    context.painter().fill_rect(timeline_past_rect.to_type<int>(), control_highlight_color.lightened());
 
-    auto timeline_future_rect = timelime_scrub_rect;
+    auto timeline_future_rect = components.timeline_rect;
     timeline_future_rect.take_from_left(timeline_button_offset_x);
-    painter.fill_rect_with_rounded_corners(timeline_future_rect.to_type<int>(), Color::Black, 4);
-
-    auto timeline_button_rect = timelime_scrub_rect;
-    timeline_button_rect.shrink(timelime_scrub_rect.width() - components.timeline_button_size, timelime_scrub_rect.height() - components.timeline_button_size);
-    timeline_button_rect.set_x(timelime_scrub_rect.x() + timeline_button_offset_x - components.timeline_button_size / 2);
-
-    auto timeline_is_hovered = mouse_position.has_value() && components.timeline_rect.contains(*mouse_position);
-    auto timeline_color = control_button_color(timeline_is_hovered);
-    painter.fill_ellipse(timeline_button_rect.to_type<int>(), timeline_color);
+    context.painter().fill_rect(timeline_future_rect.to_type<int>(), Color::Black);
 }
 
 void MediaPaintable::paint_control_bar_timestamp(PaintContext& context, Components const& components)
@@ -220,7 +207,7 @@ void MediaPaintable::paint_control_bar_speaker(PaintContext& context, HTML::HTML
         return position.to_type<DevicePixels::Type>().to_type<float>();
     };
 
-    auto speaker_button_is_hovered = mouse_position.has_value() && components.speaker_button_rect.contains(*mouse_position);
+    auto speaker_button_is_hovered = rect_is_hovered(media_element, components.speaker_button_rect, mouse_position);
     auto speaker_button_color = control_button_color(speaker_button_is_hovered);
 
     Gfx::AntiAliasingPainter painter { context.painter() };
@@ -274,12 +261,12 @@ void MediaPaintable::paint_control_bar_volume(PaintContext& context, HTML::HTMLM
     volume_button_rect.shrink(volume_scrub_rect.width() - components.volume_button_size, volume_scrub_rect.height() - components.volume_button_size);
     volume_button_rect.set_x(volume_scrub_rect.x() + volume_button_offset_x - components.volume_button_size / 2);
 
-    auto volume_is_hovered = mouse_position.has_value() && components.volume_rect.contains(*mouse_position);
+    auto volume_is_hovered = rect_is_hovered(media_element, components.volume_rect, mouse_position, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
     auto volume_color = control_button_color(volume_is_hovered);
     painter.fill_ellipse(volume_button_rect.to_type<int>(), volume_color);
 }
 
-MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
+MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary)
         return DispatchEventOfSameName::Yes;
@@ -287,34 +274,50 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
     auto& media_element = *verify_cast<HTML::HTMLMediaElement>(layout_box().dom_node());
     auto const& cached_layout_boxes = media_element.cached_layout_boxes({});
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
+    if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
+        media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Timeline);
+        set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
+    } else if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
+        media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
+        set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+    }
 
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    if (media_element.layout_mouse_tracking_component({}).has_value())
+        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(&layout_node());
 
-    auto toggle_playback = [&]() -> WebIDL::ExceptionOr<void> {
-        if (media_element.paused())
-            TRY(media_element.play());
-        else
-            TRY(media_element.pause());
-        return {};
-    };
+    return DispatchEventOfSameName::Yes;
+}
+
+MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
+{
+    auto& media_element = *verify_cast<HTML::HTMLMediaElement>(layout_box().dom_node());
+    auto const& cached_layout_boxes = media_element.cached_layout_boxes({});
+
+    if (auto const& mouse_tracking_component = media_element.layout_mouse_tracking_component({}); mouse_tracking_component.has_value()) {
+        switch (*mouse_tracking_component) {
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Timeline:
+            set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::No);
+            media_element.set_layout_display_time({}, {});
+            break;
+
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
+            if (auto* page = browsing_context().page())
+                page->client().page_did_leave_tooltip_area();
+            break;
+        }
+
+        const_cast<HTML::BrowsingContext&>(browsing_context()).event_handler().set_mouse_event_tracking_layout_node(nullptr);
+        media_element.set_layout_mouse_tracking_component({}, {});
+
+        return DispatchEventOfSameName::Yes;
+    }
+
+    if (button != GUI::MouseButton::Primary)
+        return DispatchEventOfSameName::Yes;
 
     if (cached_layout_boxes.control_box_rect.has_value() && cached_layout_boxes.control_box_rect->contains(position)) {
         if (cached_layout_boxes.playback_button_rect.has_value() && cached_layout_boxes.playback_button_rect->contains(position)) {
-            toggle_playback().release_value_but_fixme_should_propagate_errors();
-            return DispatchEventOfSameName::Yes;
-        }
-
-        if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
-            auto x_offset = position.x() - cached_layout_boxes.timeline_rect->x();
-            auto x_percentage = static_cast<double>(x_offset) / static_cast<double>(cached_layout_boxes.timeline_rect->width());
-
-            auto position = static_cast<double>(x_percentage) * media_element.duration();
-            media_element.set_current_time(position);
-
+            media_element.toggle_playback().release_value_but_fixme_should_propagate_errors();
             return DispatchEventOfSameName::Yes;
         }
 
@@ -323,25 +326,39 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mouseup(Badge<Eve
             return DispatchEventOfSameName::Yes;
         }
 
-        if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
-            auto x_offset = position.x() - cached_layout_boxes.volume_rect->x();
-            auto volume = static_cast<double>(x_offset) / static_cast<double>(cached_layout_boxes.volume_rect->width());
-
-            media_element.set_volume(volume).release_value_but_fixme_should_propagate_errors();
-
-            return DispatchEventOfSameName::Yes;
-        }
-
-        return DispatchEventOfSameName::No;
+        if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position))
+            return DispatchEventOfSameName::No;
     }
 
-    toggle_playback().release_value_but_fixme_should_propagate_errors();
+    media_element.toggle_playback().release_value_but_fixme_should_propagate_errors();
     return DispatchEventOfSameName::Yes;
 }
 
 MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<EventHandler>, CSSPixelPoint position, unsigned, unsigned)
 {
     auto& media_element = *verify_cast<HTML::HTMLMediaElement>(layout_box().dom_node());
+    auto const& cached_layout_boxes = media_element.cached_layout_boxes({});
+
+    if (auto const& mouse_tracking_component = media_element.layout_mouse_tracking_component({}); mouse_tracking_component.has_value()) {
+        switch (*mouse_tracking_component) {
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Timeline:
+            if (cached_layout_boxes.timeline_rect.has_value())
+                set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
+            break;
+
+        case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
+            if (cached_layout_boxes.volume_rect.has_value()) {
+                set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+
+                if (auto* page = browsing_context().page()) {
+                    auto volume = static_cast<u8>(media_element.volume() * 100.0);
+                    page->client().page_did_enter_tooltip_area(position, DeprecatedString::formatted("{}%", volume));
+                }
+            }
+
+            break;
+        }
+    }
 
     if (absolute_rect().contains(position)) {
         media_element.set_layout_mouse_position({}, position);
@@ -350,6 +367,46 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
 
     media_element.set_layout_mouse_position({}, {});
     return DispatchEventOfSameName::No;
+}
+
+void MediaPaintable::set_current_time(HTML::HTMLMediaElement& media_element, CSSPixelRect timeline_rect, CSSPixelPoint mouse_position, Temporary temporarily)
+{
+    auto x_offset = mouse_position.x() - timeline_rect.x();
+    x_offset = max(x_offset, 0);
+    x_offset = min(x_offset, timeline_rect.width());
+
+    auto x_percentage = static_cast<double>(x_offset) / static_cast<double>(timeline_rect.width());
+    auto position = static_cast<double>(x_percentage) * media_element.duration();
+
+    switch (temporarily) {
+    case Temporary::Yes:
+        media_element.set_layout_display_time({}, position);
+        break;
+    case Temporary::No:
+        media_element.set_current_time(position);
+        break;
+    }
+}
+
+void MediaPaintable::set_volume(HTML::HTMLMediaElement& media_element, CSSPixelRect volume_rect, CSSPixelPoint mouse_position)
+{
+    auto x_offset = mouse_position.x() - volume_rect.x();
+    x_offset = max(x_offset, 0);
+    x_offset = min(x_offset, volume_rect.width());
+
+    auto volume = static_cast<double>(x_offset) / static_cast<double>(volume_rect.width());
+    media_element.set_volume(volume).release_value_but_fixme_should_propagate_errors();
+}
+
+bool MediaPaintable::rect_is_hovered(HTML::HTMLMediaElement const& media_element, Optional<DevicePixelRect> const& rect, Optional<DevicePixelPoint> const& mouse_position, Optional<HTML::HTMLMediaElement::MouseTrackingComponent> const& allowed_mouse_tracking_component)
+{
+    if (auto const& mouse_tracking_component = media_element.layout_mouse_tracking_component({}); mouse_tracking_component.has_value())
+        return mouse_tracking_component == allowed_mouse_tracking_component;
+
+    if (!rect.has_value() || !mouse_position.has_value())
+        return false;
+
+    return rect->contains(*mouse_position);
 }
 
 }

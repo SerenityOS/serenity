@@ -10,7 +10,7 @@
 #include <AK/Concepts.h>
 #include <AK/Vector.h>
 #include <Kernel/Memory/VirtualAddress.h>
-#include <LibC/elf.h>
+#include <LibELF/ELFABI.h>
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>

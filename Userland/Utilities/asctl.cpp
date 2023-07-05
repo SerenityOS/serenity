@@ -8,7 +8,7 @@
 
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibAudio/ConnectionToServer.h>
+#include <LibAudio/ConnectionToManagerServer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -27,8 +27,7 @@ enum AudioVariable : u32 {
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    auto audio_client = TRY(Audio::ConnectionToServer::try_create());
-    audio_client->async_pause_playback();
+    auto audio_client = TRY(Audio::ConnectionToManagerServer::try_create());
 
     StringView command;
     Vector<StringView> command_arguments;
@@ -85,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 break;
             }
             case AudioVariable::SampleRate: {
-                u32 sample_rate = audio_client->get_sample_rate();
+                u32 sample_rate = audio_client->get_device_sample_rate();
                 if (human_mode)
                     outln("Sample rate: {:5d} Hz", sample_rate);
                 else
@@ -155,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             case AudioVariable::SampleRate: {
                 int& sample_rate = to_set.value.get<int>();
-                audio_client->set_sample_rate(sample_rate);
+                audio_client->set_device_sample_rate(sample_rate);
                 break;
             }
             }

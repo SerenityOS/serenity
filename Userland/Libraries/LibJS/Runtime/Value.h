@@ -428,6 +428,17 @@ public:
 #endif
     }
 
+    // A double is any Value which does not have the full exponent and top mantissa bit set or has
+    // exactly only those bits set.
+    bool is_double() const { return (m_value.encoded & CANON_NAN_BITS) != CANON_NAN_BITS || (m_value.encoded == CANON_NAN_BITS); }
+    bool is_int32() const { return m_value.tag == INT32_TAG; }
+
+    i32 as_i32() const
+    {
+        VERIFY(is_int32());
+        return static_cast<i32>(m_value.encoded & 0xFFFFFFFF);
+    }
+
 private:
     Value(u64 tag, u64 val)
     {
@@ -457,17 +468,6 @@ private:
             //       See also: Value::extract_pointer.
             m_value.encoded = tag | (reinterpret_cast<u64>(ptr) & 0x0000ffffffffffffULL);
         }
-    }
-
-    // A double is any Value which does not have the full exponent and top mantissa bit set or has
-    // exactly only those bits set.
-    bool is_double() const { return (m_value.encoded & CANON_NAN_BITS) != CANON_NAN_BITS || (m_value.encoded == CANON_NAN_BITS); }
-    bool is_int32() const { return m_value.tag == INT32_TAG; }
-
-    i32 as_i32() const
-    {
-        VERIFY(is_int32());
-        return static_cast<i32>(m_value.encoded & 0xFFFFFFFF);
     }
 
     template<typename PointerType>

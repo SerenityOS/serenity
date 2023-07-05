@@ -10,7 +10,7 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/FunctionKind.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -20,9 +20,18 @@ class InstructionStreamIterator;
 class PassManager;
 
 struct RegisterWindow {
-    MarkedVector<Value> registers;
-    MarkedVector<GCPtr<Environment>> saved_lexical_environments;
-    MarkedVector<GCPtr<Environment>> saved_variable_environments;
+    void visit_edges(Cell::Visitor& visitor)
+    {
+        for (auto const& value : registers)
+            visitor.visit(value);
+        for (auto const& environment : saved_lexical_environments)
+            visitor.visit(environment);
+        for (auto& context : unwind_contexts) {
+            visitor.visit(context.lexical_environment);
+        }
+    }
+    Vector<Value> registers;
+    Vector<GCPtr<Environment>> saved_lexical_environments;
     Vector<UnwindInfo> unwind_contexts;
 };
 
@@ -30,24 +39,20 @@ class Interpreter {
 public:
     [[nodiscard]] static bool enabled();
     static void set_enabled(bool);
+    static void set_optimizations_enabled(bool);
 
-    explicit Interpreter(Realm&);
+    explicit Interpreter(VM&);
     ~Interpreter();
 
-    // FIXME: Remove this thing once we don't need it anymore!
-    static Interpreter* current();
-
-    Realm& realm() { return m_realm; }
+    Realm& realm();
     VM& vm() { return m_vm; }
-
-    void set_optimizations_enabled(bool);
 
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
-    ThrowCompletionOr<Value> run(Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Realm& realm, Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
-        auto value_and_frame = run_and_return_frame(executable, entry_point);
+        auto value_and_frame = run_and_return_frame(realm, executable, entry_point);
         return move(value_and_frame.value);
     }
 
@@ -55,13 +60,12 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<RegisterWindow> frame;
     };
-    ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
+    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
 
     auto& saved_lexical_environment_stack() { return window().saved_lexical_environments; }
-    auto& saved_variable_environment_stack() { return window().saved_variable_environments; }
     auto& unwind_contexts() { return window().unwind_contexts; }
 
     void jump(Label const& label)
@@ -89,15 +93,11 @@ public:
     size_t pc() const;
     DeprecatedString debug_position() const;
 
-    enum class OptimizationLevel {
-        None,
-        Optimize,
-        __Count,
-        Default = None,
-    };
-    static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
+    static Bytecode::PassManager& optimization_pipeline();
 
-    VM::InterpreterExecutionScope ast_interpreter_scope();
+    VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
+
+    void visit_edges(Cell::Visitor&);
 
 private:
     RegisterWindow& window()
@@ -110,25 +110,28 @@ private:
         return const_cast<Interpreter*>(this)->window();
     }
 
-    MarkedVector<Value>& registers() { return window().registers; }
+    Span<Value> registers() { return m_current_register_window; }
+    ReadonlySpan<Value> registers() const { return m_current_register_window; }
 
-    static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
+    void push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>, size_t register_count);
+    [[nodiscard]] Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> pop_register_window();
 
     VM& m_vm;
-    NonnullGCPtr<Realm> m_realm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
+    Span<Value> m_current_register_window;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
-    Value m_return_value;
-    Handle<Value> m_saved_return_value;
+    Optional<Value> m_return_value;
+    Optional<Value> m_saved_return_value;
+    Optional<Value> m_saved_exception;
     Executable const* m_current_executable { nullptr };
-    Handle<Value> m_saved_exception;
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };
-    bool m_optimizations_enabled { false };
 };
 
 extern bool g_dump_bytecode;
+
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
 
 }

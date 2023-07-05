@@ -4,14 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibAudio/QOALoader.h>
 #include <stddef.h>
 #include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto qoa_data = ByteBuffer::copy(data, size).release_value();
-    auto qoa_or_error = Audio::QOALoaderPlugin::create(qoa_data.bytes());
+    auto const qoa_bytes = ByteBuffer::copy(data, size).release_value();
+    auto qoa_data = try_make<FixedMemoryStream>(qoa_bytes).release_value();
+    auto qoa_or_error = Audio::QOALoaderPlugin::create(move(qoa_data));
 
     if (qoa_or_error.is_error())
         return 0;

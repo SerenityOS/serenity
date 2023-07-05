@@ -147,6 +147,7 @@ private:
     int virt$anon_create(size_t, int);
     int virt$beep();
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
+    u32 virt$bindmount(u32 params_addr);
     int virt$chdir(FlatPtr, size_t);
     int virt$chmod(FlatPtr);
     int virt$chown(FlatPtr);
@@ -167,6 +168,8 @@ private:
     int virt$fchown(int, uid_t, gid_t);
     u32 virt$fcntl(int fd, int, u32);
     int virt$fork();
+    u32 virt$fsopen(u32);
+    u32 virt$fsmount(u32);
     int virt$fstat(int, FlatPtr);
     int virt$ftruncate(int fd, FlatPtr length_addr);
     int virt$futex(FlatPtr);
@@ -199,7 +202,6 @@ private:
     u32 virt$madvise(FlatPtr, size_t, int);
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
     u32 virt$mmap(u32);
-    u32 virt$mount(u32);
     u32 virt$mprotect(FlatPtr, size_t, int);
     FlatPtr virt$mremap(FlatPtr);
     int virt$annotate_mapping(FlatPtr);
@@ -219,6 +221,7 @@ private:
     int virt$recvfd(int, int);
     int virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$rename(FlatPtr address);
+    u32 virt$remount(u32);
     int virt$rmdir(FlatPtr path, size_t path_length);
     int virt$scheduler_get_parameters(FlatPtr);
     int virt$scheduler_set_parameters(FlatPtr);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
@@ -18,8 +18,13 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/ValueTraits.h>
+
+namespace JS {
+class FunctionExpression;
+}
 
 namespace JS::Bytecode::Op {
 
@@ -347,6 +352,25 @@ private:
     bool m_is_spread = false;
 };
 
+class ImportCall final : public Instruction {
+public:
+    ImportCall(Register specifier, Register options)
+        : Instruction(Type::ImportCall)
+        , m_specifier(specifier)
+        , m_options(options)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register);
+
+private:
+    Register m_specifier;
+    Register m_options;
+};
+
 class IteratorToArray final : public Instruction {
 public:
     IteratorToArray()
@@ -517,6 +541,23 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class GetPrivateById final : public Instruction {
+public:
+    explicit GetPrivateById(IdentifierTableIndex property)
+        : Instruction(Type::GetPrivateById)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_property;
+};
+
 enum class PropertyKind {
     Getter,
     Setter,
@@ -529,6 +570,31 @@ class PutById final : public Instruction {
 public:
     explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutById)
+        , m_base(base)
+        , m_property(property)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+    }
+
+private:
+    Register m_base;
+    IdentifierTableIndex m_property;
+    PropertyKind m_kind;
+};
+
+class PutPrivateById final : public Instruction {
+public:
+    explicit PutPrivateById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutPrivateById)
         , m_base(base)
         , m_property(property)
         , m_kind(kind)
@@ -704,17 +770,51 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
 };
 
-// NOTE: This instruction is variable-width depending on the number of arguments!
+enum class CallType {
+    Call,
+    Construct,
+    DirectEval,
+};
+
 class Call final : public Instruction {
 public:
-    enum class CallType {
-        Call,
-        Construct,
-        DirectEval,
-    };
-
-    Call(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
+    Call(CallType type, Register callee, Register this_value, Register first_argument, u32 argument_count, Optional<StringTableIndex> expression_string = {})
         : Instruction(Type::Call)
+        , m_callee(callee)
+        , m_this_value(this_value)
+        , m_first_argument(first_argument)
+        , m_argument_count(argument_count)
+        , m_type(type)
+        , m_expression_string(expression_string)
+    {
+    }
+
+    CallType call_type() const { return m_type; }
+    Register callee() const { return m_callee; }
+    Register this_value() const { return m_this_value; }
+    Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
+
+    Register first_argument() const { return m_first_argument; }
+    u32 argument_count() const { return m_argument_count; }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register);
+
+private:
+    Register m_callee;
+    Register m_this_value;
+    Register m_first_argument;
+    u32 m_argument_count { 0 };
+    CallType m_type;
+    Optional<StringTableIndex> m_expression_string;
+};
+
+class CallWithArgumentArray final : public Instruction {
+public:
+    CallWithArgumentArray(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
+        : Instruction(Type::CallWithArgumentArray)
         , m_callee(callee)
         , m_this_value(this_value)
         , m_type(type)
@@ -722,12 +822,15 @@ public:
     {
     }
 
+    CallType call_type() const { return m_type; }
+    Register callee() const { return m_callee; }
+    Register this_value() const { return m_this_value; }
+    Optional<StringTableIndex> const& expression_string() const { return m_expression_string; }
+
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register);
-
-    Completion throw_type_error_for_callee(Bytecode::Interpreter&, StringView callee_type) const;
 
 private:
     Register m_callee;
@@ -736,11 +839,10 @@ private:
     Optional<StringTableIndex> m_expression_string;
 };
 
-// NOTE: This instruction is variable-width depending on the number of arguments!
-class SuperCall : public Instruction {
+class SuperCallWithArgumentArray : public Instruction {
 public:
-    explicit SuperCall(bool is_synthetic)
-        : Instruction(Type::SuperCall)
+    explicit SuperCallWithArgumentArray(bool is_synthetic)
+        : Instruction(Type::SuperCallWithArgumentArray)
         , m_is_synthetic(is_synthetic)
     {
     }
@@ -756,9 +858,10 @@ private:
 
 class NewClass final : public Instruction {
 public:
-    explicit NewClass(ClassExpression const& class_expression)
+    explicit NewClass(ClassExpression const& class_expression, Optional<IdentifierTableIndex> lhs_name)
         : Instruction(Type::NewClass)
         , m_class_expression(class_expression)
+        , m_lhs_name(lhs_name)
     {
     }
 
@@ -769,13 +872,15 @@ public:
 
 private:
     ClassExpression const& m_class_expression;
+    Optional<IdentifierTableIndex> m_lhs_name;
 };
 
 class NewFunction final : public Instruction {
 public:
-    explicit NewFunction(FunctionNode const& function_node, Optional<Register> home_object = {})
+    explicit NewFunction(FunctionExpression const& function_node, Optional<IdentifierTableIndex> lhs_name, Optional<Register> home_object = {})
         : Instruction(Type::NewFunction)
         , m_function_node(function_node)
+        , m_lhs_name(lhs_name)
         , m_home_object(move(home_object))
     {
     }
@@ -786,7 +891,8 @@ public:
     void replace_references_impl(Register, Register);
 
 private:
-    FunctionNode const& m_function_node;
+    FunctionExpression const& m_function_node;
+    Optional<IdentifierTableIndex> m_lhs_name;
     Optional<Register> m_home_object;
 };
 
@@ -880,6 +986,19 @@ class ThrowIfNotObject final : public Instruction {
 public:
     ThrowIfNotObject()
         : Instruction(Type::ThrowIfNotObject)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+};
+
+class ThrowIfNullish final : public Instruction {
+public:
+    ThrowIfNullish()
+        : Instruction(Type::ThrowIfNullish)
     {
     }
 
@@ -1043,8 +1162,9 @@ private:
 
 class GetIterator final : public Instruction {
 public:
-    GetIterator()
+    GetIterator(IteratorHint hint = IteratorHint::Sync)
         : Instruction(Type::GetIterator)
+        , m_hint(hint)
     {
     }
 
@@ -1052,6 +1172,9 @@ public:
     DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
+
+private:
+    IteratorHint m_hint { IteratorHint::Sync };
 };
 
 class GetMethod final : public Instruction {

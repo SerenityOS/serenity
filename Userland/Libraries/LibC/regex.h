@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "bits/regex_defs.h"
+#include <LibRegex/RegexDefs.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>

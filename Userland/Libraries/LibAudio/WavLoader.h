@@ -25,8 +25,9 @@ namespace Audio {
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
-    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> create(StringView path);
-    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> create(Bytes buffer);
+
+    static bool sniff(SeekableStream& stream);
+    static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create(NonnullOwnPtr<SeekableStream>);
 
     virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 
@@ -44,8 +45,6 @@ public:
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
 
 private:
-    MaybeLoaderError initialize();
-
     MaybeLoaderError parse_header();
     MaybeLoaderError load_wav_info_block(Vector<RIFF::Chunk> info_chunks);
 

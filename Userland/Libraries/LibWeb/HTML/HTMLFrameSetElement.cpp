@@ -25,9 +25,9 @@ JS::ThrowCompletionOr<void> HTMLFrameSetElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void HTMLFrameSetElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLFrameSetElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    HTMLElement::attribute_changed(name, value);
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)                                                                     \

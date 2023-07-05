@@ -342,10 +342,6 @@ public:
 
     void alert(AlertLevel, AlertDescription);
 
-    bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
-    bool can_read() const { return m_context.application_buffer.size() > 0; }
-    DeprecatedString read_line(size_t max_size);
-
     Function<void(AlertDescription)> on_tls_error;
     Function<void()> on_tls_finished;
     Function<void(TLSv12&)> on_tls_certificate_request;

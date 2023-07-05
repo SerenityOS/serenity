@@ -32,9 +32,9 @@ JS::ThrowCompletionOr<void> SVGGraphicsElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGGraphicsElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGElement::parse_attribute(name, value);
+    SVGElement::attribute_changed(name, value);
     if (name == "transform"sv) {
         auto transform_list = AttributeParser::parse_transform(value);
         if (transform_list.has_value())
@@ -108,7 +108,6 @@ Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> trans
 
 Gfx::AffineTransform SVGGraphicsElement::get_transform() const
 {
-    // FIXME: It would be nice to do this using the SVGContext, however, then layout/hit testing knows nothing about the transform.
     Gfx::AffineTransform transform = m_transform;
     for (auto* svg_ancestor = shadow_including_first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->shadow_including_first_ancestor_of_type<SVGGraphicsElement>()) {
         transform = Gfx::AffineTransform { svg_ancestor->m_transform }.multiply(transform);

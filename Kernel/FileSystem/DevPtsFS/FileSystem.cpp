@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> DevPtsFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> DevPtsFS::try_create(ReadonlyBytes)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFS));
 }

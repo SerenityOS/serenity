@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
+#include <Kernel/API/KeyCode.h>
 #include <LibGfx/Rect.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
@@ -36,6 +37,8 @@ class HTMLMediaElement : public HTMLElement {
 
 public:
     virtual ~HTMLMediaElement() override;
+
+    virtual bool is_focusable() const override { return true; }
 
     void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
@@ -84,6 +87,7 @@ public:
     bool potentially_playing() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
+    WebIDL::ExceptionOr<void> toggle_playback();
 
     double volume() const { return m_volume; }
     WebIDL::ExceptionOr<void> set_volume(double);
@@ -96,8 +100,20 @@ public:
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
 
+    WebIDL::ExceptionOr<void> handle_keydown(Badge<Web::EventHandler>, KeyCode);
+
+    enum class MouseTrackingComponent {
+        Timeline,
+        Volume,
+    };
+    void set_layout_mouse_tracking_component(Badge<Painting::MediaPaintable>, Optional<MouseTrackingComponent> mouse_tracking_component) { m_mouse_tracking_component = move(mouse_tracking_component); }
+    Optional<MouseTrackingComponent> const& layout_mouse_tracking_component(Badge<Painting::MediaPaintable>) const { return m_mouse_tracking_component; }
+
     void set_layout_mouse_position(Badge<Painting::MediaPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
     Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::MediaPaintable>) const { return m_mouse_position; }
+
+    void set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time);
+    double layout_display_time(Badge<Painting::MediaPaintable>) const;
 
     struct CachedLayoutBoxes {
         Optional<CSSPixelRect> control_box_rect;
@@ -114,8 +130,7 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual void removed_from(DOM::Node*) override;
     virtual void children_changed() override;
 
@@ -259,7 +274,10 @@ private:
     bool m_seek_in_progress = false;
 
     // Cached state for layout.
+    Optional<MouseTrackingComponent> m_mouse_tracking_component;
+    bool m_tracking_mouse_position_while_playing { false };
     Optional<CSSPixelPoint> m_mouse_position;
+    Optional<double> m_display_time;
     mutable CachedLayoutBoxes m_layout_boxes;
 };
 

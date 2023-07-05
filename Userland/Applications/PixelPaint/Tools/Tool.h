@@ -101,6 +101,10 @@ protected:
 
     GUI::AbstractSlider* m_primary_slider { nullptr };
     GUI::AbstractSlider* m_secondary_slider { nullptr };
+
+    template<Gfx::StorageFormat>
+    void set_pixel_with_possible_mask(int x, int y, Gfx::Color color, Gfx::Bitmap& bitmap);
+    void set_pixel_with_possible_mask(int x, int y, Gfx::Color color, Gfx::Bitmap& bitmap);
 };
 
 }

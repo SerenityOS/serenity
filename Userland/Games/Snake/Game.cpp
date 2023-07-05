@@ -325,7 +325,7 @@ Direction Game::direction_to_position(Snake::Coordinate const& from, Snake::Coor
     VERIFY_NOT_REACHED();
 }
 
-void Game::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+void Game::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Snake"sv && group == "Snake"sv && key == "SnakeSkin"sv) {
         set_skin_name(value);
@@ -333,7 +333,7 @@ void Game::config_string_did_change(DeprecatedString const& domain, DeprecatedSt
     }
 }
 
-void Game::config_u32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value)
+void Game::config_u32_did_change(StringView domain, StringView group, StringView key, u32 value)
 {
     if (domain == "Snake"sv && group == "Snake"sv && key == "BaseColor"sv) {
         set_skin_color(Color::from_argb(value));

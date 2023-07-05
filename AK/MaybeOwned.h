@@ -13,10 +13,12 @@ namespace AK {
 
 template<typename T>
 class MaybeOwned {
+    AK_MAKE_NONCOPYABLE(MaybeOwned);
+
 public:
     template<DerivedFrom<T> U>
     MaybeOwned(NonnullOwnPtr<U> handle)
-        : m_handle(adopt_own<T>(*handle.leak_ptr()))
+        : m_handle(static_cast<NonnullOwnPtr<T>&&>(move(handle)))
     {
     }
 
@@ -26,6 +28,9 @@ public:
         : m_handle(&handle)
     {
     }
+
+    MaybeOwned(MaybeOwned&&) = default;
+    MaybeOwned& operator=(MaybeOwned&&) = default;
 
     T* ptr()
     {

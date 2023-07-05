@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/CountQueuingStrategyPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Streams/CountQueuingStrategy.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -26,6 +28,13 @@ CountQueuingStrategy::CountQueuingStrategy(JS::Realm& realm, double high_water_m
 }
 
 CountQueuingStrategy::~CountQueuingStrategy() = default;
+
+// https://streams.spec.whatwg.org/#cqs-size
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> CountQueuingStrategy::size()
+{
+    // 1. Return this's relevant global object's count queuing strategy size function.
+    return global_object().count_queuing_strategy_size_function();
+}
 
 JS::ThrowCompletionOr<void> CountQueuingStrategy::initialize(JS::Realm& realm)
 {

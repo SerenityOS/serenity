@@ -32,7 +32,6 @@
 #endif
 
 static DeprecatedString s_current_test = "";
-static bool s_enable_bytecode_optimizations = false;
 static bool s_parse_only = false;
 static DeprecatedString s_harness_file_directory;
 static bool s_automatic_harness_detection_mode = false;
@@ -215,12 +214,10 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
     if (program_or_error.is_error())
         return program_or_error.release_error();
 
-    OwnPtr<JS::Bytecode::Interpreter> bytecode_interpreter = nullptr;
-    if (JS::Bytecode::Interpreter::enabled())
-        bytecode_interpreter = make<JS::Bytecode::Interpreter>(realm);
+    auto* bytecode_interpreter = vm->bytecode_interpreter_if_exists();
 
     auto run_with_interpreter = [&](ScriptOrModuleProgram& program) {
-        if (JS::Bytecode::Interpreter::enabled())
+        if (bytecode_interpreter)
             return run_program(*bytecode_interpreter, program);
         return run_program(*ast_interpreter, program);
     };
@@ -350,11 +347,6 @@ static Result<TestMetadata, DeprecatedString> extract_metadata(StringView source
 
         if (line.starts_with("flags:"sv)) {
             auto flags = parse_list(line);
-
-            if (flags.is_empty()) {
-                failed_message = DeprecatedString::formatted("Failed to find flags in '{}'", line);
-                break;
-            }
 
             for (auto flag : flags) {
                 if (flag == "raw"sv) {
@@ -572,12 +564,13 @@ int main(int argc, char** argv)
     bool enable_debug_printing = false;
     bool disable_core_dumping = false;
     bool use_bytecode = false;
+    bool enable_bytecode_optimizations = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("LibJS test262 runner for streaming tests");
     args_parser.add_option(s_harness_file_directory, "Directory containing the harness files", "harness-location", 'l', "harness-files");
     args_parser.add_option(use_bytecode, "Use the bytecode interpreter", "use-bytecode", 'b');
-    args_parser.add_option(s_enable_bytecode_optimizations, "Enable the bytecode optimization passes", "enable-bytecode-optimizations", 'e');
+    args_parser.add_option(enable_bytecode_optimizations, "Enable the bytecode optimization passes", "enable-bytecode-optimizations", 'e');
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
@@ -585,6 +578,7 @@ int main(int argc, char** argv)
     args_parser.parse(arguments);
 
     JS::Bytecode::Interpreter::set_enabled(use_bytecode);
+    JS::Bytecode::Interpreter::set_optimizations_enabled(enable_bytecode_optimizations);
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {

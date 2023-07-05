@@ -216,6 +216,8 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
             auto& box_state = m_state.get(item.box);
             if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_flex_container->space)))
                 independent_formatting_context->parent_context_did_dimension_child_root_box();
+
+            compute_inset(item.box);
         }
     }
 }
@@ -2123,10 +2125,13 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         //  Fallthrough
     case CSS::AlignItems::Start:
     case CSS::AlignItems::FlexStart:
+    case CSS::AlignItems::SelfStart:
     case CSS::AlignItems::Stretch:
+    case CSS::AlignItems::Normal:
         cross_offset = -half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
         break;
     case CSS::AlignItems::End:
+    case CSS::AlignItems::SelfEnd:
     case CSS::AlignItems::FlexEnd:
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
@@ -2148,40 +2153,22 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
     case CSS::JustifyContent::Start:
-        if (is_direction_reverse()) {
-            main_offset = inner_main_size(flex_container());
-        } else {
-            main_offset = 0;
-        }
+    case CSS::JustifyContent::FlexStart:
+        main_offset = 0;
+        pack_from_end = is_direction_reverse();
         break;
     case CSS::JustifyContent::End:
-        if (is_direction_reverse()) {
-            main_offset = 0;
-        } else {
-            main_offset = inner_main_size(flex_container());
-        }
-        break;
-    case CSS::JustifyContent::FlexStart:
-        if (is_direction_reverse()) {
-            pack_from_end = false;
-            main_offset = inner_main_size(flex_container());
-        } else {
-            main_offset = 0;
-        }
-        break;
     case CSS::JustifyContent::FlexEnd:
-        if (is_direction_reverse()) {
-            main_offset = 0;
-        } else {
-            pack_from_end = false;
-            main_offset = inner_main_size(flex_container());
-        }
+        main_offset = 0;
+        pack_from_end = !is_direction_reverse();
         break;
     case CSS::JustifyContent::SpaceBetween:
+        pack_from_end = false;
         main_offset = 0;
         break;
     case CSS::JustifyContent::Center:
     case CSS::JustifyContent::SpaceAround:
+        pack_from_end = false;
         main_offset = inner_main_size(flex_container()) / 2.0 - inner_main_size(box) / 2.0;
         break;
     }
@@ -2189,12 +2176,12 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     // NOTE: Next, we add the flex container's padding since abspos boxes are placed relative to the padding edge
     //       of their abspos containing block.
     if (pack_from_end) {
-        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
-    } else {
         main_offset += is_row_layout() ? m_flex_container_state.padding_right : m_flex_container_state.padding_bottom;
+    } else {
+        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
     }
 
-    if (!pack_from_end)
+    if (pack_from_end)
         main_offset += inner_main_size(flex_container()) - inner_main_size(box);
 
     auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };

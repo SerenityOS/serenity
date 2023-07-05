@@ -20,22 +20,6 @@ Layout::SVGBox const& SVGPaintable::layout_box() const
     return static_cast<Layout::SVGBox const&>(layout_node());
 }
 
-void SVGPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const
-{
-    PaintableBox::before_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
-        return;
-    context.svg_context().save();
-}
-
-void SVGPaintable::after_children_paint(PaintContext& context, PaintPhase phase) const
-{
-    PaintableBox::after_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
-        return;
-    context.svg_context().restore();
-}
-
 CSSPixelRect SVGPaintable::compute_absolute_rect() const
 {
     if (auto* svg_svg_box = layout_box().first_ancestor_of_type<Layout::SVGSVGBox>()) {

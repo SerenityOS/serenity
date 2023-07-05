@@ -28,6 +28,7 @@ public:
         ProgressValue,
         ProgressBar,
         Placeholder,
+        Selection,
 
         // Keep this last.
         PseudoElementCount,
@@ -231,6 +232,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "-webkit-progress-value"sv;
     case Selector::PseudoElement::Placeholder:
         return "placeholder"sv;
+    case Selector::PseudoElement::Selection:
+        return "selection"sv;
     case Selector::PseudoElement::PseudoElementCount:
         break;
     }

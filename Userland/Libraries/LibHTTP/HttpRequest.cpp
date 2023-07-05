@@ -12,35 +12,35 @@
 
 namespace HTTP {
 
-DeprecatedString to_deprecated_string(HttpRequest::Method method)
+StringView to_string_view(HttpRequest::Method method)
 {
     switch (method) {
     case HttpRequest::Method::GET:
-        return "GET";
+        return "GET"sv;
     case HttpRequest::Method::HEAD:
-        return "HEAD";
+        return "HEAD"sv;
     case HttpRequest::Method::POST:
-        return "POST";
+        return "POST"sv;
     case HttpRequest::Method::DELETE:
-        return "DELETE";
+        return "DELETE"sv;
     case HttpRequest::Method::PATCH:
-        return "PATCH";
+        return "PATCH"sv;
     case HttpRequest::Method::OPTIONS:
-        return "OPTIONS";
+        return "OPTIONS"sv;
     case HttpRequest::Method::TRACE:
-        return "TRACE";
+        return "TRACE"sv;
     case HttpRequest::Method::CONNECT:
-        return "CONNECT";
+        return "CONNECT"sv;
     case HttpRequest::Method::PUT:
-        return "PUT";
+        return "PUT"sv;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-DeprecatedString HttpRequest::method_name() const
+StringView HttpRequest::method_name() const
 {
-    return to_deprecated_string(m_method);
+    return to_string_view(m_method);
 }
 
 ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const

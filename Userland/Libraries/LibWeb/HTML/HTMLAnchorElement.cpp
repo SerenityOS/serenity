@@ -29,9 +29,9 @@ JS::ThrowCompletionOr<void> HTMLAnchorElement::initialize(JS::Realm& realm)
     return {};
 }
 
-void HTMLAnchorElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void HTMLAnchorElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    HTMLElement::attribute_changed(name, value);
     if (name == HTML::AttributeNames::href) {
         set_the_url();
     }
@@ -53,6 +53,11 @@ void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
 
     // 1. If element has no href attribute, then return.
     if (href().is_empty())
+        return;
+
+    // AD-HOC: follow_the_hyperlink currently doesn't navigate properly with javascript urls
+    // EventHandler::handle_mouseup performs the navigation steps for javascript urls instead
+    if (href().starts_with("javascript:"sv))
         return;
 
     // 2. Let hyperlinkSuffix be null.

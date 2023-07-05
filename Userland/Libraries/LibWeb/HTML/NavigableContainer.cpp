@@ -10,10 +10,12 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
@@ -27,14 +29,27 @@ HashTable<NavigableContainer*>& NavigableContainer::all_instances()
 NavigableContainer::NavigableContainer(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    all_instances().set(this);
 }
 
-NavigableContainer::~NavigableContainer() = default;
+NavigableContainer::~NavigableContainer()
+{
+    all_instances().remove(this);
+}
 
 void NavigableContainer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_nested_browsing_context);
+}
+
+JS::GCPtr<NavigableContainer> NavigableContainer::navigable_container_with_content_navigable(JS::NonnullGCPtr<Navigable> navigable)
+{
+    for (auto* navigable_container : all_instances()) {
+        if (navigable_container->content_navigable() == navigable)
+            return navigable_container;
+    }
+    return nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context
@@ -220,6 +235,39 @@ void NavigableContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetch::Inf
     auto* source_browsing_context = document().browsing_context();
     VERIFY(source_browsing_context);
     MUST(m_nested_browsing_context->navigate(resource, *source_browsing_context, false, history_handling));
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#destroy-a-child-navigable
+void NavigableContainer::destroy_the_child_navigable()
+{
+    // 1. Let navigable be container's content navigable.
+    auto navigable = content_navigable();
+
+    // 2. If navigable is null, then return.
+    if (!navigable)
+        return;
+
+    // 3. Set container's content navigable to null.
+    m_content_navigable = nullptr;
+
+    // 4. Destroy navigable's active document.
+    navigable->active_document()->destroy();
+
+    // 5. Let parentDocState be container's node navigable's active session history entry's document state.
+    auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state;
+
+    // 6. Remove the nested history from parentDocState's nested histories whose id equals navigable's id.
+    parent_doc_state->nested_histories().remove_all_matching([&](auto& nested_history) {
+        return navigable->id() == nested_history.id;
+    });
+
+    // 7. Let traversable be container's node navigable's traversable navigable.
+    auto traversable = this->navigable()->traversable_navigable();
+
+    // FIXME: 8. Append the following session history traversal steps to traversable:
+
+    // 1. Apply pending history changes to traversable.
+    traversable->apply_pending_history_changes();
 }
 
 }

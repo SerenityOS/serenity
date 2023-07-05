@@ -31,6 +31,8 @@ public:
         return m_high_water_mark;
     }
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> size();
+
 private:
     explicit ByteLengthQueuingStrategy(JS::Realm&, double high_water_mark);
 

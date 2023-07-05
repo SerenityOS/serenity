@@ -20,6 +20,10 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             Op::NewArray const& array_instruction = static_cast<Op::NewArray const&>(*it);
             if (size_t element_count = array_instruction.element_count())
                 array_ranges.set_range<true, false>(array_instruction.start().index(), element_count);
+        } else if ((*it).type() == Instruction::Type::Call) {
+            auto const& call_instruction = static_cast<Op::Call const&>(*it);
+            if (size_t element_count = call_instruction.argument_count())
+                array_ranges.set_range<true, false>(call_instruction.first_argument().index(), element_count);
         }
     }
 
@@ -125,6 +129,7 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             // or may trigger proxies
             // So these are treated like calls
         case Call:
+        case CallWithArgumentArray:
             // Calls, especially to local functions and eval, may poison visible and
             // cached variables, hence we need to clear the lookup cache after emitting them
             // FIXME: In strict mode and with better identifier metrics, we might be able

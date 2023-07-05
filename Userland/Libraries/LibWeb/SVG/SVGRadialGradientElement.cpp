@@ -23,9 +23,9 @@ JS::ThrowCompletionOr<void> SVGRadialGradientElement::initialize(JS::Realm& real
     return {};
 }
 
-void SVGRadialGradientElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGRadialGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGradientElement::parse_attribute(name, value);
+    SVGGradientElement::attribute_changed(name, value);
 
     // FIXME: These are <length> or <coordinate> in the spec, but all examples seem to allow percentages
     // and unitless values.

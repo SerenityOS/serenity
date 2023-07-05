@@ -35,7 +35,7 @@ struct Range {
 
 static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
 {
-    Vector<DeprecatedString> tokens = list.split(',');
+    Vector<DeprecatedString> tokens = list.split(',', SplitBehavior::KeepEmpty);
 
     for (auto& token : tokens) {
         if (token.length() == 0) {
@@ -75,7 +75,7 @@ static bool expand_list(DeprecatedString& list, Vector<Range>& ranges)
 
             ranges.append({ index.value(), SIZE_MAX });
         } else {
-            auto range = token.split('-');
+            auto range = token.split('-', SplitBehavior::KeepEmpty);
             if (range.size() == 2) {
                 auto index1 = range[0].to_uint();
                 if (!index1.has_value()) {
@@ -134,11 +134,17 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
     outln();
 }
 
-static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter)
+static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter, bool only_print_delimited_lines)
 {
-    auto string_split = DeprecatedString(line).split(delimiter);
-    Vector<DeprecatedString> output_fields;
+    auto string_split = DeprecatedString(line).split(delimiter, SplitBehavior::KeepEmpty);
+    if (string_split.size() == 1) {
+        if (!only_print_delimited_lines)
+            outln("{}", line);
 
+        return;
+    }
+
+    Vector<DeprecatedString> output_fields;
     for (auto& range : ranges) {
         for (size_t i = range.m_from - 1; i < min(range.m_to, string_split.size()); i++) {
             output_fields.append(string_split[i]);
@@ -153,6 +159,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString byte_list = "";
     DeprecatedString fields_list = "";
     DeprecatedString delimiter = "\t";
+    bool only_print_delimited_lines = false;
 
     Vector<StringView> files;
 
@@ -161,6 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
     args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list");
     args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter");
+    args_parser.add_option(only_print_delimited_lines, "suppress lines which don't contain any field delimiter characters", "only-delimited", 's');
     args_parser.parse(arguments);
 
     bool selected_bytes = (byte_list != "");
@@ -237,13 +245,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = TRY(Core::InputBufferedFile::create(maybe_file.release_value()));
 
         Array<u8, PAGE_SIZE> buffer;
-        while (!file->is_eof()) {
+        while (TRY(file->can_read_line())) {
             auto line = TRY(file->read_line(buffer));
+            if (line == "\n" && TRY(file->can_read_line()))
+                break;
 
             if (selected_bytes) {
                 process_line_bytes(line, disjoint_ranges);
             } else if (selected_fields) {
-                process_line_fields(line, disjoint_ranges, delimiter[0]);
+                process_line_fields(line, disjoint_ranges, delimiter[0], only_print_delimited_lines);
             } else {
                 VERIFY_NOT_REACHED();
             }

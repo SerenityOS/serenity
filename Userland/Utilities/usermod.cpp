@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Brandon Pruitt <brapru@pm.me>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,27 @@
 #include <string.h>
 #include <unistd.h>
 
+static Optional<gid_t> group_string_to_gid(StringView group)
+{
+    auto maybe_gid = group.to_uint<gid_t>();
+    auto maybe_group_or_error = maybe_gid.has_value()
+        ? Core::System::getgrgid(maybe_gid.value())
+        : Core::System::getgrnam(group);
+
+    if (maybe_group_or_error.is_error()) {
+        warnln("Error resolving group '{}': {}", group, maybe_group_or_error.release_error());
+        return {};
+    }
+
+    auto maybe_group = maybe_group_or_error.release_value();
+    if (!maybe_group.has_value()) {
+        warnln("Group '{}' does not exist", group);
+        return {};
+    }
+
+    return maybe_group->gr_gid;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     if (geteuid() != 0) {
@@ -26,21 +48,53 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
     TRY(Core::System::unveil("/etc", "rwc"));
 
-    int uid = 0;
-    int gid = 0;
+    uid_t uid = 0;
+    bool append_extra_gids = false;
+    Optional<gid_t> gid;
     bool lock = false;
+    bool remove_extra_gids = false;
     bool unlock = false;
     StringView new_home_directory;
     bool move_home = false;
     StringView shell;
     StringView gecos;
     StringView username;
+    Vector<gid_t> extra_gids;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify a user account");
+    args_parser.add_option(append_extra_gids, "Append the supplementary groups specified with the -G option to the user", "append", 'a');
     args_parser.add_option(uid, "The new numerical value of the user's ID", "uid", 'u', "uid");
-    args_parser.add_option(gid, "The group number of the user's new initial login group", "gid", 'g', "gid");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "The group name or number of the user's new initial login group",
+        .long_name = "gid",
+        .short_name = 'g',
+        .value_name = "group",
+        .accept_value = [&gid](StringView group) {
+            if (auto maybe_gid = group_string_to_gid(group); maybe_gid.has_value())
+                gid = move(maybe_gid);
+
+            return gid.has_value();
+        },
+    });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Set the user's supplementary groups. Groups are specified with a comma-separated list. Group names or numbers may be used",
+        .long_name = "groups",
+        .short_name = 'G',
+        .value_name = "groups",
+        .accept_value = [&extra_gids](StringView comma_separated_groups) {
+            auto groups = comma_separated_groups.split_view(',');
+            for (auto group : groups) {
+                if (auto gid = group_string_to_gid(group); gid.has_value())
+                    extra_gids.append(gid.value());
+            }
+            return true;
+        },
+    });
     args_parser.add_option(lock, "Lock password", "lock", 'L');
+    args_parser.add_option(remove_extra_gids, "Remove the supplementary groups specified with the -G option from the user", "remove", 'r');
     args_parser.add_option(unlock, "Unlock password", "unlock", 'U');
     args_parser.add_option(new_home_directory, "The user's new login directory", "home", 'd', "new-home");
     args_parser.add_option(move_home, "Move the content of the user's home directory to the new location", "move", 'm');
@@ -49,6 +103,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(username, "Username of the account to modify", "username");
 
     args_parser.parse(arguments);
+
+    if (extra_gids.is_empty() && (append_extra_gids || remove_extra_gids)) {
+        warnln("The -a and -r options can only be used with the -G option");
+        args_parser.print_usage(stderr, arguments.strings[0]);
+        return 1;
+    }
+
+    if (append_extra_gids && remove_extra_gids) {
+        warnln("The -a and -r options are mutually exclusive");
+        args_parser.print_usage(stderr, arguments.strings[0]);
+        return 1;
+    }
+
+    if (lock && unlock) {
+        warnln("The -L and -U options are mutually exclusive");
+        args_parser.print_usage(stderr, arguments.strings[0]);
+        return 1;
+    }
 
     auto account_or_error = Core::Account::from_name(username);
 
@@ -68,12 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     unveil(nullptr, nullptr);
 
     if (uid) {
-        if (uid < 0) {
-            warnln("invalid uid {}", uid);
-            return 1;
-        }
-
-        if (getpwuid(static_cast<uid_t>(uid))) {
+        if (getpwuid(uid)) {
             warnln("uid {} already exists", uid);
             return 1;
         }
@@ -81,14 +148,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_uid(uid);
     }
 
-    if (gid) {
-        if (gid < 0) {
-            warnln("invalid gid {}", gid);
-            return 1;
-        }
-
-        target_account.set_gid(gid);
-    }
+    if (gid.has_value())
+        target_account.set_gid(gid.value());
 
     if (lock) {
         target_account.set_password_enabled(false);
@@ -131,6 +192,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!gecos.is_empty()) {
         target_account.set_gecos(gecos);
+    }
+
+    if (append_extra_gids) {
+        for (auto gid : target_account.extra_gids())
+            extra_gids.append(gid);
+    }
+
+    if (remove_extra_gids) {
+        Vector<gid_t> current_extra_gids = target_account.extra_gids();
+        for (auto gid : extra_gids)
+            current_extra_gids.remove_all_matching([gid](auto current_gid) { return current_gid == gid; });
+
+        extra_gids = move(current_extra_gids);
+    }
+
+    if (!extra_gids.is_empty() || remove_extra_gids) {
+        target_account.set_extra_gids(extra_gids);
     }
 
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));

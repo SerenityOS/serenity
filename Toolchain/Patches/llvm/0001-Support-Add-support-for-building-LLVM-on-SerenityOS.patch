@@ -14,11 +14,11 @@ process's resource usage information.
  3 files changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/llvm/include/llvm/Support/SwapByteOrder.h b/llvm/include/llvm/Support/SwapByteOrder.h
-index e8612ba6654b5d950b2eb570c23ebbb79d4dc035..f0109f4b30e83cefc745e0575deaf89b1e51c35a 100644
+index 9dd08665b..8915f92e8 100644
 --- a/llvm/include/llvm/Support/SwapByteOrder.h
 +++ b/llvm/include/llvm/Support/SwapByteOrder.h
-@@ -22,7 +22,7 @@
- #endif
+@@ -20,7 +20,7 @@
+ #include <type_traits>
  
  #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) ||            \
 -    defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
@@ -27,19 +27,19 @@ index e8612ba6654b5d950b2eb570c23ebbb79d4dc035..f0109f4b30e83cefc745e0575deaf89b
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 2ae7c6dc47e071a7801c346a6d40e0db45e49beb..bf173117bb9be72902597569dc94ff81efe5af38 100644
+index 3efcad4f2..4f83d0e76 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -112,7 +112,7 @@ typedef uint_t uint;
  #endif
  
- #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) || \
+ #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) ||       \
 -    defined(__MVS__)
 +    defined(__MVS__) || defined(__serenity__)
  #define STATVFS_F_FLAG(vfs) (vfs).f_flag
  #else
  #define STATVFS_F_FLAG(vfs) (vfs).f_flags
-@@ -512,6 +512,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
+@@ -506,6 +506,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
  #elif defined(__HAIKU__)
    // Haiku doesn't expose this information.
    return false;
@@ -47,13 +47,13 @@ index 2ae7c6dc47e071a7801c346a6d40e0db45e49beb..bf173117bb9be72902597569dc94ff81
 +  // Serenity doesn't yet support remote filesystem mounts.
 +  return false;
  #elif defined(__sun)
-   // statvfs::f_basetype contains a null-terminated FSType name of the mounted target
-   StringRef fstype(Vfs.f_basetype);
+   // statvfs::f_basetype contains a null-terminated FSType name of the mounted
+   // target
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 089342030b97e178d749a54b2d43ae5338b5b097..3ffe064e5f0de06ac76c34b218e44fe7a8d9eaf6 100644
+index 897e22711..23965a1a1 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
-@@ -336,7 +336,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+@@ -340,7 +340,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
  namespace llvm {
  namespace sys {
  
@@ -61,8 +61,8 @@ index 089342030b97e178d749a54b2d43ae5338b5b097..3ffe064e5f0de06ac76c34b218e44fe7
 +#if !defined(_AIX) && !defined(__serenity__)
  using ::wait4;
  #else
- static pid_t (wait4)(pid_t pid, int *status, int options, struct rusage *usage);
-@@ -379,6 +379,13 @@ pid_t (llvm::sys::wait4)(pid_t pid, int *status, int options,
+ static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
+@@ -383,6 +383,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
  }
  #endif
  
@@ -73,6 +73,6 @@ index 089342030b97e178d749a54b2d43ae5338b5b097..3ffe064e5f0de06ac76c34b218e44fe7
 +}
 +#endif
 +
- ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
-                             bool WaitUntilTerminates, std::string *ErrMsg,
-                             Optional<ProcessStatistics> *ProcStat) {
+ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
+                             std::optional<unsigned> SecondsToWait,
+                             std::string *ErrMsg,

@@ -20,7 +20,7 @@ class HTMLBodyElement final
 public:
     virtual ~HTMLBodyElement() override;
 
-    virtual void parse_attribute(DeprecatedFlyString const&, DeprecatedString const&) override;
+    virtual void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-body

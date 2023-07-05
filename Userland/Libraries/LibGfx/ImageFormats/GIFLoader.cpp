@@ -633,7 +633,7 @@ size_t GIFImageDecoderPlugin::first_animated_frame_index()
     return 0;
 }
 
-ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (m_context->error_state >= GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame) {
         return Error::from_string_literal("GIFImageDecoderPlugin: Decoding failed");

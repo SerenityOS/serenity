@@ -26,9 +26,9 @@ JS::ThrowCompletionOr<void> SVGLinearGradientElement::initialize(JS::Realm& real
     return {};
 }
 
-void SVGLinearGradientElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void SVGLinearGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
-    SVGGradientElement::parse_attribute(name, value);
+    SVGGradientElement::attribute_changed(name, value);
 
     // FIXME: Should allow for `<number-percentage> | <length>` for x1, x2, y1, y2
     if (name == SVG::AttributeNames::x1) {

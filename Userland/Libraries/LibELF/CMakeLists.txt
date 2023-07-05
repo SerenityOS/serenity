@@ -2,4 +2,5 @@
 # so add a dummy interface library for platform-agnosticism.
 add_library(LibELF INTERFACE)
 
+serenity_install_headers("LibELF")
 serenity_install_sources("Userland/Libraries/LibELF")

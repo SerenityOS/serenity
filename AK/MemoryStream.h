@@ -24,6 +24,7 @@ public:
     virtual void close() override;
     virtual ErrorOr<void> truncate(size_t) override;
     virtual ErrorOr<Bytes> read_some(Bytes bytes) override;
+    virtual ErrorOr<void> read_until_filled(Bytes bytes) override;
 
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override;
 

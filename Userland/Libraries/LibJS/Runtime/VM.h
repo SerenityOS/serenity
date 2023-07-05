@@ -21,7 +21,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/ExecutionContext.h>
-#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -39,10 +38,13 @@ public:
     };
 
     static ErrorOr<NonnullRefPtr<VM>> create(OwnPtr<CustomData> = {});
-    ~VM() = default;
+    ~VM();
 
     Heap& heap() { return m_heap; }
     Heap const& heap() const { return m_heap; }
+
+    Bytecode::Interpreter& bytecode_interpreter();
+    Bytecode::Interpreter* bytecode_interpreter_if_exists();
 
     Interpreter& interpreter();
     Interpreter* interpreter_if_exists();
@@ -269,6 +271,10 @@ public:
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
 
+    // Execute a specific AST node either in AST or BC interpreter, depending on which one is enabled by default.
+    // NOTE: This is meant as a temporary stopgap until everything is bytecode.
+    ThrowCompletionOr<Value> execute_ast_node(ASTNode const&);
+
 private:
     using ErrorMessages = AK::Array<String, to_underlying(ErrorMessage::__Count)>;
 
@@ -282,7 +288,7 @@ private:
     VM(OwnPtr<CustomData>, ErrorMessages);
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
-    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment);
+    ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, IteratorRecord& iterator_record, Environment* environment);
 
     ThrowCompletionOr<NonnullGCPtr<Module>> resolve_imported_module(ScriptOrModule referencing_script_or_module, ModuleRequest const& module_request);
     ThrowCompletionOr<void> link_and_eval_module(Module& module);
@@ -332,6 +338,8 @@ private:
     u32 m_execution_generation { 0 };
 
     OwnPtr<CustomData> m_custom_data;
+
+    OwnPtr<Bytecode::Interpreter> m_bytecode_interpreter;
 };
 
 ALWAYS_INLINE Heap& Cell::heap() const

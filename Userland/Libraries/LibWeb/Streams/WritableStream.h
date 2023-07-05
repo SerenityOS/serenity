@@ -11,6 +11,7 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Streams/QueuingStrategy.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Streams {
@@ -42,7 +43,7 @@ public:
         Errored,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_sink);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_sink, QueuingStrategy const& = {});
 
     virtual ~WritableStream() = default;
 

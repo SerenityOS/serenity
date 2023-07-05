@@ -73,7 +73,6 @@ ErrorOr<void> Stream::initialize_buffer()
         m_stream_io_window->write32(StreamRegisterOffset::CyclicBufferLength, buffers->size());
 
         // 3.3.39: Input/Output/Bidirectional Stream Descriptor Last Valid Index
-        VERIFY(number_of_buffers_required_for_cyclic_buffer_size <= 256);
         m_stream_io_window->write16(StreamRegisterOffset::LastValidIndex, number_of_buffers_required_for_cyclic_buffer_size - 1);
 
         // 3.6.2: Buffer Descriptor List
@@ -83,12 +82,12 @@ ErrorOr<void> Stream::initialize_buffer()
         m_stream_io_window->write32(StreamRegisterOffset::BDLUpperBaseAddress, bdl_physical_address >> 32);
 
         // 3.6.3: Buffer Descriptor List Entry
-        auto* buffer_descriptor_entry = m_buffer_descriptor_list->vaddr().as_ptr();
-        for (u8 buffer_index = 0; buffer_index < buffers->page_count(); ++buffer_index) {
-            auto* entry = buffer_descriptor_entry + buffer_index * 0x10;
-            *bit_cast<u64*>(entry) = buffers->physical_page(buffer_index)->paddr().get();
-            *bit_cast<u32*>(entry + 8) = PAGE_SIZE;
-            *bit_cast<u32*>(entry + 12) = 0;
+        auto* buffer_descriptors = bit_cast<BufferDescriptorEntry*>(m_buffer_descriptor_list->vaddr().as_ptr());
+        for (size_t buffer_index = 0; buffer_index < buffers->page_count(); ++buffer_index) {
+            auto* entry = &buffer_descriptors[buffer_index];
+            entry->address = buffers->physical_page(buffer_index)->paddr().get();
+            entry->size = PAGE_SIZE;
+            entry->flags = BufferDescriptorEntryFlag::InterruptOnCompletion;
         }
         return {};
     }));
@@ -135,6 +134,7 @@ void Stream::start()
 
     auto control = read_control();
     control |= StreamControlFlag::StreamRun;
+    control |= StreamControlFlag::InterruptOnCompletionEnable;
     write_control(control);
     m_running = true;
 }
@@ -176,23 +176,45 @@ ErrorOr<void> Stream::set_format(FormatParameters format)
     return {};
 }
 
+ErrorOr<void> OutputStream::handle_interrupt(Badge<Controller>)
+{
+    auto interrupt_status = m_stream_io_window->read8(StreamRegisterOffset::Status);
+
+    if ((interrupt_status & StreamStatusFlag::BufferCompletionInterruptStatus) > 0) {
+        // 3.3.36: BCIS remains active until software clears it by writing a 1 to this bit position.
+        m_stream_io_window->write8(StreamRegisterOffset::Status, interrupt_status);
+
+        // Wake up thread waiting for new buffers to write to
+        m_irq_queue.wake_all();
+
+        // If the read head is past our last written buffer, stop the stream. There are three possible
+        // condition combinations of last & new link, and current buffer position for our circular buffer.
+        auto new_link_position = m_stream_io_window->read32(StreamRegisterOffset::LinkPosition);
+        if ((m_last_link_position < m_buffer_position && m_buffer_position < new_link_position)
+            || (new_link_position < m_last_link_position && m_last_link_position < m_buffer_position)
+            || (m_buffer_position < new_link_position && new_link_position < m_last_link_position)) {
+            dbgln_if(INTEL_HDA_DEBUG, "OutputStream::{}: Stopping because of stream underrun (link position: {} → {}, buffer position: {})",
+                __FUNCTION__, m_last_link_position, new_link_position, m_buffer_position);
+            TRY(stop());
+        }
+        m_last_link_position = new_link_position;
+    }
+
+    return {};
+}
+
 ErrorOr<size_t> OutputStream::write(UserOrKernelBuffer const& data, size_t length)
 {
     auto wait_until_buffer_index_can_be_written = [&](u8 buffer_index) {
         while (m_running) {
-            auto link_position = m_stream_io_window->read32(StreamRegisterOffset::LinkPosition);
-            auto read_buffer_index = link_position / PAGE_SIZE;
+            m_last_link_position = m_stream_io_window->read32(StreamRegisterOffset::LinkPosition);
+            auto read_buffer_index = m_last_link_position / PAGE_SIZE;
             if (read_buffer_index != buffer_index)
                 return;
 
-            auto microseconds_to_wait = ((read_buffer_index + 1) * PAGE_SIZE - link_position)
-                / m_format_parameters.number_of_channels
-                * 8 / m_format_parameters.pcm_bits
-                * 1'000'000 / m_format_parameters.sample_rate;
-            dbgln_if(INTEL_HDA_DEBUG, "IntelHDA: Waiting {} µs until buffer {} becomes writeable", microseconds_to_wait, buffer_index);
+            dbgln_if(INTEL_HDA_DEBUG, "IntelHDA: Waiting until buffer {} becomes writeable", buffer_index);
 
-            // NOTE: we don't care about the reason for interruption - we simply calculate the next delay
-            [[maybe_unused]] auto block_result = Thread::current()->sleep(Duration::from_microseconds(microseconds_to_wait));
+            m_irq_queue.wait_forever("IntelHDA"sv);
         }
     };
 
@@ -203,7 +225,7 @@ ErrorOr<size_t> OutputStream::write(UserOrKernelBuffer const& data, size_t lengt
         wait_until_buffer_index_can_be_written(buffer_index);
 
         TRY(m_buffers.with([&](auto& buffers) -> ErrorOr<void> {
-            // NOTE: if the buffers were reinitialized, we might point to an out of bounds page
+            // NOTE: if the buffers were reinitialized, we might point to an out-of-bounds page
             if (buffer_index >= buffers->page_count())
                 return EAGAIN;
 

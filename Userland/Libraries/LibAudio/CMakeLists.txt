@@ -16,9 +16,12 @@ set(SOURCES
 
 if (SERENITYOS)
     list(APPEND SOURCES ConnectionToServer.cpp)
+    list(APPEND SOURCES ConnectionToManagerServer.cpp)
     set(GENERATED_SOURCES
         ../../Services/AudioServer/AudioClientEndpoint.h
         ../../Services/AudioServer/AudioServerEndpoint.h
+        ../../Services/AudioServer/AudioManagerClientEndpoint.h
+        ../../Services/AudioServer/AudioManagerServerEndpoint.h
     )
 endif()
 

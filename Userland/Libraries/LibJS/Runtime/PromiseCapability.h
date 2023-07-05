@@ -17,27 +17,24 @@ class PromiseCapability final : public Cell {
     JS_CELL(PromiseCapability, Cell);
 
 public:
-    static NonnullGCPtr<PromiseCapability> create(VM& vm, GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject);
+    static NonnullGCPtr<PromiseCapability> create(VM& vm, NonnullGCPtr<Object> promise, NonnullGCPtr<FunctionObject> resolve, NonnullGCPtr<FunctionObject> reject);
 
     virtual ~PromiseCapability() = default;
 
-    [[nodiscard]] GCPtr<Object> promise() const { return m_promise; }
-    void set_promise(NonnullGCPtr<Object> promise) { m_promise = promise; }
+    [[nodiscard]] NonnullGCPtr<Object> promise() const { return m_promise; }
 
-    [[nodiscard]] GCPtr<FunctionObject> resolve() const { return m_resolve; }
-    void set_resolve(NonnullGCPtr<FunctionObject> resolve) { m_resolve = resolve; }
+    [[nodiscard]] NonnullGCPtr<FunctionObject> resolve() const { return m_resolve; }
 
-    [[nodiscard]] GCPtr<FunctionObject> reject() const { return m_reject; }
-    void set_reject(NonnullGCPtr<FunctionObject> reject) { m_reject = reject; }
+    [[nodiscard]] NonnullGCPtr<FunctionObject> reject() const { return m_reject; }
 
 private:
-    PromiseCapability(GCPtr<Object>, GCPtr<FunctionObject>, GCPtr<FunctionObject>);
+    PromiseCapability(NonnullGCPtr<Object>, NonnullGCPtr<FunctionObject>, NonnullGCPtr<FunctionObject>);
 
     virtual void visit_edges(Visitor&) override;
 
-    GCPtr<Object> m_promise;
-    GCPtr<FunctionObject> m_resolve;
-    GCPtr<FunctionObject> m_reject;
+    NonnullGCPtr<Object> m_promise;
+    NonnullGCPtr<FunctionObject> m_resolve;
+    NonnullGCPtr<FunctionObject> m_reject;
 };
 
 // 27.2.1.1.1 IfAbruptRejectPromise ( value, capability ), https://tc39.es/ecma262/#sec-ifabruptrejectpromise

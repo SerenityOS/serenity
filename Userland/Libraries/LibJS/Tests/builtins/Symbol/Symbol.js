@@ -17,3 +17,11 @@ test("constructing symbol from symbol is an error", () => {
         Symbol(Symbol("foo"));
     }).toThrowWithMessage(TypeError, "Cannot convert symbol to string");
 });
+
+test("setting new properties on a symbol is an error in strict mode", () => {
+    "use strict";
+    var symbol = Symbol("foo");
+    expect(() => {
+        symbol.bar = 42;
+    }).toThrowWithMessage(TypeError, "Cannot set property 'bar' of Symbol(foo)");
+});

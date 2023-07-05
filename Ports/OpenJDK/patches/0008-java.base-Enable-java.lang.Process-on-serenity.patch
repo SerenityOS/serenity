@@ -6,9 +6,9 @@ Subject: [PATCH] java.base: Enable java.lang.Process on serenity
 ---
  make/modules/java.base/Launcher.gmk           |   2 +-
  make/modules/java.base/lib/CoreLibraries.gmk  |   3 +
- .../libjava/ProcessHandleImpl_serenity.cpp    | 165 ++++++++++++++++++
+ .../libjava/ProcessHandleImpl_serenity.cpp    | 163 ++++++++++++++++++
  .../unix/classes/java/lang/ProcessImpl.java   |   7 +-
- 4 files changed, 175 insertions(+), 2 deletions(-)
+ 4 files changed, 173 insertions(+), 2 deletions(-)
  create mode 100644 src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 
 diff --git a/make/modules/java.base/Launcher.gmk b/make/modules/java.base/Launcher.gmk
@@ -47,10 +47,10 @@ index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..769c2fd8b5a7e0000c85d6d44ec30f64
          -framework SystemConfiguration, \
 diff --git a/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..d9f9663352d56fbc3ba2db75c4beebd3aea4554c
+index 0000000000000000000000000000000000000000..9f4410816af68b2a1912255807fbbe4b982bd72c
 --- /dev/null
 +++ b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,163 @@
 +/*
 + * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -88,7 +88,6 @@ index 0000000000000000000000000000000000000000..d9f9663352d56fbc3ba2db75c4beebd3
 +}
 +
 +#include <AK/JsonArray.h>
-+#include <LibCore/DeprecatedFile.h>
 +#include <LibCore/File.h>
 +#include <LibCore/ProcessStatisticsReader.h>
 +#include <stdio.h>
@@ -108,11 +107,8 @@ index 0000000000000000000000000000000000000000..d9f9663352d56fbc3ba2db75c4beebd3
 +    })
 +
 +
-+static RefPtr<Core::DeprecatedFile> proc_all;
-+
 +extern "C" {
 +void os_initNative(JNIEnv *env, jclass clazz) {
-+    proc_all = MUST(Core::DeprecatedFile::open("/sys/kernel/processes", Core::OpenMode::ReadOnly));
 +}
 +
 +jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
@@ -121,7 +117,8 @@ index 0000000000000000000000000000000000000000..d9f9663352d56fbc3ba2db75c4beebd3
 +}
 +
 +pid_t os_getParentPidAndTimings(JNIEnv *env, pid_t pid, jlong *total, jlong *start) {
-+    auto maybe_stats = Core::ProcessStatisticsReader::get_all(proc_all);
++    // Won't read usernames, not even UIDs:
++    auto maybe_stats = Core::ProcessStatisticsReader::get_all(false);
 +    if (maybe_stats.is_error()) {
 +        JNU_ThrowByNameWithLastError(env,
 +            "java/lang/RuntimeException", "ProcessStatisticsReader::get_all failed");
@@ -168,7 +165,8 @@ index 0000000000000000000000000000000000000000..d9f9663352d56fbc3ba2db75c4beebd3
 +}
 +
 +void os_getCmdlineAndUserInfo(JNIEnv *env, jobject jinfo, pid_t pid) {
-+    auto maybe_stats = Core::ProcessStatisticsReader::get_all(proc_all);
++    // Won't read usernames, only UIDs:
++    auto maybe_stats = Core::ProcessStatisticsReader::get_all(false);
 +    if (maybe_stats.is_error()) {
 +        JNU_ThrowByNameWithLastError(env,
 +            "java/lang/RuntimeException", "ProcessStatisticsReader::get_all failed");

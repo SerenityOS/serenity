@@ -36,29 +36,33 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     size_t y_offset = 10;
     size_t current_original_line_index = 0;
     for (auto const& hunk : m_hunks) {
-        for (size_t i = current_original_line_index; i < hunk.original_start_line; ++i) {
+        for (size_t i = current_original_line_index; i < hunk.location.old_range.start_line; ++i) {
             draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
             y_offset += line_height();
         }
-        current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
+        current_original_line_index = hunk.location.old_range.start_line + hunk.location.old_range.number_of_lines;
 
         size_t left_y_offset = y_offset;
-        for (auto const& removed_line : hunk.removed_lines) {
-            draw_line(painter, removed_line, left_y_offset, LinePosition::Left, LineType::Diff);
+        for (auto const& line : hunk.lines) {
+            if (line.operation != Diff::Line::Operation::Removal)
+                continue;
+            draw_line(painter, line.content, left_y_offset, LinePosition::Left, LineType::Diff);
             left_y_offset += line_height();
         }
-        for (int i = 0; i < (int)hunk.added_lines.size() - (int)hunk.removed_lines.size(); ++i) {
-            draw_line(painter, "", left_y_offset, LinePosition::Left, LineType::Missing);
+        for (int i = 0; i < (int)hunk.location.new_range.number_of_lines - (int)hunk.location.old_range.number_of_lines; ++i) {
+            draw_line(painter, ""sv, left_y_offset, LinePosition::Left, LineType::Missing);
             left_y_offset += line_height();
         }
 
         size_t right_y_offset = y_offset;
-        for (auto const& added_line : hunk.added_lines) {
-            draw_line(painter, added_line, right_y_offset, LinePosition::Right, LineType::Diff);
+        for (auto const& line : hunk.lines) {
+            if (line.operation != Diff::Line::Operation::Addition)
+                continue;
+            draw_line(painter, line.content, right_y_offset, LinePosition::Right, LineType::Diff);
             right_y_offset += line_height();
         }
-        for (int i = 0; i < (int)hunk.removed_lines.size() - (int)hunk.added_lines.size(); ++i) {
-            draw_line(painter, "", right_y_offset, LinePosition::Right, LineType::Missing);
+        for (int i = 0; i < (int)hunk.location.old_range.number_of_lines - (int)hunk.location.new_range.number_of_lines; ++i) {
+            draw_line(painter, ""sv, right_y_offset, LinePosition::Right, LineType::Missing);
             right_y_offset += line_height();
         }
 
@@ -71,7 +75,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void DiffViewer::draw_line(GUI::Painter& painter, DeprecatedString const& line, size_t y_offset, LinePosition line_position, LineType line_type)
+void DiffViewer::draw_line(GUI::Painter& painter, StringView line, size_t y_offset, LinePosition line_position, LineType line_type)
 {
     size_t line_width = font().width(line);
 
@@ -134,7 +138,7 @@ Gfx::IntRect DiffViewer::separator_rect() const
 void DiffViewer::set_content(DeprecatedString const& original, DeprecatedString const& diff)
 {
     m_original_lines = split_to_lines(original);
-    m_hunks = Diff::parse_hunks(diff);
+    m_hunks = Diff::parse_hunks(diff).release_value_but_fixme_should_propagate_errors();
 
     if constexpr (DIFF_DEBUG) {
         for (size_t i = 0; i < m_original_lines.size(); ++i)
@@ -149,7 +153,7 @@ DiffViewer::DiffViewer()
 
 DiffViewer::DiffViewer(DeprecatedString const& original, DeprecatedString const& diff)
     : m_original_lines(split_to_lines(original))
-    , m_hunks(Diff::parse_hunks(diff))
+    , m_hunks(Diff::parse_hunks(diff).release_value_but_fixme_should_propagate_errors())
 {
     setup_properties();
 }
@@ -205,13 +209,13 @@ void DiffViewer::update_content_size()
     size_t num_lines = 0;
     size_t current_original_line_index = 0;
     for (auto const& hunk : m_hunks) {
-        num_lines += ((int)hunk.original_start_line - (int)current_original_line_index);
+        num_lines += (hunk.location.old_range.start_line - (int)current_original_line_index);
 
-        num_lines += hunk.removed_lines.size();
-        if (hunk.added_lines.size() > hunk.removed_lines.size()) {
-            num_lines += ((int)hunk.added_lines.size() - (int)hunk.removed_lines.size());
+        num_lines += hunk.location.old_range.number_of_lines;
+        if (hunk.location.new_range.number_of_lines > hunk.location.old_range.number_of_lines) {
+            num_lines += ((int)hunk.location.new_range.number_of_lines - (int)hunk.location.old_range.number_of_lines);
         }
-        current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
+        current_original_line_index = hunk.location.old_range.start_line + hunk.location.old_range.number_of_lines;
     }
     num_lines += ((int)m_original_lines.size() - (int)current_original_line_index);
 

@@ -56,7 +56,7 @@ struct Proxy {
 template<typename Socket, typename SocketStorageType = Socket>
 struct Connection {
     struct JobData {
-        Function<void(Core::Socket&)> start {};
+        Function<void(Core::BufferedSocketBase&)> start {};
         Function<void(Core::NetworkJob::Error)> fail {};
         Function<Vector<TLS::Certificate>()> provide_client_certificates {};
 

@@ -17,6 +17,7 @@
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PPMLoader.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
+#include <LibGfx/ImageFormats/TinyVGLoader.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
@@ -558,4 +559,14 @@ TEST_CASE(test_webp_extended_lossless_animated)
         // This one isn't the same in all frames.
         EXPECT_EQ(frame.image->get_pixel(500, 0), (frame_index == 2 || frame_index == 6) ? Gfx::Color::Black : Gfx::Color(255, 255, 255, 0));
     }
+}
+
+TEST_CASE(test_tvg)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("tvg/yak.tvg"sv)));
+    EXPECT(Gfx::TinyVGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+    MUST(plugin_decoder->initialize());
+
+    expect_single_frame_of_size(*plugin_decoder, { 1024, 1024 });
 }

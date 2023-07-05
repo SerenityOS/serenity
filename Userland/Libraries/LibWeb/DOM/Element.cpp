@@ -145,7 +145,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
         attribute->set_value(value);
     }
 
-    parse_attribute(attribute->local_name(), value);
+    attribute_changed(attribute->local_name(), value);
 
     if (value != old_value) {
         invalidate_style_after_attribute_change(name);
@@ -227,9 +227,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
 void Element::remove_attribute(DeprecatedFlyString const& name)
 {
     m_attributes->remove_attribute(name);
-
-    did_remove_attribute(name);
-
+    attribute_changed(name, {});
     invalidate_style_after_attribute_change(name);
 }
 
@@ -261,7 +259,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
             auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, ""));
             m_attributes->append_attribute(new_attribute);
 
-            parse_attribute(new_attribute->local_name(), "");
+            attribute_changed(new_attribute->local_name(), "");
 
             invalidate_style_after_attribute_change(name);
 
@@ -275,9 +273,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
     // 5. Otherwise, if force is not given or is false, remove an attribute given qualifiedName and this, and then return false.
     if (!force.has_value() || !force.value()) {
         m_attributes->remove_attribute(name);
-
-        did_remove_attribute(name);
-
+        attribute_changed(name, {});
         invalidate_style_after_attribute_change(name);
     }
 
@@ -361,7 +357,7 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(Infra::is_ascii_whitespace);
@@ -373,19 +369,16 @@ void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString 
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
-        if (m_inline_style && m_inline_style->is_updating())
-            return;
-        m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
-        set_needs_style_update(true);
-    }
-}
-
-void Element::did_remove_attribute(DeprecatedFlyString const& name)
-{
-    if (name == HTML::AttributeNames::style) {
-        if (m_inline_style) {
-            m_inline_style = nullptr;
+        if (value.is_null()) {
+            if (!m_inline_style) {
+                m_inline_style = nullptr;
+                set_needs_style_update(true);
+            }
+        } else {
+            // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
+            if (m_inline_style && m_inline_style->is_updating())
+                return;
+            m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
             set_needs_style_update(true);
         }
     }

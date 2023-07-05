@@ -437,7 +437,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     });
     VERIFY(table_box.has_value());
 
-    auto table_used_width = throwaway_state.get(*table_box).content_width();
+    auto table_used_width = throwaway_state.get(*table_box).border_box_width();
     return available_space.width.is_definite() ? min(table_used_width, available_width) : table_used_width;
 }
 
@@ -950,10 +950,11 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         if (!line_builder)
             y += side_data.y_offset;
 
+        auto top_margin_edge = y - box_state.margin_box_top();
         side_data.all_boxes.append(adopt_own(*new FloatingBox {
             .box = box,
             .offset_from_edge = offset_from_edge,
-            .top_margin_edge = y - box_state.margin_box_top(),
+            .top_margin_edge = top_margin_edge,
             .bottom_margin_edge = y + box_state.content_height() + box_state.margin_box_bottom(),
         }));
         side_data.current_boxes.append(*side_data.all_boxes.last());
@@ -971,7 +972,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
         // If the new box was inserted below the bottom of the opposite side,
         // we reset the other side back to its edge.
-        if (y > other_side_data.y_offset)
+        if (top_margin_edge > other_side_data.y_offset)
             other_side_data.clear();
     };
 
@@ -986,6 +987,8 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
     if (line_builder)
         line_builder->recalculate_available_space();
+
+    compute_inset(box);
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();

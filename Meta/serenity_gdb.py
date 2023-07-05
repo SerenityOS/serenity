@@ -22,6 +22,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKAtomic
     elif klass == 'AK::DistinctNumeric':
         return AKDistinctNumeric
+    elif klass == 'AK::FixedArray':
+        return AKFixedArrayPrinter
     elif klass == 'AK::HashMap':
         return AKHashMapPrettyPrinter
     elif klass == 'AK::RefCounted':
@@ -89,6 +91,45 @@ class AKDistinctNumeric:
         # If the tag is malformed, just print DistinctNumeric<T>
         contained_type = type.template_argument(0)
         return f'AK::DistinctNumeric<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+
+
+class AKFixedArrayPrinter:
+    def __init__(self, val):
+        self.val = val
+
+    def get_storage(self):
+        storage = self.val["m_storage"]
+
+        return None if int(storage) == 0 else storage
+
+    def to_string(self):
+        storage = self.get_storage()
+        if storage is not None:
+            size = storage["size"]
+        else:
+            size = 0
+
+        return f'{AKFixedArrayPrinter.prettyprint_type(self.val.type)} of size {size}'
+
+    def children(self):
+        storage = self.get_storage()
+
+        if storage is None:
+            return []
+        else:
+            size = storage["size"]
+            elements = storage["elements"]
+
+        # Very arbitrary limit, just to catch UAF'd and garbage vector values with a silly number of elements
+        if size > 373373:
+            return []
+
+        return [(f"[{i}]", elements[i]) for i in range(size)]
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        template_type = type.template_argument(0)
+        return f'AK::FixedArray<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
 
 
 class AKRefCounted:

@@ -262,6 +262,16 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
     return Key_Invalid;
 }
 
+void WebContentView::wheelEvent(QWheelEvent* event)
+{
+    if (!event->modifiers().testFlag(Qt::ControlModifier)) {
+        QAbstractScrollArea::wheelEvent(event);
+        event->accept();
+        return;
+    }
+    event->ignore();
+}
+
 void WebContentView::mouseMoveEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
@@ -359,10 +369,7 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
     }
 
     auto text = event->text();
-    if (text.isEmpty()) {
-        return;
-    }
-    auto point = event->text()[0].unicode();
+    auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
     client().async_key_down(keycode, modifiers, point);
@@ -371,10 +378,7 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
 void WebContentView::keyReleaseEvent(QKeyEvent* event)
 {
     auto text = event->text();
-    if (text.isEmpty()) {
-        return;
-    }
-    auto point = event->text()[0].unicode();
+    auto point = text.isEmpty() ? 0u : event->text()[0].unicode();
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
     client().async_key_up(keycode, modifiers, point);

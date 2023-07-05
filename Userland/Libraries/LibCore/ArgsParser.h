@@ -51,7 +51,7 @@ public:
         char const* long_name { nullptr };
         char short_name { 0 };
         char const* value_name { nullptr };
-        Function<bool(StringView)> accept_value;
+        Function<ErrorOr<bool>(StringView)> accept_value;
         OptionHideMode hide_mode { OptionHideMode::None };
 
         DeprecatedString name_for_display() const
@@ -67,7 +67,7 @@ public:
         char const* name { nullptr };
         int min_values { 0 };
         int max_values { 1 };
-        Function<bool(StringView)> accept_value;
+        Function<ErrorOr<bool>(StringView)> accept_value;
     };
 
     bool parse(Span<StringView> arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
@@ -88,6 +88,7 @@ public:
     void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     template<Integral I>
     void add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
@@ -102,6 +103,7 @@ public:
     void add_positional_argument(Arg&&);
     void add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
+    void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
     template<Integral I>
     void add_positional_argument(I& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);

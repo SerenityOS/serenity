@@ -122,8 +122,8 @@ private:
 
     ChessWidget() = default;
 
-    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
-    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
+    virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
+    virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value) override;
 
     bool check_game_over(ClaimDrawBehavior);
 

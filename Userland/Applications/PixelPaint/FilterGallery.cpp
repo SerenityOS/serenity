@@ -74,7 +74,14 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     };
 
     m_preview_widget->set_layer(editor->active_layer());
-    m_preview_widget->set_bitmap(editor->active_layer()->content_bitmap().clone().release_value());
+    switch (editor->active_layer()->edit_mode()) {
+    case Layer::EditMode::Content:
+        m_preview_widget->set_bitmap(editor->active_layer()->content_bitmap().clone().release_value());
+        break;
+    case Layer::EditMode::Mask:
+        m_preview_widget->set_bitmap(editor->active_layer()->mask_bitmap()->clone().release_value());
+        break;
+    }
 
     apply_button->on_click = [this](auto) {
         if (!m_selected_filter) {

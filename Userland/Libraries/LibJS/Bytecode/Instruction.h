@@ -19,6 +19,7 @@
     O(BitwiseXor)                    \
     O(BlockDeclarationInstantiation) \
     O(Call)                          \
+    O(CallWithArgumentArray)         \
     O(ConcatString)                  \
     O(ContinuePendingUnwind)         \
     O(CopyObjectExcludingProperties) \
@@ -38,9 +39,11 @@
     O(GetMethod)                     \
     O(GetNewTarget)                  \
     O(GetObjectPropertyIterator)     \
+    O(GetPrivateById)                \
     O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
+    O(ImportCall)                    \
     O(In)                            \
     O(Increment)                     \
     O(InstanceOf)                    \
@@ -76,6 +79,7 @@
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
     O(PutByValue)                    \
+    O(PutPrivateById)                \
     O(ResolveThisBinding)            \
     O(ResolveSuperBase)              \
     O(Return)                        \
@@ -86,9 +90,10 @@
     O(StrictlyEquals)                \
     O(StrictlyInequals)              \
     O(Sub)                           \
-    O(SuperCall)                     \
+    O(SuperCallWithArgumentArray)    \
     O(Throw)                         \
     O(ThrowIfNotObject)              \
+    O(ThrowIfNullish)                \
     O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \

@@ -431,6 +431,11 @@ class ImmutableComputedValues final : public ComputedValues {
 
 class MutableComputedValues final : public ComputedValues {
 public:
+    void inherit_from(ComputedValues const& other)
+    {
+        m_inherited = static_cast<MutableComputedValues const&>(other).m_inherited;
+    }
+
     void set_aspect_ratio(AspectRatio aspect_ratio) { m_noninherited.aspect_ratio = aspect_ratio; }
     void set_font_size(float font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }

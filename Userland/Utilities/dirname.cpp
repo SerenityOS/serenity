@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,11 +11,16 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    DeprecatedString path = {};
+    bool null_terminated = false;
+    Vector<DeprecatedString> paths;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path", "path");
+    args_parser.add_option(null_terminated, "End each output line with \\0, rather than \\n", "zero", 'z');
+    args_parser.add_positional_argument(paths, "Path", "path");
     args_parser.parse(arguments);
 
-    outln("{}", LexicalPath::dirname(path));
+    auto const delimiter = null_terminated ? '\0' : '\n';
+    for (auto const& path : paths)
+        out("{}{}", LexicalPath::dirname(path), delimiter);
+
     return 0;
 }

@@ -8,15 +8,15 @@ Subject: [PATCH] Include ar.h for serenity as well
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/arscan.c b/src/arscan.c
-index b6ed45a87754085aa1776c85e0181ba6edb0d7e6..2ae76f8134a581f3607a7d0c507d1d2e21dc3abc 100644
+index edd4070c3f86fcecc44ac2025d1256a47de700a0..6c7a7f4c595a9b00ffcbc0e4fade63d2efbca816 100644
 --- a/src/arscan.c
 +++ b/src/arscan.c
 @@ -331,7 +331,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *varg)
  #endif
  
  #ifndef WINDOWS32
--# if !defined (__ANDROID__) && !defined (__BEOS__)
-+# if !defined (__ANDROID__) && !defined (__BEOS__) && !defined(__serenity__)
+-# if !defined (__ANDROID__) && !defined (__BEOS__) && !defined(MK_OS_ZOS)
++# if !defined (__ANDROID__) && !defined (__BEOS__) && !defined(MK_OS_ZOS) && !defined(__serenity__)
  #  include <ar.h>
  # else
     /* These platforms don't have <ar.h> but have archives in the same format

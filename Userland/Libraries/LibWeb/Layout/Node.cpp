@@ -26,6 +26,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -593,7 +594,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto maybe_text_decoration_thickness = computed_style.length_percentage(CSS::PropertyID::TextDecorationThickness); maybe_text_decoration_thickness.has_value())
         computed_values.set_text_decoration_thickness(maybe_text_decoration_thickness.release_value());
 
-    computed_values.set_text_shadow(computed_style.text_shadow());
+    computed_values.set_text_shadow(computed_style.text_shadow(*this));
 
     computed_values.set_z_index(computed_style.z_index());
     computed_values.set_opacity(computed_style.opacity());
@@ -615,7 +616,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_margin(computed_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
     computed_values.set_padding(computed_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
 
-    computed_values.set_box_shadow(computed_style.box_shadow());
+    computed_values.set_box_shadow(computed_style.box_shadow(*this));
 
     computed_values.set_transformations(computed_style.transformations());
     computed_values.set_transform_origin(computed_style.transform_origin());
@@ -734,6 +735,20 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     } else if (aspect_ratio->is_ratio()) {
         computed_values.set_aspect_ratio({ false, aspect_ratio->as_ratio().ratio() });
     }
+    if (display().is_table_inside() && is<TableWrapper>(parent())) {
+        auto& wrapper_computed_values = static_cast<TableWrapper*>(parent())->m_computed_values;
+        transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
+    }
+
+    // Update any anonymous children that inherit from this node.
+    // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style
+    //        data structure somehow, so this wasn't necessary.
+    for_each_child([&](auto& child) {
+        if (child.is_anonymous()) {
+            auto& child_computed_values = static_cast<CSS::MutableComputedValues&>(static_cast<CSS::ComputedValues&>(const_cast<CSS::ImmutableComputedValues&>(child.computed_values())));
+            child_computed_values.inherit_from(computed_values);
+        }
+    });
 }
 
 bool Node::is_root_element() const
@@ -803,11 +818,29 @@ void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_valu
     VERIFY(this->display().is_table_inside());
 
     CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
-    mutable_computed_values.set_position(CSS::Position::Static);
-    mutable_computed_values.set_float(CSS::Float::None);
-    mutable_computed_values.set_clear(CSS::Clear::None);
-    mutable_computed_values.set_inset({ CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() });
-    mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
+    mutable_computed_values.set_position(CSS::InitialValues::position());
+    mutable_computed_values.set_float(CSS::InitialValues::float_());
+    mutable_computed_values.set_clear(CSS::InitialValues::clear());
+    mutable_computed_values.set_inset(CSS::InitialValues::inset());
+    mutable_computed_values.set_margin(CSS::InitialValues::margin());
+}
+
+void NodeWithStyle::transfer_table_box_computed_values_to_wrapper_computed_values(CSS::ComputedValues& wrapper_computed_values)
+{
+    // The computed values of properties 'position', 'float', 'margin-*', 'top', 'right', 'bottom', and 'left' on the table element are used on the table wrapper box and not the table box;
+    // all other values of non-inheritable properties are used on the table box and not the table wrapper box.
+    // (Where the table element's values are not used on the table and table wrapper boxes, the initial values are used instead.)
+    auto& mutable_wrapper_computed_values = static_cast<CSS::MutableComputedValues&>(wrapper_computed_values);
+    if (display().is_inline_outside())
+        mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
+    else
+        mutable_wrapper_computed_values.set_display(CSS::Display::from_short(CSS::Display::Short::FlowRoot));
+    mutable_wrapper_computed_values.set_position(computed_values().position());
+    mutable_wrapper_computed_values.set_inset(computed_values().inset());
+    mutable_wrapper_computed_values.set_float(computed_values().float_());
+    mutable_wrapper_computed_values.set_clear(computed_values().clear());
+    mutable_wrapper_computed_values.set_margin(computed_values().margin());
+    reset_table_box_computed_values_used_by_wrapper_to_init_values();
 }
 
 void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)

@@ -192,6 +192,11 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             auto const& svg_text_box = static_cast<SVGTextBox const&>(descendant);
             // NOTE: This hack creates a layout state to ensure the existence of a paintable box node in LayoutState::commit(), even when none of the values from UsedValues impact the SVG text.
             m_state.get_mutable(svg_text_box);
+        } else if (is<SVGGraphicsBox>(descendant)) {
+            // Same hack as above.
+            // FIXME: This should be sized based on its children.
+            auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
+            m_state.get_mutable(svg_graphics_box);
         }
 
         return IterationDecision::Continue;

@@ -8,7 +8,6 @@
 #include <AK/Types.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Loader.h>
-#include <LibAudio/Resampler.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -17,8 +16,6 @@
 #include <math.h>
 #include <stdio.h>
 
-// The Kernel has issues with very large anonymous buffers.
-// FIXME: This appears to be fine for now, but it's really a hack.
 constexpr size_t LOAD_CHUNK_SIZE = 128 * KiB;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -62,10 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         loader->num_channels() == 1 ? "Mono" : "Stereo");
     out("\033[34;1mProgress\033[0m: \033[s");
 
-    auto resampler = Audio::ResampleHelper<Audio::Sample>(loader->sample_rate(), audio_client->get_sample_rate());
-
-    // If we're downsampling, we need to appropriately load more samples at once.
-    size_t const load_size = static_cast<size_t>(LOAD_CHUNK_SIZE * static_cast<double>(loader->sample_rate()) / static_cast<double>(audio_client->get_sample_rate()));
+    audio_client->set_self_sample_rate(loader->sample_rate());
 
     auto print_playback_update = [&]() {
         out("\033[u");
@@ -94,14 +88,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (;;) {
-        auto samples = loader->get_more_samples(load_size);
+        auto samples = loader->get_more_samples(LOAD_CHUNK_SIZE);
         if (!samples.is_error()) {
             if (samples.value().size() > 0) {
                 print_playback_update();
                 // We can read and enqueue more samples
-                resampler.reset();
-                auto resampled_samples = resampler.resample(move(samples.value()));
-                TRY(audio_client->async_enqueue(move(resampled_samples)));
+                TRY(audio_client->async_enqueue(samples.release_value()));
             } else if (should_loop) {
                 // We're done: now loop
                 auto result = loader->reset();
@@ -113,7 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 // We're done and the server is done
                 break;
             }
-            while (audio_client->remaining_samples() > load_size) {
+            while (audio_client->remaining_samples() > LOAD_CHUNK_SIZE) {
                 // The server has enough data for now
                 print_playback_update();
                 usleep(1'000'000 / 10);

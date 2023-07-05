@@ -1344,6 +1344,10 @@ ThrowCompletionOr<Value> less_than_equals(VM& vm, Value lhs, Value rhs)
 // BitwiseANDExpression : BitwiseANDExpression & EqualityExpression
 ThrowCompletionOr<Value> bitwise_and(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path when both values are Int32.
+    if (lhs.is_int32() && rhs.is_int32())
+        return Value(lhs.as_i32() & rhs.as_i32());
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 6. N/A.
 
@@ -1377,6 +1381,10 @@ ThrowCompletionOr<Value> bitwise_and(VM& vm, Value lhs, Value rhs)
 // BitwiseORExpression : BitwiseORExpression | BitwiseXORExpression
 ThrowCompletionOr<Value> bitwise_or(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path when both values are Int32.
+    if (lhs.is_int32() && rhs.is_int32())
+        return Value(lhs.as_i32() | rhs.as_i32());
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 6. N/A.
 
@@ -1414,6 +1422,10 @@ ThrowCompletionOr<Value> bitwise_or(VM& vm, Value lhs, Value rhs)
 // BitwiseXORExpression : BitwiseXORExpression ^ BitwiseANDExpression
 ThrowCompletionOr<Value> bitwise_xor(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path when both values are Int32.
+    if (lhs.is_int32() && rhs.is_int32())
+        return Value(lhs.as_i32() ^ rhs.as_i32());
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 6. N/A.
 
@@ -1598,6 +1610,12 @@ ThrowCompletionOr<Value> left_shift(VM& vm, Value lhs, Value rhs)
 // ShiftExpression : ShiftExpression >> AdditiveExpression
 ThrowCompletionOr<Value> right_shift(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path when both values are suitable Int32 values.
+    if (lhs.is_int32() && rhs.is_int32() && rhs.as_i32() >= 0) {
+        auto shift_count = static_cast<u32>(rhs.as_i32()) % 32;
+        return Value(lhs.as_i32() >> shift_count);
+    }
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 6. N/A.
 
@@ -1649,6 +1667,12 @@ ThrowCompletionOr<Value> right_shift(VM& vm, Value lhs, Value rhs)
 // ShiftExpression : ShiftExpression >>> AdditiveExpression
 ThrowCompletionOr<Value> unsigned_right_shift(VM& vm, Value lhs, Value rhs)
 {
+    // OPTIMIZATION: Fast path when both values are suitable Int32 values.
+    if (lhs.is_int32() && rhs.is_int32() && lhs.as_i32() >= 0 && rhs.as_i32() >= 0) {
+        auto shift_count = static_cast<u32>(rhs.as_i32()) % 32;
+        return Value(static_cast<u32>(lhs.as_i32()) >> shift_count);
+    }
+
     // 13.15.3 ApplyStringOrNumericBinaryOperator ( lval, opText, rval ), https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator
     // 1-2, 5-6. N/A.
 
@@ -1936,7 +1960,7 @@ static Value exp_double(Value base, Value exponent)
 
     // 5. If base is -∞𝔽, then
     if (base.is_negative_infinity()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (fmod(exponent.as_double(), 2.0) != 0);
 
         // a. If exponent > +0𝔽, then
         if (exponent.as_double() > 0) {
@@ -1958,7 +1982,7 @@ static Value exp_double(Value base, Value exponent)
 
     // 7. If base is -0𝔽, then
     if (base.is_negative_zero()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (fmod(exponent.as_double(), 2.0) != 0);
 
         // a. If exponent > +0𝔽, then
         if (exponent.as_double() > 0) {

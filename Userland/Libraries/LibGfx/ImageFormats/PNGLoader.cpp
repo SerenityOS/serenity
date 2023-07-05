@@ -1409,7 +1409,7 @@ static ErrorOr<RefPtr<Bitmap>> render_animation_frame(AnimationFrame const& prev
     return rendered_bitmap;
 }
 
-ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (m_context->state == PNGLoadingContext::State::Error)
         return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");

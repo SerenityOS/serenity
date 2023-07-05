@@ -779,6 +779,23 @@ TEST_CASE(ECMA262_unicode_match)
     }
 }
 
+TEST_CASE(ECMA262_unicode_sets_parser_error)
+{
+    struct _test {
+        StringView pattern;
+        regex::Error error;
+    };
+
+    constexpr _test tests[] {
+        { "[[]"sv, regex::Error::InvalidPattern },
+    };
+
+    for (auto test : tests) {
+        Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::UnicodeSets);
+        EXPECT_EQ(re.parser_result.error, test.error);
+    }
+}
+
 TEST_CASE(ECMA262_unicode_sets_match)
 {
     struct _test {

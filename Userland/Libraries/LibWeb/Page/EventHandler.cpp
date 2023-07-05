@@ -286,7 +286,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                     dbgln("Web::EventHandler: Clicking on a link to {}", url);
                     if (button == GUI::MouseButton::Primary) {
                         if (href.starts_with("javascript:"sv)) {
-                            document->run_javascript(href.substring_view(11, href.length() - 11));
+                            document->navigate_to_javascript_url(href);
                         } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
                             m_browsing_context->scroll_to_anchor(url.fragment());
                         } else {
@@ -743,6 +743,11 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
                 return true;
             }
         }
+    }
+
+    if (auto* element = m_browsing_context->active_document()->focused_element(); is<HTML::HTMLMediaElement>(element)) {
+        auto& media_element = static_cast<HTML::HTMLMediaElement&>(*element);
+        media_element.handle_keydown({}, key).release_value_but_fixme_should_propagate_errors();
     }
 
     if (m_browsing_context->cursor_position().is_valid() && m_browsing_context->cursor_position().node()->is_editable()) {

@@ -24,10 +24,10 @@ LibC, namely:
  create mode 100644 libcxx/include/__support/serenity/xlocale.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index f7c2d99e78b08ff823b9d510a8608ebf50031b82..8d3cb754ddf4c599708b2be38fab1574ce3a4923 100644
+index a12aa1de1..075ebbe81 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -495,6 +495,7 @@ set(files
+@@ -549,6 +549,7 @@ set(files
    __support/musl/xlocale.h
    __support/newlib/xlocale.h
    __support/openbsd/xlocale.h
@@ -36,10 +36,10 @@ index f7c2d99e78b08ff823b9d510a8608ebf50031b82..8d3cb754ddf4c599708b2be38fab1574
    __support/solaris/wchar.h
    __support/solaris/xlocale.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 8c2f7614af537e71a76cb5292d5765d6ff8cd279..c7ebf50cb5ebb3a96029cd9a8a38d836cf19a01e 100644
+index 5e30a4217..5dea34814 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -912,7 +912,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+@@ -930,7 +930,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
          defined(__sun__) ||                                                                                            \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -49,7 +49,7 @@ index 8c2f7614af537e71a76cb5292d5765d6ff8cd279..c7ebf50cb5ebb3a96029cd9a8a38d836
  // clang-format on
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD
  #    elif defined(__Fuchsia__)
-@@ -990,7 +991,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+@@ -1008,7 +1009,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -59,10 +59,10 @@ index 8c2f7614af537e71a76cb5292d5765d6ff8cd279..c7ebf50cb5ebb3a96029cd9a8a38d836
  #  endif
  
 diff --git a/libcxx/include/__locale b/libcxx/include/__locale
-index 40f9a3ff57c22635254be654227333b2a10eca6a..1c499c078b44a49abead17ce566801b4c34733f3 100644
+index e0ffa0ca0..33e994abe 100644
 --- a/libcxx/include/__locale
 +++ b/libcxx/include/__locale
-@@ -42,6 +42,8 @@
+@@ -44,6 +44,8 @@
  # include <__support/musl/xlocale.h>
  #elif defined(_LIBCPP_HAS_MUSL_LIBC)
  # include <__support/musl/xlocale.h>
@@ -73,7 +73,7 @@ index 40f9a3ff57c22635254be654227333b2a10eca6a..1c499c078b44a49abead17ce566801b4
  #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 diff --git a/libcxx/include/__support/serenity/xlocale.h b/libcxx/include/__support/serenity/xlocale.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..0f939d2f6989e2ad617145308d079776fe87b6ce
+index 000000000..0f939d2f6
 --- /dev/null
 +++ b/libcxx/include/__support/serenity/xlocale.h
 @@ -0,0 +1,24 @@
@@ -102,10 +102,10 @@ index 0000000000000000000000000000000000000000..0f939d2f6989e2ad617145308d079776
 +
 +#endif
 diff --git a/libcxx/include/locale b/libcxx/include/locale
-index b01c66d0430f66ee74118e73296780bb864e920b..da29b7d00c709788facb049f417b6d5ccb5b70e1 100644
+index 874866f69..55632f101 100644
 --- a/libcxx/include/locale
 +++ b/libcxx/include/locale
-@@ -217,7 +217,7 @@ template <class charT> class messages_byname;
+@@ -216,7 +216,7 @@ template <class charT> class messages_byname;
  
  #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
@@ -115,7 +115,7 @@ index b01c66d0430f66ee74118e73296780bb864e920b..da29b7d00c709788facb049f417b6d5c
  #    include <nl_types.h>
  #  endif
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index bef26ec5019eccab758733eb85a1f8a6fc404968..fbb2899b1939a2f9ce7a39337c99e48c7749f7f2 100644
+index bef26ec50..fbb2899b1 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
 @@ -35,6 +35,8 @@

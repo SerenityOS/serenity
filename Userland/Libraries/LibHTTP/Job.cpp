@@ -92,10 +92,10 @@ Job::Job(HttpRequest&& request, Stream& output_stream)
 {
 }
 
-void Job::start(Core::Socket& socket)
+void Job::start(Core::BufferedSocketBase& socket)
 {
     VERIFY(!m_socket);
-    m_socket = static_cast<Core::BufferedSocketBase*>(&socket);
+    m_socket = &socket;
     dbgln_if(HTTPJOB_DEBUG, "Reusing previous connection for {}", url());
     deferred_invoke([this] {
         dbgln_if(HTTPJOB_DEBUG, "HttpJob: on_connected callback");

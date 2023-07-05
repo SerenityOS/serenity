@@ -6,15 +6,10 @@
  */
 
 #include <AK/Platform.h>
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/I8042Reboot.h>
-#    include <Kernel/Arch/x86_64/Shutdown.h>
-#elif ARCH(AARCH64)
-#    include <Kernel/Arch/aarch64/RPi/Watchdog.h>
-#endif
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/PowerState.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/Tasks/Process.h>
@@ -60,55 +55,13 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
     TRY(data.read(buf, 1));
     switch (buf[0]) {
     case '1':
-        reboot();
+        Firmware::reboot();
         VERIFY_NOT_REACHED();
     case '2':
-        poweroff();
+        Firmware::poweroff();
         VERIFY_NOT_REACHED();
     default:
         return Error::from_errno(EINVAL);
     }
 }
-
-void SysFSPowerStateSwitchNode::reboot()
-{
-    MutexLocker locker(Process::current().big_lock());
-
-    dbgln("acquiring FS locks...");
-    FileSystem::lock_all();
-    dbgln("syncing mounted filesystems...");
-    FileSystem::sync();
-    dbgln("attempting reboot via ACPI");
-    if (ACPI::is_enabled())
-        ACPI::Parser::the()->try_acpi_reboot();
-#if ARCH(X86_64)
-    i8042_reboot();
-#endif
-    dbgln("reboot attempts failed, applications will stop responding.");
-    dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
-    Processor::halt();
-}
-
-void SysFSPowerStateSwitchNode::poweroff()
-{
-    MutexLocker locker(Process::current().big_lock());
-
-    ConsoleManagement::the().switch_to_debug();
-
-    dbgln("acquiring FS locks...");
-    FileSystem::lock_all();
-    dbgln("syncing mounted filesystems...");
-    FileSystem::sync();
-    dbgln("attempting system shutdown...");
-#if ARCH(X86_64)
-    qemu_shutdown();
-    virtualbox_shutdown();
-#elif ARCH(AARCH64)
-    RPi::Watchdog::the().system_shutdown();
-#endif
-    dbgln("shutdown attempts failed, applications will stop responding.");
-    dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
-    Processor::halt();
-}
-
 }

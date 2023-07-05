@@ -39,10 +39,8 @@ private:
 
     TrackManager& m_track_manager;
     FixedArray<DSP::Sample> m_buffer;
-    Optional<Audio::ResampleHelper<DSP::Sample>> m_resampler;
     RefPtr<Audio::ConnectionToServer> m_audio_client;
     NonnullRefPtr<Threading::Thread> m_pipeline_thread;
-    Vector<Audio::Sample, Audio::AUDIO_BUFFER_SIZE> m_remaining_samples {};
 
     Atomic<bool> m_should_play_audio { true };
     Atomic<bool> m_exit_requested { false };

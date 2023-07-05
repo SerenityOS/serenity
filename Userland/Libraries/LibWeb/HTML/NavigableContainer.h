@@ -14,6 +14,8 @@ class NavigableContainer : public HTMLElement {
     WEB_PLATFORM_OBJECT(NavigableContainer, HTMLElement);
 
 public:
+    static JS::GCPtr<NavigableContainer> navigable_container_with_content_navigable(JS::NonnullGCPtr<Navigable> navigable);
+
     virtual ~NavigableContainer() override;
 
     static HashTable<NavigableContainer*>& all_instances();
@@ -30,6 +32,8 @@ public:
     HTML::WindowProxy* content_window();
 
     DOM::Document const* get_svg_document() const;
+
+    void destroy_the_child_navigable();
 
 protected:
     NavigableContainer(DOM::Document&, DOM::QualifiedName);

@@ -35,6 +35,7 @@ constexpr u32 max_supported_sdsc_frequency_high_speed = 50000000;
 
 // In "m_registers->host_configuration_0"
 // 2.2.11 Host Control 1 Register
+constexpr u32 data_transfer_width_4bit = 1 << 1;
 constexpr u32 high_speed_enable = 1 << 2;
 constexpr u32 dma_select_adma2_32 = 0b10 << 3;
 constexpr u32 dma_select_adma2_64 = 0b11 << 3;
@@ -44,6 +45,11 @@ constexpr u32 dma_select_adma2_64 = 0b11 << 3;
 constexpr u32 internal_clock_enable = 1 << 0;
 constexpr u32 internal_clock_stable = 1 << 1;
 constexpr u32 sd_clock_enable = 1 << 2;
+constexpr u32 sd_clock_divisor_mask = 0x0000ffc0;
+
+// In sub-register "Timeout Control"
+constexpr u32 data_timeout_counter_value_mask = 0b1111 << 16;
+constexpr u32 data_timeout_counter_value_max = 0b1110 << 16;
 
 // In sub-register "Software Reset"
 constexpr u32 software_reset_for_all = 0x01000000;
@@ -53,6 +59,7 @@ constexpr u32 command_complete = 1 << 0;
 constexpr u32 transfer_complete = 1 << 1;
 constexpr u32 buffer_write_ready = 1 << 4;
 constexpr u32 buffer_read_ready = 1 << 5;
+constexpr u32 card_interrupt = 1 << 8;
 
 // PLSS 5.1: all voltage windows
 constexpr u32 acmd41_voltage = 0x00ff8000;
@@ -136,7 +143,7 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
 
     // NOTE: The SDHC might already have been initialized (e.g. by the bootloader), let's reset it to a known configuration
     if (is_sd_clock_enabled())
-        sd_clock_stop();
+        TRY(sd_clock_stop());
     TRY(sd_clock_supply(400000));
 
     // PLSS 4.2.3: "Card Initialization and Identification Process"
@@ -242,10 +249,23 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
 
     auto scr = TRY(retrieve_sd_configuration_register(rca));
 
+    // SDHC 3.4: "Changing Bus Width"
+
+    // 1. Set Card Interrupt Status Enable in the Normal Interrupt Status Enable register to 0 for
+    //    masking incorrect interrupts that may occur while changing the bus width.
+    m_registers->interrupt_status_enable &= ~card_interrupt;
+    // 2. In case of SD memory only card, go to step (4). In case of other card, go to step (3).
+    // 4. Change the bus width mode for an SD card. SD Memory Card bus width is changed by ACMD6
+    //    and SDIO card bus width is changed by setting Bus Width of Bus Interface Control register in
+    //    CCCR.
     TRY(issue_command(SD::Commands::app_cmd, rca));
     TRY(wait_for_response());
     TRY(issue_command(SD::Commands::app_set_bus_width, 0x2)); // 0b00=1 bit bus, 0b10=4 bit bus
     TRY(wait_for_response());
+    // 5. In case of changing to 4-bit mode, set Data Transfer Width to 1 in the Host Control 1 register.
+    //    In another case (1-bit mode), set this bit to 0.
+    m_registers->host_configuration_0 |= data_transfer_width_4bit;
+    // 6. In case of SD memory only card, go to the 'End'. In case of other card, go to step (7).
 
     return TRY(DeviceManagement::try_create_device<SDMemoryCard>(
         *this,
@@ -270,14 +290,12 @@ bool SDHostController::retry_with_timeout(Function<bool()> f, i64 delay_between_
 ErrorOr<void> SDHostController::issue_command(SD::Command const& cmd, u32 argument)
 {
     // SDHC 3.7.1: "Transaction Control without Data Transfer Using DAT Line"
-    constexpr u32 command_inhibit = 1 << 1;
 
     // 1. Check Command Inhibit (CMD) in the Present State register.
     //    Repeat this step until Command Inhibit (CMD) is 0.
     //    That is, when Command Inhibit (CMD) is 1, the Host Driver
     //    shall not issue an SD Command.
-    if (!retry_with_timeout(
-            [&]() { return !(m_registers->present_state & command_inhibit); })) {
+    if (!retry_with_timeout([&]() { return !m_registers->present_state.command_inhibit_cmd; })) {
         return EIO;
     }
 
@@ -290,8 +308,7 @@ ErrorOr<void> SDHostController::issue_command(SD::Command const& cmd, u32 argume
 
         // 4. Check Command Inhibit (DAT) in the Present State register. Repeat
         // this step until Command Inhibit (DAT) is set to 0.
-        constexpr u32 data_inhibit = 1 << 2;
-        if (!retry_with_timeout([&]() { return !(m_registers->present_state & data_inhibit); })) {
+        if (!retry_with_timeout([&]() { return !m_registers->present_state.command_inhibit_dat; })) {
             return EIO;
         }
     }
@@ -449,12 +466,16 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
         const u32 two_upper_bits_of_sdclk_frequency_select = (divisor >> 8 & 0x3) << 6;
         sdclk_frequency_select |= two_upper_bits_of_sdclk_frequency_select;
     }
-    m_registers->host_configuration_1 = m_registers->host_configuration_1 | internal_clock_enable | sdclk_frequency_select;
+    m_registers->host_configuration_1 = (m_registers->host_configuration_1 & ~sd_clock_divisor_mask) | internal_clock_enable | sdclk_frequency_select;
 
     // 3. Check Internal Clock Stable in the Clock Control register until it is 1
     if (!retry_with_timeout([&] { return m_registers->host_configuration_1 & internal_clock_stable; })) {
         return EIO;
     }
+
+    // FIXME: With the default timeout value, reading will sometimes fail on the Raspberry Pi.
+    //        We should be a bit smarter with choosing the right timeout value and handling errors.
+    m_registers->host_configuration_1 = (m_registers->host_configuration_1 & ~data_timeout_counter_value_mask) | data_timeout_counter_value_max;
 
     // 4. Set SD Clock Enable in the Clock Control register to 1
     m_registers->host_configuration_1 = m_registers->host_configuration_1 | sd_clock_enable;
@@ -462,12 +483,20 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
     return {};
 }
 
-void SDHostController::sd_clock_stop()
+ErrorOr<void> SDHostController::sd_clock_stop()
 {
     // SDHC 3.2.2: "SD Clock Stop Sequence"
 
+    // The Host Driver shall not clear SD Clock Enable while an SD transaction is executing on the SD Bus --
+    // namely, while either Command Inhibit (DAT) or Command Inhibit (CMD) in the Present State register
+    // is set to 1
+    if (!retry_with_timeout([&] { return !m_registers->present_state.command_inhibit_dat && !m_registers->present_state.command_inhibit_cmd; })) {
+        return EIO;
+    }
+
     // 1. Set SD Clock Enable in the Clock Control register to 0
     m_registers->host_configuration_1 = m_registers->host_configuration_1 & ~sd_clock_enable;
+    return {};
 }
 
 ErrorOr<void> SDHostController::sd_clock_frequency_change(u32 new_frequency)
@@ -475,7 +504,7 @@ ErrorOr<void> SDHostController::sd_clock_frequency_change(u32 new_frequency)
     // SDHC 3.2.3: "SD Clock Frequency Change Sequence"
 
     // 1. Execute the SD Clock Stop Sequence
-    sd_clock_stop();
+    TRY(sd_clock_stop());
 
     // 2. Execute the SD Clock Supply Sequence
     return sd_clock_supply(new_frequency);
