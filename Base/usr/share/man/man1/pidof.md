@@ -17,3 +17,7 @@ $ pidof [-s] [-o pid] [-S separator] <process-name>
 ## Arguments
 
 * `process-name`: Process name to search for
+
+## See also
+* [`pgrep`(1)](help://man/1/pgrep)
+* [`ps`(1)](help://man/1/ps)

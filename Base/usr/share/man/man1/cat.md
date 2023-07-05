@@ -51,3 +51,8 @@ cat test.txt test2.txt
 123
 456
 ```
+
+## See Also
+* [`head`(1)](help://man/1/head)
+* [`tail`(1)](help://man/1/tail)
+* [`cut`(1)](help://man/1/cut)

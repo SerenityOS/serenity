@@ -34,3 +34,6 @@ $ cp -R tests tests-backup
 # Copy test file into existing root
 $ cp test root
 ```
+
+## See also
+* [`mv`(1)](help://man/1/mv)

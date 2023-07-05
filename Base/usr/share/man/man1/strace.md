@@ -24,3 +24,7 @@ Trace all syscalls and their result.
 * `argument`: Arguments to exec
 
 <!-- Auto-generated through ArgsParser -->
+
+## See Also
+* [`profile`(1)](help://man/1/profile)
+* [`Profiler`(1)](help://man/1/Applications/Profiler)

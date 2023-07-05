@@ -18,4 +18,5 @@ $ ntpquery [--adjust] [--set] [--verbose] [host]
 
 * `host`: NTP server
 
-<!-- Auto-generated through ArgsParser -->
+## See Also
+* [`date`(1)](help://man/1/date)

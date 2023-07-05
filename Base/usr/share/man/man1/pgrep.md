@@ -24,3 +24,7 @@ $ pgrep [--count] [-d delimiter] [--ignore-case] [--list-name] [--newest] [--old
 ## Arguments
 
 * `process-name`: Process name to search for
+
+## See also
+* [`pidof`(1)](help://man/1/pidof)
+* [`ps`(1)](help://man/1/ps)

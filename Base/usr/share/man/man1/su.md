@@ -37,3 +37,6 @@ Switch to another user
 ```sh
 $ su nona
 ```
+
+## See also
+* [`pls`(8)](help://man/8/pls)

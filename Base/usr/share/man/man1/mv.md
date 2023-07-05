@@ -26,3 +26,6 @@ $ mv bin /usr
 $ mv *.cpp /usr/src
 $ mv old.txt new.txt
 ```
+
+## See also
+* [`cp`(1)](help://man/1/cp)

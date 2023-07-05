@@ -50,6 +50,7 @@ Or right clicking on a folder in the TreeView and using
         -   [IconView](help://man/5/GML/Widget/IconView)
         -   [ImageWidget](help://man/5/GML/Widget/ImageWidget)
         -   [Label](help://man/5/GML/Widget/Label)
+        -   [LinkLabel](help://man/5/GML/Widget/LinkLabel)
         -   [ListView](help://man/5/GML/Widget/ListView)
         -   [MultiView](help://man/5/GML/Widget/MultiView)
         -   [OpacitySlider](help://man/5/GML/Widget/OpacitySlider)

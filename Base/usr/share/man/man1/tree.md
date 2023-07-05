@@ -18,4 +18,5 @@ $ tree [--all] [--only-directories] [--maximum-depth level] [directories...]
 
 * `directories`: Directories to print
 
-<!-- Auto-generated through ArgsParser -->
+## See also
+* [`ls`(1)](help://man/1/ls) to show just the contents of one directory

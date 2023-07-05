@@ -15,3 +15,8 @@ $ w [--no-header] [user]
 ## Arguments
 
 * `user`: Only show information about the specified user
+
+## See also
+* [`whoami`(1)](help://man/1/whoami)
+* [`utmpupdate`(1)](help://man/1/utmpupdate)
+* [`usermod`(8)](help://man/8/usermod)

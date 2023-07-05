@@ -23,4 +23,5 @@ Display network connections
 * `-W`, `--wide`: Do not truncate IP addresses by printing out the whole symbolic host
 * `-e`, `--extend`: Display more information
 
-<!-- Auto-generated through ArgsParser -->
+## See Also
+* [`ifconfig`(1)](help://man/1/ifconfig)

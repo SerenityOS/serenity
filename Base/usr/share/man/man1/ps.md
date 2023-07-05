@@ -27,3 +27,7 @@ For each process, print its PID (process ID), to which TTY it belongs, and invok
 ```sh
 $ ps -ef
 ```
+
+## See Also
+* [`pmap`(1)](help://man/1/pmap)
+* [`lsof`(1)](help://man/1/lsof)

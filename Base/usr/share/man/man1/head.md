@@ -39,3 +39,6 @@ Graphical Unix-like operating system for x86 computers.
 
 ```
 
+## See also
+* [`tail`(1)](help://man/1/tail)
+* [`cat`(1)](help://man/1/cat)

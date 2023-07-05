@@ -49,3 +49,6 @@ This program must be run as root.
 # useradd --create-home supercomputer7
 ```
 
+## See also
+* [`userdel`(8)](help://man/8/userdel)
+* [`usermod`(8)](help://man/8/usermod)

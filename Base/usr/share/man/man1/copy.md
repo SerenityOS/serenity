@@ -26,3 +26,6 @@ $ cat image.png | copy -t image/png
 # Place text 'foo' in clipboard
 $ copy foo
 ```
+
+## See also
+* [`clipboard`(5)](help://man/5/clipboard)

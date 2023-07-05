@@ -23,5 +23,5 @@ $ pmap $$
 ```
 
 ## See also
-
+* [`lsof`(1)](help://man/1/lsof)
 * [`ps`(1)](help://man/1/ps)
