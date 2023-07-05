@@ -544,6 +544,20 @@ ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> HasPrivateId::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    if (!interpreter.accumulator().is_object())
+        return vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject);
+
+    auto private_environment = vm.running_execution_context().private_environment;
+    VERIFY(private_environment);
+    auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property));
+    interpreter.accumulator() = Value(interpreter.accumulator().as_object().private_element_find(private_name) != nullptr);
+    return {};
+}
+
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1381,6 +1395,11 @@ DeprecatedString GetById::to_deprecated_string_impl(Bytecode::Executable const& 
 DeprecatedString GetPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("GetPrivateById {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
+DeprecatedString HasPrivateId::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("HasPrivateId {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
 DeprecatedString DeleteById::to_deprecated_string_impl(Bytecode::Executable const& executable) const

@@ -66,6 +66,13 @@ Bytecode::CodeGenerationErrorOr<void> ExpressionStatement::generate_bytecode(Byt
 
 Bytecode::CodeGenerationErrorOr<void> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_op == BinaryOp::In && is<PrivateIdentifier>(*m_lhs)) {
+        auto const& private_identifier = static_cast<PrivateIdentifier const&>(*m_lhs).string();
+        TRY(m_rhs->generate_bytecode(generator));
+        generator.emit<Bytecode::Op::HasPrivateId>(generator.intern_identifier(private_identifier));
+        return {};
+    }
+
     TRY(m_lhs->generate_bytecode(generator));
     auto lhs_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(lhs_reg);
