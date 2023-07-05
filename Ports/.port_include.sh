@@ -299,6 +299,11 @@ do_download_file() {
     local filename="$2"
     local accept_existing="${3:-true}"
 
+    if $accept_existing && [ -f "$filename" ]; then
+        echo "$filename already exists"
+        return
+    fi
+
     echo "Downloading URL: ${url}"
 
     # FIXME: Serenity's curl port does not support https, even with openssl installed.
@@ -306,15 +311,10 @@ do_download_file() {
         url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
     fi
 
-    # download files
-    if $accept_existing && [ -f "$filename" ]; then
-        echo "$filename already exists"
+    if which curl; then
+        run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
     else
-        if which curl; then
-            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
-        else
-            run_nocd pro "$url" > "$filename"
-        fi
+        run_nocd pro "$url" > "$filename"
     fi
 }
 
