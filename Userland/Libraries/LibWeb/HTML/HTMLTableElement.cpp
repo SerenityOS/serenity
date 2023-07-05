@@ -61,6 +61,11 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
                 style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
             return;
         }
+        if (name == HTML::AttributeNames::cellspacing) {
+            if (auto parsed_value = parse_dimension_value(value))
+                style.set_property(CSS::PropertyID::BorderSpacing, parsed_value.release_nonnull());
+            return;
+        }
     });
 }
 
