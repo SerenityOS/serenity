@@ -120,7 +120,7 @@ private:
         if (file.is_error())
             client().async_handle_file_return(file.error().code(), {}, request_id);
         else
-            client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
+            client().async_handle_file_return(0, IPC::File(*file.value(), IPC::File::CloseAfterSending), request_id);
     }
 
     void notify_server_did_finish_handling_input_event(bool) override { }
