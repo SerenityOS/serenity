@@ -32,7 +32,17 @@ stdenv.mkDerivation {
     openssl
     parted
     qemu
-    xlibsWrapper
+
+    freetype
+    fontconfig
+    xorg.xorgproto
+    xorg.libX11
+    xorg.libXt
+    xorg.libXft
+    xorg.libXext
+    xorg.libSM
+    xorg.libICE
+
   ];
 
   hardeningDisable = [ "format" "fortify" ];
