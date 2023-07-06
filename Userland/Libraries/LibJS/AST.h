@@ -308,6 +308,7 @@ public:
 
     ThrowCompletionOr<void> for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
@@ -665,12 +666,6 @@ struct BindingPattern : RefCounted<BindingPattern> {
     Kind kind { Kind::Object };
 };
 
-struct FunctionParameter {
-    Variant<DeprecatedFlyString, NonnullRefPtr<BindingPattern const>> binding;
-    RefPtr<Expression const> default_value;
-    bool is_rest { false };
-};
-
 class Identifier final : public Expression {
 public:
     explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
@@ -701,6 +696,12 @@ private:
     mutable EnvironmentCoordinate m_cached_environment_coordinate;
 
     Optional<size_t> m_local_variable_index;
+};
+
+struct FunctionParameter {
+    Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> binding;
+    RefPtr<Expression const> default_value;
+    bool is_rest { false };
 };
 
 class FunctionNode {
