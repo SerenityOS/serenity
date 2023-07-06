@@ -7,7 +7,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Base64.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
 
@@ -111,7 +110,6 @@ TEST_CASE(some_bad_urls)
     EXPECT_EQ(URL("http://serenityos.org:abc"sv).is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:abc:80"sv).is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:abc:80/"sv).is_valid(), false);
-    EXPECT_EQ(URL("data:"sv).is_valid(), false);
 }
 
 TEST_CASE(serialization)
@@ -246,10 +244,11 @@ TEST_CASE(data_url)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/html");
-    EXPECT_EQ(url.data_payload(), "test");
-    EXPECT(!url.data_payload_is_base64());
     EXPECT_EQ(url.serialize(), "data:text/html,test");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/html");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test"sv);
 }
 
 TEST_CASE(data_url_default_mime_type)
@@ -258,10 +257,11 @@ TEST_CASE(data_url_default_mime_type)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/plain");
-    EXPECT_EQ(url.data_payload(), "test");
-    EXPECT(!url.data_payload_is_base64());
-    EXPECT_EQ(url.serialize(), "data:text/plain,test");
+    EXPECT_EQ(url.serialize(), "data:,test");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/plain;charset=US-ASCII");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test"sv);
 }
 
 TEST_CASE(data_url_encoded)
@@ -270,46 +270,50 @@ TEST_CASE(data_url_encoded)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/html");
-    EXPECT_EQ(url.data_payload(), "Hello friends,%0X%X0");
-    EXPECT(!url.data_payload_is_base64());
-    EXPECT_EQ(url.serialize(), "data:text/html,Hello friends,%0X%X0");
+    EXPECT_EQ(url.serialize(), "data:text/html,Hello%20friends%2C%0X%X0");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/html");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "Hello friends,%0X%X0"sv);
 }
 
 TEST_CASE(data_url_base64_encoded)
 {
-    URL url("data:text/html;base64,test"sv);
+    URL url("data:text/html;base64,dGVzdA=="sv);
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/html");
-    EXPECT_EQ(url.data_payload(), "test");
-    EXPECT(url.data_payload_is_base64());
-    EXPECT_EQ(url.serialize(), "data:text/html;base64,test");
+    EXPECT_EQ(url.serialize(), "data:text/html;base64,dGVzdA==");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/html");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test"sv);
 }
 
 TEST_CASE(data_url_base64_encoded_default_mime_type)
 {
-    URL url("data:;base64,test"sv);
+    URL url("data:;base64,dGVzdA=="sv);
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/plain");
-    EXPECT_EQ(url.data_payload(), "test");
-    EXPECT(url.data_payload_is_base64());
-    EXPECT_EQ(url.serialize(), "data:text/plain;base64,test");
+    EXPECT_EQ(url.serialize(), "data:;base64,dGVzdA==");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/plain;charset=US-ASCII");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test"sv);
 }
 
 TEST_CASE(data_url_base64_encoded_with_whitespace)
 {
-    URL url("data: text/html ;     bAsE64 , test with whitespace "sv);
+    URL url("data: text/html ;     bAsE64 , dGVz dA== "sv);
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/html");
-    EXPECT_EQ(url.data_payload(), " test with whitespace ");
-    EXPECT(url.data_payload_is_base64());
-    EXPECT_EQ(url.serialize(), "data:text/html;base64, test with whitespace ");
+    EXPECT_EQ(url.serialize(), "data: text/html ;     bAsE64 , dGVz dA==");
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/html");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test");
 }
 
 TEST_CASE(data_url_base64_encoded_with_inline_whitespace)
@@ -318,12 +322,23 @@ TEST_CASE(data_url_base64_encoded_with_inline_whitespace)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "data");
     EXPECT(url.host().has<Empty>());
-    EXPECT_EQ(url.data_mime_type(), "text/javascript");
-    EXPECT(url.data_payload_is_base64());
-    EXPECT_EQ(url.data_payload(), " ZD Qg\r\nPS An Zm91cic\r\n 7 "sv);
-    auto decode_result = decode_base64(url.data_payload());
-    EXPECT_EQ(decode_result.is_error(), false);
-    EXPECT_EQ(StringView(decode_result.value()), "d4 = 'four';"sv);
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/javascript");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "d4 = 'four';"sv);
+}
+
+TEST_CASE(data_url_completed_with_fragment)
+{
+    auto url = URL("data:text/plain,test"sv).complete_url("#a"sv);
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "data");
+    EXPECT_EQ(url.fragment(), "a");
+    EXPECT(url.host().has<Empty>());
+
+    auto data_url = TRY_OR_FAIL(url.process_data_url());
+    EXPECT_EQ(data_url.mime_type, "text/plain");
+    EXPECT_EQ(StringView(data_url.body.bytes()), "test"sv);
 }
 
 TEST_CASE(trailing_slash_with_complete_url)

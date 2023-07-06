@@ -63,9 +63,6 @@ public:
 
     // https://url.spec.whatwg.org/#concept-host-serializer
     static ErrorOr<String> serialize_host(URL::Host const&);
-
-private:
-    static Optional<URL> parse_data_url(StringView raw_input);
 };
 
 #undef ENUMERATE_STATES

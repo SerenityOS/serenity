@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
@@ -123,7 +122,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
 static DeprecatedString sanitized_url_for_logging(AK::URL const& url)
 {
     if (url.scheme() == "data"sv)
-        return DeprecatedString::formatted("[data URL, mime-type={}, size={}]", url.data_mime_type(), url.data_payload().length());
+        return "[data URL]"sv;
     return url.to_deprecated_string();
 }
 
@@ -204,30 +203,25 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     }
 
     if (url.scheme() == "data") {
-        dbgln_if(SPAM_DEBUG, "ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
-            url.data_mime_type(),
-            url.data_payload_is_base64(),
-            url.data_payload());
-
-        ByteBuffer data;
-        if (url.data_payload_is_base64()) {
-            auto data_maybe = decode_base64(url.data_payload());
-            if (data_maybe.is_error()) {
-                auto error_message = data_maybe.error().string_literal();
-                log_failure(request, error_message);
-                error_callback(error_message, {});
-                return;
-            }
-            data = data_maybe.value();
-        } else {
-            data = url.data_payload().to_byte_buffer();
+        auto data_url_or_error = url.process_data_url();
+        if (data_url_or_error.is_error()) {
+            auto error_message = data_url_or_error.error().string_literal();
+            log_failure(request, error_message);
+            error_callback(error_message, {});
+            return;
         }
+        auto data_url = data_url_or_error.release_value();
+
+        dbgln_if(SPAM_DEBUG, "ResourceLoader loading a data URL with mime-type: '{}', payload='{}'",
+            data_url.mime_type,
+            StringView(data_url.body.bytes()));
 
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
-        response_headers.set("Content-Type", url.data_mime_type());
+        response_headers.set("Content-Type", data_url.mime_type.to_deprecated_string());
 
         log_success(request);
-        Platform::EventLoopPlugin::the().deferred_invoke([data = move(data), response_headers = move(response_headers), success_callback = move(success_callback)] {
+
+        Platform::EventLoopPlugin::the().deferred_invoke([data = move(data_url.body), response_headers = move(response_headers), success_callback = move(success_callback)] {
             success_callback(data, response_headers, {});
         });
         return;

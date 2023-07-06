@@ -124,7 +124,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->show();
         } else if (url.host() == String::from_utf8_short_string("doc"sv)) {
             auto entry = LexicalPath::basename(url.serialize_path());
-            m_webview->load(URL::create_with_data("text/html", render(entry)));
+            m_webview->load(URL::create_with_data("text/html"sv, render(entry)));
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.serialized_host().release_value_but_fixme_should_propagate_errors());
         }
@@ -135,7 +135,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             return;
 
         auto key = static_cast<HelpListModel*>(m_listview->model())->key(index);
-        m_webview->load(URL::create_with_data("text/html", render(key)));
+        m_webview->load(URL::create_with_data("text/html"sv, render(key)));
     };
 }
 

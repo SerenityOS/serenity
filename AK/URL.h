@@ -128,14 +128,16 @@ public:
 
     URL complete_url(StringView) const;
 
-    bool data_payload_is_base64() const { return m_data_payload_is_base64; }
-    DeprecatedString const& data_mime_type() const { return m_data_mime_type; }
-    DeprecatedString const& data_payload() const { return m_data_payload; }
+    struct DataURL {
+        String mime_type;
+        ByteBuffer body;
+    };
+    ErrorOr<DataURL> process_data_url() const;
 
     static URL create_with_url_or_path(DeprecatedString const&);
     static URL create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
     static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
-    static URL create_with_data(DeprecatedString mime_type, DeprecatedString payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); }
+    static URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
 
     static u16 default_port_for_scheme(StringView);
     static bool is_special_scheme(StringView);
@@ -152,17 +154,7 @@ public:
     static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
 
 private:
-    URL(DeprecatedString&& data_mime_type, DeprecatedString&& data_payload, bool payload_is_base64)
-        : m_valid(true)
-        , m_scheme("data")
-        , m_data_payload_is_base64(payload_is_base64)
-        , m_data_mime_type(move(data_mime_type))
-        , m_data_payload(move(data_payload))
-    {
-    }
-
     bool compute_validity() const;
-    DeprecatedString serialize_data_url() const;
 
     static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static void append_percent_encoded(StringBuilder&, u32 code_point);
@@ -196,10 +188,6 @@ private:
     DeprecatedString m_fragment;
 
     bool m_cannot_be_a_base_url { false };
-
-    bool m_data_payload_is_base64 { false };
-    DeprecatedString m_data_mime_type;
-    DeprecatedString m_data_payload;
 };
 
 template<>
