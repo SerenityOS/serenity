@@ -2340,6 +2340,8 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
             case AllowedDataUrlType::Font:
                 if (data_url.data_mime_type().starts_with("font"sv, CaseSensitivity::CaseInsensitive))
                     return data_url;
+                if (data_url.data_mime_type().starts_with("application/font"sv, CaseSensitivity::CaseInsensitive))
+                    return data_url;
                 break;
             default:
                 break;
