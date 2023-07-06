@@ -52,7 +52,7 @@ public:
     static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes, Optional<DeprecatedString> mime_type = {});
     ~ImageDecoder() = default;
 
-    IntSize size() const { return m_plugin->size(); }
+    ErrorOr<IntSize> size() const { return m_plugin->size(); }
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
     bool is_animated() const { return m_plugin->is_animated(); }
