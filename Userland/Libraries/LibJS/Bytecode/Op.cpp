@@ -1156,18 +1156,33 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
     //    9- Property attributes of the target object must be obtained by calling its [[GetOwnProperty]] internal method
 
     // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
-    // Invariants 1 and 6 through 9 are implemented in `enumerable_own_property_names`, which implements the EnumerableOwnPropertyNames AO.
     auto& vm = interpreter.vm();
     auto object = TRY(interpreter.accumulator().to_object(vm));
     // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
     //       so we just keep the order consistent anyway.
     OrderedHashTable<PropertyKey> properties;
+    OrderedHashTable<PropertyKey> non_enumerable_properties;
     HashTable<NonnullGCPtr<Object>> seen_objects;
     // Collect all keys immediately (invariant no. 5)
     for (auto object_to_check = GCPtr { object.ptr() }; object_to_check && !seen_objects.contains(*object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
         seen_objects.set(*object_to_check);
-        for (auto& key : TRY(object_to_check->enumerable_own_property_names(Object::PropertyKind::Key))) {
-            properties.set(TRY(PropertyKey::from_value(vm, key)));
+        for (auto& key : TRY(object_to_check->internal_own_property_keys())) {
+            if (key.is_symbol())
+                continue;
+            auto property_key = TRY(PropertyKey::from_value(vm, key));
+
+            // If there is a non-enumerable property higher up the prototype chain with the same key,
+            // we mustn't include this property even if it's enumerable (invariant no. 5 and 6)
+            if (non_enumerable_properties.contains(property_key))
+                continue;
+            if (properties.contains(property_key))
+                continue;
+
+            auto descriptor = TRY(object_to_check->internal_get_own_property(property_key));
+            if (!*descriptor->enumerable)
+                non_enumerable_properties.set(move(property_key));
+            else
+                properties.set(move(property_key));
         }
     }
     IteratorRecord iterator {
