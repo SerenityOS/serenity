@@ -121,6 +121,24 @@ bool is_char_device(int fd)
     return S_ISCHR(st.st_mode);
 }
 
+bool is_regular_file(StringView path)
+{
+    auto st_or_error = Core::System::stat(path);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISREG(st.st_mode);
+}
+
+bool is_regular_file(int fd)
+{
+    auto st_or_error = Core::System::fstat(fd);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISREG(st.st_mode);
+}
+
 bool is_directory(StringView path)
 {
     auto st_or_error = Core::System::stat(path);

@@ -25,6 +25,9 @@ ErrorOr<String> real_path(StringView path);
 bool exists(StringView path);
 bool exists(int fd);
 
+bool is_regular_file(StringView path);
+bool is_regular_file(int fd);
+
 bool is_directory(StringView path);
 bool is_directory(int fd);
 
