@@ -170,8 +170,8 @@ ThrowCompletionOr<bool> Reference::delete_(VM& vm)
         if (is_super_reference())
             return vm.throw_completion<ReferenceError>(ErrorType::UnsupportedDeleteSuperProperty);
 
-        // c. Let baseObj be ! ToObject(ref.[[Base]]).
-        auto base_obj = MUST(m_base_value.to_object(vm));
+        // c. Let baseObj be ? ToObject(ref.[[Base]]).
+        auto base_obj = TRY(m_base_value.to_object(vm));
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
         bool delete_status = TRY(base_obj->internal_delete(m_name));
