@@ -627,6 +627,17 @@ ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpre
     return {};
 };
 
+ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto base_value = interpreter.accumulator();
+    auto const& identifier = interpreter.current_executable().get_identifier(m_property);
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base_value, identifier, interpreter.reg(m_this_value), strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    return {};
+};
+
 ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.jump(*m_true_target);
@@ -1115,6 +1126,21 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
     return {};
 }
 
+ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
+    auto base_value = interpreter.reg(m_base);
+    auto property_key = TRY(property_key_value.to_property_key(vm));
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base_value, property_key, interpreter.reg(m_this_value), strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    return {};
+};
+
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1511,6 +1537,11 @@ DeprecatedString DeleteById::to_deprecated_string_impl(Bytecode::Executable cons
     return DeprecatedString::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
+DeprecatedString DeleteByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("DeleteByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
+}
+
 DeprecatedString Jump::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     if (m_true_target.has_value())
@@ -1710,6 +1741,11 @@ DeprecatedString PutByValueWithThis::to_deprecated_string_impl(Bytecode::Executa
 DeprecatedString DeleteByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("DeleteByValue base:{}", m_base);
+}
+
+DeprecatedString DeleteByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("DeleteByValueWithThis base:{} this_value:{}", m_base, m_this_value);
 }
 
 DeprecatedString GetIterator::to_deprecated_string_impl(Executable const&) const

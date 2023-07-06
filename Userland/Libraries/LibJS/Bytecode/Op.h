@@ -740,6 +740,25 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class DeleteByIdWithThis final : public Instruction {
+public:
+    DeleteByIdWithThis(Register this_value, IdentifierTableIndex property)
+        : Instruction(Type::DeleteByIdWithThis)
+        , m_this_value(this_value)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    Register m_this_value;
+    IdentifierTableIndex m_property;
+};
+
 class GetByValue final : public Instruction {
 public:
     explicit GetByValue(Register base)
@@ -863,6 +882,29 @@ public:
 
 private:
     Register m_base;
+};
+
+class DeleteByValueWithThis final : public Instruction {
+public:
+    DeleteByValueWithThis(Register base, Register this_value)
+        : Instruction(Type::DeleteByValueWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
 };
 
 class Jump : public Instruction {
