@@ -80,7 +80,7 @@ public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual IntSize size() override;
+    virtual ErrorOr<IntSize> size() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool&) override;
     virtual ErrorOr<void> initialize() override;

@@ -198,21 +198,21 @@ ICOImageDecoderPlugin::ICOImageDecoderPlugin(u8 const* data, size_t size)
 
 ICOImageDecoderPlugin::~ICOImageDecoderPlugin() = default;
 
-IntSize ICOImageDecoderPlugin::size()
+ErrorOr<IntSize> ICOImageDecoderPlugin::size()
 {
     if (m_context->state == ICOLoadingContext::State::Error) {
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
     }
 
     if (m_context->state < ICOLoadingContext::State::DirectoryDecoded) {
-        if (load_ico_directory(*m_context).is_error()) {
+        if (auto result = load_ico_directory(*m_context); result.is_error()) {
             m_context->state = ICOLoadingContext::State::Error;
-            return {};
+            return result.release_error();
         }
         m_context->state = ICOLoadingContext::State::DirectoryDecoded;
     }
 
-    return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
+    return IntSize { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
 }
 
 void ICOImageDecoderPlugin::set_volatile()

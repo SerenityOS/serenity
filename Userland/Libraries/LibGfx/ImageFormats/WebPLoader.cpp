@@ -709,14 +709,16 @@ bool WebPImageDecoderPlugin::set_error(ErrorOr<void> const& error_or)
     return false;
 }
 
-IntSize WebPImageDecoderPlugin::size()
+ErrorOr<IntSize> WebPImageDecoderPlugin::size()
 {
     if (m_context->state == WebPLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
     if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
-        if (set_error(decode_webp_first_chunk(*m_context)))
-            return {};
+        if (auto result = decode_webp_first_chunk(*m_context); result.is_error()) {
+            set_error(result);
+            return result.release_error();
+        }
     }
 
     return m_context->size.value();

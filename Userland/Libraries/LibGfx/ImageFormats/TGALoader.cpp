@@ -169,7 +169,7 @@ TGAImageDecoderPlugin::TGAImageDecoderPlugin(u8 const* file_data, size_t file_si
 
 TGAImageDecoderPlugin::~TGAImageDecoderPlugin() = default;
 
-IntSize TGAImageDecoderPlugin::size()
+ErrorOr<IntSize> TGAImageDecoderPlugin::size()
 {
     return IntSize { m_context->header.width, m_context->header.height };
 }

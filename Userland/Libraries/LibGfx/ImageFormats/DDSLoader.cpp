@@ -621,15 +621,15 @@ DDSImageDecoderPlugin::DDSImageDecoderPlugin(u8 const* data, size_t size)
 
 DDSImageDecoderPlugin::~DDSImageDecoderPlugin() = default;
 
-IntSize DDSImageDecoderPlugin::size()
+ErrorOr<IntSize> DDSImageDecoderPlugin::size()
 {
     if (m_context->state == DDSLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
     if (m_context->state == DDSLoadingContext::State::BitmapDecoded)
-        return { m_context->header.width, m_context->header.height };
+        return IntSize { m_context->header.width, m_context->header.height };
 
-    return {};
+    return Error::from_string_literal("Size not read yet");
 }
 
 void DDSImageDecoderPlugin::set_volatile()

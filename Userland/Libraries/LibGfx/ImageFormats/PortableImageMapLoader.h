@@ -62,7 +62,7 @@ public:
 
     virtual ~PortableImageDecoderPlugin() override = default;
 
-    virtual IntSize size() override;
+    virtual ErrorOr<IntSize> size() override;
 
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
@@ -88,20 +88,19 @@ PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<S
 }
 
 template<typename TContext>
-IntSize PortableImageDecoderPlugin<TContext>::size()
+ErrorOr<IntSize> PortableImageDecoderPlugin<TContext>::size()
 {
     if (m_context->state == TContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
     if (m_context->state < TContext::State::Decoded) {
-        if (decode(*m_context).is_error()) {
+        if (auto result = decode(*m_context); result.is_error()) {
             m_context->state = TContext::State::Error;
-            // FIXME: We should propagate errors
-            return {};
+            return result.release_error();
         }
     }
 
-    return { m_context->width, m_context->height };
+    return IntSize { m_context->width, m_context->height };
 }
 
 template<typename TContext>

@@ -1295,18 +1295,17 @@ bool PNGImageDecoderPlugin::ensure_animation_frame_was_decoded(u32 animation_fra
     return decode_png_animation_data_chunks(*m_context, animation_frame_index);
 }
 
-IntSize PNGImageDecoderPlugin::size()
+ErrorOr<IntSize> PNGImageDecoderPlugin::size()
 {
     if (m_context->state == PNGLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
     if (m_context->state < PNGLoadingContext::State::SizeDecoded) {
-        bool success = decode_png_size(*m_context);
-        if (!success)
-            return {};
+        if (auto result = decode_png_size(*m_context); !result)
+            return Error::from_string_literal("Error in the PNG decoder");
     }
 
-    return { m_context->width, m_context->height };
+    return IntSize { m_context->width, m_context->height };
 }
 
 void PNGImageDecoderPlugin::set_volatile()

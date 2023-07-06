@@ -29,7 +29,7 @@ class ImageDecoderPlugin {
 public:
     virtual ~ImageDecoderPlugin() = default;
 
-    virtual IntSize size() = 0;
+    virtual ErrorOr<IntSize> size() = 0;
 
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;

@@ -1921,14 +1921,14 @@ JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> 
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
 
-IntSize JPEGImageDecoderPlugin::size()
+ErrorOr<IntSize> JPEGImageDecoderPlugin::size()
 {
     if (m_context->state == JPEGLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
     if (m_context->state >= JPEGLoadingContext::State::FrameDecoded)
-        return { m_context->frame.width, m_context->frame.height };
+        return IntSize { m_context->frame.width, m_context->frame.height };
 
-    return {};
+    return Error::from_string_literal("Size not read yet");
 }
 
 void JPEGImageDecoderPlugin::set_volatile()

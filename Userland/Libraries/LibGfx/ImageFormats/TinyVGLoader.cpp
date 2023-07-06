@@ -497,11 +497,11 @@ bool TinyVGImageDecoderPlugin::sniff(ReadonlyBytes bytes)
     return !decode_tinyvg_header(stream).is_error();
 }
 
-IntSize TinyVGImageDecoderPlugin::size()
+ErrorOr<IntSize> TinyVGImageDecoderPlugin::size()
 {
     if (m_context.decoded_image)
         return m_context.decoded_image->size();
-    return {};
+    return Error::from_string_literal("Size not known yet");
 }
 
 void TinyVGImageDecoderPlugin::set_volatile()

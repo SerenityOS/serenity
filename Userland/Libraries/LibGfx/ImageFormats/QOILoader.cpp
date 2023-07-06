@@ -168,18 +168,16 @@ QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Stream> stream)
     m_context->stream = move(stream);
 }
 
-IntSize QOIImageDecoderPlugin::size()
+ErrorOr<IntSize> QOIImageDecoderPlugin::size()
 {
     if (m_context->state < QOILoadingContext::State::HeaderDecoded) {
-        // FIXME: This is a weird API (inherited from ImageDecoderPlugin), should probably propagate errors by returning ErrorOr<IntSize>.
-        //        For the time being, ignore the result and rely on the context's state.
-        (void)decode_header_and_update_context(*m_context->stream);
+        TRY(decode_header_and_update_context(*m_context->stream));
     }
 
     if (m_context->state == QOILoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
-    return { m_context->header.width, m_context->header.height };
+    return IntSize { m_context->header.width, m_context->header.height };
 }
 
 void QOIImageDecoderPlugin::set_volatile()

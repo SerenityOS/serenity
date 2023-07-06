@@ -1476,15 +1476,17 @@ BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, I
 
 BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
 
-IntSize BMPImageDecoderPlugin::size()
+ErrorOr<IntSize> BMPImageDecoderPlugin::size()
 {
     if (m_context->state == BMPLoadingContext::State::Error)
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
 
-    if (m_context->state < BMPLoadingContext::State::DIBDecoded && decode_bmp_dib(*m_context).is_error())
-        return {};
+    if (m_context->state < BMPLoadingContext::State::DIBDecoded) {
+        if (auto result = decode_bmp_dib(*m_context); result.is_error())
+            return result.release_error();
+    }
 
-    return { m_context->dib.core.width, abs(m_context->dib.core.height) };
+    return IntSize { m_context->dib.core.width, abs(m_context->dib.core.height) };
 }
 
 void BMPImageDecoderPlugin::set_volatile()

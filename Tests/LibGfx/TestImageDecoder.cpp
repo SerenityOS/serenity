@@ -43,7 +43,7 @@ static Gfx::ImageFrameDescriptor expect_single_frame(Gfx::ImageDecoderPlugin& pl
 static Gfx::ImageFrameDescriptor expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
 {
     auto frame = expect_single_frame(plugin_decoder);
-    EXPECT_EQ(plugin_decoder.size(), size);
+    EXPECT_EQ(MUST(plugin_decoder.size()), size);
     EXPECT_EQ(frame.image->size(), size);
     return frame;
 }
@@ -557,7 +557,7 @@ TEST_CASE(test_webp_extended_lossless_animated)
     EXPECT(plugin_decoder->is_animated());
     EXPECT_EQ(plugin_decoder->loop_count(), 42u);
 
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(990, 1050));
+    EXPECT_EQ(MUST(plugin_decoder->size()), Gfx::IntSize(990, 1050));
 
     for (size_t frame_index = 0; frame_index < plugin_decoder->frame_count(); ++frame_index) {
         auto frame = MUST(plugin_decoder->frame(frame_index));

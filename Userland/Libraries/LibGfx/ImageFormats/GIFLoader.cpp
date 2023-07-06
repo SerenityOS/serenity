@@ -532,20 +532,20 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(u8 const* data, size_t size)
 
 GIFImageDecoderPlugin::~GIFImageDecoderPlugin() = default;
 
-IntSize GIFImageDecoderPlugin::size()
+ErrorOr<IntSize> GIFImageDecoderPlugin::size()
 {
     if (m_context->error_state == GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors) {
-        return {};
+        return Error::from_string_literal("Decoder already had an error");
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
-        if (load_gif_frame_descriptors(*m_context).is_error()) {
+        if (auto result = load_gif_frame_descriptors(*m_context); result.is_error()) {
             m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
-            return {};
+            return result.release_error();
         }
     }
 
-    return { m_context->logical_screen.width, m_context->logical_screen.height };
+    return IntSize { m_context->logical_screen.width, m_context->logical_screen.height };
 }
 
 void GIFImageDecoderPlugin::set_volatile()
