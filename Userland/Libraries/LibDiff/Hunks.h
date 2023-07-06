@@ -59,11 +59,25 @@ struct Hunk {
     Vector<Line> lines;
 };
 
+enum class Format {
+    Unified,
+    Unknown,
+};
+
+struct Header {
+    Format format { Format::Unknown };
+
+    String old_file_path;
+    String new_file_path;
+};
+
 class Parser : public GenericLexer {
 public:
     using GenericLexer::GenericLexer;
 
     ErrorOr<Vector<Hunk>> parse_hunks();
+
+    ErrorOr<Header> parse_header();
 
 private:
     Optional<HunkLocation> consume_unified_location();
