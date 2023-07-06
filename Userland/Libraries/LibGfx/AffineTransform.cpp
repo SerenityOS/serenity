@@ -134,18 +134,23 @@ AffineTransform& AffineTransform::rotate_radians(float radians)
     return *this;
 }
 
+float AffineTransform::determinant() const
+{
+    return a() * d() - b() * c();
+}
+
 Optional<AffineTransform> AffineTransform::inverse() const
 {
-    auto determinant = a() * d() - b() * c();
-    if (determinant == 0)
+    auto det = determinant();
+    if (det == 0)
         return {};
     return AffineTransform {
-        d() / determinant,
-        -b() / determinant,
-        -c() / determinant,
-        a() / determinant,
-        (c() * f() - d() * e()) / determinant,
-        (b() * e() - a() * f()) / determinant,
+        d() / det,
+        -b() / det,
+        -c() / det,
+        a() / det,
+        (c() * f() - d() * e()) / det,
+        (b() * e() - a() * f()) / det,
     };
 }
 
