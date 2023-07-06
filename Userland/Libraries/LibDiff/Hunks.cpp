@@ -57,6 +57,33 @@ bool Parser::consume_line_number(size_t& number)
     return true;
 }
 
+ErrorOr<Header> Parser::parse_header()
+{
+    Header header;
+
+    while (!is_eof()) {
+
+        if (consume_specific("+++ ")) {
+            header.new_file_path = TRY(String::from_utf8(consume_line()));
+            continue;
+        }
+
+        if (consume_specific("--- ")) {
+            header.old_file_path = TRY(String::from_utf8(consume_line()));
+            continue;
+        }
+
+        if (next_is("@@ ")) {
+            header.format = Format::Unified;
+            return header;
+        }
+
+        consume_line();
+    }
+
+    return Error::from_string_literal("Unable to find any patch");
+}
+
 ErrorOr<Vector<Hunk>> Parser::parse_hunks()
 {
     Vector<Hunk> hunks;
