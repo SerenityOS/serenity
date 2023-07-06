@@ -12,6 +12,7 @@
 #include <AK/Stream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibDiff/Hunks.h>
 
 namespace Diff {
 DeprecatedString generate_only_additions(StringView text)

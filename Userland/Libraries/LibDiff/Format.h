@@ -9,7 +9,7 @@
 
 #include <AK/Error.h>
 #include <AK/Forward.h>
-#include <LibDiff/Hunks.h>
+#include <LibDiff/Forward.h>
 
 namespace Diff {
 
