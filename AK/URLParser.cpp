@@ -697,42 +697,6 @@ DeprecatedString URLParser::percent_encode_after_encoding(StringView input, URL:
     return output.to_deprecated_string();
 }
 
-// https://fetch.spec.whatwg.org/#data-urls
-// FIXME: This only loosely follows the spec, as we use the same class for "regular" and data URLs, unlike the spec.
-Optional<URL> URLParser::parse_data_url(StringView raw_input)
-{
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
-    VERIFY(raw_input.starts_with("data:"sv));
-    auto input = raw_input.substring_view(5);
-    auto comma_offset = input.find(',');
-    if (!comma_offset.has_value())
-        return {};
-    auto mime_type = StringUtils::trim(input.substring_view(0, comma_offset.value()), "\t\n\f\r "sv, TrimMode::Both);
-    auto encoded_body = input.substring_view(comma_offset.value() + 1);
-    auto body = URL::percent_decode(encoded_body);
-    bool is_base64_encoded = false;
-    if (mime_type.ends_with("base64"sv, CaseSensitivity::CaseInsensitive)) {
-        auto substring_view = mime_type.substring_view(0, mime_type.length() - 6);
-        auto trimmed_substring_view = StringUtils::trim(substring_view, " "sv, TrimMode::Right);
-        if (trimmed_substring_view.ends_with(';')) {
-            is_base64_encoded = true;
-            mime_type = trimmed_substring_view.substring_view(0, trimmed_substring_view.length() - 1);
-        }
-    }
-
-    StringBuilder builder;
-    if (mime_type.starts_with(";"sv) || mime_type.is_empty()) {
-        builder.append("text/plain"sv);
-        builder.append(mime_type);
-        mime_type = builder.string_view();
-    }
-
-    // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
-    URL url { StringUtils::trim(mime_type, "\n\r\t "sv, TrimMode::Both), move(body), is_base64_encoded };
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsed data URL to be '{}'.", url.serialize());
-    return url;
-}
-
 // https://url.spec.whatwg.org/#concept-basic-url-parser
 // NOTE: This parser assumes a UTF-8 encoding.
 // NOTE: Refrain from using the URL classes setters inside this algorithm. Rather, set the values directly. This bypasses the setters' built-in
@@ -745,13 +709,6 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
         return base_url.has_value() ? *base_url : URL {};
-
-    if (raw_input.starts_with("data:"sv)) {
-        auto maybe_url = parse_data_url(raw_input);
-        if (!maybe_url.has_value())
-            return {};
-        return maybe_url.release_value();
-    }
 
     size_t start_index = 0;
     size_t end_index = raw_input.length();

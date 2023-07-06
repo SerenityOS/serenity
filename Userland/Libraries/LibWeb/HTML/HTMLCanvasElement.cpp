@@ -195,7 +195,7 @@ DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, [[
         // FIXME: propagate error
         return {};
     }
-    return AK::URL::create_with_data(type, base64_encoded_or_error.release_value().to_deprecated_string(), true).to_deprecated_string();
+    return AK::URL::create_with_data(type, base64_encoded_or_error.release_value(), true).to_deprecated_string();
 }
 
 void HTMLCanvasElement::present()

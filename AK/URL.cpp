@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
@@ -173,18 +174,7 @@ bool URL::compute_validity() const
     if (m_scheme.is_empty())
         return false;
 
-    if (m_scheme == "data") {
-        if (m_data_mime_type.is_empty())
-            return false;
-        if (m_data_payload_is_base64) {
-            if (m_data_payload.length() % 4 != 0)
-                return false;
-            for (auto character : m_data_payload) {
-                if (!is_ascii_alphanumeric(character) || character == '+' || character == '/' || character == '=')
-                    return false;
-            }
-        }
-    } else if (m_cannot_be_a_base_url) {
+    if (m_cannot_be_a_base_url) {
         if (m_paths.size() != 1)
             return false;
         if (m_paths[0].is_empty())
@@ -275,6 +265,22 @@ URL URL::create_with_url_or_path(DeprecatedString const& url_or_path)
     return URL::create_with_file_scheme(path);
 }
 
+URL URL::create_with_data(StringView mime_type, StringView payload, bool is_base64)
+{
+    URL url;
+    url.set_cannot_be_a_base_url(true);
+    url.set_scheme("data"sv);
+
+    StringBuilder builder;
+    builder.append(mime_type);
+    if (is_base64)
+        builder.append(";base64"sv);
+    builder.append(',');
+    builder.append(payload);
+    url.set_paths({ builder.to_deprecated_string() });
+    return url;
+}
+
 // https://url.spec.whatwg.org/#special-scheme
 bool URL::is_special_scheme(StringView scheme)
 {
@@ -293,30 +299,9 @@ DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding
     return builder.to_deprecated_string();
 }
 
-DeprecatedString URL::serialize_data_url() const
-{
-    VERIFY(m_scheme == "data");
-    VERIFY(!m_data_mime_type.is_null());
-    VERIFY(!m_data_payload.is_null());
-    StringBuilder builder;
-    builder.append(m_scheme);
-    builder.append(':');
-    builder.append(m_data_mime_type);
-    if (m_data_payload_is_base64)
-        builder.append(";base64"sv);
-    builder.append(',');
-    // NOTE: The specification does not say anything about encoding this, but we should encode at least control and non-ASCII
-    //       characters (since this is also a valid representation of the same data URL).
-    builder.append(URL::percent_encode(m_data_payload, PercentEncodeSet::C0Control));
-    return builder.to_deprecated_string();
-}
-
 // https://url.spec.whatwg.org/#concept-url-serializer
 DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 {
-    if (m_scheme == "data")
-        return serialize_data_url();
-
     // 1. Let output be url’s scheme and U+003A (:) concatenated.
     StringBuilder output;
     output.append(m_scheme);
@@ -387,8 +372,7 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 DeprecatedString URL::serialize_for_display() const
 {
     VERIFY(m_valid);
-    if (m_scheme == "data")
-        return serialize_data_url();
+
     StringBuilder builder;
     builder.append(m_scheme);
     builder.append(':');
@@ -464,6 +448,80 @@ bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
     if (!m_valid || !other.m_valid)
         return false;
     return serialize(exclude_fragments) == other.serialize(exclude_fragments);
+}
+
+// https://fetch.spec.whatwg.org/#data-url-processor
+ErrorOr<URL::DataURL> URL::process_data_url() const
+{
+    // 1. Assert: dataURL’s scheme is "data".
+    VERIFY(scheme() == "data");
+
+    // 2. Let input be the result of running the URL serializer on dataURL with exclude fragment set to true.
+    auto input = serialize(URL::ExcludeFragment::Yes);
+
+    // 3. Remove the leading "data:" from input.
+    input = input.substring("data:"sv.length());
+
+    // 4. Let position point at the start of input.
+
+    // 5. Let mimeType be the result of collecting a sequence of code points that are not equal to U+002C (,), given position.
+    auto position = input.find(',');
+    auto mime_type = input.substring_view(0, position.value_or(input.length()));
+
+    // 6. Strip leading and trailing ASCII whitespace from mimeType.
+    mime_type = mime_type.trim_whitespace(TrimMode::Both);
+
+    // 7. If position is past the end of input, then return failure.
+    if (!position.has_value())
+        return Error::from_string_literal("Missing a comma character");
+
+    // 8. Advance position by 1.
+    position = position.value() + 1;
+
+    // 9. Let encodedBody be the remainder of input.
+    auto encoded_body = input.substring_view(position.value());
+
+    // 10. Let body be the percent-decoding of encodedBody.
+    auto body = URL::percent_decode(encoded_body).to_byte_buffer();
+
+    // 11. If mimeType ends with U+003B (;), followed by zero or more U+0020 SPACE, followed by an ASCII case-insensitive match for "base64", then:
+    if (mime_type.ends_with("base64"sv, CaseSensitivity::CaseInsensitive)) {
+        auto trimmed_substring_view = mime_type.substring_view(0, mime_type.length() - 6);
+        trimmed_substring_view = trimmed_substring_view.trim(" "sv, TrimMode::Right);
+        if (trimmed_substring_view.ends_with(';')) {
+            // 1. Let stringBody be the isomorphic decode of body.
+            auto string_body = StringView(body);
+
+            // 2. Set body to the forgiving-base64 decode of stringBody.
+            //    FIXME: Check if it's really forgiving.
+            // 3. If body is failure, then return failure.
+            body = TRY(decode_base64(string_body));
+
+            // 4. Remove the last 6 code points from mimeType.
+            // 5. Remove trailing U+0020 SPACE code points from mimeType, if any.
+            // 6. Remove the last U+003B (;) from mimeType.
+            mime_type = trimmed_substring_view.substring_view(0, trimmed_substring_view.length() - 1);
+        }
+    }
+
+    // 12. If mimeType starts with ";", then prepend "text/plain" to mimeType.
+    StringBuilder builder;
+    if (mime_type.starts_with(';')) {
+        builder.append("text/plain"sv);
+        builder.append(mime_type);
+        mime_type = builder.string_view();
+    }
+
+    // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
+    // FIXME: 13. Let mimeTypeRecord be the result of parsing mimeType.
+    auto mime_type_record = mime_type.trim("\n\r\t "sv, TrimMode::Both);
+
+    // 14. If mimeTypeRecord is failure, then set mimeTypeRecord to text/plain;charset=US-ASCII.
+    if (mime_type_record.is_empty())
+        mime_type_record = "text/plain;charset=US-ASCII"sv;
+
+    // 15. Return a new data: URL struct whose MIME type is mimeTypeRecord and body is body.
+    return URL::DataURL { TRY(String::from_utf8(mime_type_record)), body };
 }
 
 void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)

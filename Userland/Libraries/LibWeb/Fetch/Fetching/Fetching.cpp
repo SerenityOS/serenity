@@ -714,17 +714,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
     // -> "data"
     else if (request->current_url().scheme() == "data"sv) {
         // 1. Let dataURLStruct be the result of running the data: URL processor on request’s current URL.
-        auto const& url = request->current_url();
-        auto data_or_error = url.data_payload_is_base64()
-            ? decode_base64(url.data_payload())
-            : TRY_OR_THROW_OOM(vm, ByteBuffer::copy(url.data_payload().bytes()));
+        auto data_url_struct = request->current_url().process_data_url();
 
         // 2. If dataURLStruct is failure, then return a network error.
-        if (data_or_error.is_error())
-            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has invalid base64 'data:' URL"sv));
+        if (data_url_struct.is_error())
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Failed to process 'data:' URL"sv));
 
         // 3. Let mimeType be dataURLStruct’s MIME type, serialized.
-        auto const& mime_type = url.data_mime_type();
+        //    FIXME: Serialize MIME type.
+        auto const& mime_type = data_url_struct.value().mime_type;
 
         // 4. Return a new response whose status message is `OK`, header list is « (`Content-Type`, mimeType) », and
         //    body is dataURLStruct’s body as a body.
@@ -732,7 +730,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
         auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, mime_type));
         TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
-        response->set_body(TRY(Infrastructure::byte_sequence_as_body(realm, data_or_error.value().span())));
+        response->set_body(TRY(Infrastructure::byte_sequence_as_body(realm, data_url_struct.value().body)));
         return PendingResponse::create(vm, request, response);
     }
     // -> "file"
