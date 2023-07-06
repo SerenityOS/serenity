@@ -66,6 +66,7 @@ AK_ENUM_BITWISE_OPERATORS(PreserveMode);
 ErrorOr<void> copy_file(StringView destination_path, StringView source_path, struct stat const& source_stat, Core::File& source, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> copy_directory(StringView destination_path, StringView source_path, struct stat const& source_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView source_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+ErrorOr<void> move_file(StringView destination_path, StringView source_path, PreserveMode = PreserveMode::Nothing);
 ErrorOr<void> remove(StringView path, RecursionMode);
 ErrorOr<size_t> size(StringView path);
 bool can_delete_or_move(StringView path);

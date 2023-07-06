@@ -298,6 +298,24 @@ ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView sou
     return copy_file(final_destination_path, source_path, source_stat, *source, preserve_mode);
 }
 
+ErrorOr<void> move_file(StringView destination_path, StringView source_path, PreserveMode preserve_mode)
+{
+    auto maybe_error = Core::System::rename(source_path, destination_path);
+    if (!maybe_error.is_error())
+        return {};
+
+    if (!maybe_error.error().is_errno() || maybe_error.error().code() != EXDEV)
+        return maybe_error;
+
+    auto source = TRY(Core::File::open(source_path, Core::File::OpenMode::Read));
+
+    auto source_stat = TRY(Core::System::fstat(source->fd()));
+
+    TRY(copy_file(destination_path, source_path, source_stat, *source, preserve_mode));
+
+    return Core::System::unlink(source_path);
+}
+
 ErrorOr<void> remove(StringView path, RecursionMode mode)
 {
     if (is_directory(path) && mode == RecursionMode::Allowed) {
