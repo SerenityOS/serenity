@@ -1292,14 +1292,27 @@ DecoderErrorOr<void> Decoder::reconstruct_templated(u8 plane, BlockContext const
 
 inline DecoderErrorOr<void> Decoder::inverse_walsh_hadamard_transform(Span<Intermediate> data, u8 log2_of_block_size, u8 shift)
 {
-    (void)data;
-    (void)shift;
     // The input to this process is a variable shift that specifies the amount of pre-scaling.
     // This process does an in-place transform of the array T (of length 4) by the following ordered steps:
     if (1 << log2_of_block_size != 4)
         return DecoderError::corrupted("Block size was not 4"sv);
 
-    return DecoderError::not_implemented();
+    auto a = data[0] >> shift;
+    auto c = data[1] >> shift;
+    auto d = data[2] >> shift;
+    auto b = data[3] >> shift;
+    a += c;
+    d -= b;
+    auto average_of_a_and_d = (a - d) >> 1;
+    b = average_of_a_and_d - b;
+    c = average_of_a_and_d - c;
+    a -= b;
+    d += c;
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+    data[3] = d;
+    return {};
 }
 
 inline i32 Decoder::cos64(u8 angle)
@@ -1817,24 +1830,24 @@ ALWAYS_INLINE DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext co
         //    to 2.
         if (block_context.frame_context.lossless) {
             TRY(inverse_walsh_hadamard_transform(row, log2_of_block_size, 2));
-            continue;
-        }
-        switch (transform_set.second_transform) {
-        case TransformType::DCT:
-            // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to ADST_DCT, apply an inverse DCT as
-            // follows:
-            // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
-            TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(row));
-            // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform<log2_of_block_size>(row));
-            break;
-        case TransformType::ADST:
-            // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
-            //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(row));
-            break;
-        default:
-            return DecoderError::corrupted("Unknown tx_type"sv);
+        } else {
+            switch (transform_set.second_transform) {
+            case TransformType::DCT:
+                // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to ADST_DCT, apply an inverse DCT as
+                // follows:
+                // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
+                TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(row));
+                // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
+                TRY(inverse_discrete_cosine_transform<log2_of_block_size>(row));
+                break;
+            case TransformType::ADST:
+                // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
+                //    process as specified in section 8.7.1.9 with input variable n.
+                TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(row));
+                break;
+            default:
+                return DecoderError::corrupted("Unknown tx_type"sv);
+            }
         }
 
         // 5. Set Dequant[ i ][ j ] equal to T[ j ] for j = 0..(n0-1).
@@ -1854,25 +1867,25 @@ ALWAYS_INLINE DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext co
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 0.
         if (block_context.frame_context.lossless) {
-            TRY(inverse_walsh_hadamard_transform(column, log2_of_block_size, 2));
-            continue;
-        }
-        switch (transform_set.first_transform) {
-        case TransformType::DCT:
-            // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to DCT_ADST, apply an inverse DCT as
-            // follows:
-            // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
-            TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(column));
-            // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform<log2_of_block_size>(column));
-            break;
-        case TransformType::ADST:
-            // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
-            //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(column));
-            break;
-        default:
-            VERIFY_NOT_REACHED();
+            TRY(inverse_walsh_hadamard_transform(column, log2_of_block_size, 0));
+        } else {
+            switch (transform_set.first_transform) {
+            case TransformType::DCT:
+                // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to DCT_ADST, apply an inverse DCT as
+                // follows:
+                // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
+                TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(column));
+                // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
+                TRY(inverse_discrete_cosine_transform<log2_of_block_size>(column));
+                break;
+            case TransformType::ADST:
+                // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
+                //    process as specified in section 8.7.1.9 with input variable n.
+                TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(column));
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
         }
 
         // 5. If Lossless is equal to 1, set Dequant[ i ][ j ] equal to T[ i ] for i = 0..(n0-1).
