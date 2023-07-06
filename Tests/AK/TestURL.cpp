@@ -226,6 +226,20 @@ TEST_CASE(mailto_url)
     EXPECT_EQ(url.serialize(), "mailto:mail@example.com");
 }
 
+TEST_CASE(mailto_url_with_subject)
+{
+    URL url("mailto:mail@example.com?subject=test"sv);
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "mailto");
+    EXPECT(url.host().has<Empty>());
+    EXPECT_EQ(url.port_or_default(), 0);
+    EXPECT_EQ(url.path_segment_count(), 1u);
+    EXPECT_EQ(url.path_segment_at_index(0), "mail@example.com");
+    EXPECT_EQ(url.query(), "subject=test");
+    EXPECT(url.fragment().is_null());
+    EXPECT_EQ(url.serialize(), "mailto:mail@example.com?subject=test");
+}
+
 TEST_CASE(data_url)
 {
     URL url("data:text/html,test"sv);
