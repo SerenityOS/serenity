@@ -38,6 +38,9 @@ public:
         // https://w3c.github.io/FileAPI/#fileReadingTaskSource
         FileReading,
 
+        // https://www.w3.org/TR/intersection-observer/#intersectionobserver-task-source
+        IntersectionObserver,
+
         // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
         // Keep this field last, to serve as the base value of all unique task sources.
         UniqueTaskSourceStart,

@@ -396,6 +396,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     IntersectionObserver/IntersectionObserver.cpp
+    IntersectionObserver/IntersectionObserverEntry.cpp
     Layout/AudioBox.cpp
     Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
