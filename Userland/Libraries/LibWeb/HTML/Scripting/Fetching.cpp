@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -568,9 +569,7 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
             return;
         }
 
-        // FIXME: This is an ad-hoc hack to make sure that there's an execution context on the VM stack in case linking throws an exception.
-        auto& vm = fetch_client_settings_object.vm();
-        vm.push_execution_context(fetch_client_settings_object.realm_execution_context());
+        TemporaryExecutionContext execution_context { fetch_client_settings_object };
 
         // FIXME: 2. Let parse error be the result of finding the first parse error given result.
 
@@ -590,9 +589,6 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& modul
             // FIXME: 4. Otherwise, set result's error to rethrow to parse error.
             TODO();
         }
-
-        // FIXME: This undoes the ad-hoc hack above.
-        vm.pop_execution_context();
 
         // 5. Run onComplete given result.
         on_complete(result);

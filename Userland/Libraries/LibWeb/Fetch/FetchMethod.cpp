@@ -19,6 +19,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/Fetch/Response.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -85,15 +86,8 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
         if (locally_aborted->value())
             return;
 
-        // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
-        //       (In this case, Promise functions)
-        auto& environment_settings_object = Bindings::host_defined_environment_settings_object(relevant_realm);
-        environment_settings_object.prepare_to_run_script();
-
-        ScopeGuard guard = [&]() {
-            // See above NOTE.
-            environment_settings_object.clean_up_after_running_script();
-        };
+        // AD-HOC: An execution context is required for Promise functions.
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(relevant_realm) };
 
         // 2. If response’s aborted flag is set, then:
         if (response->aborted()) {

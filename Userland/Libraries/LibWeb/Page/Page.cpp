@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 
@@ -300,12 +301,8 @@ WebIDL::ExceptionOr<void> Page::toggle_media_play_state()
     if (!media_element)
         return {};
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = media_element->document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
-
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    // AD-HOC: An execution context is required for Promise creation hooks.
+    HTML::TemporaryExecutionContext execution_context { media_element->document().relevant_settings_object() };
 
     if (media_element->potentially_playing())
         TRY(media_element->pause());
@@ -321,12 +318,9 @@ void Page::toggle_media_mute_state()
     if (!media_element)
         return;
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = media_element->document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
+    // AD-HOC: An execution context is required for Promise creation hooks.
+    HTML::TemporaryExecutionContext execution_context { media_element->document().relevant_settings_object() };
 
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
     media_element->set_muted(!media_element->muted());
 }
 
@@ -336,12 +330,8 @@ WebIDL::ExceptionOr<void> Page::toggle_media_loop_state()
     if (!media_element)
         return {};
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = media_element->document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
-
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    // AD-HOC: An execution context is required for Promise creation hooks.
+    HTML::TemporaryExecutionContext execution_context { media_element->document().relevant_settings_object() };
 
     if (media_element->has_attribute(HTML::AttributeNames::loop))
         media_element->remove_attribute(HTML::AttributeNames::loop);
@@ -357,12 +347,7 @@ WebIDL::ExceptionOr<void> Page::toggle_media_controls_state()
     if (!media_element)
         return {};
 
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = media_element->document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
-
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    HTML::TemporaryExecutionContext execution_context { media_element->document().relevant_settings_object() };
 
     if (media_element->has_attribute(HTML::AttributeNames::controls))
         media_element->remove_attribute(HTML::AttributeNames::controls);
