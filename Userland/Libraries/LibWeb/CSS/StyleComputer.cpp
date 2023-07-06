@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/Find.h>
@@ -35,6 +36,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CompositeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
@@ -1341,27 +1343,139 @@ bool StyleComputer::Animation::is_done() const
     return progress.as_fraction() >= 0.9999 && iteration_count.has_value() && iteration_count.value() == 0;
 }
 
+// NOTE: Magic values from <https://www.w3.org/TR/css-easing-1/#valdef-cubic-bezier-easing-function-ease>
+static auto ease_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.25, 0.1, 0.25, 1.0 };
+static auto ease_in_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.42, 0.0, 1.0, 1.0 };
+static auto ease_out_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.0, 0.0, 0.58, 1.0 };
+static auto ease_in_out_timing_function = StyleComputer::AnimationTiming::CubicBezier { 0.42, 0.0, 0.58, 1.0 };
+
 float StyleComputer::Animation::compute_output_progress(float input_progress) const
 {
     auto output_progress = input_progress;
+    auto going_forwards = true;
     switch (direction) {
     case AnimationDirection::Alternate:
-        if (current_iteration % 2 == 0)
+        if (current_iteration % 2 == 0) {
             output_progress = 1.0f - output_progress;
+            going_forwards = false;
+        }
         break;
     case AnimationDirection::AlternateReverse:
-        if (current_iteration % 2 == 1)
+        if (current_iteration % 2 == 1) {
             output_progress = 1.0f - output_progress;
+            going_forwards = false;
+        }
         break;
     case AnimationDirection::Normal:
         break;
     case AnimationDirection::Reverse:
         output_progress = 1.0f - output_progress;
+        going_forwards = false;
         break;
     }
 
-    // FIXME: This should also be a function of the animation-timing-function, if not during the delay.
-    return output_progress;
+    if (remaining_delay.to_milliseconds() != 0)
+        return output_progress;
+
+    return timing_function.timing_function.visit(
+        [&](AnimationTiming::Linear) { return output_progress; },
+        [&](AnimationTiming::Steps const& steps) {
+            auto before_flag = (current_state == AnimationState::Before && going_forwards) || (current_state == AnimationState::After && !going_forwards);
+            auto progress_step = output_progress * static_cast<float>(steps.number_of_steps);
+            auto current_step = floorf(progress_step);
+            if (steps.jump_at_start)
+                current_step += 1;
+            if (before_flag && truncf(progress_step) == progress_step)
+                current_step -= 1;
+            if (output_progress >= 0 && current_step < 0)
+                current_step = 0;
+            size_t jumps;
+            if (steps.jump_at_start ^ steps.jump_at_end)
+                jumps = steps.number_of_steps;
+            else if (steps.jump_at_start && steps.jump_at_end)
+                jumps = steps.number_of_steps + 1;
+            else
+                jumps = steps.number_of_steps - 1;
+
+            if (output_progress <= 1 && current_step > static_cast<float>(jumps))
+                current_step = static_cast<float>(jumps);
+            return current_step / static_cast<float>(steps.number_of_steps);
+        },
+        [&](AnimationTiming::CubicBezier const& bezier) {
+            // Special cases first:
+            if (bezier == AnimationTiming::CubicBezier { 0.0, 0.0, 1.0, 1.0 })
+                return output_progress;
+            // FIXME: This is quite inefficient on memory and CPU, find a better way to do this.
+            auto sample = bezier.sample_around(static_cast<double>(output_progress));
+            return static_cast<float>(sample.y);
+        });
+}
+
+static double cubic_bezier_at(double x1, double x2, double t)
+{
+    auto a = 1.0 - 3.0 * x2 + 3.0 * x1;
+    auto b = 3.0 * x2 - 6.0 * x1;
+    auto c = 3.0 * x1;
+
+    auto t2 = t * t;
+    auto t3 = t2 * t;
+
+    return (a * t3) + (b * t2) + (c * t);
+}
+
+StyleComputer::AnimationTiming::CubicBezier::CachedSample StyleComputer::AnimationTiming::CubicBezier::sample_around(double x) const
+{
+    x = clamp(x, 0, 1);
+
+    auto solve = [&](auto t) {
+        auto x = cubic_bezier_at(x1, x2, t);
+        auto y = cubic_bezier_at(y1, y2, t);
+        return CachedSample { x, y, t };
+    };
+
+    if (m_cached_x_samples.is_empty())
+        m_cached_x_samples.append(solve(0.));
+
+    size_t nearby_index = 0;
+    if (auto found = binary_search(m_cached_x_samples, x, &nearby_index, [](auto x, auto& sample) {
+            if (x > sample.x)
+                return 1;
+            if (x < sample.x)
+                return -1;
+            return 0;
+        }))
+        return *found;
+
+    if (nearby_index == m_cached_x_samples.size() || nearby_index + 1 == m_cached_x_samples.size()) {
+        // Produce more samples until we have enough.
+        auto last_t = m_cached_x_samples.is_empty() ? 0 : m_cached_x_samples.last().t;
+        auto last_x = m_cached_x_samples.is_empty() ? 0 : m_cached_x_samples.last().x;
+        while (last_x <= x) {
+            last_t += 1. / 60.;
+            auto solution = solve(last_t);
+            m_cached_x_samples.append(solution);
+            last_x = solution.x;
+        }
+
+        if (auto found = binary_search(m_cached_x_samples, x, &nearby_index, [](auto x, auto& sample) {
+                if (x > sample.x)
+                    return 1;
+                if (x < sample.x)
+                    return -1;
+                return 0;
+            }))
+            return *found;
+    }
+
+    // We have two samples on either side of the x value we want, so we can linearly interpolate between them.
+    auto& sample1 = m_cached_x_samples[nearby_index];
+    auto& sample2 = m_cached_x_samples[nearby_index + 1];
+    auto factor = (x - sample1.x) / (sample2.x - sample1.x);
+    return CachedSample {
+        x,
+        clamp(sample1.y + factor * (sample2.y - sample1.y), 0, 1),
+        sample1.t + factor * (sample2.t - sample1.t),
+    };
 }
 
 void StyleComputer::ensure_animation_timer() const
@@ -1543,11 +1657,94 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                             direction = *direction_value;
                     }
 
+                    AnimationTiming timing_function { ease_timing_function };
+                    if (auto timing_property = style.maybe_null_property(PropertyID::AnimationTimingFunction); timing_property && timing_property->is_easing()) {
+                        auto& easing_value = timing_property->as_easing();
+                        switch (easing_value.easing_function()) {
+                        case EasingFunction::Linear:
+                            timing_function = AnimationTiming { AnimationTiming::Linear {} };
+                            break;
+                        case EasingFunction::Ease:
+                            timing_function = AnimationTiming { ease_timing_function };
+                            break;
+                        case EasingFunction::EaseIn:
+                            timing_function = AnimationTiming { ease_in_timing_function };
+                            break;
+                        case EasingFunction::EaseOut:
+                            timing_function = AnimationTiming { ease_out_timing_function };
+                            break;
+                        case EasingFunction::EaseInOut:
+                            timing_function = AnimationTiming { ease_in_out_timing_function };
+                            break;
+                        case EasingFunction::CubicBezier: {
+                            auto values = easing_value.values();
+                            timing_function = AnimationTiming {
+                                AnimationTiming::CubicBezier {
+                                    values[0]->as_number().number(),
+                                    values[1]->as_number().number(),
+                                    values[2]->as_number().number(),
+                                    values[3]->as_number().number(),
+                                },
+                            };
+                            break;
+                        }
+                        case EasingFunction::Steps: {
+                            auto values = easing_value.values();
+                            auto jump_at_start = false;
+                            auto jump_at_end = true;
+
+                            if (values.size() > 1) {
+                                auto identifier = values[1]->to_identifier();
+                                switch (identifier) {
+                                case ValueID::JumpStart:
+                                case ValueID::Start:
+                                    jump_at_start = true;
+                                    jump_at_end = false;
+                                    break;
+                                case ValueID::JumpEnd:
+                                case ValueID::End:
+                                    jump_at_start = false;
+                                    jump_at_end = true;
+                                    break;
+                                case ValueID::JumpNone:
+                                    jump_at_start = false;
+                                    jump_at_end = false;
+                                    break;
+                                default:
+                                    break;
+                                }
+                            }
+
+                            timing_function = AnimationTiming { AnimationTiming::Steps {
+                                .number_of_steps = static_cast<size_t>(max(values[0]->as_integer().integer(), !(jump_at_end && jump_at_start) ? 1 : 0)),
+                                .jump_at_start = jump_at_start,
+                                .jump_at_end = jump_at_end,
+                            } };
+                            break;
+                        }
+                        case EasingFunction::StepEnd:
+                            timing_function = AnimationTiming { AnimationTiming::Steps {
+                                .number_of_steps = 1,
+                                .jump_at_start = false,
+                                .jump_at_end = true,
+                            } };
+                            break;
+                        case EasingFunction::StepStart:
+                            timing_function = AnimationTiming { AnimationTiming::Steps {
+                                .number_of_steps = 1,
+                                .jump_at_start = true,
+                                .jump_at_end = false,
+                            } };
+                            break;
+                        }
+                    }
+
                     auto animation = make<Animation>(Animation {
                         .name = move(name),
                         .duration = duration,
                         .delay = delay,
                         .iteration_count = iteration_count,
+                        .timing_function = timing_function,
                         .direction = direction,
                         .fill_mode = fill_mode,
                         .owning_element = TRY(element.try_make_weak_ptr<DOM::Element>()),

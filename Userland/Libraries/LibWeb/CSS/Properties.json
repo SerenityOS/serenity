@@ -122,13 +122,8 @@
     "affects-layout": true,
     "inherited": false,
     "initial": "ease",
-    "__comment": "FIXME: This is like...wrong.",
-    "valid-identifiers": [
-      "ease",
-      "linear",
-      "ease-in-out",
-      "ease-in",
-      "ease-out"
+    "valid-types": [
+      "easing-function"
     ]
   },
   "appearance": {

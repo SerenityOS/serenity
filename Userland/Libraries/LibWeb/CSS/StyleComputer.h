@@ -95,6 +95,37 @@ public:
         DOM::Element const* element;
     };
 
+    struct AnimationTiming {
+        struct Linear { };
+        struct CubicBezier {
+            // Regular parameters
+            double x1;
+            double y1;
+            double x2;
+            double y2;
+
+            struct CachedSample {
+                double x;
+                double y;
+                double t;
+            };
+            mutable Vector<CachedSample, 64> m_cached_x_samples = {};
+
+            CachedSample sample_around(double x) const;
+            bool operator==(CubicBezier const& other) const
+            {
+                return x1 == other.x1 && y1 == other.y1 && x2 == other.x2 && y2 == other.y2;
+            }
+        };
+        struct Steps {
+            size_t number_of_steps;
+            bool jump_at_start;
+            bool jump_at_end;
+        };
+
+        Variant<Linear, CubicBezier, Steps> timing_function;
+    };
+
 private:
     enum class ComputeStyleMode {
         Normal,
@@ -202,6 +233,7 @@ private:
         Optional<CSS::Time> duration; // "auto" if not set.
         CSS::Time delay;
         Optional<size_t> iteration_count; // Infinite if not set.
+        AnimationTiming timing_function;
         CSS::AnimationDirection direction;
         CSS::AnimationFillMode fill_mode;
         WeakPtr<DOM::Element> owning_element;
