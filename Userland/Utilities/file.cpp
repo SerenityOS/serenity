@@ -36,7 +36,8 @@ static ErrorOr<Optional<String>> image_details(StringView description, StringVie
         return OptionalNone {};
 
     StringBuilder builder;
-    builder.appendff("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
+    auto const image_size = image_decoder->size();
+    builder.appendff("{}, {} x {}", description, image_size.width(), image_size.height());
     if (image_decoder->is_animated()) {
         builder.appendff(", animated with {} frames that loop", image_decoder->frame_count());
         int loop_count = image_decoder->loop_count();

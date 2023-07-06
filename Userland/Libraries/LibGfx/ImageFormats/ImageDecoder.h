@@ -53,8 +53,6 @@ public:
     ~ImageDecoder() = default;
 
     IntSize size() const { return m_plugin->size(); }
-    int width() const { return size().width(); }
-    int height() const { return size().height(); }
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
     bool is_animated() const { return m_plugin->is_animated(); }
