@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/MediaQueryList.h>
@@ -75,6 +76,7 @@
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Strings.h>
+#include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -90,6 +92,7 @@
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -2761,6 +2764,223 @@ HTML::ListOfAvailableImages& Document::list_of_available_images()
 HTML::ListOfAvailableImages const& Document::list_of_available_images() const
 {
     return *m_list_of_available_images;
+}
+
+void Document::register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver& observer)
+{
+    auto result = m_intersection_observers.set(observer);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Document::unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver& observer)
+{
+    bool was_removed = m_intersection_observers.remove(observer);
+    VERIFY(was_removed);
+}
+
+// https://www.w3.org/TR/intersection-observer/#queue-an-intersection-observer-task
+void Document::queue_intersection_observer_task()
+{
+    // 1. If document’s IntersectionObserverTaskQueued flag is set to true, return.
+    if (m_intersection_observer_task_queued)
+        return;
+
+    // 2. Set document’s IntersectionObserverTaskQueued flag to true.
+    m_intersection_observer_task_queued = true;
+
+    // 3. Queue a task on the IntersectionObserver task source associated with the document's event loop to notify intersection observers.
+    HTML::queue_global_task(HTML::Task::Source::IntersectionObserver, window(), [this]() {
+        auto& realm = this->realm();
+
+        // https://www.w3.org/TR/intersection-observer/#notify-intersection-observers
+        // 1. Set document’s IntersectionObserverTaskQueued flag to false.
+        m_intersection_observer_task_queued = false;
+
+        // 2. Let notify list be a list of all IntersectionObservers whose root is in the DOM tree of document.
+        Vector<JS::Handle<IntersectionObserver::IntersectionObserver>> notify_list;
+        notify_list.try_ensure_capacity(m_intersection_observers.size()).release_value_but_fixme_should_propagate_errors();
+        for (auto& observer : m_intersection_observers) {
+            notify_list.append(JS::make_handle(observer));
+        }
+
+        // 3. For each IntersectionObserver object observer in notify list, run these steps:
+        for (auto& observer : notify_list) {
+            // 2. Let queue be a copy of observer’s internal [[QueuedEntries]] slot.
+            // 3. Clear observer’s internal [[QueuedEntries]] slot.
+            auto queue = observer->take_records();
+
+            // 1. If observer’s internal [[QueuedEntries]] slot is empty, continue.
+            if (queue.is_empty())
+                continue;
+
+            auto wrapped_queue = MUST(JS::Array::create(realm, 0));
+            for (size_t i = 0; i < queue.size(); ++i) {
+                auto& record = queue.at(i);
+                auto property_index = JS::PropertyKey { i };
+                MUST(wrapped_queue->create_data_property(property_index, record.ptr()));
+            }
+
+            // 4. Let callback be the value of observer’s internal [[callback]] slot.
+            auto& callback = observer->callback();
+
+            // 5. Invoke callback with queue as the first argument, observer as the second argument, and observer as the callback this value. If this throws an exception, report the exception.
+            auto completion = WebIDL::invoke_callback(callback, observer.ptr(), wrapped_queue, observer.ptr());
+            if (completion.is_abrupt())
+                HTML::report_exception(completion, realm);
+        }
+    });
+}
+
+// https://www.w3.org/TR/intersection-observer/#queue-an-intersectionobserverentry
+void Document::queue_an_intersection_observer_entry(IntersectionObserver::IntersectionObserver& observer, HighResolutionTime::DOMHighResTimeStamp time, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<Element> target)
+{
+    auto& realm = this->realm();
+
+    // 1. Construct an IntersectionObserverEntry, passing in time, rootBounds, boundingClientRect, intersectionRect, isIntersecting, and target.
+    auto entry = realm.heap().allocate<IntersectionObserver::IntersectionObserverEntry>(realm, realm, time, root_bounds, bounding_client_rect, intersection_rect, is_intersecting, intersection_ratio, target).release_allocated_value_but_fixme_should_propagate_errors();
+
+    // 2. Append it to observer’s internal [[QueuedEntries]] slot.
+    observer.queue_entry({}, entry);
+
+    // 3. Queue an intersection observer task for document.
+    queue_intersection_observer_task();
+}
+
+// https://www.w3.org/TR/intersection-observer/#compute-the-intersection
+static JS::NonnullGCPtr<Geometry::DOMRectReadOnly> compute_intersection(JS::NonnullGCPtr<Element> target, IntersectionObserver::IntersectionObserver const& observer)
+{
+    // 1. Let intersectionRect be the result of getting the bounding box for target.
+    auto intersection_rect = target->get_bounding_client_rect();
+
+    // FIXME: 2. Let container be the containing block of target.
+    // FIXME: 3. While container is not root:
+    // FIXME:   1. If container is the document of a nested browsing context, update intersectionRect by clipping to
+    //             the viewport of the document, and update container to be the browsing context container of container.
+    // FIXME:   2. Map intersectionRect to the coordinate space of container.
+    // FIXME:   3. If container has a content clip or a css clip-path property, update intersectionRect by applying
+    //             container’s clip.
+    // FIXME:   4. If container is the root element of a browsing context, update container to be the browsing context’s
+    //             document; otherwise, update container to be the containing block of container.
+    // FIXME: 4. Map intersectionRect to the coordinate space of root.
+
+    // 5. Update intersectionRect by intersecting it with the root intersection rectangle.
+    // FIXME: Pass in target so we can properly apply rootMargin.
+    auto root_intersection_rectangle = observer.root_intersection_rectangle();
+    CSSPixelRect intersection_rect_as_pixel_rect(intersection_rect->x(), intersection_rect->y(), intersection_rect->width(), intersection_rect->height());
+    intersection_rect_as_pixel_rect.intersect(root_intersection_rectangle);
+    intersection_rect->set_x(static_cast<double>(intersection_rect_as_pixel_rect.x()));
+    intersection_rect->set_y(static_cast<double>(intersection_rect_as_pixel_rect.y()));
+    intersection_rect->set_width(static_cast<double>(intersection_rect_as_pixel_rect.width()));
+    intersection_rect->set_height(static_cast<double>(intersection_rect_as_pixel_rect.height()));
+
+    // FIXME: 6. Map intersectionRect to the coordinate space of the viewport of the document containing target.
+
+    // 7. Return intersectionRect.
+    return intersection_rect;
+}
+
+// https://www.w3.org/TR/intersection-observer/#run-the-update-intersection-observations-steps
+void Document::run_the_update_intersection_observations_steps(HighResolutionTime::DOMHighResTimeStamp time)
+{
+    auto& realm = this->realm();
+
+    // 1. Let observer list be a list of all IntersectionObservers whose root is in the DOM tree of document.
+    //    For the top-level browsing context, this includes implicit root observers.
+    // 2. For each observer in observer list:
+    for (auto& observer : m_intersection_observers) {
+        // 1. Let rootBounds be observer’s root intersection rectangle.
+        auto root_bounds = observer->root_intersection_rectangle();
+
+        // 2. For each target in observer’s internal [[ObservationTargets]] slot, processed in the same order that
+        //    observe() was called on each target:
+        for (auto& target : observer->observation_targets()) {
+            // 1. Let:
+            // thresholdIndex be 0.
+            size_t threshold_index = 0;
+
+            // isIntersecting be false.
+            bool is_intersecting = false;
+
+            // targetRect be a DOMRectReadOnly with x, y, width, and height set to 0.
+            auto target_rect = Geometry::DOMRectReadOnly::construct_impl(realm, 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+
+            // intersectionRect be a DOMRectReadOnly with x, y, width, and height set to 0.
+            auto intersection_rect = Geometry::DOMRectReadOnly::construct_impl(realm, 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+
+            // SPEC ISSUE: It doesn't pass in intersection ratio to "queue an IntersectionObserverEntry" despite needing it.
+            //             This is default 0, as isIntersecting is default false, see step 9.
+            double intersection_ratio = 0.0;
+
+            // 2. If the intersection root is not the implicit root, and target is not in the same document as the intersection root, skip to step 11.
+            // 3. If the intersection root is an Element, and target is not a descendant of the intersection root in the containing block chain, skip to step 11.
+            // FIXME: Actually use the containing block chain.
+            auto intersection_root = observer->intersection_root();
+            auto intersection_root_document = intersection_root.visit([](auto& node) -> JS::NonnullGCPtr<Document> {
+                return node->document();
+            });
+            if (!(observer->root().has<Empty>() && &target->document() == intersection_root_document.ptr())
+                || !(intersection_root.has<JS::Handle<DOM::Element>>() && !target->is_descendant_of(*intersection_root.get<JS::Handle<DOM::Element>>()))) {
+                // 4. Set targetRect to the DOMRectReadOnly obtained by getting the bounding box for target.
+                target_rect = target->get_bounding_client_rect();
+
+                // 5. Let intersectionRect be the result of running the compute the intersection algorithm on target and
+                //    observer’s intersection root.
+                intersection_rect = compute_intersection(target, observer);
+
+                // 6. Let targetArea be targetRect’s area.
+                auto target_area = target_rect->width() * target_rect->height();
+
+                // 7. Let intersectionArea be intersectionRect’s area.
+                auto intersection_area = intersection_rect->width() * intersection_rect->height();
+
+                // 8. Let isIntersecting be true if targetRect and rootBounds intersect or are edge-adjacent, even if the
+                //    intersection has zero area (because rootBounds or targetRect have zero area).
+                CSSPixelRect target_rect_as_pixel_rect(target_rect->x(), target_rect->y(), target_rect->width(), target_rect->height());
+                is_intersecting = target_rect_as_pixel_rect.intersects(root_bounds);
+
+                // 9. If targetArea is non-zero, let intersectionRatio be intersectionArea divided by targetArea.
+                //    Otherwise, let intersectionRatio be 1 if isIntersecting is true, or 0 if isIntersecting is false.
+                if (target_area != 0.0)
+                    intersection_ratio = intersection_area / target_area;
+                else
+                    intersection_ratio = is_intersecting ? 1.0 : 0.0;
+
+                // 10. Set thresholdIndex to the index of the first entry in observer.thresholds whose value is greater
+                //     than intersectionRatio, or the length of observer.thresholds if intersectionRatio is greater than
+                //     or equal to the last entry in observer.thresholds.
+                threshold_index = observer->thresholds().find_first_index_if([&intersection_ratio](double threshold_value) {
+                                                            return threshold_value > intersection_ratio;
+                                                        })
+                                      .value_or(observer->thresholds().size());
+            }
+
+            // 11. Let intersectionObserverRegistration be the IntersectionObserverRegistration record in target’s
+            //     internal [[RegisteredIntersectionObservers]] slot whose observer property is equal to observer.
+            auto& intersection_observer_registration = target->get_intersection_observer_registration({}, observer);
+
+            // 12. Let previousThresholdIndex be the intersectionObserverRegistration’s previousThresholdIndex property.
+            auto previous_threshold_index = intersection_observer_registration.previous_threshold_index;
+
+            // 13. Let previousIsIntersecting be the intersectionObserverRegistration’s previousIsIntersecting property.
+            auto previous_is_intersecting = intersection_observer_registration.previous_is_intersecting;
+
+            // 14. If thresholdIndex does not equal previousThresholdIndex or if isIntersecting does not equal
+            //     previousIsIntersecting, queue an IntersectionObserverEntry, passing in observer, time,
+            //     rootBounds, targetRect, intersectionRect, isIntersecting, and target.
+            if (threshold_index != previous_threshold_index || is_intersecting != previous_is_intersecting) {
+                auto root_bounds_as_dom_rect = Geometry::DOMRectReadOnly::construct_impl(realm, static_cast<double>(root_bounds.x()), static_cast<double>(root_bounds.y()), static_cast<double>(root_bounds.width()), static_cast<double>(root_bounds.height())).release_value_but_fixme_should_propagate_errors();
+
+                // SPEC ISSUE: It doesn't pass in intersectionRatio, but it's required.
+                queue_an_intersection_observer_entry(observer, time, root_bounds_as_dom_rect, target_rect, intersection_rect, is_intersecting, intersection_ratio, target);
+            }
+
+            // 15. Assign thresholdIndex to intersectionObserverRegistration’s previousThresholdIndex property.
+            intersection_observer_registration.previous_threshold_index = threshold_index;
+
+            // 16. Assign isIntersecting to intersectionObserverRegistration’s previousIsIntersecting property.
+            intersection_observer_registration.previous_is_intersecting = is_intersecting;
+        }
+    }
 }
 
 }

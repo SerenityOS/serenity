@@ -1784,4 +1784,25 @@ bool Element::id_reference_exists(DeprecatedString const& id_reference) const
     return document().get_element_by_id(id_reference);
 }
 
+void Element::register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration registration)
+{
+    m_registered_intersection_observers.append(move(registration));
+}
+
+void Element::unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver> observer)
+{
+    m_registered_intersection_observers.remove_first_matching([&observer](IntersectionObserver::IntersectionObserverRegistration const& entry) {
+        return entry.observer == observer;
+    });
+}
+
+IntersectionObserver::IntersectionObserverRegistration& Element::get_intersection_observer_registration(Badge<DOM::Document>, IntersectionObserver::IntersectionObserver const& observer)
+{
+    auto registration_iterator = m_registered_intersection_observers.find_if([&observer](IntersectionObserver::IntersectionObserverRegistration const& entry) {
+        return entry.observer.ptr() == &observer;
+    });
+    VERIFY(!registration_iterator.is_end());
+    return *registration_iterator;
+}
+
 }

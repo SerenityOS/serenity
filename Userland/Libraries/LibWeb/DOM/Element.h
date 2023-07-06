@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/ScrollOptions.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
@@ -309,6 +310,10 @@ public:
     void scroll(HTML::ScrollToOptions const&);
     void scroll(double x, double y);
 
+    void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration);
+    void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>);
+    IntersectionObserver::IntersectionObserverRegistration& get_intersection_observer_registration(Badge<DOM::Document>, IntersectionObserver::IntersectionObserver const&);
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
@@ -358,6 +363,10 @@ private:
 
     // https://dom.spec.whatwg.org/#concept-element-is-value
     Optional<String> m_is_value;
+
+    // https://www.w3.org/TR/intersection-observer/#dom-element-registeredintersectionobservers-slot
+    // Element objects have an internal [[RegisteredIntersectionObservers]] slot, which is initialized to an empty list.
+    Vector<IntersectionObserver::IntersectionObserverRegistration> m_registered_intersection_observers;
 };
 
 template<>

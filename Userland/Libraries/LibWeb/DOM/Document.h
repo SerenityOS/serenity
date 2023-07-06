@@ -488,6 +488,11 @@ public:
     HTML::ListOfAvailableImages& list_of_available_images();
     HTML::ListOfAvailableImages const& list_of_available_images() const;
 
+    void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver&);
+    void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver&);
+
+    void run_the_update_intersection_observations_steps(HighResolutionTime::DOMHighResTimeStamp time);
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -503,6 +508,9 @@ private:
     void evaluate_media_rules();
 
     WebIDL::ExceptionOr<void> run_the_document_write_steps(DeprecatedString);
+
+    void queue_intersection_observer_task();
+    void queue_an_intersection_observer_entry(IntersectionObserver::IntersectionObserver&, HighResolutionTime::DOMHighResTimeStamp time, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<Element> target);
 
     OwnPtr<CSS::StyleComputer> m_style_computer;
     JS::GCPtr<CSS::StyleSheetList> m_style_sheets;
@@ -655,6 +663,13 @@ private:
 
     // https://html.spec.whatwg.org/multipage/images.html#list-of-available-images
     OwnPtr<HTML::ListOfAvailableImages> m_list_of_available_images;
+
+    // NOTE: Not in the spec per say, but Document must be able to access all IntersectionObservers whose root is in the document.
+    OrderedHashTable<JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>> m_intersection_observers;
+
+    // https://www.w3.org/TR/intersection-observer/#document-intersectionobservertaskqueued
+    // Each document has an IntersectionObserverTaskQueued flag which is initialized to false.
+    bool m_intersection_observer_task_queued { false };
 };
 
 template<>

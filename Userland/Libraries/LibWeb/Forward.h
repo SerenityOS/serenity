@@ -451,6 +451,8 @@ class Performance;
 
 namespace Web::IntersectionObserver {
 class IntersectionObserver;
+class IntersectionObserverEntry;
+struct IntersectionObserverRegistration;
 }
 
 namespace Web::Layout {
