@@ -167,6 +167,8 @@ void* memset(void* dest_ptr, int c, size_t n)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memmove.html
 void* memmove(void* dest, void const* src, size_t n)
 {
+    if (dest < src)
+        return memcpy(dest, src, n);
     if (((FlatPtr)dest - (FlatPtr)src) >= n)
         return memcpy(dest, src, n);
 
