@@ -11,7 +11,7 @@
 
 namespace Compress {
 
-ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_symbol(LittleEndianInputBitStream& input_stream) const
+ErrorOr<size_t> Brotli::CanonicalCode::read_symbol(LittleEndianInputBitStream& input_stream) const
 {
     size_t code_bits = 1;
 
@@ -137,7 +137,7 @@ ErrorOr<size_t> BrotliDecompressionStream::read_variable_length()
     }
 }
 
-ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_complex_prefix_code_length(LittleEndianInputBitStream& stream)
+ErrorOr<size_t> Brotli::CanonicalCode::read_complex_prefix_code_length(LittleEndianInputBitStream& stream)
 {
     // Symbol   Code
     // ------   ----
@@ -171,7 +171,7 @@ ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_complex_prefix_co
     }
 }
 
-ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
+ErrorOr<Brotli::CanonicalCode> Brotli::CanonicalCode::read_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
 {
     size_t hskip = TRY(stream.read_bits(2));
 
@@ -181,7 +181,7 @@ ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::Can
     return TRY(read_complex_prefix_code(stream, alphabet_size, hskip));
 }
 
-ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_simple_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
+ErrorOr<Brotli::CanonicalCode> Brotli::CanonicalCode::read_simple_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
 {
     CanonicalCode code {};
 
@@ -230,7 +230,7 @@ ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::Can
     return code;
 }
 
-ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_complex_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size, size_t hskip)
+ErrorOr<Brotli::CanonicalCode> Brotli::CanonicalCode::read_complex_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size, size_t hskip)
 {
     // hskip should only be 0, 2 or 3
     VERIFY(hskip != 1);
@@ -259,7 +259,7 @@ ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::Can
             return Error::from_string_literal("invalid prefix code");
     }
 
-    BrotliDecompressionStream::CanonicalCode temp_code;
+    CanonicalCode temp_code;
     if (number_of_non_zero_symbols > 1) {
         size_t code_value = 0;
         for (size_t bits = 1; bits <= 5; bits++) {

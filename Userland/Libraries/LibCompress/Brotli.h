@@ -13,7 +13,35 @@
 
 namespace Compress {
 
+namespace Brotli {
+
+class CanonicalCode {
+public:
+    CanonicalCode() = default;
+
+    static ErrorOr<CanonicalCode> read_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
+    static ErrorOr<CanonicalCode> read_simple_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
+    static ErrorOr<CanonicalCode> read_complex_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size, size_t hskip);
+
+    ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&) const;
+    void clear()
+    {
+        m_symbol_codes.clear();
+        m_symbol_values.clear();
+    }
+
+private:
+    static ErrorOr<size_t> read_complex_prefix_code_length(LittleEndianInputBitStream&);
+
+    Vector<size_t> m_symbol_codes;
+    Vector<size_t> m_symbol_values;
+};
+
+}
+
 class BrotliDecompressionStream : public Stream {
+    using CanonicalCode = Brotli::CanonicalCode;
+
 public:
     enum class State {
         WindowSize,
@@ -24,28 +52,6 @@ public:
         CompressedDistance,
         CompressedCopy,
         CompressedDictionary,
-    };
-
-    class CanonicalCode {
-    public:
-        CanonicalCode() = default;
-
-        static ErrorOr<CanonicalCode> read_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
-        static ErrorOr<CanonicalCode> read_simple_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
-        static ErrorOr<CanonicalCode> read_complex_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size, size_t hskip);
-
-        ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&) const;
-        void clear()
-        {
-            m_symbol_codes.clear();
-            m_symbol_values.clear();
-        }
-
-    private:
-        static ErrorOr<size_t> read_complex_prefix_code_length(LittleEndianInputBitStream&);
-
-        Vector<size_t> m_symbol_codes;
-        Vector<size_t> m_symbol_values;
     };
 
     struct Block {
