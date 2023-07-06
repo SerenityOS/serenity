@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Arne Elster <arne@elster.li>
+ * Copyright (c) 2023, Sarsaparilla
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,14 +18,17 @@ public:
     template<size_t size>
     constexpr static Array<T, size> hamming() { return make_window<size>(calculate_hamming); }
     constexpr static FixedArray<T> hamming(size_t size) { return make_window(size, calculate_hamming); }
+    constexpr static T hamming(u32 index, size_t size) { return calculate_hamming(index, size); }
 
     template<size_t size>
     constexpr static Array<T, size> hann() { return make_window<size>(calculate_hann); }
     constexpr static FixedArray<T> hann(size_t size) { return make_window(size, calculate_hann); }
+    constexpr static T hann(u32 index, size_t size) { return calculate_hann(index, size); }
 
     template<size_t size>
     constexpr static Array<T, size> blackman_harris() { return make_window<size>(calculate_blackman_harris); }
     constexpr static FixedArray<T> blackman_harris(size_t size) { return make_window(size, calculate_blackman_harris); }
+    constexpr static T blackman_harris(u32 index, size_t size) { return calculate_blackman_harris(index, size); }
 
 private:
     constexpr static float calculate_hann(size_t index, size_t size)
@@ -43,7 +47,7 @@ private:
         T const a1 = 0.48829;
         T const a2 = 0.14128;
         T const a3 = 0.01168;
-        return a0 - a1 * AK::cos(2 * AK::Pi<T> * index / size) + a2 * AK::cos(4 * AK::Pi<T> * index / size) - a3 * AK::cos(6 * AK::Pi<T> * index / size);
+        return a0 - a1 * AK::cos((2 * AK::Pi<T> * index) / (size - 1)) + a2 * AK::cos((4 * AK::Pi<T> * index) / (size - 1)) - a3 * AK::cos((6 * AK::Pi<T> * index) / (size - 1));
     }
 
     template<size_t size>
