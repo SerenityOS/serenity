@@ -124,6 +124,14 @@ export SERENITY_SOURCE_DIR=$(realpath ../)
 ./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
 ```
 
+### Debugging with CLion
+
+Ladybird should be built with debug symbols first. In `Meta/CMake/lagom_compile_options.cmake` remove the optimizations by changing `-O2` to `-O0`. For macOS also change the debug option from `-g1` to `-g` so that lldb is happy with the emitted symbols. In linux `-g1` can be changed to `-ggdb3` for maximum debug info.
+
+After running Ladybird as suggested above with `./Meta/serenity.sh run lagom ladybird`, you can now in CLion use Run -> Attach to Process to connect. If debugging layouting and rendering issues, filter the listing that opens for `WebContent` and attach to that.
+
+Now breakpoints, stepping and variable inspection will work.
+
 ### Debugging with Xcode on macOS
 
 The `serenity.sh` build script does not know how to generate Xcode projects, so creating the project must be done manually.
