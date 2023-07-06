@@ -77,9 +77,15 @@ public:
     {
         ScopePusher scope_pusher(parser, &function_body, ScopeLevel::FunctionTopLevel, ScopeType::Function);
         scope_pusher.m_function_parameters = parameters;
+
+        auto has_parameters_with_default_values = false;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
                 [&](Identifier const& identifier) {
+                    if (parameter.default_value)
+                        has_parameters_with_default_values = true;
+                    scope_pusher.register_identifier(identifier);
+                    scope_pusher.m_function_parameters_candidates_for_local_variables.set(identifier.string());
                     scope_pusher.m_forbidden_lexical_names.set(identifier.string());
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
@@ -89,6 +95,11 @@ public:
                     }));
                 });
         }
+
+        if (has_parameters_with_default_values) {
+            scope_pusher.m_function_parameters_candidates_for_local_variables.clear();
+        }
+
         return scope_pusher;
     }
 
@@ -313,6 +324,10 @@ public:
                 scope_has_declaration = false;
             }
 
+            if (m_type == ScopeType::Function && !m_contains_access_to_arguments_object && m_function_parameters_candidates_for_local_variables.contains(identifier_group_name)) {
+                scope_has_declaration = true;
+            }
+
             if (scope_has_declaration) {
                 if (function_declaration)
                     continue;
@@ -413,6 +428,7 @@ private:
     Vector<NonnullRefPtr<FunctionDeclaration const>> m_functions_to_hoist;
 
     HashTable<DeprecatedFlyString> m_bound_names;
+    HashTable<DeprecatedFlyString> m_function_parameters_candidates_for_local_variables;
 
     struct IdentifierGroup {
         bool captured_by_nested_function { false };
