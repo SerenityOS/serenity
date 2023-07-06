@@ -71,6 +71,11 @@ struct Header {
     String new_file_path;
 };
 
+struct Patch {
+    Header header;
+    Vector<Hunk> hunks;
+};
+
 class Parser : public GenericLexer {
 public:
     using GenericLexer::GenericLexer;

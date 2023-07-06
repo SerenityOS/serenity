@@ -16,6 +16,7 @@ struct Header;
 struct Hunk;
 struct HunkLocation;
 struct Line;
+struct Patch;
 struct Range;
 
 }
