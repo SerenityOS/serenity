@@ -14,7 +14,7 @@
   opacity: 0;
   background: url(https://serenityos.org/buggie.png) no-repeat left center;
   background-size: contain;
-  animation: buggie 10s linear infinite;
+  animation: buggie 10s cubic-bezier(0.1, -0.6, 0.2, -0.2) infinite;
 }
 .offset-0 { animation-delay: 0.9s; }
 .offset-1 { animation-delay: 1.7s; }
@@ -27,7 +27,7 @@
   height: 50%;
   background: url(https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/LadyBall-SerenityOS.png/240px-LadyBall-SerenityOS.png) no-repeat left center;
   scale: 50%;
-  animation: ladyball 9s linear infinite;
+  animation: ladyball 9s ease-in-out infinite;
 }
 @keyframes buggie {
   0% { transform: translateX(0vw); opacity: 1; }
