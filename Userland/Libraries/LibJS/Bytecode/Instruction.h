@@ -27,7 +27,9 @@
     O(CreateVariable)                \
     O(Decrement)                     \
     O(DeleteById)                    \
+    O(DeleteByIdWithThis)            \
     O(DeleteByValue)                 \
+    O(DeleteByValueWithThis)         \
     O(DeleteVariable)                \
     O(Div)                           \
     O(EnterUnwindContext)            \

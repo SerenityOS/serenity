@@ -304,6 +304,21 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
 
     if (is<MemberExpression>(node)) {
         auto& expression = static_cast<MemberExpression const&>(node);
+
+        // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+        if (is<SuperExpression>(expression.object())) {
+            auto super_reference = TRY(emit_super_reference(expression));
+
+            if (super_reference.referenced_name.has_value()) {
+                emit<Bytecode::Op::DeleteByValueWithThis>(super_reference.this_value, *super_reference.referenced_name);
+            } else {
+                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                emit<Bytecode::Op::DeleteByIdWithThis>(super_reference.this_value, identifier_table_ref);
+            }
+
+            return {};
+        }
+
         TRY(expression.object().generate_bytecode(*this));
 
         if (expression.is_computed()) {

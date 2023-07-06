@@ -118,7 +118,9 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
             break;
         }
         case DeleteById:
+        case DeleteByIdWithThis:
         case DeleteByValue:
+        case DeleteByValueWithThis:
             // These can trigger proxies, which call into user code
             // So these are treated like calls
         case GetByValue:
