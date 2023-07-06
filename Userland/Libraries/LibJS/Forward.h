@@ -187,6 +187,7 @@ class Interpreter;
 class Identifier;
 class Intrinsics;
 struct IteratorRecord;
+class MemberExpression;
 class MetaProperty;
 class Module;
 struct ModuleRequest;
