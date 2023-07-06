@@ -137,7 +137,7 @@ ErrorOr<size_t> BrotliDecompressionStream::read_variable_length()
     }
 }
 
-ErrorOr<size_t> BrotliDecompressionStream::read_complex_prefix_code_length()
+ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_complex_prefix_code_length(LittleEndianInputBitStream& stream)
 {
     // Symbol   Code
     // ------   ----
@@ -148,7 +148,7 @@ ErrorOr<size_t> BrotliDecompressionStream::read_complex_prefix_code_length()
     // 4          01
     // 5        1111
 
-    switch (TRY(m_input_stream.read_bits(2))) {
+    switch (TRY(stream.read_bits(2))) {
     case 0:
         return 0;
     case 1:
@@ -156,10 +156,10 @@ ErrorOr<size_t> BrotliDecompressionStream::read_complex_prefix_code_length()
     case 2:
         return 3;
     case 3: {
-        if (TRY(m_input_stream.read_bit()) == 0) {
+        if (TRY(stream.read_bit()) == 0) {
             return 2;
         } else {
-            if (TRY(m_input_stream.read_bit()) == 0) {
+            if (TRY(stream.read_bit()) == 0) {
                 return 1;
             } else {
                 return 5;
@@ -171,25 +171,21 @@ ErrorOr<size_t> BrotliDecompressionStream::read_complex_prefix_code_length()
     }
 }
 
-ErrorOr<void> BrotliDecompressionStream::read_prefix_code(CanonicalCode& code, size_t alphabet_size)
+ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
 {
-    size_t hskip = TRY(m_input_stream.read_bits(2));
+    size_t hskip = TRY(stream.read_bits(2));
 
-    if (hskip == 1) {
-        TRY(read_simple_prefix_code(code, alphabet_size));
-    } else {
-        TRY(read_complex_prefix_code(code, alphabet_size, hskip));
-    }
+    if (hskip == 1)
+        return TRY(read_simple_prefix_code(stream, alphabet_size));
 
-    return {};
+    return TRY(read_complex_prefix_code(stream, alphabet_size, hskip));
 }
 
-ErrorOr<void> BrotliDecompressionStream::read_simple_prefix_code(CanonicalCode& code, size_t alphabet_size)
+ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_simple_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size)
 {
-    VERIFY(code.m_symbol_codes.is_empty());
-    VERIFY(code.m_symbol_values.is_empty());
+    CanonicalCode code {};
 
-    size_t number_of_symbols = 1 + TRY(m_input_stream.read_bits(2));
+    size_t number_of_symbols = 1 + TRY(stream.read_bits(2));
 
     size_t symbol_size = 0;
     while ((1u << symbol_size) < alphabet_size)
@@ -197,7 +193,7 @@ ErrorOr<void> BrotliDecompressionStream::read_simple_prefix_code(CanonicalCode& 
 
     Vector<size_t> symbols;
     for (size_t i = 0; i < number_of_symbols; i++) {
-        size_t symbol = TRY(m_input_stream.read_bits(symbol_size));
+        size_t symbol = TRY(stream.read_bits(symbol_size));
         symbols.append(symbol);
 
         if (symbol >= alphabet_size)
@@ -218,7 +214,7 @@ ErrorOr<void> BrotliDecompressionStream::read_simple_prefix_code(CanonicalCode& 
             swap(symbols[1], symbols[2]);
         code.m_symbol_values = move(symbols);
     } else if (number_of_symbols == 4) {
-        bool tree_select = TRY(m_input_stream.read_bit());
+        bool tree_select = TRY(stream.read_bit());
         if (tree_select) {
             code.m_symbol_codes.extend({ 0b10, 0b110, 0b1110, 0b1111 });
             if (symbols[2] > symbols[3])
@@ -231,10 +227,10 @@ ErrorOr<void> BrotliDecompressionStream::read_simple_prefix_code(CanonicalCode& 
         }
     }
 
-    return {};
+    return code;
 }
 
-ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode& code, size_t alphabet_size, size_t hskip)
+ErrorOr<BrotliDecompressionStream::CanonicalCode> BrotliDecompressionStream::CanonicalCode::read_complex_prefix_code(LittleEndianInputBitStream& stream, size_t alphabet_size, size_t hskip)
 {
     // hskip should only be 0, 2 or 3
     VERIFY(hskip != 1);
@@ -248,7 +244,7 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
     size_t sum = 0;
     size_t number_of_non_zero_symbols = 0;
     for (size_t i = hskip; i < 18; i++) {
-        size_t len = TRY(read_complex_prefix_code_length());
+        size_t len = TRY(read_complex_prefix_code_length(stream));
         code_length[symbol_mapping[i]] = len;
 
         if (len != 0) {
@@ -302,7 +298,7 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
     Vector<size_t> result_lengths;
     size_t result_lengths_count[16] { 0 };
     while (i < alphabet_size) {
-        auto symbol = TRY(temp_code.read_symbol(m_input_stream));
+        auto symbol = TRY(temp_code.read_symbol(stream));
 
         if (symbol < 16) {
             result_symbols.append(i);
@@ -327,7 +323,7 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
             } else {
                 last_repeat = 0;
             }
-            repeat_count += 3 + TRY(m_input_stream.read_bits(2));
+            repeat_count += 3 + TRY(stream.read_bits(2));
 
             for (size_t rep = 0; rep < (repeat_count - last_repeat); rep++) {
                 result_symbols.append(i);
@@ -358,7 +354,7 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
             } else {
                 last_repeat = 0;
             }
-            repeat_count += 3 + TRY(m_input_stream.read_bits(3));
+            repeat_count += 3 + TRY(stream.read_bits(3));
 
             i += (repeat_count - last_repeat);
             last_repeat = repeat_count;
@@ -368,6 +364,8 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
     }
     result_lengths_count[0] = 0;
 
+    CanonicalCode final_code;
+
     size_t code_value = 0;
     for (size_t bits = 1; bits < 16; bits++) {
         code_value = (code_value + result_lengths_count[bits - 1]) << 1;
@@ -376,14 +374,14 @@ ErrorOr<void> BrotliDecompressionStream::read_complex_prefix_code(CanonicalCode&
         for (size_t n = 0; n < result_symbols.size(); n++) {
             size_t len = result_lengths[n];
             if (len == bits) {
-                code.m_symbol_codes.append((1 << bits) | current_code_value);
-                code.m_symbol_values.append(result_symbols[n]);
+                final_code.m_symbol_codes.append((1 << bits) | current_code_value);
+                final_code.m_symbol_values.append(result_symbols[n]);
                 current_code_value++;
             }
         }
     }
 
-    return {};
+    return final_code;
 }
 
 static void inverse_move_to_front_transform(Span<u8> v)
@@ -412,8 +410,7 @@ ErrorOr<void> BrotliDecompressionStream::read_context_map(size_t number_of_codes
         run_length_encoding_max = 1 + TRY(m_input_stream.read_bits(4));
     }
 
-    BrotliDecompressionStream::CanonicalCode code;
-    TRY(read_prefix_code(code, number_of_codes + run_length_encoding_max));
+    auto const code = TRY(CanonicalCode::read_prefix_code(m_input_stream, number_of_codes + run_length_encoding_max));
 
     size_t i = 0;
     while (i < context_map_size) {
@@ -455,8 +452,8 @@ ErrorOr<void> BrotliDecompressionStream::read_block_configuration(Block& block)
     if (blocks_of_type == 1) {
         block.length = 16 * MiB;
     } else {
-        TRY(read_prefix_code(block.type_code, 2 + blocks_of_type));
-        TRY(read_prefix_code(block.length_code, 26));
+        block.type_code = TRY(CanonicalCode::read_prefix_code(m_input_stream, 2 + blocks_of_type));
+        block.length_code = TRY(CanonicalCode::read_prefix_code(m_input_stream, 26));
         TRY(block_update_length(block));
     }
 
@@ -716,23 +713,17 @@ ErrorOr<Bytes> BrotliDecompressionStream::read_some(Bytes output_buffer)
 
                 m_literal_codes.clear();
                 for (size_t i = 0; i < number_of_literal_codes; i++) {
-                    CanonicalCode code;
-                    TRY(read_prefix_code(code, 256));
-                    m_literal_codes.append(move(code));
+                    m_literal_codes.append(TRY(CanonicalCode::read_prefix_code(m_input_stream, 256)));
                 }
 
                 m_insert_and_copy_codes.clear();
                 for (size_t i = 0; i < m_insert_and_copy_block.number_of_types; i++) {
-                    CanonicalCode code;
-                    TRY(read_prefix_code(code, 704));
-                    m_insert_and_copy_codes.append(move(code));
+                    m_insert_and_copy_codes.append(TRY(CanonicalCode::read_prefix_code(m_input_stream, 704)));
                 }
 
                 m_distance_codes.clear();
                 for (size_t i = 0; i < number_of_distance_codes; i++) {
-                    CanonicalCode code;
-                    TRY(read_prefix_code(code, 16 + m_direct_distances + (48 << m_postfix_bits)));
-                    m_distance_codes.append(move(code));
+                    m_distance_codes.append(TRY(CanonicalCode::read_prefix_code(m_input_stream, 16 + m_direct_distances + (48 << m_postfix_bits))));
                 }
 
                 m_current_state = State::CompressedCommand;
