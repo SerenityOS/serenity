@@ -776,12 +776,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @parameter.type.name@ @cpp_name@ {};
 )~~~");
         auto* current_dictionary = &interface.dictionaries.find(parameter.type->name())->value;
+        // FIXME: This (i) is a hack to make sure we don't generate duplicate variable names.
+        static auto i = 0;
         while (true) {
             for (auto& member : current_dictionary->members) {
                 dictionary_generator.set("member_key", member.name);
                 auto member_js_name = make_input_acceptable_cpp(member.name.to_snakecase());
                 auto member_value_name = DeprecatedString::formatted("{}_value", member_js_name);
-                auto member_property_value_name = DeprecatedString::formatted("{}_property_value", member_js_name);
+                auto member_property_value_name = DeprecatedString::formatted("{}_property_value_{}", member_js_name, i);
                 dictionary_generator.set("member_name", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
                 dictionary_generator.set("member_property_value_name", member_property_value_name);
@@ -821,6 +823,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
                 }
+                i++;
             }
             if (current_dictionary->parent_name.is_null())
                 break;
