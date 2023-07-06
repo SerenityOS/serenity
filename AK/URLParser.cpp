@@ -1575,13 +1575,13 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
         // -> opaque path state, https://url.spec.whatwg.org/#cannot-be-a-base-url-path-state
         case State::CannotBeABaseUrlPath:
             // NOTE: This does not follow the spec exactly but rather uses the buffer and only sets the path on EOF.
-            // NOTE: Verify that the assumptions required for this simplification are correct.
             VERIFY(url->m_paths.size() == 1 && url->m_paths[0].is_empty());
 
             // 1. If c is U+003F (?), then set url’s query to the empty string and state to query state.
             if (code_point == '?') {
                 url->m_paths[0] = buffer.string_view();
                 url->m_query = "";
+                buffer.clear();
                 state = State::Query;
             }
             // 2. Otherwise, if c is U+0023 (#), then set url’s fragment to the empty string and state to fragment state.
@@ -1589,6 +1589,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // NOTE: This needs to be percent decoded since the member variables contain decoded data.
                 url->m_paths[0] = buffer.string_view();
                 url->m_fragment = "";
+                buffer.clear();
                 state = State::Fragment;
             }
             // 3. Otherwise:
@@ -1604,6 +1605,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     URL::append_percent_encoded_if_necessary(buffer, code_point, URL::PercentEncodeSet::C0Control);
                 } else {
                     url->m_paths[0] = buffer.string_view();
+                    buffer.clear();
                 }
             }
             break;
