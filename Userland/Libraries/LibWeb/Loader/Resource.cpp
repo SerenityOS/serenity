@@ -102,9 +102,6 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<Depre
         //        Let's use image/x-qoi for now, which is also what our Core::MimeData uses & would guess.
         if (m_mime_type == "application/octet-stream" && url().serialize_path().ends_with(".qoi"sv))
             m_mime_type = "image/x-qoi";
-    } else if (url().scheme() == "data" && !url().data_mime_type().is_empty()) {
-        dbgln_if(RESOURCE_DEBUG, "This is a data URL with mime-type _{}_", url().data_mime_type());
-        m_mime_type = url().data_mime_type();
     } else {
         auto content_type_options = headers.get("X-Content-Type-Options");
         if (content_type_options.value_or("").equals_ignoring_ascii_case("nosniff"sv)) {
