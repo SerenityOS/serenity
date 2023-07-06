@@ -20,7 +20,10 @@ ErrorOr<void> generate_bounds_checking_function(JsonObject& properties, SourceGe
 
 static bool type_name_is_enum(StringView type_name)
 {
-    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+    return !AK::first_is_one_of(type_name,
+        "angle"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "frequency"sv, "image"sv,
+        "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv,
+        "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -158,6 +161,7 @@ enum class ValueType {
     Angle,
     Color,
     CustomIdent,
+    EasingFunction,
     FilterValueList,
     Frequency,
     Image,
@@ -614,6 +618,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     TRY(property_generator.try_appendln("        case ValueType::Color:"));
                 } else if (type_name == "custom-ident") {
                     TRY(property_generator.try_appendln("        case ValueType::CustomIdent:"));
+                } else if (type_name == "easing-function") {
+                    TRY(property_generator.try_appendln("        case ValueType::EasingFunction:"));
                 } else if (type_name == "frequency") {
                     TRY(property_generator.try_appendln("        case ValueType::Frequency:"));
                 } else if (type_name == "image") {

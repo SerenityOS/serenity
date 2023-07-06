@@ -33,6 +33,7 @@ Optional<CSSNumericType::BaseType> CSSNumericType::base_type_from_value_type(Val
 
     case ValueType::Color:
     case ValueType::CustomIdent:
+    case ValueType::EasingFunction:
     case ValueType::FilterValueList:
     case ValueType::Image:
     case ValueType::Integer:
