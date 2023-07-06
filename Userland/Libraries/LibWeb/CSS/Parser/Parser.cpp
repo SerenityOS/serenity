@@ -2290,34 +2290,15 @@ ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element&
     return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties)).release_value_but_fixme_should_propagate_errors();
 }
 
-Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
+Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_value)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
-    // FIXME: Handle data: urls (RFC2397)
 
     auto convert_string_to_url = [&](StringView& url_string) -> Optional<AK::URL> {
-        if (url_string.starts_with("data:"sv, CaseSensitivity::CaseInsensitive)) {
-            auto data_url = AK::URL(url_string);
-
-            switch (allowed_data_url_type) {
-            case AllowedDataUrlType::Image:
-                if (data_url.data_mime_type().starts_with("image"sv, CaseSensitivity::CaseInsensitive))
-                    return data_url;
-                break;
-            case AllowedDataUrlType::Font:
-                if (data_url.data_mime_type().starts_with("font"sv, CaseSensitivity::CaseInsensitive))
-                    return data_url;
-                if (data_url.data_mime_type().starts_with("application/font"sv, CaseSensitivity::CaseInsensitive))
-                    return data_url;
-                break;
-            default:
-                break;
-            }
-
-            return {};
-        }
-
-        return m_context.complete_url(url_string);
+        auto url = m_context.complete_url(url_string);
+        if (url.is_valid())
+            return url;
+        return {};
     };
 
     if (component_value.is(Token::Type::Url)) {
@@ -2342,9 +2323,9 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     return {};
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_url_value(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
+ErrorOr<RefPtr<StyleValue>> Parser::parse_url_value(ComponentValue const& component_value)
 {
-    auto url = parse_url_function(component_value, allowed_data_url_type);
+    auto url = parse_url_function(component_value);
     if (!url.has_value())
         return nullptr;
     return URLStyleValue::create(*url);
@@ -3258,7 +3239,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             DeprecatedString namespace_uri;
             if (token.is(Token::Type::String)) {
                 namespace_uri = token.token().string();
-            } else if (auto url = parse_url_function(token, AllowedDataUrlType::None); url.has_value()) {
+            } else if (auto url = parse_url_function(token); url.has_value()) {
                 namespace_uri = url.value().to_deprecated_string();
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @namespace rule invalid; discarding.");
@@ -4264,7 +4245,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_string_value(ComponentValue const& com
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_image_value(ComponentValue const& component_value)
 {
-    auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
+    auto url = parse_url_function(component_value);
     if (url.has_value())
         return ImageStyleValue::create(url.value());
     auto linear_gradient = TRY(parse_linear_gradient_function(component_value));
@@ -6103,7 +6084,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
 
         // <url> [ format(<font-format>)]?
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
-        if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
+        if (auto maybe_url = parse_url_function(first); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
             if (!url.is_valid()) {
                 continue;
