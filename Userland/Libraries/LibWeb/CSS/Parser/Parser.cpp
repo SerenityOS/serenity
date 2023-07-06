@@ -7928,6 +7928,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     m_context.set_current_property_id(property_id);
     Vector<ComponentValue> component_values;
     bool contains_var_or_attr = false;
+    bool const property_accepts_custom_ident = property_accepts_type(property_id, ValueType::CustomIdent);
 
     while (tokens.has_next_token()) {
         auto const& token = tokens.next_token();
@@ -7941,7 +7942,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             if (token.is(Token::Type::Whitespace))
                 continue;
 
-            if (token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
+            if (!property_accepts_custom_ident && token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
                 return ParseError::IncludesIgnoredVendorPrefix;
         }
 
