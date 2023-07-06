@@ -12,6 +12,7 @@
 #include <LibAudio/WavWriter.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibDSP/Resampler.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -65,6 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView input_format {};
     StringView output_format {};
     StringView output_sample_format;
+    u32 target_samplerate = 0;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between audio formats");
@@ -72,6 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(input_format, "Force input codec and container (see manual for supported codecs and containers)", "input-audio-codec", 0, "input-codec");
     args_parser.add_option(output_format, "Set output codec", "audio-codec", 0, "output-codec");
     args_parser.add_option(output_sample_format, "Set output sample format (see manual for supported formats)", "audio-format", 0, "sample-format");
+    args_parser.add_option(target_samplerate, "Target samplerate", "target-samplerate", 's', "samplerate");
     args_parser.add_option(output, "Target file (or '-' for standard output)", "output", 'o', "output");
     args_parser.parse(arguments);
 
@@ -102,6 +105,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     VERIFY(input_loader);
 
+    if (target_samplerate == 0)
+        target_samplerate = input_loader->sample_rate();
+
+    size_t const input_buffer_size = input_loader->sample_rate();
+    size_t const output_buffer_size = input_buffer_size * target_samplerate / input_loader->sample_rate();
+
+    double const transition_bandwidth_hz = 8000;
+
+    auto resampler = TRY((DSP::InterpolatedSincResampler<Audio::Sample, DSP::recommended_float_sinc_taps, DSP::recommended_float_oversample>::create(input_loader->sample_rate(), target_samplerate, input_buffer_size, DSP::recommended_float_sinc_taps, transition_bandwidth_hz)));
+
+    Vector<Audio::Sample> output_samples;
+    output_samples.resize(output_buffer_size);
+
     if (output_format.is_empty())
         output_format = TRY(guess_format_from_extension(output));
     VERIFY(!output_format.is_empty());
@@ -115,8 +131,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             writer.emplace(TRY(Audio::WavWriter::create_from_file(
                 output,
-                static_cast<int>(input_loader->sample_rate()),
-                input_loader->num_channels(),
+                static_cast<int>(target_samplerate),
+                2, // input_loader->num_channels(),
                 parsed_output_sample_format)));
         } else if (output_format == "flac"sv) {
             auto parsed_output_sample_format = input_loader->pcm_format();
@@ -131,7 +147,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto output_stream = TRY(Core::OutputBufferedFile::create(TRY(Core::File::open(output, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate))));
             auto flac_writer = TRY(Audio::FlacWriter::create(
                 move(output_stream),
-                static_cast<int>(input_loader->sample_rate()),
+                static_cast<int>(target_samplerate),
                 input_loader->num_channels(),
                 Audio::pcm_bits_per_sample(parsed_output_sample_format)));
             writer.emplace(move(flac_writer));
@@ -156,15 +172,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             out("Writing: \033[s");
 
         auto start = MonotonicTime::now();
+        bool first_conversion = true;
+
         while (input_loader->loaded_samples() < input_loader->total_samples()) {
-            auto samples_or_error = input_loader->get_more_samples();
+            auto samples_or_error = input_loader->get_more_samples(input_buffer_size);
             if (samples_or_error.is_error()) {
                 warnln("Error while loading samples: {} (at {})", samples_or_error.error().description, samples_or_error.error().index);
                 return 1;
             }
             auto samples = samples_or_error.release_value();
-            if (writer.has_value())
-                TRY((*writer)->write_samples(samples.span()));
+            size_t written = resampler.process(samples.span(), output_samples);
+
+            if (writer.has_value()) {
+                if (first_conversion) {
+                    // The resampler introduces a delay of sinc_taps + 1 samples.
+                    TRY((*writer)->write_samples(output_samples.span().slice(DSP::recommended_float_sinc_taps + 1).trim(written)));
+                    first_conversion = false;
+                } else {
+                    TRY((*writer)->write_samples(output_samples.span().trim(written)));
+                }
+            }
             // TODO: Show progress updates like aplay by moving the progress calculation into a common utility function.
             if (output != "-"sv) {
                 out("\033[u{}/{}", input_loader->loaded_samples(), input_loader->total_samples());
@@ -174,6 +201,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto end = MonotonicTime::now();
         auto seconds_to_write = (end - start).to_milliseconds() / 1000.0;
         dbgln("Wrote {} samples in {:.3f}s, {:3.2f}% realtime", input_loader->loaded_samples(), seconds_to_write, input_loader->loaded_samples() / static_cast<double>(input_loader->sample_rate()) / seconds_to_write * 100.0);
+
+        if (writer.has_value()) {
+            // Flush the resampler
+            Vector<Audio::Sample> zeros;
+            TRY(zeros.try_resize(DSP::recommended_float_sinc_taps + 1));
+
+            size_t written = resampler.process(zeros.span(), output_samples);
+            TRY((*writer)->write_samples(output_samples.span().trim(written)));
+        }
 
         if (writer.has_value())
             TRY((*writer)->finalize());
