@@ -495,8 +495,7 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
 
     tab_ptr->focus_location_editor();
 
-    // We make it HistoryNavigation so that the initial page doesn't get added to the history.
-    tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
+    tab_ptr->navigate(url);
 
     return *tab_ptr;
 }
