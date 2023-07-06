@@ -11,7 +11,7 @@
 
 namespace Compress {
 
-ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_symbol(LittleEndianInputBitStream& input_stream)
+ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_symbol(LittleEndianInputBitStream& input_stream) const
 {
     size_t code_bits = 1;
 

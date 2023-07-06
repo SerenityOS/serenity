@@ -31,7 +31,7 @@ public:
 
     public:
         CanonicalCode() = default;
-        ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&);
+        ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&) const;
         void clear()
         {
             m_symbol_codes.clear();
