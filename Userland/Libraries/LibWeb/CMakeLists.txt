@@ -450,6 +450,7 @@ set(SOURCES
     Loader/ProxyMappings.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    MathML/MathMLElement.cpp
     MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/EntryNames.cpp

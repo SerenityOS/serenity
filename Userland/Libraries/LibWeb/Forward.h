@@ -497,6 +497,10 @@ enum class LayoutMode;
 struct LayoutState;
 }
 
+namespace Web::MathML {
+class MathMLElement;
+}
+
 namespace Web::MimeSniff {
 class MimeType;
 }
