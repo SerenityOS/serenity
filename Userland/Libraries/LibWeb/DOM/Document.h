@@ -493,6 +493,8 @@ public:
 
     void run_the_update_intersection_observations_steps(HighResolutionTime::DOMHighResTimeStamp time);
 
+    void start_intersection_observing_a_lazy_loading_element(Element& element);
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -670,6 +672,10 @@ private:
     // https://www.w3.org/TR/intersection-observer/#document-intersectionobservertaskqueued
     // Each document has an IntersectionObserverTaskQueued flag which is initialized to false.
     bool m_intersection_observer_task_queued { false };
+
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-intersection-observer
+    // Each Document has a lazy load intersection observer, initially set to null but can be set to an IntersectionObserver instance.
+    JS::GCPtr<IntersectionObserver::IntersectionObserver> m_lazy_load_intersection_observer;
 };
 
 template<>
