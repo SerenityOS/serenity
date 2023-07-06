@@ -619,10 +619,10 @@ ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto object = TRY(interpreter.accumulator().to_object(vm));
+    auto base_value = interpreter.accumulator();
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { object, identifier, {}, strict };
+    auto reference = Reference { base_value, identifier, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 };
@@ -1107,10 +1107,10 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
     // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
     auto property_key_value = interpreter.accumulator();
 
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto base_value = interpreter.reg(m_base);
     auto property_key = TRY(property_key_value.to_property_key(vm));
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { object, property_key, {}, strict };
+    auto reference = Reference { base_value, property_key, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
