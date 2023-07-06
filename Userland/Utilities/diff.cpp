@@ -57,6 +57,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto hunks = TRY(Diff::from_text(TRY(file1->read_until_eof()), TRY(file2->read_until_eof()), number_context_lines));
 
+    if (hunks.is_empty())
+        return 0;
+
     if (unified) {
         TRY(Diff::write_unified_header(filename1, filename2, *out));
         for (auto const& hunk : hunks)
@@ -70,5 +73,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             TRY(Diff::write_normal(hunk, *out, color_output));
     }
 
-    return hunks.is_empty() ? 0 : 1;
+    return 1;
 }
