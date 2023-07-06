@@ -451,6 +451,7 @@ set(SOURCES
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     MathML/MathMLElement.cpp
+    MathML/TagNames.cpp
     MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/EntryNames.cpp

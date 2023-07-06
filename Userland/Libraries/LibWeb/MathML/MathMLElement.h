@@ -22,6 +22,8 @@ public:
     HTML::DOMStringMap* dataset() { return m_dataset.ptr(); }
     HTML::DOMStringMap const* dataset() const { return m_dataset.ptr(); }
 
+    virtual Optional<ARIA::Role> default_role() const override;
+
 protected:
     virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 

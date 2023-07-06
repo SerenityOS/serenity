@@ -1430,6 +1430,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#special
 bool HTMLParser::is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
@@ -1522,7 +1523,12 @@ bool HTMLParser::is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedF
             SVG::TagNames::foreignObject,
             SVG::TagNames::title);
     } else if (namespace_ == Namespace::MathML) {
-        TODO();
+        return tag_name.is_one_of(
+            MathML::TagNames::mi,
+            MathML::TagNames::mo,
+            MathML::TagNames::mn,
+            MathML::TagNames::mtext,
+            MathML::TagNames::annotation_xml);
     }
 
     return false;

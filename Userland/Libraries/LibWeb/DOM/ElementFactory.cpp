@@ -81,6 +81,8 @@
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/MathML/MathMLElement.h>
+#include <LibWeb/MathML/TagNames.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/SVGCircleElement.h>
 #include <LibWeb/SVG/SVGClipPathElement.h>
@@ -477,6 +479,15 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
     return nullptr;
 }
 
+static WebIDL::ExceptionOr<JS::GCPtr<MathML::MathMLElement>> create_mathml_element(JS::Realm& realm, Document& document, QualifiedName qualified_name)
+{
+    auto const& local_name = TRY_OR_THROW_OOM(realm.vm(), FlyString::from_deprecated_fly_string(qualified_name.local_name()));
+
+    if (local_name.is_one_of(MathML::TagNames::annotation, MathML::TagNames::annotation_xml, MathML::TagNames::maction, MathML::TagNames::math, MathML::TagNames::merror, MathML::TagNames::mfrac, MathML::TagNames::mi, MathML::TagNames::mmultiscripts, MathML::TagNames::mn, MathML::TagNames::mo, MathML::TagNames::mover, MathML::TagNames::mpadded, MathML::TagNames::mphantom, MathML::TagNames::mprescripts, MathML::TagNames::mroot, MathML::TagNames::mrow, MathML::TagNames::ms, MathML::TagNames::mspace, MathML::TagNames::msqrt, MathML::TagNames::mstyle, MathML::TagNames::msub, MathML::TagNames::msubsup, MathML::TagNames::msup, MathML::TagNames::mtable, MathML::TagNames::mtd, MathML::TagNames::mtext, MathML::TagNames::mtr, MathML::TagNames::munder, MathML::TagNames::munderover, MathML::TagNames::semantics))
+        return MUST_OR_THROW_OOM(realm.heap().allocate<MathML::MathMLElement>(realm, document, move(qualified_name)));
+
+    return nullptr;
+}
 // https://dom.spec.whatwg.org/#concept-create-element
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document, DeprecatedFlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix, Optional<String> is_value, bool synchronous_custom_elements_flag)
 {
@@ -627,6 +638,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
 
     if (namespace_ == Namespace::SVG) {
         auto element = TRY(create_svg_element(realm, document, qualified_name));
+        if (element) {
+            element->set_is_value(move(is_value));
+            element->set_custom_element_state(CustomElementState::Uncustomized);
+            return JS::NonnullGCPtr<Element> { *element };
+        }
+    }
+
+    if (namespace_ == Namespace::MathML) {
+        auto element = TRY(create_mathml_element(realm, document, qualified_name));
         if (element) {
             element->set_is_value(move(is_value));
             element->set_custom_element_state(CustomElementState::Uncustomized);
