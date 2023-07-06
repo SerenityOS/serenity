@@ -851,7 +851,11 @@
   },
   "font-family": {
     "inherited": true,
-    "initial": "sans-serif"
+    "initial": "sans-serif",
+    "valid-types": [
+      "custom-ident",
+      "string"
+    ]
   },
   "font-size": {
     "inherited": true,
