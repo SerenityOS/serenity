@@ -52,10 +52,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u8 quality = 75;
     args_parser.add_option(quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
 
+    bool dump_metadata = false;
+    args_parser.add_option(dump_metadata, "Dump metadata of the given image", "dump-metadata", {});
+
     args_parser.parse(arguments);
 
-    if (out_path.is_empty() ^ no_output) {
-        warnln("exactly one of -o or --no-output is required");
+    if (out_path.is_empty() ^ no_output ^ dump_metadata) {
+        warnln("exactly one of -o, --no-output or --dump-metadata is required");
         return 1;
     }
 
@@ -64,6 +67,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!decoder) {
         warnln("Failed to decode input file '{}'", in_path);
         return 1;
+    }
+
+    if (dump_metadata) {
+        auto const metadata = TRY(decoder->exif_metadata());
+        outln("Manufacturer: {}", metadata.manufacturer);
+        outln("Model: {}", metadata.model);
+
+        outln("Exposure: {}", metadata.exposure);
+        outln("F-Number: {}", metadata.fnumber);
+
+        outln("Image width: {}", metadata.width);
+        outln("Image height: {}", metadata.height);
+
+        return 0;
     }
 
     auto frame = TRY(decoder->frame(frame_index)).image;
