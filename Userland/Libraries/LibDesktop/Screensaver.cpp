@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> Screensaver::create_window(StringView title,
     window->set_fullscreen(true);
     window->set_minimizable(false);
     window->set_resizable(false);
-    window->set_title(title);
+    window->set_title(TRY(String::from_utf8(title)));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon(icon));
     window->set_icon(app_icon.bitmap_for_size(16));

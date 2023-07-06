@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto mail_widget = TRY(window->set_main_widget<MailWidget>());
 
-    window->set_title("Mail");
+    window->set_title("Mail"_short_string);
     window->resize(640, 400);
 
     auto& file_menu = window->add_menu("&File"_short_string);

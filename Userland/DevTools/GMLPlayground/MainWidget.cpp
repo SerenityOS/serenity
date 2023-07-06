@@ -74,7 +74,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     main_widget->m_statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     main_widget->m_preview_window = TRY(GUI::Window::try_create(main_widget));
-    main_widget->m_preview_window->set_title("Preview - GML Playground");
+    main_widget->m_preview_window->set_title(TRY("Preview - GML Playground"_string));
     main_widget->m_preview_window->set_icon(icon.bitmap_for_size(16));
     main_widget->m_preview_window_widget = TRY(main_widget->m_preview_window->set_main_widget<GUI::Widget>());
     main_widget->m_preview_window_widget->set_fill_with_background_color(true);
@@ -114,7 +114,7 @@ MainWidget::MainWidget()
 
 void MainWidget::update_title()
 {
-    window()->set_title(DeprecatedString::formatted("{}[*] - GML Playground", m_file_path.is_empty() ? "Untitled"sv : m_file_path.view()));
+    window()->set_title(String::formatted("{}[*] - GML Playground", m_file_path.is_empty() ? "Untitled"sv : m_file_path.view()).release_value_but_fixme_should_propagate_errors());
 };
 
 void MainWidget::load_file(FileSystemAccessClient::File file)

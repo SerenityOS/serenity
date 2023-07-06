@@ -21,7 +21,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
         set_icon(parent_window->icon());
     set_resizable(false);
     resize(340, 122);
-    set_title(move(title));
+    set_title(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
 
     auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
     widget->load_from_gml(password_input_dialog_gml).release_value_but_fixme_should_propagate_errors();

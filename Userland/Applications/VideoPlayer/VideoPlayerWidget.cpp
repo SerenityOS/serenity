@@ -353,7 +353,7 @@ void VideoPlayerWidget::update_title()
     }
 
     string_builder.append("[*] - Video Player"sv);
-    window()->set_title(string_builder.to_deprecated_string());
+    window()->set_title(string_builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 Video::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()

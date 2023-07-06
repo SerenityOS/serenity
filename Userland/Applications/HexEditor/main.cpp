@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hex-editor"sv));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Hex Editor");
+    window->set_title(TRY("Hex Editor"_string));
     window->resize(640, 400);
 
     auto hex_editor_widget = TRY(window->set_main_widget<HexEditorWidget>());

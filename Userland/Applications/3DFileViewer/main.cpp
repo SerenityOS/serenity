@@ -329,7 +329,7 @@ bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File
     m_mesh = new_mesh.release_value();
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
 
-    window()->set_title(DeprecatedString::formatted("{} - 3D File Viewer", filename));
+    window()->set_title(String::formatted("{} - 3D File Viewer", filename).release_value_but_fixme_should_propagate_errors());
 
     return true;
 }
@@ -358,7 +358,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = GUI::Window::construct();
     auto app_icon = GUI::Icon::default_icon("app-3d-file-viewer"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("3D File Viewer");
+    window->set_title(TRY("3D File Viewer"_string));
     window->resize(640 + 4, 480 + 4);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);

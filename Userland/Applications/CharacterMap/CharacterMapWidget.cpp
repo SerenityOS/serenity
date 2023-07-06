@@ -92,7 +92,7 @@ CharacterMapWidget::CharacterMapWidget()
                 m_glyph_map->scroll_to_glyph(code_point);
             };
             m_find_window->set_icon(GUI::Icon::try_create_default_icon("find"sv).value().bitmap_for_size(16));
-            m_find_window->set_title("Find a Character");
+            m_find_window->set_title("Find a Character"_string.release_value_but_fixme_should_propagate_errors());
             m_find_window->resize(300, 400);
             m_find_window->set_window_mode(GUI::WindowMode::Modeless);
         }

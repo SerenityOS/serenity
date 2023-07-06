@@ -373,7 +373,7 @@ void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
 
 PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
-    window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", path));
+    window()->set_title(TRY(String::formatted("{} - PDF Viewer", path)));
 
     m_buffer = TRY(file->read_until_eof());
     auto document = TRY(PDF::Document::create(m_buffer));

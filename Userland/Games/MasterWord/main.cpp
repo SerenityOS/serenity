@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_double_buffering_enabled(false);
-    window->set_title("MasterWord");
+    window->set_title(TRY("MasterWord"_string));
     window->set_resizable(false);
     window->set_auto_shrink(true);
 

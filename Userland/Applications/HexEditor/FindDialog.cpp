@@ -97,7 +97,7 @@ FindDialog::FindDialog()
     resize(280, 146);
     center_on_screen();
     set_resizable(false);
-    set_title("Find");
+    set_title("Find"_short_string);
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->load_from_gml(find_dialog_gml).release_value_but_fixme_should_propagate_errors();

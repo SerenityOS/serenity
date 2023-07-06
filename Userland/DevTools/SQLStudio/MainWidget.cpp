@@ -407,9 +407,9 @@ ScriptEditor* MainWidget::active_editor()
 void MainWidget::update_title()
 {
     if (auto* editor = active_editor())
-        window()->set_title(DeprecatedString::formatted("{} - SQL Studio", editor->name()));
+        window()->set_title(String::formatted("{} - SQL Studio", editor->name()).release_value_but_fixme_should_propagate_errors());
     else
-        window()->set_title("SQL Studio");
+        window()->set_title("SQL Studio"_string.release_value_but_fixme_should_propagate_errors());
 }
 
 void MainWidget::on_editor_change()

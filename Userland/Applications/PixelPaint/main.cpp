@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     PixelPaint::g_icon_bag = TRY(PixelPaint::IconBag::create());
 
     auto window = GUI::Window::construct();
-    window->set_title("Pixel Paint");
+    window->set_title(TRY("Pixel Paint"_string));
     window->resize(800, 520);
     window->set_icon(app_icon.bitmap_for_size(16));
 

@@ -182,7 +182,7 @@ void CSVExportDialogPage::update_preview()
 ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, DeprecatedString filename, Workbook& workbook)
 {
     auto wizard = TRY(GUI::WizardDialog::create(GUI::Application::the()->active_window()));
-    wizard->set_title("File Export Wizard");
+    wizard->set_title(TRY("File Export Wizard"_string));
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
     auto export_xsv = [&]() -> ErrorOr<void> {

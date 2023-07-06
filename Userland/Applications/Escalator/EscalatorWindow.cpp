@@ -30,7 +30,7 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 {
     auto app_icon = GUI::FileIconProvider::icon_for_executable(m_executable);
 
-    set_title("Run as Root");
+    set_title("Run as Root"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(app_icon.bitmap_for_size(16));
     resize(345, 100);
     set_resizable(false);

@@ -180,7 +180,7 @@ void CSVImportDialogPage::update_preview()
 ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::create(&parent).release_value_but_fixme_should_propagate_errors();
-    wizard->set_title("File Import Wizard");
+    wizard->set_title("File Import Wizard"_string.release_value_but_fixme_should_propagate_errors());
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
     auto import_xsv = [&]() -> ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> {

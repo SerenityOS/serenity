@@ -150,7 +150,7 @@ void PresenterWidget::set_file(StringView file_name)
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("The presentation \"{}\" could not be loaded.\n{}", file_name, presentation.error()));
     } else {
         m_current_presentation = presentation.release_value();
-        window()->set_title(DeprecatedString::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()));
+        window()->set_title(String::formatted(title_template, m_current_presentation->title(), m_current_presentation->author()).release_value_but_fixme_should_propagate_errors());
         set_min_size(m_current_presentation->normative_size());
         m_web_view->load_html(MUST(m_current_presentation->render()), "presenter://slide.html"sv);
         update_slides_actions();

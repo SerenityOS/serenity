@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(430, 480);
-    window->set_title("Widget Gallery");
+    window->set_title(TRY("Widget Gallery"_string));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->set_main_widget<GalleryWidget>());
     window->show();

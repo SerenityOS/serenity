@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper"sv);
 
     auto window = GUI::Window::construct();
-    window->set_title("Keyboard Mapper");
+    window->set_title(TRY("Keyboard Mapper"_string));
     window->set_icon(app_icon.bitmap_for_size(16));
     auto keyboard_mapper_widget = TRY(window->set_main_widget<KeyboardMapperWidget>());
     window->resize(775, 315);

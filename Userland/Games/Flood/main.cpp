@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
 
     window->set_double_buffering_enabled(false);
-    window->set_title("Flood");
+    window->set_title("Flood"_short_string);
     window->resize(304, 325);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());

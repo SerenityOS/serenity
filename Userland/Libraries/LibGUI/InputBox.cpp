@@ -38,7 +38,7 @@ InputBox::InputBox(Window* parent_window, String text_value, String title, Strin
     , m_input_type(input_type)
     , m_icon(move(icon))
 {
-    set_title(move(title).to_deprecated_string());
+    set_title(move(title));
     set_resizable(false);
     set_auto_shrink(true);
 }
@@ -50,7 +50,7 @@ InputBox::InputBox(Window* parent_window, int value, String title, String prompt
     , m_input_type(InputType::Numeric)
     , m_icon(move(icon))
 {
-    set_title(move(title).to_deprecated_string());
+    set_title(move(title));
     set_resizable(false);
     set_auto_shrink(true);
 }

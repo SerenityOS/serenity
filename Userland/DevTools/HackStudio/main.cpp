@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
-    window->set_title(DeprecatedString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
+    window->set_title(TRY(String::formatted("{} - Hack Studio", hack_studio_widget->project().name())));
 
     TRY(hack_studio_widget->initialize_menubar(*window));
 

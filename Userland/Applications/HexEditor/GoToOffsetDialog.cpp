@@ -94,7 +94,7 @@ GoToOffsetDialog::GoToOffsetDialog()
     resize(300, 80);
     center_on_screen();
     set_resizable(false);
-    set_title("Go to Offset");
+    set_title("Go to Offset"_string.release_value_but_fixme_should_propagate_errors());
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->load_from_gml(go_to_offset_dialog_gml).release_value_but_fixme_should_propagate_errors();

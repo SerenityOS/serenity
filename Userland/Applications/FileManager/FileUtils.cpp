@@ -86,13 +86,13 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
 
     switch (operation) {
     case FileOperation::Copy:
-        window->set_title("Copying Files...");
+        window->set_title(TRY("Copying Files..."_string));
         break;
     case FileOperation::Move:
-        window->set_title("Moving Files...");
+        window->set_title(TRY("Moving Files..."_string));
         break;
     case FileOperation::Delete:
-        window->set_title("Deleting Files...");
+        window->set_title(TRY("Deleting Files..."_string));
         break;
     default:
         VERIFY_NOT_REACHED();

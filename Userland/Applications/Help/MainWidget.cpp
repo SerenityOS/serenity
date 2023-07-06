@@ -261,9 +261,9 @@ void MainWidget::open_url(URL const& url)
                 return;
             auto title = String::formatted("{} - Help", page_and_section.value());
             if (!title.is_error())
-                window()->set_title(title.release_value().to_deprecated_string());
+                window()->set_title(title.release_value());
         } else {
-            window()->set_title("Help");
+            window()->set_title("Help"_short_string);
         }
     }
 }
@@ -280,7 +280,7 @@ void MainWidget::open_page(Optional<String> const& path)
     m_go_forward_action->set_enabled(m_history.can_go_forward());
 
     if (!path.has_value()) {
-        window()->set_title("Help");
+        window()->set_title("Help"_short_string);
         m_web_view->load_empty_document();
         return;
     }

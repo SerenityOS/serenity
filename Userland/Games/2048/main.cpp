@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
     window->set_double_buffering_enabled(false);
-    window->set_title("2048");
+    window->set_title("2048"_short_string);
     window->resize(315, 336);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());

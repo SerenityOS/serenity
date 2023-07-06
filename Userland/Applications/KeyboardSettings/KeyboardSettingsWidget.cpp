@@ -37,7 +37,7 @@ public:
     static DeprecatedString select_keymap(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
     {
         auto dialog = KeymapSelectionDialog::construct(parent_window, selected_keymaps);
-        dialog->set_title("Add a keymap");
+        dialog->set_title("Add a keymap"_string.release_value_but_fixme_should_propagate_errors());
 
         if (dialog->exec() == ExecResult::OK) {
             return dialog->selected_keymap();

@@ -78,7 +78,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 {
     auto window = TRY(GUI::Window::try_create(this));
     window->set_window_mode(GUI::WindowMode::RenderAbove);
-    window->set_title("Preview");
+    window->set_title("Preview"_short_string);
     window->resize(400, 150);
     window->center_within(*this->window());
 
@@ -917,7 +917,7 @@ void MainWidget::update_title()
     else
         title.append(m_path);
     title.append("[*] - Font Editor"sv);
-    window()->set_title(title.to_deprecated_string());
+    window()->set_title(title.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void MainWidget::did_modify_font()
@@ -1163,7 +1163,7 @@ void MainWidget::reset()
     m_statusbar->set_text(1, {});
 
     window()->set_modified(false);
-    window()->set_title("Font Editor");
+    window()->set_title("Font Editor"_string.release_value_but_fixme_should_propagate_errors());
     set_actions_enabled(false);
     set_widgets_enabled(false);
     set_focus(true);

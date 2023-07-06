@@ -26,8 +26,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
 
-static constexpr auto APP_NAME = "Space Analyzer"sv;
-
 static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& tree_map_widget, bool include_last_node = true)
 {
     StringBuilder path_builder;
@@ -45,10 +43,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::create(arguments));
 
+    auto app_name = TRY("Space Analyzer"_string);
+
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(APP_NAME);
+    window->set_title(app_name);
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(app_name.to_deprecated_string(), app_icon, window)));
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the node's context menu.
@@ -151,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (size_t k = 0; k < tree_map_widget.path_size(); k++) {
             if (k == 0) {
                 if (tree_map_widget.viewpoint() == 0)
-                    window->set_title("/ - SpaceAnalyzer");
+                    window->set_title("/ - SpaceAnalyzer"_string.release_value_but_fixme_should_propagate_errors());
 
                 breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/");
                 continue;
@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             // Sneakily set the window title here, while the StringBuilder holds the right amount of the path.
             if (k == tree_map_widget.viewpoint())
-                window->set_title(DeprecatedString::formatted("{} - SpaceAnalyzer", builder.string_view()));
+                window->set_title(String::formatted("{} - SpaceAnalyzer", builder.string_view()).release_value_but_fixme_should_propagate_errors());
 
             breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
         }

@@ -41,7 +41,7 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     else
         builder.appendff("Format {} cells", positions.size());
 
-    set_title(builder.string_view());
+    set_title(builder.to_string().release_value_but_fixme_should_propagate_errors());
     set_icon(parent->icon());
     resize(285, 360);
 

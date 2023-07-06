@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto window = GUI::Window::construct();
         auto container = TRY(window->set_main_widget<SelectableLayover>(window));
 
-        window->set_title("shot");
+        window->set_title("shot"_short_string);
         window->set_has_alpha_channel(true);
         window->set_fullscreen(true);
         window->show();

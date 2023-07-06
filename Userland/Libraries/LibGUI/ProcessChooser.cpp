@@ -21,7 +21,7 @@ ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx
     , m_button_label(move(button_label))
     , m_window_icon(window_icon)
 {
-    set_title(m_window_title);
+    set_title(String::from_deprecated_string(m_window_title).release_value_but_fixme_should_propagate_errors());
 
     if (m_window_icon)
         set_icon(m_window_icon);

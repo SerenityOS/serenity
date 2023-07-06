@@ -80,16 +80,9 @@ Window::Window(Core::Object* parent)
 
     all_windows->set(this);
     m_rect_when_windowless = { -5000, -5000, 0, 0 };
-    m_title_when_windowless = "GUI::Window";
+    m_title_when_windowless = "GUI::Window"_string.release_value_but_fixme_should_propagate_errors();
 
-    register_property(
-        "title",
-        [this] { return title(); },
-        [this](auto& value) {
-            set_title(value.to_deprecated_string());
-            return true;
-        });
-
+    REGISTER_STRING_PROPERTY("title", title, set_title);
     register_property("visible", [this] { return is_visible(); });
     register_property("active", [this] { return is_active(); });
 
@@ -166,7 +159,7 @@ void Window::show()
         m_resize_aspect_ratio,
         (i32)m_window_type,
         (i32)m_window_mode,
-        m_title_when_windowless,
+        m_title_when_windowless.to_deprecated_string(),
         parent_window ? parent_window->window_id() : 0,
         launch_origin_rect);
     m_visible = true;
@@ -240,19 +233,19 @@ void Window::hide()
     }
 }
 
-void Window::set_title(DeprecatedString title)
+void Window::set_title(String title)
 {
     m_title_when_windowless = move(title);
     if (!is_visible())
         return;
-    ConnectionToWindowServer::the().async_set_window_title(m_window_id, m_title_when_windowless);
+    ConnectionToWindowServer::the().async_set_window_title(m_window_id, m_title_when_windowless.to_deprecated_string());
 }
 
-DeprecatedString Window::title() const
+String Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;
-    return ConnectionToWindowServer::the().get_window_title(m_window_id);
+    return String::from_deprecated_string(ConnectionToWindowServer::the().get_window_title(m_window_id)).release_value_but_fixme_should_propagate_errors();
 }
 
 Gfx::IntRect Window::applet_rect_on_screen() const

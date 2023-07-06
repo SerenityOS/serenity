@@ -112,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("LibGfx Scale Demo");
+    window->set_title(TRY("LibGfx Scale Demo"_string));
     window->set_resizable(false);
     window->resize(WIDTH * 2, HEIGHT * 3);
 

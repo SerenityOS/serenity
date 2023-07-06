@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_double_buffering_enabled(true);
     window->resize(300, 200);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("Image Viewer");
+    window->set_title(TRY("Image Viewer"_string));
 
     auto root_widget = TRY(window->set_main_widget<MainWidget>());
 
@@ -78,11 +78,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto widget = TRY(root_widget->try_add<ViewWidget>());
     widget->on_scale_change = [&](float scale) {
         if (!widget->bitmap()) {
-            window->set_title("Image Viewer");
+            window->set_title("Image Viewer"_string.release_value());
             return;
         }
 
-        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_deprecated_string(), (int)(scale * 100)));
+        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_deprecated_string(), (int)(scale * 100)).release_value_but_fixme_should_propagate_errors());
 
         if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
@@ -290,7 +290,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         reset_zoom_action->set_enabled(should_enable_image_actions);
         zoom_out_action->set_enabled(should_enable_image_actions);
         if (!should_enable_image_actions) {
-            window->set_title("Image Viewer");
+            window->set_title("Image Viewer"_string.release_value_but_fixme_should_propagate_errors());
         }
     };
 

@@ -44,7 +44,7 @@ ErrorOr<Optional<String>> FilePicker::get_filepath(Badge<FileSystemAccessServer:
     picker->center_within(parent_rect);
     picker->constrain_to_desktop();
     if (!window_title.is_empty())
-        picker->set_title(window_title);
+        picker->set_title(TRY(String::from_utf8(window_title)));
     picker->show();
     ConnectionToWindowServer::the().set_window_parent_from_client(window_server_client_id, parent_window_id, picker->window_id());
 
@@ -62,7 +62,7 @@ Optional<DeprecatedString> FilePicker::get_open_filepath(Window* parent_window, 
     auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, ""sv, path, screen_position, move(allowed_file_types));
 
     if (!window_title.is_null())
-        picker->set_title(window_title);
+        picker->set_title(String::from_deprecated_string(window_title).release_value_but_fixme_should_propagate_errors());
 
     if (picker->exec() == ExecResult::OK) {
         DeprecatedString file_path = picker->selected_file();
@@ -100,11 +100,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     case Mode::Open:
     case Mode::OpenMultiple:
     case Mode::OpenFolder:
-        set_title("Open");
+        set_title("Open"_short_string);
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     case Mode::Save:
-        set_title("Save As");
+        set_title("Save As"_short_string);
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors());
         break;
     }

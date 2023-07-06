@@ -35,7 +35,7 @@ RunWindow::RunWindow()
 
     auto app_icon = GUI::Icon::default_icon("app-run"sv);
 
-    set_title("Run");
+    set_title("Run"_short_string);
     set_icon(app_icon.bitmap_for_size(16));
     resize(345, 100);
     set_resizable(false);

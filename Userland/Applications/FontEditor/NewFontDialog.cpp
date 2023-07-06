@@ -212,7 +212,7 @@ ErrorOr<void> NewFontDialog::build()
 NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     : GUI::WizardDialog(parent_window)
 {
-    set_title("New Font");
+    set_title("New Font"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(parent_window->icon());
 }
 

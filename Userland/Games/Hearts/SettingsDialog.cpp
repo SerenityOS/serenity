@@ -15,7 +15,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     , m_player_name(move(player_name))
 {
     set_rect({ 0, 0, 250, 75 });
-    set_title("Settings");
+    set_title("Settings"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(parent->icon());
     set_resizable(false);
 

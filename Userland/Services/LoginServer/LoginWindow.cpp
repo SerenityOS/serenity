@@ -12,7 +12,7 @@
 LoginWindow::LoginWindow(GUI::Window* parent)
     : GUI::Window(parent)
 {
-    set_title("Log in to SerenityOS");
+    set_title("Log in to SerenityOS"_string.release_value_but_fixme_should_propagate_errors());
     resize(413, 170);
     center_on_screen();
     set_resizable(false);

@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-sound-player"sv);
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Sound Player");
+    window->set_title(TRY("Sound Player"_string));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // start in advanced view by default

@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-partition-editor"sv));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Partition Editor");
+    window->set_title(TRY("Partition Editor"_string));
     window->resize(640, 400);
     window->set_icon(app_icon.bitmap_for_size(16));
 

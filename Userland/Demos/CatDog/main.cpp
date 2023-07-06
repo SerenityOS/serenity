@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("CatDog Demo");
+    window->set_title(TRY("CatDog Demo"_string));
     window->resize(32, 32);
     window->set_frameless(true);
     window->set_resizable(false);
@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     catdog_widget->start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
 
     auto advice_window = TRY(GUI::Window::try_create());
-    advice_window->set_title("CatDog Advice");
+    advice_window->set_title(TRY("CatDog Advice"_string));
     advice_window->resize(225, 50);
     advice_window->set_frameless(true);
     advice_window->set_resizable(false);

@@ -15,7 +15,7 @@ namespace PixelPaint {
 LevelsDialog::LevelsDialog(GUI::Window* parent_window, ImageEditor* editor)
     : GUI::Dialog(parent_window)
 {
-    set_title("Levels");
+    set_title("Levels"_short_string);
     set_icon(parent_window->icon());
 
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();

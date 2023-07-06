@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(DesktopStatusWindow::try_create());
-    window->set_title("WorkspacePicker");
+    window->set_title(TRY("WorkspacePicker"_string));
     window->resize(28, 15);
 
     auto& desktop = GUI::Desktop::the();

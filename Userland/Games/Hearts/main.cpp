@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Hearts");
+    window->set_title("Hearts"_short_string);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(widget->load_from_gml(hearts_gml));

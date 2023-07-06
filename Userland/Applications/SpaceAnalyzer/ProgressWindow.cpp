@@ -31,7 +31,7 @@ ErrorOr<NonnullRefPtr<ProgressWindow>> ProgressWindow::try_create(StringView tit
 ProgressWindow::ProgressWindow(StringView title, GUI::Window* parent)
     : GUI::Window(parent)
 {
-    set_title(title);
+    set_title(String::from_utf8(title).release_value_but_fixme_should_propagate_errors());
     set_resizable(false);
     set_closeable(false);
     resize(240, 50);

@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/Profiler.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    window->set_title("Profiler");
+    window->set_title(TRY("Profiler"_string));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
@@ -308,7 +308,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_name)
 {
     auto window = GUI::Window::construct();
-    window->set_title(DeprecatedString::formatted("Profiling {}({})", process_name, pid));
+    window->set_title(String::formatted("Profiling {}({})", process_name, pid).release_value_but_fixme_should_propagate_errors());
     window->resize(240, 100);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
     window->center_on_screen();

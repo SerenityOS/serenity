@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Spider");
+    window->set_title("Spider"_short_string);
 
     auto mode = static_cast<Spider::Mode>(Config::read_u32("Spider"sv, "Settings"sv, "Mode"sv, to_underlying(Spider::Mode::SingleSuit)));
 

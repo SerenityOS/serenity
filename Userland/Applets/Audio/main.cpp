@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_has_alpha_channel(true);
-    window->set_title("Audio");
+    window->set_title("Audio"_short_string);
     window->set_window_type(GUI::WindowType::Applet);
 
     auto audio_widget = TRY(window->set_main_widget<AudioWidget>());

@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("SQL Studio");
+    window->set_title(TRY("SQL Studio"_string));
 
     auto main_widget = TRY(MainWidget::create());
     window->set_main_widget(main_widget);

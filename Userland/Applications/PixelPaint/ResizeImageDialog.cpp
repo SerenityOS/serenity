@@ -23,7 +23,7 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* p
     m_desired_size.set_height(max(1, suggested_size.height()));
     m_starting_aspect_ratio = m_desired_size.width() / static_cast<float>(m_desired_size.height());
 
-    set_title("Resize Image");
+    set_title("Resize Image"_string.release_value_but_fixme_should_propagate_errors());
     resize(260, 228);
     set_icon(parent_window->icon());
 

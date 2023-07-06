@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
 TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
-    set_title("Taskbar");
+    set_title("Taskbar"_short_string);
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }

@@ -271,7 +271,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto graph_color = Gfx::Color::from_string(parts[1]);
 
         auto window = GUI::Window::construct();
-        window->set_title(name);
+        window->set_title(String::from_utf8(name).release_value_but_fixme_should_propagate_errors());
         window->set_window_type(GUI::WindowType::Applet);
         window->resize(GraphWidget::history_size + 2, 15);
 

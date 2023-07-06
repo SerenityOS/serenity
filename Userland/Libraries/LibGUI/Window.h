@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
@@ -89,8 +89,8 @@ public:
 
     void make_window_manager(unsigned event_mask);
 
-    DeprecatedString title() const;
-    void set_title(DeprecatedString);
+    String title() const;
+    void set_title(String);
 
     enum class CloseRequestDecision {
         StayOpen,
@@ -297,7 +297,7 @@ private:
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
     Gfx::IntSize m_minimum_size_when_windowless { 0, 0 };
-    DeprecatedString m_title_when_windowless;
+    String m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;

@@ -145,7 +145,7 @@ void DownloadWidget::did_progress(Optional<u64> total_size, u64 downloaded_size)
         }
         builder.append(" of "sv);
         builder.append(m_url.basename());
-        window()->set_title(builder.to_deprecated_string());
+        window()->set_title(builder.to_string().release_value_but_fixme_should_propagate_errors());
     }
 }
 
@@ -154,7 +154,7 @@ void DownloadWidget::did_finish(bool success)
     dbgln("did_finish, success={}", success);
 
     m_browser_image->load_from_file("/res/graphics/download-finished.gif"sv);
-    window()->set_title("Download finished!");
+    window()->set_title("Download finished!"_string.release_value_but_fixme_should_propagate_errors());
     m_close_button->set_enabled(true);
     m_cancel_button->set_text("Open in Folder"_string.release_value_but_fixme_should_propagate_errors());
     m_cancel_button->on_click = [this](auto) {

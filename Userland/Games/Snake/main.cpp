@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
 
     window->set_double_buffering_enabled(false);
-    window->set_title("Snake");
+    window->set_title("Snake"_short_string);
     window->resize(324, 345);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());

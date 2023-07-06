@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-flappybug"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("Flappy Bug");
+    window->set_title(TRY("Flappy Bug"_string));
     window->set_double_buffering_enabled(false);
     window->set_resizable(false);
     auto widget = TRY(window->set_main_widget<FlappyBug::Game>(TRY(FlappyBug::Game::Bug::construct()), TRY(FlappyBug::Game::Cloud::construct())));

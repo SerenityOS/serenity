@@ -193,7 +193,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(true);
-    window->set_title("LibGfx Demo");
+    window->set_title(TRY("LibGfx Demo"_string));
     window->set_resizable(false);
     window->resize(WIDTH, HEIGHT);
 

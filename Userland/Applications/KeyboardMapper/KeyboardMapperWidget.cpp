@@ -259,7 +259,7 @@ void KeyboardMapperWidget::update_window_title()
     sb.append(m_filename);
     sb.append("[*] - Keyboard Mapper"sv);
 
-    window()->set_title(sb.to_deprecated_string());
+    window()->set_title(sb.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void KeyboardMapperWidget::show_error_to_user(Error error)

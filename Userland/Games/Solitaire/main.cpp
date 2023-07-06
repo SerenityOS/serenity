@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Solitaire");
+    window->set_title(TRY("Solitaire"_string));
 
     auto mode = static_cast<Solitaire::Mode>(Config::read_u32("Solitaire"sv, "Settings"sv, "Mode"sv, to_underlying(Solitaire::Mode::SingleCardDraw)));
 

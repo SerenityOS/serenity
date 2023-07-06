@@ -380,7 +380,7 @@ ErrorOr<int> run_in_desktop_mode()
     (void)Core::Process::set_name("FileManager (Desktop)"sv, Core::Process::SetThreadName::Yes);
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Desktop Manager");
+    window->set_title(TRY("Desktop Manager"_string));
     window->set_window_type(GUI::WindowType::Desktop);
     window->set_has_alpha_channel(true);
 
@@ -607,7 +607,7 @@ ErrorOr<int> run_in_desktop_mode()
 ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, DeprecatedString const& entry_focused_on_init)
 {
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("File Manager");
+    window->set_title(TRY("File Manager"_string));
 
     auto left = Config::read_i32("FileManager"sv, "Window"sv, "Left"sv, 150);
     auto top = Config::read_i32("FileManager"sv, "Window"sv, "Top"sv, 75);
@@ -1103,7 +1103,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
 
-        window->set_title(DeprecatedString::formatted("{} - File Manager", new_path));
+        window->set_title(String::formatted("{} - File Manager", new_path).release_value_but_fixme_should_propagate_errors());
 
         breadcrumbbar.set_current_path(new_path);
 

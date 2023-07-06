@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(KeymapStatusWindow::try_create());
     window->set_has_alpha_channel(true);
-    window->set_title("Keymap");
+    window->set_title("Keymap"_short_string);
     window->resize(16, 16);
     window->show();
     window->make_window_manager(WindowServer::WMEventMask::KeymapChanged);

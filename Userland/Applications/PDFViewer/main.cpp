@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     app->set_config_domain(TRY("PDFViewer"_string));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("PDF Viewer");
+    window->set_title(TRY("PDF Viewer"_string));
     window->resize(640, 400);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));

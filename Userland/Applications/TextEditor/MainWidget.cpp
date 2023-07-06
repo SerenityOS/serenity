@@ -791,7 +791,7 @@ void MainWidget::update_title()
     else
         builder.append(m_path);
     builder.append("[*] - Text Editor"sv);
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)

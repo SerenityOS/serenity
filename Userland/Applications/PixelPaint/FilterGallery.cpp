@@ -16,7 +16,7 @@ namespace PixelPaint {
 FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     : GUI::Dialog(parent_window)
 {
-    set_title("Filter Gallery");
+    set_title("Filter Gallery"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(parent_window->icon());
     resize(400, 250);
     set_resizable(true);

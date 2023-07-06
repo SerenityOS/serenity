@@ -24,7 +24,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     , m_date_time(date_time)
 {
     resize(158, 130);
-    set_title("Add Event");
+    set_title("Add Event"_string.release_value_but_fixme_should_propagate_errors());
     set_resizable(false);
     set_icon(parent_window->icon());
 

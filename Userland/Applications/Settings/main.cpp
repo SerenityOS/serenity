@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-settings"sv);
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Settings");
+    window->set_title(TRY("Settings"_string));
     window->resize(420, 265);
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));

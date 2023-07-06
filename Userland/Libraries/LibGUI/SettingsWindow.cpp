@@ -27,7 +27,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
 {
     auto window = TRY(SettingsWindow::try_create());
 
-    window->set_title(move(title));
+    window->set_title(TRY(String::from_deprecated_string(title)));
     window->resize(400, 480);
     window->set_resizable(false);
     window->set_minimizable(false);

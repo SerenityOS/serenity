@@ -15,7 +15,7 @@
 DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     : GUI::WizardDialog(parent_window)
 {
-    set_title("Demo Wizard");
+    set_title("Demo Wizard"_string.release_value_but_fixme_should_propagate_errors());
     build().release_value_but_fixme_should_propagate_errors();
 
     // Create the front cover

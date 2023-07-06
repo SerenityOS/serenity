@@ -45,7 +45,7 @@ private:
         StringBuilder builder;
         builder.appendff("{}x{}", N, N);
         builder.append(" Convolution"sv);
-        set_title(builder.string_view());
+        set_title(builder.to_string().release_value_but_fixme_should_propagate_errors());
 
         resize(200, 250);
         auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();

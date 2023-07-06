@@ -16,7 +16,7 @@ namespace PixelPaint {
 CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize suggested_size, GUI::Window* parent_window)
     : Dialog(parent_window)
 {
-    set_title("Create new layer");
+    set_title("Create new layer"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(parent_window->icon());
     resize(200, 200);
 

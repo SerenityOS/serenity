@@ -259,7 +259,7 @@ void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
             title = metadata.title.value().to_deprecated_string();
         }
     }
-    m_window.set_title(DeprecatedString::formatted("{} — Sound Player", title));
+    m_window.set_title(String::formatted("{} — Sound Player", title).release_value_but_fixme_should_propagate_errors());
 }
 
 void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)

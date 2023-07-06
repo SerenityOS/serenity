@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-screensaver"sv);
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Screensaver");
+    window->set_title(TRY("Screensaver"_string));
     window->resize(360, 240);
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));

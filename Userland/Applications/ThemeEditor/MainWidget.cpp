@@ -316,7 +316,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
 void MainWidget::update_title()
 {
-    window()->set_title(DeprecatedString::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")));
+    window()->set_title(String::formatted("{}[*] - Theme Editor", m_path.value_or("Untitled")).release_value_but_fixme_should_propagate_errors());
 }
 
 GUI::Window::CloseRequestDecision MainWidget::request_close()

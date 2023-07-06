@@ -407,7 +407,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_double_buffering_enabled(false);
-    window->set_title("Mandelbrot");
+    window->set_title(TRY("Mandelbrot"_string));
     window->set_obey_widget_min_size(false);
     window->set_minimum_size(320, 240);
     window->resize(window->minimum_size() * 2);

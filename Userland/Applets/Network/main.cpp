@@ -183,7 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         name = "Network"sv;
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title(name);
+    window->set_title(TRY(String::from_utf8(name)));
     window->set_window_type(GUI::WindowType::Applet);
     window->set_has_alpha_channel(true);
     window->resize(16, 16);

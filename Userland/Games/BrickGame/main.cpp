@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     auto const app_name = "BrickGame"sv;
-    auto const title = "Brick Game"sv;
+    auto const title = TRY("Brick Game"_string);
     auto const man_file = "/usr/share/man/man6/BrickGame.md"sv;
 
     Config::pledge_domain(app_name);
@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
     })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(title, app_icon, window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(title.to_deprecated_string(), app_icon, window)));
 
     window->show();
 

@@ -36,9 +36,9 @@ public:
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
         if (perform_edit_on == BookmarksBarWidget::PerformEditOn::NewBookmark) {
-            editor->set_title("Add Bookmark");
+            editor->set_title("Add Bookmark"_string.release_value_but_fixme_should_propagate_errors());
         } else {
-            editor->set_title("Edit Bookmark");
+            editor->set_title("Edit Bookmark"_string.release_value_but_fixme_should_propagate_errors());
         }
         editor->set_icon(g_icon_bag.bookmark_filled);
 

@@ -618,7 +618,7 @@ void SpreadsheetWidget::update_window_title()
         builder.append(current_filename());
     builder.append("[*] - Spreadsheet"sv);
 
-    window()->set_title(builder.to_deprecated_string());
+    window()->set_title(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void SpreadsheetWidget::clipboard_action(bool is_cut)

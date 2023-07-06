@@ -14,7 +14,7 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
 {
     resize(400, 260);
     center_within(*parent);
-    set_title("Commit");
+    set_title("Commit"_short_string);
     set_icon(parent->icon());
 
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();

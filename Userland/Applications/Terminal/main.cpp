@@ -168,7 +168,7 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
 {
     auto window = TRY(GUI::Window::try_create(&terminal));
     window->set_window_mode(GUI::WindowMode::RenderAbove);
-    window->set_title("Find in Terminal");
+    window->set_title(TRY("Find in Terminal"_string));
     window->set_resizable(false);
     window->resize(300, 90);
 
@@ -286,7 +286,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-terminal"sv);
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Terminal");
+    window->set_title(TRY("Terminal"_string));
     window->set_obey_widget_min_size(false);
 
     auto terminal = TRY(window->set_main_widget<VT::TerminalWidget>(ptm_fd, true));
@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit(0);
     };
     terminal->on_title_change = [&](auto title) {
-        window->set_title(title);
+        window->set_title(String::from_utf8(title).release_value_but_fixme_should_propagate_errors());
     };
     terminal->on_terminal_size_change = [&](auto size) {
         window->resize(size);

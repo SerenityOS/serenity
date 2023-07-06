@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_resizable(false);
-    window->set_title("Minesweeper");
+    window->set_title(TRY("Minesweeper"_string));
     window->set_auto_shrink(true);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());

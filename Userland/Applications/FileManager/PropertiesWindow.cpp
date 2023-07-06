@@ -188,7 +188,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 void PropertiesWindow::update()
 {
     m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
-    set_title(DeprecatedString::formatted("{} - Properties", m_name));
+    set_title(String::formatted("{} - Properties", m_name).release_value_but_fixme_should_propagate_errors());
 }
 
 void PropertiesWindow::permission_changed(mode_t mask, bool set)

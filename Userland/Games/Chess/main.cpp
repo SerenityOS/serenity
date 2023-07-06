@@ -75,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    window->set_title("Chess");
+    window->set_title("Chess"_short_string);
     window->set_base_size({ 4, 4 });
     window->set_size_increment({ 8, 8 });
     window->resize(508, 508);

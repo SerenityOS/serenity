@@ -64,7 +64,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     : GUI::Window(parent)
 {
     resize(530, 365);
-    set_title("Spreadsheet Functions Help");
+    set_title("Spreadsheet Functions Help"_string.release_value_but_fixme_should_propagate_errors());
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
@@ -110,7 +110,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto window = GUI::Window::construct(this);
             window->resize(size());
             window->set_icon(icon());
-            window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            window->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry).release_value_but_fixme_should_propagate_errors());
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
             auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false).release_value_but_fixme_should_propagate_errors();

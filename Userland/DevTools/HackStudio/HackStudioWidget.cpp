@@ -1707,7 +1707,7 @@ void HackStudioWidget::update_toolbar_actions()
 
 void HackStudioWidget::update_window_title()
 {
-    window()->set_title(DeprecatedString::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+    window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()).release_value_but_fixme_should_propagate_errors());
     window()->set_modified(any_document_is_dirty());
 }
 
