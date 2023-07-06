@@ -27,10 +27,13 @@ public:
     };
 
     class CanonicalCode {
-        friend class BrotliDecompressionStream;
-
     public:
         CanonicalCode() = default;
+
+        static ErrorOr<CanonicalCode> read_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
+        static ErrorOr<CanonicalCode> read_simple_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size);
+        static ErrorOr<CanonicalCode> read_complex_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size, size_t hskip);
+
         ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&) const;
         void clear()
         {
@@ -39,6 +42,8 @@ public:
         }
 
     private:
+        static ErrorOr<size_t> read_complex_prefix_code_length(LittleEndianInputBitStream&);
+
         Vector<size_t> m_symbol_codes;
         Vector<size_t> m_symbol_values;
     };
@@ -114,11 +119,7 @@ private:
     ErrorOr<size_t> read_window_length();
     ErrorOr<size_t> read_size_number_of_nibbles();
     ErrorOr<size_t> read_variable_length();
-    ErrorOr<size_t> read_complex_prefix_code_length();
 
-    ErrorOr<void> read_prefix_code(CanonicalCode&, size_t alphabet_size);
-    ErrorOr<void> read_simple_prefix_code(CanonicalCode&, size_t alphabet_size);
-    ErrorOr<void> read_complex_prefix_code(CanonicalCode&, size_t alphabet_size, size_t hskip);
     ErrorOr<void> read_context_map(size_t number_of_codes, Vector<u8>& context_map, size_t context_map_size);
     ErrorOr<void> read_block_configuration(Block&);
 
