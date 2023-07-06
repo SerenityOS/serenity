@@ -205,7 +205,7 @@ IntSize ICOImageDecoderPlugin::size()
     }
 
     if (m_context->state < ICOLoadingContext::State::DirectoryDecoded) {
-        if (!load_ico_directory(*m_context).is_error()) {
+        if (load_ico_directory(*m_context).is_error()) {
             m_context->state = ICOLoadingContext::State::Error;
             return {};
         }
