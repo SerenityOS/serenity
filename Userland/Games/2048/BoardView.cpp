@@ -45,7 +45,7 @@ void BoardView::set_board(Game::Board const* board)
 
 void BoardView::pick_font()
 {
-    DeprecatedString best_font_name;
+    String best_font_name;
     int best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
@@ -53,7 +53,7 @@ void BoardView::pick_font()
             return;
         auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_cell_size && size > best_font_size) {
-            best_font_name = font.qualified_name();
+            best_font_name = String::from_deprecated_string(font.qualified_name()).release_value_but_fixme_should_propagate_errors();
             best_font_size = size;
         }
     });
@@ -234,7 +234,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
             auto rect = Gfx::IntRect::centered_on(center, tile_size);
 
             painter.fill_rect(rect, background_color_for_cell(sliding_tile.value_from));
-            painter.draw_text(rect, DeprecatedString::number(sliding_tile.value_from), font(), Gfx::TextAlignment::Center, text_color_for_cell(sliding_tile.value_from));
+            painter.draw_text(rect, String::number(sliding_tile.value_from).release_value_but_fixme_should_propagate_errors(), font(), Gfx::TextAlignment::Center, text_color_for_cell(sliding_tile.value_from));
         }
     } else {
         for (size_t column = 0; column < columns(); ++column) {
@@ -249,7 +249,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
                 auto entry = tiles[row][column];
                 painter.fill_rect(rect, background_color_for_cell(entry));
                 if (entry > 0)
-                    painter.draw_text(rect, DeprecatedString::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+                    painter.draw_text(rect, String::number(entry).release_value_but_fixme_should_propagate_errors(), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
             }
         }
     }

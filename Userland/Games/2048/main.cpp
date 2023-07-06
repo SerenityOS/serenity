@@ -144,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         case Game::MoveOutcome::Won: {
             update();
             auto want_to_continue = GUI::MessageBox::show(window,
-                DeprecatedString::formatted("You won the game in {} turns with a score of {}. Would you like to continue?", game.turns(), game.score()),
+                String::formatted("You won the game in {} turns with a score of {}. Would you like to continue?", game.turns(), game.score()).release_value_but_fixme_should_propagate_errors(),
                 "Congratulations!"sv,
                 GUI::MessageBox::Type::Question,
                 GUI::MessageBox::InputType::YesNo);
@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         case Game::MoveOutcome::GameOver:
             update();
             GUI::MessageBox::show(window,
-                DeprecatedString::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
+                String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()).release_value_but_fixme_should_propagate_errors(),
                 "You lost!"sv,
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
