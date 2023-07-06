@@ -356,7 +356,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
+    auto from_object = interpreter.reg(m_from_object);
 
     auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
@@ -365,15 +365,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
         excluded_names.set(TRY(interpreter.reg(m_excluded_names[i]).to_property_key(vm)));
     }
 
-    auto own_keys = TRY(from_object->internal_own_property_keys());
-
-    for (auto& key : own_keys) {
-        auto property_key = TRY(key.to_property_key(vm));
-        if (!excluded_names.contains(property_key)) {
-            auto property_value = TRY(from_object->get(property_key));
-            to_object->define_direct_property(property_key, property_value, JS::default_attributes);
-        }
-    }
+    TRY(to_object->copy_data_properties(vm, from_object, excluded_names));
 
     interpreter.accumulator() = to_object;
     return {};
