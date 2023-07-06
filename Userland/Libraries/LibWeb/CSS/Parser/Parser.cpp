@@ -8329,6 +8329,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
 
     auto& peek_token = tokens.peek_token();
 
+    if (auto property = any_property_accepts_type(property_ids, ValueType::EasingFunction); property.has_value()) {
+        if (auto maybe_easing_function = TRY(parse_easing_value(tokens)))
+            return PropertyAndValue { *property, maybe_easing_function };
+    }
+
     if (peek_token.is(Token::Type::Ident)) {
         // NOTE: We do not try to parse "CSS-wide keywords" here. https://www.w3.org/TR/css-values-4/#common-keywords
         //       These are only valid on their own, and so should be parsed directly in `parse_css_value()`.
