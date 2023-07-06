@@ -38,12 +38,6 @@ public:
         , m_this_value(this_value)
         , m_strict(strict)
     {
-        if (base.is_nullish()) {
-            m_base_type = BaseType::Unresolvable;
-            m_base_value = {};
-            m_this_value = {};
-            m_name = {};
-        }
     }
 
     Reference(Environment& base, DeprecatedFlyString referenced_name, bool strict = false, Optional<EnvironmentCoordinate> environment_coordinate = {})
