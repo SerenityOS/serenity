@@ -1189,7 +1189,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
         .iterator = object,
         .next_method = NativeFunction::create(
             interpreter.realm(),
-            [seen_items = HashTable<PropertyKey>(), items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
+            [items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
                 auto& realm = *vm.current_realm();
                 auto iterated_object_value = vm.this_value();
                 if (!iterated_object_value.is_object())
@@ -1204,11 +1204,6 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     }
 
                     auto key = items.take_first();
-
-                    // If the key was already seen, skip over it (invariant no. 4)
-                    auto result = seen_items.set(key);
-                    if (result != AK::HashSetResult::InsertedNewEntry)
-                        continue;
 
                     // If the property is deleted, don't include it (invariant no. 2)
                     if (!TRY(iterated_object.has_property(key)))
