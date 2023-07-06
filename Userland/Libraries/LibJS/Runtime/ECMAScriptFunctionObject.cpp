@@ -479,12 +479,18 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
                 if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
-                    Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
-                    // Here the difference from hasDuplicates is important
-                    if (has_duplicates)
-                        return reference.put_value(vm, argument_value);
-                    else
-                        return reference.initialize_referenced_binding(vm, argument_value);
+                    if (vm.bytecode_interpreter_if_exists() && param->is_local()) {
+                        // NOTE: Local variables are supported only in bytecode interpreter
+                        callee_context.local_variables[param->local_variable_index()] = argument_value;
+                        return {};
+                    } else {
+                        Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
+                        // Here the difference from hasDuplicates is important
+                        if (has_duplicates)
+                            return reference.put_value(vm, argument_value);
+                        else
+                            return reference.initialize_referenced_binding(vm, argument_value);
+                    }
                 }
                 if constexpr (IsSame<NonnullRefPtr<BindingPattern const> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
