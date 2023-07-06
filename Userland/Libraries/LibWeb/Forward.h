@@ -556,6 +556,8 @@ class ReadableStreamDefaultController;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReaderMixin;
 class ReadRequest;
+class TransformStream;
+class TransformStreamDefaultController;
 class WritableStream;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
