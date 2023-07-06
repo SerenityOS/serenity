@@ -1435,6 +1435,7 @@ public:
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual bool is_super_expression() const override { return true; }
 };
