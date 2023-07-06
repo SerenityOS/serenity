@@ -21,8 +21,9 @@ namespace Audio {
 // 6 channels = front left/right, center, LFE, back left/right
 // 7 channels = front left/right, center, LFE, back center, side left/right
 // 8 channels = front left/right, center, LFE, back left/right, side left/right
-template<ArrayLike<float> ChannelType, ArrayLike<ChannelType> InputType>
-ErrorOr<FixedArray<Sample>> downmix_surround_to_stereo(InputType input)
+// Additionally, performs sample rescaling to go from integer samples to floating-point samples.
+template<ArrayLike<i64> ChannelType, ArrayLike<ChannelType> InputType>
+ErrorOr<FixedArray<Sample>> downmix_surround_to_stereo(InputType const& input, float sample_scale_factor)
 {
     if (input.size() == 0)
         return Error::from_string_view("Cannot resample from 0 channels"sv);
@@ -38,43 +39,58 @@ ErrorOr<FixedArray<Sample>> downmix_surround_to_stereo(InputType input)
     switch (channel_count) {
     case 1:
         for (auto i = 0u; i < sample_count; ++i)
-            output[i] = Sample { input[0][i] };
+            output[i] = Sample { input[0][i] * sample_scale_factor };
         break;
     case 2:
         for (auto i = 0u; i < sample_count; ++i)
-            output[i] = Sample { input[0][i], input[1][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor
+            };
         break;
     case 3:
         for (auto i = 0u; i < sample_count; ++i)
-            output[i] = Sample { input[0][i] + input[2][i],
-                input[1][i] + input[2][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[2][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[2][i] * sample_scale_factor
+            };
         break;
     case 4:
         for (auto i = 0u; i < sample_count; ++i)
-            output[i] = Sample { input[0][i] + input[2][i],
-                input[1][i] + input[3][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[2][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[3][i] * sample_scale_factor
+            };
         break;
     case 5:
         for (auto i = 0u; i < sample_count; ++i)
-            output[i] = Sample { input[0][i] + input[3][i] + input[2][i],
-                input[1][i] + input[4][i] + input[2][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[3][i] * sample_scale_factor + input[2][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[4][i] * sample_scale_factor + input[2][i] * sample_scale_factor
+            };
         break;
     case 6:
         for (auto i = 0u; i < sample_count; ++i) {
-            output[i] = Sample { input[0][i] + input[4][i] + input[2][i] + input[3][i],
-                input[1][i] + input[5][i] + input[2][i] + input[3][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[4][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[5][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor
+            };
         }
         break;
     case 7:
         for (auto i = 0u; i < sample_count; ++i) {
-            output[i] = Sample { input[0][i] + input[5][i] + input[2][i] + input[3][i] + input[4][i],
-                input[1][i] + input[6][i] + input[2][i] + input[3][i] + input[4][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[5][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor + input[4][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[6][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor + input[4][i] * sample_scale_factor
+            };
         }
         break;
     case 8:
         for (auto i = 0u; i < sample_count; ++i) {
-            output[i] = Sample { input[0][i] + input[4][i] + input[6][i] + input[2][i] + input[3][i],
-                input[1][i] + input[5][i] + input[7][i] + input[2][i] + input[3][i] };
+            output[i] = Sample {
+                input[0][i] * sample_scale_factor + input[4][i] * sample_scale_factor + input[6][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor,
+                input[1][i] * sample_scale_factor + input[5][i] * sample_scale_factor + input[7][i] * sample_scale_factor + input[2][i] * sample_scale_factor + input[3][i] * sample_scale_factor
+            };
         }
         break;
     default:
