@@ -117,6 +117,7 @@ ErrorOr<Bytes> File::read_some(Bytes buffer)
 
     ssize_t nread = TRY(System::read(m_fd, buffer));
     m_last_read_was_eof = nread == 0;
+    m_file_offset += nread;
     return buffer.trim(nread);
 }
 
@@ -135,7 +136,9 @@ ErrorOr<size_t> File::write_some(ReadonlyBytes buffer)
         return Error::from_errno(EBADF);
     }
 
-    return TRY(System::write(m_fd, buffer));
+    auto nwritten = TRY(System::write(m_fd, buffer));
+    m_file_offset += nwritten;
+    return nwritten;
 }
 
 bool File::is_eof() const { return m_last_read_was_eof; }
@@ -177,8 +180,14 @@ ErrorOr<size_t> File::seek(i64 offset, SeekMode mode)
     }
 
     size_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
+    m_file_offset = seek_result;
     m_last_read_was_eof = false;
     return seek_result;
+}
+
+ErrorOr<size_t> File::tell() const
+{
+    return m_file_offset;
 }
 
 ErrorOr<void> File::truncate(size_t length)
@@ -186,6 +195,7 @@ ErrorOr<void> File::truncate(size_t length)
     if (length > static_cast<size_t>(NumericLimits<off_t>::max()))
         return Error::from_string_literal("Length is larger than the maximum supported length");
 
+    m_file_offset = min(length, m_file_offset);
     return System::ftruncate(m_fd, length);
 }
 
