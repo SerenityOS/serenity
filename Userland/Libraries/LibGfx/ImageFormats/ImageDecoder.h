@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/ExifReader.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {
@@ -42,6 +43,7 @@ public:
     virtual size_t first_animated_frame_index() = 0;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() = 0;
+    virtual ErrorOr<ExifMetadata> exif_metadata() { return ExifMetadata {}; };
 
 protected:
     ImageDecoderPlugin() = default;
@@ -63,6 +65,7 @@ public:
     size_t first_animated_frame_index() const { return m_plugin->first_animated_frame_index(); }
     ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) const { return m_plugin->frame(index, ideal_size); }
     ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
+    ErrorOr<ExifMetadata> exif_metadata() const { return m_plugin->exif_metadata(); }
 
 private:
     explicit ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin>);

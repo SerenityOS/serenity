@@ -2038,4 +2038,11 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
     return OptionalNone {};
 }
 
+ErrorOr<ExifMetadata> JPEGImageDecoderPlugin::exif_metadata()
+{
+    TRY(decode_header(*m_context));
+
+    return m_context->exif_metadata;
+}
+
 }
