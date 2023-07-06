@@ -195,6 +195,46 @@ ErrorOr<void> ExifReader::read_tag()
         VERIFY(!TRY(read_idf(exif_value.get<u32>())).has_value());
     }
 
+    if (tag == 271) {
+        // 4.6.5.4.2. - Make
+        m_metadata.manufacturer = exif_value.get<String>();
+    }
+
+    if (tag == 272) {
+        // 4.6.5.4.3. - Model
+        m_metadata.model = exif_value.get<String>();
+    }
+
+    if (tag == 33434) {
+        // 4.6.6.7.1. - ExposureTime
+        m_metadata.exposure = exif_value.get<Rational<u32>>();
+    }
+
+    if (tag == 33437) {
+        // 4.6.6.7.2. - FNumber
+        m_metadata.fnumber = exif_value.get<Rational<u32>>();
+    }
+
+    if (tag == 40962) {
+        // 4.6.6.3.1. - PixelXDimension
+        if (exif_value.has<u16>())
+            m_metadata.width = exif_value.get<u16>();
+        else if (exif_value.has<u32>())
+            m_metadata.width = exif_value.get<u32>();
+        else
+            VERIFY_NOT_REACHED();
+    }
+
+    if (tag == 40963) {
+        // 4.6.6.3.2. - PixelYDimension
+        if (exif_value.has<u16>())
+            m_metadata.height = exif_value.get<u16>();
+        else if (exif_value.has<u32>())
+            m_metadata.height = exif_value.get<u32>();
+        else
+            VERIFY_NOT_REACHED();
+    }
+
     return {};
 }
 

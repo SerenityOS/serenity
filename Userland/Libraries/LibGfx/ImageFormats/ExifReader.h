@@ -15,7 +15,21 @@
 
 namespace Gfx {
 
+template<OneOf<u32, i32> x32>
+struct Rational {
+    x32 numerator;
+    x32 denominator;
+};
+
 struct ExifMetadata {
+    Optional<String> manufacturer {};
+    Optional<String> model {};
+
+    Optional<Rational<u32>> exposure {};
+    Optional<Rational<u32>> fnumber {};
+
+    Optional<u32> width {};
+    Optional<u32> height {};
 };
 
 class ExifReader {
@@ -38,12 +52,6 @@ private:
         SLong = 9,
         SRational = 10,
         UTF8 = 129,
-    };
-
-    template<OneOf<u32, i32> x32>
-    struct Rational {
-        x32 numerator;
-        x32 denominator;
     };
 
     using ExifValue = Variant<u8, String, u16, u32, Rational<u32>, i32, Rational<i32>>;
