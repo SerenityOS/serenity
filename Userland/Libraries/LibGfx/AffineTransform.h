@@ -68,6 +68,7 @@ public:
     AffineTransform& skew_radians(float x_radians, float y_radians);
     AffineTransform& multiply(AffineTransform const&);
 
+    float determinant() const;
     Optional<AffineTransform> inverse() const;
 
 private:
