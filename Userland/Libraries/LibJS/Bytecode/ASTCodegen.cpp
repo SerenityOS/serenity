@@ -2348,6 +2348,12 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluat
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> SuperExpression::generate_bytecode(Bytecode::Generator&) const
+{
+    // The semantics for SuperExpression are handled in CallExpression and SuperCall.
+    VERIFY_NOT_REACHED();
+}
+
 Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto accumulator_backup_reg = generator.allocate_register();
