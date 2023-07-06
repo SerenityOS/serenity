@@ -553,10 +553,19 @@ after_step_7:
 
         // FIXME: 22. Set request's priority to the current state of the element's fetchpriority attribute.
 
-        // FIXME: 24. If the will lazy load element steps given the img return true, then:
-        // FIXME:     1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
-        // FIXME:     2. Start intersection-observing a lazy loading element for the img element.
-        // FIXME:     3. Return.
+        // 24. If the will lazy load element steps given the img return true, then:
+        if (will_lazy_load()) {
+            // 1. Set the img's lazy load resumption steps to the rest of this algorithm starting with the step labeled fetch the image.
+            m_lazy_load_resumption_steps = [this, request, image_request]() {
+                image_request->fetch_image(realm(), request);
+            };
+
+            // 2. Start intersection-observing a lazy loading element for the img element.
+            document().start_intersection_observing_a_lazy_loading_element(*this);
+
+            // 3. Return.
+            return;
+        }
 
         image_request->fetch_image(realm(), request);
     });
@@ -767,6 +776,27 @@ HTMLImageElement::LazyLoading HTMLImageElement::lazy_loading() const
     if (value.equals_ignoring_ascii_case("lazy"sv))
         return LazyLoading::Lazy;
     return LazyLoading::Eager;
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
+bool HTMLImageElement::will_lazy_load() const
+{
+    // 1. If scripting is disabled for element, then return false.
+    // Spec Note: This is an anti-tracking measure, because if a user agent supported lazy loading when scripting is
+    //            disabled, it would still be possible for a site to track a user's approximate scroll position throughout
+    //            a session, by strategically placing images in a page's markup such that a server can track how many
+    //            images are requested and when.
+    if (is_scripting_disabled())
+        return false;
+
+    // 2. If element's lazy loading attribute is in the Lazy state, then return true.
+    // 3. Return false.
+    return lazy_loading() == LazyLoading::Lazy;
+}
+
+JS::SafeFunction<void()> HTMLImageElement::take_lazy_load_resumption_steps(Badge<DOM::Document>)
+{
+    return move(m_lazy_load_resumption_steps);
 }
 
 }

@@ -14,6 +14,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
@@ -375,6 +376,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_selection);
     visitor.visit(m_first_base_element_with_href_in_tree_order);
     visitor.visit(m_parser);
+    visitor.visit(m_lazy_load_intersection_observer);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script);
@@ -2981,6 +2983,70 @@ void Document::run_the_update_intersection_observations_steps(HighResolutionTime
             intersection_observer_registration.previous_is_intersecting = is_intersecting;
         }
     }
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#start-intersection-observing-a-lazy-loading-element
+void Document::start_intersection_observing_a_lazy_loading_element(Element& element)
+{
+    auto& realm = this->realm();
+
+    // 1. Let doc be element's node document.
+    VERIFY(&element.document() == this);
+
+    // 2. If doc's lazy load intersection observer is null, set it to a new IntersectionObserver instance, initialized as follows:
+    if (!m_lazy_load_intersection_observer) {
+        // - The callback is these steps, with arguments entries and observer:
+        auto callback = JS::NativeFunction::create(realm, "", [this](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            // For each entry in entries using a method of iteration which does not trigger developer-modifiable array accessors or iteration hooks:
+            auto& entries = verify_cast<JS::Array>(vm.argument(0).as_object());
+            auto entries_length = MUST(MUST(entries.get(vm.names.length)).to_length(vm));
+
+            for (size_t i = 0; i < entries_length; ++i) {
+                auto property_key = JS::PropertyKey { i };
+                auto& entry = verify_cast<IntersectionObserver::IntersectionObserverEntry>(entries.get_without_side_effects(property_key).as_object());
+
+                // 1. Let resumptionSteps be null.
+                JS::SafeFunction<void()> resumption_steps;
+
+                // 2. If entry.isIntersecting is true, then set resumptionSteps to entry.target's lazy load resumption steps.
+                if (entry.is_intersecting()) {
+                    // 5. Set entry.target's lazy load resumption steps to null.
+                    resumption_steps = verify_cast<HTML::HTMLImageElement>(*entry.target()).take_lazy_load_resumption_steps({});
+                }
+
+                // 3. If resumptionSteps is null, then return.
+                if (!resumption_steps)
+                    return JS::js_undefined();
+
+                // 4. Stop intersection-observing a lazy loading element for entry.target.
+                // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#stop-intersection-observing-a-lazy-loading-element
+                // 1. Let doc be element's node document.
+                // NOTE: It's `this`.
+
+                // 2. Assert: doc's lazy load intersection observer is not null.
+                VERIFY(m_lazy_load_intersection_observer);
+
+                // 3. Call doc's lazy load intersection observer unobserve method with element as the argument.
+                m_lazy_load_intersection_observer->unobserve(entry.target());
+
+                // 6. Invoke resumptionSteps.
+                resumption_steps();
+            }
+
+            return JS::js_undefined();
+        });
+
+        // FIXME: The options is an IntersectionObserverInit dictionary with the following dictionary members: «[ "rootMargin" → lazy load root margin ]»
+        // Spec Note: This allows for fetching the image during scrolling, when it does not yet — but is about to — intersect the viewport.
+        auto options = IntersectionObserver::IntersectionObserverInit {};
+
+        auto wrapped_callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(callback, Bindings::host_defined_environment_settings_object(realm));
+        m_lazy_load_intersection_observer = IntersectionObserver::IntersectionObserver::construct_impl(realm, wrapped_callback, options).release_value_but_fixme_should_propagate_errors();
+    }
+
+    // 3. Call doc's lazy load intersection observer's observe method with element as the argument.
+    VERIFY(m_lazy_load_intersection_observer);
+    m_lazy_load_intersection_observer->observe(element);
 }
 
 }
