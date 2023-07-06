@@ -31,7 +31,6 @@ for i in ( \
             (readelf 1) \
             (shot 1) \
             (sql 1) \
-            (strace 1) \
             (tr 1) \
             (traceroute 1) \
             (truncate 1) \
