@@ -1005,6 +1005,22 @@ int snprintf(char* buffer, size_t size, char const* fmt, ...)
     return ret;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/vdprintf.html
+int vdprintf(int fd, char const* fmt, va_list ap)
+{
+    return printf_internal([fd](auto, char ch) { write(fd, &ch, sizeof(char)); }, nullptr, fmt, ap);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/dprintf.html
+int dprintf(int fd, char const* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vdprintf(fd, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/perror.html
 void perror(char const* s)
 {

@@ -81,6 +81,8 @@ void dbgputstr(char const*, size_t);
 int sprintf(char* buffer, char const* fmt, ...) __attribute__((format(printf, 2, 3)));
 int asprintf(char** strp, char const* fmt, ...) __attribute__((format(printf, 2, 3)));
 int snprintf(char* buffer, size_t, char const* fmt, ...) __attribute__((format(printf, 3, 4)));
+int vdprintf(int fd, char const* fmt, va_list) __attribute__((format(printf, 2, 0)));
+int dprintf(int fd, char const* fmt, ...) __attribute__((format(printf, 2, 3)));
 int putchar(int ch);
 int putc(int ch, FILE*);
 int puts(char const*);
