@@ -27,8 +27,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
     add_compile_options(-Wno-expansion-to-defined)
-    add_compile_options(-Wno-literal-suffix)
+    # Don't pass these options to the C compiler, only to the C++ compiler:
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-literal-suffix>)
 
     # FIXME: This warning seems useful but has too many false positives with GCC 13.
-    add_compile_options(-Wno-dangling-reference)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-dangling-reference>)
 endif()

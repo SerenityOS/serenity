@@ -42,3 +42,11 @@ set_source_files_properties(TestStrtodAccuracy.cpp PROPERTIES COMPILE_FLAGS "-fn
 foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibC)
 endforeach()
+
+
+add_executable(TestCComplex TestCComplex.c)
+add_dependencies(ComponentTests TestCComplex)
+set_target_properties(TestCComplex PROPERTIES EXCLUDE_FROM_ALL TRUE)
+serenity_set_implicit_links(TestCComplex)
+target_link_libraries(TestCComplex PRIVATE LibC LibCore  m)
+install(TARGETS TestCComplex RUNTIME DESTINATION usr/Tests/LibC OPTIONAL)

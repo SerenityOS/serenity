@@ -15,6 +15,7 @@
 #    error "C++ code must not include complex.h. Use AK/Complex.h instead."
 #endif
 
+#include <math.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
 
@@ -72,6 +73,68 @@ static inline float(cimagf)(float complex z)
 static inline long double(cimagl)(long double complex z)
 {
     return cimagl(z);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/cabs.html
+static inline long double cabsl(long double complex z)
+{
+    // Algorithm 312: Absolute value and square root of a complex number
+    // https://dl.acm.org/doi/10.1145/363717.363780
+    long double real = fabsl(creal(z));
+    long double imag = fabsl(cimagl(z));
+
+    if (real == 0)
+        return imag;
+
+    if (imag == 0)
+        return real;
+
+    if (real > imag)
+        return real * sqrtl(1 + (imag / real) * (imag / real));
+
+    return imag * sqrtl(1 + (real / imag) * (real / imag));
+}
+
+static inline double cabs(double complex z)
+{
+    return cabsl(z);
+}
+
+static inline float cabsf(float complex z)
+{
+    return cabsl(z);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/csqrt.html
+static inline long double complex csqrtl(long double complex z)
+{
+    // Algorithm 312: Absolute value and square root of a complex number
+    // https://dl.acm.org/doi/10.1145/363717.363780
+    long double real = creal(z);
+    long double imag = cimagl(z);
+
+    long double a_squared = (fabsl(real) + cabsl(z)) * 0.5;
+
+    if (a_squared <= 0)
+        return CMPLXL(0, 0);
+
+    long double a = sqrtl(a_squared);
+
+    if (real >= 0)
+        return CMPLXL(a, imag / (a + a));
+
+    long double b = (imag < 0) ? -a : a;
+    return CMPLXL(imag / (b + b), b);
+}
+
+static inline double complex csqrt(double complex z)
+{
+    return csqrtl(z);
+}
+
+static inline float complex csqrtf(float complex z)
+{
+    return csqrtl(z);
 }
 
 __END_DECLS
