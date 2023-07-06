@@ -1128,7 +1128,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     VERIFY(formals.size() <= NumericLimits<i32>::max());
     for (i32 index = static_cast<i32>(formals.size()) - 1; index >= 0; --index) {
         // a. Let name be parameterNames[index].
-        auto const& name = formals[index].binding.get<DeprecatedFlyString>();
+        auto const& name = formals[index].binding.get<NonnullRefPtr<Identifier const>>()->string();
 
         // b. If name is not an element of mappedNames, then
         if (mapped_names.contains(name))

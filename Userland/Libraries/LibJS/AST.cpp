@@ -2537,11 +2537,14 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
 
         for (auto& parameter : m_parameters) {
             parameter.binding.visit(
-                [&](DeprecatedFlyString const& name) {
-                    print_indent(indent + 2);
-                    if (parameter.is_rest)
+                [&](Identifier const& identifier) {
+                    if (parameter.is_rest) {
+                        print_indent(indent + 2);
                         out("...");
-                    outln("{}", name);
+                        identifier.dump(0);
+                    } else {
+                        identifier.dump(indent + 2);
+                    }
                 },
                 [&](BindingPattern const& pattern) {
                     pattern.dump(indent + 2);
@@ -4479,6 +4482,16 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowComplet
     return {};
 }
 
+ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& declaration : m_lexical_declarations) {
+        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
+            return callback(identifier);
+        }));
+    }
+    return {};
+}
+
 ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
@@ -4770,7 +4783,9 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
     // 2. Let varNames be the VarDeclaredNames of script.
     // 3. For each element name of lexNames, do
-    TRY(for_each_lexically_declared_name([&](DeprecatedFlyString const& name) -> ThrowCompletionOr<void> {
+    TRY(for_each_lexically_declared_identifier([&](Identifier const& identifier) -> ThrowCompletionOr<void> {
+        auto const& name = identifier.string();
+
         // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_var_declaration(name))
             return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);

@@ -94,7 +94,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
             return false;
         if (parameter.default_value)
             return false;
-        if (!parameter.binding.template has<DeprecatedFlyString>())
+        if (!parameter.binding.template has<NonnullRefPtr<Identifier const>>())
             return false;
         return true;
     });
@@ -353,8 +353,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             has_parameter_expressions = true;
 
         parameter.binding.visit(
-            [&](DeprecatedFlyString const& name) {
-                if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+            [&](Identifier const& identifier) {
+                if (parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
                     has_duplicates = true;
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
@@ -362,8 +362,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     has_parameter_expressions = true;
 
                 // NOTE: Nothing in the callback throws an exception.
-                MUST(pattern->for_each_bound_name([&](auto& name) {
-                    if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+                MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
+                    if (parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
                         has_duplicates = true;
                 }));
             });
@@ -478,8 +478,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
-                if constexpr (IsSame<DeprecatedFlyString const&, decltype(param)>) {
-                    Reference reference = TRY(vm.resolve_binding(param, used_environment));
+                if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
+                    Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
                     // Here the difference from hasDuplicates is important
                     if (has_duplicates)
                         return reference.put_value(vm, argument_value);

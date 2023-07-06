@@ -79,8 +79,8 @@ public:
         scope_pusher.m_function_parameters = parameters;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
-                [&](DeprecatedFlyString const& name) {
-                    scope_pusher.m_forbidden_lexical_names.set(name);
+                [&](Identifier const& identifier) {
+                    scope_pusher.m_forbidden_lexical_names.set(identifier.string());
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
                     // NOTE: Nothing in the callback throws an exception.
@@ -864,7 +864,7 @@ static bool is_strict_reserved_word(StringView str)
 static bool is_simple_parameter_list(Vector<FunctionParameter> const& parameters)
 {
     return all_of(parameters, [](FunctionParameter const& parameter) {
-        return !parameter.is_rest && parameter.default_value.is_null() && parameter.binding.has<DeprecatedFlyString>();
+        return !parameter.is_rest && parameter.default_value.is_null() && parameter.binding.has<NonnullRefPtr<Identifier const>>();
     });
 }
 
@@ -939,7 +939,8 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
             syntax_error("BindingIdentifier may not be 'arguments' or 'eval' in strict mode");
         if (is_async && token.value() == "await"sv)
             syntax_error("'await' is a reserved identifier in async functions");
-        parameters.append({ DeprecatedFlyString { token.value() }, {} });
+        auto identifier = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
+        parameters.append({ identifier, {} });
     }
     // If there's a newline between the closing paren and arrow it's not a valid arrow function,
     // ASI should kick in instead (it'll then fail with "Unexpected token Arrow")
@@ -1003,8 +1004,8 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
     if (body->in_strict_mode()) {
         for (auto& parameter : parameters) {
             parameter.binding.visit(
-                [&](DeprecatedFlyString const& name) {
-                    check_identifier_name_for_assignment_validity(name, true);
+                [&](Identifier const& identifier) {
+                    check_identifier_name_for_assignment_validity(identifier.string(), true);
                 },
                 [&](auto const&) {});
         }
@@ -1495,7 +1496,7 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
             //          this function does not.
             //          So we use a custom version of SuperCall which doesn't use the @@iterator
             //          method on %Array.prototype% visibly.
-            DeprecatedFlyString argument_name = "args";
+            auto argument_name = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, "args");
             auto super_call = create_ast_node<SuperCall>(
                 { m_source_code, rule_start.position(), position() },
                 SuperCall::IsPartOfSyntheticConstructor::Yes,
@@ -2675,7 +2676,9 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
         Vector<StringView> parameter_names;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
-                [&](DeprecatedFlyString const& parameter_name) {
+                [&](Identifier const& identifier) {
+                    auto const& parameter_name = identifier.string();
+
                     check_identifier_name_for_assignment_validity(parameter_name, function_body->in_strict_mode());
                     if (function_kind == FunctionKind::Generator && parameter_name == "yield"sv)
                         syntax_error("Parameter name 'yield' not allowed in this context");
@@ -2842,7 +2845,7 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
 
     Vector<FunctionParameter> parameters;
 
-    auto consume_identifier_or_binding_pattern = [&]() -> Variant<DeprecatedFlyString, NonnullRefPtr<BindingPattern const>> {
+    auto consume_identifier_or_binding_pattern = [&]() -> Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> {
         if (auto pattern = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::No))
             return pattern.release_nonnull();
 
@@ -2853,8 +2856,8 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
 
         for (auto& parameter : parameters) {
             bool has_same_name = parameter.binding.visit(
-                [&](DeprecatedFlyString const& name) {
-                    return name == parameter_name;
+                [&](Identifier const& identifier) {
+                    return identifier.string() == parameter_name;
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& bindings) {
                     bool found_duplicate = false;
@@ -2882,7 +2885,7 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
                 syntax_error(message, Position { token.line_number(), token.line_column() });
             break;
         }
-        return DeprecatedFlyString { token.value() };
+        return create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
     };
 
     while (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen) || match_identifier() || match(TokenType::TripleDot)) {
