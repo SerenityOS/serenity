@@ -16,8 +16,8 @@
 
 namespace Gfx {
 
-const u8 bmp_header_size = 14;
-const u32 color_palette_limit = 1024;
+u8 const bmp_header_size = 14;
+u32 const color_palette_limit = 1024;
 
 // Compression flags
 // https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57
@@ -1229,7 +1229,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     if (context.state <= BMPLoadingContext::State::ColorTableDecoded)
         TRY(decode_bmp_color_table(context));
 
-    const u16 bits_per_pixel = context.dib.core.bpp;
+    u16 const bits_per_pixel = context.dib.core.bpp;
 
     BitmapFormat format = [&]() -> BitmapFormat {
         // NOTE: If this is an BMP included in an ICO, the bitmap format will be converted to BGRA8888.
@@ -1268,8 +1268,8 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
         return Error::from_string_literal("BMP has invalid bpp");
     }
 
-    const u32 width = abs(context.dib.core.width);
-    const u32 height = !context.is_included_in_ico ? context.dib.core.height : (context.dib.core.height / 2);
+    u32 const width = abs(context.dib.core.width);
+    u32 const height = !context.is_included_in_ico ? context.dib.core.height : (context.dib.core.height / 2);
 
     context.bitmap = TRY(Bitmap::create(format, { static_cast<int>(width), static_cast<int>(height) }));
 
@@ -1284,7 +1284,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
 
     InputStreamer streamer(bytes.data(), bytes.size());
 
-    auto process_row_padding = [&](const u8 consumed) -> ErrorOr<void> {
+    auto process_row_padding = [&](u8 const consumed) -> ErrorOr<void> {
         // Calculate padding
         u8 remaining = consumed % 4;
         u8 bytes_to_drop = remaining == 0 ? 0 : 4 - remaining;
