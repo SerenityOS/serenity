@@ -223,9 +223,12 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             data = url.data_payload().to_byte_buffer();
         }
 
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+        response_headers.set("Content-Type", url.data_mime_type());
+
         log_success(request);
-        Platform::EventLoopPlugin::the().deferred_invoke([data = move(data), success_callback = move(success_callback)] {
-            success_callback(data, {}, {});
+        Platform::EventLoopPlugin::the().deferred_invoke([data = move(data), response_headers = move(response_headers), success_callback = move(success_callback)] {
+            success_callback(data, response_headers, {});
         });
         return;
     }
