@@ -4,6 +4,8 @@ interface DOMRectReadOnly {
 
     constructor(optional double x = 0, optional double y = 0, optional double width = 0, optional double height = 0);
 
+    [NewObject] static DOMRectReadOnly fromRect(optional DOMRectInit other = {});
+
     readonly attribute double x;
     readonly attribute double y;
     readonly attribute double width;
@@ -14,4 +16,11 @@ interface DOMRectReadOnly {
     readonly attribute double bottom;
     readonly attribute double left;
 
+};
+
+dictionary DOMRectInit {
+    unrestricted double x = 0;
+    unrestricted double y = 0;
+    unrestricted double width = 0;
+    unrestricted double height = 0;
 };
