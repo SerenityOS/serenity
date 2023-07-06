@@ -4,10 +4,12 @@ checksum - helper program for calculating checksums
 
 ## Synopsis
 
-`$ md5sum [options...] <file...>`  
-`$ sha1sum [options...] <file...>`  
-`$ sha256sum [options...] <file...>`  
-`$ sha512sum [options...] <file...>`  
+```**sh
+$ md5sum [options...] <file...>
+$ sha1sum [options...] <file...>  
+$ sha256sum [options...] <file...>  
+$ sha512sum [options...] <file...>
+```  
 
 ## Description
 
