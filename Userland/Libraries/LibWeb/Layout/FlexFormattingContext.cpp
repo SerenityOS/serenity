@@ -1004,6 +1004,10 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                 line.remaining_free_space = value;
         }
 
+        // AD-HOC: We allow the remaining free space to be infinite, but we can't let infinity
+        //         leak into the layout geometry, so we treat infinity as zero when used in arithmetic.
+        auto remaining_free_space_or_zero_if_infinite = isfinite(line.remaining_free_space.to_double()) ? line.remaining_free_space : 0;
+
         // c. If the remaining free space is non-zero, distribute it proportional to the flex factors:
         if (line.remaining_free_space != 0) {
             // If using the flex grow factor
@@ -1016,7 +1020,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                         continue;
                     double ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
                     // Set the item’s target main size to its flex base size plus a fraction of the remaining free space proportional to the ratio.
-                    item.target_main_size = item.flex_base_size + (line.remaining_free_space * ratio);
+                    item.target_main_size = item.flex_base_size + (remaining_free_space_or_zero_if_infinite * ratio);
                 }
             }
             // If using the flex shrink factor
@@ -1038,7 +1042,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
                     // Set the item’s target main size to its flex base size minus a fraction of the absolute value of the remaining free space proportional to the ratio.
                     // (Note this may result in a negative inner main size; it will be corrected in the next step.)
-                    item.target_main_size = item.flex_base_size - (abs(line.remaining_free_space) * ratio);
+                    item.target_main_size = item.flex_base_size - (abs(remaining_free_space_or_zero_if_infinite) * ratio);
                 }
             }
         }

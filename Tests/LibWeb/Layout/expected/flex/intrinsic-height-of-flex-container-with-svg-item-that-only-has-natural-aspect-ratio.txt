@@ -1,0 +1,5 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x16 [BFC] children: not-inline
+    Box <body> at (8,8) content-size 784x0 flex-container(column) [FFC] children: not-inline
+      SVGSVGBox <svg> at (400,8) content-size 0x0 flex-item [SVG] children: not-inline
+        SVGGeometryBox <rect> at (400,8) content-size 0x0 children: not-inline
