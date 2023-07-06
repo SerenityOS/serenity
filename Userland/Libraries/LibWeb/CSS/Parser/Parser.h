@@ -266,13 +266,8 @@ private:
     Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
     Optional<PositionValue> parse_position(TokenStream<ComponentValue>&, PositionValue initial_value = PositionValue::center());
 
-    enum class AllowedDataUrlType {
-        None,
-        Image,
-        Font,
-    };
-    Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
-    ErrorOr<RefPtr<StyleValue>> parse_url_value(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    Optional<AK::URL> parse_url_function(ComponentValue const&);
+    ErrorOr<RefPtr<StyleValue>> parse_url_value(ComponentValue const&);
 
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
     Optional<Vector<AngularColorStopListElement>> parse_angular_color_stop_list(TokenStream<ComponentValue>&);
