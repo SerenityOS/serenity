@@ -170,6 +170,7 @@ static ErrorOr<Optional<String>> elf_details(StringView description, StringView 
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-31x-compressed"sv, "Windows 3.1X compressed file"sv, description_only) \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-95-compressed"sv, "Windows 95 compressed file"sv, description_only)    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp"sv, "BMP image data"sv, image_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/vnd.ms-dds"sv, "DDS image data"sv, image_details)                          \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif"sv, "GIF image data"sv, image_details)                                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg"sv, "JPEG image data"sv, image_details)                               \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png"sv, "PNG image data"sv, image_details)                                 \
