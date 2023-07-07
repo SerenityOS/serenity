@@ -31,6 +31,7 @@ struct DDSLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
+        HeaderDecoded,
         BitmapDecoded,
     };
 
@@ -409,8 +410,11 @@ static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, D
     return {};
 }
 
-static ErrorOr<void> decode_dds(DDSLoadingContext& context)
+static ErrorOr<void> decode_header(DDSLoadingContext& context)
 {
+    if (context.state >= DDSLoadingContext::HeaderDecoded)
+        return {};
+
     // All valid DDS files are at least 128 bytes long.
     if (TRY(context.stream.size()) < 128) {
         dbgln_if(DDS_DEBUG, "File is too short for DDS");
@@ -451,9 +455,19 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         }
     }
 
+    context.state = DDSLoadingContext::HeaderDecoded;
+
     if constexpr (DDS_DEBUG) {
         context.dump_debug();
     }
+
+    return {};
+}
+
+static ErrorOr<void> decode_dds(DDSLoadingContext& context)
+{
+    if (context.state == DDSLoadingContext::NotDecoded)
+        TRY(decode_header(context));
 
     DXGIFormat format = get_format(context.header.pixel_format);
 
