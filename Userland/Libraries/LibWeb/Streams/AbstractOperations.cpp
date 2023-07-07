@@ -2734,6 +2734,15 @@ void transform_stream_default_controller_clear_algorithms(TransformStreamDefault
     controller.set_flush_algorithm({});
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-controller-error
+WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController& controller, JS::Value error)
+{
+    // 1. Perform ! TransformStreamError(controller.[[stream]], e).
+    TRY(transform_stream_error(*controller.stream(), error));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
 {
