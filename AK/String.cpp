@@ -484,6 +484,11 @@ ErrorOr<String> String::trim(StringView code_points_to_trim, TrimMode mode) cons
     return trim(Utf8View { code_points_to_trim }, mode);
 }
 
+ErrorOr<String> String::trim_ascii_whitespace(TrimMode mode) const
+{
+    return trim(" \n\t\v\f\r"sv, mode);
+}
+
 bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
