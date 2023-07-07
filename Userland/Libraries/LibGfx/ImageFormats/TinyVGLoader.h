@@ -14,6 +14,7 @@
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/VectorGraphic.h>
 
 namespace Gfx {
 
@@ -33,7 +34,7 @@ namespace Gfx {
 // Decoder from the "Tiny Vector Graphics" format (v1.0).
 // https://tinyvg.tech/download/specification.pdf
 
-class TinyVGDecodedImageData {
+class TinyVGDecodedImageData final : public VectorGraphic {
 public:
     using Style = Variant<Color, NonnullRefPtr<SVGGradientPaintStyle>>;
 
@@ -44,19 +45,19 @@ public:
         float stroke_width { 0.0f };
     };
 
-    ErrorOr<RefPtr<Gfx::Bitmap>> bitmap(IntSize size) const;
-
-    IntSize size() const
+    virtual IntSize intrinsic_size() const override
     {
         return m_size;
     }
+
+    virtual void draw_transformed(Painter&, AffineTransform) const override;
 
     ReadonlySpan<DrawCommand> draw_commands() const
     {
         return m_draw_commands;
     }
 
-    static ErrorOr<TinyVGDecodedImageData> decode(Stream& stream);
+    static ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> decode(Stream& stream);
 
 private:
     TinyVGDecodedImageData(IntSize size, Vector<DrawCommand> draw_commands)
@@ -71,7 +72,7 @@ private:
 
 struct TinyVGLoadingContext {
     ReadonlyBytes data;
-    OwnPtr<TinyVGDecodedImageData> decoded_image {};
+    RefPtr<TinyVGDecodedImageData> decoded_image {};
     RefPtr<Bitmap> bitmap {};
 };
 
@@ -88,6 +89,9 @@ public:
     virtual size_t first_animated_frame_index() override { return 0; }
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override { return OptionalNone {}; }
+
+    virtual bool is_vector() override { return true; }
+    virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) override;
 
     virtual ~TinyVGImageDecoderPlugin() override = default;
 
