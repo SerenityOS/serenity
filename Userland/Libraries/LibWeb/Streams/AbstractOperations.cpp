@@ -21,6 +21,7 @@
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
+#include <LibWeb/Streams/TransformStream.h>
 #include <LibWeb/Streams/TransformStreamDefaultController.h>
 #include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
@@ -2731,6 +2732,27 @@ void transform_stream_default_controller_clear_algorithms(TransformStreamDefault
 
     // 2. Set controller.[[flushAlgorithm]] to undefined.
     controller.set_flush_algorithm({});
+}
+
+//  https://streams.spec.whatwg.org/#transform-stream-set-backpressure
+WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream& stream, bool backpressure)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream.[[backpressure]] is not backpressure.
+    VERIFY(stream.backpressure() != backpressure);
+
+    // 2. If stream.[[backpressureChangePromise]] is not undefined, resolve stream.[[backpressureChangePromise]] with undefined.
+    if (stream.backpressure_change_promise())
+        WebIDL::resolve_promise(realm, *stream.backpressure_change_promise(), JS::js_undefined());
+
+    // 3. Set stream.[[backpressureChangePromise]] to a new promise.
+    stream.set_backpressure_change_promise(WebIDL::create_promise(realm));
+
+    // 4. Set stream.[[backpressure]] to backpressure.
+    stream.set_backpressure(backpressure);
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#is-non-negative-number
