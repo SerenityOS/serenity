@@ -19,20 +19,4 @@ pre_configure() {
 install() {
     # Can't make keys outside of Serenity since ssh-keygen is built for Serenity.
     run make DESTDIR="${SERENITY_INSTALL_ROOT}" "${installopts[@]}" install-nokeys
-
-    if command -v ssh-keygen &>/dev/null; then
-        mkdir -p "${SERENITY_INSTALL_ROOT}/etc/ssh"
-        if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_rsa_key" ]; then
-            ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_rsa_key" -C serenity -N "" -t rsa
-        fi
-        if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_dsa_key" ]; then
-            ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_dsa_key" -C serenity -N "" -t dsa
-        fi
-        if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ecdsa_key" ]; then
-            ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ecdsa_key" -C serenity -N "" -t ecdsa -b 521
-        fi
-        if [ ! -e "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ed25519_key" ]; then
-            ssh-keygen -f "${SERENITY_INSTALL_ROOT}/etc/ssh/ssh_host_ed25519_key" -C serenity -N "" -t ed25519
-        fi
-    fi
 }
