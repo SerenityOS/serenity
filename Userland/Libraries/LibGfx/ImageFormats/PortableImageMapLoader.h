@@ -64,9 +64,6 @@ public:
 
     virtual IntSize size() override;
 
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
-
     virtual ErrorOr<void> initialize() override { return {}; }
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
@@ -102,22 +99,6 @@ IntSize PortableImageDecoderPlugin<TContext>::size()
     }
 
     return { m_context->width, m_context->height };
-}
-
-template<typename TContext>
-void PortableImageDecoderPlugin<TContext>::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-template<typename TContext>
-bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-
-    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 template<typename TContext>

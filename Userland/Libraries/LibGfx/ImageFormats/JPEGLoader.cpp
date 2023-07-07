@@ -1931,19 +1931,6 @@ IntSize JPEGImageDecoderPlugin::size()
     return {};
 }
 
-void JPEGImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool JPEGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> JPEGImageDecoderPlugin::initialize()
 {
     return {};

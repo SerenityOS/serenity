@@ -632,19 +632,6 @@ IntSize DDSImageDecoderPlugin::size()
     return {};
 }
 
-void DDSImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool DDSImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> DDSImageDecoderPlugin::initialize()
 {
     // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.

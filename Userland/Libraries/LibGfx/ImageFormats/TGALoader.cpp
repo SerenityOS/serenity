@@ -174,19 +174,6 @@ IntSize TGAImageDecoderPlugin::size()
     return IntSize { m_context->header.width, m_context->header.height };
 }
 
-void TGAImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool TGAImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 bool TGAImageDecoderPlugin::decode_tga_header()
 {
     auto& reader = m_context->reader;
