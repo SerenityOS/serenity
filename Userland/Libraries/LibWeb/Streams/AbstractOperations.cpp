@@ -2734,6 +2734,22 @@ void transform_stream_default_controller_clear_algorithms(TransformStreamDefault
     controller.set_flush_algorithm({});
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-error-writable-and-unblock-write
+WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(TransformStream& stream, JS::Value error)
+{
+    // 1. Perform ! TransformStreamDefaultControllerClearAlgorithms(stream.[[controller]]).
+    transform_stream_default_controller_clear_algorithms(*stream.controller());
+
+    // 2. Perform ! WritableStreamDefaultControllerErrorIfNeeded(stream.[[writable]].[[controller]], e).
+    TRY(writable_stream_default_controller_error_if_needed(*stream.writable()->controller(), error));
+
+    // 3. If stream.[[backpressure]] is true, perform ! TransformStreamSetBackpressure(stream, false).
+    if (stream.backpressure().has_value() && *stream.backpressure())
+        TRY(transform_stream_set_backpressure(stream, false));
+
+    return {};
+}
+
 //  https://streams.spec.whatwg.org/#transform-stream-set-backpressure
 WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream& stream, bool backpressure)
 {
