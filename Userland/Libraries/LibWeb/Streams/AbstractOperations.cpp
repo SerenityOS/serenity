@@ -2734,6 +2734,22 @@ void transform_stream_default_controller_clear_algorithms(TransformStreamDefault
     controller.set_flush_algorithm({});
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-error
+WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
+{
+    VERIFY(stream.readable()->controller().has_value() && stream.readable()->controller()->has<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
+
+    auto readable_controller = stream.readable()->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
+
+    // 1. Perform ! ReadableStreamDefaultControllerError(stream.[[readable]].[[controller]], e).
+    readable_stream_default_controller_error(*readable_controller, error);
+
+    // 2. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, e).
+    TRY(transform_stream_error_writable_and_unblock_write(stream, error));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error-writable-and-unblock-write
 WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(TransformStream& stream, JS::Value error)
 {
