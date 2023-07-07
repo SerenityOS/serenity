@@ -23,6 +23,11 @@
 namespace Gfx {
 
 struct DDSLoadingContext {
+    DDSLoadingContext(FixedMemoryStream stream)
+        : stream(move(stream))
+    {
+    }
+
     enum State {
         NotDecoded = 0,
         Error,
@@ -31,8 +36,7 @@ struct DDSLoadingContext {
 
     State state { State::NotDecoded };
 
-    u8 const* data { nullptr };
-    size_t data_size { 0 };
+    FixedMemoryStream stream;
 
     DDSHeader header;
     DDSHeaderDXT10 header10;
@@ -408,15 +412,13 @@ static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, D
 static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 {
     // All valid DDS files are at least 128 bytes long.
-    if (context.data_size < 128) {
+    if (TRY(context.stream.size()) < 128) {
         dbgln_if(DDS_DEBUG, "File is too short for DDS");
         context.state = DDSLoadingContext::State::Error;
         return Error::from_string_literal("File is too short for DDS");
     }
 
-    FixedMemoryStream stream { ReadonlyBytes { context.data, context.data_size } };
-
-    auto magic = TRY(stream.read_value<u32>());
+    auto magic = TRY(context.stream.read_value<u32>());
 
     if (magic != create_four_cc('D', 'D', 'S', ' ')) {
         dbgln_if(DDS_DEBUG, "Missing magic number");
@@ -424,7 +426,7 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         return Error::from_string_literal("Missing magic number");
     }
 
-    context.header = TRY(stream.read_value<DDSHeader>());
+    context.header = TRY(context.stream.read_value<DDSHeader>());
 
     if (context.header.size != 124) {
         dbgln_if(DDS_DEBUG, "Header size is malformed");
@@ -439,13 +441,13 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 
     if ((context.header.pixel_format.flags & PixelFormatFlags::DDPF_FOURCC) == PixelFormatFlags::DDPF_FOURCC) {
         if (context.header.pixel_format.four_cc == create_four_cc('D', 'X', '1', '0')) {
-            if (context.data_size < 148) {
+            if (TRY(context.stream.size()) < 148) {
                 dbgln_if(DDS_DEBUG, "DX10 header is too short");
                 context.state = DDSLoadingContext::State::Error;
                 return Error::from_string_literal("DX10 header is too short");
             }
 
-            context.header10 = TRY(stream.read_value<DDSHeaderDXT10>());
+            context.header10 = TRY(context.stream.read_value<DDSHeaderDXT10>());
         }
     }
 
@@ -469,7 +471,7 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 
         context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
-        TRY(decode_bitmap(stream, context, format, width, height));
+        TRY(decode_bitmap(context.stream, context, format, width, height));
     }
 
     context.state = DDSLoadingContext::State::BitmapDecoded;
@@ -612,11 +614,9 @@ void DDSLoadingContext::dump_debug()
     dbgln("{}", builder.to_deprecated_string());
 }
 
-DDSImageDecoderPlugin::DDSImageDecoderPlugin(u8 const* data, size_t size)
+DDSImageDecoderPlugin::DDSImageDecoderPlugin(FixedMemoryStream stream)
 {
-    m_context = make<DDSLoadingContext>();
-    m_context->data = data;
-    m_context->data_size = size;
+    m_context = make<DDSLoadingContext>(move(stream));
 }
 
 DDSImageDecoderPlugin::~DDSImageDecoderPlugin() = default;
@@ -649,7 +649,8 @@ bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(data.data(), data.size()));
+    FixedMemoryStream stream { data };
+    return adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(move(stream)));
 }
 
 bool DDSImageDecoderPlugin::is_animated()
