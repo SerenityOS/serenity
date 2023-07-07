@@ -663,10 +663,11 @@ static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
-    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path));
-    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 }));
+    Gfx::IntSize thumbnail_size { 32, 32 };
+    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path, 1, thumbnail_size));
+    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
 
-    double scale = min(32 / (double)bitmap->width(), 32 / (double)bitmap->height());
+    double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());
     auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
 
     Painter painter(thumbnail);
