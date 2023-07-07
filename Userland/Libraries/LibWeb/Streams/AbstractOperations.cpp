@@ -2745,6 +2745,51 @@ void transform_stream_default_controller_clear_algorithms(TransformStreamDefault
     controller.set_flush_algorithm({});
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-controller-enqueue
+WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformStreamDefaultController& controller, JS::Value chunk)
+{
+    auto& vm = controller.vm();
+
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. Let readableController be stream.[[readable]].[[controller]].
+    VERIFY(stream->readable()->controller().has_value() && stream->readable()->controller()->has<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
+    auto& readable_controller = stream->readable()->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
+
+    // 3. If ! ReadableStreamDefaultControllerCanCloseOrEnqueue(readableController) is false, throw a TypeError exception.
+    if (!readable_stream_default_controller_can_close_or_enqueue(readable_controller))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "ReadableController is either closed or not readable."sv };
+
+    // 4. Let enqueueResult be ReadableStreamDefaultControllerEnqueue(readableController, chunk).
+    auto enqueue_result = readable_stream_default_controller_enqueue(readable_controller, chunk);
+
+    // 5. If enqueueResult is an abrupt completion,
+    if (enqueue_result.is_error()) {
+        auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, enqueue_result.exception());
+
+        // 1. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, enqueueResult.[[Value]]).
+        TRY(transform_stream_error_writable_and_unblock_write(*stream, throw_completion.value().value()));
+
+        // 2. Throw stream.[[readable]].[[storedError]].
+        return JS::throw_completion(stream->readable()->stored_error());
+    }
+
+    // 6. Let backpressure be ! ReadableStreamDefaultControllerHasBackpressure(readableController).
+    auto backpressure = readable_stream_default_controller_has_backpressure(readable_controller);
+
+    // 7. If backpressure is not stream.[[backpressure]],
+    if (backpressure != stream->backpressure()) {
+        // 1. Assert: backpressure is true.
+        VERIFY(backpressure);
+
+        // 2. Perform ! TransformStreamSetBackpressure(stream, true).
+        TRY(transform_stream_set_backpressure(*stream, true));
+    }
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-error
 WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController& controller, JS::Value error)
 {
