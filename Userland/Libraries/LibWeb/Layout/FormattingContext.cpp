@@ -578,13 +578,13 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     auto computed_left = computed_values.inset().left();
     auto computed_right = computed_values.inset().right();
+    auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
+    auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
 
     auto try_compute_width = [&](auto const& a_width) {
         margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length);
         margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length);
 
-        auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
-        auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
         auto width = a_width;
 
         auto solve_for_left = [&] {
@@ -610,7 +610,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
             // FIXME: This is very hackish.
-            left = 0;
+            auto static_position = calculate_static_position(box);
+            left = static_position.x();
             goto Rule3;
         }
 
@@ -666,8 +667,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
         else if (computed_left.is_auto() && computed_right.is_auto() && !width.is_auto()) {
             // FIXME: Check direction
-            // FIXME: Use the static-position containing block
-            left = 0;
+            auto static_position = calculate_static_position(box);
+            left = static_position.x();
             right = solve_for_right();
         }
 
@@ -722,11 +723,10 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     auto& box_state = m_state.get_mutable(box);
     box_state.set_content_width(used_width.to_px(box));
-
+    box_state.inset_left = left;
+    box_state.inset_right = right;
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
-    box_state.border_left = border_left;
-    box_state.border_right = border_right;
     box_state.padding_left = padding_left;
     box_state.padding_right = padding_right;
 }
@@ -1014,15 +1014,18 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     //       the final used values for vertical margin/border/padding.
 
     auto& box_state = m_state.get_mutable(box);
+    box_state.set_content_height(used_height);
+
+    // do not set calculated insets or margins on the first pass, there will be a second pass
+    if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+        return;
+
+    box_state.inset_top = top.to_px(box, width_of_containing_block);
+    box_state.inset_bottom = bottom.to_px(box, width_of_containing_block);
     box_state.margin_top = margin_top.to_px(box, width_of_containing_block);
     box_state.margin_bottom = margin_bottom.to_px(box, width_of_containing_block);
-    box_state.border_top = box.computed_values().border_top().width;
-    box_state.border_bottom = box.computed_values().border_bottom().width;
     box_state.padding_top = box.computed_values().padding().top().to_px(box, width_of_containing_block);
     box_state.padding_bottom = box.computed_values().padding().bottom().to_px(box, width_of_containing_block);
-
-    // And here is where we assign the box's content height.
-    box_state.set_content_height(used_height);
 }
 
 // NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
@@ -1077,9 +1080,9 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
             // Easy case: no previous sibling, we're at the top of the containing block.
         }
     } else {
-        x = m_state.get(box).margin_box_left();
+        x = m_state.get(box).margin_left;
         // We're among block siblings, Y can be calculated easily.
-        y = m_state.get(box).margin_box_top();
+        y = m_state.get(box).margin_top;
     }
     auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block());
     return offset_to_static_parent.location().translated(x, y);
@@ -1095,6 +1098,13 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
+    // The border computed values are not changed by the compute_height & width calculations below.
+    // The spec only adjusts and computes sizes, insets and margins.
+    box_state.border_left = box.computed_values().border_left().width;
+    box_state.border_right = box.computed_values().border_right().width;
+    box_state.border_top = box.computed_values().border_top().width;
+    box_state.border_bottom = box.computed_values().border_bottom().width;
+
     compute_width_for_absolutely_positioned_element(box, available_space);
 
     // NOTE: We compute height before *and* after doing inside layout.
@@ -1106,59 +1116,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
 
     compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
 
-    box_state.margin_top = box.computed_values().margin().top().to_px(box, width_of_containing_block);
-    box_state.margin_bottom = box.computed_values().margin().bottom().to_px(box, width_of_containing_block);
-
-    box_state.border_left = box.computed_values().border_left().width;
-    box_state.border_right = box.computed_values().border_right().width;
-    box_state.border_top = box.computed_values().border_top().width;
-    box_state.border_bottom = box.computed_values().border_bottom().width;
-
-    auto const& computed_left = box.computed_values().inset().left();
-    auto const& computed_right = box.computed_values().inset().right();
-    auto const& computed_top = box.computed_values().inset().top();
-    auto const& computed_bottom = box.computed_values().inset().bottom();
-
-    box_state.inset_left = computed_left.to_px(box, width_of_containing_block);
-    box_state.inset_top = computed_top.to_px(box, height_of_containing_block);
-    box_state.inset_right = computed_right.to_px(box, width_of_containing_block);
-    box_state.inset_bottom = computed_bottom.to_px(box, height_of_containing_block);
-
-    auto static_position = calculate_static_position(box);
-
     CSSPixelPoint used_offset;
-
-    if (!computed_left.is_auto()) {
-        CSSPixels x_offset = box_state.inset_left
-            + box_state.border_box_left();
-        used_offset.set_x(x_offset + box_state.margin_left);
-    } else if (!computed_right.is_auto()) {
-        CSSPixels x_offset = CSSPixels(0)
-            - box_state.inset_right
-            - box_state.border_box_right();
-        used_offset.set_x(width_of_containing_block + x_offset - box_state.content_width() - box_state.margin_right);
-    } else {
-        // NOTE: static position is content box position so border_box and margin should not be added
-        used_offset.set_x(static_position.x());
-    }
-
-    if (!computed_top.is_auto()) {
-        CSSPixels y_offset = box_state.inset_top
-            + box_state.border_box_top();
-        used_offset.set_y(y_offset + box_state.margin_top);
-    } else if (!computed_bottom.is_auto()) {
-        CSSPixels y_offset = CSSPixels(0)
-            - box_state.inset_bottom
-            - box_state.border_box_bottom();
-        used_offset.set_y(height_of_containing_block + y_offset - box_state.content_height() - box_state.margin_bottom);
-    } else {
-        // NOTE: static position is content box position so border_box and margin should not be added
-        used_offset.set_y(static_position.y());
-    }
-
+    used_offset.set_x(box_state.inset_left + box_state.margin_box_left());
+    used_offset.set_y(box_state.inset_top + box_state.margin_box_top());
     // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
     used_offset.translate_by(-containing_block_state.padding_left, -containing_block_state.padding_top);
-
     box_state.set_content_offset(used_offset);
 
     if (independent_formatting_context)

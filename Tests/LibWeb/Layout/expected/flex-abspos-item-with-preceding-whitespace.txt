@@ -4,5 +4,5 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.pink> at (38,38) content-size 724x0 flex-container(row) [FFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.orange> at (38,-12) content-size 100x100 positioned [BFC] children: inline
+        BlockContainer <div.orange> at (48,-12) content-size 100x100 positioned [BFC] children: inline
           TextNode <#text>
