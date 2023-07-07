@@ -68,6 +68,8 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "image/gif"sv;
     if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
         return "image/bmp"sv;
+    if (path.ends_with(".dds"sv, CaseSensitivity::CaseInsensitive))
+        return "image/vnd.ms-dds"sv;
     if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
         return "image/jpeg"sv;
     if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
@@ -135,6 +137,7 @@ StringView guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(blend, "extra/blender"sv, 0, 7, 'B', 'L', 'E', 'N', 'D', 'E', 'R')                                                \
     __ENUMERATE_MIME_TYPE_HEADER(bmp, "image/bmp"sv, 0, 2, 'B', 'M')                                                                               \
     __ENUMERATE_MIME_TYPE_HEADER(bzip2, "application/x-bzip2"sv, 0, 3, 'B', 'Z', 'h')                                                              \
+    __ENUMERATE_MIME_TYPE_HEADER(dds, "image/vnd.ms-dds"sv, 0, 4, 'D', 'D', 'S', ' ')                                                              \
     __ENUMERATE_MIME_TYPE_HEADER(compressed_iso, "extra/isz"sv, 0, 4, 'I', 's', 'Z', '!')                                                          \
     __ENUMERATE_MIME_TYPE_HEADER(elf, "extra/elf"sv, 0, 4, 0x7F, 'E', 'L', 'F')                                                                    \
     __ENUMERATE_MIME_TYPE_HEADER(ext, "extra/ext"sv, 0x438, 2, 0x53, 0xEF)                                                                         \
