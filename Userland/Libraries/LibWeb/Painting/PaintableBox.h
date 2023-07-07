@@ -64,10 +64,16 @@ public:
     {
         auto padded_rect = this->absolute_padding_box_rect();
         CSSPixelRect rect;
-        rect.set_x(padded_rect.x() - box_model().border.left);
-        rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
-        rect.set_y(padded_rect.y() - box_model().border.top);
-        rect.set_height(padded_rect.height() + box_model().border.top + box_model().border.bottom);
+        auto use_collapsing_borders_model = override_borders_data().has_value();
+        // Implement the collapsing border model https://www.w3.org/TR/CSS22/tables.html#collapsing-borders.
+        auto border_top = use_collapsing_borders_model ? round(box_model().border.top / 2) : box_model().border.top;
+        auto border_bottom = use_collapsing_borders_model ? round(box_model().border.bottom / 2) : box_model().border.bottom;
+        auto border_left = use_collapsing_borders_model ? round(box_model().border.left / 2) : box_model().border.left;
+        auto border_right = use_collapsing_borders_model ? round(box_model().border.right / 2) : box_model().border.right;
+        rect.set_x(padded_rect.x() - border_left);
+        rect.set_width(padded_rect.width() + border_left + border_right);
+        rect.set_y(padded_rect.y() - border_top);
+        rect.set_height(padded_rect.height() + border_top + border_bottom);
         return rect;
     }
 
@@ -124,7 +130,7 @@ public:
     bool is_out_of_view(PaintContext&) const;
 
     void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; }
-    auto const& override_borders_data() const { return m_override_borders_data; }
+    Optional<BordersData> const& override_borders_data() const { return m_override_borders_data; }
 
     struct TableCellCoordinates {
         size_t row_index;
