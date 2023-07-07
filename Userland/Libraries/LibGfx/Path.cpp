@@ -347,15 +347,16 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
         }
         case Segment::Type::EllipticalArcTo: {
             auto const& arc_segment = static_cast<EllipticalArcSegment const&>(*segment);
+            auto det_negative = transform.determinant() < 0;
             result.elliptical_arc_to(
                 transform.map(segment->point()),
                 transform.map(arc_segment.center()),
                 transform.map(arc_segment.radii()),
                 arc_segment.x_axis_rotation() + transform.rotation(),
-                arc_segment.theta_1(),
-                arc_segment.theta_delta(),
+                det_negative ? AK::Pi<float> * 2 - arc_segment.theta_1() : arc_segment.theta_1(),
+                det_negative ? -arc_segment.theta_delta() : arc_segment.theta_delta(),
                 arc_segment.large_arc(),
-                arc_segment.sweep());
+                det_negative ? !arc_segment.sweep() : arc_segment.sweep());
             break;
         }
         case Segment::Type::Invalid:
