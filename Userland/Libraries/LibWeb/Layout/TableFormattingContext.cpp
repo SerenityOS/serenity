@@ -174,11 +174,12 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels padding_right = computed_values.padding().right().to_px(cell.box, containing_block.content_width());
 
         auto const& cell_state = m_state.get(cell.box);
-        auto is_collapse = cell.box->computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
-        CSSPixels border_top = is_collapse ? cell_state.border_top : computed_values.border_top().width;
-        CSSPixels border_bottom = is_collapse ? cell_state.border_bottom : computed_values.border_bottom().width;
-        CSSPixels border_left = is_collapse ? cell_state.border_left : computed_values.border_left().width;
-        CSSPixels border_right = is_collapse ? cell_state.border_right : computed_values.border_right().width;
+        auto use_collapsing_borders_model = cell_state.override_borders_data().has_value();
+        // Implement the collapsing border model https://www.w3.org/TR/CSS22/tables.html#collapsing-borders.
+        CSSPixels border_top = use_collapsing_borders_model ? round(cell_state.border_top / 2) : computed_values.border_top().width;
+        CSSPixels border_bottom = use_collapsing_borders_model ? round(cell_state.border_bottom / 2) : computed_values.border_bottom().width;
+        CSSPixels border_left = use_collapsing_borders_model ? round(cell_state.border_left / 2) : computed_values.border_left().width;
+        CSSPixels border_right = use_collapsing_borders_model ? round(cell_state.border_right / 2) : computed_values.border_right().width;
 
         auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
         auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
