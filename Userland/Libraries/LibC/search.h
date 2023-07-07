@@ -17,6 +17,7 @@ typedef enum {
     leaf,
 } VISIT;
 
+void tdestroy(void *root, void (*free_node)(void *nodep));
 void* tsearch(void const*, void**, int (*)(void const*, void const*));
 void* tfind(void const*, void* const*, int (*)(void const*, void const*));
 void* tdelete(void const*, void**, int (*)(void const*, void const*));

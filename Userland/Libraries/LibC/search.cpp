@@ -92,6 +92,11 @@ void* tfind(void const* key, void* const* rootp, int (*comparator)(void const*, 
     return nullptr;
 }
 
+void tdestroy(void *, [[maybe_unused]] void (*free_node)(void *nodep))
+{
+    dbgln("FIXME: Implement tdestroy()");
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/tdelete.html
 void* tdelete(void const*, void**, int (*)(void const*, void const*))
 {
