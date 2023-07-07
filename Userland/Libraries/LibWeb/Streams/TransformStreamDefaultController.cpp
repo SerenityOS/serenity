@@ -43,4 +43,13 @@ Optional<double> TransformStreamDefaultController::desired_size()
     return readable_stream_default_controller_get_desired_size(*readable_controller);
 }
 
+// https://streams.spec.whatwg.org/#ts-default-controller-error
+WebIDL::ExceptionOr<void> TransformStreamDefaultController::error(Optional<JS::Value> reason)
+{
+    // 1. Perform ? TransformStreamDefaultControllerError(this, e).
+    TRY(transform_stream_default_controller_error(*this, reason.has_value() ? reason.value() : JS::js_undefined()));
+
+    return {};
+}
+
 }

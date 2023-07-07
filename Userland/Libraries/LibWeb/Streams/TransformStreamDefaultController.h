@@ -19,6 +19,7 @@ public:
     virtual ~TransformStreamDefaultController() override;
 
     Optional<double> desired_size();
+    WebIDL::ExceptionOr<void> error(Optional<JS::Value> reason = {});
 
     auto& flush_algorithm() { return m_flush_algorithm; }
     void set_flush_algorithm(Optional<FlushAlgorithm>&& value) { m_flush_algorithm = move(value); }
