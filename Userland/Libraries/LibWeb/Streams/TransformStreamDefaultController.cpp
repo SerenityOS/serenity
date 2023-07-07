@@ -61,4 +61,13 @@ WebIDL::ExceptionOr<void> TransformStreamDefaultController::error(Optional<JS::V
     return {};
 }
 
+// https://streams.spec.whatwg.org/#ts-default-controller-terminate
+WebIDL::ExceptionOr<void> TransformStreamDefaultController::terminate()
+{
+    // 1. Perform ? TransformStreamDefaultControllerTerminate(this).
+    TRY(transform_stream_default_controller_terminate(*this));
+
+    return {};
+}
+
 }
