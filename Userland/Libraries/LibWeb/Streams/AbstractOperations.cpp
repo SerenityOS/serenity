@@ -2799,6 +2799,30 @@ WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStr
     return {};
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-controller-terminate
+WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(TransformStreamDefaultController& controller)
+{
+    auto& realm = controller.realm();
+
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. Let readableController be stream.[[readable]].[[controller]].
+    VERIFY(stream->readable()->controller().has_value() && stream->readable()->controller()->has<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
+    auto readable_controller = stream->readable()->controller()->get<JS::NonnullGCPtr<ReadableStreamDefaultController>>();
+
+    // 3. Perform ! ReadableStreamDefaultControllerClose(readableController).
+    readable_stream_default_controller_close(readable_controller);
+
+    // 4. Let error be a TypeError exception indicating that the stream has been terminated.
+    auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Stream has been terminated."sv));
+
+    // 5. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, error).
+    TRY(transform_stream_error_writable_and_unblock_write(*stream, error));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
 {
