@@ -18,8 +18,8 @@ Engine::~Engine()
     quit();
 }
 
-Engine::Engine(StringView command)
-    : m_command(command)
+Engine::Engine(String command)
+    : m_command(move(command))
 {
     connect_to_engine_service();
 }
@@ -43,12 +43,20 @@ void Engine::connect_to_engine_service()
     posix_spawn_file_actions_adddup2(&file_actions, wpipefds[0], STDIN_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
-    char const* argv[] = { m_command.characters(), nullptr };
+    auto command_length = m_command.code_points().length();
+    auto command_name = new char[command_length + 1];
+    memcpy(command_name, m_command.bytes_as_string_view().characters_without_null_termination(), command_length);
+    command_name[command_length] = '\0';
+
+    char const* argv[] = { command_name, nullptr };
+
     pid_t pid = -1;
-    if (posix_spawnp(&pid, m_command.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
+    if (posix_spawnp(&pid, command_name, &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");
         VERIFY_NOT_REACHED();
     }
+
+    delete[] command_name;
 
     posix_spawn_file_actions_destroy(&file_actions);
 

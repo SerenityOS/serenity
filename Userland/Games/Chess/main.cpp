@@ -69,6 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto const& engine : engines)
         TRY(Core::System::unveil(engine.path, "x"sv));
 
+    TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
@@ -125,7 +126,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Exported PGN file to {}", result.value().filename());
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
-        GUI::Clipboard::the().set_data(widget->get_fen().bytes());
+        GUI::Clipboard::the().set_data(widget->get_fen().release_value_but_fixme_should_propagate_errors().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN."sv, "Copy FEN"sv, GUI::MessageBox::Type::Information);
     })));
     TRY(game_menu->try_add_separator());

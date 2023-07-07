@@ -15,7 +15,7 @@ class Engine : public Chess::UCI::Endpoint {
 public:
     virtual ~Engine() override;
 
-    Engine(StringView command);
+    Engine(String command);
 
     Engine(Engine const&) = delete;
     Engine& operator=(Engine const&) = delete;
@@ -51,7 +51,7 @@ private:
     void quit();
     void connect_to_engine_service();
 
-    DeprecatedString m_command;
+    String m_command;
     Function<void(ErrorOr<Chess::Move>)> m_bestmove_callback;
     bool m_connected { false };
 };

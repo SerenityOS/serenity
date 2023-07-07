@@ -7,9 +7,9 @@
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
 #include <AK/String.h>
+#include <LibCore/Account.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
@@ -368,7 +368,6 @@ static RefPtr<Gfx::Bitmap> get_piece(StringView set, StringView image)
 
 void ChessWidget::set_piece_set(StringView set)
 {
-    m_piece_set = set;
     m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"sv));
     m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"sv));
     m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"sv));
@@ -522,9 +521,9 @@ void ChessWidget::playback_move(PlaybackDirection direction)
     update();
 }
 
-DeprecatedString ChessWidget::get_fen() const
+ErrorOr<String> ChessWidget::get_fen() const
 {
-    return (m_playback ? m_board_playback.to_fen() : m_board.to_fen()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return TRY(m_playback ? m_board_playback.to_fen() : m_board.to_fen());
 }
 
 ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
@@ -548,13 +547,13 @@ ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
     bool recursive_annotation = false;
     bool future_expansion = false;
     Chess::Color turn = Chess::Color::White;
-    DeprecatedString movetext;
+    String movetext;
 
     for (size_t j = i; j < lines.size(); j++)
-        movetext = DeprecatedString::formatted("{}{}", movetext, lines.at(i).to_deprecated_string());
+        movetext = TRY(String::formatted("{}{}", movetext, lines.at(i)));
 
-    for (auto token : movetext.split(' ')) {
-        token = token.trim_whitespace();
+    for (auto token : TRY(movetext.split(' '))) {
+        token = TRY(token.trim_ascii_whitespace());
 
         // FIXME: Parse all of these tokens when we start caring about them
         if (token.ends_with('}')) {
@@ -629,16 +628,19 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
     // Tag Pair Section
     TRY(file.write_until_depleted("[Event \"Casual Game\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[Site \"SerenityOS Chess\"]\n"sv.bytes()));
-    TRY(file.write_until_depleted(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)).bytes()));
+    TRY(file.write_formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)));
     TRY(file.write_until_depleted("[Round \"1\"]\n"sv.bytes()));
 
-    DeprecatedString username(getlogin());
-    auto const player1 = (!username.is_empty() ? username.view() : "?"sv.bytes());
-    auto const player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv.bytes() : "?"sv.bytes());
-    TRY(file.write_until_depleted(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2).bytes()));
-    TRY(file.write_until_depleted(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2).bytes()));
+    auto current_user = TRY(Core::Account::self(Core::Account::Read::PasswdOnly));
+    auto const username = TRY(String::from_deprecated_string(current_user.username()));
 
-    TRY(file.write_until_depleted(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn())).bytes()));
+    auto const player1 = (!username.is_empty() ? username : "?"sv);
+    auto const player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv : "?"sv);
+
+    TRY(file.write_formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
+    TRY(file.write_formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
+
+    TRY(file.write_formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn())));
     TRY(file.write_until_depleted("[WhiteElo \"?\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[BlackElo \"?\"]\n"sv.bytes()));
     TRY(file.write_until_depleted("[Variant \"Standard\"]\n"sv.bytes()));
@@ -648,13 +650,13 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
-        const DeprecatedString white = m_board.moves().at(i).to_algebraic().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        auto const white = TRY(m_board.moves().at(i).to_algebraic());
 
         if (i + 1 < m_board.moves().size()) {
-            const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-            TRY(file.write_until_depleted(DeprecatedString::formatted("{}. {} {} ", move_no, white, black).bytes()));
+            auto const black = TRY(m_board.moves().at(i + 1).to_algebraic());
+            TRY(file.write_until_depleted(TRY(String::formatted("{}. {} {} ", move_no, white, black)).bytes()));
         } else {
-            TRY(file.write_until_depleted(DeprecatedString::formatted("{}. {} ", move_no, white).bytes()));
+            TRY(file.write_until_depleted(TRY(String::formatted("{}. {} ", move_no, white)).bytes()));
         }
     }
 
