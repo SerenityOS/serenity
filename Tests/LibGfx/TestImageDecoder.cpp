@@ -42,8 +42,8 @@ static Gfx::ImageFrameDescriptor expect_single_frame(Gfx::ImageDecoderPlugin& pl
 
 static Gfx::ImageFrameDescriptor expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
 {
-    auto frame = expect_single_frame(plugin_decoder);
     EXPECT_EQ(plugin_decoder.size(), size);
+    auto frame = expect_single_frame(plugin_decoder);
     EXPECT_EQ(frame.image->size(), size);
     return frame;
 }
