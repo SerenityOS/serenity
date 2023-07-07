@@ -43,7 +43,6 @@ public:
     void set_side(Chess::Color side) { m_side = side; }
 
     void set_piece_set(StringView set);
-    DeprecatedString const& piece_set() const { return m_piece_set; }
 
     Optional<Chess::Square> mouse_to_square(GUI::MouseEvent& event) const;
 
@@ -54,7 +53,7 @@ public:
     bool show_available_moves() const { return m_show_available_moves; }
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
 
-    DeprecatedString get_fen() const;
+    ErrorOr<String> get_fen() const;
     ErrorOr<void> import_pgn(Core::File&);
     ErrorOr<void> export_pgn(Core::File&) const;
 
@@ -140,7 +139,6 @@ private:
     Color m_marking_secondary_color { Color::from_argb(0x6655dd55) };
     Chess::Color m_side { Chess::Color::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap const>> m_pieces;
-    DeprecatedString m_piece_set;
     Chess::Square m_moving_square { 50, 50 };
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
