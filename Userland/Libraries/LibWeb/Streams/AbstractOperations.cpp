@@ -2845,6 +2845,53 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     return WebIDL::create_resolved_promise(realm, react_result);
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-sink-write-algorithm
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_write_algorithm(TransformStream& stream, JS::Value chunk)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream.[[writable]].[[state]] is "writable".
+    VERIFY(stream.writable()->state() == WritableStream::State::Writable);
+
+    // 2. Let controller be stream.[[controller]].
+    auto controller = stream.controller();
+
+    // 3. If stream.[[backpressure]] is true,
+    if (stream.backpressure().has_value() && *stream.backpressure()) {
+        // 1. Let backpressureChangePromise be stream.[[backpressureChangePromise]].
+        auto backpressure_change_promise = stream.backpressure_change_promise();
+
+        // 2. Assert: backpressureChangePromise is not undefined.
+        VERIFY(backpressure_change_promise);
+
+        // 3. Return the result of reacting to backpressureChangePromise with the following fulfillment steps:
+        auto react_result = WebIDL::react_to_promise(*backpressure_change_promise,
+            [&stream, controller, chunk](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+                // 1. Let writable be stream.[[writable]].
+                auto writable = stream.writable();
+
+                // 2. Let state be writable.[[state]].
+                auto state = writable->state();
+
+                // 3. If state is "erroring", throw writable.[[storedError]].
+                if (state == WritableStream::State::Erroring)
+                    return JS::throw_completion(writable->stored_error());
+
+                // 4. Assert: state is "writable".
+                VERIFY(state == WritableStream::State::Writable);
+
+                // 5. Return ! TransformStreamDefaultControllerPerformTransform(controller, chunk).
+                return TRY(transform_stream_default_controller_perform_transform(*controller, chunk))->promise();
+            },
+            {});
+
+        return WebIDL::create_resolved_promise(realm, react_result);
+    }
+
+    // 4. Return ! TransformStreamDefaultControllerPerformTransform(controller, chunk).
+    return transform_stream_default_controller_perform_transform(*controller, chunk);
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
 {
