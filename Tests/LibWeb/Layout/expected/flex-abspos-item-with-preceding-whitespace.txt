@@ -1,7 +1,8 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x20 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 780x2 children: not-inline
-      Box <div.pink> at (11,11) content-size 778x0 flex-container(row) [FFC] children: not-inline
+  BlockContainer <html> at (10,10) content-size 780x56 [BFC] children: not-inline
+    BlockContainer <body> at (28,28) content-size 744x20 children: not-inline
+      Box <div.pink> at (38,38) content-size 724x0 flex-container(row) [FFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.orange> at (11,-39) content-size 100x100 positioned [BFC] children: not-inline
+        BlockContainer <div.orange> at (38,-12) content-size 100x100 positioned [BFC] children: inline
+          TextNode <#text>
