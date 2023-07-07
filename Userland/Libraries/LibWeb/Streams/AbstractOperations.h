@@ -24,6 +24,8 @@ using StartAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::Value>()>;
 using AbortAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
 using CloseAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>()>;
 using WriteAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
+using FlushAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>()>;
+using TransformAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream&);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> acquire_readable_stream_byob_reader(ReadableStream&);
