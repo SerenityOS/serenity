@@ -133,6 +133,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
 WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
 
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
+WebIDL::ExceptionOr<void> transform_stream_set_backpressure(TransformStream&, bool backpressure);
 
 bool is_non_negative_number(JS::Value);
 
