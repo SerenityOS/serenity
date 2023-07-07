@@ -16,7 +16,13 @@ cat <<EOF >> mnt/etc/SystemServer.ini
 [SSHServer]
 Executable=/usr/local/sbin/sshd
 Arguments=-D
-KeepAlive=1
+KeepAlive=true
+SystemModes=text,graphical
+
+[SSHServerGenKeys]
+Executable=/usr/local/bin/ssh-keygen
+Arguments=-A
+KeepAlive=false
 SystemModes=text,graphical
 EOF
 ```
