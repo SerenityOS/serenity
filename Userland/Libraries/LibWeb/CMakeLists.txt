@@ -515,6 +515,7 @@ set(SOURCES
     Streams/ReadableStreamGenericReader.cpp
     Streams/Transformer.cpp
     Streams/TransformStream.cpp
+    Streams/TransformStreamDefaultController.cpp
     Streams/UnderlyingSink.cpp
     Streams/UnderlyingSource.cpp
     Streams/WritableStream.cpp
