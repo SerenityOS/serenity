@@ -542,6 +542,17 @@ void readable_stream_default_controller_close(ReadableStreamDefaultController& c
     }
 }
 
+// https://streams.spec.whatwg.org/#rs-default-controller-has-backpressure
+bool readable_stream_default_controller_has_backpressure(ReadableStreamDefaultController& controller)
+{
+    // 1. If ! ReadableStreamDefaultControllerShouldCallPull(controller) is true, return false.
+    if (readable_stream_default_controller_should_call_pull(controller))
+        return false;
+
+    // 2. Otherwise, return true.
+    return true;
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
 WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStreamDefaultController& controller, JS::Value chunk)
 {
