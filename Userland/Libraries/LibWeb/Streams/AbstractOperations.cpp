@@ -2845,6 +2845,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     return WebIDL::create_resolved_promise(realm, react_result);
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-sink-abort-algorithm
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_abort_algorithm(TransformStream& stream, JS::Value reason)
+{
+    auto& realm = stream.realm();
+
+    // 1. Perform ! TransformStreamError(stream, reason).
+    TRY(transform_stream_error(stream, reason));
+
+    // 2. Return a promise resolved with undefined.
+    return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-default-sink-write-algorithm
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_write_algorithm(TransformStream& stream, JS::Value chunk)
 {

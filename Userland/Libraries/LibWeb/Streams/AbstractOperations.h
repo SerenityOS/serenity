@@ -138,6 +138,7 @@ WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformS
 WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(TransformStreamDefaultController&);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_controller_perform_transform(TransformStreamDefaultController&, JS::Value chunk);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_abort_algorithm(TransformStream&, JS::Value reason);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_write_algorithm(TransformStream&, JS::Value chunk);
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream&, JS::Value error);
 WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(TransformStream&, JS::Value error);
