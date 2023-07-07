@@ -479,7 +479,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
                 if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
-                    if (vm.bytecode_interpreter_if_exists() && param->is_local()) {
+                    if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator) && param->is_local()) {
                         // NOTE: Local variables are supported only in bytecode interpreter
                         callee_context.local_variables[param->local_variable_index()] = argument_value;
                         return {};
