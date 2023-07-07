@@ -12,6 +12,7 @@
 #include <bits/FILE.h>
 #include <bits/pthread_integration.h>
 #include <bits/wchar.h>
+#include <stdio_locking_ext.h>
 #include <pthread.h>
 #include <sys/types.h>
 
@@ -34,6 +35,9 @@ public:
     void purge();
     size_t pending();
     bool close();
+
+    int fsetlocking(int type);
+    bool is_fsetlocking_internal() const;
 
     void lock();
     void unlock();
@@ -133,6 +137,7 @@ private:
     bool m_eof { false };
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
+    int m_fsetlock_type { FSETLOCKING_INTERNAL };
     __pthread_mutex_t m_mutex;
     IntrusiveListNode<FILE> m_list_node;
 
@@ -144,15 +149,19 @@ class ScopedFileLock {
 public:
     ScopedFileLock(FILE* file)
         : m_file(file)
+        , m_should_be_locked(file->is_fsetlocking_internal())
     {
-        m_file->lock();
+        if (m_should_be_locked)
+            m_file->lock();
     }
 
     ~ScopedFileLock()
     {
-        m_file->unlock();
+        if (m_should_be_locked)
+            m_file->unlock();
     }
 
 private:
     FILE* m_file;
+    bool m_should_be_locked { true };
 };

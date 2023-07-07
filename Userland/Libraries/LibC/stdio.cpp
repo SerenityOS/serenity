@@ -534,6 +534,19 @@ bool FILE::Buffer::enqueue_front(u8 byte)
     return true;
 }
 
+int FILE::fsetlocking(int type)
+{
+    switch (type) {
+        case FSETLOCKING_INTERNAL:
+        case FSETLOCKING_BYCALLER:
+            m_fsetlock_type = type;
+            break;
+        case FSETLOCKING_QUERY:
+            break;
+    }
+    return m_fsetlock_type;
+}
+
 void FILE::lock()
 {
     pthread_mutex_lock(&m_mutex);
@@ -544,12 +557,23 @@ void FILE::unlock()
     pthread_mutex_unlock(&m_mutex);
 }
 
+bool FILE::is_fsetlocking_internal() const
+{
+    return m_fsetlock_type == FSETLOCKING_INTERNAL;
+}
+
 extern "C" {
 
 alignas(FILE) static u8 default_streams[3][sizeof(FILE)];
 FILE* stdin = reinterpret_cast<FILE*>(&default_streams[0]);
 FILE* stdout = reinterpret_cast<FILE*>(&default_streams[1]);
 FILE* stderr = reinterpret_cast<FILE*>(&default_streams[2]);
+
+int __fsetlocking(FILE *stream, int type)
+{
+    VERIFY(stream);
+    return stream->fsetlocking(type);
+}
 
 void __stdio_init()
 {
@@ -596,12 +620,17 @@ int fileno(FILE* stream)
     return stream->fileno();
 }
 
+int feof_unlocked(FILE* stream)
+{
+    VERIFY(stream);
+    return stream->eof();
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/feof.html
 int feof(FILE* stream)
 {
-    VERIFY(stream);
     ScopedFileLock lock(stream);
-    return stream->eof();
+    return feof_unlocked(stream);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fflush.html
@@ -759,22 +788,33 @@ int putc(int ch, FILE* stream)
     return fputc(ch, stream);
 }
 
+int putchar_unlocked(int ch)
+{
+    return fputc_unlocked(ch, stdout);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/putchar.html
 int putchar(int ch)
 {
     return putc(ch, stdout);
 }
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputs.html
-int fputs(char const* s, FILE* stream)
+int fputs_unlocked(char const* s, FILE* stream)
 {
     VERIFY(stream);
     size_t len = strlen(s);
-    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<u8 const*>(s), len);
     if (nwritten < len)
         return EOF;
     return 1;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputs.html
+int fputs(char const* s, FILE* stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    return fputs_unlocked(s, stream);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html
@@ -794,12 +834,17 @@ void clearerr(FILE* stream)
     stream->clear_err();
 }
 
+int ferror_unlocked(FILE* stream)
+{
+    VERIFY(stream);
+    return stream->error();
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/ferror.html
 int ferror(FILE* stream)
 {
-    VERIFY(stream);
     ScopedFileLock lock(stream);
-    return stream->error();
+    return ferror_unlocked(stream);
 }
 
 size_t fread_unlocked(void* ptr, size_t size, size_t nmemb, FILE* stream)

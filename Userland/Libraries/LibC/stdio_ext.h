@@ -7,6 +7,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdio_locking_ext.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -20,5 +21,7 @@ size_t __freadahead(FILE*);
 char const* __freadptr(FILE*, size_t*);
 void __freadptrinc(FILE*, size_t);
 void __fseterr(FILE*);
+
+int __fsetlocking(FILE *stream, int type);
 
 __END_DECLS
