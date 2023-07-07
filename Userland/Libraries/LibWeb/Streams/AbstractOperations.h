@@ -55,6 +55,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamD
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDefaultReader&, ReadableStream&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_byob_reader(ReadableStreamBYOBReader&, ReadableStream&);
 void readable_stream_default_controller_close(ReadableStreamDefaultController&);
+bool readable_stream_default_controller_has_backpressure(ReadableStreamDefaultController&);
 WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStreamDefaultController&, JS::Value chunk);
 WebIDL::ExceptionOr<void> readable_stream_default_controller_can_pull_if_needed(ReadableStreamDefaultController&);
 bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultController&);
