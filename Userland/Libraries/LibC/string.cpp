@@ -133,6 +133,37 @@ int timingsafe_memcmp(void const* b1, void const* b2, size_t len)
     return AK::timing_safe_compare(b1, b2, len) ? 1 : 0;
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncpy.html
+char* stpncpy(char* dest, char const* src, size_t n)
+{
+    char* pd = dest;
+    char const* ps = src;
+
+    // Requirement 1: shall copy not more than n bytes (bytes that follow 
+    // a NUL character are not copied) from the array pointed to by s2 to
+    // the array pointed to by s1.
+    for (; n--;) {
+        if (*ps == '\0')
+            break;
+        *pd++ = *ps++;
+    }
+
+    char* first_null = pd;
+
+    // Requirement 2: If the array pointed to by s2 is a string that is
+    // shorter than n bytes, NUL characters shall be appended to the 
+    // copy in the array pointed to by s1, until n bytes in all are written.
+    bool fills_nulls = n > 0;
+    for (; n--;) {
+        *pd++ = '\0';
+    }
+
+    // Requirement 3: If a NUL character is written to the destination,
+    // the stpncpy() function shall return the address of the first such
+    // NUL character. Otherwise, it shall return &s1[n]
+    return fills_nulls ? first_null : pd;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcpy.html
 void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 {

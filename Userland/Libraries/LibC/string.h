@@ -44,6 +44,7 @@ __attribute__((malloc)) char* strndup(char const*, size_t);
 char* strcpy(char* dest, char const* src);
 char* stpcpy(char* dest, char const* src);
 char* strncpy(char* dest, char const* src, size_t);
+char* stpncpy(char* dest, char const* src, size_t n);
 __attribute__((warn_unused_result)) size_t strlcpy(char* dest, char const* src, size_t);
 
 char* strchr(char const*, int c);
