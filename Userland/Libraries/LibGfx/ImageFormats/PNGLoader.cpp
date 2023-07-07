@@ -1309,19 +1309,6 @@ IntSize PNGImageDecoderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-void PNGImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool PNGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> PNGImageDecoderPlugin::initialize()
 {
     if (decode_png_header(*m_context))

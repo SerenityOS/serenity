@@ -215,19 +215,6 @@ IntSize ICOImageDecoderPlugin::size()
     return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
 }
 
-void ICOImageDecoderPlugin::set_volatile()
-{
-    if (m_context->images[0].bitmap)
-        m_context->images[0].bitmap->set_volatile();
-}
-
-bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->images[0].bitmap)
-        return false;
-    return m_context->images[0].bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> ICOImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context->data, m_context->data_size } };

@@ -182,19 +182,6 @@ IntSize QOIImageDecoderPlugin::size()
     return { m_context->header.width, m_context->header.height };
 }
 
-void QOIImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool QOIImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> QOIImageDecoderPlugin::initialize()
 {
     return decode_header_and_update_context(*m_context->stream);
