@@ -1925,10 +1925,11 @@ ErrorOr<IntSize> JPEGImageDecoderPlugin::size()
 {
     if (m_context->state == JPEGLoadingContext::State::Error)
         return Error::from_string_literal("Decoder already had an error");
-    if (m_context->state >= JPEGLoadingContext::State::FrameDecoded)
-        return IntSize { m_context->frame.width, m_context->frame.height };
 
-    return Error::from_string_literal("Size not read yet");
+    if (m_context->state < JPEGLoadingContext::State::FrameDecoded)
+        TRY(decode_header(*m_context));
+
+    return IntSize { m_context->frame.width, m_context->frame.height };
 }
 
 void JPEGImageDecoderPlugin::set_volatile()
