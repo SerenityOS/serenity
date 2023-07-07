@@ -2823,6 +2823,28 @@ WebIDL::ExceptionOr<void> transform_stream_default_controller_terminate(Transfor
     return {};
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-controller-perform-transform
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_controller_perform_transform(TransformStreamDefaultController& controller, JS::Value chunk)
+{
+    auto& realm = controller.realm();
+
+    // 1. Let transformPromise be the result of performing controller.[[transformAlgorithm]], passing chunk.
+    auto transform_promise = TRY((*controller.transform_algorithm())(chunk));
+
+    // 2. Return the result of reacting to transformPromise with the following rejection steps given the argument r:
+    auto react_result = WebIDL::react_to_promise(*transform_promise,
+        {},
+        [&](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+            // 1. Perform ! TransformStreamError(controller.[[stream]], r).
+            TRY(transform_stream_error(*controller.stream(), reason));
+
+            // 2. Throw r.
+            return JS::throw_completion(reason);
+        });
+
+    return WebIDL::create_resolved_promise(realm, react_result);
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
 {
