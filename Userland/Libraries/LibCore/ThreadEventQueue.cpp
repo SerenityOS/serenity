@@ -76,7 +76,7 @@ void ThreadEventQueue::cancel_all_pending_jobs()
 {
     Threading::MutexLocker lock(m_private->mutex);
     for (auto const& promise : m_private->pending_promises)
-        promise->cancel(Error::from_errno(ECANCELED));
+        promise->reject(Error::from_errno(ECANCELED));
 
     m_private->pending_promises.clear();
 }
@@ -87,7 +87,7 @@ size_t ThreadEventQueue::process()
     {
         Threading::MutexLocker locker(m_private->mutex);
         events = move(m_private->queued_events);
-        m_private->pending_promises.remove_all_matching([](auto& job) { return job->is_resolved() || job->is_canceled(); });
+        m_private->pending_promises.remove_all_matching([](auto& job) { return job->is_resolved() || job->is_rejected(); });
     }
 
     size_t processed_events = 0;
