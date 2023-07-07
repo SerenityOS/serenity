@@ -2857,6 +2857,50 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     return WebIDL::create_resolved_promise(realm, JS::js_undefined());
 }
 
+// https://streams.spec.whatwg.org/#transform-stream-default-sink-close-algorithm
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_close_algorithm(TransformStream& stream)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let readable be stream.[[readable]].
+    auto readable = stream.readable();
+
+    // 2. Let controller be stream.[[controller]].
+    auto controller = stream.controller();
+
+    // 3. Let flushPromise be the result of performing controller.[[flushAlgorithm]].
+    auto flush_promise = TRY((*controller->flush_algorithm())());
+
+    // 4. Perform ! TransformStreamDefaultControllerClearAlgorithms(controller).
+    transform_stream_default_controller_clear_algorithms(*controller);
+
+    // 5. Return the result of reacting to flushPromise:
+    auto react_result = WebIDL::react_to_promise(
+        *flush_promise,
+        // 1. If flushPromise was fulfilled, then:
+        [readable](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+            // 1. If readable.[[state]] is "errored", throw readable.[[storedError]].
+            if (readable->state() == ReadableStream::State::Errored)
+                return JS::throw_completion(readable->stored_error());
+
+            VERIFY(readable->controller().has_value() && readable->controller()->has<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
+            // 2. Perform ! ReadableStreamDefaultControllerClose(readable.[[controller]]).
+            readable_stream_default_controller_close(readable->controller().value().get<JS::NonnullGCPtr<ReadableStreamDefaultController>>());
+
+            return JS::js_undefined();
+        },
+        // 2. If flushPromise was rejected with reason r, then:
+        [&stream, readable](auto const& reason) -> WebIDL::ExceptionOr<JS::Value> {
+            // 1. Perform ! TransformStreamError(stream, r).
+            TRY(transform_stream_error(stream, reason));
+
+            // 2. Throw readable.[[storedError]].
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY(readable->stored_error().as_string().utf8_string_view()) };
+        });
+
+    return WebIDL::create_resolved_promise(realm, react_result);
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-default-sink-write-algorithm
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_sink_write_algorithm(TransformStream& stream, JS::Value chunk)
 {
