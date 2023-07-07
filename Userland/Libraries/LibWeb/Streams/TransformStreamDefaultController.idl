@@ -3,7 +3,7 @@
 interface TransformStreamDefaultController {
     readonly attribute unrestricted double? desiredSize;
 
-    // FIXME: undefined enqueue(optional any chunk);
+    undefined enqueue(optional any chunk);
     undefined error(optional any reason);
     // FIXME: undefined terminate();
 };

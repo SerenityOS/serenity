@@ -43,6 +43,15 @@ Optional<double> TransformStreamDefaultController::desired_size()
     return readable_stream_default_controller_get_desired_size(*readable_controller);
 }
 
+// https://streams.spec.whatwg.org/#ts-default-controller-enqueue
+WebIDL::ExceptionOr<void> TransformStreamDefaultController::enqueue(Optional<JS::Value> chunk)
+{
+    // 1. Perform ? TransformStreamDefaultControllerEnqueue(this, chunk).
+    TRY(transform_stream_default_controller_enqueue(*this, chunk.has_value() ? chunk.value() : JS::js_undefined()));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#ts-default-controller-error
 WebIDL::ExceptionOr<void> TransformStreamDefaultController::error(Optional<JS::Value> reason)
 {
