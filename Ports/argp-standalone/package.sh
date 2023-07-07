@@ -13,4 +13,5 @@ configure() {
 install() {
 	cp -r "${port}-${version}"/include/argp-standalone/argp.h "${SERENITY_INSTALL_ROOT}/usr/include/argp.h"
     cp -r "${port}-${version}"/src/libargp-standalone.so "${SERENITY_INSTALL_ROOT}/usr/lib/libargp.so"
+    ln -s "/usr/lib/libargp.so" "${SERENITY_INSTALL_ROOT}/usr/lib/libargp-standalone.so"
 }
