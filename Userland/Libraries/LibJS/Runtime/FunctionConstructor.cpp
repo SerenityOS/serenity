@@ -183,14 +183,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
     // 18. Let body be ParseText(StringToCodePoints(bodyString), bodySym).
     bool contains_direct_call_to_eval = false;
-    auto body_parser = Parser { Lexer { body_string } };
-    // Set up some parser state to accept things like return await, and yield in the plain function body.
-    body_parser.m_state.in_function_context = true;
-    if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
-        body_parser.m_state.await_expression_is_valid = true;
-    if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0)
-        body_parser.m_state.in_generator_function_context = true;
-    (void)body_parser.parse_function_body(parameters, kind, contains_direct_call_to_eval);
+    auto body_parser = Parser::parse_function_body_from_string(body_string, parse_options, parameters, kind, contains_direct_call_to_eval);
 
     // 19. If body is a List of errors, throw a SyntaxError exception.
     if (body_parser.has_errors()) {
