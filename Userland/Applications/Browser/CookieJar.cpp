@@ -608,10 +608,10 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
                         on_result(cookie.release_value());
                 },
                 [&]() {
-                    MUST(promise->resolve({}));
+                    promise->resolve({});
                 },
                 [&](auto) {
-                    MUST(promise->resolve({}));
+                    promise->resolve({});
                 });
 
             MUST(promise->await());
