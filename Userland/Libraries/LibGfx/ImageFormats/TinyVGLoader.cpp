@@ -327,7 +327,7 @@ private:
     ReadonlySpan<Color> m_color_table;
 };
 
-ErrorOr<TinyVGDecodedImageData> TinyVGDecodedImageData::decode(Stream& stream)
+ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(Stream& stream)
 {
     auto header = TRY(decode_tinyvg_header(stream));
     if (header.version != 1)
@@ -437,48 +437,35 @@ ErrorOr<TinyVGDecodedImageData> TinyVGDecodedImageData::decode(Stream& stream)
         }
     }
 
-    return TinyVGDecodedImageData { { header.width, header.height }, move(draw_commands) };
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TinyVGDecodedImageData({ header.width, header.height }, move(draw_commands))));
 }
 
-ErrorOr<RefPtr<Gfx::Bitmap>> TinyVGDecodedImageData::bitmap(IntSize size) const
+void TinyVGDecodedImageData::draw_transformed(Painter& painter, AffineTransform transform) const
 {
-    auto scale_x = float(size.width()) / m_size.width();
-    auto scale_y = float(size.height()) / m_size.height();
-    auto transform = Gfx::AffineTransform {}.scale(scale_x, scale_y);
-    auto bitmap = TRY(Bitmap::create(Gfx::BitmapFormat::BGRA8888, size));
-    Painter base_painter { *bitmap };
-    AntiAliasingPainter painter { base_painter };
+    // FIXME: Correctly handle non-uniform scales.
+    auto scale = max(transform.x_scale(), transform.y_scale());
+    AntiAliasingPainter aa_painter { painter };
     for (auto const& command : draw_commands()) {
         auto draw_path = command.path.copy_transformed(transform);
         if (command.fill.has_value()) {
             auto fill_path = draw_path;
             fill_path.close_all_subpaths();
             command.fill->visit(
-                [&](Color color) { painter.fill_path(fill_path, color, Painter::WindingRule::EvenOdd); },
+                [&](Color color) { aa_painter.fill_path(fill_path, color, Painter::WindingRule::EvenOdd); },
                 [&](NonnullRefPtr<SVGGradientPaintStyle> style) {
                     const_cast<SVGGradientPaintStyle&>(*style).set_gradient_transform(transform);
-                    painter.fill_path(fill_path, style, 1.0f, Painter::WindingRule::EvenOdd);
+                    aa_painter.fill_path(fill_path, style, 1.0f, Painter::WindingRule::EvenOdd);
                 });
         }
         if (command.stroke.has_value()) {
-            // FIXME: A more correct way to non-uniformly scale strokes would be:
-            //  1. Scale the path uniformly by the largest of scale_x/y
-            //  2. Convert that to a fill with .stroke_to_fill()
-            //  3.
-            //     If scale_x > scale_y
-            //        Scale by: (1, scale_y/scale_x)
-            //     else
-            //        Scale by: (scale_x/scale_y, 1)
-            auto stroke_scale = max(scale_x, scale_y);
             command.stroke->visit(
-                [&](Color color) { painter.stroke_path(draw_path, color, command.stroke_width * stroke_scale); },
+                [&](Color color) { aa_painter.stroke_path(draw_path, color, command.stroke_width * scale); },
                 [&](NonnullRefPtr<SVGGradientPaintStyle> style) {
                     const_cast<SVGGradientPaintStyle&>(*style).set_gradient_transform(transform);
-                    painter.stroke_path(draw_path, style, command.stroke_width * stroke_scale);
+                    aa_painter.stroke_path(draw_path, style, command.stroke_width * scale);
                 });
         }
     }
-    return bitmap;
 }
 
 TinyVGImageDecoderPlugin::TinyVGImageDecoderPlugin(ReadonlyBytes bytes)
@@ -507,7 +494,7 @@ IntSize TinyVGImageDecoderPlugin::size()
 ErrorOr<void> TinyVGImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context.data.data(), m_context.data.size() } };
-    m_context.decoded_image = make<TinyVGDecodedImageData>(TRY(TinyVGDecodedImageData::decode(stream)));
+    m_context.decoded_image = TRY(TinyVGDecodedImageData::decode(stream));
     return {};
 }
 
@@ -517,6 +504,11 @@ ErrorOr<ImageFrameDescriptor> TinyVGImageDecoderPlugin::frame(size_t, Optional<I
     if (!m_context.bitmap || m_context.bitmap->size() != target_size)
         m_context.bitmap = TRY(m_context.decoded_image->bitmap(target_size));
     return ImageFrameDescriptor { m_context.bitmap };
+}
+
+ErrorOr<VectorImageFrameDescriptor> TinyVGImageDecoderPlugin::vector_frame(size_t)
+{
+    return VectorImageFrameDescriptor { m_context.decoded_image, 0 };
 }
 
 }
