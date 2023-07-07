@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
@@ -252,7 +253,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    DDSImageDecoderPlugin(u8 const*, size_t);
+    DDSImageDecoderPlugin(FixedMemoryStream);
 
     OwnPtr<DDSLoadingContext> m_context;
 };
