@@ -35,6 +35,7 @@ class ScopePusher {
         StaticInitTopLevel
     };
 
+public:
     enum class ScopeType {
         Function,
         Program,
@@ -54,12 +55,13 @@ private:
         , m_type(type)
     {
         m_parent_scope = exchange(m_parser.m_state.current_scope_pusher, this);
-        VERIFY(node || (m_parent_scope && scope_level == ScopeLevel::NotTopLevel));
-        if (!node)
-            m_node = m_parent_scope->m_node;
-        else
-            m_node = node;
-        VERIFY(m_node);
+        if (type != ScopeType::Function) {
+            VERIFY(node || (m_parent_scope && scope_level == ScopeLevel::NotTopLevel));
+            if (!node)
+                m_node = m_parent_scope->m_node;
+            else
+                m_node = node;
+        }
 
         if (!is_top_level())
             m_top_level_scope = m_parent_scope->m_top_level_scope;
@@ -73,34 +75,9 @@ private:
     }
 
 public:
-    static ScopePusher function_scope(Parser& parser, FunctionBody& function_body, Vector<FunctionParameter> const& parameters)
+    static ScopePusher function_scope(Parser& parser)
     {
-        ScopePusher scope_pusher(parser, &function_body, ScopeLevel::FunctionTopLevel, ScopeType::Function);
-        scope_pusher.m_function_parameters = parameters;
-
-        auto has_parameters_with_default_values = false;
-        for (auto& parameter : parameters) {
-            parameter.binding.visit(
-                [&](Identifier const& identifier) {
-                    if (parameter.default_value)
-                        has_parameters_with_default_values = true;
-                    scope_pusher.register_identifier(identifier);
-                    scope_pusher.m_function_parameters_candidates_for_local_variables.set(identifier.string());
-                    scope_pusher.m_forbidden_lexical_names.set(identifier.string());
-                },
-                [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
-                    // NOTE: Nothing in the callback throws an exception.
-                    MUST(binding_pattern->for_each_bound_name([&](auto const& name) {
-                        scope_pusher.m_forbidden_lexical_names.set(name);
-                    }));
-                });
-        }
-
-        if (has_parameters_with_default_values) {
-            scope_pusher.m_function_parameters_candidates_for_local_variables.clear();
-        }
-
-        return scope_pusher;
+        return ScopePusher(parser, nullptr, ScopeLevel::FunctionTopLevel, ScopeType::Function);
     }
 
     static ScopePusher program_scope(Parser& parser, Program& program)
@@ -161,6 +138,8 @@ public:
         }
         return scope_pusher;
     }
+
+    ScopeType type() const { return m_type; }
 
     void add_declaration(NonnullRefPtr<Declaration const> declaration)
     {
@@ -261,10 +240,55 @@ public:
         m_can_use_local_variables = false;
     }
     void set_contains_access_to_arguments_object() { m_contains_access_to_arguments_object = true; }
+    void set_scope_node(ScopeNode* node) { m_node = node; }
+    void set_function_parameters(Vector<FunctionParameter> const& parameters)
+    {
+        m_function_parameters = parameters;
+        auto has_parameters_with_default_values = false;
+        for (auto& parameter : parameters) {
+            parameter.binding.visit(
+                [&](Identifier const& identifier) {
+                    if (parameter.default_value)
+                        has_parameters_with_default_values = true;
+                    register_identifier(identifier);
+                    m_function_parameters_candidates_for_local_variables.set(identifier.string());
+                    m_forbidden_lexical_names.set(identifier.string());
+                },
+                [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
+                    // NOTE: Nothing in the callback throws an exception.
+                    MUST(binding_pattern->for_each_bound_name([&](auto const& name) {
+                        m_forbidden_lexical_names.set(name);
+                    }));
+                });
+        }
+
+        if (has_parameters_with_default_values) {
+            m_function_parameters_candidates_for_local_variables.clear();
+        }
+    }
 
     ~ScopePusher()
     {
         VERIFY(is_top_level() || m_parent_scope);
+
+        if (m_parent_scope && !m_function_parameters.has_value()) {
+            m_parent_scope->m_contains_access_to_arguments_object |= m_contains_access_to_arguments_object;
+            m_parent_scope->m_contains_direct_call_to_eval |= m_contains_direct_call_to_eval;
+            m_parent_scope->m_contains_await_expression |= m_contains_await_expression;
+        }
+
+        if (m_parent_scope) {
+            if (m_contains_direct_call_to_eval) {
+                m_parent_scope->m_can_use_local_variables = false;
+            } else {
+                m_can_use_local_variables = m_parent_scope->m_can_use_local_variables && m_can_use_local_variables;
+            }
+        }
+
+        if (!m_node) {
+            m_parser.m_state.current_scope_pusher = m_parent_scope;
+            return;
+        }
 
         for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
             auto const& function_declaration = m_functions_to_hoist[i];
@@ -357,20 +381,6 @@ public:
                         m_parent_scope->m_identifier_groups.set(identifier_group_name, identifier_group);
                     }
                 }
-            }
-        }
-
-        if (m_parent_scope && !m_function_parameters.has_value()) {
-            m_parent_scope->m_contains_access_to_arguments_object |= m_contains_access_to_arguments_object;
-            m_parent_scope->m_contains_direct_call_to_eval |= m_contains_direct_call_to_eval;
-            m_parent_scope->m_contains_await_expression |= m_contains_await_expression;
-        }
-
-        if (m_parent_scope) {
-            if (m_contains_direct_call_to_eval) {
-                m_parent_scope->m_can_use_local_variables = false;
-            } else {
-                m_can_use_local_variables = m_parent_scope->m_can_use_local_variables && m_can_use_local_variables;
             }
         }
 
@@ -931,52 +941,53 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
 
     Vector<FunctionParameter> parameters;
     i32 function_length = -1;
-    if (expect_parens) {
-        // We have parens around the function parameters and can re-use the same parsing
-        // logic used for regular functions: multiple parameters, default values, rest
-        // parameter, maybe a trailing comma. If we have a new syntax error afterwards we
-        // check if it's about a wrong token (something like duplicate parameter name must
-        // not abort), know parsing failed and rollback the parser state.
-        auto previous_syntax_errors = m_state.errors.size();
-        TemporaryChange in_async_context(m_state.await_expression_is_valid, is_async || m_state.await_expression_is_valid);
+    bool contains_direct_call_to_eval = false;
+    auto function_body_result = [&]() -> RefPtr<FunctionBody const> {
+        ScopePusher function_scope = ScopePusher::function_scope(*this);
 
-        parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction | (is_async ? FunctionNodeParseOptions::IsAsyncFunction : 0));
-        if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"sv))
+        if (expect_parens) {
+            // We have parens around the function parameters and can re-use the same parsing
+            // logic used for regular functions: multiple parameters, default values, rest
+            // parameter, maybe a trailing comma. If we have a new syntax error afterwards we
+            // check if it's about a wrong token (something like duplicate parameter name must
+            // not abort), know parsing failed and rollback the parser state.
+            auto previous_syntax_errors = m_state.errors.size();
+            TemporaryChange in_async_context(m_state.await_expression_is_valid, is_async || m_state.await_expression_is_valid);
+
+            parameters = parse_formal_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction | (is_async ? FunctionNodeParseOptions::IsAsyncFunction : 0));
+            if (m_state.errors.size() > previous_syntax_errors && m_state.errors[previous_syntax_errors].message.starts_with("Unexpected token"sv))
+                return nullptr;
+            if (!match(TokenType::ParenClose))
+                return nullptr;
+            consume();
+        } else {
+            // No parens - this must be an identifier followed by arrow. That's it.
+            if (!match_identifier() && !match(TokenType::Yield) && !match(TokenType::Await))
+                return nullptr;
+            auto token = consume_identifier_reference();
+            if (m_state.strict_mode && token.value().is_one_of("arguments"sv, "eval"sv))
+                syntax_error("BindingIdentifier may not be 'arguments' or 'eval' in strict mode");
+            if (is_async && token.value() == "await"sv)
+                syntax_error("'await' is a reserved identifier in async functions");
+            auto identifier = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
+            parameters.append({ identifier, {} });
+        }
+        // If there's a newline between the closing paren and arrow it's not a valid arrow function,
+        // ASI should kick in instead (it'll then fail with "Unexpected token Arrow")
+        if (m_state.current_token.trivia_contains_line_terminator())
             return nullptr;
-        if (!match(TokenType::ParenClose))
+        if (!match(TokenType::Arrow))
             return nullptr;
         consume();
-    } else {
-        // No parens - this must be an identifier followed by arrow. That's it.
-        if (!match_identifier() && !match(TokenType::Yield) && !match(TokenType::Await))
-            return nullptr;
-        auto token = consume_identifier_reference();
-        if (m_state.strict_mode && token.value().is_one_of("arguments"sv, "eval"sv))
-            syntax_error("BindingIdentifier may not be 'arguments' or 'eval' in strict mode");
-        if (is_async && token.value() == "await"sv)
-            syntax_error("'await' is a reserved identifier in async functions");
-        auto identifier = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
-        parameters.append({ identifier, {} });
-    }
-    // If there's a newline between the closing paren and arrow it's not a valid arrow function,
-    // ASI should kick in instead (it'll then fail with "Unexpected token Arrow")
-    if (m_state.current_token.trivia_contains_line_terminator())
-        return nullptr;
-    if (!match(TokenType::Arrow))
-        return nullptr;
-    consume();
 
-    if (function_length == -1)
-        function_length = parameters.size();
+        if (function_length == -1)
+            function_length = parameters.size();
 
-    auto old_labels_in_scope = move(m_state.labels_in_scope);
-    ScopeGuard guard([&]() {
-        m_state.labels_in_scope = move(old_labels_in_scope);
-    });
+        auto old_labels_in_scope = move(m_state.labels_in_scope);
+        ScopeGuard guard([&]() {
+            m_state.labels_in_scope = move(old_labels_in_scope);
+        });
 
-    bool contains_direct_call_to_eval = false;
-
-    auto function_body_result = [&]() -> RefPtr<FunctionBody const> {
         TemporaryChange change(m_state.in_arrow_function_context, true);
         TemporaryChange async_context_change(m_state.await_expression_is_valid, is_async);
         TemporaryChange in_class_static_init_block_change(m_state.in_class_static_init_block, false);
@@ -996,12 +1007,14 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
             // Esprima generates a single "ArrowFunctionExpression"
             // with a "body" property.
             auto return_block = create_ast_node<FunctionBody>({ m_source_code, rule_start.position(), position() });
-            ScopePusher function_scope = ScopePusher::function_scope(*this, return_block, parameters);
+            VERIFY(m_state.current_scope_pusher->type() == ScopePusher::ScopeType::Function);
+            m_state.current_scope_pusher->set_scope_node(return_block);
+            m_state.current_scope_pusher->set_function_parameters(parameters);
             auto return_expression = parse_expression(2);
             return_block->append<ReturnStatement const>({ m_source_code, rule_start.position(), position() }, move(return_expression));
             if (m_state.strict_mode)
                 const_cast<FunctionBody&>(*return_block).set_strict_mode();
-            contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
+            contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
             return return_block;
         }
         // Invalid arrow function body
@@ -2668,7 +2681,11 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
 {
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_source_code, rule_start.position(), position() });
-    ScopePusher function_scope = ScopePusher::function_scope(*this, function_body, parameters); // FIXME <-
+
+    VERIFY(m_state.current_scope_pusher->type() == ScopePusher::ScopeType::Function);
+    m_state.current_scope_pusher->set_scope_node(function_body);
+    m_state.current_scope_pusher->set_function_parameters(parameters);
+
     auto has_use_strict = parse_directive(function_body);
     bool previous_strict_mode = m_state.strict_mode;
     if (has_use_strict) {
@@ -2732,7 +2749,8 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
     }
 
     m_state.strict_mode = previous_strict_mode;
-    contains_direct_call_to_eval = function_scope.contains_direct_call_to_eval();
+    VERIFY(m_state.current_scope_pusher->type() == ScopePusher::ScopeType::Function);
+    contains_direct_call_to_eval = m_state.current_scope_pusher->contains_direct_call_to_eval();
     return function_body;
 }
 
@@ -2815,24 +2833,32 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
     TemporaryChange generator_change(m_state.in_generator_function_context, function_kind == FunctionKind::Generator || function_kind == FunctionKind::AsyncGenerator);
     TemporaryChange async_change(m_state.await_expression_is_valid, function_kind == FunctionKind::Async || function_kind == FunctionKind::AsyncGenerator);
 
-    consume(TokenType::ParenOpen);
     i32 function_length = -1;
-    auto parameters = parse_formal_parameters(function_length, parse_options);
-    consume(TokenType::ParenClose);
-
-    if (function_length == -1)
-        function_length = parameters.size();
-
-    TemporaryChange function_context_rollback(m_state.in_function_context, true);
-
-    auto old_labels_in_scope = move(m_state.labels_in_scope);
-    ScopeGuard guard([&]() {
-        m_state.labels_in_scope = move(old_labels_in_scope);
-    });
-
-    consume(TokenType::CurlyOpen);
+    Vector<FunctionParameter> parameters;
     bool contains_direct_call_to_eval = false;
-    auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+    auto body = [&] {
+        ScopePusher function_scope = ScopePusher::function_scope(*this);
+
+        consume(TokenType::ParenOpen);
+        parameters = parse_formal_parameters(function_length, parse_options);
+        consume(TokenType::ParenClose);
+
+        if (function_length == -1)
+            function_length = parameters.size();
+
+        TemporaryChange function_context_rollback(m_state.in_function_context, true);
+
+        auto old_labels_in_scope = move(m_state.labels_in_scope);
+        ScopeGuard guard([&]() {
+            m_state.labels_in_scope = move(old_labels_in_scope);
+        });
+
+        consume(TokenType::CurlyOpen);
+
+        auto body = parse_function_body(parameters, function_kind, contains_direct_call_to_eval);
+        return body;
+    }();
+
     auto local_variables_names = body->local_variables_names();
     consume(TokenType::CurlyClose);
 
@@ -5010,6 +5036,25 @@ NonnullRefPtr<Identifier const> Parser::create_identifier_and_register_in_curren
     if (m_state.current_scope_pusher)
         m_state.current_scope_pusher->register_identifier(const_cast<Identifier&>(*id));
     return id;
+}
+
+Parser Parser::parse_function_body_from_string(DeprecatedString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, bool& contains_direct_call_to_eval)
+{
+    RefPtr<FunctionBody const> function_body;
+
+    auto body_parser = Parser { Lexer { body_string } };
+    {
+        // Set up some parser state to accept things like return await, and yield in the plain function body.
+        body_parser.m_state.in_function_context = true;
+        auto function_scope = ScopePusher::function_scope(body_parser);
+        if ((parse_options & FunctionNodeParseOptions::IsAsyncFunction) != 0)
+            body_parser.m_state.await_expression_is_valid = true;
+        if ((parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0)
+            body_parser.m_state.in_generator_function_context = true;
+        function_body = body_parser.parse_function_body(parameters, kind, contains_direct_call_to_eval);
+    }
+
+    return body_parser;
 }
 
 }
