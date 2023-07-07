@@ -134,6 +134,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
 WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
 
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
+WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformStreamDefaultController&, JS::Value chunk);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream&, JS::Value error);
 WebIDL::ExceptionOr<void> transform_stream_error_writable_and_unblock_write(TransformStream&, JS::Value error);
