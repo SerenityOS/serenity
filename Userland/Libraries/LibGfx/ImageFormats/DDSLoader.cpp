@@ -640,10 +640,10 @@ ErrorOr<IntSize> DDSImageDecoderPlugin::size()
     if (m_context->state == DDSLoadingContext::State::Error)
         return Error::from_string_literal("Decoder already had an error");
 
-    if (m_context->state == DDSLoadingContext::State::BitmapDecoded)
-        return IntSize { m_context->header.width, m_context->header.height };
+    if (m_context->state < DDSLoadingContext::State::HeaderDecoded)
+        TRY(decode_header(*m_context));
 
-    return Error::from_string_literal("Size not read yet");
+    return IntSize { get_width(m_context->header, 0), get_height(m_context->header, 0) };
 }
 
 void DDSImageDecoderPlugin::set_volatile()
