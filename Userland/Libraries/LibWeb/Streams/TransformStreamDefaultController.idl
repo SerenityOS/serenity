@@ -5,5 +5,5 @@ interface TransformStreamDefaultController {
 
     undefined enqueue(optional any chunk);
     undefined error(optional any reason);
-    // FIXME: undefined terminate();
+    undefined terminate();
 };
