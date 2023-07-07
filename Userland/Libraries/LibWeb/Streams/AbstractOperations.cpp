@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,7 @@
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
+#include <LibWeb/Streams/TransformStreamDefaultController.h>
 #include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
 #include <LibWeb/Streams/WritableStream.h>
@@ -2718,6 +2720,17 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStrea
     TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
 
     return {};
+}
+
+// https://streams.spec.whatwg.org/#transform-stream-default-controller-clear-algorithms
+void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController& controller)
+{
+    // NOTE: This is observable using weak references. See tc39/proposal-weakrefs#31 for more detail.
+    // 1. Set controller.[[transformAlgorithm]] to undefined.
+    controller.set_transform_algorithm({});
+
+    // 2. Set controller.[[flushAlgorithm]] to undefined.
+    controller.set_flush_algorithm({});
 }
 
 // https://streams.spec.whatwg.org/#is-non-negative-number
