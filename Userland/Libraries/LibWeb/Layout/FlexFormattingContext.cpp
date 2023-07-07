@@ -2155,8 +2155,9 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels cross_margin_after = is_row_layout() ? box_state.margin_bottom : box_state.margin_right;
     CSSPixels cross_border_before = is_row_layout() ? box_state.border_top : box_state.border_left;
     CSSPixels cross_border_after = is_row_layout() ? box_state.border_bottom : box_state.border_right;
-    CSSPixels cross_padding_before = is_row_layout() ? box_state.padding_top : box_state.padding_left;
     CSSPixels cross_padding_after = is_row_layout() ? box_state.padding_bottom : box_state.padding_right;
+    CSSPixels main_border_before = is_row_layout() ? box_state.border_left : box_state.border_top;
+    CSSPixels main_border_after = is_row_layout() ? box_state.border_right : box_state.border_bottom;
 
     switch (alignment_for_item(box)) {
     case CSS::AlignItems::Baseline:
@@ -2167,7 +2168,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::AlignItems::SelfStart:
     case CSS::AlignItems::Stretch:
     case CSS::AlignItems::Normal:
-        cross_offset = -half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
+        cross_offset = -half_line_size + cross_margin_before;
         break;
     case CSS::AlignItems::End:
     case CSS::AlignItems::SelfEnd:
@@ -2175,7 +2176,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
     case CSS::AlignItems::Center:
-        cross_offset = -(inner_cross_size(box) / 2.0);
+        cross_offset = -((inner_cross_size(box) + cross_border_before + cross_border_after) / 2.0);
         break;
     default:
         break;
@@ -2198,7 +2199,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         break;
     case CSS::JustifyContent::End:
     case CSS::JustifyContent::FlexEnd:
-        main_offset = 0;
+        main_offset = -main_border_before - main_border_after;
         pack_from_end = !is_direction_reverse();
         break;
     case CSS::JustifyContent::SpaceBetween:
@@ -2209,7 +2210,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::JustifyContent::SpaceAround:
     case CSS::JustifyContent::SpaceEvenly:
         pack_from_end = false;
-        main_offset = inner_main_size(flex_container()) / 2.0 - inner_main_size(box) / 2.0;
+        main_offset = (inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after) / 2.0;
         break;
     }
 
