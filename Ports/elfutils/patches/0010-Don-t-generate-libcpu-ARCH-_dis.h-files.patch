@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 08:01:06 +0300
+Subject: [PATCH] Don't generate libcpu ${ARCH}_dis.h files
+
+---
+ libcpu/Makefile.am | 17 -----------------
+ 1 file changed, 17 deletions(-)
+
+diff --git a/libcpu/Makefile.am b/libcpu/Makefile.am
+index 43844ecfede636c031782b89f46b16dd03587a99..9fe65be70288bca80b3034b5794cfeecbf75ff56 100644
+--- a/libcpu/Makefile.am
++++ b/libcpu/Makefile.am
+@@ -56,23 +56,6 @@ x86_64_disasm.o: x86_64.mnemonics $(srcdir)/x86_64_dis.h
+ 	$(AM_V_GEN)m4 -D$* -DDISASSEMBLER $< > $@T
+ 	$(AM_V_at)mv -f $@T $@
+ 
+-if MAINTAINER_MODE
+-noinst_HEADERS += memory-access.h i386_parse.h i386_data.h
+-
+-noinst_PROGRAMS = i386_gendis$(EXEEXT)
+-
+-$(srcdir)/%_dis.h: %_defs i386_gendis$(EXEEXT)
+-	$(AM_V_GEN)./i386_gendis$(EXEEXT) $< > $@T
+-	$(AM_V_at)mv -f $@T $@
+-
+-else
+-
+-$(srcdir)/%_dis.h:
+-	@echo '*** missing $@; configure with --enable-maintainer-mode'
+-	@false
+-
+-endif
+-
+ %.mnemonics: %_defs
+ 	$(AM_V_GEN)sed '1,/^%%/d;/^#/d;/^[[:space:]]*$$/d;s/[^:]*:\([^[:space:]]*\).*/MNE(\1)/;s/{[^}]*}//g;/INVALID/d' \
+ 	  $< | sort -u > $@

@@ -1,0 +1,86 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:08:04 +0300
+Subject: [PATCH] Add includes to <alloca.h>
+
+---
+ src/ar.c      | 1 +
+ src/elfcmp.c  | 1 +
+ src/elflint.c | 1 +
+ src/nm.c      | 1 +
+ src/readelf.c | 1 +
+ src/strip.c   | 1 +
+ 6 files changed, 6 insertions(+)
+
+diff --git a/src/ar.c b/src/ar.c
+index 8375b7eb387152a49de244bf14225125d877594b..c69a2878be6fcf9ce2fdf101978f85c71722a7ab 100644
+--- a/src/ar.c
++++ b/src/ar.c
+@@ -21,6 +21,7 @@
+ #endif
+ 
+ #include <argp.h>
++#include <alloca.h>
+ #include <assert.h>
+ #include <fcntl.h>
+ #include <gelf.h>
+diff --git a/src/elfcmp.c b/src/elfcmp.c
+index 21d8d9dc3000eddbcaa4c0876a46bb746ff6bddb..4515142ff082301dd8b42cfe94855313ce18ab9d 100644
+--- a/src/elfcmp.c
++++ b/src/elfcmp.c
+@@ -21,6 +21,7 @@
+ #endif
+ 
+ #include <argp.h>
++#include <alloca.h>
+ #include <assert.h>
+ #include <errno.h>
+ #include <fcntl.h>
+diff --git a/src/elflint.c b/src/elflint.c
+index ef7725ce7f30c3a365062edfb8ef2d04b959e2c5..f74f1c9153223307604e47af588a13d933548dcc 100644
+--- a/src/elflint.c
++++ b/src/elflint.c
+@@ -22,6 +22,7 @@
+ 
+ #include <argp.h>
+ #include <assert.h>
++#include <alloca.h>
+ #include <byteswap.h>
+ #include <endian.h>
+ #include <fcntl.h>
+diff --git a/src/nm.c b/src/nm.c
+index 879441e969791bd214fc70212597138ce63505e8..759192c9bfa8159b020c94f9ab472be6dcee5a8b 100644
+--- a/src/nm.c
++++ b/src/nm.c
+@@ -21,6 +21,7 @@
+ #endif
+ 
+ #include <ar.h>
++#include <alloca.h>
+ #include <argp.h>
+ #include <assert.h>
+ #include <ctype.h>
+diff --git a/src/readelf.c b/src/readelf.c
+index c10038e340c7f60a24d4a71b7a90810f402e5cd8..215d7a1f5e80917e1960e3e94c6cb75fc3cfb1c1 100644
+--- a/src/readelf.c
++++ b/src/readelf.c
+@@ -19,6 +19,7 @@
+ # include <config.h>
+ #endif
+ 
++#include <alloca.h>
+ #include <argp.h>
+ #include <assert.h>
+ #include <ctype.h>
+diff --git a/src/strip.c b/src/strip.c
+index f8efb78d810f1cfaaaeb5a5b1116bc4629a475f1..3dc3b5c952f0fa3ef1269a37158fcf5fe8aeed2d 100644
+--- a/src/strip.c
++++ b/src/strip.c
+@@ -21,6 +21,7 @@
+ #endif
+ 
+ #include <argp.h>
++#include <alloca.h>
+ #include <assert.h>
+ #include <byteswap.h>
+ #include <endian.h>

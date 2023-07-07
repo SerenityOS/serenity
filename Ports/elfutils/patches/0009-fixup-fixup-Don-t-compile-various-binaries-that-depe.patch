@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:50:45 +0300
+Subject: [PATCH] fixup! fixup! Don't compile various binaries that depend on
+ extended LibC functions
+
+---
+ src/Makefile.am | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 41a3807c5b6cb5c061ac7d9443af8aadeaf7d527..a82cd66ec520ea1d54b5b4ca6666708e6c45d6a6 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -67,7 +67,6 @@ ranlib_no_Wstack_usage = yes
+ ar_no_Wstack_usage = yes
+ unstrip_no_Wstack_usage = yes
+ 
+-readelf_LDADD = $(libdw) $(libebl) $(libelf) $(libeu) $(argp_LDADD)
+ nm_LDADD = $(libdw) $(libebl) $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS) \
+ 	   $(demanglelib)
+ size_LDADD = $(libelf) $(libeu) $(argp_LDADD)

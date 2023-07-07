@@ -1,0 +1,71 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 12:24:52 +0300
+Subject: [PATCH] fixup! fixup! fixup! Don't compile various binaries that
+ depend on extended LibC functions
+
+---
+ src/Makefile.in | 27 ++++-----------------------
+ 1 file changed, 4 insertions(+), 23 deletions(-)
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index f119b8c58132017ba0854cb0a18a0784e2156a1f..adb9d969af75accb5d9fcd6855df3aa1561c2ffc 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -262,12 +262,12 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+ am__v_CCLD_0 = @echo "  CCLD    " $@;
+ am__v_CCLD_1 = 
+-SOURCES = $(libar_a_SOURCES) addr2line.c ar.c elfclassify.c elfcmp.c \
++SOURCES = $(libar_a_SOURCES) addr2line.c elfclassify.c elfcmp.c \
+ 	elfcompress.c elflint.c findtextrel.c nm.c objdump.c ranlib.c \
+-	readelf.c size.c stack.c strings.c strip.c unstrip.c
+-DIST_SOURCES = $(libar_a_SOURCES) addr2line.c ar.c elfclassify.c \
++	size.c stack.c
++DIST_SOURCES = $(libar_a_SOURCES) addr2line.c elfclassify.c \
+ 	elfcmp.c elfcompress.c elflint.c findtextrel.c nm.c objdump.c \
+-	ranlib.c readelf.c size.c stack.c strings.c strip.c unstrip.c
++	ranlib.c size.c stack.c
+ am__can_run_installinfo = \
+   case $$AM_UPDATE_INFO_DIR in \
+     n|no|NO) false;; \
+@@ -652,10 +652,6 @@ addr2line$(EXEEXT): $(addr2line_OBJECTS) $(addr2line_DEPENDENCIES) $(EXTRA_addr2
+ 	@rm -f addr2line$(EXEEXT)
+ 	$(AM_V_CCLD)$(LINK) $(addr2line_OBJECTS) $(addr2line_LDADD) $(LIBS)
+ 
+-ar$(EXEEXT): $(ar_OBJECTS) $(ar_DEPENDENCIES) $(EXTRA_ar_DEPENDENCIES) 
+-	@rm -f ar$(EXEEXT)
+-	$(AM_V_CCLD)$(LINK) $(ar_OBJECTS) $(ar_LDADD) $(LIBS)
+-
+ elfclassify$(EXEEXT): $(elfclassify_OBJECTS) $(elfclassify_DEPENDENCIES) $(EXTRA_elfclassify_DEPENDENCIES) 
+ 	@rm -f elfclassify$(EXEEXT)
+ 	$(AM_V_CCLD)$(LINK) $(elfclassify_OBJECTS) $(elfclassify_LDADD) $(LIBS)
+@@ -688,10 +684,6 @@ ranlib$(EXEEXT): $(ranlib_OBJECTS) $(ranlib_DEPENDENCIES) $(EXTRA_ranlib_DEPENDE
+ 	@rm -f ranlib$(EXEEXT)
+ 	$(AM_V_CCLD)$(LINK) $(ranlib_OBJECTS) $(ranlib_LDADD) $(LIBS)
+ 
+-readelf$(EXEEXT): $(readelf_OBJECTS) $(readelf_DEPENDENCIES) $(EXTRA_readelf_DEPENDENCIES) 
+-	@rm -f readelf$(EXEEXT)
+-	$(AM_V_CCLD)$(LINK) $(readelf_OBJECTS) $(readelf_LDADD) $(LIBS)
+-
+ size$(EXEEXT): $(size_OBJECTS) $(size_DEPENDENCIES) $(EXTRA_size_DEPENDENCIES) 
+ 	@rm -f size$(EXEEXT)
+ 	$(AM_V_CCLD)$(LINK) $(size_OBJECTS) $(size_LDADD) $(LIBS)
+@@ -700,17 +692,6 @@ stack$(EXEEXT): $(stack_OBJECTS) $(stack_DEPENDENCIES) $(EXTRA_stack_DEPENDENCIE
+ 	@rm -f stack$(EXEEXT)
+ 	$(AM_V_CCLD)$(LINK) $(stack_OBJECTS) $(stack_LDADD) $(LIBS)
+ 
+-strings$(EXEEXT): $(strings_OBJECTS) $(strings_DEPENDENCIES) $(EXTRA_strings_DEPENDENCIES) 
+-	@rm -f strings$(EXEEXT)
+-	$(AM_V_CCLD)$(LINK) $(strings_OBJECTS) $(strings_LDADD) $(LIBS)
+-
+-strip$(EXEEXT): $(strip_OBJECTS) $(strip_DEPENDENCIES) $(EXTRA_strip_DEPENDENCIES) 
+-	@rm -f strip$(EXEEXT)
+-	$(AM_V_CCLD)$(LINK) $(strip_OBJECTS) $(strip_LDADD) $(LIBS)
+-
+-unstrip$(EXEEXT): $(unstrip_OBJECTS) $(unstrip_DEPENDENCIES) $(EXTRA_unstrip_DEPENDENCIES) 
+-	@rm -f unstrip$(EXEEXT)
+-	$(AM_V_CCLD)$(LINK) $(unstrip_OBJECTS) $(unstrip_LDADD) $(LIBS)
+ install-binSCRIPTS: $(bin_SCRIPTS)
+ 	@$(NORMAL_INSTALL)
+ 	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \

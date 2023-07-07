@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:16:41 +0300
+Subject: [PATCH] Don't compile various binaries that depend on extended LibC
+ functions
+
+---
+ src/Makefile.am | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 6cc019da0856c39ee84ebad9480a643bba26cd25..b8b26b226ef0f5e9d9596dffe0dc695491358f17 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -25,8 +25,8 @@ AM_CPPFLAGS += -I$(srcdir)/../libelf -I$(srcdir)/../libebl \
+ 
+ AM_LDFLAGS = -Wl,-rpath-link,../libelf:../libdw $(STACK_USAGE_NO_ERROR)
+ 
+-bin_PROGRAMS = readelf nm size strip elflint findtextrel addr2line \
+-	       elfcmp objdump ranlib strings ar unstrip stack elfcompress \
++bin_PROGRAMS = nm size strip elflint findtextrel addr2line \
++	       elfcmp objdump ranlib stack elfcompress \
+ 	       elfclassify
+ 
+ noinst_LIBRARIES = libar.a

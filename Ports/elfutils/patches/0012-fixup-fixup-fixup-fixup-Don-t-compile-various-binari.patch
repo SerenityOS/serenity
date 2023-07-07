@@ -1,0 +1,110 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 12:38:14 +0300
+Subject: [PATCH] fixup! fixup! fixup! fixup! Don't compile various binaries
+ that depend on extended LibC functions
+
+---
+ src/Makefile.am |  3 +--
+ src/Makefile.in | 32 ++++----------------------------
+ 2 files changed, 5 insertions(+), 30 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index a82cd66ec520ea1d54b5b4ca6666708e6c45d6a6..f7bc6db9829ead238e4ee66e0cf169c50c5177f9 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -25,7 +25,7 @@ AM_CPPFLAGS += -I$(srcdir)/../libelf -I$(srcdir)/../libebl \
+ 
+ AM_LDFLAGS = -Wl,-rpath-link,../libelf:../libdw $(STACK_USAGE_NO_ERROR)
+ 
+-bin_PROGRAMS = nm size strip elflint findtextrel addr2line \
++bin_PROGRAMS = nm size elflint findtextrel addr2line \
+ 	       elfcmp objdump ranlib stack elfcompress \
+ 	       elfclassify
+ 
+@@ -70,7 +70,6 @@ unstrip_no_Wstack_usage = yes
+ nm_LDADD = $(libdw) $(libebl) $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS) \
+ 	   $(demanglelib)
+ size_LDADD = $(libelf) $(libeu) $(argp_LDADD)
+-strip_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ elflint_LDADD  = $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ findtextrel_LDADD = $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ addr2line_LDADD = $(libdw) $(libelf) $(libeu) $(argp_LDADD) $(demanglelib)
+diff --git a/src/Makefile.in b/src/Makefile.in
+index adb9d969af75accb5d9fcd6855df3aa1561c2ffc..feb87de1435ae75532a231538f5ef307d459afe7 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -91,11 +91,11 @@ POST_UNINSTALL = :
+ build_triplet = @build@
+ host_triplet = @host@
+ @SYMBOL_VERSIONING_TRUE@am__append_1 = -DSYMBOL_VERSIONING
+-bin_PROGRAMS = readelf$(EXEEXT) nm$(EXEEXT) size$(EXEEXT) \
+-	strip$(EXEEXT) elflint$(EXEEXT) findtextrel$(EXEEXT) \
++bin_PROGRAMS = nm$(EXEEXT) size$(EXEEXT) \
++	elflint$(EXEEXT) findtextrel$(EXEEXT) \
+ 	addr2line$(EXEEXT) elfcmp$(EXEEXT) objdump$(EXEEXT) \
+-	ranlib$(EXEEXT) strings$(EXEEXT) ar$(EXEEXT) unstrip$(EXEEXT) \
+-	stack$(EXEEXT) elfcompress$(EXEEXT) elfclassify$(EXEEXT)
++	ranlib$(EXEEXT) elfcompress$(EXEEXT) elfclassify$(EXEEXT) \
++	stack$(EXEEXT) 
+ subdir = src
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx.m4 \
+@@ -135,10 +135,6 @@ am__DEPENDENCIES_1 =
+ @BUILD_STATIC_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+ addr2line_DEPENDENCIES = $(am__DEPENDENCIES_3) $(am__DEPENDENCIES_2) \
+ 	$(libeu) $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+-ar_SOURCES = ar.c
+-ar_OBJECTS = ar.$(OBJEXT)
+-ar_DEPENDENCIES = libar.a $(am__DEPENDENCIES_2) $(libeu) \
+-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+ elfclassify_SOURCES = elfclassify.c
+ elfclassify_OBJECTS = elfclassify.$(OBJEXT)
+ elfclassify_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
+@@ -172,10 +168,6 @@ ranlib_SOURCES = ranlib.c
+ ranlib_OBJECTS = ranlib.$(OBJEXT)
+ ranlib_DEPENDENCIES = libar.a $(am__DEPENDENCIES_2) $(libeu) \
+ 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+-readelf_SOURCES = readelf.c
+-readelf_OBJECTS = readelf.$(OBJEXT)
+-readelf_DEPENDENCIES = $(am__DEPENDENCIES_3) $(libebl) \
+-	$(am__DEPENDENCIES_2) $(libeu) $(am__DEPENDENCIES_1)
+ size_SOURCES = size.c
+ size_OBJECTS = size.$(OBJEXT)
+ size_DEPENDENCIES = $(am__DEPENDENCIES_2) $(libeu) \
+@@ -185,18 +177,6 @@ stack_OBJECTS = stack.$(OBJEXT)
+ stack_DEPENDENCIES = $(libebl) $(am__DEPENDENCIES_2) \
+ 	$(am__DEPENDENCIES_3) $(libeu) $(am__DEPENDENCIES_1) \
+ 	$(am__DEPENDENCIES_1)
+-strings_SOURCES = strings.c
+-strings_OBJECTS = strings.$(OBJEXT)
+-strings_DEPENDENCIES = $(am__DEPENDENCIES_2) $(libeu) \
+-	$(am__DEPENDENCIES_1)
+-strip_SOURCES = strip.c
+-strip_OBJECTS = strip.$(OBJEXT)
+-strip_DEPENDENCIES = $(libebl) $(am__DEPENDENCIES_2) \
+-	$(am__DEPENDENCIES_3) $(libeu) $(am__DEPENDENCIES_1)
+-unstrip_SOURCES = unstrip.c
+-unstrip_OBJECTS = unstrip.$(OBJEXT)
+-unstrip_DEPENDENCIES = $(libebl) $(am__DEPENDENCIES_2) \
+-	$(am__DEPENDENCIES_3) $(libeu) $(am__DEPENDENCIES_1)
+ am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+ am__vpath_adj = case $$p in \
+     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+@@ -550,16 +530,12 @@ nm_LDADD = $(libdw) $(libebl) $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS) \
+ 	   $(demanglelib)
+ 
+ size_LDADD = $(libelf) $(libeu) $(argp_LDADD)
+-strip_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ elflint_LDADD = $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ findtextrel_LDADD = $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ addr2line_LDADD = $(libdw) $(libelf) $(libeu) $(argp_LDADD) $(demanglelib)
+ elfcmp_LDADD = $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ objdump_LDADD = $(libasm) $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ ranlib_LDADD = libar.a $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS)
+-strings_LDADD = $(libelf) $(libeu) $(argp_LDADD)
+-ar_LDADD = libar.a $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS)
+-unstrip_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ stack_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD) $(demanglelib)
+ elfcompress_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ elfclassify_LDADD = $(libelf) $(libdw) $(libeu) $(argp_LDADD)

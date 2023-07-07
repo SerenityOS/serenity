@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 06:59:03 +0300
+Subject: [PATCH] Fix limits.h include
+
+---
+ debuginfod/debuginfod-client.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/debuginfod/debuginfod-client.c b/debuginfod/debuginfod-client.c
+index c875ee6277b1502dfbb7dbd61bdba05fae208b7b..87a5e2aa4f8359135fa7189b9f4acf32b4f50a75 100644
+--- a/debuginfod/debuginfod-client.c
++++ b/debuginfod/debuginfod-client.c
+@@ -76,7 +76,7 @@ void debuginfod_end (debuginfod_client *c) { }
+ #include <regex.h>
+ #include <string.h>
+ #include <stdbool.h>
+-#include <linux/limits.h>
++#include <limits.h>
+ #include <time.h>
+ #include <utime.h>
+ #include <sys/syscall.h>

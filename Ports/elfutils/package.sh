@@ -8,5 +8,36 @@ files="http://archive.ubuntu.com/ubuntu/pool/main/e/elfutils/elfutils_${version}
 auth_type='sha256'
 depends=('zlib' 'libfts' 'argp-standalone' 'musl-obstack' 'curl' 'libarchive' 'sqlite' 'gettext')
 configopts=(
-    '--disable-debuginfod'
+    "--disable-debuginfod"
+    "--enable-libdebuginfod=dummy"
+    "--disable-libdwfl"
+    "--enable-maintainer-mode"
 )
+
+pre_configure() {
+    # Rebuild after patching configure.ac to support serenity host.
+
+    # `automake` may exit with a warning about how there is a mismatch
+    # between the versions of autoconf and automake that were previously
+    # used to generate aclocal and specifed in configure.ac.
+    run automake --add-missing || true
+    run autoreconf
+}
+
+export LIBC="musl"
+export LDFLAGS='-lintl -lobstack'
+export CFLAGS="-Wno-discarded-qualifiers -Wno-unused-value"
+
+install() {
+    run cp src/nm "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/size "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/elflint "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/findtextrel "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/addr2line "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+	run cp src/elfcmp "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/objdump "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/ranlib "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/stack "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp src/elfcompress "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+	run cp src/elfclassify "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+}

@@ -1,0 +1,191 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 04:21:22 +0300
+Subject: [PATCH] Add includes to libgen.h
+
+---
+ libdw/dwarf_getsrc_file.c            | 1 +
+ libdwfl/core-file.c                  | 1 +
+ libdwfl/dwfl_module_getsrc_file.c    | 2 ++
+ libdwfl/dwfl_segment_report_module.c | 1 +
+ libdwfl/find-debuginfo.c             | 1 +
+ libdwfl/link_map.c                   | 1 +
+ libdwfl/linux-kernel-modules.c       | 1 +
+ src/addr2line.c                      | 1 +
+ src/ar.c                             | 1 +
+ src/nm.c                             | 1 +
+ src/stack.c                          | 1 +
+ src/strip.c                          | 1 +
+ tests/show-die-info.c                | 1 +
+ tests/varlocs.c                      | 1 +
+ 14 files changed, 15 insertions(+)
+
+diff --git a/libdw/dwarf_getsrc_file.c b/libdw/dwarf_getsrc_file.c
+index 5289c7da48fd643c2d0472cfe86242a1c3a43fd3..225f07e1ffac5144c2e8dfe25bd4c59fddf108d0 100644
+--- a/libdw/dwarf_getsrc_file.c
++++ b/libdw/dwarf_getsrc_file.c
+@@ -34,6 +34,7 @@
+ #include <assert.h>
+ #include <limits.h>
+ #include <stdlib.h>
++#include <libgen.h>
+ #include <string.h>
+ 
+ #include "libdwP.h"
+diff --git a/libdwfl/core-file.c b/libdwfl/core-file.c
+index 4e4c9b3cff1a9f1f4b9b9d2ac665897a3e638a01..0f81b4230bb99dbdf7df4f220b66794e383fc2af 100644
+--- a/libdwfl/core-file.c
++++ b/libdwfl/core-file.c
+@@ -35,6 +35,7 @@
+ #include <unistd.h>
+ #include <endian.h>
+ #include <byteswap.h>
++#include <libgen.h>
+ #include "system.h"
+ 
+ 
+diff --git a/libdwfl/dwfl_module_getsrc_file.c b/libdwfl/dwfl_module_getsrc_file.c
+index cea2ba4145698f21bd365300bbe7bd890a768f52..d83bfbe0e1807ca91e0cd1b64f099d7fe2a37a1b 100644
+--- a/libdwfl/dwfl_module_getsrc_file.c
++++ b/libdwfl/dwfl_module_getsrc_file.c
+@@ -30,6 +30,8 @@
+ # include <config.h>
+ #endif
+ 
++#include <libgen.h>
++
+ #include "libdwflP.h"
+ #include "../libdw/libdwP.h"
+ 
+diff --git a/libdwfl/dwfl_segment_report_module.c b/libdwfl/dwfl_segment_report_module.c
+index ee9cfa2e5bc2da6379d397567f0ca8af1e35435d..cf5670105bb1a7e606cc57007c09dffd1f591343 100644
+--- a/libdwfl/dwfl_segment_report_module.c
++++ b/libdwfl/dwfl_segment_report_module.c
+@@ -37,6 +37,7 @@
+ #include <inttypes.h>
+ #include <endian.h>
+ #include <unistd.h>
++#include <libgen.h>
+ #include <fcntl.h>
+ 
+ #include <system.h>
+diff --git a/libdwfl/find-debuginfo.c b/libdwfl/find-debuginfo.c
+index 449df5a14b19bedf2795498dd9523342a2382b00..47834f0ecd5ad7ff900be3477dac1ca9bcfad180 100644
+--- a/libdwfl/find-debuginfo.c
++++ b/libdwfl/find-debuginfo.c
+@@ -35,6 +35,7 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ #include <sys/stat.h>
++#include <libgen.h>
+ #include "system.h"
+ 
+ 
+diff --git a/libdwfl/link_map.c b/libdwfl/link_map.c
+index 1e7d4502688787b8e6ab92e43aa12701f071bff7..bb2a7341c2dedb76a55dc799452b113291f80107 100644
+--- a/libdwfl/link_map.c
++++ b/libdwfl/link_map.c
+@@ -33,6 +33,7 @@
+ 
+ #include <byteswap.h>
+ #include <endian.h>
++#include <libgen.h>
+ #include <fcntl.h>
+ 
+ /* This element is always provided and always has a constant value.
+diff --git a/libdwfl/linux-kernel-modules.c b/libdwfl/linux-kernel-modules.c
+index c0f8dfa4aef2cf5c2894993cf0755e4ff8c98857..4cbea05beda416c6cb0a300c5761d82e2be53d04 100644
+--- a/libdwfl/linux-kernel-modules.c
++++ b/libdwfl/linux-kernel-modules.c
+@@ -38,6 +38,7 @@
+ 
+ #include <config.h>
+ #include <system.h>
++#include <libgen.h>
+ 
+ #include "libelfP.h"
+ #include "libdwflP.h"
+diff --git a/src/addr2line.c b/src/addr2line.c
+index 349450469bdd7a5dfa6e096ef27774e03a428829..185b7d3ee54c04a22c921cfdd3f4b82911719846 100644
+--- a/src/addr2line.c
++++ b/src/addr2line.c
+@@ -27,6 +27,7 @@
+ #include <inttypes.h>
+ #include <libdwfl.h>
+ #include <dwarf.h>
++#include <libgen.h>
+ #include <libintl.h>
+ #include <locale.h>
+ #include <stdbool.h>
+diff --git a/src/ar.c b/src/ar.c
+index ab6098f030b4c670a3babdbf698a08011430c79f..8375b7eb387152a49de244bf14225125d877594b 100644
+--- a/src/ar.c
++++ b/src/ar.c
+@@ -27,6 +27,7 @@
+ #include <libintl.h>
+ #include <limits.h>
+ #include <locale.h>
++#include <libgen.h>
+ #include <search.h>
+ #include <stdbool.h>
+ #include <stdlib.h>
+diff --git a/src/nm.c b/src/nm.c
+index 2ae29c4d96ab94c325a048a499ddc2c104085061..879441e969791bd214fc70212597138ce63505e8 100644
+--- a/src/nm.c
++++ b/src/nm.c
+@@ -25,6 +25,7 @@
+ #include <assert.h>
+ #include <ctype.h>
+ #include <dwarf.h>
++#include <libgen.h>
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <gelf.h>
+diff --git a/src/stack.c b/src/stack.c
+index 534aa93c433551896b67b65845ab4891fd175066..9db8cd25eea15c2bd28f5f62a5b411d3cf9fbe7e 100644
+--- a/src/stack.c
++++ b/src/stack.c
+@@ -24,6 +24,7 @@
+ #include <stdio_ext.h>
+ #include <string.h>
+ #include <locale.h>
++#include <libgen.h>
+ #include <fcntl.h>
+ #include ELFUTILS_HEADER(dwfl)
+ 
+diff --git a/src/strip.c b/src/strip.c
+index d5b753d7067c17f6021a02d0428daea242f6655f..f8efb78d810f1cfaaaeb5a5b1116bc4629a475f1 100644
+--- a/src/strip.c
++++ b/src/strip.c
+@@ -25,6 +25,7 @@
+ #include <byteswap.h>
+ #include <endian.h>
+ #include <fcntl.h>
++#include <libgen.h>
+ #include <fnmatch.h>
+ #include <gelf.h>
+ #include <libelf.h>
+diff --git a/tests/show-die-info.c b/tests/show-die-info.c
+index 1a3191cd5eb73519e0c729f95e1a1b49161e772f..1514bb4b5617d596d47cf20982bf00a4f85bf36c 100644
+--- a/tests/show-die-info.c
++++ b/tests/show-die-info.c
+@@ -25,6 +25,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <libgen.h>
+ 
+ #include "../libdw/known-dwarf.h"
+ 
+diff --git a/tests/varlocs.c b/tests/varlocs.c
+index 152c655579c712782d77f99139fcb62e8a4f0851..274a472a4a363059ef52dd6ea0122e728382c539 100644
+--- a/tests/varlocs.c
++++ b/tests/varlocs.c
+@@ -26,6 +26,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <libgen.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>

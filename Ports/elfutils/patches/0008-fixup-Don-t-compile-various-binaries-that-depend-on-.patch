@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:49:38 +0300
+Subject: [PATCH] fixup! Don't compile various binaries that depend on extended
+ LibC functions
+
+---
+ src/Makefile.am | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index b8b26b226ef0f5e9d9596dffe0dc695491358f17..41a3807c5b6cb5c061ac7d9443af8aadeaf7d527 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -78,9 +78,6 @@ addr2line_LDADD = $(libdw) $(libelf) $(libeu) $(argp_LDADD) $(demanglelib)
+ elfcmp_LDADD = $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ objdump_LDADD  = $(libasm) $(libebl) $(libdw) $(libelf) $(libeu) $(argp_LDADD)
+ ranlib_LDADD = libar.a $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS)
+-strings_LDADD = $(libelf) $(libeu) $(argp_LDADD)
+-ar_LDADD = libar.a $(libelf) $(libeu) $(argp_LDADD) $(obstack_LIBS)
+-unstrip_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ stack_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD) $(demanglelib)
+ elfcompress_LDADD = $(libebl) $(libelf) $(libdw) $(libeu) $(argp_LDADD)
+ elfclassify_LDADD = $(libelf) $(libdw) $(libeu) $(argp_LDADD)

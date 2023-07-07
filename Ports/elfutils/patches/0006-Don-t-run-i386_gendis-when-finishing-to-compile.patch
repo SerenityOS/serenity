@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:40:53 +0300
+Subject: [PATCH] Don't run i386_gendis when finishing to compile
+
+---
+ libcpu/Makefile.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/libcpu/Makefile.in b/libcpu/Makefile.in
+index 753fee1f589f56647edb3504fe23ba3c48e9aee1..63d133dde48f4aadb1b9e9378337753f2d3d2a44 100644
+--- a/libcpu/Makefile.in
++++ b/libcpu/Makefile.in
+@@ -793,7 +793,6 @@ x86_64_disasm.o: x86_64.mnemonics $(srcdir)/x86_64_dis.h
+ 	$(AM_V_at)mv -f $@T $@
+ 
+ @MAINTAINER_MODE_TRUE@$(srcdir)/%_dis.h: %_defs i386_gendis$(EXEEXT)
+-@MAINTAINER_MODE_TRUE@	$(AM_V_GEN)./i386_gendis$(EXEEXT) $< > $@T
+ @MAINTAINER_MODE_TRUE@	$(AM_V_at)mv -f $@T $@
+ 
+ @MAINTAINER_MODE_FALSE@$(srcdir)/%_dis.h:

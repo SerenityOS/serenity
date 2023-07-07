@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 7 Jul 2023 07:42:42 +0300
+Subject: [PATCH] fixup! Don't run i386_gendis when finishing to compile
+
+---
+ libcpu/Makefile.in | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/libcpu/Makefile.in b/libcpu/Makefile.in
+index 63d133dde48f4aadb1b9e9378337753f2d3d2a44..c5e424dacdbf9e2f5c034abf48667b146bc65c03 100644
+--- a/libcpu/Makefile.in
++++ b/libcpu/Makefile.in
+@@ -792,9 +792,6 @@ x86_64_disasm.o: x86_64.mnemonics $(srcdir)/x86_64_dis.h
+ 	$(AM_V_GEN)m4 -D$* -DDISASSEMBLER $< > $@T
+ 	$(AM_V_at)mv -f $@T $@
+ 
+-@MAINTAINER_MODE_TRUE@$(srcdir)/%_dis.h: %_defs i386_gendis$(EXEEXT)
+-@MAINTAINER_MODE_TRUE@	$(AM_V_at)mv -f $@T $@
+-
+ @MAINTAINER_MODE_FALSE@$(srcdir)/%_dis.h:
+ @MAINTAINER_MODE_FALSE@	@echo '*** missing $@; configure with --enable-maintainer-mode'
+ @MAINTAINER_MODE_FALSE@	@false
