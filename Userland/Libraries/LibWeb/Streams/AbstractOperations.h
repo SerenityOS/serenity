@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -130,6 +131,8 @@ double writable_stream_default_controller_get_desired_size(WritableStreamDefault
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
+
+void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
 
 bool is_non_negative_number(JS::Value);
 
