@@ -34,6 +34,8 @@ namespace Gfx {
 // Decoder from the "Tiny Vector Graphics" format (v1.0).
 // https://tinyvg.tech/download/specification.pdf
 
+struct TinyVGHeader;
+
 class TinyVGDecodedImageData final : public VectorGraphic {
 public:
     using Style = Variant<Color, NonnullRefPtr<SVGGradientPaintStyle>>;
@@ -58,6 +60,7 @@ public:
     }
 
     static ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> decode(Stream& stream);
+    static ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> decode(Stream& stream, TinyVGHeader const& header);
 
 private:
     TinyVGDecodedImageData(IntSize size, Vector<DrawCommand> draw_commands)
@@ -70,11 +73,7 @@ private:
     Vector<DrawCommand> m_draw_commands;
 };
 
-struct TinyVGLoadingContext {
-    ReadonlyBytes data;
-    RefPtr<TinyVGDecodedImageData> decoded_image {};
-    RefPtr<Bitmap> bitmap {};
-};
+struct TinyVGLoadingContext;
 
 class TinyVGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
@@ -98,7 +97,7 @@ public:
 private:
     TinyVGImageDecoderPlugin(ReadonlyBytes);
 
-    TinyVGLoadingContext m_context;
+    NonnullOwnPtr<TinyVGLoadingContext> m_context;
 };
 
 }
