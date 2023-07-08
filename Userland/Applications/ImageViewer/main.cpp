@@ -77,12 +77,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto widget = TRY(root_widget->try_add<ViewWidget>());
     widget->on_scale_change = [&](float scale) {
-        if (!widget->bitmap()) {
+        if (!widget->image()) {
             window->set_title("Image Viewer");
             return;
         }
 
-        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->bitmap()->size().to_deprecated_string(), (int)(scale * 100)));
+        window->set_title(DeprecatedString::formatted("{} {} {}% - Image Viewer", widget->path(), widget->image()->size().to_deprecated_string(), (int)(scale * 100)));
 
         if (!widget->scaled_for_first_image()) {
             widget->set_scaled_for_first_image(true);
@@ -186,7 +186,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"sv)),
         [&](auto&) {
-            if (!GUI::Desktop::the().set_wallpaper(widget->bitmap(), widget->path())) {
+            if (!GUI::Desktop::the().set_wallpaper(widget->image()->bitmap(GUI::Desktop::the().rect().size()).release_value_but_fixme_should_propagate_errors(), widget->path())) {
                 GUI::MessageBox::show(window,
                     DeprecatedString::formatted("set_wallpaper({}) failed", widget->path()),
                     "Could not set wallpaper"sv,
@@ -249,8 +249,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     hide_show_toolbar_action->set_checked(true);
 
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
-        if (widget->bitmap())
-            GUI::Clipboard::the().set_bitmap(*widget->bitmap());
+        if (widget->image())
+            GUI::Clipboard::the().set_bitmap(*widget->image()->bitmap({}).release_value_but_fixme_should_propagate_errors());
     });
 
     auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
@@ -270,8 +270,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
     });
 
-    widget->on_image_change = [&](Gfx::Bitmap const* bitmap) {
-        bool should_enable_image_actions = (bitmap != nullptr);
+    widget->on_image_change = [&](Image const* image) {
+        bool should_enable_image_actions = (image != nullptr);
         bool should_enable_forward_actions = (widget->is_next_available() && should_enable_image_actions);
         bool should_enable_backward_actions = (widget->is_previous_available() && should_enable_image_actions);
         delete_action->set_enabled(should_enable_image_actions);
