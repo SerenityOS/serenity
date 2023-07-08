@@ -10,7 +10,6 @@
 
 #include <AK/AllOf.h>
 #include <AK/AnyOf.h>
-#include <AK/Array.h>
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
@@ -270,14 +269,19 @@ private:
 
 class TypeErasedFormatParams {
 public:
-    ReadonlySpan<TypeErasedParameter> parameters() const { return m_parameters; }
+    TypeErasedFormatParams(u32 size)
+        : m_size(size)
+    {
+    }
 
-    void set_parameters(ReadonlySpan<TypeErasedParameter> parameters) { m_parameters = parameters; }
+    ReadonlySpan<TypeErasedParameter> parameters() const { return { m_parameters, m_size }; }
+
     size_t take_next_index() { return m_next_index++; }
 
 private:
-    ReadonlySpan<TypeErasedParameter> m_parameters;
-    size_t m_next_index { 0 };
+    u32 m_size { 0 };
+    u32 m_next_index { 0 };
+    TypeErasedParameter m_parameters[0];
 };
 
 template<typename T>
@@ -295,16 +299,16 @@ public:
     static_assert(sizeof...(Parameters) <= max_format_arguments);
 
     explicit VariadicFormatParams(Parameters const&... parameters)
-        : m_data({ TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... })
+        : TypeErasedFormatParams(sizeof...(Parameters))
+        , m_parameter_storage { TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... }
     {
         constexpr bool any_debug_formatters = (is_debug_only_formatter<Formatter<Parameters>>() || ...);
         static_assert(!any_debug_formatters || allow_debug_formatters == AllowDebugOnlyFormatters::Yes,
             "You are attempting to use a debug-only formatter outside of a debug log! Maybe one of your format values is an ErrorOr<T>?");
-        this->set_parameters(m_data);
     }
 
 private:
-    Array<TypeErasedParameter, sizeof...(Parameters)> m_data;
+    TypeErasedParameter m_parameter_storage[sizeof...(Parameters)];
 };
 
 // We use the same format for most types for consistency. This is taken directly from
