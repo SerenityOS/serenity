@@ -133,6 +133,8 @@ unsigned get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
         modifiers |= KeyModifier::Mod_Shift;
     if (event.modifiers().testFlag(Qt::AltModifier))
         modifiers |= KeyModifier::Mod_AltGr;
+    if (event.modifiers().testFlag(Qt::KeypadModifier))
+        modifiers |= KeyModifier::Mod_Keypad;
     return modifiers;
 }
 
