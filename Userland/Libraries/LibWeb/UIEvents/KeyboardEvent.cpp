@@ -484,6 +484,25 @@ static ErrorOr<String> get_event_code(KeyCode platform_key, unsigned modifiers)
     VERIFY_NOT_REACHED();
 }
 
+// 5.6.2. Keyboard Event Key Location, https://www.w3.org/TR/uievents/#events-keyboard-key-location
+static DOMKeyLocation get_event_location(KeyCode platform_key, unsigned modifiers)
+{
+    if ((modifiers & Mod_Keypad) != 0)
+        return DOMKeyLocation::Numpad;
+
+    // FIXME: Detect left vs. right for Control and Alt keys.
+    switch (platform_key) {
+    case KeyCode::Key_LeftShift:
+        return DOMKeyLocation::Left;
+    case KeyCode::Key_RightShift:
+        return DOMKeyLocation::Right;
+    default:
+        break;
+    }
+
+    return DOMKeyLocation::Standard;
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     auto& vm = realm.vm();
@@ -495,7 +514,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_
     KeyboardEventInit event_init {};
     event_init.key = move(event_key);
     event_init.code = move(event_code);
-    event_init.location = 0;
+    event_init.location = to_underlying(get_event_location(platform_key, modifiers));
     event_init.ctrl_key = modifiers & Mod_Ctrl;
     event_init.shift_key = modifiers & Mod_Shift;
     event_init.alt_key = modifiers & Mod_Alt;
