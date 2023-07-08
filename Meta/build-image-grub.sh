@@ -34,14 +34,6 @@ if [ -z "$grub" ]; then
 fi
 echo "using grub-install at ${grub}"
 
-disk_usage() {
-if [ "$(uname -s)" = "Darwin" ]; then
-    du -sm "$1" | cut -f1
-else
-    du -sm --apparent-size "$1" | cut -f1
-fi
-}
-
 DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 300))
 
 echo "setting up disk image..."

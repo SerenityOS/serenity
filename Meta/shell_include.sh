@@ -82,3 +82,20 @@ get_number_of_processing_units() {
 
   ($number_of_processing_units)
 }
+
+# We depend on GNU coreutils du for the --apparent-size extension.
+# GNU coreutils is a build dependency.
+if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then
+    GNUDU="gdu"
+else
+    GNUDU="du"
+fi
+
+disk_usage() {
+    # shellcheck disable=SC2003,SC2307
+    expr "$(${GNUDU} -sbm "$1" | cut -f1)"
+}
+
+inode_usage() {
+    find "$1" | wc -l
+}
