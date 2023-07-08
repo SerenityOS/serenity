@@ -41,6 +41,16 @@ public:
     void set_sample_format(PcmSampleFormat sample_format) { m_sample_format = sample_format; }
 
 private:
+    template<typename T>
+    T clip(float value)
+    {
+        if (value > NumericLimits<T>::max())
+            return NumericLimits<T>::max();
+        if (value < NumericLimits<T>::min())
+            return NumericLimits<T>::min();
+        return value;
+    }
+
     ErrorOr<void> write_header();
     OwnPtr<Core::File> m_file;
     bool m_finalized { false };
