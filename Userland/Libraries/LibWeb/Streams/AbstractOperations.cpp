@@ -23,6 +23,7 @@
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
 #include <LibWeb/Streams/TransformStream.h>
 #include <LibWeb/Streams/TransformStreamDefaultController.h>
+#include <LibWeb/Streams/Transformer.h>
 #include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
 #include <LibWeb/Streams/WritableStream.h>
@@ -2906,6 +2907,67 @@ void set_up_transform_stream_default_controller(TransformStream& stream, Transfo
 
     // 6. Set controller.[[flushAlgorithm]] to flushAlgorithm.
     controller.set_flush_algorithm(move(flush_algorithm));
+}
+
+// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
+WebIDL::ExceptionOr<void> set_up_transform_stream_default_controller_from_transformer(TransformStream& stream, JS::Value transformer, Transformer& transformer_dict)
+{
+    auto& realm = stream.realm();
+    auto& vm = realm.vm();
+
+    // 1. Let controller be a new TransformStreamDefaultController.
+    auto controller = MUST_OR_THROW_OOM(realm.heap().allocate<TransformStreamDefaultController>(realm, realm));
+
+    // 2. Let transformAlgorithm be the following steps, taking a chunk argument:
+    TransformAlgorithm transform_algorithm = [controller, &realm, &vm](JS::Value chunk) {
+        // 1. Let result be TransformStreamDefaultControllerEnqueue(controller, chunk).
+        auto result = transform_stream_default_controller_enqueue(*controller, chunk);
+
+        // 2. If result is an abrupt completion, return a promise rejected with result.[[Value]].
+        if (result.is_error()) {
+            auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, result.exception());
+            return WebIDL::create_rejected_promise(realm, *throw_completion.release_value());
+        }
+
+        // 3. Otherwise, return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 3. Let flushAlgorithm be an algorithm which returns a promise resolved with undefined.
+    FlushAlgorithm flush_algorithm = [&realm] {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. If transformerDict["transform"] exists, set transformAlgorithm to an algorithm which takes an argument chunk
+    //    and returns the result of invoking transformerDict["transform"] with argument list « chunk, controller » and
+    //    callback this value transformer.
+    if (transformer_dict.transform) {
+        transform_algorithm = [controller, &realm, transformer, callback = transformer_dict.transform](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
+            auto result = WebIDL::invoke_callback(*callback, transformer, chunk, controller);
+            if (result.is_error())
+                return WebIDL::create_rejected_promise(realm, *result.release_value());
+
+            return WebIDL::create_resolved_promise(realm, *result.release_value());
+        };
+    }
+    // 5. If transformerDict["flush"] exists, set flushAlgorithm to an algorithm which returns the result of invoking
+    //    transformerDict["flush"] with argument list « controller » and callback this value transformer.
+    if (transformer_dict.flush) {
+        flush_algorithm = [&realm, transformer, callback = transformer_dict.flush, controller]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
+            auto result = WebIDL::invoke_callback(*callback, transformer, controller);
+            if (result.is_error()) {
+                return WebIDL::create_rejected_promise(realm, *result.release_value());
+            }
+            return WebIDL::create_resolved_promise(realm, *result.release_value());
+        };
+    }
+
+    // 6. Perform ! SetUpTransformStreamDefaultController(stream, controller, transformAlgorithm, flushAlgorithm).
+    set_up_transform_stream_default_controller(stream, *controller, move(transform_algorithm), move(flush_algorithm));
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-clear-algorithms
