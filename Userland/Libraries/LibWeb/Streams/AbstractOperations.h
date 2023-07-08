@@ -138,6 +138,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(Writa
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
 
+WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream&, JS::NonnullGCPtr<JS::PromiseCapability> start_promise, double writable_high_water_mark, SizeAlgorithm&& writable_size_algorithm, double readable_high_water_mark, SizeAlgorithm&& readable_size_algorithm);
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController&);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_enqueue(TransformStreamDefaultController&, JS::Value chunk);
 WebIDL::ExceptionOr<void> transform_stream_default_controller_error(TransformStreamDefaultController&, JS::Value error);
