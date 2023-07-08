@@ -1178,6 +1178,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> create_writable_stream(JS:
     return stream;
 }
 
+// https://streams.spec.whatwg.org/#initialize-readable-stream
+void initialize_readable_stream(ReadableStream& stream)
+{
+    // 1. Set stream.[[state]] to "readable".
+    stream.set_state(ReadableStream::State::Readable);
+
+    // 2. Set stream.[[reader]] and stream.[[storedError]] to undefined.
+    stream.set_reader({});
+    stream.set_stored_error({});
+
+    // 3. Set stream.[[disturbed]] to false.
+    stream.set_disturbed(false);
+}
+
 // https://streams.spec.whatwg.org/#initialize-writable-stream
 void initialize_writable_stream(WritableStream& stream)
 {
