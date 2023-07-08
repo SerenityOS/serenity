@@ -151,6 +151,7 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
         KeyCode serenity_key;
     };
 
+    // https://doc.qt.io/qt-6/qt.html#Key-enum
     constexpr Mapping mappings[] = {
         { Qt::Key_0, Key_0 },
         { Qt::Key_1, Key_1 },
@@ -190,7 +191,9 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
         { Qt::Key_E, Key_E },
         { Qt::Key_End, Key_End },
         { Qt::Key_Equal, Key_Equal },
+        { Qt::Key_Enter, Key_Return },
         { Qt::Key_Escape, Key_Escape },
+        { Qt::Key_Exclam, Key_ExclamationPoint },
         { Qt::Key_exclamdown, Key_ExclamationPoint },
         { Qt::Key_F, Key_F },
         { Qt::Key_F1, Key_F1 },
@@ -218,8 +221,10 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
         { Qt::Key_Less, Key_LessThan },
         { Qt::Key_M, Key_M },
         { Qt::Key_Menu, Key_Menu },
+        { Qt::Key_Meta, Key_Super },
         { Qt::Key_Minus, Key_Minus },
         { Qt::Key_N, Key_N },
+        { Qt::Key_NumberSign, Key_Hashtag },
         { Qt::Key_NumLock, Key_NumLock },
         { Qt::Key_O, Key_O },
         { Qt::Key_P, Key_P },
@@ -234,6 +239,7 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
         { Qt::Key_Q, Key_Q },
         { Qt::Key_Question, Key_QuestionMark },
         { Qt::Key_QuoteDbl, Key_DoubleQuote },
+        { Qt::Key_QuoteLeft, Key_Backtick },
         { Qt::Key_R, Key_R },
         { Qt::Key_Return, Key_Return },
         { Qt::Key_Right, Key_Right },
@@ -244,6 +250,7 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
         { Qt::Key_Slash, Key_Slash },
         { Qt::Key_Space, Key_Space },
         { Qt::Key_Super_L, Key_Super },
+        { Qt::Key_Super_R, Key_Super },
         { Qt::Key_SysReq, Key_SysRq },
         { Qt::Key_T, Key_T },
         { Qt::Key_Tab, Key_Tab },
