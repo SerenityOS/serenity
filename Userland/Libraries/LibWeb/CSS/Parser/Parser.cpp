@@ -6246,8 +6246,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<Compone
         } else if (filter_token == FilterToken::DropShadow) {
             if (!tokens.has_next_token())
                 return {};
-            auto next_token = [&]() -> auto&
-            {
+            auto next_token = [&]() -> auto& {
                 auto& token = tokens.next_token();
                 tokens.skip_whitespace();
                 return token;

@@ -43,7 +43,7 @@ void CRC32::update(ReadonlyBytes span)
     }
 };
 
-    // FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
+// FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
 
 #else
 

@@ -560,7 +560,7 @@ void Editor::initialize()
             m_configuration.set(Configuration::NonInteractive);
         } else {
             auto* term = getenv("TERM");
-            if (term != NULL && StringView { term, strlen(term) }.starts_with("xterm"sv))
+            if ((term != NULL) && StringView { term, strlen(term) }.starts_with("xterm"sv))
                 m_configuration.set(Configuration::Full);
             else
                 m_configuration.set(Configuration::NoEscapeSequences);
