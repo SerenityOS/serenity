@@ -137,14 +137,14 @@ ThrowCompletionOr<bool> ModuleNamespaceObject::internal_has_property(PropertyKey
 }
 
 // 10.4.6.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver
-ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& property_key, Value receiver) const
+ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata) const
 {
     auto& vm = this->vm();
 
     // 1. If Type(P) is Symbol, then
     if (property_key.is_symbol()) {
         // a. Return ! OrdinaryGet(O, P, Receiver).
-        return MUST(Object::internal_get(property_key, receiver));
+        return MUST(Object::internal_get(property_key, receiver, cacheable_metadata));
     }
 
     // 2. Let exports be O.[[Exports]].

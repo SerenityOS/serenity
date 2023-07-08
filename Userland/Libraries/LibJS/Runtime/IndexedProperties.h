@@ -15,6 +15,8 @@ namespace JS {
 struct ValueAndAttributes {
     Value value;
     PropertyAttributes attributes { default_attributes };
+
+    Optional<u32> property_offset {};
 };
 
 class IndexedProperties;
