@@ -124,11 +124,12 @@ public:
     // https://drafts.csswg.org/css-values-4/#calc-error-constants
     enum class ConstantType {
         E,
-        PI,
+        Pi,
         NaN,
         Infinity,
         MinusInfinity,
     };
+    static Optional<ConstantType> constant_type_from_string(StringView);
 
     enum class Type {
         Numeric,
