@@ -2823,6 +2823,71 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStrea
     return {};
 }
 
+// https://streams.spec.whatwg.org/#initialize-transform-stream
+WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream& stream, JS::NonnullGCPtr<JS::PromiseCapability> start_promise, double writable_high_water_mark, SizeAlgorithm&& writable_size_algorithm, double readable_high_water_mark, SizeAlgorithm&& readable_size_algorithm)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let startAlgorithm be an algorithm that returns startPromise.
+    StartAlgorithm writable_start_algorithm = [start_promise] {
+        return start_promise->promise();
+    };
+    StartAlgorithm readable_start_algorithm = [start_promise] {
+        return start_promise->promise();
+    };
+
+    // 2. Let writeAlgorithm be the following steps, taking a chunk argument:
+    WriteAlgorithm write_algorithm = [&stream](JS::Value chunk) {
+        // 1. Return ! TransformStreamDefaultSinkWriteAlgorithm(stream, chunk).
+        return transform_stream_default_sink_write_algorithm(stream, chunk);
+    };
+
+    // 3. Let abortAlgorithm be the following steps, taking a reason argument:
+    AbortAlgorithm abort_algorithm = [&stream](JS::Value reason) {
+        // 1. Return ! TransformStreamDefaultSinkAbortAlgorithm(stream, reason).
+        return transform_stream_default_sink_abort_algorithm(stream, reason);
+    };
+
+    // 4. Let closeAlgorithm be the following steps:
+    CloseAlgorithm close_algorithm = [&stream] {
+        // 1. Return ! TransformStreamDefaultSinkCloseAlgorithm(stream).
+        return transform_stream_default_sink_close_algorithm(stream);
+    };
+
+    // 5. Set stream.[[writable]] to ! CreateWritableStream(startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm, writableHighWaterMark, writableSizeAlgorithm).
+    stream.set_writable(TRY(create_writable_stream(realm, move(writable_start_algorithm), move(write_algorithm), move(close_algorithm), move(abort_algorithm), writable_high_water_mark, move(writable_size_algorithm))));
+
+    // 6. Let pullAlgorithm be the following steps:
+    PullAlgorithm pull_algorithm = [&stream] {
+        // 1. Return ! TransformStreamDefaultSourcePullAlgorithm(stream).
+        return transform_stream_default_source_pull_algorithm(stream);
+    };
+
+    // 7. Let cancelAlgorithm be the following steps, taking a reason argument:
+    CancelAlgorithm cancel_algorithm = [&stream, &realm](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
+        // 1. Perform ! TransformStreamErrorWritableAndUnblockWrite(stream, reason).
+        TRY(transform_stream_error_writable_and_unblock_write(stream, reason));
+
+        // 2. Return a promise resolved with undefined.
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 8. Set stream.[[readable]] to ! CreateReadableStream(startAlgorithm, pullAlgorithm, cancelAlgorithm, readableHighWaterMark, readableSizeAlgorithm).
+    stream.set_readable(TRY(create_readable_stream(realm, move(readable_start_algorithm), move(pull_algorithm), move(cancel_algorithm), readable_high_water_mark, move(readable_size_algorithm))));
+
+    // 9. Set stream.[[backpressure]] and stream.[[backpressureChangePromise]] to undefined.
+    stream.set_backpressure({});
+    stream.set_backpressure_change_promise({});
+
+    // 10. Perform ! TransformStreamSetBackpressure(stream, true).
+    TRY(transform_stream_set_backpressure(stream, true));
+
+    // 11. Set stream.[[controller]] to undefined.
+    stream.set_controller({});
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-clear-algorithms
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController& controller)
 {
