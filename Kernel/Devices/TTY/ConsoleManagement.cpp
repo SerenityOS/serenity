@@ -9,9 +9,9 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Management.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel {
 

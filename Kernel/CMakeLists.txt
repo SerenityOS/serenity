@@ -340,12 +340,12 @@ set(KERNEL_SOURCES
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
-    TTY/ConsoleManagement.cpp
-    TTY/MasterPTY.cpp
-    TTY/PTYMultiplexer.cpp
-    TTY/SlavePTY.cpp
-    TTY/TTY.cpp
-    TTY/VirtualConsole.cpp
+    Devices/TTY/ConsoleManagement.cpp
+    Devices/TTY/MasterPTY.cpp
+    Devices/TTY/PTYMultiplexer.cpp
+    Devices/TTY/SlavePTY.cpp
+    Devices/TTY/TTY.cpp
+    Devices/TTY/VirtualConsole.cpp
     Tasks/Coredump.cpp
     Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp

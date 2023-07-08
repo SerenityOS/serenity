@@ -13,12 +13,12 @@
 #endif
 #include <AK/StringView.h>
 #include <Kernel/Arch/PowerState.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>

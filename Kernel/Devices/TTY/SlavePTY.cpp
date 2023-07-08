@@ -6,8 +6,8 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
-#include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/TTY/SlavePTY.h>
+#include <Kernel/Devices/TTY/MasterPTY.h>
+#include <Kernel/Devices/TTY/SlavePTY.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

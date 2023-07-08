@@ -8,6 +8,8 @@
 #include <AK/MemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/TTY/MasterPTY.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/InodeFile.h>
@@ -17,8 +19,6 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 

@@ -8,10 +8,10 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/TTY/MasterPTY.h>
+#include <Kernel/Devices/TTY/PTYMultiplexer.h>
+#include <Kernel/Devices/TTY/SlavePTY.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
-#include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/TTY/PTYMultiplexer.h>
-#include <Kernel/TTY/SlavePTY.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

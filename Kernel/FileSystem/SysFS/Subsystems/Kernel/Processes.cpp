@@ -6,9 +6,9 @@
 
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Try.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 

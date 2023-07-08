@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/TTY/TTY.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

@@ -13,7 +13,7 @@
 #include <LibVT/Color.h>
 #include <LibVT/Terminal.h>
 #ifdef KERNEL
-#    include <Kernel/TTY/VirtualConsole.h>
+#    include <Kernel/Devices/TTY/VirtualConsole.h>
 #endif
 
 namespace VT {

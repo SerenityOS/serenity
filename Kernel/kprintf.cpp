@@ -16,8 +16,8 @@
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {

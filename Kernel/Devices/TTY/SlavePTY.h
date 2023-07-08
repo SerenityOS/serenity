@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 

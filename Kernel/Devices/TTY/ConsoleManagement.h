@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/TTY/VirtualConsole.h>
 
 namespace Kernel {
 
