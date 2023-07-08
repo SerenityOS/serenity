@@ -54,8 +54,12 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
     else if (is<FunctionExpression>(node))
         is_strict_mode = static_cast<FunctionExpression const&>(node).is_strict_mode();
 
+    Vector<PropertyLookupCache> property_lookup_caches;
+    property_lookup_caches.resize(generator.m_next_property_lookup_cache);
+
     return adopt_own(*new Executable {
         .name = {},
+        .property_lookup_caches = move(property_lookup_caches),
         .basic_blocks = move(generator.m_root_basic_blocks),
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
@@ -199,7 +203,7 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
             } else {
                 // 3. Let propertyKey be StringValue of IdentifierName.
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
-                emit<Bytecode::Op::GetByIdWithThis>(identifier_table_ref, super_reference.this_value);
+                emit_get_by_id_with_this(identifier_table_ref, super_reference.this_value);
             }
         } else {
             TRY(expression.object().generate_bytecode(*this));
@@ -212,7 +216,7 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
                 emit<Bytecode::Op::GetByValue>(object_reg);
             } else if (expression.property().is_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
-                emit<Bytecode::Op::GetById>(identifier_table_ref);
+                emit_get_by_id(identifier_table_ref);
             } else if (expression.property().is_private_identifier()) {
                 auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
                 emit<Bytecode::Op::GetPrivateById>(identifier_table_ref);
@@ -541,6 +545,16 @@ CodeGenerationErrorOr<void> Generator::emit_named_evaluation_if_anonymous_functi
 
     TRY(expression.generate_bytecode(*this));
     return {};
+}
+
+void Generator::emit_get_by_id(IdentifierTableIndex id)
+{
+    emit<Op::GetById>(id, m_next_property_lookup_cache++);
+}
+
+void Generator::emit_get_by_id_with_this(IdentifierTableIndex id, Register this_reg)
+{
+    emit<Op::GetByIdWithThis>(id, this_reg, m_next_property_lookup_cache++);
 }
 
 }
