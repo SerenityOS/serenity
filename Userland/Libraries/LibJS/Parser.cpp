@@ -244,12 +244,9 @@ public:
     void set_function_parameters(Vector<FunctionParameter> const& parameters)
     {
         m_function_parameters = parameters;
-        auto has_parameters_with_default_values = false;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
                 [&](Identifier const& identifier) {
-                    if (parameter.default_value)
-                        has_parameters_with_default_values = true;
                     register_identifier(identifier);
                     m_function_parameters_candidates_for_local_variables.set(identifier.string());
                     m_forbidden_lexical_names.set(identifier.string());
@@ -260,10 +257,6 @@ public:
                         m_forbidden_lexical_names.set(name);
                     }));
                 });
-        }
-
-        if (has_parameters_with_default_values) {
-            m_function_parameters_candidates_for_local_variables.clear();
         }
     }
 
