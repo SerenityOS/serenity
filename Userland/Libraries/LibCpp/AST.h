@@ -466,7 +466,7 @@ public:
     {
     }
 
-    void append_dimension(StringView dim) { m_dimensions.append(dim); };
+    void append_dimension(StringView dim) { m_dimensions.append(dim); }
 
 private:
     Vector<StringView> m_dimensions;

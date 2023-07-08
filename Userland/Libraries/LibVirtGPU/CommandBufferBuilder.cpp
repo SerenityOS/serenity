@@ -21,7 +21,7 @@ static u32 encode_command(u16 length, Protocol::ObjectType object_type, Protocol
     u8 command_value = to_underlying(command);
     u8 object_type_value = to_underlying(object_type);
     return (length << 16) | (object_type_value << 8) | command_value;
-};
+}
 
 class CommandBuilder {
 public:

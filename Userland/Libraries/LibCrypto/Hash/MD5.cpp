@@ -8,10 +8,10 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/MD5.h>
 
-static constexpr u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); };
-static constexpr u32 G(u32 x, u32 y, u32 z) { return (x & z) | ((~z) & y); };
-static constexpr u32 H(u32 x, u32 y, u32 z) { return x ^ y ^ z; };
-static constexpr u32 I(u32 x, u32 y, u32 z) { return y ^ (x | ~z); };
+static constexpr u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); }
+static constexpr u32 G(u32 x, u32 y, u32 z) { return (x & z) | ((~z) & y); }
+static constexpr u32 H(u32 x, u32 y, u32 z) { return x ^ y ^ z; }
+static constexpr u32 I(u32 x, u32 y, u32 z) { return y ^ (x | ~z); }
 static constexpr u32 ROTATE_LEFT(u32 x, size_t n)
 {
     return (x << n) | (x >> (32 - n));

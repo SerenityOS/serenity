@@ -58,7 +58,7 @@ static void print_closing_statistics()
     if (successful_pings)
         average_ms = total_ms / successful_pings;
     outln("rtt min/avg/max = {}/{}/{} ms", min_ms, average_ms, max_ms);
-};
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

@@ -26,7 +26,7 @@ public:
     size_t used_bytes() const { return m_num_used_bytes; }
     PhysicalAddress start_of_region() const { return m_region->physical_page(0)->paddr(); }
     VirtualAddress vaddr() const { return m_region->vaddr(); }
-    size_t bytes_till_end() const { return (m_capacity_in_bytes - ((m_start_of_used + m_num_used_bytes) % m_capacity_in_bytes)) % m_capacity_in_bytes; };
+    size_t bytes_till_end() const { return (m_capacity_in_bytes - ((m_start_of_used + m_num_used_bytes) % m_capacity_in_bytes)) % m_capacity_in_bytes; }
 
 private:
     RingBuffer(NonnullOwnPtr<Memory::Region> region, size_t capacity);

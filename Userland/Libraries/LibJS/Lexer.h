@@ -21,10 +21,10 @@ public:
 
     Token next();
 
-    DeprecatedString const& source() const { return m_source; };
-    String const& filename() const { return m_filename; };
+    DeprecatedString const& source() const { return m_source; }
+    String const& filename() const { return m_filename; }
 
-    void disallow_html_comments() { m_allow_html_comments = false; };
+    void disallow_html_comments() { m_allow_html_comments = false; }
 
     Token force_slash_as_regex();
 

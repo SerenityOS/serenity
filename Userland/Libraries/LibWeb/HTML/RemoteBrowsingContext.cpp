@@ -12,7 +12,7 @@ JS::NonnullGCPtr<RemoteBrowsingContext> RemoteBrowsingContext::create_a_new_remo
 {
     auto browsing_context = Bindings::main_thread_vm().heap().allocate_without_realm<RemoteBrowsingContext>(handle);
     return browsing_context;
-};
+}
 
 HTML::WindowProxy* RemoteBrowsingContext::window_proxy()
 {

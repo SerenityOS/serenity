@@ -15,7 +15,7 @@
 class Pattern final {
 public:
     Pattern(Vector<DeprecatedString>);
-    Vector<DeprecatedString> pattern() { return m_pattern; };
+    Vector<DeprecatedString> pattern() { return m_pattern; }
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);
     void rotate_clockwise();

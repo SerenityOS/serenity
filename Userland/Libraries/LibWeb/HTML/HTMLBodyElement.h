@@ -24,7 +24,7 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-body
-    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; };
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; }
 
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);

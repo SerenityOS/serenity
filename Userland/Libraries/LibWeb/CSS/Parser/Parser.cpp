@@ -2505,7 +2505,7 @@ static StringView consume_if_starts_with(StringView str, StringView start, auto 
         return str.substring_view(start.length());
     }
     return str;
-};
+}
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
@@ -5349,7 +5349,7 @@ static Optional<PositionEdge> identifier_to_edge(ValueID identifier)
     default:
         return {};
     }
-};
+}
 
 static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
 {
@@ -5360,7 +5360,7 @@ static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
     if (value->is_calculated())
         return LengthPercentage { value->as_calculated() };
     return {};
-};
+}
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
 {
@@ -7906,7 +7906,7 @@ bool block_contains_var_or_attr(Block const& block)
             return true;
     }
     return false;
-};
+}
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {

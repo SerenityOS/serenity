@@ -22,7 +22,7 @@ public:
     GridTrackPlacement const& grid_track_placement() const { return m_grid_track_placement; }
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(GridTrackPlacementStyleValue const& other) const { return m_grid_track_placement == other.m_grid_track_placement; };
+    bool properties_equal(GridTrackPlacementStyleValue const& other) const { return m_grid_track_placement == other.m_grid_track_placement; }
 
 private:
     explicit GridTrackPlacementStyleValue(GridTrackPlacement grid_track_placement)

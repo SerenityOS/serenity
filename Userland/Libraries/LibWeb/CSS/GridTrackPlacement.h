@@ -23,7 +23,7 @@ public:
     GridTrackPlacement(String line_name, bool has_span = false);
     GridTrackPlacement();
 
-    static GridTrackPlacement make_auto() { return GridTrackPlacement(); };
+    static GridTrackPlacement make_auto() { return GridTrackPlacement(); }
 
     bool is_span() const { return m_type == Type::Span; }
     bool is_position() const { return m_type == Type::Position; }

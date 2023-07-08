@@ -187,7 +187,7 @@ public:
 
     ThrowCompletionOr<Value> resolve_this_binding();
 
-    StackInfo const& stack_info() const { return m_stack_info; };
+    StackInfo const& stack_info() const { return m_stack_info; }
 
     HashMap<String, NonnullGCPtr<Symbol>> const& global_symbol_registry() const { return m_global_symbol_registry; }
     HashMap<String, NonnullGCPtr<Symbol>>& global_symbol_registry() { return m_global_symbol_registry; }

@@ -180,7 +180,7 @@ public:
     bool needs_bracketed_paste() const
     {
         return m_needs_bracketed_paste;
-    };
+    }
 
     bool is_within_scroll_region(u16 line) const
     {
@@ -400,8 +400,8 @@ protected:
         m_history_start = (m_history_start + 1) % m_history.size();
     }
 
-    Vector<NonnullOwnPtr<Line>>& active_buffer() { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
-    Vector<NonnullOwnPtr<Line>> const& active_buffer() const { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
+    Vector<NonnullOwnPtr<Line>>& active_buffer() { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; }
+    Vector<NonnullOwnPtr<Line>> const& active_buffer() const { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; }
     Vector<NonnullOwnPtr<Line>> m_normal_screen_buffer;
     Vector<NonnullOwnPtr<Line>> m_alternate_screen_buffer;
 #endif

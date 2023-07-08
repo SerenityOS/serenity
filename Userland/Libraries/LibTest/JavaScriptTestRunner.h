@@ -83,7 +83,7 @@
         __TestJS_flag_hook_##flag()                                                        \
         {                                                                                  \
             ::Test::JS::g_extra_args.set(&(flag), { help_string, long_name, short_name }); \
-        };                                                                                 \
+        }                                                                                  \
     } __testjs_flag_hook_##flag;
 
 #define TEST_ROOT(path) \

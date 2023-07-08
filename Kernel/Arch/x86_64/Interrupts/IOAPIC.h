@@ -51,7 +51,7 @@ public:
     virtual u16 get_irr() const override;
     virtual u32 gsi_base() const override { return m_gsi_base; }
     virtual size_t interrupt_vectors_count() const override { return m_redirection_entries_count; }
-    virtual StringView model() const override { return "IOAPIC"sv; };
+    virtual StringView model() const override { return "IOAPIC"sv; }
     virtual IRQControllerType type() const override { return IRQControllerType::i82093AA; }
 
 private:

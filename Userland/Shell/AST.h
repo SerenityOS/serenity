@@ -1364,7 +1364,7 @@ private:
     virtual ErrorOr<RefPtr<Value>> run(RefPtr<Shell>) override;
     virtual ErrorOr<void> highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
-    virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; };
+    virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; }
 
     String m_end;
     bool m_allows_interpolation { false };
@@ -1393,7 +1393,7 @@ private:
     virtual ErrorOr<void> dump(int level) const override;
     virtual ErrorOr<RefPtr<Value>> run(RefPtr<Shell>) override;
     virtual ErrorOr<void> highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; };
+    virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; }
 
     String m_text;
     EnclosureType m_enclosure_type;

@@ -231,7 +231,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
-    Expression const& expression() const { return m_expression; };
+    Expression const& expression() const { return m_expression; }
 
 private:
     virtual bool is_expression_statement() const override { return true; }
@@ -709,7 +709,7 @@ public:
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
     DeprecatedString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
-    Vector<FunctionParameter> const& parameters() const { return m_parameters; };
+    Vector<FunctionParameter> const& parameters() const { return m_parameters; }
     i32 function_length() const { return m_function_length; }
     Vector<DeprecatedFlyString> const& local_variables_names() const { return m_local_variables_names; }
     bool is_strict_mode() const { return m_is_strict_mode; }
@@ -1345,7 +1345,7 @@ public:
     using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const = 0;
 
-    virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; };
+    virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; }
 
 private:
     bool m_is_static { false };
@@ -1804,7 +1804,7 @@ public:
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
-    virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
+    virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; }
 
     virtual bool is_lexical_declaration() const override { return m_declaration_kind != DeclarationKind::Var; }
 
@@ -1830,7 +1830,7 @@ public:
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
-    virtual bool is_constant_declaration() const override { return true; };
+    virtual bool is_constant_declaration() const override { return true; }
 
     virtual bool is_lexical_declaration() const override { return true; }
 

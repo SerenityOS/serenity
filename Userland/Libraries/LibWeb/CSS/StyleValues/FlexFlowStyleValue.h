@@ -26,7 +26,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     FlexFlowStyleValue(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)

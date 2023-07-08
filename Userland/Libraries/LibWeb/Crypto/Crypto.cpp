@@ -132,6 +132,6 @@ ErrorOr<String> generate_random_uuid()
     TRY(builder.try_appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]));
 
     return builder.to_string();
-};
+}
 
 }

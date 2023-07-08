@@ -306,7 +306,7 @@ EditingEngine::DidMoveALine EditingEngine::move_one_up(KeyEvent const& event)
         m_editor->set_cursor(new_cursor);
     }
     return DidMoveALine::No;
-};
+}
 
 EditingEngine::DidMoveALine EditingEngine::move_one_down(KeyEvent const& event)
 {
@@ -323,7 +323,7 @@ EditingEngine::DidMoveALine EditingEngine::move_one_down(KeyEvent const& event)
         m_editor->set_cursor(new_cursor);
     }
     return DidMoveALine::No;
-};
+}
 
 void EditingEngine::move_up(double page_height_factor)
 {
@@ -333,7 +333,7 @@ void EditingEngine::move_up(double page_height_factor)
         TextPosition new_cursor = m_editor->text_position_at_content_position(position_above);
         m_editor->set_cursor(new_cursor);
     }
-};
+}
 
 void EditingEngine::move_down(double page_height_factor)
 {
@@ -348,22 +348,22 @@ void EditingEngine::move_down(double page_height_factor)
 void EditingEngine::move_page_up()
 {
     move_up(1);
-};
+}
 
 void EditingEngine::move_page_down()
 {
     move_down(1);
-};
+}
 
 void EditingEngine::move_to_first_line()
 {
     m_editor->set_cursor(0, 0);
-};
+}
 
 void EditingEngine::move_to_last_line()
 {
     m_editor->set_cursor(m_editor->line_count() - 1, m_editor->lines()[m_editor->line_count() - 1]->length());
-};
+}
 
 void EditingEngine::get_selection_line_boundaries(Badge<MoveLineUpOrDownCommand>, size_t& first_line, size_t& last_line)
 {
@@ -389,14 +389,14 @@ void EditingEngine::delete_char()
     if (!m_editor->is_editable())
         return;
     m_editor->do_delete();
-};
+}
 
 void EditingEngine::delete_line()
 {
     if (!m_editor->is_editable())
         return;
     m_editor->delete_current_line();
-};
+}
 
 MoveLineUpOrDownCommand::MoveLineUpOrDownCommand(TextDocument& document, KeyEvent event, EditingEngine& engine)
     : TextDocumentUndoCommand(document)

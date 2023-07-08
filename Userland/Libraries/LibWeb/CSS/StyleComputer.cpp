@@ -1600,7 +1600,7 @@ static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_valu
     if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(initial_value_context_realm, property_id).release_value_but_fixme_should_propagate_errors();
     return parent_element->computed_css_values()->property(property_id);
-};
+}
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {

@@ -31,7 +31,7 @@ static double resolve_value_radians(CalculatedStyleValue::CalculationResult::Val
         [](Number const& number) { return number.value(); },
         [](Angle const& angle) { return angle.to_radians(); },
         [](auto const&) { VERIFY_NOT_REACHED(); return 0.0; });
-};
+}
 
 static double resolve_value(CalculatedStyleValue::CalculationResult::Value value, Optional<Length::ResolutionContext const&> context)
 {
@@ -42,7 +42,7 @@ static double resolve_value(CalculatedStyleValue::CalculationResult::Value value
         [&context](Length const& length) { return length.to_px(*context).to_double(); },
         [](Percentage const& percentage) { return percentage.value(); },
         [](Time const& time) { return time.to_seconds(); });
-};
+}
 
 static Optional<CSSNumericType> add_the_types(Vector<NonnullOwnPtr<CalculationNode>> const& nodes, PropertyID property_id)
 {
@@ -85,7 +85,7 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
     }
 
     VERIFY_NOT_REACHED();
-};
+}
 
 CalculationNode::CalculationNode(Type type)
     : m_type(type)

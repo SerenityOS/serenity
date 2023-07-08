@@ -212,7 +212,7 @@ public:
     void register_frame_nesting(AK::URL const&);
     bool is_frame_nesting_allowed(AK::URL const&) const;
 
-    void set_frame_nesting_levels(HashMap<AK::URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); };
+    void set_frame_nesting_levels(HashMap<AK::URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); }
     HashMap<AK::URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
     DOM::Document* container_document();

@@ -33,10 +33,10 @@ public:
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)>) override
     {
         return {};
-    };
+    }
 
     virtual String const& window_handle() const override { return m_window_handle; }
-    virtual void set_window_handle(String handle) override { m_window_handle = handle; };
+    virtual void set_window_handle(String handle) override { m_window_handle = handle; }
 
 private:
     explicit RemoteBrowsingContext(String);

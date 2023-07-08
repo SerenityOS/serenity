@@ -35,8 +35,8 @@ public:
     virtual bool is_cpp_semantic_highlighter() const override { return true; }
 
 protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs_impl() const override { return m_simple_syntax_highlighter.matching_token_pairs_impl(); };
-    virtual bool token_types_equal(u64 token1, u64 token2) const override { return m_simple_syntax_highlighter.token_types_equal(token1, token2); };
+    virtual Vector<MatchingTokenPair> matching_token_pairs_impl() const override { return m_simple_syntax_highlighter.matching_token_pairs_impl(); }
+    virtual bool token_types_equal(u64 token1, u64 token2) const override { return m_simple_syntax_highlighter.token_types_equal(token1, token2); }
 
 private:
     void update_spans(Vector<CodeComprehension::TokenInfo> const&, Gfx::Palette const&);

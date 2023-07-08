@@ -34,7 +34,7 @@ public:
     void lock_location(bool);
     void display_previous_frame();
     void display_next_frame();
-    RefPtr<Gfx::Bitmap> current_bitmap() const { return m_grabbed_bitmap; };
+    RefPtr<Gfx::Bitmap> current_bitmap() const { return m_grabbed_bitmap; }
 
     virtual Optional<GUI::UISize> calculated_min_size() const override
     {

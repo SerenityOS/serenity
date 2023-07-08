@@ -16,6 +16,7 @@ InsertNewlineAtEOF: true
 LineEnding: LF
 NamespaceIndentation: None
 QualifierAlignment: Right
+RemoveSemicolon: true
 RequiresClausePosition: WithFollowing
 RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false

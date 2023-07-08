@@ -28,7 +28,7 @@ public:
 
     virtual ~CSSKeyframesRule() = default;
 
-    virtual Type type() const override { return Type::Keyframes; };
+    virtual Type type() const override { return Type::Keyframes; }
 
     Vector<JS::NonnullGCPtr<CSSKeyframeRule>> const& keyframes() const { return m_keyframes; }
     FlyString const& name() const { return m_name; }

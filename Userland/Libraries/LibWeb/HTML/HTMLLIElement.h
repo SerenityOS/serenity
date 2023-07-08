@@ -18,7 +18,7 @@ public:
     virtual ~HTMLLIElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-li
-    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::listitem; };
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::listitem; }
 
 private:
     HTMLLIElement(DOM::Document&, DOM::QualifiedName);

@@ -24,7 +24,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     GridTrackPlacementShorthandStyleValue(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end)

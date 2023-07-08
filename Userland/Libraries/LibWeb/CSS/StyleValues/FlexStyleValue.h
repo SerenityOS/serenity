@@ -30,7 +30,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(FlexStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FlexStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     FlexStyleValue(

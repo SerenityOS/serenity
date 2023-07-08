@@ -156,7 +156,7 @@ public:
 
     size_t total_chunks() const { return m_total_chunks; }
     size_t total_bytes() const { return m_total_chunks * CHUNK_SIZE; }
-    size_t free_chunks() const { return m_total_chunks - m_allocated_chunks; };
+    size_t free_chunks() const { return m_total_chunks - m_allocated_chunks; }
     size_t free_bytes() const { return free_chunks() * CHUNK_SIZE; }
     size_t allocated_chunks() const { return m_allocated_chunks; }
     size_t allocated_bytes() const { return m_allocated_chunks * CHUNK_SIZE; }

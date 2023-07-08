@@ -26,6 +26,6 @@ ErrorOr<FlatPtr> Process::sys$realpath(Userspace<Syscall::SC_realpath_params con
     TRY(copy_to_user(params.buffer.data, absolute_path->characters(), size_to_copy));
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
-};
+}
 
 }

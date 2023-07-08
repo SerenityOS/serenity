@@ -21,11 +21,11 @@ public:
     LengthPercentage& top() { return m_top; }
     LengthPercentage& right() { return m_right; }
     LengthPercentage& bottom() { return m_bottom; }
-    LengthPercentage& left() { return m_left; };
+    LengthPercentage& left() { return m_left; }
     LengthPercentage const& top() const { return m_top; }
     LengthPercentage const& right() const { return m_right; }
     LengthPercentage const& bottom() const { return m_bottom; }
-    LengthPercentage const& left() const { return m_left; };
+    LengthPercentage const& left() const { return m_left; }
 
 private:
     LengthPercentage m_top;

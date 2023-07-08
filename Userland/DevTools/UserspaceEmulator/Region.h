@@ -70,7 +70,7 @@ public:
 
 protected:
     Region(u32 base, u32 size, bool mmap = false);
-    void set_range(Range r) { m_range = r; };
+    void set_range(Range r) { m_range = r; }
 
 private:
     Emulator& m_emulator;

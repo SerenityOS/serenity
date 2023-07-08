@@ -67,7 +67,7 @@ bool Timer::handle_irq(RegisterState const& regs)
     clear_interrupt(TimerID::Timer1);
 
     return result;
-};
+}
 
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {

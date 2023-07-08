@@ -35,7 +35,7 @@ protected:
             convert_channel(original.blue()),
             original.alpha()
         };
-    };
+    }
 };
 
 }

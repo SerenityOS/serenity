@@ -23,8 +23,8 @@ public:
 
     virtual ~WeakMap() override = default;
 
-    HashMap<GCPtr<Cell>, Value> const& values() const { return m_values; };
-    HashMap<GCPtr<Cell>, Value>& values() { return m_values; };
+    HashMap<GCPtr<Cell>, Value> const& values() const { return m_values; }
+    HashMap<GCPtr<Cell>, Value>& values() { return m_values; }
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 

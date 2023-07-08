@@ -498,7 +498,7 @@ public:
             if (result.is_error())
                 return result.error();
             return Import { module.release_value(), name.release_value(), result.release_value() };
-        };
+        }
 
         DeprecatedString m_module;
         DeprecatedString m_name;
@@ -563,7 +563,7 @@ public:
     {
     }
 
-    auto& tables() const { return m_tables; };
+    auto& tables() const { return m_tables; }
 
     static ParseResult<TableSection> parse(Stream& stream);
 

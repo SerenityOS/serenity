@@ -56,8 +56,8 @@ public:
     String extensions() const;
     WebIDL::ExceptionOr<String> protocol() const;
 
-    String const& binary_type() { return m_binary_type; };
-    void set_binary_type(String const& type) { m_binary_type = type; };
+    String const& binary_type() { return m_binary_type; }
+    void set_binary_type(String const& type) { m_binary_type = type; }
 
     WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
     WebIDL::ExceptionOr<void> send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, String> const& data);

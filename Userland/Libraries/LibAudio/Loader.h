@@ -74,7 +74,7 @@ public:
     virtual PcmSampleFormat pcm_format() = 0;
 
     Metadata const& metadata() const { return m_metadata; }
-    Vector<PictureData> const& pictures() const { return m_pictures; };
+    Vector<PictureData> const& pictures() const { return m_pictures; }
 
 protected:
     NonnullOwnPtr<SeekableStream> m_stream;
@@ -111,7 +111,7 @@ public:
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
     PcmSampleFormat pcm_format() const { return m_plugin->pcm_format(); }
     Metadata const& metadata() const { return m_plugin->metadata(); }
-    Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
+    Vector<PictureData> const& pictures() const { return m_plugin->pictures(); }
 
 private:
     static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(NonnullOwnPtr<SeekableStream> stream);

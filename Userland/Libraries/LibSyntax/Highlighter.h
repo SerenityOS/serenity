@@ -28,8 +28,8 @@ public:
     virtual void rehighlight(Palette const&) = 0;
     virtual void highlight_matching_token_pair();
 
-    virtual bool is_identifier(u64) const { return false; };
-    virtual bool is_navigatable(u64) const { return false; };
+    virtual bool is_identifier(u64) const { return false; }
+    virtual bool is_navigatable(u64) const { return false; }
 
     void attach(HighlighterClient&);
     void detach();

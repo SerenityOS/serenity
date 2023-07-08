@@ -25,10 +25,10 @@ public:
     {
     }
 
-    Message::Type type() const { return m_type; };
-    u32 data_size() const { return m_data_size; };
-    u32 protocol_version() const { return m_protocol_version; };
-    u64 opaque() const { return m_opaque; };
+    Message::Type type() const { return m_type; }
+    u32 data_size() const { return m_data_size; }
+    u32 protocol_version() const { return m_protocol_version; }
+    u64 opaque() const { return m_opaque; }
 
 private:
     // The protocol version being used.

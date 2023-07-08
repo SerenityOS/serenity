@@ -53,7 +53,7 @@ struct Class {
 class Database : public RefCounted<Database> {
 public:
     static RefPtr<Database> open(DeprecatedString const& filename);
-    static RefPtr<Database> open() { return open("/res/usb.ids"); };
+    static RefPtr<Database> open() { return open("/res/usb.ids"); }
 
     const StringView get_vendor(u16 vendor_id) const;
     const StringView get_device(u16 vendor_id, u16 device_id) const;

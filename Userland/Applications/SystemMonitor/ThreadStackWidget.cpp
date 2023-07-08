@@ -26,8 +26,8 @@ class ThreadStackModel final : public GUI::Model {
     };
 
 public:
-    int column_count(GUI::ModelIndex const&) const override { return 3; };
-    int row_count(GUI::ModelIndex const&) const override { return m_symbols.size(); };
+    int column_count(GUI::ModelIndex const&) const override { return 3; }
+    int row_count(GUI::ModelIndex const&) const override { return m_symbols.size(); }
     bool is_column_sortable(int) const override { return false; }
 
     ErrorOr<String> column_name(int column) const override
@@ -57,7 +57,7 @@ public:
         default:
             VERIFY_NOT_REACHED();
         }
-    };
+    }
 
     void set_symbols(Vector<Symbolication::Symbol> const& symbols)
     {

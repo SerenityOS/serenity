@@ -47,14 +47,14 @@ public:
 
     ~DescendantFetchingContext() = default;
 
-    size_t pending_count() const { return m_pending_count; };
+    size_t pending_count() const { return m_pending_count; }
     void set_pending_count(size_t count) { m_pending_count = count; }
     void decrement_pending_count() { --m_pending_count; }
 
     bool failed() const { return m_failed; }
     void set_failed(bool failed) { m_failed = failed; }
 
-    void on_complete(JavaScriptModuleScript* module_script) { m_on_complete(module_script); };
+    void on_complete(JavaScriptModuleScript* module_script) { m_on_complete(module_script); }
     void set_on_complete(OnFetchScriptComplete on_complete) { m_on_complete = move(on_complete); }
 
 private:

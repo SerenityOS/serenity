@@ -860,7 +860,7 @@ void LzmaState::update_state_after_match()
         m_state = 7;
     else
         m_state = 10;
-};
+}
 
 void LzmaState::update_state_after_rep()
 {

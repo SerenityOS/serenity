@@ -29,7 +29,7 @@ public:
 
     DeprecatedFlyString const& encoding() const { return m_encoding; }
     bool fatal() const { return m_fatal; }
-    bool ignore_bom() const { return m_ignore_bom; };
+    bool ignore_bom() const { return m_ignore_bom; }
 
 private:
     // https://encoding.spec.whatwg.org/#dom-textdecoder

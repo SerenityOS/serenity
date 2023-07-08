@@ -45,19 +45,19 @@ public:
     void make_method(Object& home_object);
 
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
-    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; };
+    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; }
 
-    virtual DeprecatedFlyString const& name() const override { return m_name; };
+    virtual DeprecatedFlyString const& name() const override { return m_name; }
     void set_name(DeprecatedFlyString const& name);
 
-    void set_is_class_constructor() { m_is_class_constructor = true; };
+    void set_is_class_constructor() { m_is_class_constructor = true; }
 
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
     Environment* environment() { return m_environment; }
     virtual Realm* realm() const override { return m_realm; }
 
-    ConstructorKind constructor_kind() const { return m_constructor_kind; };
+    ConstructorKind constructor_kind() const { return m_constructor_kind; }
     void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
 
     ThisMode this_mode() const { return m_this_mode; }
@@ -72,7 +72,7 @@ public:
     void add_field(ClassFieldDefinition field) { m_fields.append(move(field)); }
 
     Vector<PrivateElement> const& private_methods() const { return m_private_methods; }
-    void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); };
+    void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); }
 
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }

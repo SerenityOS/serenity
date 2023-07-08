@@ -34,7 +34,7 @@ public:
 
     static NonnullRefPtr<Document> parse(StringView source, const URL&);
 
-    const URL& url() const { return m_url; };
+    const URL& url() const { return m_url; }
 
 private:
     explicit Document(const URL& url)

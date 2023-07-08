@@ -423,7 +423,7 @@ public:
         return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
 
-    virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); };
+    virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); }
 
     bool is_unclamped_integer_element_type() const override
     {

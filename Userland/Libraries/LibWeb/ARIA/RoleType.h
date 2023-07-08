@@ -47,7 +47,7 @@ public:
     virtual bool children_are_presentational() const { return false; }
     // https://www.w3.org/TR/wai-aria-1.2/#implictValueForRole
     using DefaultValueType = Variant<Empty, f64, AriaOrientation, AriaLive, bool, AriaHasPopup>;
-    virtual DefaultValueType default_value_for_property_or_state(StateAndProperties) const { return {}; };
+    virtual DefaultValueType default_value_for_property_or_state(StateAndProperties) const { return {}; }
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& object) const;
 
 protected:

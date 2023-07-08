@@ -160,7 +160,7 @@ constexpr StringView color_primaries_to_string(ColorPrimaries color_primaries)
         return "EBU Tech 3213"sv;
     }
     return "Reserved"sv;
-};
+}
 
 constexpr StringView transfer_characteristics_to_string(TransferCharacteristics transfer_characteristics)
 {
@@ -203,7 +203,7 @@ constexpr StringView transfer_characteristics_to_string(TransferCharacteristics 
         return "ARIB STD-B67 (HLG, BT.2100)"sv;
     }
     return "Reserved"sv;
-};
+}
 
 constexpr StringView matrix_coefficients_to_string(MatrixCoefficients matrix_coefficients)
 {
@@ -238,7 +238,7 @@ constexpr StringView matrix_coefficients_to_string(MatrixCoefficients matrix_coe
         return "BT.2100 ICtCp"sv;
     }
     return "Reserved"sv;
-};
+}
 
 constexpr StringView video_full_range_flag_to_string(VideoFullRangeFlag video_full_range_flag)
 {
@@ -251,6 +251,6 @@ constexpr StringView video_full_range_flag_to_string(VideoFullRangeFlag video_fu
         return "Unspecified"sv;
     }
     return "Unknown"sv;
-};
+}
 
 }

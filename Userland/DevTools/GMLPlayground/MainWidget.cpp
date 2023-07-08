@@ -115,7 +115,7 @@ MainWidget::MainWidget()
 void MainWidget::update_title()
 {
     window()->set_title(DeprecatedString::formatted("{}[*] - GML Playground", m_file_path.is_empty() ? "Untitled"sv : m_file_path.view()));
-};
+}
 
 void MainWidget::load_file(FileSystemAccessClient::File file)
 {
@@ -130,7 +130,7 @@ void MainWidget::load_file(FileSystemAccessClient::File file)
     update_title();
 
     GUI::Application::the()->set_most_recently_open_file(file.filename());
-};
+}
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {

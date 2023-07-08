@@ -22,7 +22,7 @@ public:
 
     virtual ~CSSMediaRule() = default;
 
-    virtual Type type() const override { return Type::Media; };
+    virtual Type type() const override { return Type::Media; }
 
     virtual DeprecatedString condition_text() const override;
     virtual void set_condition_text(DeprecatedString) override;

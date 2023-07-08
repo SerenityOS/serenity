@@ -41,7 +41,7 @@ void CRC32::update(ReadonlyBytes span)
         ++data;
         --size;
     }
-};
+}
 
 // FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
 
@@ -133,7 +133,7 @@ void CRC32::update(ReadonlyBytes data)
 
     for (auto byte : aligned_data)
         m_state = single_byte_crc(m_state, byte);
-};
+}
 
 #    else
 
@@ -164,7 +164,7 @@ void CRC32::update(ReadonlyBytes data)
     for (size_t i = 0; i < data.size(); i++) {
         m_state = table[(m_state ^ data.at(i)) & 0xFF] ^ (m_state >> 8);
     }
-};
+}
 
 #    endif
 #endif
