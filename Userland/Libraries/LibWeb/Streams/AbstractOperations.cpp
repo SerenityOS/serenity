@@ -2993,6 +2993,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
     return transform_stream_default_controller_perform_transform(*controller, chunk);
 }
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_source_pull_algorithm(TransformStream& stream)
+{
+    // 1. Assert: stream.[[backpressure]] is true.
+    VERIFY(stream.backpressure().has_value() && *stream.backpressure());
+
+    // 2. Assert: stream.[[backpressureChangePromise]] is not undefined.
+    VERIFY(stream.backpressure_change_promise());
+
+    // 3. Perform ! TransformStreamSetBackpressure(stream, false).
+    TRY(transform_stream_set_backpressure(stream, false));
+
+    // 4. Return stream.[[backpressureChangePromise]].
+    return JS::NonnullGCPtr { *stream.backpressure_change_promise() };
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-error
 WebIDL::ExceptionOr<void> transform_stream_error(TransformStream& stream, JS::Value error)
 {
