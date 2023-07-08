@@ -130,12 +130,40 @@ concept FallibleFunction = requires(Func&& func, Args&&... args) {
 };
 
 }
+namespace AK::Detail {
+
+template<typename T, typename Out, typename... Args>
+inline constexpr bool IsCallableWithArguments = requires(T t) {
+    {
+        t(declval<Args>()...)
+    } -> Concepts::ConvertibleTo<Out>;
+} || requires(T t) {
+    {
+        t(declval<Args>()...)
+    } -> Concepts::SameAs<Out>;
+};
+
+}
+
+namespace AK {
+
+using Detail::IsCallableWithArguments;
+
+}
+
+namespace AK::Concepts {
+
+template<typename Func, typename R, typename... Args>
+concept CallableAs = Detail::IsCallableWithArguments<Func, R, Args...>;
+
+}
 
 #if !USING_AK_GLOBALLY
 namespace AK {
 #endif
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
+using AK::Concepts::CallableAs;
 using AK::Concepts::ConvertibleTo;
 using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;
