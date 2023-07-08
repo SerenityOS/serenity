@@ -2888,6 +2888,26 @@ WebIDL::ExceptionOr<void> initialize_transform_stream(TransformStream& stream, J
     return {};
 }
 
+// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
+void set_up_transform_stream_default_controller(TransformStream& stream, TransformStreamDefaultController& controller, TransformAlgorithm&& transform_algorithm, FlushAlgorithm&& flush_algorithm)
+{
+    // 1. Assert: stream implements TransformStream.
+    // 2. Assert: stream.[[controller]] is undefined.
+    VERIFY(!stream.controller());
+
+    // 3. Set controller.[[stream]] to stream.
+    controller.set_stream(stream);
+
+    // 4. Set stream.[[controller]] to controller.
+    stream.set_controller(controller);
+
+    // 5. Set controller.[[transformAlgorithm]] to transformAlgorithm.
+    controller.set_transform_algorithm(move(transform_algorithm));
+
+    // 6. Set controller.[[flushAlgorithm]] to flushAlgorithm.
+    controller.set_flush_algorithm(move(flush_algorithm));
+}
+
 // https://streams.spec.whatwg.org/#transform-stream-default-controller-clear-algorithms
 void transform_stream_default_controller_clear_algorithms(TransformStreamDefaultController& controller)
 {
