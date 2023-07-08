@@ -26,7 +26,7 @@ public:
     WavWriter(int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
     ~WavWriter();
 
-    ErrorOr<void> write_samples(Span<Sample> samples);
+    ErrorOr<void> write_samples(ReadonlySpan<Sample> samples);
     void finalize(); // You can finalize manually or let the destructor do it.
 
     u32 sample_rate() const { return m_sample_rate; }
@@ -40,6 +40,15 @@ public:
     void set_sample_format(PcmSampleFormat sample_format) { m_sample_format = sample_format; }
 
 private:
+    template<typename T>
+    T clip(float value) {
+        if (value > NumericLimits<T>::max())
+            return NumericLimits<T>::max();
+        if (value < NumericLimits<T>::min())
+            return NumericLimits<T>::min();
+        return value;
+    }
+
     ErrorOr<void> write_header();
     OwnPtr<Core::File> m_file;
     bool m_finalized { false };
