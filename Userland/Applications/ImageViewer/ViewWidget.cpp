@@ -5,6 +5,7 @@
  * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2023, Caoimhe Byrne <caoimhebyrne06@gmail.com>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,11 +21,54 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace ImageViewer {
+
+void VectorImage::flip(Gfx::Orientation orientation)
+{
+    if (orientation == Gfx::Orientation::Horizontal)
+        apply_transform(Gfx::AffineTransform {}.scale(-1, 1));
+    else
+        apply_transform(Gfx::AffineTransform {}.scale(1, -1));
+}
+
+void VectorImage::rotate(Gfx::RotationDirection rotation_direction)
+{
+    if (rotation_direction == Gfx::RotationDirection::Clockwise)
+        apply_transform(Gfx::AffineTransform {}.rotate_radians(AK::Pi<float> / 2));
+    else
+        apply_transform(Gfx::AffineTransform {}.rotate_radians(-AK::Pi<float> / 2));
+    m_size = { m_size.height(), m_size.width() };
+}
+
+void VectorImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode) const
+{
+    m_vector->draw_into(painter, dest, m_transform);
+}
+
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> VectorImage::bitmap(Optional<Gfx::IntSize> ideal_size) const
+{
+    return m_vector->bitmap(ideal_size.value_or(size()), m_transform);
+}
+
+void BitmapImage::flip(Gfx::Orientation orientation)
+{
+    m_bitmap = m_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+}
+
+void BitmapImage::rotate(Gfx::RotationDirection rotation)
+{
+    m_bitmap = m_bitmap->rotated(rotation).release_value_but_fixme_should_propagate_errors();
+}
+
+void BitmapImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode scaling_mode) const
+{
+    painter.draw_scaled_bitmap(dest, *m_bitmap, m_bitmap->rect(), 1.0f, scaling_mode);
+}
 
 ViewWidget::ViewWidget()
     : m_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
@@ -35,10 +79,10 @@ ViewWidget::ViewWidget()
 void ViewWidget::clear()
 {
     m_timer->stop();
-    m_decoded_image.clear();
-    m_bitmap = nullptr;
+    m_animation.clear();
+    m_image = nullptr;
     if (on_image_change)
-        on_image_change(m_bitmap);
+        on_image_change(m_image);
     set_original_rect({});
     m_path = {};
 
@@ -48,13 +92,13 @@ void ViewWidget::clear()
 
 void ViewWidget::flip(Gfx::Orientation orientation)
 {
-    m_bitmap = m_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+    m_image->flip(orientation);
     scale_image_for_window();
 }
 
 void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
 {
-    m_bitmap = m_bitmap->rotated(rotation_direction).release_value_but_fixme_should_propagate_errors();
+    m_image->rotate(rotation_direction);
     scale_image_for_window();
 }
 
@@ -143,8 +187,8 @@ void ViewWidget::paint_event(GUI::PaintEvent& event)
 
     Gfx::StylePainter::paint_transparency_grid(painter, frame_inner_rect(), palette());
 
-    if (!m_bitmap.is_null())
-        painter.draw_scaled_bitmap(content_rect(), *m_bitmap, m_bitmap->rect(), 1.0f, m_scaling_mode);
+    if (m_image)
+        return m_image->draw_into(painter, content_rect(), m_scaling_mode);
 }
 
 void ViewWidget::mousedown_event(GUI::MouseEvent& event)
@@ -174,24 +218,47 @@ void ViewWidget::open_file(String const& path, Core::File& file)
 
 ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
 {
-    // Spawn a new ImageDecoder service process and connect to it.
-    auto client = TRY(ImageDecoderClient::Client::try_create());
-    auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    auto decoded_image_or_none = client->decode_image(TRY(file.read_until_eof()), mime_type);
-    if (!decoded_image_or_none.has_value()) {
-        return Error::from_string_literal("Failed to decode image");
+    auto file_data = TRY(file.read_until_eof());
+    bool is_animated = false;
+    size_t loop_count = 0;
+    Vector<Animation::Frame> frames;
+    // Note: Doing this check only requires reading the header of images
+    // (so if the image is not vector graphics it can be still be decoded OOP).
+    if (auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file_data); decoder && decoder->is_vector()) {
+        // Use in-process decoding for vector graphics.
+        is_animated = decoder->is_animated();
+        loop_count = decoder->loop_count();
+        frames.ensure_capacity(decoder->frame_count());
+        for (u32 i = 0; i < decoder->frame_count(); i++) {
+            auto frame_data = TRY(decoder->vector_frame(i));
+            frames.unchecked_append({ VectorImage::create(*frame_data.image), frame_data.duration });
+        }
+    } else {
+        // Use out-of-process decoding for raster formats.
+        auto client = TRY(ImageDecoderClient::Client::try_create());
+        auto mime_type = Core::guess_mime_type_based_on_filename(path);
+        auto decoded_image = client->decode_image(file_data, mime_type);
+        if (!decoded_image.has_value()) {
+            return Error::from_string_literal("Failed to decode image");
+        }
+        is_animated = decoded_image->is_animated;
+        loop_count = decoded_image->loop_count;
+        frames.ensure_capacity(decoded_image->frames.size());
+        for (u32 i = 0; i < decoded_image->frames.size(); i++) {
+            auto& frame_data = decoded_image->frames[i];
+            frames.unchecked_append({ BitmapImage::create(*frame_data.bitmap), int(frame_data.duration) });
+        }
     }
 
-    m_decoded_image = decoded_image_or_none.release_value();
-    m_bitmap = m_decoded_image->frames[0].bitmap;
-    if (m_bitmap.is_null()) {
-        return Error::from_string_literal("Image didn't contain a bitmap");
+    m_image = frames[0].image;
+    if (is_animated && frames.size() > 1) {
+        m_animation = Animation { loop_count, move(frames) };
     }
 
-    set_original_rect(m_bitmap->rect());
+    set_original_rect(m_image->rect());
 
-    if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
-        auto const& first_frame = m_decoded_image->frames[0];
+    if (m_animation.has_value()) {
+        auto const& first_frame = m_animation->frames[0];
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
@@ -203,7 +270,7 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
     GUI::Application::the()->set_most_recently_open_file(path);
 
     if (on_image_change)
-        on_image_change(m_bitmap);
+        on_image_change(m_image);
 
     if (scaled_for_first_image())
         scale_image_for_window();
@@ -235,10 +302,10 @@ void ViewWidget::resize_event(GUI::ResizeEvent& event)
 
 void ViewWidget::scale_image_for_window()
 {
-    if (!m_bitmap)
+    if (!m_image)
         return;
 
-    set_original_rect(m_bitmap->rect());
+    set_original_rect(m_image->rect());
     fit_content_to_view(GUI::AbstractZoomPanWidget::FitType::Both);
 }
 
@@ -250,7 +317,7 @@ void ViewWidget::resize_window()
     auto absolute_bitmap_rect = content_rect();
     absolute_bitmap_rect.translate_by(window()->rect().top_left());
 
-    if (!m_bitmap)
+    if (!m_image)
         return;
 
     auto new_size = content_rect().size();
@@ -270,33 +337,33 @@ void ViewWidget::resize_window()
     scale_image_for_window();
 }
 
-void ViewWidget::set_bitmap(Gfx::Bitmap const* bitmap)
+void ViewWidget::set_image(Image const* image)
 {
-    if (m_bitmap == bitmap)
+    if (m_image == image)
         return;
-    m_bitmap = bitmap;
-    set_original_rect(m_bitmap->rect());
+    m_image = image;
+    set_original_rect(m_image->rect());
     update();
 }
 
 // Same as ImageWidget::animate(), you probably want to keep any changes in sync
 void ViewWidget::animate()
 {
-    if (!m_decoded_image.has_value())
+    if (!m_animation.has_value())
         return;
 
-    m_current_frame_index = (m_current_frame_index + 1) % m_decoded_image->frames.size();
+    m_current_frame_index = (m_current_frame_index + 1) % m_animation->frames.size();
 
-    auto const& current_frame = m_decoded_image->frames[m_current_frame_index];
-    set_bitmap(current_frame.bitmap);
+    auto const& current_frame = m_animation->frames[m_current_frame_index];
+    set_image(current_frame.image);
 
     if ((int)current_frame.duration != m_timer->interval()) {
         m_timer->restart(current_frame.duration);
     }
 
-    if (m_current_frame_index == m_decoded_image->frames.size() - 1) {
+    if (m_current_frame_index == m_animation->frames.size() - 1) {
         ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == m_decoded_image->loop_count) {
+        if (m_loops_completed > 0 && m_loops_completed == m_animation->loop_count) {
             m_timer->stop();
         }
     }
