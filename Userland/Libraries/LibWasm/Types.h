@@ -737,7 +737,6 @@ public:
     };
 
     struct SegmentType0 {
-        // FIXME: Implement me!
         static ParseResult<SegmentType0> parse(Stream& stream);
 
         Vector<FunctionIndex> function_indices;
@@ -757,8 +756,10 @@ public:
         static ParseResult<SegmentType3> parse(Stream& stream);
     };
     struct SegmentType4 {
-        // FIXME: Implement me!
         static ParseResult<SegmentType4> parse(Stream& stream);
+
+        Active mode;
+        Vector<Expression> initializer;
     };
     struct SegmentType5 {
         // FIXME: Implement me!
