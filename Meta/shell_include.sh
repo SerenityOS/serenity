@@ -6,16 +6,26 @@
 # NOTE: If using another privilege escalation binary make sure it is configured or has the appropiate flag
 #       to keep the current environment variables in the launched process (in sudo's case this is achieved
 #       through the -E flag described in sudo(8).
-SUDO="sudo -E"
-
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls -E"
-fi
-
 die() {
     echo "die: $*"
     exit 1
 }
+
+if [ "$(uname -s)" = "SerenityOS" ]; then
+    SUDO="pls -E"
+elif command -v sudo >/dev/null; then
+    SUDO="sudo -E"
+elif command -v doas >/dev/null; then
+    if [ "$SUDO_UID" = '' ]; then
+        SUDO_UID=$(id -u)
+        SUDO_GID=$(id -g)
+        export SUDO_UID SUDO_GID
+    fi
+    # To make doas work, you have to make sure you use the "keepenv" flag in doas.conf
+    SUDO="doas"
+else
+    die "You need sudo, doas or pls to build Serenity..."
+fi
 
 exit_if_running_as_root() {
     if [ "$(id -u)" -eq 0 ]; then
