@@ -771,7 +771,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, ReadonlySpan<
 
             // Look for a long option
             auto option_pattern = argument.substring_view(2);
-            auto it = m_options.find_if([&](auto& option) { return option.hide_mode != OptionHideMode::None && StringView { option.long_name, strlen(option.long_name) } == option_pattern; });
+            auto it = m_options.find_if([&](auto& option) { return (option.hide_mode != OptionHideMode::None) && StringView { option.long_name, strlen(option.long_name) } == option_pattern; });
             if (it.is_end())
                 continue;
 

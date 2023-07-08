@@ -17,10 +17,10 @@ template<typename T, typename Container = Vector<T>, typename ColumnNameListType
 class ItemListModel : public Model {
 public:
     static constexpr auto IsTwoDimensional = requires(Container data) {
-                                                 requires !IsVoid<ColumnNameListType>;
-                                                 data.at(0).at(0);
-                                                 data.at(0).size();
-                                             };
+        requires !IsVoid<ColumnNameListType>;
+        data.at(0).at(0);
+        data.at(0).size();
+    };
 
     // Substitute 'void' for a dummy u8.
     using ColumnNamesT = Conditional<IsVoid<ColumnNameListType>, u8, ColumnNameListType>;

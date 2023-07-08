@@ -402,15 +402,16 @@ void Printer::print(Wasm::ImportSection::Import const& import)
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         import.description().visit(
-            [this](auto const& type) { print(type);
-    },
+            [this](auto const& type) {
+                print(type);
+            },
             [this](TypeIndex const& index) {
-        print_indent();
-        print("(type index {})\n", index.value());
+                print_indent();
+                print("(type index {})\n", index.value());
             });
-}
-print_indent();
-print(")\n");
+    }
+    print_indent();
+    print(")\n");
 }
 
 void Printer::print(Wasm::Instruction const& instruction)

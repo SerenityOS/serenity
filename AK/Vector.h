@@ -31,13 +31,13 @@ struct CanBePlacedInsideVectorHelper;
 template<typename StorageType>
 struct CanBePlacedInsideVectorHelper<StorageType, true> {
     template<typename U>
-    static constexpr bool value = requires(U && u) { StorageType { &u }; };
+    static constexpr bool value = requires(U&& u) { StorageType { &u }; };
 };
 
 template<typename StorageType>
 struct CanBePlacedInsideVectorHelper<StorageType, false> {
     template<typename U>
-    static constexpr bool value = requires(U && u) { StorageType(forward<U>(u)); };
+    static constexpr bool value = requires(U&& u) { StorageType(forward<U>(u)); };
 };
 }
 

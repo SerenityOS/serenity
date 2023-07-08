@@ -45,8 +45,7 @@ extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
-struct [[gnu::aligned(64), gnu::packed]] FPUState
-{
+struct [[gnu::aligned(64), gnu::packed]] FPUState {
     SIMD::LegacyRegion legacy_region;
     SIMD::Header xsave_header;
 

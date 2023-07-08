@@ -32,9 +32,9 @@ namespace AK {
 // Concept to detect types which look like timespec without requiring the type.
 template<typename T>
 concept TimeSpecType = requires(T t) {
-                           t.tv_sec;
-                           t.tv_nsec;
-                       };
+    t.tv_sec;
+    t.tv_nsec;
+};
 
 constexpr bool is_leap_year(int year)
 {

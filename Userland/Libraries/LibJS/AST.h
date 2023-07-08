@@ -241,11 +241,11 @@ private:
 
 template<typename Func, typename... Args>
 concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args) {
-                                            {
-                                                func(args...)
-                                                }
-                                                -> SameAs<ThrowCompletionOr<void>>;
-                                        };
+    {
+        func(args...)
+    }
+    -> SameAs<ThrowCompletionOr<void>>;
+};
 
 template<typename... Args>
 class ThrowCompletionOrVoidCallback : public Function<ThrowCompletionOr<void>(Args...)> {
