@@ -32,27 +32,10 @@ fi
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 
-# We depend on GNU coreutils du for the --apparent-size extension.
-# GNU coreutils is a build dependency.
-if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then
-    GNUDU="gdu"
-else
-    GNUDU="du"
-fi
-
-disk_usage() {
-    # shellcheck disable=SC2003,SC2307
-    expr "$(${GNUDU} -sk --apparent-size "$1" | cut -f1)"
-}
-
-inode_usage() {
-    find "$1" | wc -l
-}
-
 INODE_SIZE=128
 INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
 INODE_COUNT=$((INODE_COUNT + 2000))  # Some additional inodes for toolchain files, could probably also be calculated
-DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root)) * 1024))
+DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) ) * 1024 * 1024))
 DISK_SIZE_BYTES=$((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE)))
 
 if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
